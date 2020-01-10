@@ -34,6 +34,8 @@ try
 - Operation implemented on the POC
   - STREAM
   - FILTER
+  - FILTER NOT
+  - TRANSFORM
   - TO
 
 - Operation which must implement

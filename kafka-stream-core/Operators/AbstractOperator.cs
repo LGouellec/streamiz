@@ -48,7 +48,12 @@ namespace kafka_stream_core.Operators
                 Next.Add(next);
         }
 
-        public abstract void Init(ContextOperator context);
+        public void Init(ContextOperator context)
+        {
+            foreach (var n in Next)
+                n.Init(context);
+            this.context = context;
+        }
 
         public abstract void Kill();
 

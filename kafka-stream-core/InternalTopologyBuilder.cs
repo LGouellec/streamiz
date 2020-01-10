@@ -102,17 +102,28 @@ namespace kafka_stream_core
                 throw new Exception("Sink operator already exist !");
         }
 
-        internal void setFilterOperator<K,V>(string nameNode, Func<K, V, bool> predicate)
+        internal void setFilterOperator<K,V>(string nameNode, Func<K, V, bool> predicate, bool not)
         {
             if (!processorOperators.ContainsKey(nameNode))
             {
-                FilterOperator<K, V> filter = new FilterOperator<K, V>(null, nameNode, predicate);
+                FilterOperator<K, V> filter = new FilterOperator<K, V>(null, nameNode, predicate, not);
                 processorOperators.Add(nameNode, filter);
             }
             else
                 throw new Exception("Filter operator already exist !");
         }
-        
+
+        internal void setTransformOperator<K,V, K1, V1>(string nameNode, Func<K,V, KeyValuePair<K1,V1>> kv)
+        {
+            if (!processorOperators.ContainsKey(nameNode))
+            {
+                TransformOperator<K, V, K1, V1> transform = new TransformOperator<K, V, K1, V1>(nameNode, null, kv);
+                processorOperators.Add(nameNode, transform);
+            }
+            else
+                throw new Exception("Filter operator already exist !");
+        }
+
         internal Topology build()
         {
             return new Topology(rootOperator);

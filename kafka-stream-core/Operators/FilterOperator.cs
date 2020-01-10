@@ -8,18 +8,13 @@ namespace kafka_stream_core.Operators
     internal class FilterOperator<K, V> : AbstractOperator<K, V>
     {
         private readonly Func<K, V, bool> _filterPredicate;
+        private readonly bool _not;
 
-        internal FilterOperator(IOperator previous, string name, Func<K, V, bool> predicate)
+        internal FilterOperator(IOperator previous, string name, Func<K, V, bool> predicate, bool not)
             : base(name, previous)
         {
             _filterPredicate = predicate;
-        }
-
-        public override void Init(ContextOperator context)
-        {
-            foreach (var n in Next)
-                n.Init(context);
-            this.context = context;
+            _not = not;
         }
 
         public override void Kill()
@@ -28,7 +23,7 @@ namespace kafka_stream_core.Operators
 
         public override void Message(K key, V value)
         {
-            if(_filterPredicate.Invoke(key, value))
+            if((!_not && _filterPredicate.Invoke(key, value)) || (_not && !_filterPredicate.Invoke(key, value)))
             {
                 foreach (var n in Next)
                     if (n is IOperator<K, V>)

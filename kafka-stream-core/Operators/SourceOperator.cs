@@ -13,12 +13,6 @@ namespace kafka_stream_core.Operators
         {
             this.topicName = topicName;
         }
-        public override void Init(ContextOperator context)
-        {
-            foreach (var n in Next)
-                n.Init(context);
-            this.context = context;
-        }
 
         public override void Kill()
         {
