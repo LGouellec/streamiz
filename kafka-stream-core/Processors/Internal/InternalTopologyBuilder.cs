@@ -1,20 +1,19 @@
-﻿using System;
+﻿using kafka_stream_core.Nodes.Parameters;
+using kafka_stream_core.Processors;
+using kafka_stream_core.Stream.Internal.Graph.Nodes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using kafka_stream_core.Nodes;
-using kafka_stream_core.Nodes.Parameters;
-using kafka_stream_core.Operators;
 
 namespace kafka_stream_core
 {
     internal class InternalTopologyBuilder
     {
-        private IDictionary<string, IOperator> sourceOperators = new Dictionary<string, IOperator>();
-        private IDictionary<string, IOperator> sinkOperators = new Dictionary<string, IOperator>();
-        private IDictionary<string, IOperator> processorOperators = new Dictionary<string, IOperator>();
+        private IDictionary<string, IProcessor> sourceOperators = new Dictionary<string, IProcessor>();
+        private IDictionary<string, IProcessor> sinkOperators = new Dictionary<string, IProcessor>();
+        private IDictionary<string, IProcessor> processorOperators = new Dictionary<string, IProcessor>();
 
-        private IOperator rootOperator = null;
+        private IProcessor root = null;
 
         internal InternalTopologyBuilder()
         {
@@ -22,24 +21,24 @@ namespace kafka_stream_core
 
         internal void buildAndOptimizeTopology(RootNode root, IList<StreamGraphNode> nodes)
         {
-            if (rootOperator == null)
+            if (this.root == null)
             {
                 foreach (var node in nodes)
                     node.writeToTopology(this);
 
-                rootOperator = new RootOperator();
+                this.root = new RootProcessor();
 
                 foreach(var source in sourceOperators)
                 {
-                    this.applyChildNodes(source.Value, rootOperator, root);
-                    rootOperator.SetNextOperator(source.Value);
+                    this.applyChildNodes(source.Value, this.root, root);
+                    this.root.SetNextProcessor(source.Value);
                 }
             }
             else
                 throw new Exception("Topology already built !");
         }
 
-        private void applyChildNodes(IOperator value, IOperator previous, StreamGraphNode root)
+        private void applyChildNodes(IProcessor value, IProcessor previous, StreamGraphNode root)
         {
             StreamGraphNode r = null;
             while(r == null)
@@ -57,7 +56,7 @@ namespace kafka_stream_core
 
             if(r != null)
             {
-                value.SetPreviousOperator(previous);
+                value.SetPreviousProcessor(previous);
                 IList<StreamGraphNode> list = r.Nodes;
                 foreach (var n in list)
                 {
@@ -65,14 +64,14 @@ namespace kafka_stream_core
                     {
                         var f = sinkOperators.FirstOrDefault(kp => kp.Key.Equals(n.streamGraphNode)).Value;
                         if (f != null)
-                            value.SetNextOperator(f);
+                            value.SetNextProcessor(f);
                     }
                     else if (n is ProcessorGraphNode)
                     {
                         var f = processorOperators.FirstOrDefault(kp => kp.Key.Equals(n.streamGraphNode)).Value;
                         if (f != null)
                         {
-                            value.SetNextOperator(f);
+                            value.SetNextProcessor(f);
                             this.applyChildNodes(f, value, n);
                         }
                     }
@@ -80,53 +79,37 @@ namespace kafka_stream_core
             }
         }
 
-        internal void setSourceOperator<K,V>(string topic, string nameNode, Consumed<K,V> consumed)
+        internal void addSourceOperator<K,V>(string topic, string nameNode, Consumed<K,V> consumed)
         {
             if (!sourceOperators.ContainsKey(nameNode))
             {
-                SourceOperator<K, V> source = new SourceOperator<K, V>(nameNode, topic, consumed.KeySerdes, consumed.ValueSerdes);
+                SourceProcessor<K, V> source = new SourceProcessor<K, V>(nameNode, topic, consumed.KeySerdes, consumed.ValueSerdes);
                 sourceOperators.Add(nameNode, source);
             }
             else
                 throw new Exception("Source operator already exist !");
         }
 
-        internal void setSinkOperator<K, V>(string topic, string nameNode, Produced<K,V> produced)
+        internal void addSinkOperator<K, V>(string topic, string nameNode, Produced<K,V> produced)
         {
             if (!sinkOperators.ContainsKey(nameNode))
             {
-                SinkOperator<K, V> sink = new SinkOperator<K, V>(nameNode, null, topic, produced.KeySerdes, produced.ValueSerdes);
+                SinkProcessor<K, V> sink = new SinkProcessor<K, V>(nameNode, null, topic, produced.KeySerdes, produced.ValueSerdes);
                 sinkOperators.Add(nameNode, sink);
             }
             else
                 throw new Exception("Sink operator already exist !");
         }
 
-        internal void setFilterOperator<K,V>(string nameNode, Func<K, V, bool> predicate, bool not)
+        internal void addProcessor<K, V>(string nameNode, IProcessorSupplier<K, V> processor)
         {
             if (!processorOperators.ContainsKey(nameNode))
             {
-                FilterOperator<K, V> filter = new FilterOperator<K, V>(null, nameNode, predicate, not);
-                processorOperators.Add(nameNode, filter);
+                var p = processor.Get();
+                processorOperators.Add(nameNode, p);
             }
             else
-                throw new Exception("Filter operator already exist !");
-        }
-
-        internal void setTransformOperator<K,V, K1, V1>(string nameNode, Func<K,V, KeyValuePair<K1,V1>> kv)
-        {
-            if (!processorOperators.ContainsKey(nameNode))
-            {
-                TransformOperator<K, V, K1, V1> transform = new TransformOperator<K, V, K1, V1>(nameNode, null, kv);
-                processorOperators.Add(nameNode, transform);
-            }
-            else
-                throw new Exception("Filter operator already exist !");
-        }
-
-        internal Topology build()
-        {
-            return new Topology(rootOperator);
+                throw new Exception("Processor operator already exist !");
         }
     }
 }

@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Nodes
+namespace kafka_stream_core.Stream.Internal.Graph.Nodes
 {
     internal abstract class StreamGraphNode
     {
         private readonly Guid guid = Guid.NewGuid();
         internal readonly string streamGraphNode;
         private readonly IList<StreamGraphNode> childNode = new List<StreamGraphNode>();
+        private readonly IList<StreamGraphNode> parentNode = new List<StreamGraphNode>();
 
         internal StreamGraphNode(string streamGraphNode)
         {
@@ -20,7 +21,14 @@ namespace kafka_stream_core.Nodes
 
         public void appendChild(StreamGraphNode node)
         {
-            childNode.Add(node);
+            if(!childNode.Contains(node))
+                childNode.Add(node);
+        }
+
+        public void appendParent(StreamGraphNode node)
+        {
+            if(!parentNode.Contains(node))
+                parentNode.Add(node);
         }
 
         public abstract void writeToTopology(InternalTopologyBuilder builder);

@@ -1,8 +1,7 @@
-﻿using System;
+﻿using kafka_stream_core;
+using kafka_stream_core.Stream;
+using System;
 using System.Collections.Generic;
-using kafka_stream_core;
-using kafka_stream_core.Nodes.Parameters;
-using kafka_stream_core.SerDes;
 
 namespace test_stream
 {
@@ -19,10 +18,7 @@ namespace test_stream
             config.Add("security.protocol", "SaslPlaintext");
 
             StreamBuilder builder = new StreamBuilder();
-            builder.stream("test")
-                .filterNot((k, v) => v.Contains("toto"))
-                .transform((k,v) => new KeyValuePair<string, string>(k, v.ToUpper()))
-                .to("test2");
+            builder.stream("test").filterNot((k, v) => v.Contains("toto")).to("test2");
 
             Topology t = builder.build();
             KafkaStream stream = new KafkaStream(t, config);
@@ -31,7 +27,8 @@ namespace test_stream
                 stream.start();
                 Console.ReadKey();
                 stream.stop();
-            }catch(Exception e)
+            }
+            catch (Exception e)
             {
                 Console.WriteLine(e.Message + ":" + e.StackTrace);
                 stream.kill();

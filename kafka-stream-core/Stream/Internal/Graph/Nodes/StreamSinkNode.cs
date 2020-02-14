@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Nodes
+namespace kafka_stream_core.Stream.Internal.Graph.Nodes
 {
     internal abstract class StreamSinkNode : StreamGraphNode
     {
@@ -27,7 +27,7 @@ namespace kafka_stream_core.Nodes
 
         public override void writeToTopology(InternalTopologyBuilder builder)
         {
-            builder.setSinkOperator(topicName, this.streamGraphNode, produced);
+            builder.addSinkOperator(topicName, this.streamGraphNode, produced);
         }
     }
 }

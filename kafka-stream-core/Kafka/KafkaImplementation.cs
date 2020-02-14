@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using kafka_stream_core.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -8,71 +9,67 @@ namespace kafka_stream_core.Kafka
 {
     internal class KafkaImplementation : IKafkaClient
     {
-        protected readonly IDictionary<string, object> _producers = new Dictionary<string, object>();
-        protected readonly IDictionary<string, object> _consumers = new Dictionary<string, object>();
+        protected readonly IDictionary<string, IProducer<byte[], byte[]>> _producers = new Dictionary<string, IProducer<byte[], byte[]>>();
+        protected readonly IDictionary<string, IConsumer<byte[], byte[]>> _consumers = new Dictionary<string, IConsumer<byte[], byte[]>>();
         protected readonly IDictionary<string, Task> _consumerReceiver = new Dictionary<string, Task>();
 
         protected readonly Configuration configuration;
+        protected readonly IKafkaSupplier kafkaSupplier;
         protected CancellationTokenSource cts = new CancellationTokenSource();
 
-        internal KafkaImplementation(Configuration configuration)
+        internal KafkaImplementation(Configuration configuration, IKafkaSupplier kafkaSupplier)
         {
             this.configuration = configuration;
+            this.kafkaSupplier = kafkaSupplier;
         }
 
         private string GetKey<K, V>() => $"{typeof(K).Name}-{typeof(V).Name}";
 
-        private IProducer<K, V> CreateGenericProducer<K, V>(string clef)
+        private IProducer<byte[], byte[]> CreateGenericProducer(string clef)
         {
-            // TODO : Avro Serializer
             ProducerConfig producer = configuration.toProducerConfig();
-
-            var builder = new ProducerBuilder<K, V>(producer) { };
-            var p = builder.Build();
+            var p = this.kafkaSupplier.GetProducer(producer);
             _producers.Add(clef, p);
             return p;
         }
 
-        private IConsumer<K, V> CreateGenericConsumer<K, V>(string clef)
+        private IConsumer<byte[], byte[]> CreateGenericConsumer(string clef)
         {
-            // TODO : Avro Serializer
             ConsumerConfig consumer = configuration.toConsumerConfig();
-
-            var builder = new ConsumerBuilder<K, V>(consumer) { };
-            var c = builder.Build();
+            var c = this.kafkaSupplier.GetConsumer(consumer);
             _consumers.Add(clef, c);
             return c;
         }
 
-        public void Publish<K, V>(K key, V value, string topicName)
+        public void Publish<K, V>(K key, V value, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string topicName)
         {
             var clef = GetKey<K, V>();
-            IProducer<K, V> producer = null;
+            IProducer<byte[], byte[]> producer = null;
             if (!_producers.ContainsKey(clef))
-                producer = CreateGenericProducer<K, V>(clef);
+                producer = CreateGenericProducer(clef);
             else
             {
-                if (_producers[clef] is IProducer<K, V>)
-                    producer = _producers[clef] as IProducer<K, V>;
+                producer = _producers[clef];
             }
 
-            producer.Produce(topicName, new Message<K, V> { Key = key, Value = value });
+            var k = keySerdes.Serialize(key);
+            var v = valueSerdes.Serialize(value);
+            producer.Produce(topicName, new Message<byte[], byte[]> { Key = k, Value = v });
             producer.Flush(cts.Token);
         }
 
-        public void Subscribe<K, V>(string topicName, Action<K, V> action)
+        public void Subscribe<K, V>(string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Action<K, V> action)
         {
             var clef = GetKey<K, V>();
-            IConsumer<K, V> consumer = null;
+            IConsumer<byte[], byte[]> consumer = null;
             if (!_consumers.ContainsKey(clef))
             {
-                consumer = CreateGenericConsumer<K, V>(clef);
+                consumer = CreateGenericConsumer(clef);
                 consumer.Subscribe(topicName);
             }
             else
             {
-                if (_consumers[clef] is IConsumer<K, V>)
-                    consumer = _consumers[clef] as IConsumer<K, V>;
+                consumer = _consumers[clef];
             }
 
             Task t = Task.Run(() =>
@@ -83,7 +80,11 @@ namespace kafka_stream_core.Kafka
                     {
                         var cr = consumer.Consume(cts.Token);
                         if (cr != null)
-                            action?.Invoke(cr.Key, cr.Value);
+                        {
+                            var key = keySerdes.Deserialize(cr.Key);
+                            var value = valueSerdes.Deserialize(cr.Value);
+                            action?.Invoke(key, value);
+                        }
                     }
                     catch (ConsumeException e)
                     {

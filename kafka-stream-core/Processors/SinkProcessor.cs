@@ -3,13 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Operators
+namespace kafka_stream_core.Processors
 {
-    internal class SinkOperator<K,V> : AbstractOperator<K, V>
+    internal class SinkProcessor<K,V> : AbstractProcessor<K, V>
     {
         private readonly string topicName;
 
-        internal SinkOperator(string name, IOperator previous, string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+        internal SinkProcessor(string name, IProcessor previous, string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
             : base(name, previous, keySerdes, valueSerdes)
         {
             this.topicName = topicName;
@@ -20,9 +20,9 @@ namespace kafka_stream_core.Operators
 
         }
 
-        public override void Message(K key, V value)
+        public override void Process(K key, V value)
         {
-            context.Client.Publish(key, value, topicName);
+            context.Client.Publish(key, value, this.KeySerDes, this.ValueSerDes, topicName);
         }
 
         public override void Start()

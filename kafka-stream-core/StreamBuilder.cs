@@ -1,17 +1,19 @@
 ﻿using kafka_stream_core.Nodes.Parameters;
 using kafka_stream_core.SerDes;
 using kafka_stream_core.Stream;
+using kafka_stream_core.Stream.Internal;
 
 namespace kafka_stream_core
 {
     public class StreamBuilder
     {
+        private readonly Topology topology = new Topology();
         private readonly InternalTopologyBuilder internalTopologyBuilder;
         private readonly InternalStreamBuilder internalStreamBuilder;
 
         public StreamBuilder()
         {
-            internalTopologyBuilder = new InternalTopologyBuilder();
+            internalTopologyBuilder = topology.Builder;
             internalStreamBuilder = new InternalStreamBuilder(internalTopologyBuilder);
         }
 
@@ -25,7 +27,8 @@ namespace kafka_stream_core
         public Topology build()
         {
             this.internalStreamBuilder.build();
-            return this.internalTopologyBuilder.build();
+            topology.SetNodes(this.internalStreamBuilder.root, this.internalStreamBuilder.nodes);
+            return topology;
         }
     }
 }

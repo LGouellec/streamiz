@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Nodes
+namespace kafka_stream_core
 {
-    internal class NodeParameter<K,V>
+    public class ProcessorTopology
     {
     }
 }

@@ -2,17 +2,19 @@
 using kafka_stream_core.Nodes.Parameters;
 using kafka_stream_core.SerDes;
 using kafka_stream_core.Stream;
+using kafka_stream_core.Stream.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
 
-namespace kafka_stream_core
+namespace kafka_stream_core.Stream.Internal
 {
     internal class InternalStreamBuilder
     {
         private int index = 0;
         private readonly object _locker = new object();
-        private IList<StreamGraphNode> sourcesNodes = new List<StreamGraphNode>();
-        private readonly RootNode root = new RootNode();
+
+        internal IList<StreamGraphNode> nodes = new List<StreamGraphNode>();
+        internal readonly RootNode root = new RootNode();
 
         private InternalTopologyBuilder internalTopologyBuilder;
 
@@ -42,7 +44,8 @@ namespace kafka_stream_core
         internal void addGraphNode(StreamGraphNode root, StreamGraphNode node)
         {
             root.appendChild(node);
-            sourcesNodes.Add(node);
+            node.appendParent(root);
+            nodes.Add(node);
         }
 
         #endregion
@@ -51,7 +54,7 @@ namespace kafka_stream_core
 
         internal void build()
         {
-            internalTopologyBuilder.buildAndOptimizeTopology(root, sourcesNodes);
+            internalTopologyBuilder.buildAndOptimizeTopology(root, nodes);
         }
 
         #endregion

@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Text;
 using kafka_stream_core.SerDes;
 
-namespace kafka_stream_core.Operators
+namespace kafka_stream_core.Processors
 {
-    internal class TransformOperator<K, V, K1, V1> : AbstractOperator<K, V>
+    internal class TransformProcessor<K, V, K1, V1> : AbstractProcessor<K, V>
     {
         private readonly Func<K, V, KeyValuePair<K1, V1>> transformer;
 
-        public TransformOperator(string name, IOperator previous, Func<K, V, KeyValuePair<K1, V1>> transformer) 
+        public TransformProcessor(string name, IProcessor previous, Func<K, V, KeyValuePair<K1, V1>> transformer) 
             : base(name, previous)
         {
             this.transformer = transformer;
@@ -20,13 +20,13 @@ namespace kafka_stream_core.Operators
             
         }
 
-        public override void Message(K key, V value)
+        public override void Process(K key, V value)
         {
             KeyValuePair<K1,V1> kp = transformer.Invoke(key, value);
 
             foreach (var n in Next)
-                if (n is IOperator<K1, V1>)
-                    ((IOperator<K1, V1>)n).Message(kp.Key, kp.Value);
+                if (n is IProcessor<K1, V1>)
+                    ((IProcessor<K1, V1>)n).Process(kp.Key, kp.Value);
         }
 
         public override void Start()

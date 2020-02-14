@@ -1,6 +1,7 @@
-﻿using kafka_stream_core.Nodes;
-using kafka_stream_core.Nodes.Parameters;
+﻿using kafka_stream_core.Nodes.Parameters;
 using kafka_stream_core.SerDes;
+using kafka_stream_core.Stream.Internal;
+using kafka_stream_core.Stream.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
 
@@ -28,8 +29,8 @@ namespace kafka_stream_core.Stream
         public KStream<K, V> filter(Func<K, V, bool> predicate)
         {
             string name = this.builder.newProcessorName("KSTREAM-FILTER-");
-            ProcessorParameters<KStreamFilter<K, V>, K, V> processorParameters = new ProcessorParameters<KStreamFilter<K, V>, K, V>(new KStreamFilter<K, V>(predicate), name);
-            ProcessorGraphNode<KStreamFilter<K, V>, K, V> filterProcessorNode = new ProcessorGraphNode<KStreamFilter<K, V>, K, V>(name, processorParameters);
+            ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFilter<K, V>(name, predicate), name);
+            ProcessorGraphNode<K, V> filterProcessorNode = new ProcessorGraphNode<K, V>(name, processorParameters);
             this.builder.addGraphNode(node, filterProcessorNode);
             return new KStream<K, V>(name, this.keySerdes, this.valueSerdes, this.setSourceNodes, filterProcessorNode, this.builder);
         }
@@ -37,32 +38,32 @@ namespace kafka_stream_core.Stream
         public KStream<K, V> filterNot(Func<K, V, bool> predicate)
         {
             string name = this.builder.newProcessorName("KSTREAM-FILTER-");
-            ProcessorParameters<KStreamFilter<K, V>, K, V> processorParameters = new ProcessorParameters<KStreamFilter<K, V>, K, V>(new KStreamFilter<K, V>(predicate, true), name);
-            ProcessorGraphNode<KStreamFilter<K, V>, K, V> filterProcessorNode = new ProcessorGraphNode<KStreamFilter<K, V>, K, V>(name, processorParameters);
+            ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFilter<K, V>(name, predicate, true), name);
+            ProcessorGraphNode<K, V> filterProcessorNode = new ProcessorGraphNode<K, V>(name, processorParameters);
             this.builder.addGraphNode(node, filterProcessorNode);
             return new KStream<K, V>(name, this.keySerdes, this.valueSerdes, this.setSourceNodes, filterProcessorNode, this.builder);
         }
 
-        public KStream<K1, V1> transform<K1,V1>(Func<K, V, KeyValuePair<K1, V1>> transformSupplier)
-        {
-            string name = this.builder.newProcessorName("KSTREAM-TRANSFORM-");
-            ProcessorParameters<KStreamTransform<K, V, K1, V1>, K, V> processorParameters = new ProcessorParameters<KStreamTransform<K, V, K1, V1>, K, V>(new KStreamTransform<K, V, K1, V1>(transformSupplier), name);
-            TransformKeyValueGraphNode<KStreamTransform<K, V, K1, V1>, K, V, K1, V1> transformProcessorNode = new TransformKeyValueGraphNode<KStreamTransform<K, V, K1, V1>, K, V, K1, V1>(name, processorParameters);
-            this.builder.addGraphNode(node, transformProcessorNode);
-            return new KStream<K1, V1>(name, null, null, this.setSourceNodes, transformProcessorNode, this.builder);
-        }
+        //public KStream<K1, V1> transform<K1,V1>(Func<K, V, KeyValuePair<K1, V1>> transformSupplier)
+        //{
+        //    string name = this.builder.newProcessorName("KSTREAM-TRANSFORM-");
+        //    ProcessorParameters<KStreamTransform<K, V, K1, V1>, K, V> processorParameters = new ProcessorParameters<KStreamTransform<K, V, K1, V1>, K, V>(new KStreamTransform<K, V, K1, V1>(transformSupplier), name);
+        //    TransformKeyValueGraphNode<KStreamTransform<K, V, K1, V1>, K, V, K1, V1> transformProcessorNode = new TransformKeyValueGraphNode<KStreamTransform<K, V, K1, V1>, K, V, K1, V1>(name, processorParameters);
+        //    this.builder.addGraphNode(node, transformProcessorNode);
+        //    return new KStream<K1, V1>(name, null, null, this.setSourceNodes, transformProcessorNode, this.builder);
+        //}
 
         public void to(string topicName, Produced<K,V> produced)
         {
             string name = this.builder.newProcessorName("KSTREAM-SINK-");
-            StreamSinkNode<K, V> sinkNode = new Nodes.StreamSinkNode<K,V>(topicName, name, produced);
+            StreamSinkNode<K, V> sinkNode = new StreamSinkNode<K,V>(topicName, name, produced);
             this.builder.addGraphNode(node, sinkNode);
         }
 
         public void to(string topicName)
         {
             string name = this.builder.newProcessorName("KSTREAM-SINK-");
-            StreamSinkNode<string, string> sinkNode = new Nodes.StreamSinkNode<string, string>(topicName, name, Produced<string, string>.with(new StringSerDes(), new StringSerDes()));
+            StreamSinkNode<string, string> sinkNode = new StreamSinkNode<string, string>(topicName, name, Produced<string, string>.with(new StringSerDes(), new StringSerDes()));
             this.builder.addGraphNode(node, sinkNode);
         }
     }

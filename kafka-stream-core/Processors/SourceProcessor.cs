@@ -3,12 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Operators
+namespace kafka_stream_core.Processors
 {
-    internal class SourceOperator<K,V> : AbstractOperator<K, V>
+    internal class SourceProcessor<K,V> : AbstractProcessor<K, V>
     {
         private readonly string topicName;
-        internal SourceOperator(string name, string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+        internal SourceProcessor(string name, string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
             : base(name, null, keySerdes, valueSerdes)
         {
             this.topicName = topicName;
@@ -19,18 +19,18 @@ namespace kafka_stream_core.Operators
             context.Client.Unsubscribe<K, V>(topicName);
         }
 
-        public override void Message(K key, V value)
+        public override void Process(K key, V value)
         {
             Console.WriteLine("Source Operator => Key: " + key + " | Value : " + value);
 
             foreach (var n in Next)
-                if (n is IOperator<K, V>)
-                    ((IOperator<K, V>)n).Message(key, value);
+                if (n is IProcessor<K, V>)
+                    ((IProcessor<K, V>)n).Process(key, value);
         }
 
         public override void Start()
         {
-            context.Client.Subscribe<K, V>(topicName, Message);
+            context.Client.Subscribe<K, V>(topicName, this.KeySerDes, this.ValueSerDes, Process);
         }
 
         public override void Stop()

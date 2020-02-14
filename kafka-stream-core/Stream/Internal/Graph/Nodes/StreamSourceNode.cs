@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Nodes
+namespace kafka_stream_core.Stream.Internal.Graph.Nodes
 {
     internal class StreamSourceNode<K, V> : StreamGraphNode
     {
@@ -19,7 +19,7 @@ namespace kafka_stream_core.Nodes
 
         public override void writeToTopology(InternalTopologyBuilder builder)
         {
-            builder.setSourceOperator(topicName, this.streamGraphNode, consumed);
+            builder.addSourceOperator(topicName, this.streamGraphNode, consumed);
         }
     }
 }
