@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using kafka_stream_core.SerDes;
 
 namespace kafka_stream_core.Processors
 {
@@ -12,6 +13,14 @@ namespace kafka_stream_core.Processors
 
         public IList<IProcessor> Next { get; } = new List<IProcessor>();
 
+        public ISerDes Key => null;
+
+        public ISerDes Value => null;
+
+        public void Close()
+        {
+            
+        }
 
         public void Init(ProcessorContext context)
         {
@@ -19,10 +28,10 @@ namespace kafka_stream_core.Processors
                 n.Init(context);
         }
 
-        public void Kill()
+        public void Process(object key, object value)
         {
             foreach (var n in Next)
-                n.Kill();
+                n.Process(key, value);
         }
 
         public void SetNextProcessor(IProcessor next)
@@ -35,18 +44,6 @@ namespace kafka_stream_core.Processors
         {
             if (!Previous.Contains(prev) && prev != null)
                 Previous.Add(prev);
-        }
-
-        public void Start()
-        {
-            foreach (var n in Next)
-                n.Start();
-        }
-
-        public void Stop()
-        {
-            foreach (var n in Next)
-                n.Stop();
         }
     }
 }

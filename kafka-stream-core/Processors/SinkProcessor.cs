@@ -5,7 +5,7 @@ using System.Text;
 
 namespace kafka_stream_core.Processors
 {
-    internal class SinkProcessor<K,V> : AbstractProcessor<K, V>
+    internal class SinkProcessor<K, V> : AbstractProcessor<K, V>
     {
         private readonly string topicName;
 
@@ -15,24 +15,17 @@ namespace kafka_stream_core.Processors
             this.topicName = topicName;
         }
 
-        public override void Kill()
-        {
-
-        }
-
         public override void Process(K key, V value)
         {
-            context.Client.Publish(key, value, this.KeySerDes, this.ValueSerDes, topicName);
-        }
+            byte[] k = null, v = null;
 
-        public override void Start()
-        {
+            if(key != null)
+                k = KeySerDes.Serialize(key);
 
-        }
+            if(value != null)
+                v = ValueSerDes.Serialize(value);
 
-        public override void Stop()
-        {
-
+            Context.Producer.Produce(topicName, new Confluent.Kafka.Message<byte[], byte[]> { Key = k, Value = v });
         }
     }
 }

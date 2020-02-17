@@ -5,7 +5,12 @@ using System.Text;
 
 namespace kafka_stream_core.Processors
 {
-    internal class SourceProcessor<K,V> : AbstractProcessor<K, V>
+    internal interface ISourceProcessor
+    {
+        string TopicName { get; }
+    }
+
+    internal class SourceProcessor<K,V> : AbstractProcessor<K, V>, ISourceProcessor
     {
         private readonly string topicName;
         internal SourceProcessor(string name, string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
@@ -14,10 +19,7 @@ namespace kafka_stream_core.Processors
             this.topicName = topicName;
         }
 
-        public override void Kill()
-        {
-            context.Client.Unsubscribe<K, V>(topicName);
-        }
+        public string TopicName => topicName;
 
         public override void Process(K key, V value)
         {
@@ -26,16 +28,6 @@ namespace kafka_stream_core.Processors
             foreach (var n in Next)
                 if (n is IProcessor<K, V>)
                     ((IProcessor<K, V>)n).Process(key, value);
-        }
-
-        public override void Start()
-        {
-            context.Client.Subscribe<K, V>(topicName, this.KeySerDes, this.ValueSerDes, Process);
-        }
-
-        public override void Stop()
-        {
-            context.Client.Unsubscribe<K, V>(topicName);
         }
     }
 }

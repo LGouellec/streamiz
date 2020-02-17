@@ -22,16 +22,17 @@ namespace test_stream
 
             Topology t = builder.build();
             KafkaStream stream = new KafkaStream(t, config);
+
             try
             {
-                stream.start();
+                stream.Start();
                 Console.ReadKey();
-                stream.stop();
+                stream.Stop();
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message + ":" + e.StackTrace);
-                stream.kill();
+                stream.Kill();
             }
         }
     }

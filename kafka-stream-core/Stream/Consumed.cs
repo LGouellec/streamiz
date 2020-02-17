@@ -1,9 +1,6 @@
 ﻿using kafka_stream_core.SerDes;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace kafka_stream_core.Nodes.Parameters
+namespace kafka_stream_core.Stream
 {
     public class Consumed<K,V>
     {

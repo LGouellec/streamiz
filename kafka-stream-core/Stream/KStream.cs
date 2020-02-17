@@ -1,5 +1,4 @@
-﻿using kafka_stream_core.Nodes.Parameters;
-using kafka_stream_core.SerDes;
+﻿using kafka_stream_core.SerDes;
 using kafka_stream_core.Stream.Internal;
 using kafka_stream_core.Stream.Internal.Graph.Nodes;
 using System;

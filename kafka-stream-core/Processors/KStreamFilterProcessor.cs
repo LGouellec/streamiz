@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using kafka_stream_core.Nodes;
-using kafka_stream_core.Stream.Internal.Graph.Nodes;
+﻿using kafka_stream_core.Stream.Internal.Graph.Nodes;
+using System;
 
 namespace kafka_stream_core.Processors
 {

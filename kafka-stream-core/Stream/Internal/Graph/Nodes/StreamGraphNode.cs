@@ -1,6 +1,6 @@
-﻿using System;
+﻿using kafka_stream_core.Processors.Internal;
+using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace kafka_stream_core.Stream.Internal.Graph.Nodes
 {

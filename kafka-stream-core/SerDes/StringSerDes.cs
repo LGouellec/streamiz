@@ -4,16 +4,28 @@ using System.Text;
 
 namespace kafka_stream_core.SerDes
 {
-    public class StringSerDes : ISerDes<String>
+    public class StringSerDes : AbstractSerDes<string>
     {
-        public string Deserialize(byte[] data)
+        private readonly Encoding encoding;
+
+        public StringSerDes()
+            : this(Encoding.UTF8)
         {
-            return Encoding.UTF8.GetString(data);
         }
 
-        public byte[] Serialize(string data)
+        public StringSerDes(Encoding encoding)
         {
-            return Encoding.UTF8.GetBytes(data);
+            this.encoding = encoding;
+        }
+
+        public override string Deserialize(byte[] data)
+        {
+            return encoding.GetString(data);
+        }
+
+        public override byte[] Serialize(string data)
+        {
+            return encoding.GetBytes(data);
         }
     }
 }

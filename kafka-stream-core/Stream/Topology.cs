@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using kafka_stream_core.Stream.Internal.Graph.Nodes;
+﻿using kafka_stream_core.Processors.Internal;
 
 namespace kafka_stream_core.Stream
 {
@@ -8,18 +6,8 @@ namespace kafka_stream_core.Stream
     {
         internal InternalTopologyBuilder Builder { get; } = new InternalTopologyBuilder();
 
-        internal RootNode RootNode { get; private set; }
-        internal IList<StreamGraphNode> Nodes { get; private set; }
-
-
         internal Topology()
         {
-        }
-
-        internal void SetNodes(RootNode root, IList<StreamGraphNode> nodes)
-        {
-            this.RootNode = root;
-            this.Nodes = nodes;
         }
     }
 }

@@ -1,11 +1,10 @@
-﻿using kafka_stream_core.Nodes.Parameters;
-using kafka_stream_core.Processors;
+﻿using kafka_stream_core.Stream;
 using kafka_stream_core.Stream.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace kafka_stream_core
+namespace kafka_stream_core.Processors.Internal
 {
     internal class InternalTopologyBuilder
     {
@@ -17,6 +16,12 @@ namespace kafka_stream_core
 
         internal InternalTopologyBuilder()
         {
+        }
+
+        public ProcessorTopology buildTopology()
+        {
+            var topology = new ProcessorTopology(root, sourceOperators, sinkOperators, processorOperators);
+            return topology;
         }
 
         internal void buildAndOptimizeTopology(RootNode root, IList<StreamGraphNode> nodes)
