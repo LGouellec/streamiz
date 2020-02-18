@@ -1,0 +1,18 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace kafka_stream_core.Errors
+{
+    public class IllegalStateException : Exception
+    {
+        public IllegalStateException(string message) : base(message)
+        {
+        }
+
+        public IllegalStateException(string message, Exception innerException) 
+            : base(message, innerException)
+        {
+        }
+    }
+}

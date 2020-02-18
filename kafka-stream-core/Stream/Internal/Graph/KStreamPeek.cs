@@ -5,7 +5,7 @@ using System.Text;
 
 namespace kafka_stream_core.Stream.Internal.Graph
 {
-    public class KStreamPeek<K, V> : IProcessorSupplier<K, V>
+    internal class KStreamPeek<K, V> : IProcessorSupplier<K, V>
     {
         public bool ForwardDownStream { get; }
         public Action<K, V> Action { get; }

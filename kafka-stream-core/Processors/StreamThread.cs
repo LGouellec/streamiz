@@ -63,20 +63,21 @@ namespace kafka_stream_core.Processors
         private TimeSpan time;
 
         internal static IThread create(
-            string name, 
+            string name,
+            IConsumer<byte[], byte[]> consumer,
             ProcessorContext context, 
             IProcessor processor, 
             int consumeTimeoutms = 1000)
         {
-            return new StreamThread(name, context, processor, consumeTimeoutms);
+            return new StreamThread(name, consumer, context, processor, consumeTimeoutms);
         }
 
-        private StreamThread(string name, ProcessorContext context, IProcessor processor, int consumeTimeoutms)
+        private StreamThread(string name, IConsumer<byte[], byte[]> consumer, ProcessorContext context, IProcessor processor, int consumeTimeoutms)
         {
             Name = name;
             this.context = context;
             this.processor = processor;
-            this.consumer = this.context.Consumer;
+            this.consumer = consumer;
             this.time = TimeSpan.FromMilliseconds(consumeTimeoutms);
 
             this.thread = new Thread(this.Run);

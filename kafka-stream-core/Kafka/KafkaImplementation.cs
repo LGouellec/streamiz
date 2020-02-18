@@ -13,11 +13,11 @@ namespace kafka_stream_core.Kafka
         protected readonly IDictionary<string, IConsumer<byte[], byte[]>> _consumers = new Dictionary<string, IConsumer<byte[], byte[]>>();
         protected readonly IDictionary<string, Task> _consumerReceiver = new Dictionary<string, Task>();
 
-        protected readonly Configuration configuration;
+        protected readonly StreamConfig configuration;
         protected readonly IKafkaSupplier kafkaSupplier;
         protected CancellationTokenSource cts = new CancellationTokenSource();
 
-        internal KafkaImplementation(Configuration configuration, IKafkaSupplier kafkaSupplier)
+        internal KafkaImplementation(StreamConfig configuration, IKafkaSupplier kafkaSupplier)
         {
             this.configuration = configuration;
             this.kafkaSupplier = kafkaSupplier;

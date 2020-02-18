@@ -9,7 +9,7 @@ namespace test_stream
     {
         static void Main(string[] args)
         {
-            Configuration config = new Configuration();
+            StreamConfig config = new StreamConfig();
             config.ApplicationId = "test-app";
             config.Add("bootstrap.servers", "192.168.56.1:9092");
             config.Add("sasl.mechanism", "SCRAM-SHA-512");

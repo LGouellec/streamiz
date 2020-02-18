@@ -101,11 +101,11 @@ namespace kafka_stream_core.Processors.Internal
                 throw new Exception("Source operator already exist !");
         }
 
-        internal void addSinkOperator<K, V>(string topic, string nameNode, Produced<K,V> produced)
+        internal void addSinkOperator<K, V>(TopicNameExtractor<K,V> topicNameExtractor, string nameNode, Produced<K,V> produced)
         {
             if (!sinkOperators.ContainsKey(nameNode))
             {
-                SinkProcessor<K, V> sink = new SinkProcessor<K, V>(nameNode, null, topic, produced.KeySerdes, produced.ValueSerdes);
+                SinkProcessor<K, V> sink = new SinkProcessor<K, V>(nameNode, null, topicNameExtractor, produced.KeySerdes, produced.ValueSerdes);
                 sinkOperators.Add(nameNode, sink);
             }
             else

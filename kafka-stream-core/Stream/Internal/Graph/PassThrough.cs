@@ -5,7 +5,7 @@ using System.Text;
 
 namespace kafka_stream_core.Stream.Internal.Graph
 {
-    public class PassThrough<K, V> : IProcessorSupplier<K, V>
+    internal class PassThrough<K, V> : IProcessorSupplier<K, V>
     {
         public IProcessor<K, V> Get() => new PassThroughProcessor<K, V>();
     }

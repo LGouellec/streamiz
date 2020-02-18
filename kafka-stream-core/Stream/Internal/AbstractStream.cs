@@ -47,7 +47,7 @@ namespace kafka_stream_core.Stream.Internal
             this.node = streamsGraphNode;
         }
 
-        protected InternalTopologyBuilder internalTopologyBuilder() => builder.internalTopologyBuilder;
+        //protected InternalTopologyBuilder internalTopologyBuilder() => builder.;
 
         List<String> ensureCopartitionWith(List<AbstractStream<K, V>> otherStreams)
         {

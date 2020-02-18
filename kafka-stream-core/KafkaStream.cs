@@ -9,12 +9,12 @@ namespace kafka_stream_core
     public class KafkaStream
     {
         private readonly Topology topology;
-        private readonly Configuration configuration;
+        private readonly StreamConfig configuration;
         private readonly IKafkaSupplier kafkaSupplier;
         private readonly IThread[] threads;
         private readonly ProcessorTopology processorTopology;
 
-        public KafkaStream(Topology topology, Configuration configuration)
+        public KafkaStream(Topology topology, StreamConfig configuration)
         {
             this.topology = topology;
             this.configuration = configuration;
@@ -27,11 +27,13 @@ namespace kafka_stream_core
             {
                 var consumer = this.kafkaSupplier.GetConsumer(configuration.toConsumerConfig());
                 var producer = this.kafkaSupplier.GetProducer(configuration.toProducerConfig());
-                var context = new ProcessorContext(configuration, consumer, producer);
+                //var context = new ProcessorContext(configuration, consumer, producer);
+                var context = new ProcessorContext(configuration);
                 var processor = processorTopology.GetSourceProcessor(processorTopology.SourceProcessorNames[i]);
 
                 this.threads[i] = StreamThread.create(
                     $"{this.configuration.ApplicationId.ToLower()}-stream-thread-{i}",
+                    consumer,
                     context,
                     processor);
             }

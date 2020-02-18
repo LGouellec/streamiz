@@ -1,13 +1,15 @@
 ﻿using kafka_stream_core.Processors;
+using kafka_stream_core.Processors.Internal;
 using kafka_stream_core.SerDes;
 using kafka_stream_core.Stream.Internal;
+using kafka_stream_core.Stream.Internal.Graph;
 using kafka_stream_core.Stream.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
 
 namespace kafka_stream_core.Stream
 {
-    internal class KStreamImpl<K,V> : AbstractStream<K, V>, KStream<K, V>
+    internal class KStreamImpl<K, V> : AbstractStream<K, V>, KStream<K, V>
     {
         #region Constants
 
@@ -111,17 +113,7 @@ namespace kafka_stream_core.Stream
 
         public void to(TopicNameExtractor<K, V> topicExtractor) => to(topicExtractor, Produced<K, V>.with(keySerdes, valueSerdes));
 
-        public void to(TopicNameExtractor<K, V> topicExtractor, Produced<K, V> produced)
-        {
-            ProducedInternal<K, V> producedInternal = new ProducedInternal<K, V>(produced);
-            if (producedInternal.KeySerdes == null)
-                producedInternal.KeySerdes = keySerdes;
-
-            if (producedInternal.ValueSerdes == null)
-                producedInternal.ValueSerdes = valueSerdes;
-
-            to(topicExtractor, producedInternal);
-        }
+        public void to(TopicNameExtractor<K, V> topicExtractor, Produced<K, V> produced) => doTo(topicExtractor, produced);
 
         #endregion
 
@@ -248,7 +240,7 @@ namespace kafka_stream_core.Stream
 
         #region Private
 
-        private void to(TopicNameExtractor<K, V> topicExtractor, ProducedInternal<K, V> produced)
+        private void doTo(TopicNameExtractor<K, V> topicExtractor, Produced<K, V> produced)
         {
             string name = this.builder.newProcessorName(SINK_NAME);
 
@@ -294,37 +286,5 @@ namespace kafka_stream_core.Stream
         }
 
         #endregion
-
-        public KStreamImpl<K, V> filter(Func<K, V, bool> predicate)
-        {
-            string name = this.builder.newProcessorName("KSTREAM-FILTER-");
-            ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFilter<K, V>(name, predicate), name);
-            ProcessorGraphNode<K, V> filterProcessorNode = new ProcessorGraphNode<K, V>(name, processorParameters);
-            this.builder.addGraphNode(node, filterProcessorNode);
-            return new KStreamImpl<K, V>(name, this.keySerdes, this.valueSerdes, this.setSourceNodes, filterProcessorNode, this.builder);
-        }
-
-        public KStreamImpl<K, V> filterNot(Func<K, V, bool> predicate)
-        {
-            string name = this.builder.newProcessorName("KSTREAM-FILTER-");
-            ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFilter<K, V>(name, predicate, true), name);
-            ProcessorGraphNode<K, V> filterProcessorNode = new ProcessorGraphNode<K, V>(name, processorParameters);
-            this.builder.addGraphNode(node, filterProcessorNode);
-            return new KStreamImpl<K, V>(name, this.keySerdes, this.valueSerdes, this.setSourceNodes, filterProcessorNode, this.builder);
-        }
-
-        public void to(string topicName, Produced<K,V> produced)
-        {
-            string name = this.builder.newProcessorName("KSTREAM-SINK-");
-            StreamSinkNode<K, V> sinkNode = new StreamSinkNode<K,V>(topicName, name, produced);
-            this.builder.addGraphNode(node, sinkNode);
-        }
-
-        public void to(string topicName)
-        {
-            string name = this.builder.newProcessorName("KSTREAM-SINK-");
-            StreamSinkNode<string, string> sinkNode = new StreamSinkNode<string, string>(topicName, name, Produced<string, string>.with(new StringSerDes(), new StringSerDes()));
-            this.builder.addGraphNode(node, sinkNode);
-        }
     }
 }

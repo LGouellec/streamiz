@@ -11,7 +11,6 @@ namespace kafka_stream_core.Stream.Internal.Graph.Nodes
 
         public KStreamFilter(Func<K, V, bool> predicate, bool not = false)
         {
-            Name = name;
             Predicate = predicate;
             Not = not;
         }

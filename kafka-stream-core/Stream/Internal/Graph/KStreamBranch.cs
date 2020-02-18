@@ -5,7 +5,7 @@ using System.Text;
 
 namespace kafka_stream_core.Stream.Internal.Graph
 {
-    public class KStreamBranch<K, V> : IProcessorSupplier<K, V>
+    internal class KStreamBranch<K, V> : IProcessorSupplier<K, V>
     {
         public Func<K, V, bool>[] Predicates { get; }
         public String[] ChildNodes { get; }

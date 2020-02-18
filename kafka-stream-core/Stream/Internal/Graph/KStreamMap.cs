@@ -5,7 +5,7 @@ using System.Text;
 
 namespace kafka_stream_core.Stream.Internal.Graph
 {
-    public class KStreamMap<K, V, K1, V1> : IProcessorSupplier<K, V>
+    internal class KStreamMap<K, V, K1, V1> : IProcessorSupplier<K, V>
     {
         public KeyValueMapper<K, V, KeyValuePair<K1, V1>> Mapper { get; }
         public Func<K, V, KeyValuePair<K1, V1>> MapperFunction { get; }
