@@ -5,6 +5,9 @@ Work in progress. It's a POC for moment.
 It's a rewriting inspired by [Kafka Streams](https://github.com/apache/kafka/tree/trunk/streams)
 I need contribution ;)
 
+Please see status_implementations.xlsx for status details implementations
+
+Sample code
 ```
 Configuration config = new Configuration();
 config.ApplicationId = "test-app";
@@ -30,18 +33,3 @@ try
     stream.kill();
 }
 ```
-
-- Operation implemented on the POC
-  - STREAM
-  - FILTER
-  - FILTER NOT
-  - TRANSFORM
-  - TO
-
-- Operation which must implement
-  - MAP
-  - FLATMAP
-  - GROUPBY
-  - JOIN
-  - LEFTJOIN
-  - etc ...

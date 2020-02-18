@@ -24,12 +24,12 @@ namespace kafka_stream_core.Stream.Internal
 
         private int NextIndex { get { lock (_locker) return ++index; } }
 
-        internal KStream<K, V> stream<K, V>(string topic, Consumed<K,V> consumed)
+        internal KStreamImpl<K, V> stream<K, V>(string topic, Consumed<K,V> consumed)
         {
             String name = newProcessorName("KSTREAM-SOURCE-");
             var node = new StreamSourceNode<K,V>(topic, name, consumed);
             this.addGraphNode(root, node);
-            KStream<K, V> stream = new KStream<K, V>(name, consumed.KeySerdes, consumed.ValueSerdes, new List<string> { name }, node, this);
+            KStreamImpl<K, V> stream = new KStreamImpl<K, V>(name, consumed.KeySerdes, consumed.ValueSerdes, new List<string> { name }, node, this);
             return stream;
         }
 

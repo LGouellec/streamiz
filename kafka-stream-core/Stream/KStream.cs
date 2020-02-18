@@ -1,60 +1,28 @@
-﻿using kafka_stream_core.SerDes;
-using kafka_stream_core.Stream.Internal;
-using kafka_stream_core.Stream.Internal.Graph.Nodes;
+﻿using kafka_stream_core.Processors;
 using System;
 using System.Collections.Generic;
 
 namespace kafka_stream_core.Stream
 {
-    public class KStream<K,V>
+    public interface KStream<K, V>
     {
-        private readonly string nameNode;
-        private readonly ISerDes<K> keySerdes;
-        private readonly ISerDes<V> valueSerdes;
-        private readonly List<string> setSourceNodes;
-        private readonly StreamGraphNode node;
-        private readonly InternalStreamBuilder builder;
-
-        internal KStream(string name, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, List<string> setSourceNodes, StreamGraphNode node, InternalStreamBuilder builder)
-        {
-            nameNode = name;
-            this.keySerdes = keySerdes;
-            this.valueSerdes = valueSerdes;
-            this.setSourceNodes = setSourceNodes;
-            this.node = node;
-            this.builder = builder;
-        }
-
-        public KStream<K, V> filter(Func<K, V, bool> predicate)
-        {
-            string name = this.builder.newProcessorName("KSTREAM-FILTER-");
-            ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFilter<K, V>(name, predicate), name);
-            ProcessorGraphNode<K, V> filterProcessorNode = new ProcessorGraphNode<K, V>(name, processorParameters);
-            this.builder.addGraphNode(node, filterProcessorNode);
-            return new KStream<K, V>(name, this.keySerdes, this.valueSerdes, this.setSourceNodes, filterProcessorNode, this.builder);
-        }
-
-        public KStream<K, V> filterNot(Func<K, V, bool> predicate)
-        {
-            string name = this.builder.newProcessorName("KSTREAM-FILTER-");
-            ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFilter<K, V>(name, predicate, true), name);
-            ProcessorGraphNode<K, V> filterProcessorNode = new ProcessorGraphNode<K, V>(name, processorParameters);
-            this.builder.addGraphNode(node, filterProcessorNode);
-            return new KStream<K, V>(name, this.keySerdes, this.valueSerdes, this.setSourceNodes, filterProcessorNode, this.builder);
-        }
-
-        public void to(string topicName, Produced<K,V> produced)
-        {
-            string name = this.builder.newProcessorName("KSTREAM-SINK-");
-            StreamSinkNode<K, V> sinkNode = new StreamSinkNode<K,V>(topicName, name, produced);
-            this.builder.addGraphNode(node, sinkNode);
-        }
-
-        public void to(string topicName)
-        {
-            string name = this.builder.newProcessorName("KSTREAM-SINK-");
-            StreamSinkNode<string, string> sinkNode = new StreamSinkNode<string, string>(topicName, name, Produced<string, string>.with(new StringSerDes(), new StringSerDes()));
-            this.builder.addGraphNode(node, sinkNode);
-        }
+        KStream<K, V>[] branch(params Func<K, V, bool>[] predicates);
+        KStream<K, V>[] branch(string named, params Func<K, V, bool>[] predicates);
+        KStream<K, V> filter(Func<K, V, bool> predicate);
+        KStream<K, V> filterNot(Func<K, V, bool> predicate);
+        void to(string topicName, Produced<K, V> produced);
+        void to(string topicName);
+        void to(TopicNameExtractor<K, V> topicExtractor);
+        void to(TopicNameExtractor<K, V> topicExtractor, Produced<K, V> produced);
+        KStream<KR, VR> flatMap<KR, VR>(KeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper);
+        KStream<KR, VR> flatMap<KR, VR>(KeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named);
+        void @foreach(Action<K, V> action);
+        void @foreach(Action<K, V> action, string named);
+        KStream<KR, VR> map<KR, VR>(KeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper);
+        KStream<KR, VR> map<KR, VR>(KeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper, string named);
+        KStream<K, V> peek(Action<K, V> action);
+        KStream<K, V> peek(Action<K, V> action, string named);
+        KStream<KR, V> selectKey<KR>(KeyValueMapper<K, V, KR> mapper);
+        KStream<KR, V> selectKey<KR>(KeyValueMapper<K, V, KR> mapper, string named);
     }
 }

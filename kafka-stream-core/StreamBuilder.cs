@@ -17,9 +17,9 @@ namespace kafka_stream_core
             internalStreamBuilder = new InternalStreamBuilder(internalTopologyBuilder);
         }
 
-        public KStream<string, string> stream(string topic) => this.stream(topic, Consumed<string, string>.with(new StringSerDes(), new StringSerDes()));
+        public KStreamImpl<string, string> stream(string topic) => this.stream(topic, Consumed<string, string>.with(new StringSerDes(), new StringSerDes()));
 
-        public KStream<K, V> stream<K,V>(string topic, Consumed<K, V> consumed)
+        public KStreamImpl<K, V> stream<K,V>(string topic, Consumed<K, V> consumed)
         {
             return internalStreamBuilder.stream(topic, consumed);
         }
