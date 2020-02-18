@@ -1,7 +1,5 @@
 ﻿using kafka_stream_core.SerDes;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace kafka_stream_core.Processors
 {
@@ -19,6 +17,7 @@ namespace kafka_stream_core.Processors
 
     internal interface IProcessor<K,V> : IProcessor
     {
+        void SetProcessorName(string name);
         IList<IProcessor<K, V>> Previous { get; }
         IList<IProcessor<K, V>> Next { get; }
         ISerDes<K> KeySerDes { get; }

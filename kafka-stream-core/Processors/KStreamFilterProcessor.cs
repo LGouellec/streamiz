@@ -9,7 +9,6 @@ namespace kafka_stream_core.Processors
         private bool not;
 
         public KStreamFilterProcessor(KStreamFilter<K, V> kStreamFilter)
-            :base(kStreamFilter.Name, null)
         {
             this.predicate = kStreamFilter.Predicate;
             this.not = kStreamFilter.Not;

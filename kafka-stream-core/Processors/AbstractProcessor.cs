@@ -9,7 +9,7 @@ namespace kafka_stream_core.Processors
     {
         public ProcessorContext Context { get; protected set; }
 
-        public string Name { get; }
+        public string Name { get; private set; }
 
         public ISerDes<K> KeySerDes { get; }
 
@@ -22,6 +22,12 @@ namespace kafka_stream_core.Processors
         public IList<IProcessor<K, V>> Previous { get; private set; } = null;
 
         public IList<IProcessor<K, V>> Next { get; private set; } = null;
+
+        public AbstractProcessor()
+            : this(null, null)
+        {
+
+        }
 
         public AbstractProcessor(string name, IProcessor previous)
             : this(name, previous, null, null)
@@ -93,7 +99,12 @@ namespace kafka_stream_core.Processors
             if (next != null && next is IProcessor<K, V> && !Next.Contains(next as IProcessor<K, V>))
                 Next.Add(next as IProcessor<K, V>);
         }
-        
+
+        public void SetProcessorName(string name)
+        {
+            this.Name = name;
+        }
+
         public void Process(object key, object value)
         {
             if((key == null || key is K) && (value == null || value is V))

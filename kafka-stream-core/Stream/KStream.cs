@@ -43,15 +43,6 @@ namespace kafka_stream_core.Stream
             return new KStream<K, V>(name, this.keySerdes, this.valueSerdes, this.setSourceNodes, filterProcessorNode, this.builder);
         }
 
-        //public KStream<K1, V1> transform<K1,V1>(Func<K, V, KeyValuePair<K1, V1>> transformSupplier)
-        //{
-        //    string name = this.builder.newProcessorName("KSTREAM-TRANSFORM-");
-        //    ProcessorParameters<KStreamTransform<K, V, K1, V1>, K, V> processorParameters = new ProcessorParameters<KStreamTransform<K, V, K1, V1>, K, V>(new KStreamTransform<K, V, K1, V1>(transformSupplier), name);
-        //    TransformKeyValueGraphNode<KStreamTransform<K, V, K1, V1>, K, V, K1, V1> transformProcessorNode = new TransformKeyValueGraphNode<KStreamTransform<K, V, K1, V1>, K, V, K1, V1>(name, processorParameters);
-        //    this.builder.addGraphNode(node, transformProcessorNode);
-        //    return new KStream<K1, V1>(name, null, null, this.setSourceNodes, transformProcessorNode, this.builder);
-        //}
-
         public void to(string topicName, Produced<K,V> produced)
         {
             string name = this.builder.newProcessorName("KSTREAM-SINK-");

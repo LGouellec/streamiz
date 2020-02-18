@@ -41,7 +41,6 @@ namespace kafka_stream_core.Stream.Internal
         internal void addGraphNode(StreamGraphNode root, StreamGraphNode node)
         {
             root.appendChild(node);
-            node.appendParent(root);
             nodes.Add(node);
         }
 

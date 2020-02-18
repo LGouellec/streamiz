@@ -1,6 +1,7 @@
 ﻿using kafka_stream_core.Processors.Internal;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace kafka_stream_core.Stream.Internal.Graph.Nodes
 {
@@ -8,27 +9,54 @@ namespace kafka_stream_core.Stream.Internal.Graph.Nodes
     {
         private readonly Guid guid = Guid.NewGuid();
         internal readonly string streamGraphNode;
-        private readonly IList<StreamGraphNode> childNode = new List<StreamGraphNode>();
-        private readonly IList<StreamGraphNode> parentNode = new List<StreamGraphNode>();
+
+        public IList<StreamGraphNode> ChildNodes { get; } = new List<StreamGraphNode>();
+
+        public IList<StreamGraphNode> ParentNodes { get; } = new List<StreamGraphNode>();
+
+        public bool KeyChangingOperation { get; internal set; }
+        public bool ValueChangingOperation { get; internal set; }
+        public bool MergeNode { get; internal set; }
+        public int BuildPriority { get; internal set; }
+        public bool HasWrittenToTopology { get; internal set; } = false;
+
 
         internal StreamGraphNode(string streamGraphNode)
         {
             this.streamGraphNode = streamGraphNode;
         }
 
-        public bool IsEmpty => childNode.Count == 0;
-        public IList<StreamGraphNode> Nodes => childNode;
+        public bool IsEmpty => ChildNodes.Count == 0;
+        internal string[] ParentNodeNames() => ParentNodes.Select(p => p.streamGraphNode).ToArray();
 
         public void appendChild(StreamGraphNode node)
         {
-            if(!childNode.Contains(node))
-                childNode.Add(node);
+            if (!ChildNodes.Contains(node))
+            {
+                ChildNodes.Add(node);
+                node.ParentNodes.Add(this);
+            }
         }
 
-        public void appendParent(StreamGraphNode node)
+        public bool removeChild(StreamGraphNode node)
         {
-            if(!parentNode.Contains(node))
-                parentNode.Add(node);
+            return ChildNodes.Remove(node) && node.ParentNodes.Remove(this);
+        }
+
+        public void clearChildren()
+        {
+            foreach (var childNode in ChildNodes)
+                childNode.ParentNodes.Remove(this);
+            ChildNodes.Clear();
+        }
+
+        public bool allParentsWrittenToTopology()
+        {
+            foreach (var parentNode in ParentNodes)
+                if (!parentNode.HasWrittenToTopology)
+                    return false;
+            return true;
+
         }
 
         public abstract void writeToTopology(InternalTopologyBuilder builder);
@@ -41,6 +69,19 @@ namespace kafka_stream_core.Stream.Internal.Graph.Nodes
         public override int GetHashCode()
         {
             return guid.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            var parentNames = ParentNodes.Select(n => n.streamGraphNode);
+            return "StreamsGraphNode{" +
+                   "nodeName='" + this.streamGraphNode + '\'' +
+                   ", buildPriority=" + BuildPriority +
+                   ", hasWrittenToTopology=" + HasWrittenToTopology +
+                   ", keyChangingOperation=" + KeyChangingOperation +
+                   ", valueChangingOperation=" + ValueChangingOperation +
+                   ", mergeNode=" + MergeNode +
+                   ", parentNodes=" + string.Join(",", parentNames) + '}';
         }
     }
 }

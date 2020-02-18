@@ -8,9 +8,8 @@ namespace kafka_stream_core.Stream.Internal.Graph.Nodes
         public Func<K, V, bool> Predicate { get; }
         public bool Not { get; }
 
-        public string Name { get; }
 
-        public KStreamFilter(string name, Func<K, V, bool> predicate, bool not = false)
+        public KStreamFilter(Func<K, V, bool> predicate, bool not = false)
         {
             Name = name;
             Predicate = predicate;

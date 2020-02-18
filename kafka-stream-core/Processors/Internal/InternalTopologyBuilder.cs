@@ -29,7 +29,13 @@ namespace kafka_stream_core.Processors.Internal
             if (this.root == null)
             {
                 foreach (var node in nodes)
-                    node.writeToTopology(this);
+                {
+                    if (node.allParentsWrittenToTopology() && !node.HasWrittenToTopology)
+                    {
+                        node.writeToTopology(this);
+                        node.HasWrittenToTopology = true;
+                    }
+                }
 
                 this.root = new RootProcessor();
 
@@ -54,7 +60,7 @@ namespace kafka_stream_core.Processors.Internal
                     break;
                 }
 
-                foreach (var i in root.Nodes)
+                foreach (var i in root.ChildNodes)
                     if (value.Name.Equals(i.streamGraphNode))
                         r = i;
             }
@@ -62,7 +68,7 @@ namespace kafka_stream_core.Processors.Internal
             if(r != null)
             {
                 value.SetPreviousProcessor(previous);
-                IList<StreamGraphNode> list = r.Nodes;
+                IList<StreamGraphNode> list = r.ChildNodes;
                 foreach (var n in list)
                 {
                     if (n is StreamSinkNode)
@@ -111,6 +117,7 @@ namespace kafka_stream_core.Processors.Internal
             if (!processorOperators.ContainsKey(nameNode))
             {
                 var p = processor.Get();
+                p.SetProcessorName(nameNode);
                 processorOperators.Add(nameNode, p);
             }
             else
