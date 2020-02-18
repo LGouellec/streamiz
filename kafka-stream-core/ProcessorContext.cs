@@ -20,6 +20,13 @@ namespace kafka_stream_core
             Configuration = configuration;
         }
 
+        internal ProcessorContext UseRecordCollector(IRecordCollector collector)
+        {
+            if (collector != null)
+                RecordCollector = collector;
+            return this;
+        }
+
         internal void setRecordMetaData()
         {
             // TODO:

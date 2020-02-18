@@ -2,39 +2,49 @@
 using kafka_stream_core.Processors;
 using kafka_stream_core.SerDes;
 using System;
+using System.Collections.Generic;
 
 namespace kafka_stream_core.Kafka.Internal
 {
     internal class RecordCollectorImpl : IRecordCollector
     {
-        public void Close()
-        {
-            throw new NotImplementedException();
-        }
+        private IProducer<byte[], byte[]> producer;
+        private readonly IDictionary<TopicPartition, long> offsets;
+        private readonly string logPrefix;
 
-        public void Flush()
+        public RecordCollectorImpl(string streamTaskId)
         {
-            throw new NotImplementedException();
+            this.logPrefix = $"task [{streamTaskId}] ";
         }
 
         public void Init(IProducer<byte[], byte[]> producer)
         {
-            throw new NotImplementedException();
+            this.producer = producer;
+        }
+
+        public void Close()
+        {
+            // TODO :
+        }
+
+        public void Flush()
+        {
+            // TODO :
         }
 
         public void Offsets()
         {
-            throw new NotImplementedException();
+            // TODO :
         }
 
         public void Send<K, V>(string topic, K key, V value, Headers headers, int partition, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer)
         {
-            throw new NotImplementedException();
+            // TODO :
         }
 
         public void Send<K, V>(string topic, K key, V value, Headers headers, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer, StreamPartitioner<K, V> partitioner)
         {
-            throw new NotImplementedException();
+            // TODO :
         }
     }
 }

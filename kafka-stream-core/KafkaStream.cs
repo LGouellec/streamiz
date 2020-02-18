@@ -25,14 +25,19 @@ namespace kafka_stream_core
 
             for (int i = 0; i < this.processorTopology.NumberStreamThreads; ++i)
             {
+                var threadId = $"{this.configuration.ApplicationId.ToLower()}-stream-thread-{i}";
                 var consumer = this.kafkaSupplier.GetConsumer(configuration.toConsumerConfig());
                 var producer = this.kafkaSupplier.GetProducer(configuration.toProducerConfig());
-                //var context = new ProcessorContext(configuration, consumer, producer);
-                var context = new ProcessorContext(configuration);
+
+                var collector = new RecordCollectorImpl(threadId);
+                collector.Init(producer);
+
+                var context = new ProcessorContext(configuration).UseRecordCollector(collector);
+
                 var processor = processorTopology.GetSourceProcessor(processorTopology.SourceProcessorNames[i]);
 
                 this.threads[i] = StreamThread.create(
-                    $"{this.configuration.ApplicationId.ToLower()}-stream-thread-{i}",
+                    threadId,
                     consumer,
                     context,
                     processor);
