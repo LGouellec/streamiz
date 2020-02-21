@@ -18,7 +18,16 @@ namespace test_stream
             config.Add("security.protocol", "SaslPlaintext");
 
             StreamBuilder builder = new StreamBuilder();
-            builder.stream("test").filterNot((k, v) => v.Contains("toto")).to("test2");
+            var s = builder.stream("test");
+            KStream<String, String>[] branchs = s.branch((k, v) =>
+               {
+                   return v.Length % 2 == 0;
+               }, (k, v) =>
+               {
+                   return v.Length % 2 != 0;
+               });
+            branchs[0].to("test-pair");
+            branchs[1].to("test-impair");
 
             Topology t = builder.build();
             KafkaStream stream = new KafkaStream(t, config);

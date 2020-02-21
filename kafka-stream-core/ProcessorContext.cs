@@ -7,7 +7,7 @@ using System.Text;
 
 namespace kafka_stream_core
 {
-    internal class ProcessorContext
+    public class ProcessorContext
     {
         internal string ApplicationId => Configuration.ApplicationId;
         internal StreamConfig Configuration { get; private set; }

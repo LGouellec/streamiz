@@ -1,6 +1,7 @@
 ﻿using Confluent.Kafka;
 using System;
 using System.Collections.Generic;
+using System.Security;
 using System.Text;
 
 namespace kafka_stream_core
@@ -50,7 +51,7 @@ namespace kafka_stream_core
             get => Convert.ToInt64(this[cacheMaxBytesBufferingCst]);
             set => Add(cacheMaxBytesBufferingCst, value.ToString());
         }
-
+        
         public string ApplicationServer
         {
             get => this[applicationServerCst];

@@ -6,6 +6,7 @@ namespace kafka_stream_core.Stream.Internal.Graph.Nodes
     {
         public RootNode() : base("ROOT-NODE")
         {
+            HasWrittenToTopology = true;
         }
 
         public override void writeToTopology(InternalTopologyBuilder builder)
