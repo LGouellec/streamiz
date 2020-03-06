@@ -7,7 +7,7 @@ namespace kafka_stream_core.Kafka
 {
     public interface IKafkaSupplier
     {
-        IConsumer<byte[], byte[]> GetConsumer(ConsumerConfig config);
+        IConsumer<byte[], byte[]> GetConsumer(ConsumerConfig config, IConsumerRebalanceListener rebalanceListener);
         IProducer<byte[], byte[]> GetProducer(ProducerConfig config);
         IConsumer<byte[], byte[]> GetRestoreConsumer(ConsumerConfig config);
         IAdminClient GetAdmin(AdminClientConfig config);

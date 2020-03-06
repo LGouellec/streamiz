@@ -6,7 +6,28 @@ using System.Text;
 
 namespace kafka_stream_core
 {
-    public class StreamConfig : Dictionary<string, string>
+    public interface IStreamConfig
+    {
+        #region Methods 
+
+        ProducerConfig toProducerConfig();
+
+        ConsumerConfig toConsumerConfig();
+        
+        ConsumerConfig toConsumerConfig(string clientid);
+
+        ConsumerConfig toGlobalConsumerConfig(string clientId);
+
+        AdminClientConfig toAdminConfig(string clientId);
+
+        #endregion
+
+        string ApplicationId { get; }
+
+        int NumStreamThreads { get; }
+    }
+
+    public class StreamConfig : Dictionary<string, string>, IStreamConfig
     {
         private string topologyOptimizationCst = "topology.optimization";
         private string applicatonIdCst = "application.id";
@@ -84,7 +105,7 @@ namespace kafka_stream_core
 
         public StreamConfig()
         {
-            NumStreamThreads = 0;
+            NumStreamThreads = 1;
             Optimize = "";
         }
 
@@ -116,8 +137,16 @@ namespace kafka_stream_core
                 SaslUsername = this["sasl.username"],
                 SaslPassword = this["sasl.password"],
                 SecurityProtocol = SecurityProtocol.SaslPlaintext,
-                GroupId = this.ApplicationId
+                GroupId = this.ApplicationId,
+                EnableAutoCommit = false
             };
+        }
+
+        public ConsumerConfig toConsumerConfig(string clientId)
+        {
+            var config = this.toConsumerConfig();
+            config.ClientId = clientId;
+            return config;
         }
 
         public ConsumerConfig toGlobalConsumerConfig(string clientId)

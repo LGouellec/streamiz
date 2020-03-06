@@ -1,4 +1,5 @@
 ﻿using kafka_stream_core.Stream;
+using kafka_stream_core.Stream.Internal;
 using kafka_stream_core.Stream.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,8 @@ namespace kafka_stream_core.Processors.Internal
             var topology = new ProcessorTopology(root, sourceOperators, sinkOperators, processorOperators);
             return topology;
         }
+
+        internal IEnumerable<string> GetSourceTopics() => sourceOperators.Values.Select(o => (o as ISourceProcessor).TopicName);
 
         internal void buildAndOptimizeTopology(RootNode root, IList<StreamGraphNode> nodes)
         {

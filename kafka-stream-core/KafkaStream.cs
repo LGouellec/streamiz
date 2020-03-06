@@ -1,7 +1,10 @@
-﻿using kafka_stream_core.Kafka;
+﻿using Confluent.Kafka;
+using kafka_stream_core.Kafka;
 using kafka_stream_core.Kafka.Internal;
 using kafka_stream_core.Processors;
+using kafka_stream_core.Processors.Internal;
 using kafka_stream_core.Stream;
+using kafka_stream_core.Stream.Internal;
 using System;
 
 namespace kafka_stream_core
@@ -9,38 +12,35 @@ namespace kafka_stream_core
     public class KafkaStream
     {
         private readonly Topology topology;
-        private readonly StreamConfig configuration;
+        private readonly IStreamConfig configuration;
         private readonly IKafkaSupplier kafkaSupplier;
         private readonly IThread[] threads;
         private readonly ProcessorTopology processorTopology;
+        private readonly IAdminClient adminClient;
 
-        public KafkaStream(Topology topology, StreamConfig configuration)
+        public KafkaStream(Topology topology, IStreamConfig configuration)
         {
             this.topology = topology;
             this.configuration = configuration;
             this.kafkaSupplier = new DefaultKafkaClientSupplier();
-            this.processorTopology = this.topology.Builder.buildTopology();
+            
+            this.threads = new IThread[this.configuration.NumStreamThreads];
 
-            this.threads = new IThread[this.processorTopology.NumberStreamThreads];
-
-            for (int i = 0; i < this.processorTopology.NumberStreamThreads; ++i)
+            for (int i = 0; i < this.configuration.NumStreamThreads; ++i)
             {
+                var processID = Guid.NewGuid();
+                var clientId = $"{this.configuration.ApplicationId.ToLower()}-{processID}";
                 var threadId = $"{this.configuration.ApplicationId.ToLower()}-stream-thread-{i}";
-                var consumer = this.kafkaSupplier.GetConsumer(configuration.toConsumerConfig());
-                var producer = this.kafkaSupplier.GetProducer(configuration.toProducerConfig());
 
-                var collector = new RecordCollectorImpl(threadId);
-                collector.Init(producer);
+                adminClient = this.kafkaSupplier.GetAdmin(configuration.toAdminConfig(StreamThread.getSharedAdminClientId(clientId)));
 
-                var context = new ProcessorContext(configuration).UseRecordCollector(collector);
-
-                var processor = processorTopology.GetSourceProcessor(processorTopology.SourceProcessorNames[i]);
-
-                this.threads[i] = StreamThread.create(
+                this.threads[i] = StreamThread.Create(
                     threadId,
-                    consumer,
-                    context,
-                    processor);
+                    clientId,
+                    this.topology.Builder,
+                    configuration,
+                    this.kafkaSupplier,
+                    adminClient);
             }
         }
 

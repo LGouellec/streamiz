@@ -7,7 +7,7 @@ using kafka_stream_core.Stream.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
 
-namespace kafka_stream_core.Stream
+namespace kafka_stream_core.Stream.Internal
 {
     internal class KStreamImpl<K, V> : AbstractStream<K, V>, KStream<K, V>
     {

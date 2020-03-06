@@ -107,7 +107,13 @@ namespace kafka_stream_core.Processors
 
         public void Process(object key, object value)
         {
-            if((key == null || key is K) && (value == null || value is V))
+            if (key is byte[] && key != null && KeySerDes != null)
+                key = this.Key.DeserializeObject(key as byte[]);
+
+            if (value is byte[] && value != null && ValueSerDes != null)
+                value = this.Value.DeserializeObject(value as byte[]);
+
+            if ((key == null || key is K) && (value == null || value is V))
                 this.Process((K)key, (V)value);
         }
 

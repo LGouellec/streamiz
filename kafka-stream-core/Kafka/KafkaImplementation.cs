@@ -36,7 +36,7 @@ namespace kafka_stream_core.Kafka
         private IConsumer<byte[], byte[]> CreateGenericConsumer(string clef)
         {
             ConsumerConfig consumer = configuration.toConsumerConfig();
-            var c = this.kafkaSupplier.GetConsumer(consumer);
+            var c = this.kafkaSupplier.GetConsumer(consumer, null);
             _consumers.Add(clef, c);
             return c;
         }

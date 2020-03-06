@@ -10,12 +10,12 @@ namespace kafka_stream_core
     public class ProcessorContext
     {
         internal string ApplicationId => Configuration.ApplicationId;
-        internal StreamConfig Configuration { get; private set; }
+        internal IStreamConfig Configuration { get; private set; }
         internal RecordContext RecordContext { get; private set; }
         internal IRecordCollector RecordCollector { get; private set; }
         internal long Timestamp { get; private set; }
 
-        internal ProcessorContext(StreamConfig configuration)
+        internal ProcessorContext(IStreamConfig configuration)
         {
             Configuration = configuration;
         }

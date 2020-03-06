@@ -16,18 +16,10 @@ namespace test_stream
             config.Add("sasl.username", "admin");
             config.Add("sasl.password", "Michelin/1");
             config.Add("security.protocol", "SaslPlaintext");
+            config.NumStreamThreads = 2;
 
             StreamBuilder builder = new StreamBuilder();
-            var s = builder.stream("test");
-            KStream<String, String>[] branchs = s.branch((k, v) =>
-               {
-                   return v.Length % 2 == 0;
-               }, (k, v) =>
-               {
-                   return v.Length % 2 != 0;
-               });
-            branchs[0].to("test-pair");
-            branchs[1].to("test-impair");
+            builder.stream("test").filterNot((k, v) => v.Contains("test")).to("test-output");
 
             Topology t = builder.build();
             KafkaStream stream = new KafkaStream(t, config);
