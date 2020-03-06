@@ -1,4 +1,5 @@
-# kafka-stream-net
+# Kafka Stream .NET
+
 Proof of Concept : Kafka Stream Implementation for .NET Application [WORK IN PROGRESS]
 
 It's a rewriting inspired by [Kafka Streams](https://github.com/apache/kafka/tree/trunk/streams)
