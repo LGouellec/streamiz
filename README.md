@@ -1,6 +1,5 @@
 # kafka-stream-net
-Kafka Stream Implementation for .NET Application [ WORK IN PROGRESS]
-It's a POC for moment. 
+Proof of Concept : Kafka Stream Implementation for .NET Application [WORK IN PROGRESS]
 
 It's a rewriting inspired by [Kafka Streams](https://github.com/apache/kafka/tree/trunk/streams)
 
@@ -10,25 +9,25 @@ I need contribution ;)
 
 |Operator Name|Method|TODO|IMPLEMENTED|TESTED|DONE|
 |---|---|---|---|---|---|
-|Branch|KStream -> KStream[]|   |[x]|   |   |
-|Filter|KStream -> KStream|   |[x]|   |   |
-|Filter|KTable -> KTable|[x]|   |   |   |
-|InverseFilter|KStream -> KStream|   |[x]|   |   |
-|InverseFilter|KTable -> KTable|[x]|   |   |   |
-|FlatMap|KStream → KStream|   |[x]|   |   |
-|FlatMapValues|KStream → KStream|[x]|   |   |   |
-|Foreach|KStream → void|   |[x]|   |   |
-|Foreach|KTable → void|[x]|   |   |   |
-|GroupByKey|KStream → KGroupedStream|[x]|   |   |   |
-|GroupBy|KStream → KGroupedStream|[x]|   |   |   |
-|GroupBy|KTable → KGroupedTable|[x]|   |   |   |
-|Map|KStream → KStream|   |[x]|   |   |
-|MapValues|KStream → KStream|[x]|   |   |   |
-|MapValues|KTable → KTable|[x]|   |   |   |
-|Peek|KStream → KStream|   |[x]|   |   |
-|Print|KStream → void|[x]|   |   |   |
-|SelectKey|KStream → KStream|   |[x]|   |   |
-|Table to Steam|KTable → KStream|[x]|   |   |   |
+|Branch|KStream -> KStream[]|   | &#9745; |   |   |
+|Filter|KStream -> KStream|   |&#9745;|   |   |
+|Filter|KTable -> KTable|&#9745;|   |   |   |
+|InverseFilter|KStream -> KStream|   |&#9745;|   |   |
+|InverseFilter|KTable -> KTable|&#9745;|   |   |   |
+|FlatMap|KStream → KStream|   |&#9745;|   |   |
+|FlatMapValues|KStream → KStream|&#9745;|   |   |   |
+|Foreach|KStream → void|   |&#9745;|   |   |
+|Foreach|KTable → void|&#9745;|   |   |   |
+|GroupByKey|KStream → KGroupedStream|&#9745;|   |   |   |
+|GroupBy|KStream → KGroupedStream|&#9745;|   |   |   |
+|GroupBy|KTable → KGroupedTable|&#9745;|   |   |   |
+|Map|KStream → KStream|   |&#9745;|   |   |
+|MapValues|KStream → KStream|&#9745;|   |   |   |
+|MapValues|KTable → KTable|&#9745;|   |   |   |
+|Peek|KStream → KStream|   |&#9745;|   |   |
+|Print|KStream → void|&#9745;|   |   |   |
+|SelectKey|KStream → KStream|   |&#9745;|   |   |
+|Table to Steam|KTable → KStream|&#9745;|   |   |   |
 
 # Statefull operator implementation
 
