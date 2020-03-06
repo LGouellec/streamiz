@@ -14,7 +14,7 @@ namespace test_stream
             config.Add("bootstrap.servers", "192.168.56.1:9092");
             config.Add("sasl.mechanism", "SCRAM-SHA-512");
             config.Add("sasl.username", "admin");
-            config.Add("sasl.password", "Michelin/1");
+            config.Add("sasl.password", "admin");
             config.Add("security.protocol", "SaslPlaintext");
             config.NumStreamThreads = 2;
 
