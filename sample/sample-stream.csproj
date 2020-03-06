@@ -3,11 +3,11 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>test_stream</RootNamespace>
+    <RootNamespace>sample_stream</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\kafka-stream-core\kafka-stream-core.csproj" />
+    <ProjectReference Include="..\core\kafka-stream-core.csproj" />
   </ItemGroup>
 
 </Project>

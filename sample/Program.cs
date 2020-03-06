@@ -1,9 +1,8 @@
 ﻿using kafka_stream_core;
 using kafka_stream_core.Stream;
 using System;
-using System.Collections.Generic;
 
-namespace test_stream
+namespace sample_stream
 {
     class Program
     {
