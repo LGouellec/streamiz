@@ -1,4 +1,5 @@
-﻿using kafka_stream_core.Processors.Internal;
+﻿using kafka_stream_core.Crosscutting;
+using kafka_stream_core.Processors.Internal;
 using kafka_stream_core.SerDes;
 using kafka_stream_core.Stream;
 using kafka_stream_core.Stream.Internal;

@@ -1,5 +1,7 @@
-﻿using kafka_stream_core.Processors.Internal;
+﻿using kafka_stream_core.Crosscutting;
+using kafka_stream_core.Processors.Internal;
 using kafka_stream_core.Stream.Internal.Graph.Nodes;
+using log4net;
 using System;
 using System.Collections.Generic;
 
@@ -9,6 +11,7 @@ namespace kafka_stream_core.Stream.Internal
     {
         private int index = 0;
         private readonly object _locker = new object();
+        private readonly ILog logger = Logger.GetLogger(typeof(InternalStreamBuilder));
 
         internal IList<StreamGraphNode> nodes = new List<StreamGraphNode>();
         internal readonly RootNode root = new RootNode();
@@ -40,6 +43,8 @@ namespace kafka_stream_core.Stream.Internal
     
         internal void addGraphNode(StreamGraphNode root, StreamGraphNode node)
         {
+            if (logger.IsDebugEnabled)
+                logger.Debug($"Adding node {node} in root node {root}");
             root.appendChild(node);
             nodes.Add(node);
         }

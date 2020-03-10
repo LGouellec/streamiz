@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using kafka_stream_core.Crosscutting;
 using System;
 using System.Collections.Generic;
 using System.Security;
@@ -49,7 +50,7 @@ namespace kafka_stream_core
             set
             {
                 if (value.Equals(AT_LEAST_ONCE) || value.Equals(EXACTLY_ONCE))
-                    Add(processingGuaranteeCst, value);
+                    this.AddOrUpdate(processingGuaranteeCst, value);
                 else
                     throw new InvalidOperationException($"ProcessingGuaranteeConfig value must equal to {AT_LEAST_ONCE} or {EXACTLY_ONCE}");
             }
@@ -58,49 +59,49 @@ namespace kafka_stream_core
         public long PollMsConfig
         {
             get => Convert.ToInt64(this[pollMsCst]);
-            set => Add(pollMsCst, value.ToString());
+            set => this.AddOrUpdate(pollMsCst, value.ToString());
         }
 
         public long StateCleanupDelayMs
         {
             get => Convert.ToInt64(this[stateCleanupDelayMsCst]);
-            set => Add(stateCleanupDelayMsCst, value.ToString());
+            set => this.AddOrUpdate(stateCleanupDelayMsCst, value.ToString());
         }
 
         public long CacheMaxBytesBuffering
         {
             get => Convert.ToInt64(this[cacheMaxBytesBufferingCst]);
-            set => Add(cacheMaxBytesBufferingCst, value.ToString());
+            set => this.AddOrUpdate(cacheMaxBytesBufferingCst, value.ToString());
         }
         
         public string ApplicationServer
         {
             get => this[applicationServerCst];
-            set => Add(applicationServerCst, value);
+            set => this.AddOrUpdate(applicationServerCst, value);
         }
 
         public int NumStreamThreads
         {
             get => Convert.ToInt32(this[numStreamThreadsCst]);
-            set => Add(numStreamThreadsCst, value.ToString());
+            set => this.AddOrUpdate(numStreamThreadsCst, value.ToString());
         }
 
         public string ClientId
         {
             get => this[clientIdCst];
-            set => Add(clientIdCst, value);
+            set => this.AddOrUpdate(clientIdCst, value);
         }
 
         public string ApplicationId
         {
             get => this[applicatonIdCst];
-            set => Add(applicatonIdCst, value);
+            set => this.AddOrUpdate(applicatonIdCst, value);
         }
 
         public string Optimize
         {
             get => this[topologyOptimizationCst];
-            set => Add(topologyOptimizationCst, value);
+            set => this.AddOrUpdate(topologyOptimizationCst, value);
         }
 
         public StreamConfig()
@@ -113,7 +114,7 @@ namespace kafka_stream_core
             : this()
         {
             foreach (var k in properties)
-                this.Add(k.Key, k.Value);
+                this.AddOrUpdate(k.Key, k.Value);
         }
 
         public ProducerConfig toProducerConfig()
