@@ -10,7 +10,6 @@ using System.Text;
 
 namespace kafka_stream_core.Table.Internal
 {
-    // TODO : 
     internal class KTableImpl<K, V> : AbstractStream<K, V>, KTable<K, V>
     {
         private readonly IProcessorSupplier<K, V> processorSupplier;
