@@ -119,10 +119,10 @@ namespace kafka_stream_core.Stream.Internal
 
         #region FlatMap
 
-        public KStream<KR, VR> flatMap<KR, VR>(KeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper)
+        public KStream<KR, VR> flatMap<KR, VR>(IKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper)
             => this.flatMap(mapper, string.Empty);
 
-        public KStream<KR, VR> flatMap<KR, VR>(KeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named)
+        public KStream<KR, VR> flatMap<KR, VR>(IKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named)
         {
             String name = this.builder.newProcessorName(FLATMAP_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFlatMap<K, V, KR, VR>(mapper), name);
@@ -133,6 +133,39 @@ namespace kafka_stream_core.Stream.Internal
 
             // key and value serde cannot be preserved
             return new KStreamImpl<KR, VR>(name, null, null, setSourceNodes, flatMapNode, builder);
+        }
+
+        #endregion
+
+        #region FlatMapValues
+
+        public KStream<K, VR> flatMapValues<VR>(IValueMapper<V, IEnumerable<VR>> mapper)
+            => this.flatMapValues<VR>(mapper, null);
+
+        public KStream<K, VR> flatMapValues<VR>(IValueMapper<V, IEnumerable<VR>> mapper, string named)
+            => this.flatMapValues<VR>(withKey<IEnumerable<VR>>(mapper), named);
+
+        public KStream<K, VR> flatMapValues<VR>(IValueMapperWithKey<K, V, IEnumerable<VR>> mapper)
+            => this.flatMapValues<VR>(mapper, null);
+
+        public KStream<K, VR> flatMapValues<VR>(IValueMapperWithKey<K, V, IEnumerable<VR>> mapper, string named)
+        {
+            String name = this.builder.newProcessorName(FLATMAPVALUES_NAME);
+
+            ProcessorParameters<K,V> processorParameters = new ProcessorParameters<K, V>(new KStreamFlatMapValues<K, V, VR>(mapper), name);
+            ProcessorGraphNode<K, V> flatMapValuesNode = new ProcessorGraphNode<K, V>(name, processorParameters);
+            flatMapValuesNode.ValueChangingOperation = true;
+
+            builder.addGraphNode(this.node, flatMapValuesNode);
+
+            // value serde cannot be preserved
+            return new KStreamImpl<K, VR>(
+                name,
+                this.keySerdes,
+                null,
+                this.setSourceNodes,
+                flatMapValuesNode,
+                builder);
         }
 
         #endregion
@@ -177,10 +210,10 @@ namespace kafka_stream_core.Stream.Internal
 
         #region Map
 
-        public KStream<KR, VR> map<KR, VR>(KeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper)
+        public KStream<KR, VR> map<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper)
             => this.map(mapper, string.Empty);
 
-        public KStream<KR, VR> map<KR, VR>(KeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper, string named)
+        public KStream<KR, VR> map<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper, string named)
         {
             string name = this.builder.newProcessorName(MAP_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamMap<K, V, KR, VR>(mapper), name);
@@ -201,6 +234,39 @@ namespace kafka_stream_core.Stream.Internal
 
         #endregion
 
+        #region MapValues
+
+        public KStream<K, VR> mapValues<VR>(IValueMapper<V, VR> mapper)
+            => this.mapValues<VR>(mapper, null);
+
+        public KStream<K, VR> mapValues<VR>(IValueMapper<V, VR> mapper, string named)
+            => this.mapValues<VR>(withKey(mapper), named);
+
+        public KStream<K, VR> mapValues<VR>(IValueMapperWithKey<K, V, VR> mapper)
+            => this.mapValues<VR>(mapper, null);
+
+        public KStream<K, VR> mapValues<VR>(IValueMapperWithKey<K, V, VR> mapper, string named)
+        {
+            String name = this.builder.newProcessorName(MAPVALUES_NAME);
+
+             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K,V>(new KStreamMapValues<K,V,VR>(mapper), name);
+            ProcessorGraphNode<K, V> mapValuesProcessorNode = new ProcessorGraphNode<K,V>(name, processorParameters);
+            mapValuesProcessorNode.ValueChangingOperation = true;
+
+            builder.addGraphNode(this.node, mapValuesProcessorNode);
+
+            // value serde cannot be preserved
+            return new KStreamImpl<K, VR>(
+                    name,
+                    this.keySerdes,
+                    null,
+                    this.setSourceNodes,
+                    mapValuesProcessorNode,
+                    builder);
+        }
+
+        #endregion
+
         #region Print
 
         public void print(Printed<K, V> printed)
@@ -216,10 +282,10 @@ namespace kafka_stream_core.Stream.Internal
 
         #region SelectKey
 
-        public KStream<KR, V> selectKey<KR>(KeyValueMapper<K, V, KR> mapper)
+        public KStream<KR, V> selectKey<KR>(IKeyValueMapper<K, V, KR> mapper)
             => this.selectKey(mapper, string.Empty);
 
-        public KStream<KR, V> selectKey<KR>(KeyValueMapper<K, V, KR> mapper, string named)
+        public KStream<KR, V> selectKey<KR>(IKeyValueMapper<K, V, KR> mapper, string named)
         {
             ProcessorGraphNode<K, V> selectKeyProcessorNode = internalSelectKey(mapper, named);
             selectKeyProcessorNode.KeyChangingOperation = true;
@@ -276,7 +342,7 @@ namespace kafka_stream_core.Stream.Internal
             return branchChildren;
         }
 
-        private ProcessorGraphNode<K, V> internalSelectKey<KR>(KeyValueMapper<K, V, KR> mapper, string named)
+        private ProcessorGraphNode<K, V> internalSelectKey<KR>(IKeyValueMapper<K, V, KR> mapper, string named)
         {
             String name = this.builder.newProcessorName(KEY_SELECT_NAME);
             KStreamMap<K, V, KR, V> kStreamMap = new KStreamMap<K, V, KR, V>((key, value) => new KeyValuePair<KR, V>(mapper.apply(key, value), value));

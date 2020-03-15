@@ -4,7 +4,7 @@ using System.Text;
 
 namespace kafka_stream_core.State
 {
-    public interface KeyValueBytesStoreSupplier : StoreSupplier<KeyValueStore<byte[], byte[]>>
+    public interface TimestampedKeyValueStore<K,V> : KeyValueStore<K, ValueAndTimestamp<V>>
     {
     }
 }

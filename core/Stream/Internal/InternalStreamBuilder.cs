@@ -1,17 +1,22 @@
 ﻿using kafka_stream_core.Crosscutting;
 using kafka_stream_core.Processors.Internal;
 using kafka_stream_core.State;
+using kafka_stream_core.Stream.Internal.Graph;
 using kafka_stream_core.Stream.Internal.Graph.Nodes;
 using kafka_stream_core.Table;
 using kafka_stream_core.Table.Internal;
+using kafka_stream_core.Table.Internal.Graph;
+using kafka_stream_core.Table.Internal.Graph.Nodes;
 using log4net;
 using System;
 using System.Collections.Generic;
 
 namespace kafka_stream_core.Stream.Internal
 {
-    internal class InternalStreamBuilder : InternalNameProvider
+    internal class InternalStreamBuilder : NameProvider
     {
+        private static string TABLE_SOURCE_SUFFIX = "-source";
+
         private int index = 0;
         private readonly object _locker = new object();
         private readonly ILog logger = Logger.GetLogger(typeof(InternalStreamBuilder));
@@ -32,7 +37,7 @@ namespace kafka_stream_core.Stream.Internal
 
         internal KStreamImpl<K, V> stream<K, V>(string topic, Consumed<K,V> consumed)
         {
-            String name = newProcessorName("KSTREAM-SOURCE-");
+            String name = newProcessorName(KStreamImpl<byte, byte>.SOURCE_NAME);
             var node = new StreamSourceNode<K,V>(topic, name, consumed);
             this.addGraphNode(root, node);
             KStreamImpl<K, V> stream = new KStreamImpl<K, V>(name, consumed.KeySerdes, consumed.ValueSerdes, new List<string> { name }, node, this);
@@ -63,36 +68,26 @@ namespace kafka_stream_core.Stream.Internal
 
         internal KTable<K, V> table<K, V>(string topic, Consumed<K, V> consumed, Materialized<K, V, KeyValueStore<byte[], byte[]>> materialized)
         {
-            // TODO : 
-            // NamedInternal named = new NamedInternal(consumed.name());
+            string sourceName = newProcessorName(KStreamImpl<byte, byte>.SOURCE_NAME);
+            string tableSourceName = newProcessorName(KTableImpl<byte, byte>.SOURCE_NAME);
 
-            // String sourceName = named.suffixWithOrElseGet(TABLE_SOURCE_SUFFIX, this, KStreamImpl<byte, byte>.SOURCE_NAME);
+            KTableSource<K, V> tableSource = new KTableSource<K,V>(materialized.StoreName, materialized.QueryableStoreName);
+            ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K,V>(tableSource, tableSourceName);
 
-            // String tableSourceName = named
-            //    .orElseGenerateWithPrefix(this, KTableImpl.SOURCE_NAME);
+            var tableSourceNode = new TableSourceNode<K, V, KeyValueStore<byte[], byte[]>>(
+                topic, tableSourceName, sourceName, consumed,
+                materialized, processorParameters, false);
 
-            // KTableSource<K, V> tableSource = new KTableSource<>(materialized.storeName(), materialized.queryableStoreName());
-            // ProcessorParameters<K, V> processorParameters = new ProcessorParameters<>(tableSource, tableSourceName);
+            this.addGraphNode(root, tableSourceNode);
 
-            // TableSourceNode<K, V> tableSourceNode = TableSourceNode.< K, V> tableSourceNodeBuilder()
-            //     .withTopic(topic)
-            //     .withSourceName(sourceName)
-            //     .withNodeName(tableSourceName)
-            //     .withConsumedInternal(consumed)
-            //     .withMaterializedInternal(materialized)
-            //     .withProcessorParameters(processorParameters)
-            //     .build();
-
-            //addGraphNode(root, tableSourceNode);
-
-            //return new KTableImpl<>(tableSourceName,
-            //                        consumed.keySerde(),
-            //                        consumed.valueSerde(),
-            //                        Collections.singleton(sourceName),
-            //                        materialized.queryableStoreName(),
-            //                        tableSource,
-            //                        tableSourceNode,
-            //                        this);
+            return new KTableImpl<K,V>(tableSourceName,
+                                    consumed.KeySerdes,
+                                    consumed.ValueSerdes,
+                                    new List<string> { sourceName },
+                                    materialized.QueryableStoreName,
+                                    tableSource,
+                                    tableSourceNode,
+                                    this);
         }
 
         #endregion

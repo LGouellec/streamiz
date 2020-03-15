@@ -1,23 +1,26 @@
-﻿using kafka_stream_core.Stream.Internal.Graph;
+﻿using System;
+using kafka_stream_core.Stream.Internal.Graph;
 
 namespace kafka_stream_core.Processors
 {
     internal class KStreamBranchProcessor<K, V> : AbstractProcessor<K, V>
     {
-        private KStreamBranch<K, V> kStreamBranch;
+        private Func<K, V, bool>[] predicates;
+        private string[] childNodes;
 
-        public KStreamBranchProcessor(KStreamBranch<K, V> kStreamBranch)
+        public KStreamBranchProcessor(Func<K, V, bool>[] predicates, string[] childNodes)
         {
-            this.kStreamBranch = kStreamBranch;
+            this.predicates = predicates;
+            this.childNodes = childNodes;
         }
 
         public override void Process(K key, V value)
         {
-            for (int i = 0; i < kStreamBranch.Predicates.Length; i++)
+            for (int i = 0; i < this.predicates.Length; i++)
             {
-                if (kStreamBranch.Predicates[i].Invoke(key, value))
+                if (this.predicates[i].Invoke(key, value))
                 {
-                    this.Forward(key, value, kStreamBranch.ChildNodes[i]);
+                    this.Forward(key, value, this.childNodes[i]);
                     break;
                 }
             }

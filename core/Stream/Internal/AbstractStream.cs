@@ -47,7 +47,20 @@ namespace kafka_stream_core.Stream.Internal
             this.node = streamsGraphNode;
         }
 
-        //protected InternalTopologyBuilder internalTopologyBuilder() => builder.;
+
+        protected static ValueMapperWithKey<K, V, VR> withKey<VR>(Func<V, VR> valueMapper)
+        {
+            valueMapper = valueMapper ?? throw new ArgumentNullException(nameof(valueMapper));
+
+            return new ValueMapperWithKey<K, V, VR>((readOnlyKey, value) => valueMapper(value));
+        }
+
+        protected static ValueMapperWithKey<K, V, VR> withKey<VR>(IValueMapper<V, VR> valueMapper)
+        {
+            valueMapper = valueMapper ?? throw new ArgumentNullException(nameof(valueMapper));
+
+            return new ValueMapperWithKey<K, V, VR>((readOnlyKey, value) => valueMapper.apply(value));
+        }
 
         List<String> ensureCopartitionWith(List<AbstractStream<K, V>> otherStreams)
         {

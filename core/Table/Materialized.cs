@@ -78,7 +78,21 @@ namespace kafka_stream_core.Table
 
         #region Property
 
+        public IDictionary<string, string> TopicConfig => topicConfig;
+
+        public bool LoggingEnabled => loggingEnabled;
+
+        public bool CachingEnabled => cachingEnabled;
+
+        public StoreSupplier<S> StoreSupplier => storeSupplier;
+
+        public ISerDes<K> KeySerdes => this.keySerde;
+
+        public ISerDes<V> ValueSerdes => this.valueSerde;
+
         public string StoreName => storeSupplier != null ? storeSupplier.Name : storeName;
+
+        public string QueryableStoreName => queriable ? StoreName : null;
 
         #endregion
 
@@ -133,7 +147,7 @@ namespace kafka_stream_core.Table
             return this;
         }
     
-        internal Materialized<K, V, S> useProvider(InternalNameProvider provider, string generatedStorePrefix)
+        internal Materialized<K, V, S> useProvider(NameProvider provider, string generatedStorePrefix)
         {
             queriable = StoreName != null;
             if (!queriable && provider != null)
@@ -143,6 +157,5 @@ namespace kafka_stream_core.Table
 
             return this;
         }
-
     }
 }

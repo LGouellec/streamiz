@@ -1,24 +1,28 @@
-﻿using kafka_stream_core.Stream.Internal.Graph;
+﻿using kafka_stream_core.Stream;
+using kafka_stream_core.Stream.Internal.Graph;
+using System;
 using System.Collections.Generic;
 
 namespace kafka_stream_core.Processors
 {
     internal class KStreamMapProcessor<K, V, K1, V1> : AbstractProcessor<K, V>
     {
-        private KStreamMap<K, V, K1, V1> kStreamMap;
+        private IKeyValueMapper<K, V, KeyValuePair<K1, V1>> mapper;
+        private Func<K, V, KeyValuePair<K1, V1>> mapperFunction;
 
-        public KStreamMapProcessor(KStreamMap<K, V, K1, V1> kStreamMap)
+        public KStreamMapProcessor(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> mapper, Func<K, V, KeyValuePair<K1, V1>> mapperFunction)
         {
-            this.kStreamMap = kStreamMap;
+            this.mapper = mapper;
+            this.mapperFunction = mapperFunction;
         }
 
         public override void Process(K key, V value)
         {
             KeyValuePair<K1, V1> newPair = new KeyValuePair<K1, V1>();
-            if (kStreamMap.Mapper != null)
-                newPair = kStreamMap.Mapper.apply(key, value);
+            if (this.mapper != null)
+                newPair = this.mapper.apply(key, value);
             else
-                newPair = kStreamMap.MapperFunction.Invoke(key, value);
+                newPair = this.mapperFunction.Invoke(key, value);
 
             this.Forward(newPair.Key, newPair.Value);
         }

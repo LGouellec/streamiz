@@ -17,6 +17,8 @@ namespace kafka_stream_core.Processors
 
         public ISerDes Value => null;
 
+        public string[] StateStores => new string[0];
+
         public void Close()
         {
             

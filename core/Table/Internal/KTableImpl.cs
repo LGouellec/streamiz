@@ -1,9 +1,13 @@
 ﻿using kafka_stream_core.Processors;
 using kafka_stream_core.SerDes;
 using kafka_stream_core.State;
+using kafka_stream_core.State.Internal;
 using kafka_stream_core.Stream;
 using kafka_stream_core.Stream.Internal;
+using kafka_stream_core.Stream.Internal.Graph;
 using kafka_stream_core.Stream.Internal.Graph.Nodes;
+using kafka_stream_core.Table.Internal.Graph;
+using kafka_stream_core.Table.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,11 +16,13 @@ namespace kafka_stream_core.Table.Internal
 {
     internal class KTableImpl<K, V> : AbstractStream<K, V>, KTable<K, V>
     {
-        private readonly IProcessorSupplier<K, V> processorSupplier;
-
+        private readonly IProcessorSupplier<K, V> processorSupplier = null;
+        private readonly IProcessorSupplier<K, Change<V>> tableProcessorSupplier = null;
         private readonly string queryableStoreName;
 
         #region Constants
+
+        internal static String FOREACH_NAME = "KTABLE-FOREACH-";
 
         internal static String SOURCE_NAME = "KTABLE-SOURCE-";
 
@@ -54,8 +60,16 @@ namespace kafka_stream_core.Table.Internal
 
         #endregion
 
-        internal KTableImpl(string name, ISerDes<K> keySerde, ISerDes<V> valSerde, List<string> sourceNodes, String queryableStoreName, IProcessorSupplier<K, V> processorSupplier, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder)
+
+        internal KTableImpl(string name, ISerDes<K> keySerde, ISerDes<V> valSerde, List<string> sourceNodes, String queryableStoreName, IProcessorSupplier<K, Tuple<V, V>> processorSupplier, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder)
             : base(name, keySerde, valSerde, sourceNodes, streamsGraphNode, builder)
+        {
+            this.tableProcessorSupplier = processorSupplier;
+            this.queryableStoreName = queryableStoreName;
+        }
+
+        internal KTableImpl(string name, ISerDes<K> keySerde, ISerDes<V> valSerde, List<string> sourceNodes, String queryableStoreName, IProcessorSupplier<K, V> processorSupplier, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder)
+    : base(name, keySerde, valSerde, sourceNodes, streamsGraphNode, builder)
         {
             this.processorSupplier = processorSupplier;
             this.queryableStoreName = queryableStoreName;
@@ -65,61 +79,59 @@ namespace kafka_stream_core.Table.Internal
 
         private KTable<K, V> doFilter(Func<K, V, bool> predicate, string named, Materialized<K, V, KeyValueStore<byte[], byte[]>> materializedInternal, bool filterNot)
         {
-            //     Serde<K> keySerde;
-            //     Serde<V> valueSerde;
-            //     String queryableStoreName;
-            //     StoreBuilder<TimestampedKeyValueStore< K, V >> storeBuilder;
+            ISerDes<K> keySerde;
+            ISerDes<V> valueSerde;
+            String queryableStoreName;
+            StoreBuilder<TimestampedKeyValueStore<K, V>> storeBuilder;
 
-            //    if (materializedInternal != null)
-            //    {
-            //        // we actually do not need to generate store names at all since if it is not specified, we will not
-            //        // materialize the store; but we still need to burn one index BEFORE generating the processor to keep compatibility.
-            //        if (materializedInternal.storeName() == null)
-            //        {
-            //            builder.newStoreName(FILTER_NAME);
-            //        }
-            //        // we can inherit parent key and value serde if user do not provide specific overrides, more specifically:
-            //        // we preserve the key following the order of 1) materialized, 2) parent
-            //        keySerde = materializedInternal.keySerde() != null ? materializedInternal.keySerde() : this.keySerde;
-            //        // we preserve the value following the order of 1) materialized, 2) parent
-            //        valueSerde = materializedInternal.valueSerde() != null ? materializedInternal.valueSerde() : this.valSerde;
-            //        queryableStoreName = materializedInternal.queryableStoreName();
-            //        // only materialize if materialized is specified and it has queryable name
-            //        storeBuilder = queryableStoreName != null ? (new TimestampedKeyValueStoreMaterializer<>(materializedInternal)).materialize() : null;
-            //    }
-            //    else
-            //    {
-            //        keySerde = this.keySerde;
-            //        valueSerde = this.valSerde;
-            //        queryableStoreName = null;
-            //        storeBuilder = null;
-            //    }
-            //     String name = new NamedInternal(named).orElseGenerateWithPrefix(builder, FILTER_NAME);
+            if (materializedInternal != null)
+            {
+                // we actually do not need to generate store names at all since if it is not specified, we will not
+                // materialize the store; but we still need to burn one index BEFORE generating the processor to keep compatibility.
+                if (materializedInternal.StoreName == null)
+                {
+                    builder.newStoreName(FILTER_NAME);
+                }
+                // we can inherit parent key and value serde if user do not provide specific overrides, more specifically:
+                // we preserve the key following the order of 1) materialized, 2) parent
+                keySerde = materializedInternal.KeySerdes != null ? materializedInternal.KeySerdes : this.keySerdes;
+                // we preserve the value following the order of 1) materialized, 2) parent
+                valueSerde = materializedInternal.ValueSerdes != null ? materializedInternal.ValueSerdes : this.valueSerdes;
 
-            //     KTableProcessorSupplier<K, V, V> processorSupplier =
-            //        new KTableFilter<>(this, predicate, filterNot, queryableStoreName);
+                queryableStoreName = materializedInternal.QueryableStoreName;
+                // only materialize if materialized is specified and it has queryable name
+                storeBuilder = queryableStoreName != null ? (new TimestampedKeyValueStoreMaterializer<K,V>(materializedInternal)).materialize() : null;
+            }
+            else
+            {
+                keySerde = this.keySerdes;
+                valueSerde = this.valueSerdes;
+                queryableStoreName = null;
+                storeBuilder = null;
+            }
 
-            //     ProcessorParameters<K, V> processorParameters = unsafeCastProcessorParametersToCompletelyDifferentType(
-            //        new ProcessorParameters<>(processorSupplier, name)
-            //    );
+            String name = this.builder.newProcessorName(FILTER_NAME);
 
-            //     StreamsGraphNode tableNode = new TableProcessorNode<>(
-            //        name,
-            //        processorParameters,
-            //        storeBuilder
-            //    );
+            IProcessorSupplier<K, Change<V>> processorSupplier = new KTableFilter<K, V>(this, predicate, filterNot, queryableStoreName);
 
-            //    builder.addGraphNode(this.streamsGraphNode, tableNode);
+            var processorParameters = new TableProcessorParameters<K, V>(processorSupplier, name);
 
-            //    return new KTableImpl<>(name,
-            //                            keySerde,
-            //                            valueSerde,
-            //                            sourceNodes,
-            //                            queryableStoreName,
-            //                            processorSupplier,
-            //                            tableNode,
-            //                            builder);
-            return null;
+            var tableNode = new TableProcessorNode<K, V>(
+               name,
+               processorParameters,
+               storeBuilder
+           );
+
+            builder.addGraphNode(this.node, tableNode);
+
+            return new KTableImpl<K, V>(name,
+                                    keySerde,
+                                    valueSerde,
+                                    this.setSourceNodes,
+                                    queryableStoreName,
+                                    processorSupplier,
+                                    tableNode,
+                                    builder);
         }
 
         #endregion
@@ -133,55 +145,44 @@ namespace kafka_stream_core.Table.Internal
         public KTable<K, V> filter(Func<K, V, bool> predicate, string named) => doFilter(predicate, named, null, false);
 
         public KTable<K, V> filter(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<byte[], byte[]>> materialized)
-        {
-            //MaterializedInternal<K, V, KeyValueStore< Bytes, byte[]>> materializedInternal = new MaterializedInternal<>(materialized);
-
-            return doFilter(predicate, null, materialized, false);
-        }
+            => doFilter(predicate, null, materialized, false);
 
         public KTable<K, V> filter(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<byte[], byte[]>> materialized, string named)
-        {
-            //MaterializedInternal<K, V, KeyValueStore< Bytes, byte[]>> materializedInternal = new MaterializedInternal<>(materialized);
+            => doFilter(predicate, named, materialized, false);
 
-            return doFilter(predicate, named, materialized, false);
-        }
+        public KTable<K, V> filterNot(Func<K, V, bool> predicate) => doFilter(predicate, null, null, true);
 
-        public KTable<K, V> filterNot(Func<K, V, bool> predicate)
-        {
-            throw new NotImplementedException();
-        }
+        public KTable<K, V> filterNot(Func<K, V, bool> predicate, string name) => doFilter(predicate, name, null, true);
 
-        public KTable<K, V> filterNot(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<byte[], byte[]>> materialized)
-        {
-            throw new NotImplementedException();
-        }
+        public KTable<K, V> filterNot(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<byte[], byte[]>> materialized) 
+            => doFilter(predicate, null, materialized, true);
 
         public KTable<K, V> filterNot(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<byte[], byte[]>> materialized, string named)
-        {
-            throw new NotImplementedException();
-        }
+            => doFilter(predicate, named, materialized, true);
 
         #endregion
 
-        public void @foreach(Action<K, V> action)
-        {
-            throw new NotImplementedException();
-        }
+        #region ToStream
 
-        public void @foreach(Action<K, V> action, string named)
-        {
-            throw new NotImplementedException();
-        }
-
-        public KStream<K, V> toStream()
-        {
-            throw new NotImplementedException();
-        }
+        public KStream<K, V> toStream() => this.toStream(null);
 
         public KStream<K, V> toStream(string named)
         {
-            throw new NotImplementedException();
+            string name = this.builder.newProcessorName(TOSTREAM_NAME);
+
+            var p = new ValueMapperWithKey<K, Change<V>, V>((k, v) => v.NewValue);
+            IProcessorSupplier<K, Change<V>> processorMapValues = new KStreamMapValues<K, Change<V>, V>(p);
+            ProcessorParameters<K, Change<V>> processorParameters = new ProcessorParameters<K, Change<V>>(processorMapValues, name);
+
+            ProcessorGraphNode<K, Change<V>> toStreamNode = new ProcessorGraphNode<K, Change<V>>(name, processorParameters);
+
+            builder.addGraphNode(this.node, toStreamNode);
+
+            // we can inherit parent key and value serde
+            return new KStreamImpl<K, V>(name, this.keySerdes, this.valueSerdes, this.setSourceNodes, toStreamNode, builder);
         }
+
+        #endregion
 
         #endregion
     }

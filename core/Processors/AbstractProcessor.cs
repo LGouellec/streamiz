@@ -10,6 +10,7 @@ namespace kafka_stream_core.Processors
         public ProcessorContext Context { get; protected set; }
 
         public string Name { get; private set; }
+        public string[] StateStores { get; private set; }
 
         public ISerDes<K> KeySerDes { get; }
 
@@ -22,6 +23,7 @@ namespace kafka_stream_core.Processors
         public IList<IProcessor<K, V>> Previous { get; private set; } = null;
 
         public IList<IProcessor<K, V>> Next { get; private set; } = null;
+
 
         public AbstractProcessor()
             : this(null, null)
@@ -47,6 +49,8 @@ namespace kafka_stream_core.Processors
         {
             // do nothing
         }
+
+        #region Forward
 
         public virtual void Forward<K1, V1>(K1 key, V1 value)
         {
@@ -74,6 +78,8 @@ namespace kafka_stream_core.Processors
                 if (n.Name.Equals(name))
                     n.Process(key, value);
         }
+
+        #endregion
 
         public virtual void Init(ProcessorContext context)
         {

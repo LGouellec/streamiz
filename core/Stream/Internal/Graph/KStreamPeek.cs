@@ -16,6 +16,6 @@ namespace kafka_stream_core.Stream.Internal.Graph
             this.ForwardDownStream = forwardDownStream;
         }
 
-        public IProcessor<K, V> Get() => new KStreamPeekProcessor<K, V>(this);
+        public IProcessor<K, V> Get() => new KStreamPeekProcessor<K, V>(this.Action, this.ForwardDownStream);
     }
 }

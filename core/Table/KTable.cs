@@ -15,7 +15,5 @@ namespace kafka_stream_core.Table
         KTable<K, V> filterNot(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<byte[], byte[]>> materialized, string named);
         KStream<K, V> toStream();
         KStream<K, V> toStream(string named);
-        void @foreach(Action<K, V> action);
-        void @foreach(Action<K, V> action, string named);
     }
 }

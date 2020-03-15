@@ -8,10 +8,11 @@ namespace kafka_stream_core.Processors
         private Func<K, V, bool> predicate;
         private bool not;
 
-        public KStreamFilterProcessor(KStreamFilter<K, V> kStreamFilter)
+
+        public KStreamFilterProcessor(Func<K, V, bool> predicate, bool not)
         {
-            this.predicate = kStreamFilter.Predicate;
-            this.not = kStreamFilter.Not;
+            this.predicate = predicate;
+            this.not = not;
         }
 
         public override void Process(K key, V value)

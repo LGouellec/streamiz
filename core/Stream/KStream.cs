@@ -14,15 +14,23 @@ namespace kafka_stream_core.Stream
         void to(string topicName);
         void to(TopicNameExtractor<K, V> topicExtractor);
         void to(TopicNameExtractor<K, V> topicExtractor, Produced<K, V> produced);
-        KStream<KR, VR> flatMap<KR, VR>(KeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper);
-        KStream<KR, VR> flatMap<KR, VR>(KeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named);
+        KStream<KR, VR> flatMap<KR, VR>(IKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper);
+        KStream<KR, VR> flatMap<KR, VR>(IKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named);
+        KStream<K, VR> flatMapValues<VR>(IValueMapper<V, IEnumerable<VR>> mapper);
+        KStream<K, VR> flatMapValues<VR>(IValueMapper<V, IEnumerable<VR>> mapper, string named);
+        KStream<K, VR> flatMapValues<VR>(IValueMapperWithKey<K, V, IEnumerable<VR>> mapper);
+        KStream<K, VR> flatMapValues<VR>(IValueMapperWithKey<K, V, IEnumerable<VR>> mapper, string named);
         void @foreach(Action<K, V> action);
         void @foreach(Action<K, V> action, string named);
-        KStream<KR, VR> map<KR, VR>(KeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper);
-        KStream<KR, VR> map<KR, VR>(KeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper, string named);
+        KStream<KR, VR> map<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper);
+        KStream<KR, VR> map<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper, string named);
+        KStream<K, VR> mapValues<VR>(IValueMapper<V, VR> mapper);
+        KStream<K, VR> mapValues<VR>(IValueMapper<V, VR> mapper, string named);
+        KStream<K, VR> mapValues<VR>(IValueMapperWithKey<K, V, VR> mapper);
+        KStream<K, VR> mapValues<VR>(IValueMapperWithKey<K, V, VR> mapper, string named);
         KStream<K, V> peek(Action<K, V> action);
         KStream<K, V> peek(Action<K, V> action, string named);
-        KStream<KR, V> selectKey<KR>(KeyValueMapper<K, V, KR> mapper);
-        KStream<KR, V> selectKey<KR>(KeyValueMapper<K, V, KR> mapper, string named);
+        KStream<KR, V> selectKey<KR>(IKeyValueMapper<K, V, KR> mapper);
+        KStream<KR, V> selectKey<KR>(IKeyValueMapper<K, V, KR> mapper, string named);
     }
 }

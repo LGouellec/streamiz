@@ -18,7 +18,6 @@ I need contribution ;)
 |FlatMap|KStream → KStream|   |&#9745;|   |   |
 |FlatMapValues|KStream → KStream|&#9745;|   |   |   |
 |Foreach|KStream → void|   |&#9745;|   |   |
-|Foreach|KTable → void|&#9745;|   |   |   |
 |GroupByKey|KStream → KGroupedStream|&#9745;|   |   |   |
 |GroupBy|KStream → KGroupedStream|&#9745;|   |   |   |
 |GroupBy|KTable → KGroupedTable|&#9745;|   |   |   |
@@ -34,13 +33,19 @@ I need contribution ;)
 
 TODO
 
-# Logger
+# TODO implementation
 
-TODO
-
-# Unit test
-
-TODO 
+- Naming Kafka Streams DSL Topologies [ ]
+- Processor API [ ]
+- Repartition impl [ ]
+- Logging [ ]
+- Unit test (TestTopologyDriver, ...) [ ]
+- EOS [ ]
+- Configuration property [ ]
+- Rocks DB state implementation [ ]
+- Optimizing Kafka Streams Topologies  [ ]
+- Interactive Queries [ ]
+- Metrics [ ]
 
 # Usage
 

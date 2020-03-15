@@ -4,8 +4,8 @@ namespace kafka_stream_core.Stream.Internal.Graph.Nodes
 {
     internal class StreamSourceNode<K, V> : StreamGraphNode
     {
-        private string topicName;
-        private Consumed<K, V> consumed;
+        protected string topicName;
+        protected Consumed<K, V> consumed;
 
         public StreamSourceNode(string topicName, string streamGraphNode, Consumed<K,V> consumed) 
             : base(streamGraphNode)

@@ -17,6 +17,6 @@ namespace kafka_stream_core.Stream.Internal.Graph
             this.ChildNodes = childNodes;
         }
 
-        public IProcessor<K, V> Get() => new KStreamBranchProcessor<K, V>(this);
+        public IProcessor<K, V> Get() => new KStreamBranchProcessor<K, V>(this.Predicates, this.ChildNodes);
     }
 }

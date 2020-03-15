@@ -7,10 +7,10 @@ namespace kafka_stream_core.Stream.Internal.Graph
 {
     internal class KStreamMap<K, V, K1, V1> : IProcessorSupplier<K, V>
     {
-        public KeyValueMapper<K, V, KeyValuePair<K1, V1>> Mapper { get; }
+        public IKeyValueMapper<K, V, KeyValuePair<K1, V1>> Mapper { get; }
         public Func<K, V, KeyValuePair<K1, V1>> MapperFunction { get; }
 
-        public KStreamMap(KeyValueMapper<K, V, KeyValuePair<K1, V1>> mapper)
+        public KStreamMap(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> mapper)
             : this(mapper, null)
         {
         }
@@ -20,12 +20,12 @@ namespace kafka_stream_core.Stream.Internal.Graph
         {
         }
 
-        private KStreamMap(KeyValueMapper<K, V, KeyValuePair<K1, V1>> mapper, Func<K, V, KeyValuePair<K1, V1>> mapperFunction)
+        private KStreamMap(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> mapper, Func<K, V, KeyValuePair<K1, V1>> mapperFunction)
         {
             Mapper = mapper;
             MapperFunction = mapperFunction;
         }
 
-        public IProcessor<K, V> Get() => new KStreamMapProcessor<K, V, K1, V1>(this);
+        public IProcessor<K, V> Get() => new KStreamMapProcessor<K, V, K1, V1>(this.Mapper, this.MapperFunction);
     }
 }

@@ -6,6 +6,7 @@ namespace kafka_stream_core.Processors
     internal interface IProcessor
     {
         string Name { get; }
+        string[] StateStores {get;}
         ISerDes Key { get; }
         ISerDes Value { get; }
         void Init(ProcessorContext context);

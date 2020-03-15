@@ -1,6 +1,6 @@
 ﻿namespace kafka_stream_core.Stream
 {
-    public interface KeyValueMapper<K, V, VR>
+    public interface IKeyValueMapper<K, V, VR>
     {
         VR apply(K key, V value);
     }

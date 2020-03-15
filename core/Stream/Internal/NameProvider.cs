@@ -4,7 +4,7 @@ using System.Text;
 
 namespace kafka_stream_core.Stream.Internal
 {
-    internal interface InternalNameProvider
+    internal interface NameProvider
     {
         string newProcessorName(string prefix);
 
