@@ -35,6 +35,8 @@ TODO
 
 # TODO implementation
 
+- State thread + task implementation [ ]
+- Global state store [ ]
 - Naming Kafka Streams DSL Topologies [ ]
 - Processor API [ ]
 - Repartition impl [ ]

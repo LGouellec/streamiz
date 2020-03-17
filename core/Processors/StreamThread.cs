@@ -4,8 +4,6 @@ using kafka_stream_core.Errors;
 using kafka_stream_core.Kafka;
 using kafka_stream_core.Kafka.Internal;
 using kafka_stream_core.Processors.Internal;
-using kafka_stream_core.SerDes;
-using kafka_stream_core.Stream.Internal;
 using System;
 using System.Collections.Generic;
 using System.Threading;
