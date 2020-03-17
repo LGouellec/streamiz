@@ -27,6 +27,6 @@ namespace kafka_stream_core.Table.Internal.Graph
             this.QueryableName = StoreName;
         }
 
-        public IProcessor<K, V> Get() => new KTableSourceProcessor<K, V>(this);
+        public IProcessor<K, V> Get() => new KTableSourceProcessor<K, V>(this.StoreName, this.QueryableName, this.sendOldValues);
     }
 }

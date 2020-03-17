@@ -14,7 +14,11 @@ namespace kafka_stream_core
         internal IStreamConfig Configuration { get; private set; }
         internal RecordContext RecordContext { get; private set; }
         internal IRecordCollector RecordCollector { get; private set; }
-        internal long Timestamp { get; private set; }
+
+        internal long Timestamp => RecordContext.timestamp;
+        internal string Topic => RecordContext.topic;
+        internal long Offset => RecordContext.offset;
+        internal Partition Partition => RecordContext.partition;
 
         internal ProcessorContext(IStreamConfig configuration)
         {
@@ -28,9 +32,9 @@ namespace kafka_stream_core
             return this;
         }
 
-        internal void setRecordMetaData()
+        internal void setRecordMetaData(ConsumeResult<byte[], byte[]> result)
         {
-            // TODO:
+            
         }
 
         internal StateStore GetStateStore(string queryableStoreName)

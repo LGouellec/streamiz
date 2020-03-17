@@ -74,6 +74,7 @@ namespace kafka_stream_core.Processors
                 var record = queue.GetNextRecord();
                 if (record != null)
                 {
+                    Context.setRecordMetaData(record);
                     processor.Process(record.Key, record.Value);
                     queue.Commit();
                     commitNeeded = true;
