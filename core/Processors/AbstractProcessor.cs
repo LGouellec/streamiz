@@ -10,7 +10,7 @@ namespace kafka_stream_core.Processors
         public ProcessorContext Context { get; protected set; }
 
         public string Name { get; private set; }
-        public string[] StateStores { get; private set; }
+        public IList<string> StateStores { get; private set; }
 
         public ISerDes<K> KeySerDes { get; }
 
@@ -43,6 +43,7 @@ namespace kafka_stream_core.Processors
             this.SetNextProcessor(null);
             KeySerDes = keySerdes;
             ValueSerDes = valueSerdes;
+            StateStores = new List<string>();
         }
 
         public virtual void Close()

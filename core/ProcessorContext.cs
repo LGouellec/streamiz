@@ -1,6 +1,7 @@
 ﻿using Confluent.Kafka;
 using kafka_stream_core.Kafka;
 using kafka_stream_core.Processors;
+using kafka_stream_core.State;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -30,6 +31,11 @@ namespace kafka_stream_core
         internal void setRecordMetaData()
         {
             // TODO:
+        }
+
+        internal StateStore GetStateStore(string queryableStoreName)
+        {
+            throw new NotImplementedException();
         }
     }
 }

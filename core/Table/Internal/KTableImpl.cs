@@ -10,7 +10,6 @@ using kafka_stream_core.Table.Internal.Graph;
 using kafka_stream_core.Table.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace kafka_stream_core.Table.Internal
 {
@@ -19,6 +18,32 @@ namespace kafka_stream_core.Table.Internal
         private readonly IProcessorSupplier<K, V> processorSupplier = null;
         private readonly IProcessorSupplier<K, Change<V>> tableProcessorSupplier = null;
         private readonly string queryableStoreName;
+        
+        public bool SendOldValues { get; private set; }
+
+        public IKTableValueGetterSupplier<K, V> ValueGetterSupplier
+        {
+            get
+            {
+                if (processorSupplier != null && processorSupplier is KTableSource<K, V>)
+                {
+                    KTableSource<K, V> source = (KTableSource<K, V>)processorSupplier;
+                    // whenever a source ktable is required for getter, it should be materialized
+                    source.Materialize();
+                    return new KTableSourceValueGetterSupplier<K,V>(source.QueryableName);
+                }
+                // TODO : 
+                //} else if (processorSupplier instanceof KStreamAggProcessorSupplier) {
+                //    return ((KStreamAggProcessorSupplier <?, K, S, V >) processorSupplier).view();
+                //} else
+                else if (tableProcessorSupplier != null && tableProcessorSupplier is IKTableProcessorSupplier<K, V, V>)
+                {
+                    return ((IKTableProcessorSupplier<K, V, V>)tableProcessorSupplier).View;
+                }
+                else
+                    return null;
+            }
+        }
 
         #region Constants
 
@@ -61,7 +86,7 @@ namespace kafka_stream_core.Table.Internal
         #endregion
 
 
-        internal KTableImpl(string name, ISerDes<K> keySerde, ISerDes<V> valSerde, List<string> sourceNodes, String queryableStoreName, IProcessorSupplier<K, Tuple<V, V>> processorSupplier, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder)
+        internal KTableImpl(string name, ISerDes<K> keySerde, ISerDes<V> valSerde, List<string> sourceNodes, String queryableStoreName, IProcessorSupplier<K, Change<V>> processorSupplier, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder)
             : base(name, keySerde, valSerde, sourceNodes, streamsGraphNode, builder)
         {
             this.tableProcessorSupplier = processorSupplier;
@@ -185,5 +210,26 @@ namespace kafka_stream_core.Table.Internal
         #endregion
 
         #endregion
+
+        public void EnableSendingOldValues()
+        {
+            if (!SendOldValues)
+            {
+                if (processorSupplier != null && processorSupplier is KTableSource<K, V>)
+                {
+                    KTableSource<K, V> source = (KTableSource<K, V>)processorSupplier;
+                    source.enableSendingOldValues();
+                }
+                // TODO : 
+                //} else if (processorSupplier instanceof KStreamAggProcessorSupplier) {
+                //    ((KStreamAggProcessorSupplier <?, K, S, V >) processorSupplier).enableSendingOldValues();
+                //} else
+                else if(tableProcessorSupplier != null && tableProcessorSupplier is IKTableProcessorSupplier)
+                {
+                    (tableProcessorSupplier as IKTableProcessorSupplier).enableSendingOldValues();
+                }
+                SendOldValues = true;
+            }
+        }
     }
 }

@@ -22,6 +22,11 @@ namespace kafka_stream_core.Table.Internal.Graph
             this.QueryableName = StoreName;
         }
 
+        public void Materialize()
+        {
+            this.QueryableName = StoreName;
+        }
+
         public IProcessor<K, V> Get() => new KTableSourceProcessor<K, V>(this);
     }
 }

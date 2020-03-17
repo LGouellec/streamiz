@@ -47,6 +47,11 @@ TODO
 - Interactive Queries [ ]
 - Metrics [ ]
 
+Some documentations for help during implementation :
+https://docs.confluent.io/current/streams/index.html
+https://kafka.apache.org/20/documentation/streams/developer-guide/dsl-api.html#stateless-transformations
+
+
 # Usage
 
 Sample code

@@ -9,10 +9,15 @@ namespace kafka_stream_core.State
         public V Value { get; private set; }
         public long Timestamp { get; private set; }
 
-        public ValueAndTimestamp(long timestamp, V value)
+        private ValueAndTimestamp(long timestamp, V value)
         {
             this.Timestamp = timestamp;
             this.Value = value;
+        }
+
+        public static ValueAndTimestamp<V> make(V value, long timestamp)
+        {
+            return value == null ? null : new ValueAndTimestamp<V>(timestamp, value);
         }
     }
 }

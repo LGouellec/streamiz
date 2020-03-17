@@ -3,10 +3,13 @@ using System;
 
 namespace kafka_stream_core.Processors
 {
-    internal interface IKTableProcessorSupplier<K,V,T> : IProcessorSupplier<K, Change<V>>
+    internal interface IKTableProcessorSupplier
+    {
+        void enableSendingOldValues();
+    }
+
+    internal interface IKTableProcessorSupplier<K,V,T> : IKTableProcessorSupplier, IProcessorSupplier<K, Change<V>>
     {
         IKTableValueGetterSupplier<K, T> View { get; }
-
-        void enableSendingOldValues();
     }
 }

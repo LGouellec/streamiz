@@ -1,4 +1,6 @@
-﻿using kafka_stream_core.Stream;
+﻿using kafka_stream_core.Errors;
+using kafka_stream_core.State;
+using kafka_stream_core.Stream;
 using kafka_stream_core.Stream.Internal;
 using kafka_stream_core.Stream.Internal.Graph.Nodes;
 using System;
@@ -12,6 +14,9 @@ namespace kafka_stream_core.Processors.Internal
         private IDictionary<string, IProcessor> sourceOperators = new Dictionary<string, IProcessor>();
         private IDictionary<string, IProcessor> sinkOperators = new Dictionary<string, IProcessor>();
         private IDictionary<string, IProcessor> processorOperators = new Dictionary<string, IProcessor>();
+        private IDictionary<string, StateStore> stateStores = new Dictionary<string, StateStore>();
+
+        private IDictionary<string, StoreBuilder> storeBuilders = new Dictionary<string, StoreBuilder>();
 
         private IProcessor root = null;
 
@@ -21,7 +26,7 @@ namespace kafka_stream_core.Processors.Internal
 
         public ProcessorTopology buildTopology()
         {
-            var topology = new ProcessorTopology(root, sourceOperators, sinkOperators, processorOperators);
+            var topology = new ProcessorTopology(root, sourceOperators, sinkOperators, processorOperators, stateStores);
             return topology;
         }
 
@@ -46,6 +51,11 @@ namespace kafka_stream_core.Processors.Internal
                 {
                     this.applyChildNodes(source.Value, this.root, root);
                     this.root.SetNextProcessor(source.Value);
+                }
+
+                foreach(var builder in storeBuilders)
+                {
+                    stateStores.Add(builder.Key, builder.Value.build() as StateStore);
                 }
             }
             else
@@ -93,6 +103,29 @@ namespace kafka_stream_core.Processors.Internal
             }
         }
 
+        private void connectProcessorAndStateStore(String processorName, String stateStoreName)
+        {
+            // TODO : 
+            //if (globalStateBuilders.containsKey(stateStoreName))
+            //{
+            //    throw new TopologyException("Global StateStore " + stateStoreName +
+            //            " can be used by a Processor without being specified; it should not be explicitly passed.");
+            //}
+            if (!storeBuilders.ContainsKey(stateStoreName))
+            {
+                throw new TopologyException("StateStore " + stateStoreName + " is not added yet.");
+            }
+            if (!processorOperators.ContainsKey(processorName))
+            {
+                throw new TopologyException("Processor " + processorName + " is not added yet.");
+            }
+
+            var processor = processorOperators[processorName];
+            processor.StateStores.Add(stateStoreName);
+        }
+
+        #region Add Processors / State Store
+
         internal void addSourceOperator<K,V>(string topic, string nameNode, Consumed<K,V> consumed)
         {
             if (!sourceOperators.ContainsKey(nameNode))
@@ -126,5 +159,32 @@ namespace kafka_stream_core.Processors.Internal
             else
                 throw new Exception("Processor operator already exist !");
         }
+
+        internal  void addStateStore<S>(StoreBuilder<S> storeBuilder, params String [] processorNames)
+            where  S : StateStore
+        {
+            this.addStateStore<S>(storeBuilder, false, processorNames);
+        }
+
+        internal void addStateStore<S>(StoreBuilder<S> storeBuilder, bool allowOverride, params String [] processorNames)
+            where S : StateStore
+        {
+            if (!allowOverride && storeBuilders.ContainsKey(storeBuilder.Name))
+            {
+                throw new TopologyException("StateStore " + storeBuilder.Name + " is already added.");
+            }
+
+            storeBuilders.Add(storeBuilder.Name, storeBuilder);
+
+            if (processorNames != null)
+            {
+                foreach ( String processorName in processorNames)
+                {
+                    connectProcessorAndStateStore(processorName, storeBuilder.Name);
+                }
+            }
+        }
+
+        #endregion
     }
 }
