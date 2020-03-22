@@ -23,6 +23,9 @@ namespace kafka_stream_core
             this.topology = topology;
             this.configuration = configuration;
             this.kafkaSupplier = new DefaultKafkaClientSupplier();
+
+            // sanity check
+            this.processorTopology = topology.Builder.buildTopology();
             
             this.threads = new IThread[this.configuration.NumStreamThreads];
 
