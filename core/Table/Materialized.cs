@@ -1,6 +1,7 @@
 ﻿using kafka_stream_core.Processors;
 using kafka_stream_core.SerDes;
 using kafka_stream_core.State;
+using kafka_stream_core.State.InMemory;
 using kafka_stream_core.State.Supplier;
 using kafka_stream_core.Stream.Internal;
 using System;
@@ -22,6 +23,12 @@ namespace kafka_stream_core.Table
         protected TimeSpan retention;
 
         #region Ctor
+
+        private Materialized(string storeName, StoreSupplier<S> storeSupplier)
+        {
+            this.storeName = storeName;
+            this.storeSupplier = storeSupplier;
+        }
 
         private Materialized(StoreSupplier<S> storeSupplier)
         {
@@ -77,6 +84,23 @@ namespace kafka_stream_core.Table
 
         #endregion
 
+        #region Helpfull Static
+
+        #region InMemory
+
+        public static Materialized<K, V, KeyValueStore<byte[], byte[]>> inMemory(string storeName) => inMemory(storeName, null, null);
+
+        public static Materialized<K, V, KeyValueStore<byte[], byte[]>> inMemory(string storeName, ISerDes<K> keySerde, ISerDes<V> valueSerde)
+        {
+            var m = new Materialized<K, V, KeyValueStore<byte[], byte[]>>(storeName, new InMemoryKeyValueBytesStoreSupplier(storeName));
+            m.withKeySerde(keySerde).withValueSerde(valueSerde);
+            return m;
+        }
+
+        #endregion
+
+        #endregion
+
         #region Property
 
         public IDictionary<string, string> TopicConfig => topicConfig;
@@ -96,6 +120,8 @@ namespace kafka_stream_core.Table
         public string QueryableStoreName => queriable ? StoreName : null;
 
         #endregion
+
+        #region Methods
 
         public Materialized<K, V, S> withValueSerde(ISerDes<V> valueSerde)
         {
@@ -158,5 +184,7 @@ namespace kafka_stream_core.Table
 
             return this;
         }
+
+        #endregion
     }
 }

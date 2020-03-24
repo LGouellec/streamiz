@@ -1,4 +1,5 @@
 ﻿using kafka_stream_core;
+using kafka_stream_core.SerDes;
 using kafka_stream_core.Stream;
 using System;
 
@@ -19,7 +20,7 @@ namespace sample_stream
 
             StreamBuilder builder = new StreamBuilder();
             builder.stream("test").filterNot((k, v) => v.Contains("test")).to("test-output");
-
+             
             Topology t = builder.build();
             KafkaStream stream = new KafkaStream(t, config);
 

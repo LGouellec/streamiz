@@ -124,6 +124,15 @@ namespace kafka_stream_core.Processors.Internal
             processor.StateStores.Add(stateStoreName);
         }
 
+        //public void connectSourceStoreAndTopic(String sourceStoreName,                                          String topic)
+        //{
+        //    if (storeToChangelogTopic.containsKey(sourceStoreName))
+        //    {
+        //        throw new TopologyException("Source store " + sourceStoreName + " is already added.");
+        //    }
+        //    storeToChangelogTopic.put(sourceStoreName, topic);
+        //}
+
         #region Add Processors / State Store
 
         internal void addSourceOperator<K,V>(string topic, string nameNode, Consumed<K,V> consumed)
@@ -184,6 +193,42 @@ namespace kafka_stream_core.Processors.Internal
                 }
             }
         }
+
+        //private void buildProcessorNode(final Map<String, ProcessorNode> processorMap,
+        //                        final Map<String, StateStore> stateStoreMap,
+        //                        final ProcessorNodeFactory factory,
+        //                        final ProcessorNode node)
+        //{
+
+        //    for (final String predecessor : factory.predecessors)
+        //    {
+        //        final ProcessorNode<?, ?> predecessorNode = processorMap.get(predecessor);
+        //        predecessorNode.addChild(node);
+        //    }
+        //    for (final String stateStoreName : factory.stateStoreNames)
+        //    {
+        //        if (!stateStoreMap.containsKey(stateStoreName))
+        //        {
+        //            if (stateFactories.containsKey(stateStoreName))
+        //            {
+        //                final StateStoreFactory stateStoreFactory = stateFactories.get(stateStoreName);
+
+        //                // remember the changelog topic if this state store is change-logging enabled
+        //                if (stateStoreFactory.loggingEnabled() && !storeToChangelogTopic.containsKey(stateStoreName))
+        //                {
+        //                    final String changelogTopic = ProcessorStateManager.storeChangelogTopic(applicationId, stateStoreName);
+        //                    storeToChangelogTopic.put(stateStoreName, changelogTopic);
+        //                }
+        //                stateStoreMap.put(stateStoreName, stateStoreFactory.build());
+        //            }
+        //            else
+        //            {
+        //                stateStoreMap.put(stateStoreName, globalStateStores.get(stateStoreName));
+        //            }
+        //        }
+        //    }
+        //}
+
 
         #endregion
     }

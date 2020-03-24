@@ -24,7 +24,7 @@ namespace kafka_stream_core.SerDes
                 int length = reader.ReadInt32();
                 byte[] d = reader.ReadBytes(length);
                 V v = innerSerdes.Deserialize(d);
-                ValueAndTimestamp<V> obj = new ValueAndTimestamp<V>(t, v);
+                ValueAndTimestamp<V> obj = ValueAndTimestamp<V>.make(v, t);
                 return obj;
             }
         }

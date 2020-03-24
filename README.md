@@ -35,6 +35,7 @@ TODO
 
 # TODO implementation
 
+- Subtopology impl [ ]
 - State thread + task implementation [ ]
 - Global state store [ ]
 - Naming Kafka Streams DSL Topologies [ ]

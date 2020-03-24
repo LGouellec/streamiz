@@ -60,5 +60,7 @@ namespace kafka_stream_core.State.Internal.Builder
         }
 
         public abstract T build();
+
+        object StoreBuilder.build() => this.build();
     }
 }
