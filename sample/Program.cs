@@ -20,9 +20,9 @@ namespace sample_stream
             config.NumStreamThreads = 2;
 
             StreamBuilder builder = new StreamBuilder();
-            // builder.stream("test").filterNot((k, v) => v.Contains("test")).to("test-output");
+            builder.stream("test").filterNot((k, v) => v.Contains("test")).to("test-output");
             var ktable = builder.table("test-ktable", Consumed<string, string>.with(new StringSerDes(), new StringSerDes()), InMemory<string, string>.As("test-ktable-store"));
-             
+
             Topology t = builder.build();
             KafkaStream stream = new KafkaStream(t, config);
 

@@ -19,7 +19,24 @@ namespace kafka_stream_core.State.Internal.Builder
 
         public override TimestampedKeyValueStore<K, V> build()
         {
+            var store = storeSupplier.get();
             // TODO : 
+            //if (!(store is TimestampedBytesStore)) {
+            //    if (store.persistent())
+            //    {
+            //        store = new KeyValueToTimestampedKeyValueByteStoreAdapter(store);
+            //    }
+            //    else
+            //    {
+            //        store = new InMemoryTimestampedKeyValueStoreMarker(store);
+            //    }
+            //}
+            //return new MeteredTimestampedKeyValueStore<>(
+            //    maybeWrapCaching(maybeWrapLogging(store)),
+            //    storeSupplier.metricsScope(),
+            //    time,
+            //    keySerde,
+            //    valueSerde);
             return null;
         }
     }
