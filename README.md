@@ -14,7 +14,7 @@ I need contribution ;)
 |Filter|KStream -> KStream|   |&#9745;|   |   |
 |Filter|KTable -> KTable|   |&#9745;|   |   |
 |InverseFilter|KStream -> KStream|   |&#9745;|   |   |
-|InverseFilter|KTable -> KTable|&#9745;|   |   |   |
+|InverseFilter|KTable -> KTable|   |&#9745;|   |   |
 |FlatMap|KStream → KStream|   |&#9745;|   |   |
 |FlatMapValues|KStream → KStream|   |&#9745;|   |   |
 |Foreach|KStream → void|   |&#9745;|   |   |
@@ -36,6 +36,7 @@ TODO
 # TODO implementation
 
 - Subtopology impl [ ]
+- Task restoring [ ]
 - State thread + task implementation [ ]
 - Global state store [ ]
 - Naming Kafka Streams DSL Topologies [ ]
