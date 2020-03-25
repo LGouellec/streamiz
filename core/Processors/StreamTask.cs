@@ -23,11 +23,15 @@ namespace kafka_stream_core.Processors
             this.collector = new RecordCollectorImpl(threadId);
             collector.Init(producer);
 
-            Context = new ProcessorContext(configuration).UseRecordCollector(collector);
+            Context = new ProcessorContext(configuration, stateMgr).UseRecordCollector(collector);
 
             processor = processorTopology.GetSourceProcessor(partition.Topic);
             queue = new RecordQueue<ConsumeResult<byte[], byte[]>>(100);
         }
+
+        #region Private
+
+        #endregion
 
         #region Abstract
 
@@ -53,6 +57,12 @@ namespace kafka_stream_core.Processors
         {
             processor.Init(Context);
             taskInitialized = true;
+        }
+
+        public override bool InitializeStateStores()
+        {
+            RegisterStateStores();
+            return false;
         }
 
         public override void Resume()
@@ -93,19 +103,20 @@ namespace kafka_stream_core.Processors
             if (queue.MaxSize <= queue.Size)
                 consumer.Pause(new List<TopicPartition> { partition });
 
+            // TODO : 
             //final int newQueueSize = partitionGroup.addRawRecords(partition, records);
 
-                //if (log.isTraceEnabled())
-                //{
-                //    log.trace("Added records into the buffered queue of partition {}, new queue size is {}", partition, newQueueSize);
-                //}
+            //if (log.isTraceEnabled())
+            //{
+            //    log.trace("Added records into the buffered queue of partition {}, new queue size is {}", partition, newQueueSize);
+            //}
 
-                //// if after adding these records, its partition queue's buffered size has been
-                //// increased beyond the threshold, we can then pause the consumption for this partition
-                //if (newQueueSize > maxBufferedSize)
-                //{
-                //    consumer.pause(singleton(partition));
-                //}
+            //// if after adding these records, its partition queue's buffered size has been
+            //// increased beyond the threshold, we can then pause the consumption for this partition
+            //if (newQueueSize > maxBufferedSize)
+            //{
+            //    consumer.pause(singleton(partition));
+            //}
         }
     }
 }

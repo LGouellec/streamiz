@@ -47,7 +47,7 @@ namespace kafka_stream_core.State.InMemory
             if (root != null)
             {
                 // register the store
-                //context.register(root, (key, value)->put(Bytes.wrap(key), value));
+                context.Register(root, (key, value) => put(key, value));
             }
 
             IsOpen = true;

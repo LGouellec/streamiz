@@ -34,9 +34,10 @@ namespace kafka_stream_core.Processors.Internal
             {
                 if (!activeTasks.ContainsKey(partition))
                 {
-                    var id = new TaskId { Id = idTask, Partition = partition.Partition.Value };
+                    var id = new TaskId { Id = idTask, Partition = partition.Partition.Value, Topic = partition.Topic };
                     var task = taskCreator.CreateTask(consumer, id, partition);
                     task.InitializeTopology();
+                    task.InitializeStateStores();
                     activeTasks.Add(partition, task);
                 }
                 else if(revokedTasks.ContainsKey(partition))

@@ -24,18 +24,18 @@ namespace kafka_stream_core.Table
 
         #region Ctor
 
-        private Materialized(string storeName, StoreSupplier<S> storeSupplier)
+        protected Materialized(string storeName, StoreSupplier<S> storeSupplier)
         {
             this.storeName = storeName;
             this.storeSupplier = storeSupplier;
         }
 
-        private Materialized(StoreSupplier<S> storeSupplier)
+        protected Materialized(StoreSupplier<S> storeSupplier)
         {
             this.storeSupplier = storeSupplier;
         }
 
-        private Materialized(string storeName)
+        protected Materialized(string storeName)
         {
             this.storeName = storeName;
         }
@@ -81,23 +81,6 @@ namespace kafka_stream_core.Table
         {
             return new Materialized<K, V, S>(string.Empty).withKeySerde(keySerde).withValueSerde(valueSerde);
         }
-
-        #endregion
-
-        #region Helpfull Static
-
-        #region InMemory
-
-        public static Materialized<K, V, KeyValueStore<byte[], byte[]>> inMemory(string storeName) => inMemory(storeName, null, null);
-
-        public static Materialized<K, V, KeyValueStore<byte[], byte[]>> inMemory(string storeName, ISerDes<K> keySerde, ISerDes<V> valueSerde)
-        {
-            var m = new Materialized<K, V, KeyValueStore<byte[], byte[]>>(storeName, new InMemoryKeyValueBytesStoreSupplier(storeName));
-            m.withKeySerde(keySerde).withValueSerde(valueSerde);
-            return m;
-        }
-
-        #endregion
 
         #endregion
 
@@ -187,4 +170,25 @@ namespace kafka_stream_core.Table
 
         #endregion
     }
+
+    #region Child Materialized
+
+    public class InMemory<K, V> : Materialized<K, V, KeyValueStore<byte[], byte[]>>
+    {
+        protected InMemory(string name, StoreSupplier<KeyValueStore<byte[], byte[]>> supplier) 
+            : base(name, supplier)
+        {
+        }
+
+        public static InMemory<K, V> @As(string storeName) => As(storeName, null, null);
+
+        public static InMemory<K, V> @As(string storeName, ISerDes<K> keySerde, ISerDes<V> valueSerde)
+        {
+            var m = new InMemory<K,V>(storeName, new InMemoryKeyValueBytesStoreSupplier(storeName));
+            m.withKeySerde(keySerde).withValueSerde(valueSerde);
+            return m;
+        }
+    }
+
+    #endregion
 }

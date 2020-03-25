@@ -15,6 +15,8 @@ namespace kafka_stream_core.Processors
 
         void InitializeTopology();
 
+        bool InitializeStateStores();
+
         void Commit();
 
         void Resume();
