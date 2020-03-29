@@ -36,8 +36,8 @@ namespace kafka_stream_core.Processors.Internal
                 {
                     var id = new TaskId { Id = idTask, Partition = partition.Partition.Value, Topic = partition.Topic };
                     var task = taskCreator.CreateTask(consumer, id, partition);
-                    task.InitializeTopology();
                     task.InitializeStateStores();
+                    task.InitializeTopology();
                     activeTasks.Add(partition, task);
                 }
                 else if(revokedTasks.ContainsKey(partition))
@@ -58,7 +58,8 @@ namespace kafka_stream_core.Processors.Internal
                 {
                     var task = activeTasks[p];
                     task.Suspend();
-                    revokedTasks.Add(p, task);
+                    if(!revokedTasks.ContainsKey(p))
+                        revokedTasks.Add(p, task);
                     activeTasks.Remove(p);
                 }
             }

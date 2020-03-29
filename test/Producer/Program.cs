@@ -1,7 +1,7 @@
 ﻿using Confluent.Kafka;
 using System;
 
-namespace ProducerStub
+namespace Producer
 {
     class Program
     {
@@ -12,7 +12,7 @@ namespace ProducerStub
                 Acks = Acks.All,
                 BootstrapServers = "192.168.56.1:9092",
                 SaslMechanism = SaslMechanism.ScramSha512,
-                SaslPassword = "admin",
+                SaslPassword = "Michelin/1",
                 SaslUsername = "admin",
                 SecurityProtocol = SecurityProtocol.SaslPlaintext
             };

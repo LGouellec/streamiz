@@ -15,7 +15,7 @@ namespace kafka_stream_core.State.Internal
             this.materialized = materializedInternal;
         }
 
-        public StoreBuilder<TimestampedKeyValueStore<K, V>> materialize()
+        public StoreBuilder<kafka_stream_core.State.TimestampedKeyValueStore<K, V>> materialize()
         {
             KeyValueBytesStoreSupplier supplier = (KeyValueBytesStoreSupplier)materialized.StoreSupplier;
             if (supplier == null)
@@ -24,7 +24,7 @@ namespace kafka_stream_core.State.Internal
                 supplier = Stores.persistentTimestampedKeyValueStore(name);
             }
 
-            StoreBuilder<TimestampedKeyValueStore< K, V >> builder = Stores.timestampedKeyValueStoreBuilder(
+            StoreBuilder<kafka_stream_core.State.TimestampedKeyValueStore< K, V >> builder = Stores.timestampedKeyValueStoreBuilder(
                  supplier,
                  materialized.KeySerdes,
                  materialized.ValueSerdes);

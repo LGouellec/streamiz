@@ -24,7 +24,6 @@ namespace kafka_stream_core.Processors
             collector.Init(producer);
 
             Context = new ProcessorContext(configuration, stateMgr).UseRecordCollector(collector);
-
             processor = processorTopology.GetSourceProcessor(partition.Topic);
             queue = new RecordQueue<ConsumeResult<byte[], byte[]>>(100);
         }
@@ -84,7 +83,8 @@ namespace kafka_stream_core.Processors
                 var record = queue.GetNextRecord();
                 if (record != null)
                 {
-                    Context.setRecordMetaData(record);
+                    this.Context.setRecordMetaData(record);
+                    // PB WITH CONTEXT AND PROCESSOR
                     processor.Process(record.Key, record.Value);
                     queue.Commit();
                     commitNeeded = true;

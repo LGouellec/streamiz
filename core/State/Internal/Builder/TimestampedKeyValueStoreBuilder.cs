@@ -7,7 +7,7 @@ using kafka_stream_core.State.Supplier;
 namespace kafka_stream_core.State.Internal.Builder
 {
     internal class TimestampedKeyValueStoreBuilder<K, V>
-        : AbstractStoreBuilder<K, ValueAndTimestamp<V>, TimestampedKeyValueStore<K, V>>
+        : AbstractStoreBuilder<K, ValueAndTimestamp<V>, kafka_stream_core.State.TimestampedKeyValueStore<K, V>>
     {
         private readonly KeyValueBytesStoreSupplier storeSupplier;
 
@@ -17,27 +17,10 @@ namespace kafka_stream_core.State.Internal.Builder
             this.storeSupplier = supplier;
         }
 
-        public override TimestampedKeyValueStore<K, V> build()
+        public override kafka_stream_core.State.TimestampedKeyValueStore<K, V> build()
         {
             var store = storeSupplier.get();
-            // TODO : 
-            //if (!(store is TimestampedBytesStore)) {
-            //    if (store.persistent())
-            //    {
-            //        store = new KeyValueToTimestampedKeyValueByteStoreAdapter(store);
-            //    }
-            //    else
-            //    {
-            //        store = new InMemoryTimestampedKeyValueStoreMarker(store);
-            //    }
-            //}
-            //return new MeteredTimestampedKeyValueStore<>(
-            //    maybeWrapCaching(maybeWrapLogging(store)),
-            //    storeSupplier.metricsScope(),
-            //    time,
-            //    keySerde,
-            //    valueSerde);
-            return null;
+            return new TimestampedKeyValueStore<K, V>(store, this.keySerdes, this.valueSerdes);
         }
     }
 }

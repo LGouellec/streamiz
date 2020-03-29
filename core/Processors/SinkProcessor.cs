@@ -17,6 +17,11 @@ namespace kafka_stream_core.Processors
             this.topicNameExtractor = topicNameExtractor;
         }
 
+        public override object Clone()
+        {
+            return new SinkProcessor<K, V>(this.Name, null, this.topicNameExtractor, this.KeySerDes, this.ValueSerDes);
+        }
+
         public override void Process(K key, V value)
         {
             long timestamp = Context.Timestamp;

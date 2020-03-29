@@ -7,15 +7,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kafka-stream-core", "core\k
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "sample-stream", "sample\sample-stream.csproj", "{57CA84AD-2E9F-4E4D-94B7-B8CF534B0B0E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProducerStub", "test\ProducerStub\ProducerStub.csproj", "{A8367BFB-F9E0-43D6-AE4E-DA4FC353D413}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Producer", "test\Producer\Producer.csproj", "{A8367BFB-F9E0-43D6-AE4E-DA4FC353D413}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Stream Core", "Stream Core", "{3C748A6C-9316-4507-8FEE-77C684C4F028}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{3C748A6C-9316-4507-8FEE-77C684C4F028}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sample", "Sample", "{FFB1B148-D781-4D08-A1E8-4A7F7147FCD4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{9526F3C9-8E0C-490B-A2B0-F6DA233314D0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsumerStub", "test\ConsumerStub\ConsumerStub.csproj", "{F725913E-F02E-4E77-9F99-A219C453E111}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Consumer", "test\Consumer\Consumer.csproj", "{F725913E-F02E-4E77-9F99-A219C453E111}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GenerateData", "GenerateData", "{E3C25908-114E-4CD0-BD07-4660152F3A70}"
 EndProject

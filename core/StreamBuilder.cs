@@ -35,7 +35,7 @@ namespace kafka_stream_core
 
         public KTable<K,V> table<K,V>(string topic, Consumed<K,V> consumed, Materialized<K, V, KeyValueStore<byte[], byte[]>> materialized)
         {
-            materialized = materialized.useProvider(internalStreamBuilder, $"{topic}-");
+            materialized = materialized.useProvider(internalStreamBuilder, $"{topic}-").initConsumed(consumed);
 
             return internalStreamBuilder.table(topic, consumed, materialized);
         }

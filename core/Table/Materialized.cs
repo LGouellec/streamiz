@@ -3,6 +3,7 @@ using kafka_stream_core.SerDes;
 using kafka_stream_core.State;
 using kafka_stream_core.State.InMemory;
 using kafka_stream_core.State.Supplier;
+using kafka_stream_core.Stream;
 using kafka_stream_core.Stream.Internal;
 using System;
 using System.Collections.Generic;
@@ -168,6 +169,16 @@ namespace kafka_stream_core.Table
             return this;
         }
 
+        internal Materialized<K, V, S> initConsumed(Consumed<K, V> consumed)
+        {
+            if (this.KeySerdes == null)
+                this.withKeySerde(consumed.KeySerdes);
+            if (this.ValueSerdes == null)
+                this.withValueSerde(consumed.ValueSerdes);
+
+            return this;
+        }
+        
         #endregion
     }
 
@@ -178,6 +189,7 @@ namespace kafka_stream_core.Table
         protected InMemory(string name, StoreSupplier<KeyValueStore<byte[], byte[]>> supplier) 
             : base(name, supplier)
         {
+
         }
 
         public static InMemory<K, V> @As(string storeName) => As(storeName, null, null);

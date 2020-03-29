@@ -19,7 +19,7 @@ namespace kafka_stream_core.Processors
         protected bool commitNeeded;
         protected StateManager stateMgr;
         protected ILog log;
-
+        
         internal AbstractTask(TaskId id, TopicPartition partition, ProcessorTopology topology, IConsumer<byte[], byte[]> consumer, IStreamConfig config)
         {
             this.log = Logger.GetLogger(this.GetType());
@@ -36,7 +36,7 @@ namespace kafka_stream_core.Processors
 
         public ProcessorTopology Topology { get; }
 
-        public ProcessorContext Context { get; internal set; }
+        public ProcessorContext Context { get; protected set; }
 
         public TaskId Id { get; }
 

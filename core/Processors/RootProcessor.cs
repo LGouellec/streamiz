@@ -19,6 +19,8 @@ namespace kafka_stream_core.Processors
 
         public IList<string> StateStores => new List<string>();
 
+        public object Clone() => null;
+
         public void Close()
         {
             

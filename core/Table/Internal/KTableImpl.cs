@@ -107,7 +107,7 @@ namespace kafka_stream_core.Table.Internal
             ISerDes<K> keySerde;
             ISerDes<V> valueSerde;
             String queryableStoreName;
-            StoreBuilder<TimestampedKeyValueStore<K, V>> storeBuilder;
+            StoreBuilder<kafka_stream_core.State.TimestampedKeyValueStore<K, V>> storeBuilder;
 
             if (materializedInternal != null)
             {

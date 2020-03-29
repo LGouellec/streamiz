@@ -15,6 +15,11 @@ namespace kafka_stream_core.Processors
             this.transformer = transformer;
         }
 
+        public override object Clone()
+        {
+            throw new NotImplementedException();
+        }
+
         public override void Process(K key, V value)
         {
             KeyValuePair<K1,V1> kp = transformer.Invoke(key, value);

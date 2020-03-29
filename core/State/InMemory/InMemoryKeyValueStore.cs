@@ -39,7 +39,7 @@ namespace kafka_stream_core.State.InMemory
 
         public void flush(){ /* Nothing => IN MEMORY */ }
 
-        public byte[] get(byte[] key) => map[key];
+        public byte[] get(byte[] key) => map.ContainsKey(key) ? map[key] : null;
 
         public void init(ProcessorContext context, StateStore root)
         {

@@ -139,7 +139,8 @@ namespace kafka_stream_core
                 SaslPassword = this["sasl.password"],
                 SecurityProtocol = SecurityProtocol.SaslPlaintext,
                 GroupId = this.ApplicationId,
-                EnableAutoCommit = false
+                EnableAutoCommit = false,
+                AutoOffsetReset = AutoOffsetReset.Earliest
             };
         }
 

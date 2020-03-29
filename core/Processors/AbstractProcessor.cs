@@ -10,7 +10,7 @@ namespace kafka_stream_core.Processors
         public ProcessorContext Context { get; protected set; }
 
         public string Name { get; private set; }
-        public IList<string> StateStores { get; private set; }
+        public IList<string> StateStores { get; protected set; }
 
         public ISerDes<K> KeySerDes { get; }
 
@@ -20,9 +20,9 @@ namespace kafka_stream_core.Processors
 
         public ISerDes Value => ValueSerDes;
 
-        public IList<IProcessor<K, V>> Previous { get; private set; } = null;
+        public IList<IProcessor> Previous { get; private set; } = null;
 
-        public IList<IProcessor<K, V>> Next { get; private set; } = null;
+        public IList<IProcessor> Next { get; private set; } = null;
 
 
         public AbstractProcessor()
@@ -44,6 +44,16 @@ namespace kafka_stream_core.Processors
             KeySerDes = keySerdes;
             ValueSerDes = valueSerdes;
             StateStores = new List<string>();
+        }
+
+        public AbstractProcessor(string name, IProcessor previous, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, List<string> stateStores)
+        {
+            Name = name;
+            this.SetPreviousProcessor(previous);
+            this.SetNextProcessor(null);
+            KeySerDes = keySerdes;
+            ValueSerDes = valueSerdes;
+            StateStores = new List<string>(stateStores);
         }
 
         public virtual void Close()
@@ -92,19 +102,19 @@ namespace kafka_stream_core.Processors
         public void SetPreviousProcessor(IProcessor prev)
         {
             if (Previous == null)
-                Previous = new List<IProcessor<K, V>>();
+                Previous = new List<IProcessor>();
 
-            if (prev != null && prev is IProcessor<K, V> && !Previous.Contains(prev as IProcessor<K, V>))
-                Previous.Add(prev as IProcessor<K, V>);
+            if (prev != null && prev is IProcessor && !Previous.Contains(prev as IProcessor))
+                Previous.Add(prev as IProcessor);
         }
 
         public void SetNextProcessor(IProcessor next)
         {
             if (Next == null)
-                Next = new List<IProcessor<K, V>>();
+                Next = new List<IProcessor>();
 
-            if (next != null && next is IProcessor<K, V> && !Next.Contains(next as IProcessor<K, V>))
-                Next.Add(next as IProcessor<K, V>);
+            if (next != null && next is IProcessor && !Next.Contains(next as IProcessor))
+                Next.Add(next as IProcessor);
         }
 
         public void SetProcessorName(string name)
@@ -124,7 +134,10 @@ namespace kafka_stream_core.Processors
                 this.Process((K)key, (V)value);
         }
 
+
         public abstract void Process(K key, V value);
+        // TODO : MUST BE ABSTRACT FOR SUBTOPOLOGY
+        public virtual object Clone() { return null; }
 
 
         public override bool Equals(object obj)

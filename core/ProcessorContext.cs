@@ -37,7 +37,7 @@ namespace kafka_stream_core
 
         internal void setRecordMetaData(ConsumeResult<byte[], byte[]> result)
         {
-            
+            this.RecordContext = new RecordContextImpl(result);
         }
 
         internal StateStore GetStateStore(string storeName) => States.GetStore(storeName);

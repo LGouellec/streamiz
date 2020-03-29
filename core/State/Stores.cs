@@ -15,7 +15,7 @@ namespace kafka_stream_core.State
             return null;
         }
 
-        public static StoreBuilder<TimestampedKeyValueStore<K, V>> timestampedKeyValueStoreBuilder<K, V>(KeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
+        public static StoreBuilder<kafka_stream_core.State.TimestampedKeyValueStore<K, V>> timestampedKeyValueStoreBuilder<K, V>(KeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
         {
             return new TimestampedKeyValueStoreBuilder<K, V>(supplier, keySerde, valueSerde, DateTime.Now);
         }

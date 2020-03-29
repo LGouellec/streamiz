@@ -3,6 +3,7 @@ using kafka_stream_core.State;
 using kafka_stream_core.Stream;
 using kafka_stream_core.Stream.Internal;
 using kafka_stream_core.Stream.Internal.Graph.Nodes;
+using kafka_stream_core.Table.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,20 +68,31 @@ namespace kafka_stream_core.Processors.Internal
             StreamGraphNode r = null;
             while(r == null)
             {
-                if (value.Name.Equals(root.streamGraphNode))
+                if ((root is ITableSourceNode && (((ITableSourceNode)root).SourceName.Equals(value.Name) ||
+                        ((ITableSourceNode)root).NodeName.Equals(value.Name))) || value.Name.Equals(root.streamGraphNode))
                 {
                     r = root;
                     break;
                 }
 
                 foreach (var i in root.ChildNodes)
-                    if (value.Name.Equals(i.streamGraphNode))
+                {
+                    if ((i is ITableSourceNode && (((ITableSourceNode)i).SourceName.Equals(value.Name) ||
+                        ((ITableSourceNode)i).NodeName.Equals(value.Name))) || value.Name.Equals(i.streamGraphNode))
                         r = i;
+                }
             }
 
             if(r != null)
             {
                 value.SetPreviousProcessor(previous);
+                if(r is ITableSourceNode)
+                {
+                    var tableSourceProcessor = processorOperators.FirstOrDefault(kp => kp.Key.Equals((r as ITableSourceNode).NodeName)).Value;
+                    if (tableSourceProcessor != null)
+                        value.SetNextProcessor(tableSourceProcessor);
+                }
+
                 IList<StreamGraphNode> list = r.ChildNodes;
                 foreach (var n in list)
                 {

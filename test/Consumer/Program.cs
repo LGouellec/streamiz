@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ConsumerStub
+namespace Consumer
 {
     class Program
     {

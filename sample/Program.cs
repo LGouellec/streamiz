@@ -15,12 +15,12 @@ namespace sample_stream
             config.Add("bootstrap.servers", "192.168.56.1:9092");
             config.Add("sasl.mechanism", "SCRAM-SHA-512");
             config.Add("sasl.username", "admin");
-            config.Add("sasl.password", "admin");
+            config.Add("sasl.password", "Michelin/1");
             config.Add("security.protocol", "SaslPlaintext");
-            config.NumStreamThreads = 2;
+            config.NumStreamThreads = 1;
 
             StreamBuilder builder = new StreamBuilder();
-            builder.stream("test").filterNot((k, v) => v.Contains("test")).to("test-output");
+            //builder.stream("test").filterNot((k, v) => v.Contains("test")).to("test-output");
             var ktable = builder.table("test-ktable", Consumed<string, string>.with(new StringSerDes(), new StringSerDes()), InMemory<string, string>.As("test-ktable-store"));
 
             Topology t = builder.build();

@@ -11,7 +11,13 @@ using System.Text;
 
 namespace kafka_stream_core.Table.Internal.Graph.Nodes
 {
-    internal class TableSourceNode<K, V, S> : StreamSourceNode<K, V>
+    internal interface ITableSourceNode
+    {
+        string SourceName { get; }
+        string NodeName { get; }
+    }
+
+    internal class TableSourceNode<K, V, S> : StreamSourceNode<K, V>, ITableSourceNode
         where S : StateStore
     {
         private readonly Materialized<K, V, S> materialized;
@@ -30,6 +36,10 @@ namespace kafka_stream_core.Table.Internal.Graph.Nodes
             this.sourceName = sourceName;
             this.isGlobalKTable = isGlobalKTable;
         }
+
+        public string SourceName => sourceName;
+
+        public string NodeName => this.streamGraphNode;
 
         public void reuseSourceTopicForChangeLog(bool shouldReuseSourceTopicForChangelog)
         {
@@ -50,7 +60,7 @@ namespace kafka_stream_core.Table.Internal.Graph.Nodes
         {
             // TODO: we assume source KTables can only be timestamped-key-value stores for now.
             // should be expanded for other types of stores as well.
-            StoreBuilder<TimestampedKeyValueStore<K, V>> storeBuilder = new TimestampedKeyValueStoreMaterializer<K, V>(materialized as Materialized<K,V, KeyValueStore<byte[], byte[]>>).materialize();
+            StoreBuilder<State.TimestampedKeyValueStore<K, V>> storeBuilder = new TimestampedKeyValueStoreMaterializer<K, V>(materialized as Materialized<K, V, KeyValueStore<byte[], byte[]>>).materialize();
 
             if (isGlobalKTable)
             {
