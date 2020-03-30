@@ -11,7 +11,7 @@ namespace Producer
             {
                 Acks = Acks.All,
                 BootstrapServers = "192.168.56.1:9092",
-                SaslMechanism = SaslMechanism.ScramSha512,
+                SaslMechanism = SaslMechanism.Plain,
                 SaslPassword = "admin",
                 SaslUsername = "admin",
                 SecurityProtocol = SecurityProtocol.SaslPlaintext

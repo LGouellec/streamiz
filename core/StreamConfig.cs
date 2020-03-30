@@ -122,7 +122,7 @@ namespace kafka_stream_core
             return new ProducerConfig
             {
                 BootstrapServers = this["bootstrap.servers"],
-                SaslMechanism = SaslMechanism.ScramSha512,
+                SaslMechanism = (SaslMechanism)Enum.Parse(typeof(SaslMechanism), this["sasl.mechanism"]),
                 SaslUsername = this["sasl.username"],
                 SaslPassword = this["sasl.password"],
                 SecurityProtocol = SecurityProtocol.SaslPlaintext
@@ -134,7 +134,7 @@ namespace kafka_stream_core
             return new ConsumerConfig
             {
                 BootstrapServers = this["bootstrap.servers"],
-                SaslMechanism = SaslMechanism.ScramSha512,
+                SaslMechanism = (SaslMechanism)Enum.Parse(typeof(SaslMechanism), this["sasl.mechanism"]),
                 SaslUsername = this["sasl.username"],
                 SaslPassword = this["sasl.password"],
                 SecurityProtocol = SecurityProtocol.SaslPlaintext,
