@@ -42,13 +42,13 @@ namespace kafka_stream_core.Table.Internal.Graph
             }
         }
 
-        private KTableImpl<K, V> parent;
+        private KTableGetter<K, V> parent;
         private Func<K, V, bool> predicate;
         private bool filterNot;
         private string queryableStoreName;
         private bool sendOldValues = false;
 
-        public KTableFilter(KTableImpl<K, V> parent, Func<K, V, bool> predicate, bool filterNot, string queryableStoreName)
+        public KTableFilter(KTableGetter<K, V> parent, Func<K, V, bool> predicate, bool filterNot, string queryableStoreName)
         {
             this.parent = parent;
             this.predicate = predicate;

@@ -63,13 +63,13 @@ namespace kafka_stream_core.Stream.Internal
 
         public string newStoreName(string prefix)
         {
-            return $"{prefix}{KTableImpl<byte, byte>.STATE_STORE_NAME}{NextIndex.ToString("D10")}";
+            return $"{prefix}{KTableImpl<byte, byte, byte>.STATE_STORE_NAME}{NextIndex.ToString("D10")}";
         }
 
         internal KTable<K, V> table<K, V>(string topic, Consumed<K, V> consumed, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized)
         {
             string sourceName = newProcessorName(KStreamImpl<byte, byte>.SOURCE_NAME);
-            string tableSourceName = newProcessorName(KTableImpl<byte, byte>.SOURCE_NAME);
+            string tableSourceName = newProcessorName(KTableImpl<byte, byte, byte>.SOURCE_NAME);
 
             KTableSource<K, V> tableSource = new KTableSource<K,V>(materialized.StoreName, materialized.QueryableStoreName);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K,V>(tableSource, tableSourceName);
@@ -80,7 +80,7 @@ namespace kafka_stream_core.Stream.Internal
 
             this.addGraphNode(root, tableSourceNode);
 
-            return new KTableImpl<K,V>(tableSourceName,
+            return new KTableImpl<K,V,V>(tableSourceName,
                                     consumed.KeySerdes,
                                     consumed.ValueSerdes,
                                     new List<string> { sourceName },

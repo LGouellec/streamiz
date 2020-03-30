@@ -9,11 +9,11 @@ namespace kafka_stream_core.Stream
         VR apply(K keyReadonly, V value);
     }
 
-    public class ValueMapperWithKey<K, V, VR> : IValueMapperWithKey<K, V, VR>
+    public class WrapperValueMapperWithKey<K, V, VR> : IValueMapperWithKey<K, V, VR>
     {
         private readonly Func<K, V, VR> mapper;
 
-        public ValueMapperWithKey(Func<K, V, VR> mapper)
+        public WrapperValueMapperWithKey(Func<K, V, VR> mapper)
             => this.mapper = mapper;
 
         public VR apply(K readOnlyKey, V value) => this.mapper(readOnlyKey, value);

@@ -48,18 +48,18 @@ namespace kafka_stream_core.Stream.Internal
         }
 
 
-        protected static ValueMapperWithKey<K, V, VR> withKey<VR>(Func<V, VR> valueMapper)
+        protected static WrapperValueMapperWithKey<K, V, VR> withKey<VR>(Func<V, VR> valueMapper)
         {
             valueMapper = valueMapper ?? throw new ArgumentNullException(nameof(valueMapper));
 
-            return new ValueMapperWithKey<K, V, VR>((readOnlyKey, value) => valueMapper(value));
+            return new WrapperValueMapperWithKey<K, V, VR>((readOnlyKey, value) => valueMapper(value));
         }
 
-        protected static ValueMapperWithKey<K, V, VR> withKey<VR>(IValueMapper<V, VR> valueMapper)
+        protected static WrapperValueMapperWithKey<K, V, VR> withKey<VR>(IValueMapper<V, VR> valueMapper)
         {
             valueMapper = valueMapper ?? throw new ArgumentNullException(nameof(valueMapper));
 
-            return new ValueMapperWithKey<K, V, VR>((readOnlyKey, value) => valueMapper.apply(value));
+            return new WrapperValueMapperWithKey<K, V, VR>((readOnlyKey, value) => valueMapper.apply(value));
         }
 
         List<String> ensureCopartitionWith(List<AbstractStream<K, V>> otherStreams)

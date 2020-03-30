@@ -1,5 +1,6 @@
 ﻿using Confluent.Kafka;
 using kafka_stream_core.Crosscutting;
+using kafka_stream_core.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Security;
@@ -26,6 +27,10 @@ namespace kafka_stream_core
         string ApplicationId { get; }
 
         int NumStreamThreads { get; }
+
+        ISerDes DefaultKeySerDes { get; }
+
+        ISerDes DefaultValueSerDes { get; }
     }
 
     public class StreamConfig : Dictionary<string, string>, IStreamConfig
@@ -103,6 +108,10 @@ namespace kafka_stream_core
             get => this[topologyOptimizationCst];
             set => this.AddOrUpdate(topologyOptimizationCst, value);
         }
+
+        public ISerDes DefaultKeySerDes => new StringSerDes();
+
+        public ISerDes DefaultValueSerDes => new StringSerDes();
 
         public StreamConfig()
         {

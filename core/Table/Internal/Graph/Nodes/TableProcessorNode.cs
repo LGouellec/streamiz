@@ -7,18 +7,18 @@ using System.Text;
 
 namespace kafka_stream_core.Table.Internal.Graph.Nodes
 {
-    internal class TableProcessorNode<K, V> : StreamGraphNode
+    internal class TableProcessorNode<K, V, KS, VS> : StreamGraphNode
     {
         private ProcessorParameters<K, Change<V>> processorParameters;
-        private StoreBuilder<TimestampedKeyValueStore<K, V>> storeBuilder;
+        private StoreBuilder<TimestampedKeyValueStore<KS, VS>> storeBuilder;
         private String[] storeNames;
 
-        public TableProcessorNode(string name, ProcessorParameters<K, Change<V>> processorParameters, StoreBuilder<TimestampedKeyValueStore<K, V>> storeBuilder)
+        public TableProcessorNode(string name, ProcessorParameters<K, Change<V>> processorParameters, StoreBuilder<TimestampedKeyValueStore<KS, VS>> storeBuilder)
             : this(name, processorParameters, storeBuilder, null)
         {
         }
 
-        public TableProcessorNode(string name, ProcessorParameters<K, Change<V>> processorParameters, StoreBuilder<TimestampedKeyValueStore<K, V>> storeBuilder, string[] storeNames)
+        public TableProcessorNode(string name, ProcessorParameters<K, Change<V>> processorParameters, StoreBuilder<TimestampedKeyValueStore<KS, VS>> storeBuilder, string[] storeNames)
             : base(name)
         {
             this.processorParameters = processorParameters;
@@ -40,7 +40,7 @@ namespace kafka_stream_core.Table.Internal.Graph.Nodes
             // TODO: we are enforcing this as a keyvalue store, but it should go beyond any type of stores
             if (storeBuilder != null)
             {
-                //builder.addStateStore(storeBuilder, processorName);
+                builder.addStateStore(storeBuilder, processorName);
             }
         }
     }

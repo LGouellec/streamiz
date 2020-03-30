@@ -6,22 +6,16 @@ using System.Text;
 
 namespace kafka_stream_core.Processors
 {
-    internal class KTableFilterProcessor<K, V> : AbstractProcessor<K, Change<V>>
+    internal class KTableFilterProcessor<K, V> : AbstractKTableProcessor<K, V, K, V>
     {
         private Func<K, V, bool> predicate;
         private bool filterNot;
-        private string queryableStoreName;
-        private bool sendOldValues;
-
-        private TimestampedKeyValueStore<K, V> store;
-        // TODO : private TimestampedTupleForwarder<K, V> tupleForwarder;
 
         public KTableFilterProcessor(Func<K, V, bool> predicate, bool filterNot, string queryableStoreName, bool sendOldValues)
+            : base(queryableStoreName, sendOldValues)
         {
             this.predicate = predicate;
             this.filterNot = filterNot;
-            this.queryableStoreName = queryableStoreName;
-            this.sendOldValues = sendOldValues;
         }
 
         public override object Clone()
@@ -29,21 +23,6 @@ namespace kafka_stream_core.Processors
             var p = new KTableFilterProcessor<K, V>(this.predicate, this.filterNot, this.queryableStoreName, this.sendOldValues);
             p.StateStores = new List<string>(this.StateStores);
             return p;
-        }
-
-        public override void Init(ProcessorContext context)
-        {
-            base.Init(context);
-
-            if (queryableStoreName != null)
-            {
-                store = (TimestampedKeyValueStore<K, V>)context.GetStateStore(queryableStoreName);
-                //tupleForwarder = new TimestampedTupleForwarder<>(
-                //    store,
-                //    context,
-                //    new TimestampedCacheFlushListener<>(context),
-                //    sendOldValues);
-            }
         }
 
         public override void Process(K key, Change<V> change)

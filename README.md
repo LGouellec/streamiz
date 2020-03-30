@@ -23,7 +23,7 @@ I need contribution ;)
 |GroupBy|KTable → KGroupedTable|&#9745;|   |   |   |
 |Map|KStream → KStream|   |&#9745;|   |   |
 |MapValues|KStream → KStream|   |&#9745;|   |   |
-|MapValues|KTable → KTable|&#9745;|   |   |   |
+|MapValues|KTable → KTable|   |&#9745;|   |   |
 |Peek|KStream → KStream|   |&#9745;|   |   |
 |Print|KStream → void|&#9745;|   |   |   |
 |SelectKey|KStream → KStream|   |&#9745;|   |   |
@@ -50,6 +50,7 @@ TODO
 - Optimizing Kafka Streams Topologies  [ ]
 - Interactive Queries [ ]
 - Metrics [ ]
+- Adopt C# Syntax  [ ]
 
 Some documentations for help during implementation :
 https://docs.confluent.io/current/streams/index.html
@@ -63,14 +64,15 @@ Sample code
             StreamConfig config = new StreamConfig();
             config.ApplicationId = "test-app";
             config.Add("bootstrap.servers", "192.168.56.1:9092");
-            config.Add("sasl.mechanism", "SCRAM-SHA-512");
+            config.Add("sasl.mechanism", "Plain");
             config.Add("sasl.username", "admin");
             config.Add("sasl.password", "admin");
             config.Add("security.protocol", "SaslPlaintext");
-            config.NumStreamThreads = 2;
+            config.NumStreamThreads = 1;
 
             StreamBuilder builder = new StreamBuilder();
             builder.stream("test").filterNot((k, v) => v.Contains("test")).to("test-output");
+            builder.table("test-ktable", Consumed<string, string>.with(new StringSerDes(), new StringSerDes()), InMemory<string, string>.As("test-ktable-store"));
 
             Topology t = builder.build();
             KafkaStream stream = new KafkaStream(t, config);

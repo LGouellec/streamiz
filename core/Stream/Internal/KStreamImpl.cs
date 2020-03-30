@@ -1,7 +1,6 @@
 ﻿using kafka_stream_core.Processors;
 using kafka_stream_core.Processors.Internal;
 using kafka_stream_core.SerDes;
-using kafka_stream_core.Stream.Internal;
 using kafka_stream_core.Stream.Internal.Graph;
 using kafka_stream_core.Stream.Internal.Graph.Nodes;
 using System;
@@ -119,12 +118,18 @@ namespace kafka_stream_core.Stream.Internal
 
         #region FlatMap
 
+        public KStream<KR, VR> flatMap<KR, VR>(Func<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper)
+            => this.flatMap(mapper, string.Empty);
+
+        public KStream<KR, VR> flatMap<KR, VR>(Func<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named)
+            => this.flatMap(new WrappedKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>>(mapper), named);
+
         public KStream<KR, VR> flatMap<KR, VR>(IKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper)
             => this.flatMap(mapper, string.Empty);
 
         public KStream<KR, VR> flatMap<KR, VR>(IKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named)
         {
-            String name = this.builder.newProcessorName(FLATMAP_NAME);
+            var name = this.builder.newProcessorName(FLATMAP_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFlatMap<K, V, KR, VR>(mapper), name);
             ProcessorGraphNode<K, V> flatMapNode = new ProcessorGraphNode<K, V>(name, processorParameters);
             flatMapNode.KeyChangingOperation = true;
@@ -139,18 +144,30 @@ namespace kafka_stream_core.Stream.Internal
 
         #region FlatMapValues
 
+        public KStream<K, VR> flatMapValues<VR>(Func<V, IEnumerable<VR>> mapper)
+            => this.flatMapValues(mapper, string.Empty);
+
+        public KStream<K, VR> flatMapValues<VR>(Func<V, IEnumerable<VR>> mapper, string named)
+            => this.flatMapValues(new WrappedValueMapper<V, IEnumerable<VR>>(mapper), named);
+
+        public KStream<K, VR> flatMapValues<VR>(Func<K, V, IEnumerable<VR>> mapper)
+            => this.flatMapValues(mapper, string.Empty);
+
+        public KStream<K, VR> flatMapValues<VR>(Func<K, V, IEnumerable<VR>> mapper, string named)
+            => this.flatMapValues(new WrapperValueMapperWithKey<K, V, IEnumerable<VR>>(mapper), named);
+
         public KStream<K, VR> flatMapValues<VR>(IValueMapper<V, IEnumerable<VR>> mapper)
-            => this.flatMapValues<VR>(mapper, null);
+            => this.flatMapValues(mapper, null);
 
         public KStream<K, VR> flatMapValues<VR>(IValueMapper<V, IEnumerable<VR>> mapper, string named)
-            => this.flatMapValues<VR>(withKey<IEnumerable<VR>>(mapper), named);
+            => this.flatMapValues(withKey(mapper), named);
 
         public KStream<K, VR> flatMapValues<VR>(IValueMapperWithKey<K, V, IEnumerable<VR>> mapper)
-            => this.flatMapValues<VR>(mapper, null);
+            => this.flatMapValues(mapper, null);
 
         public KStream<K, VR> flatMapValues<VR>(IValueMapperWithKey<K, V, IEnumerable<VR>> mapper, string named)
         {
-            String name = this.builder.newProcessorName(FLATMAPVALUES_NAME);
+             var name = this.builder.newProcessorName(FLATMAPVALUES_NAME);
 
             ProcessorParameters<K,V> processorParameters = new ProcessorParameters<K, V>(new KStreamFlatMapValues<K, V, VR>(mapper), name);
             ProcessorGraphNode<K, V> flatMapValuesNode = new ProcessorGraphNode<K, V>(name, processorParameters);
@@ -210,6 +227,12 @@ namespace kafka_stream_core.Stream.Internal
 
         #region Map
 
+        public KStream<KR, VR> map<KR, VR>(Func<K, V, KeyValuePair<KR, VR>> mapper)
+            => this.map(mapper, string.Empty);
+
+        public KStream<KR, VR> map<KR, VR>(Func<K, V, KeyValuePair<KR, VR>> mapper, string named)
+            => this.map(new WrappedKeyValueMapper<K, V, KeyValuePair<KR, VR>>(mapper), named);
+
         public KStream<KR, VR> map<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper)
             => this.map(mapper, string.Empty);
 
@@ -236,6 +259,18 @@ namespace kafka_stream_core.Stream.Internal
 
         #region MapValues
 
+        public KStream<K, VR> mapValues<VR>(Func<V, VR> mapper)
+            => this.mapValues(mapper, string.Empty);
+
+        public KStream<K, VR> mapValues<VR>(Func<V, VR> mapper, string named)
+            => this.mapValues(new WrappedValueMapper<V, VR>(mapper), named);
+
+        public KStream<K, VR> mapValues<VR>(Func<K, V, VR> mapper)
+            => this.mapValues(mapper, string.Empty);
+
+        public KStream<K, VR> mapValues<VR>(Func<K, V, VR> mapper, string named)
+            => this.mapValues(new WrapperValueMapperWithKey<K, V, VR>(mapper), named);
+
         public KStream<K, VR> mapValues<VR>(IValueMapper<V, VR> mapper)
             => this.mapValues<VR>(mapper, null);
 
@@ -249,8 +284,8 @@ namespace kafka_stream_core.Stream.Internal
         {
             String name = this.builder.newProcessorName(MAPVALUES_NAME);
 
-             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K,V>(new KStreamMapValues<K,V,VR>(mapper), name);
-            ProcessorGraphNode<K, V> mapValuesProcessorNode = new ProcessorGraphNode<K,V>(name, processorParameters);
+            ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamMapValues<K, V, VR>(mapper), name);
+            ProcessorGraphNode<K, V> mapValuesProcessorNode = new ProcessorGraphNode<K, V>(name, processorParameters);
             mapValuesProcessorNode.ValueChangingOperation = true;
 
             builder.addGraphNode(this.node, mapValuesProcessorNode);
@@ -281,6 +316,12 @@ namespace kafka_stream_core.Stream.Internal
         #endregion
 
         #region SelectKey
+
+        public KStream<KR, V> selectKey<KR>(Func<K, V, KR> mapper)
+            => this.selectKey(mapper, string.Empty);
+
+        public KStream<KR, V> selectKey<KR>(Func<K, V, KR> mapper, string named)
+            => this.selectKey(new WrappedKeyValueMapper<K, V, KR>(mapper), named);
 
         public KStream<KR, V> selectKey<KR>(IKeyValueMapper<K, V, KR> mapper)
             => this.selectKey(mapper, string.Empty);

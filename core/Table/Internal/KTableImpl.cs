@@ -14,10 +14,10 @@ using System.Collections.Generic;
 
 namespace kafka_stream_core.Table.Internal
 {
-    internal class KTableImpl<K, V> : AbstractStream<K, V>, KTable<K, V>
+    internal class KTableImpl<K, S, V> : AbstractStream<K, V>, KTable<K, V>, KTableGetter<K, V>
     {
-        private readonly IProcessorSupplier<K, V> processorSupplier = null;
-        private readonly IProcessorSupplier<K, Change<V>> tableProcessorSupplier = null;
+        private readonly IProcessorSupplier<K, S> processorSupplier = null;
+        private readonly IProcessorSupplier<K, Change<S>> tableProcessorSupplier = null;
         private readonly string queryableStoreName;
         
         public bool SendOldValues { get; private set; }
@@ -28,18 +28,18 @@ namespace kafka_stream_core.Table.Internal
             {
                 if (processorSupplier != null && processorSupplier is KTableSource<K, V>)
                 {
-                    KTableSource<K, V> source = (KTableSource<K, V>)processorSupplier;
+                    var source = (KTableSource<K, V>)processorSupplier;
                     // whenever a source ktable is required for getter, it should be materialized
                     source.Materialize();
-                    return new KTableSourceValueGetterSupplier<K,V>(source.QueryableName);
+                    return new KTableSourceValueGetterSupplier<K, V>(source.QueryableName);
                 }
                 // TODO : 
                 //} else if (processorSupplier instanceof KStreamAggProcessorSupplier) {
                 //    return ((KStreamAggProcessorSupplier <?, K, S, V >) processorSupplier).view();
                 //} else
-                else if (tableProcessorSupplier != null && tableProcessorSupplier is IKTableProcessorSupplier<K, V, V>)
+                else if (tableProcessorSupplier != null && tableProcessorSupplier is IKTableProcessorSupplier<K, S, V>)
                 {
-                    return ((IKTableProcessorSupplier<K, V, V>)tableProcessorSupplier).View;
+                    return ((IKTableProcessorSupplier<K, S, V>)tableProcessorSupplier).View;
                 }
                 else
                     return null;
@@ -86,16 +86,15 @@ namespace kafka_stream_core.Table.Internal
 
         #endregion
 
-
-        internal KTableImpl(string name, ISerDes<K> keySerde, ISerDes<V> valSerde, List<string> sourceNodes, String queryableStoreName, IProcessorSupplier<K, Change<V>> processorSupplier, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder)
+        internal KTableImpl(string name, ISerDes<K> keySerde, ISerDes<V> valSerde, List<string> sourceNodes, String queryableStoreName, IProcessorSupplier<K, Change<S>> processorSupplier, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder)
             : base(name, keySerde, valSerde, sourceNodes, streamsGraphNode, builder)
         {
             this.tableProcessorSupplier = processorSupplier;
             this.queryableStoreName = queryableStoreName;
         }
 
-        internal KTableImpl(string name, ISerDes<K> keySerde, ISerDes<V> valSerde, List<string> sourceNodes, String queryableStoreName, IProcessorSupplier<K, V> processorSupplier, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder)
-    : base(name, keySerde, valSerde, sourceNodes, streamsGraphNode, builder)
+        internal KTableImpl(string name, ISerDes<K> keySerde, ISerDes<V> valSerde, List<string> sourceNodes, String queryableStoreName, IProcessorSupplier<K, S> processorSupplier, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder)
+            : base(name, keySerde, valSerde, sourceNodes, streamsGraphNode, builder)
         {
             this.processorSupplier = processorSupplier;
             this.queryableStoreName = queryableStoreName;
@@ -136,21 +135,21 @@ namespace kafka_stream_core.Table.Internal
                 storeBuilder = null;
             }
 
-            String name = this.builder.newProcessorName(FILTER_NAME);
+            var name = this.builder.newProcessorName(FILTER_NAME);
 
             IProcessorSupplier<K, Change<V>> processorSupplier = new KTableFilter<K, V>(this, predicate, filterNot, queryableStoreName);
 
             var processorParameters = new TableProcessorParameters<K, V>(processorSupplier, name);
 
-            var tableNode = new TableProcessorNode<K, V>(
+            var tableNode = new TableProcessorNode<K, V, K, V>(
                name,
                processorParameters,
                storeBuilder
-           );
+            );
 
             builder.addGraphNode(this.node, tableNode);
 
-            return new KTableImpl<K, V>(name,
+            return new KTableImpl<K, V, V>(name,
                                     keySerde,
                                     valueSerde,
                                     this.setSourceNodes,
@@ -158,6 +157,63 @@ namespace kafka_stream_core.Table.Internal
                                     processorSupplier,
                                     tableNode,
                                     builder);
+        }
+
+        private KTable<K, VR> doMapValues<VR>(IValueMapperWithKey<K,V,VR> mapper, string named, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materializedInternal)
+        {
+            ISerDes<K> keySerde;
+            ISerDes<VR> valueSerde;
+            String queryableStoreName;
+            StoreBuilder<kafka_stream_core.State.TimestampedKeyValueStore<K,VR>> storeBuilder;
+
+            if (materializedInternal != null)
+            {
+                // we actually do not need to generate store names at all since if it is not specified, we will not
+                // materialize the store; but we still need to burn one index BEFORE generating the processor to keep compatibility.
+                if (materializedInternal.StoreName == null)
+                {
+                    builder.newStoreName(MAPVALUES_NAME);
+                }
+                keySerde = materializedInternal.KeySerdes != null ? materializedInternal.KeySerdes : this.keySerdes;
+                valueSerde = materializedInternal.ValueSerdes != null ? materializedInternal.ValueSerdes : null;
+                queryableStoreName = materializedInternal.QueryableStoreName;
+                // only materialize if materialized is specified and it has queryable name
+                storeBuilder = queryableStoreName != null ? (new TimestampedKeyValueStoreMaterializer<K, VR>(materializedInternal)).materialize() : null;
+            }
+            else
+            {
+                keySerde = this.keySerdes;
+                valueSerde = null;
+                queryableStoreName = null;
+                storeBuilder = null;
+            }
+
+            var name = this.builder.newProcessorName(MAPVALUES_NAME);
+
+            var processorSupplier = new KTableMapValues<K, V, VR>(this, mapper, queryableStoreName);
+            var processorParameters = new TableProcessorParameters<K, V>(processorSupplier, name);
+
+            var tableNode = new TableProcessorNode<K, V, K, VR>(
+               name,
+               processorParameters,
+               storeBuilder
+            );
+
+            builder.addGraphNode(this.node, tableNode);
+
+            // don't inherit parent value serde, since this operation may change the value type, more specifically:
+            // we preserve the key following the order of 1) materialized, 2) parent, 3) null
+            // we preserve the value following the order of 1) materialized, 2) null
+            return new KTableImpl<K, V, VR>(
+                name,
+                keySerde,
+                valueSerde,
+                this.setSourceNodes,
+                queryableStoreName,
+                processorSupplier,
+                tableNode,
+                builder
+            );
         }
 
         #endregion
@@ -190,13 +246,27 @@ namespace kafka_stream_core.Table.Internal
 
         #region ToStream
 
+        public KStream<KR, V> toStream<KR>(Func<K, V, KR> mapper)
+            => this.toStream(mapper, string.Empty);
+
+        public KStream<KR, V> toStream<KR>(Func<K, V, KR> mapper, string named)
+            => this.toStream(new WrappedKeyValueMapper<K, V, KR>(mapper), named);
+
+        public KStream<KR, V> toStream<KR>(IKeyValueMapper<K, V, KR> mapper)
+            => this.toStream(mapper, string.Empty);
+
+        public KStream<KR, V> toStream<KR>(IKeyValueMapper<K, V, KR> mapper, string named)
+        {
+            return toStream().selectKey(mapper, named);
+        }
+
         public KStream<K, V> toStream() => this.toStream(null);
 
         public KStream<K, V> toStream(string named)
         {
             string name = this.builder.newProcessorName(TOSTREAM_NAME);
 
-            var p = new ValueMapperWithKey<K, Change<V>, V>((k, v) => v.NewValue);
+            var p = new WrapperValueMapperWithKey<K, Change<V>, V>((k, v) => v.NewValue);
             IProcessorSupplier<K, Change<V>> processorMapValues = new KStreamMapValues<K, Change<V>, V>(p);
             ProcessorParameters<K, Change<V>> processorParameters = new ProcessorParameters<K, Change<V>>(processorMapValues, name);
 
@@ -210,7 +280,61 @@ namespace kafka_stream_core.Table.Internal
 
         #endregion
 
+        #region MapValues
+
+        public KTable<K, VR> mapValues<VR>(Func<V, VR> mapper) 
+            => this.mapValues(mapper, null);
+
+        public KTable<K, VR> mapValues<VR>(Func<V, VR> mapper, string name)
+            => this.mapValues(mapper, name, null);
+
+        public KTable<K, VR> mapValues<VR>(Func<V, VR> mapper, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string name)
+            => this.mapValues(mapper, name, materialized);
+
+        public KTable<K, VR> mapValues<VR>(Func<V, VR> mapper, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
+             => this.mapValues(new WrappedValueMapper<V, VR>(mapper), name, materialized);
+
+        public KTable<K, VR> mapValues<VR>(IValueMapper<V, VR> mapper)
+            => this.mapValues(mapper, string.Empty);
+
+        public KTable<K, VR> mapValues<VR>(IValueMapper<V, VR> mapper, string name)
+            => this.mapValues(withKey(mapper), name);
+
+        public KTable<K, VR> mapValues<VR>(IValueMapper<V, VR> mapper, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
+            => this.mapValues(mapper, null, materialized);
+
+        public KTable<K, VR> mapValues<VR>(IValueMapper<V, VR> mapper, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
+            => this.mapValues(withKey(mapper), name, materialized);
+
+        public KTable<K, VR> mapValues<VR>(Func<K, V, VR> mapperWithKey)
+            => this.mapValues(mapperWithKey, null);
+
+        public KTable<K, VR> mapValues<VR>(Func<K, V, VR> mapperWithKey, string name)
+            => this.mapValues(mapperWithKey, name, null);
+
+        public KTable<K, VR> mapValues<VR>(Func<K, V, VR> mapperWithKey, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string name)
+            => this.mapValues(mapperWithKey, name, materialized);
+
+        public KTable<K, VR> mapValues<VR>(Func<K, V, VR> mapperWithKey, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
+            => this.mapValues(new WrapperValueMapperWithKey<K, V, VR>(mapperWithKey), name, materialized);
+
+        public KTable<K, VR> mapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey)
+            => this.mapValues(mapperWithKey, string.Empty);
+
+        public KTable<K, VR> mapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string name)
+            => this.mapValues(mapperWithKey, name, null);
+
+        public KTable<K, VR> mapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
+            => this.mapValues(mapperWithKey, null, materialized);
+
+        public KTable<K, VR> mapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
+            => doMapValues(mapperWithKey, name, materialized);
+
         #endregion
+
+        #endregion
+
+        #region Methods
 
         public void EnableSendingOldValues()
         {
@@ -232,5 +356,7 @@ namespace kafka_stream_core.Table.Internal
                 SendOldValues = true;
             }
         }
+
+        #endregion
     }
 }
