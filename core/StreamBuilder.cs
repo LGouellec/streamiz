@@ -33,7 +33,7 @@ namespace kafka_stream_core
 
         #region KTable
 
-        public KTable<K,V> table<K,V>(string topic, Consumed<K,V> consumed, Materialized<K, V, KeyValueStore<byte[], byte[]>> materialized)
+        public KTable<K,V> table<K,V>(string topic, Consumed<K,V> consumed, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized)
         {
             materialized = materialized.useProvider(internalStreamBuilder, $"{topic}-").initConsumed(consumed);
 

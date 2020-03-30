@@ -24,6 +24,13 @@ namespace kafka_stream_core.Processors
             this.sendOldValues = sendOldValues;
         }
 
+        public override object Clone()
+        {
+            var p = new KTableFilterProcessor<K, V>(this.predicate, this.filterNot, this.queryableStoreName, this.sendOldValues);
+            p.StateStores = new List<string>(this.StateStores);
+            return p;
+        }
+
         public override void Init(ProcessorContext context)
         {
             base.Init(context);

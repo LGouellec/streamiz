@@ -1,5 +1,6 @@
 ﻿using kafka_stream_core;
 using kafka_stream_core.SerDes;
+using kafka_stream_core.State;
 using kafka_stream_core.Stream;
 using kafka_stream_core.Table;
 using System;

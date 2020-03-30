@@ -35,7 +35,12 @@ namespace kafka_stream_core.Stream.Internal
         internal IProcessor GetSourceProcessor(string name)
         {
             var processor = SourceOperators.FirstOrDefault(kp => kp.Value is ISourceProcessor && (kp.Value as ISourceProcessor).TopicName.Equals(name));
-            return processor.Value;
+            if (processor.Value != null)
+            {
+                return processor.Value.Clone() as IProcessor;
+            }
+            else
+                return null;
         }
 
         internal IEnumerable<string> GetSourceTopics() => SourceOperators.Select(o => (o.Value as ISourceProcessor).TopicName);

@@ -1,4 +1,5 @@
-﻿using kafka_stream_core.SerDes;
+﻿using kafka_stream_core.Crosscutting;
+using kafka_stream_core.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -6,20 +7,20 @@ using System.Text;
 namespace kafka_stream_core.State.Internal
 {
     internal class TimestampedKeyValueStore<K, V> :
-        WrappedStateStore<KeyValueStore<byte[], byte[]>, K, V>,
+        WrappedStateStore<KeyValueStore<Bytes, byte[]>, K, V>,
         kafka_stream_core.State.TimestampedKeyValueStore<K, V>
     {
         private readonly ISerDes<K> keySerdes;
         private readonly ISerDes<ValueAndTimestamp<V>> valueSerdes;
 
-        public TimestampedKeyValueStore(KeyValueStore<byte[], byte[]> wrapped, ISerDes<K> keySerdes, ISerDes<ValueAndTimestamp<V>> valueSerdes) 
+        public TimestampedKeyValueStore(KeyValueStore<Bytes, byte[]> wrapped, ISerDes<K> keySerdes, ISerDes<ValueAndTimestamp<V>> valueSerdes) 
             : base(wrapped)
         {
             this.keySerdes = keySerdes;
             this.valueSerdes = valueSerdes;
         }
 
-        private byte[] GetKeyBytes(K key) => this.keySerdes.Serialize(key);
+        private Bytes GetKeyBytes(K key) => new Bytes(this.keySerdes.Serialize(key));
         private byte[] GetValueBytes(ValueAndTimestamp<V> value) => this.valueSerdes.Serialize(value);
         private ValueAndTimestamp<V> FromValue(byte[] values) => values != null ? this.valueSerdes.Deserialize(values) : null;
 

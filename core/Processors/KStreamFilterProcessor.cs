@@ -1,5 +1,6 @@
 ﻿using kafka_stream_core.Stream.Internal.Graph.Nodes;
 using System;
+using System.Collections.Generic;
 
 namespace kafka_stream_core.Processors
 {
@@ -13,6 +14,13 @@ namespace kafka_stream_core.Processors
         {
             this.predicate = predicate;
             this.not = not;
+        }
+
+        public override object Clone()
+        {
+            var p = new KStreamFilterProcessor<K, V>(this.predicate, this.not);
+            p.StateStores = new List<string>(this.StateStores);
+            return p;
         }
 
         public override void Process(K key, V value)

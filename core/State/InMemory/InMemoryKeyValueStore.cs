@@ -6,10 +6,10 @@ using kafka_stream_core.Processors;
 
 namespace kafka_stream_core.State.InMemory
 {
-    internal class InMemoryKeyValueStore : KeyValueStore<byte[], byte[]>
+    internal class InMemoryKeyValueStore : KeyValueStore<Bytes, byte[]>
     {
         private int size = 0;
-        private readonly IDictionary<byte[], byte[]> map = new Dictionary<byte[], byte[]>();
+        private readonly IDictionary<Bytes, byte[]> map = new Dictionary<Bytes, byte[]>(new BytesComparer());
 
         public InMemoryKeyValueStore(string name)
         {
@@ -30,7 +30,7 @@ namespace kafka_stream_core.State.InMemory
             IsOpen = false;
         }
 
-        public byte[] delete(byte[] key)
+        public byte[] delete(Bytes key)
         {
             byte[] v = map.ContainsKey(key) ? map[key] : null;
             size -= map.Remove(key) ? 1 : 0;
@@ -39,7 +39,7 @@ namespace kafka_stream_core.State.InMemory
 
         public void flush(){ /* Nothing => IN MEMORY */ }
 
-        public byte[] get(byte[] key) => map.ContainsKey(key) ? map[key] : null;
+        public byte[] get(Bytes key) => map.ContainsKey(key) ? map[key] : null;
 
         public void init(ProcessorContext context, StateStore root)
         {
@@ -53,7 +53,7 @@ namespace kafka_stream_core.State.InMemory
             IsOpen = true;
         }
 
-        public void put(byte[] key, byte[] value)
+        public void put(Bytes key, byte[] value)
         {
             if (value == null)
                 size -= map.Remove(key) ? 1 : 0;
@@ -61,13 +61,13 @@ namespace kafka_stream_core.State.InMemory
                 size += map.AddOrUpdate(key, value) ? 1 : 0;
         }
 
-        public void putAll(IEnumerable<KeyValuePair<byte[], byte[]>> entries)
+        public void putAll(IEnumerable<KeyValuePair<Bytes, byte[]>> entries)
         {
             foreach (var kp in entries)
                 this.put(kp.Key, kp.Value);
         }
 
-        public byte[] putIfAbsent(byte[] key, byte[] value)
+        public byte[] putIfAbsent(Bytes key, byte[] value)
         {
             if(!map.ContainsKey(key))
             {

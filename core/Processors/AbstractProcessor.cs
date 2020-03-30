@@ -135,10 +135,12 @@ namespace kafka_stream_core.Processors
         }
 
 
-        public abstract void Process(K key, V value);
-        // TODO : MUST BE ABSTRACT FOR SUBTOPOLOGY
-        public virtual object Clone() { return null; }
+        #region Abstract
 
+        public abstract void Process(K key, V value);
+        public abstract object Clone();
+
+        #endregion
 
         public override bool Equals(object obj)
         {

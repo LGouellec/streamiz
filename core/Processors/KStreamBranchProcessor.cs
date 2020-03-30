@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using kafka_stream_core.Stream.Internal.Graph;
 
 namespace kafka_stream_core.Processors
@@ -12,6 +13,13 @@ namespace kafka_stream_core.Processors
         {
             this.predicates = predicates;
             this.childNodes = childNodes;
+        }
+
+        public override object Clone()
+        {
+            var p = new KStreamBranchProcessor<K, V>(this.predicates, this.childNodes);
+            p.StateStores = new List<string>(this.StateStores);
+            return p;
         }
 
         public override void Process(K key, V value)

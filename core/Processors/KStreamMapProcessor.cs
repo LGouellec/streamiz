@@ -16,6 +16,13 @@ namespace kafka_stream_core.Processors
             this.mapperFunction = mapperFunction;
         }
 
+        public override object Clone()
+        {
+            var p= new KStreamMapProcessor<K, V, K1, V1>(this.mapper, this.mapperFunction);
+            p.StateStores = new List<string>(this.StateStores);
+            return p;
+        }
+
         public override void Process(K key, V value)
         {
             KeyValuePair<K1, V1> newPair = new KeyValuePair<K1, V1>();

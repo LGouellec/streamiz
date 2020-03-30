@@ -11,6 +11,7 @@ namespace kafka_stream_core.State
     {
         public static KeyValueBytesStoreSupplier persistentTimestampedKeyValueStore(string name)
         {
+            // TODO : RocksDB IMPLEMENTATION
             //return new RocksDbKeyValueBytesStoreSupplier(name, true);
             return null;
         }

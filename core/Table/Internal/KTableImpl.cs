@@ -1,4 +1,5 @@
-﻿using kafka_stream_core.Processors;
+﻿using kafka_stream_core.Crosscutting;
+using kafka_stream_core.Processors;
 using kafka_stream_core.SerDes;
 using kafka_stream_core.State;
 using kafka_stream_core.State.Internal;
@@ -102,7 +103,7 @@ namespace kafka_stream_core.Table.Internal
 
         #region Privates
 
-        private KTable<K, V> doFilter(Func<K, V, bool> predicate, string named, Materialized<K, V, KeyValueStore<byte[], byte[]>> materializedInternal, bool filterNot)
+        private KTable<K, V> doFilter(Func<K, V, bool> predicate, string named, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materializedInternal, bool filterNot)
         {
             ISerDes<K> keySerde;
             ISerDes<V> valueSerde;
@@ -169,20 +170,20 @@ namespace kafka_stream_core.Table.Internal
 
         public KTable<K, V> filter(Func<K, V, bool> predicate, string named) => doFilter(predicate, named, null, false);
 
-        public KTable<K, V> filter(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<byte[], byte[]>> materialized)
+        public KTable<K, V> filter(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized)
             => doFilter(predicate, null, materialized, false);
 
-        public KTable<K, V> filter(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<byte[], byte[]>> materialized, string named)
+        public KTable<K, V> filter(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized, string named)
             => doFilter(predicate, named, materialized, false);
 
         public KTable<K, V> filterNot(Func<K, V, bool> predicate) => doFilter(predicate, null, null, true);
 
         public KTable<K, V> filterNot(Func<K, V, bool> predicate, string name) => doFilter(predicate, name, null, true);
 
-        public KTable<K, V> filterNot(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<byte[], byte[]>> materialized) 
+        public KTable<K, V> filterNot(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized) 
             => doFilter(predicate, null, materialized, true);
 
-        public KTable<K, V> filterNot(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<byte[], byte[]>> materialized, string named)
+        public KTable<K, V> filterNot(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized, string named)
             => doFilter(predicate, named, materialized, true);
 
         #endregion

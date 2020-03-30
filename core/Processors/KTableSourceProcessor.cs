@@ -2,6 +2,7 @@
 using kafka_stream_core.State;
 using kafka_stream_core.Table.Internal;
 using log4net;
+using System.Collections.Generic;
 
 namespace kafka_stream_core.Processors
 {
@@ -21,6 +22,13 @@ namespace kafka_stream_core.Processors
             this.storeName = storeName;
             this.queryableName = queryableName;
             this.sendOldValues = sendOldValues;
+        }
+
+        public override object Clone()
+        {
+            var p = new KTableSourceProcessor<K, V>(this.storeName, this.queryableName, this.sendOldValues);
+            p.StateStores = new List<string>(this.StateStores);
+            return p;
         }
 
         public override void Init(ProcessorContext context)

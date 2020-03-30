@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using kafka_stream_core.Crosscutting;
 
 namespace kafka_stream_core.Processors.Internal
 {
-    public delegate void StateRestoreCallback(byte[] key, byte[] value);
+    public delegate void StateRestoreCallback(Bytes key, byte[] value);
 }

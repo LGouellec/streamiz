@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using kafka_stream_core.Crosscutting;
+using kafka_stream_core.State.InMemory;
 using kafka_stream_core.State.Supplier;
 using kafka_stream_core.Table;
 
@@ -8,9 +10,9 @@ namespace kafka_stream_core.State.Internal
 {
     internal class TimestampedKeyValueStoreMaterializer<K, V>
     {
-        private Materialized<K, V, KeyValueStore<byte[], byte[]>> materialized;
+        private Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized;
 
-        public TimestampedKeyValueStoreMaterializer(Materialized<K, V, KeyValueStore<byte[], byte[]>> materializedInternal)
+        public TimestampedKeyValueStoreMaterializer(Materialized<K, V, KeyValueStore<Bytes, byte[]>> materializedInternal)
         {
             this.materialized = materializedInternal;
         }
@@ -21,7 +23,9 @@ namespace kafka_stream_core.State.Internal
             if (supplier == null)
             {
                 String name = materialized.StoreName;
-                supplier = Stores.persistentTimestampedKeyValueStore(name);
+                // TODO : RocksDB
+                //supplier = Stores.persistentTimestampedKeyValueStore(name);
+                supplier = new InMemoryKeyValueBytesStoreSupplier(name);
             }
 
             StoreBuilder<kafka_stream_core.State.TimestampedKeyValueStore< K, V >> builder = Stores.timestampedKeyValueStoreBuilder(

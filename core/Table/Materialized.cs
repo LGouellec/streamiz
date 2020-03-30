@@ -1,4 +1,5 @@
-﻿using kafka_stream_core.Processors;
+﻿using kafka_stream_core.Crosscutting;
+using kafka_stream_core.Processors;
 using kafka_stream_core.SerDes;
 using kafka_stream_core.State;
 using kafka_stream_core.State.InMemory;
@@ -62,19 +63,19 @@ namespace kafka_stream_core.Table
             return new Materialized<K, V, S>(storeName);
         }
 
-        public static Materialized<K, V, WindowStore<byte[], byte[]>> @as<K, V>(WindowBytesStoreSupplier supplier)
+        public static Materialized<K, V, WindowStore<Bytes, byte[]>> @as<K, V>(WindowBytesStoreSupplier supplier)
         {
-            return new Materialized<K, V, WindowStore<byte[], byte[]>>(supplier);
+            return new Materialized<K, V, WindowStore<Bytes, byte[]>>(supplier);
         }
 
-        public static Materialized<K, V, SessionStore<byte[], byte[]>> @as<K, V>(SessionBytesStoreSupplier supplier)
+        public static Materialized<K, V, SessionStore<Bytes, byte[]>> @as<K, V>(SessionBytesStoreSupplier supplier)
         {
-            return new Materialized<K, V, SessionStore<byte[], byte[]>>(supplier);
+            return new Materialized<K, V, SessionStore<Bytes, byte[]>>(supplier);
         }
 
-        public static Materialized<K, V, KeyValueStore<byte[], byte[]>> @as<K, V>(KeyValueBytesStoreSupplier supplier)
+        public static Materialized<K, V, KeyValueStore<Bytes, byte[]>> @as<K, V>(KeyValueBytesStoreSupplier supplier)
         {
-            return new Materialized<K, V, KeyValueStore<byte[], byte[]>>(supplier);
+            return new Materialized<K, V, KeyValueStore<Bytes, byte[]>>(supplier);
         }
 
         public static Materialized<K, V, S> with<K, V, S>(ISerDes<K> keySerde, ISerDes<V> valueSerde)
@@ -184,9 +185,9 @@ namespace kafka_stream_core.Table
 
     #region Child Materialized
 
-    public class InMemory<K, V> : Materialized<K, V, KeyValueStore<byte[], byte[]>>
+    public class InMemory<K, V> : Materialized<K, V, KeyValueStore<Bytes, byte[]>>
     {
-        protected InMemory(string name, StoreSupplier<KeyValueStore<byte[], byte[]>> supplier) 
+        protected InMemory(string name, StoreSupplier<KeyValueStore<Bytes, byte[]>> supplier) 
             : base(name, supplier)
         {
 

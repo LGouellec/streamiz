@@ -1,4 +1,5 @@
-﻿using kafka_stream_core.State.Supplier;
+﻿using kafka_stream_core.Crosscutting;
+using kafka_stream_core.State.Supplier;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -14,6 +15,6 @@ namespace kafka_stream_core.State.InMemory
 
         public string Name { get; }
 
-        public KeyValueStore<byte[], byte[]> get() => new InMemoryKeyValueStore(this.Name);
+        public KeyValueStore<Bytes, byte[]> get() => new InMemoryKeyValueStore(this.Name);
     }
 }
