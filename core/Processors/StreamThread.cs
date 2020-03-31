@@ -170,13 +170,13 @@ namespace kafka_stream_core.Processors
 
         internal static IThread Create(string threadId, string clientId, InternalTopologyBuilder builder, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IAdminClient adminClient)
         {
-            var producer = kafkaSupplier.GetProducer(configuration.toProducerConfig());
+            var producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig());
 
             var taskCreator = new TaskCreator(builder, configuration, threadId, kafkaSupplier, producer);
             var manager = new TaskManager(taskCreator, adminClient);
 
             var listener = new StreamsRebalanceListener(manager);
-            var consumer = kafkaSupplier.GetConsumer(configuration.toConsumerConfig(clientId), listener);
+            var consumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig(clientId), listener);
 
             manager.UseConsumer(consumer);
 

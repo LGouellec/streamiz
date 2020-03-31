@@ -37,6 +37,7 @@ TODO
 
 - Subtopology impl [ ]
 - Task restoring [ ]
+- Topology description [ ]
 - State thread + task implementation [ ]
 - Global state store [ ]
 - Naming Kafka Streams DSL Topologies [ ]

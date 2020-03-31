@@ -71,7 +71,7 @@ namespace kafka_stream_core.Stream.Internal
             string sourceName = newProcessorName(KStreamImpl<byte, byte>.SOURCE_NAME);
             string tableSourceName = newProcessorName(KTableImpl<byte, byte, byte>.SOURCE_NAME);
 
-            KTableSource<K, V> tableSource = new KTableSource<K,V>(materialized.StoreName, materialized.QueryableStoreName);
+            KTableSource<K, V> tableSource = new KTableSource<K,V>(materialized.StoreName , materialized.QueryableStoreName);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K,V>(tableSource, tableSourceName);
 
             var tableSourceNode = new TableSourceNode<K, V, KeyValueStore<Bytes, byte[]>>(

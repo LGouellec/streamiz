@@ -17,6 +17,17 @@ namespace kafka_stream_core.Processors
             this.topicNameExtractor = topicNameExtractor;
         }
 
+        public override void Init(ProcessorContext context)
+        {
+            base.Init(context);
+
+            if (this.Key == null)
+                this.Key = context.Configuration.DefaultKeySerDes;
+
+            if (this.Value == null)
+                this.Value = context.Configuration.DefaultValueSerDes;
+        }
+
         public override object Clone()
         {
             return new SinkProcessor<K, V>(this.Name, null, this.topicNameExtractor, this.KeySerDes, this.ValueSerDes);

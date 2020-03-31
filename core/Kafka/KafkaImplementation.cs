@@ -27,7 +27,7 @@ namespace kafka_stream_core.Kafka
 
         private IProducer<byte[], byte[]> CreateGenericProducer(string clef)
         {
-            ProducerConfig producer = configuration.toProducerConfig();
+            ProducerConfig producer = configuration.ToProducerConfig();
             var p = this.kafkaSupplier.GetProducer(producer);
             _producers.Add(clef, p);
             return p;
@@ -35,7 +35,7 @@ namespace kafka_stream_core.Kafka
 
         private IConsumer<byte[], byte[]> CreateGenericConsumer(string clef)
         {
-            ConsumerConfig consumer = configuration.toConsumerConfig();
+            ConsumerConfig consumer = configuration.ToConsumerConfig();
             var c = this.kafkaSupplier.GetConsumer(consumer, null);
             _consumers.Add(clef, c);
             return c;

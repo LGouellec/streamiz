@@ -12,34 +12,45 @@ namespace kafka_stream_core
     {
         #region Methods 
 
-        ProducerConfig toProducerConfig();
+        ProducerConfig ToProducerConfig();
 
-        ConsumerConfig toConsumerConfig();
-        
-        ConsumerConfig toConsumerConfig(string clientid);
+        ConsumerConfig ToConsumerConfig();
 
-        ConsumerConfig toGlobalConsumerConfig(string clientId);
+        ConsumerConfig ToConsumerConfig(string clientid);
 
-        AdminClientConfig toAdminConfig(string clientId);
+        ConsumerConfig ToGlobalConsumerConfig(string clientId);
+
+        AdminClientConfig ToAdminConfig(string clientId);
 
         #endregion
 
+        #region Stream Config Property
+
+        /// <summary>
+        /// An identifier for the stream processing application. Must be unique within the Kafka cluster. It is used as 1) the default client-id prefix, 2) the group-id for membership management, 3) the changelog topic prefix.
+        /// </summary>
         string ApplicationId { get; }
+
+        /// <summary>
+        /// An ID prefix string used for the client IDs of internal consumer, producer and restore-consumer, with pattern '<client.id>-StreamThread-<threadSequenceNumber>-<consumer|producer|restore-consumer>'.
+        /// </summary>
+        string ClientId { get; }
 
         int NumStreamThreads { get; }
 
         ISerDes DefaultKeySerDes { get; }
 
         ISerDes DefaultValueSerDes { get; }
+
+        #endregion
     }
 
     public class StreamConfig : Dictionary<string, string>, IStreamConfig
     {
-        private string topologyOptimizationCst = "topology.optimization";
-        private string applicatonIdCst = "application.id";
-        private string clientIdCst = "client.id";
-        private string numStreamThreadsCst = "num.stream.threads";
+        #region Not used for moment
+
         private string applicationServerCst = "application.server";
+        private string topologyOptimizationCst = "topology.optimization";
         private string cacheMaxBytesBufferingCst = "cache.max.bytes.buffering";
         private string rocksdbConfigSetterCst = "rocksdb.config.setter";
         private string stateCleanupDelayMsCst = "state.cleanup.delay.ms";
@@ -49,7 +60,19 @@ namespace kafka_stream_core
         public static readonly string AT_LEAST_ONCE = "at_least_once";
         public static readonly string EXACTLY_ONCE = "exactly_once";
 
-        public string ProcessingGuaranteeConfig
+        private string Optimize
+        {
+            get => this[topologyOptimizationCst];
+            set => this.AddOrUpdate(topologyOptimizationCst, value);
+        }
+
+        private string ApplicationServer
+        {
+            get => this[applicationServerCst];
+            set => this.AddOrUpdate(applicationServerCst, value);
+        }
+
+        private string ProcessingGuaranteeConfig
         {
             get => this[processingGuaranteeCst];
             set
@@ -61,29 +84,33 @@ namespace kafka_stream_core
             }
         }
 
-        public long PollMsConfig
+        private long PollMsConfig
         {
             get => Convert.ToInt64(this[pollMsCst]);
             set => this.AddOrUpdate(pollMsCst, value.ToString());
         }
 
-        public long StateCleanupDelayMs
+        private long StateCleanupDelayMs
         {
             get => Convert.ToInt64(this[stateCleanupDelayMsCst]);
             set => this.AddOrUpdate(stateCleanupDelayMsCst, value.ToString());
         }
 
-        public long CacheMaxBytesBuffering
+        private long CacheMaxBytesBuffering
         {
             get => Convert.ToInt64(this[cacheMaxBytesBufferingCst]);
             set => this.AddOrUpdate(cacheMaxBytesBufferingCst, value.ToString());
         }
-        
-        public string ApplicationServer
-        {
-            get => this[applicationServerCst];
-            set => this.AddOrUpdate(applicationServerCst, value);
-        }
+
+        #endregion
+
+        private string applicatonIdCst = "application.id";
+        private string clientIdCst = "client.id";
+        private string numStreamThreadsCst = "num.stream.threads";
+        private string defaultKeySerDesCst = "default.key.serdes";
+        private string defaultValueSerDesCst = "default.value.serdes";
+
+        #region IStreamConfig Property
 
         public int NumStreamThreads
         {
@@ -103,20 +130,28 @@ namespace kafka_stream_core
             set => this.AddOrUpdate(applicatonIdCst, value);
         }
 
-        public string Optimize
+        public ISerDes DefaultKeySerDes
         {
-            get => this[topologyOptimizationCst];
-            set => this.AddOrUpdate(topologyOptimizationCst, value);
+            get => this[defaultKeySerDesCst].CreateSerDes();
+            set => this.AddOrUpdate(defaultKeySerDesCst, value.GetType().AssemblyQualifiedName);
         }
 
-        public ISerDes DefaultKeySerDes => new StringSerDes();
+        public ISerDes DefaultValueSerDes
+        {
+            get => this[defaultValueSerDesCst].CreateSerDes();
+            set => this.AddOrUpdate(defaultValueSerDesCst, value.GetType().AssemblyQualifiedName);
+        }
 
-        public ISerDes DefaultValueSerDes => new StringSerDes();
+        #endregion
+
+        #region Ctor
 
         public StreamConfig()
         {
             NumStreamThreads = 1;
             Optimize = "";
+            DefaultKeySerDes = new StringSerDes();
+            DefaultValueSerDes = new StringSerDes();
         }
 
         public StreamConfig(IDictionary<string, string> properties)
@@ -126,7 +161,11 @@ namespace kafka_stream_core
                 this.AddOrUpdate(k.Key, k.Value);
         }
 
-        public ProducerConfig toProducerConfig()
+        #endregion
+
+        #region IStreamConfig Impl
+
+        public ProducerConfig ToProducerConfig()
         {
             return new ProducerConfig
             {
@@ -138,7 +177,7 @@ namespace kafka_stream_core
             };
         }
 
-        public ConsumerConfig toConsumerConfig()
+        public ConsumerConfig ToConsumerConfig()
         {
             return new ConsumerConfig
             {
@@ -153,23 +192,25 @@ namespace kafka_stream_core
             };
         }
 
-        public ConsumerConfig toConsumerConfig(string clientId)
+        public ConsumerConfig ToConsumerConfig(string clientId)
         {
-            var config = this.toConsumerConfig();
+            var config = this.ToConsumerConfig();
             config.ClientId = clientId;
             return config;
         }
 
-        public ConsumerConfig toGlobalConsumerConfig(string clientId)
+        public ConsumerConfig ToGlobalConsumerConfig(string clientId)
         {
             // TODO
             return new ConsumerConfig();
         }
 
-        public AdminClientConfig toAdminConfig(string clientId)
+        public AdminClientConfig ToAdminConfig(string clientId)
         {
             // TODO
             return new AdminClientConfig();
         }
+
+        #endregion
     }
 }

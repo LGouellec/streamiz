@@ -35,7 +35,7 @@ namespace kafka_stream_core
                 var clientId = $"{this.configuration.ApplicationId.ToLower()}-{processID}";
                 var threadId = $"{this.configuration.ApplicationId.ToLower()}-stream-thread-{i}";
 
-                adminClient = this.kafkaSupplier.GetAdmin(configuration.toAdminConfig(StreamThread.getSharedAdminClientId(clientId)));
+                adminClient = this.kafkaSupplier.GetAdmin(configuration.ToAdminConfig(StreamThread.getSharedAdminClientId(clientId)));
 
                 this.threads[i] = StreamThread.Create(
                     threadId,

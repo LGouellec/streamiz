@@ -12,13 +12,13 @@ namespace kafka_stream_core.Processors
         public string Name { get; private set; }
         public IList<string> StateStores { get; protected set; }
 
-        public ISerDes<K> KeySerDes { get; }
+        public ISerDes<K> KeySerDes => Key is ISerDes<K> ? (ISerDes<K>)Key : null;
 
-        public ISerDes<V> ValueSerDes { get; }
+        public ISerDes<V> ValueSerDes => Value is ISerDes<V>? (ISerDes<V>)Value : null;
 
-        public ISerDes Key => KeySerDes;
+        public ISerDes Key { get; internal set; } = null;
 
-        public ISerDes Value => ValueSerDes;
+        public ISerDes Value { get; internal set; } = null;
 
         public IList<IProcessor> Previous { get; private set; } = null;
 
@@ -37,13 +37,8 @@ namespace kafka_stream_core.Processors
         }
 
         public AbstractProcessor(string name, IProcessor previous, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+            : this(name, previous, keySerdes, valueSerdes, null)
         {
-            Name = name;
-            this.SetPreviousProcessor(previous);
-            this.SetNextProcessor(null);
-            KeySerDes = keySerdes;
-            ValueSerDes = valueSerdes;
-            StateStores = new List<string>();
         }
 
         public AbstractProcessor(string name, IProcessor previous, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, List<string> stateStores)
@@ -51,9 +46,9 @@ namespace kafka_stream_core.Processors
             Name = name;
             this.SetPreviousProcessor(previous);
             this.SetNextProcessor(null);
-            KeySerDes = keySerdes;
-            ValueSerDes = valueSerdes;
-            StateStores = new List<string>(stateStores);
+            Key = keySerdes;
+            Value = valueSerdes;
+            StateStores = stateStores != null ? new List<string>(stateStores) : new List<string>();
         }
 
         public virtual void Close()
@@ -80,14 +75,26 @@ namespace kafka_stream_core.Processors
         public virtual void Forward(K key, V value)
         {
             foreach (var n in Next)
-                n.Process(key, value);
+            {
+                if (n is IProcessor<K, V>)
+                    (n as IProcessor<K, V>).Process(key, value);
+                else
+                    n.Process(key, value);
+            }
         }
 
         public virtual void Forward(K key, V value, string name)
         {
             foreach (var n in Next)
+            {
                 if (n.Name.Equals(name))
-                    n.Process(key, value);
+                {
+                    if (n is IProcessor<K, V>)
+                        (n as IProcessor<K, V>).Process(key, value);
+                    else
+                        n.Process(key, value);
+                }
+            }
         }
 
         #endregion
@@ -124,16 +131,15 @@ namespace kafka_stream_core.Processors
 
         public void Process(object key, object value)
         {
-            if (key is byte[] && key != null && KeySerDes != null)
+            if (key != null && key is byte[] && KeySerDes != null)
                 key = this.Key.DeserializeObject(key as byte[]);
 
-            if (value is byte[] && value != null && ValueSerDes != null)
+            if (value != null && value is byte[] && ValueSerDes != null)
                 value = this.Value.DeserializeObject(value as byte[]);
 
             if ((key == null || key is K) && (value == null || value is V))
                 this.Process((K)key, (V)value);
         }
-
 
         #region Abstract
 

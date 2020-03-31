@@ -33,9 +33,15 @@ namespace kafka_stream_core
 
         #region KTable
 
-        public KTable<K,V> table<K,V>(string topic, Consumed<K,V> consumed, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized)
+        // TODO
+        //public KTable<object, object> table(string topic) 
+        //    => this.table<object, object>(topic, 
+        //        Consumed<object, object>.with(null, null), 
+        //        Materialized<object, object, KeyValueStore<Bytes, byte[]>>.with(default, default));
+
+        public KTable<K,V> table<K,V>(string topic, Consumed<K,V> consumed, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized = null)
         {
-            materialized = materialized.useProvider(internalStreamBuilder, $"{topic}-").initConsumed(consumed);
+            materialized?.useProvider(internalStreamBuilder, $"{topic}-").initConsumed(consumed);
 
             return internalStreamBuilder.table(topic, consumed, materialized);
         }

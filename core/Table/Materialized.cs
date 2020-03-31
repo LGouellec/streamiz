@@ -161,7 +161,7 @@ namespace kafka_stream_core.Table
     
         internal Materialized<K, V, S> useProvider(NameProvider provider, string generatedStorePrefix)
         {
-            queriable = StoreName != null;
+            queriable = !string.IsNullOrEmpty(StoreName);
             if (!queriable && provider != null)
             {
                 storeName = provider.newStoreName(generatedStorePrefix);

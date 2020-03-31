@@ -18,6 +18,7 @@ namespace kafka_stream_core.Processors
     internal class SourceProcessor<K,V> : AbstractProcessor<K, V>, ISourceProcessor
     {
         private readonly string topicName;
+
         internal SourceProcessor(string name, string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, TimestampExtractor extractor, Topology.AutoOffsetReset autoOffsetReset)
             : base(name, null, keySerdes, valueSerdes)
         {
@@ -38,6 +39,17 @@ namespace kafka_stream_core.Processors
 
         public Topology.AutoOffsetReset AutoOffsetReset { get; }
 
+        public override void Init(ProcessorContext context)
+        {
+            base.Init(context);
+
+            if (this.Key == null)
+                this.Key = context.Configuration.DefaultKeySerDes;
+
+            if (this.Value == null)
+                this.Value = context.Configuration.DefaultValueSerDes;
+        }
+
         public override void Process(K key, V value)
         {
             Console.WriteLine("Source Operator => Key: " + key + " | Value : " + value);
@@ -49,7 +61,6 @@ namespace kafka_stream_core.Processors
 
         public override object Clone()
         {
-            // TODO : TO TEST
             SourceProcessor<K, V> source = new SourceProcessor<K, V>(this);
             this.CloneRecursiveChild(source, this.Next);
             return source;

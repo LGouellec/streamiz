@@ -45,7 +45,6 @@ namespace kafka_stream_core
         internal void Register(StateStore store, StateRestoreCallback callback)
         {
             States.Register(store, callback);
-
         }
     }
 }

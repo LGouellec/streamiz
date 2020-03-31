@@ -16,7 +16,7 @@ namespace Producer
                 SaslUsername = "admin",
                 SecurityProtocol = SecurityProtocol.SaslPlaintext
             };
-            var topic = "test";
+            var topic = "test-ktable";
             var builder = new ProducerBuilder<String, String>(producerConfig);
             Console.WriteLine("Enter exit for stopping producer, or enter KEY:VALUE");
             using (var producer = builder.Build())
