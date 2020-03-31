@@ -314,7 +314,7 @@ namespace kafka_stream_core.Stream.Internal
 
         public void print(Printed<K, V> printed)
         {
-            String name = this.builder.newProcessorName(PRINTING_NAME);
+            var name = this.builder.newProcessorName(PRINTING_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(printed.build(this.nameNode), name);
             ProcessorGraphNode<K, V> printNode = new ProcessorGraphNode<K, V>(name, processorParameters);
 

@@ -30,6 +30,7 @@ namespace kafka_stream_core.Stream
         KStream<K, VR> flatMapValues<VR>(Func<K, V, IEnumerable<VR>> mapper, string named);
         void @foreach(Action<K, V> action);
         void @foreach(Action<K, V> action, string named);
+        void print(Printed<K, V> printed);
         KStream<KR, VR> map<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper);
         KStream<KR, VR> map<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper, string named);
         KStream<KR, VR> map<KR, VR>(Func<K, V, KeyValuePair<KR, VR>> mapper);
