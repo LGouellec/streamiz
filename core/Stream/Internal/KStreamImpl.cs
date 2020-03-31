@@ -79,7 +79,7 @@ namespace kafka_stream_core.Stream.Internal
 
         #region Filter
 
-        public KStream<K, V> filter(Func<K, V, bool> predicate)
+        public KStream<K, V> filter(Func<K, V, bool> predicate, string named)
         {
             string name = this.builder.newProcessorName(FILTER_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFilter<K, V>(predicate), name);
@@ -87,16 +87,24 @@ namespace kafka_stream_core.Stream.Internal
 
             this.builder.addGraphNode(node, filterProcessorNode);
             return new KStreamImpl<K, V>(name, this.keySerdes, this.valueSerdes, this.setSourceNodes, filterProcessorNode, this.builder);
+
         }
 
-        public KStream<K, V> filterNot(Func<K, V, bool> predicate)
+        public KStream<K, V> filterNot(Func<K, V, bool> predicate, string named)
         {
             string name = this.builder.newProcessorName(FILTER_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFilter<K, V>(predicate, true), name);
             ProcessorGraphNode<K, V> filterProcessorNode = new ProcessorGraphNode<K, V>(name, processorParameters);
             this.builder.addGraphNode(node, filterProcessorNode);
             return new KStreamImpl<K, V>(name, this.keySerdes, this.valueSerdes, this.setSourceNodes, filterProcessorNode, this.builder);
+
         }
+
+        public KStream<K, V> filter(Func<K, V, bool> predicate)
+            => this.filter(predicate, string.Empty);
+
+        public KStream<K, V> filterNot(Func<K, V, bool> predicate)
+            => this.filterNot(predicate, string.Empty);
 
         #endregion
 
@@ -345,6 +353,35 @@ namespace kafka_stream_core.Stream.Internal
 
         #endregion
 
+        #region GroupBy
+
+        public KGroupedStream<KR, V> groupBy<KR>(IKeyValueMapper<K, V, KR> keySelector)
+            => this.groupBy(keySelector, Grouped<KR, V>.With(null, valueSerdes));
+
+        public KGroupedStream<KR, V> groupBy<KR>(Func<K, V, KR> keySelector)
+            => this.groupBy(keySelector, Grouped<KR, V>.With(null, valueSerdes));
+
+        public KGroupedStream<KR, V> groupBy<KR>(IKeyValueMapper<K, V, KR> keySelector, Grouped<KR, V> grouped)
+            => doGroup(keySelector, grouped);
+
+        public KGroupedStream<KR, V> groupBy<KR>(Func<K, V, KR> keySelector, Grouped<KR, V> grouped)
+            => this.groupBy(new WrappedKeyValueMapper<K, V, KR>(keySelector), grouped);
+
+        public KGroupedStream<K, V> groupByKey()
+            => this.groupByKey(Grouped<K, V>.With(this.keySerdes, this.valueSerdes));
+
+        public KGroupedStream<K, V> groupByKey(Grouped<K, V> grouped)
+        {
+            return new KGroupedStreamImpl<K, V>(
+                this.nameNode,
+                grouped,
+                this.setSourceNodes,
+                this.node,
+                builder);
+        }
+
+        #endregion
+
         #region Private
 
         private void doTo(TopicNameExtractor<K, V> topicExtractor, Produced<K, V> produced)
@@ -363,7 +400,7 @@ namespace kafka_stream_core.Stream.Internal
             String branchName = this.builder.newProcessorName(BRANCH_NAME);
             String[] childNames = new String[predicates.Length];
             for (int i = 0; i < predicates.Length; i++)
-                childNames[i] = $"{this.builder.newProcessorName(BRANCHCHILD_NAME)}- predicate-{i}";
+                childNames[i] = $"{this.builder.newProcessorName(BRANCHCHILD_NAME)}-predicate-{i}";
 
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamBranch<K, V>(predicates, childNames), branchName);
             ProcessorGraphNode<K, V> branchNode = new ProcessorGraphNode<K, V>(branchName, processorParameters);
@@ -381,6 +418,21 @@ namespace kafka_stream_core.Stream.Internal
             }
 
             return branchChildren;
+        }
+
+        private KGroupedStream<KR, V> doGroup<KR>(IKeyValueMapper<K, V, KR> keySelector, Grouped<KR, V> grouped)
+        {
+            ProcessorGraphNode<K, V> selectKeyMapNode = internalSelectKey(keySelector, grouped.Named);
+            selectKeyMapNode.KeyChangingOperation = true;
+
+            builder.addGraphNode(this.node, selectKeyMapNode);
+
+            return new KGroupedStreamImpl<KR, V>(
+                selectKeyMapNode.streamGraphNode,
+                grouped,
+                this.setSourceNodes,
+                selectKeyMapNode,
+                builder);
         }
 
         private ProcessorGraphNode<K, V> internalSelectKey<KR>(IKeyValueMapper<K, V, KR> mapper, string named)

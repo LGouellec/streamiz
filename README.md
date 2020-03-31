@@ -44,7 +44,7 @@ TODO
 - Repartition impl [ ]
 - Logging [ ]
 - Unit test (TestTopologyDriver, ...) [ ]
-- EOS [ ]
+- [EOS](https://github.com/LGouellec/kafka-stream-net/issues/2) [ ] : 
 - Configuration property [ ]
 - Rocks DB state implementation [ ]
 - Optimizing Kafka Streams Topologies  [ ]

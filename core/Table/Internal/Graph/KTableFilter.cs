@@ -6,7 +6,7 @@ namespace kafka_stream_core.Table.Internal.Graph
 {
     internal class KTableFilter<K, V> : IKTableProcessorSupplier<K, V, V>
     {
-        internal class KTableFilterValueGetter<K, V> : IKTableValueGetter<K, V>
+        internal class KTableFilterValueGetter : IKTableValueGetter<K, V>
         {
             private readonly IKTableValueGetter<K, V> ktablegetter;
             private readonly bool filterNot;
@@ -71,7 +71,7 @@ namespace kafka_stream_core.Table.Internal.Graph
                     var supplier = parent.ValueGetterSupplier;
                     return new GenericKTableValueGetterSupplier<K, V>(
                         supplier.StoreNames,
-                        new KTableFilterValueGetter<K, V>(this.filterNot, this.predicate, supplier.get()));
+                        new KTableFilterValueGetter(this.filterNot, this.predicate, supplier.get()));
                 }
             }
         }

@@ -3,6 +3,7 @@ using kafka_stream_core.State;
 using kafka_stream_core.Stream;
 using kafka_stream_core.Table.Internal;
 using System;
+using System.Collections.Generic;
 
 namespace kafka_stream_core.Table
 {
@@ -43,6 +44,9 @@ namespace kafka_stream_core.Table
         KTable<K, VR> mapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string name);
         KTable<K, VR> mapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized);
         KTable<K, VR> mapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized);
-        
+        KGroupedTable<K1, V1> groupBy<K1, V1>(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> keySelector);
+        KGroupedTable<K1, V1> groupBy<K1, V1>(Func<K, V, KeyValuePair<K1, V1>> keySelector);
+        KGroupedTable<K1, V1> groupBy<K1, V1>(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> keySelector, Grouped<K1, V1> grouped);
+        KGroupedTable<K1, V1> groupBy<K1, V1>(Func<K, V, KeyValuePair<K1, V1>> keySelector, Grouped<K1, V1> grouped);
     }
 }

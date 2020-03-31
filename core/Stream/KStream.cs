@@ -9,7 +9,9 @@ namespace kafka_stream_core.Stream
         KStream<K, V>[] branch(params Func<K, V, bool>[] predicates);
         KStream<K, V>[] branch(string named, params Func<K, V, bool>[] predicates);
         KStream<K, V> filter(Func<K, V, bool> predicate);
+        KStream<K, V> filter(Func<K, V, bool> predicate, string named);
         KStream<K, V> filterNot(Func<K, V, bool> predicate);
+        KStream<K, V> filterNot(Func<K, V, bool> predicate, string named);
         void to(string topicName, Produced<K, V> produced);
         void to(string topicName);
         void to(TopicNameExtractor<K, V> topicExtractor);
@@ -46,5 +48,11 @@ namespace kafka_stream_core.Stream
         KStream<KR, V> selectKey<KR>(IKeyValueMapper<K, V, KR> mapper, string named);
         KStream<KR, V> selectKey<KR>(Func<K, V, KR> mapper);
         KStream<KR, V> selectKey<KR>(Func<K, V, KR> mapper, string named);
+        KGroupedStream<KR, V> groupBy<KR>(IKeyValueMapper<K, V, KR> keySelector);
+        KGroupedStream<KR, V> groupBy<KR>(Func<K, V, KR> keySelector);
+        KGroupedStream<KR, V> groupBy<KR>(IKeyValueMapper<K, V, KR> keySelector, Grouped<KR, V> grouped);
+        KGroupedStream<KR, V> groupBy<KR>(Func<K, V, KR> keySelector, Grouped<KR, V> grouped);
+        KGroupedStream<K, V> groupByKey();
+        KGroupedStream<K, V> groupByKey(Grouped<K, V> grouped);
     }
 }
