@@ -5,7 +5,7 @@ using System.Text;
 
 namespace kafka_stream_core.State
 {
-    public interface KeyValueStore<K, V> : StateStore, ReadOnlyKeyValueStore<K, V>
+    public interface KeyValueStore<K, V> : IStateStore, ReadOnlyKeyValueStore<K, V>
     {
         void put(K key, V value);
 

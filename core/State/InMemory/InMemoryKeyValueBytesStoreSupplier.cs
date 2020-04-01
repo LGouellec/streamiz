@@ -15,6 +15,6 @@ namespace kafka_stream_core.State.InMemory
 
         public string Name { get; }
 
-        public KeyValueStore<Bytes, byte[]> get() => new InMemoryKeyValueStore(this.Name);
+        public KeyValueStore<Bytes, byte[]> Get() => new InMemoryKeyValueStore(this.Name);
     }
 }

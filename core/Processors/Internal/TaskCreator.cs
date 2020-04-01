@@ -26,7 +26,7 @@ namespace kafka_stream_core.Processors.Internal
 
         public override StreamTask CreateTask(IConsumer<byte[], byte[]> consumer, TaskId id, TopicPartition partition)
         {
-            var processorTopology = this.builder.buildTopology();
+            var processorTopology = this.builder.BuildTopology();
 
             return new StreamTask(
                 threadId,

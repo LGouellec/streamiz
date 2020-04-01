@@ -15,7 +15,7 @@ namespace kafka_stream_core.Stream.Internal
         internal IDictionary<string, IProcessor> SourceOperators { get; } = new Dictionary<string, IProcessor>();
         internal IDictionary<string, IProcessor> SinkOperators { get; } = new Dictionary<string, IProcessor>();
         internal IDictionary<string, IProcessor> ProcessorOperators { get; } = new Dictionary<string, IProcessor>();
-        internal IDictionary<string, StateStore> StateStores { get; } = new Dictionary<string, StateStore>();
+        internal IDictionary<string, IStateStore> StateStores { get; } = new Dictionary<string, IStateStore>();
 
 
         internal ProcessorTopology(
@@ -23,7 +23,7 @@ namespace kafka_stream_core.Stream.Internal
             IDictionary<string, IProcessor> sources,
             IDictionary<string, IProcessor> sinks,
             IDictionary<string, IProcessor> processors,
-            IDictionary<string, StateStore> stateStores)
+            IDictionary<string, IStateStore> stateStores)
         {
             Root = rootProcessor;
             SourceOperators = sources;

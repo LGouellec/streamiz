@@ -2,7 +2,6 @@
 using kafka_stream_core.Kafka;
 using kafka_stream_core.Kafka.Internal;
 using kafka_stream_core.Processors;
-using kafka_stream_core.Processors.Internal;
 using kafka_stream_core.Stream;
 using kafka_stream_core.Stream.Internal;
 using System;
@@ -25,7 +24,7 @@ namespace kafka_stream_core
             this.kafkaSupplier = new DefaultKafkaClientSupplier();
 
             // sanity check
-            this.processorTopology = topology.Builder.buildTopology();
+            this.processorTopology = topology.Builder.BuildTopology();
             
             this.threads = new IThread[this.configuration.NumStreamThreads];
 
@@ -35,7 +34,7 @@ namespace kafka_stream_core
                 var clientId = $"{this.configuration.ApplicationId.ToLower()}-{processID}";
                 var threadId = $"{this.configuration.ApplicationId.ToLower()}-stream-thread-{i}";
 
-                adminClient = this.kafkaSupplier.GetAdmin(configuration.ToAdminConfig(StreamThread.getSharedAdminClientId(clientId)));
+                adminClient = this.kafkaSupplier.GetAdmin(configuration.ToAdminConfig(StreamThread.GetSharedAdminClientId(clientId)));
 
                 this.threads[i] = StreamThread.Create(
                     threadId,

@@ -4,10 +4,10 @@ using System.Text;
 
 namespace kafka_stream_core.Stream.Internal
 {
-    internal interface NameProvider
+    internal interface INameProvider
     {
-        string newProcessorName(string prefix);
+        string NewProcessorName(string prefix);
 
-        string newStoreName(string prefix);
+        string NewStoreName(string prefix);
     }
 }

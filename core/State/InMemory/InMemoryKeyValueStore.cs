@@ -24,7 +24,7 @@ namespace kafka_stream_core.State.InMemory
 
         public long approximateNumEntries() => size;
 
-        public void close() {
+        public void Close() {
             map.Clear();
             size = 0;
             IsOpen = false;
@@ -37,11 +37,11 @@ namespace kafka_stream_core.State.InMemory
             return v;
         }
 
-        public void flush(){ /* Nothing => IN MEMORY */ }
+        public void Flush(){ /* Nothing => IN MEMORY */ }
 
         public byte[] get(Bytes key) => map.ContainsKey(key) ? map[key] : null;
 
-        public void init(ProcessorContext context, StateStore root)
+        public void Init(ProcessorContext context, IStateStore root)
         {
             size = 0;
             if (root != null)

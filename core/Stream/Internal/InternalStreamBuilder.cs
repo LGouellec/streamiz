@@ -13,7 +13,7 @@ using System.Collections.Generic;
 
 namespace kafka_stream_core.Stream.Internal
 {
-    internal class InternalStreamBuilder : NameProvider
+    internal class InternalStreamBuilder : INameProvider
     {
         private static string TABLE_SOURCE_SUFFIX = "-source";
 
@@ -35,25 +35,25 @@ namespace kafka_stream_core.Stream.Internal
 
         private int NextIndex { get { lock (_locker) return ++index; } }
 
-        internal KStreamImpl<K, V> stream<K, V>(string topic, Consumed<K,V> consumed)
+        internal KStream<K, V> Stream<K, V>(string topic, Consumed<K, V> consumed)
         {
-            String name = newProcessorName(KStreamImpl<byte, byte>.SOURCE_NAME);
+            var name = NewProcessorName(KStream<byte, byte>.SOURCE_NAME);
             var node = new StreamSourceNode<K,V>(topic, name, consumed);
-            this.addGraphNode(root, node);
-            KStreamImpl<K, V> stream = new KStreamImpl<K, V>(name, consumed.KeySerdes, consumed.ValueSerdes, new List<string> { name }, node, this);
+            this.AddGraphNode(root, node);
+            KStream<K, V> stream = new KStream<K, V>(name, consumed.KeySerdes, consumed.ValueSerdes, new List<string> { name }, node, this);
             return stream;
         }
 
-        public string newProcessorName(string prefix)
+        public string NewProcessorName(string prefix)
         {
             return $"{prefix}-{NextIndex.ToString("D10")}";
         }
   
-        internal void addGraphNode(StreamGraphNode root, StreamGraphNode node)
+        internal void AddGraphNode(StreamGraphNode root, StreamGraphNode node)
         {
             if (logger.IsDebugEnabled)
                 logger.Debug($"Adding node {node} in root node {root}");
-            root.appendChild(node);
+            root.AppendChild(node);
             nodes.Add(node);
         }
 
@@ -61,15 +61,15 @@ namespace kafka_stream_core.Stream.Internal
 
         #region Build Table
 
-        public string newStoreName(string prefix)
+        public string NewStoreName(string prefix)
         {
-            return $"{prefix}{KTableImpl<byte, byte, byte>.STATE_STORE_NAME}{NextIndex.ToString("D10")}";
+            return $"{prefix}{KTable<byte, byte, byte>.STATE_STORE_NAME}{NextIndex.ToString("D10")}";
         }
 
-        internal KTable<K, V> table<K, V>(string topic, Consumed<K, V> consumed, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized)
+        internal IKTable<K, V> Table<K, V>(string topic, Consumed<K, V> consumed, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized)
         {
-            string sourceName = newProcessorName(KStreamImpl<byte, byte>.SOURCE_NAME);
-            string tableSourceName = newProcessorName(KTableImpl<byte, byte, byte>.SOURCE_NAME);
+            var sourceName = NewProcessorName(KStream<byte, byte>.SOURCE_NAME);
+            var tableSourceName = NewProcessorName(KTable<byte, byte, byte>.SOURCE_NAME);
 
             KTableSource<K, V> tableSource = new KTableSource<K,V>(materialized.StoreName , materialized.QueryableStoreName);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K,V>(tableSource, tableSourceName);
@@ -78,9 +78,9 @@ namespace kafka_stream_core.Stream.Internal
                 topic, tableSourceName, sourceName, consumed,
                 materialized, processorParameters, false);
 
-            this.addGraphNode(root, tableSourceNode);
+            this.AddGraphNode(root, tableSourceNode);
 
-            return new KTableImpl<K,V,V>(tableSourceName,
+            return new KTable<K,V,V>(tableSourceName,
                                     consumed.KeySerdes,
                                     consumed.ValueSerdes,
                                     new List<string> { sourceName },
@@ -94,9 +94,9 @@ namespace kafka_stream_core.Stream.Internal
 
         #region Build Topology
 
-        internal void build()
+        internal void Build()
         {
-            internalTopologyBuilder.buildAndOptimizeTopology(root, nodes);
+            internalTopologyBuilder.BuildAndOptimizeTopology(root, nodes);
         }
 
         #endregion

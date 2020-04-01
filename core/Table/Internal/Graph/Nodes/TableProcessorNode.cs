@@ -26,11 +26,11 @@ namespace kafka_stream_core.Table.Internal.Graph.Nodes
             this.storeNames = storeNames != null ? storeNames : new string[0];
         }
 
-        public override void writeToTopology(InternalTopologyBuilder builder)
+        public override void WriteToTopology(InternalTopologyBuilder builder)
         {
             // TODO : 
             String processorName = processorParameters.ProcessorName;
-            builder.addProcessor(processorName, processorParameters.Processor);
+            builder.AddProcessor(processorName, processorParameters.Processor);
 
             if (storeNames.Length > 0)
             {
@@ -40,7 +40,7 @@ namespace kafka_stream_core.Table.Internal.Graph.Nodes
             // TODO: we are enforcing this as a keyvalue store, but it should go beyond any type of stores
             if (storeBuilder != null)
             {
-                builder.addStateStore(storeBuilder, processorName);
+                builder.AddStateStore(storeBuilder, processorName);
             }
         }
     }

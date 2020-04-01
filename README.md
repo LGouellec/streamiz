@@ -72,31 +72,37 @@ https://kafka.apache.org/20/documentation/streams/developer-guide/dsl-api.html#s
 
 Sample code
 ```
-            StreamConfig config = new StreamConfig();
-            config.ApplicationId = "test-app";
-            config.Add("bootstrap.servers", "192.168.56.1:9092");
-            config.Add("sasl.mechanism", "Plain");
-            config.Add("sasl.username", "admin");
-            config.Add("sasl.password", "admin");
-            config.Add("security.protocol", "SaslPlaintext");
-            config.NumStreamThreads = 1;
+var config = new StreamConfig<StringSerDes, StringSerDes>();
+config.ApplicationId = "test-app";
+config.Add("bootstrap.servers", "192.168.56.1:9092");
+config.Add("sasl.mechanism", "Plain");
+config.Add("sasl.username", "admin");
+config.Add("sasl.password", "admin");
+config.Add("security.protocol", "SaslPlaintext");
+config.NumStreamThreads = 2;
 
-            StreamBuilder builder = new StreamBuilder();
-            builder.stream("test").filterNot((k, v) => v.Contains("test")).to("test-output");
-            builder.table("test-ktable", Consumed<string, string>.with(new StringSerDes(), new StringSerDes()), InMemory<string, string>.As("test-ktable-store"));
+StreamBuilder builder = new StreamBuilder();
 
-            Topology t = builder.build();
-            KafkaStream stream = new KafkaStream(t, config);
+builder.stream("test", Consumed<string, string>.Create())
+    .filterNot((k, v) => v.Contains("test"))
+    .to("test-output");
 
-            try
-            {
-                stream.Start();
-                Console.ReadKey();
-                stream.Stop();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message + ":" + e.StackTrace);
-                stream.Kill();
-            }
+builder.table("test-ktable", 
+    Consumed<string, string>.Create(), 
+    InMemory<string, string>.As("test-ktable-store"));
+
+Topology t = builder.build();
+KafkaStream stream = new KafkaStream(t, config);
+
+try
+{
+    stream.Start();
+    Console.ReadKey();
+    stream.Stop();
+}
+catch (Exception e)
+{
+    Console.WriteLine(e.Message + ":" + e.StackTrace);
+    stream.Kill();
+}
 ```

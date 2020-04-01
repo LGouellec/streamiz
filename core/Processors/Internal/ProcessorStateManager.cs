@@ -7,13 +7,13 @@ using System.Text;
 
 namespace kafka_stream_core.Processors.Internal
 {
-    internal class ProcessorStateManager : StateManager
+    internal class ProcessorStateManager : IStateManager
     {
         private static String STATE_CHANGELOG_TOPIC_SUFFIX = "-changelog";
 
         private readonly ILog log;
         private readonly string logPrefix;
-        private readonly IDictionary<String, StateStore> registeredStores = new Dictionary<String, StateStore>();
+        private readonly IDictionary<String, IStateStore> registeredStores = new Dictionary<String, IStateStore>();
 
         public TopicPartition Partition { get; private set; }
 
@@ -23,7 +23,7 @@ namespace kafka_stream_core.Processors.Internal
             this.logPrefix = $"task [{taskId}] ";
         }
 
-        public static String storeChangelogTopic(String applicationId, String storeName)
+        public static string StoreChangelogTopic(string applicationId, String storeName)
         {
             return $"{applicationId}-{storeName}{STATE_CHANGELOG_TOPIC_SUFFIX}";
         }
@@ -37,11 +37,11 @@ namespace kafka_stream_core.Processors.Internal
             foreach (var state in registeredStores)
             {
                 log.Debug($"Flushing store {state.Key}");
-                state.Value.flush();
+                state.Value.Flush();
             }
         }
 
-        public void Register(StateStore store, StateRestoreCallback callback)
+        public void Register(IStateStore store, StateRestoreCallback callback)
         {
             string storeName = store.Name;
             log.Debug($"Registering state store {storeName} to its state manager");
@@ -101,11 +101,11 @@ namespace kafka_stream_core.Processors.Internal
             foreach (var state in registeredStores)
             {
                 log.Debug($"Closing storage engine {state.Key}");
-                state.Value.close();
+                state.Value.Close();
             }
         }
 
-        public StateStore GetStore(string name)
+        public IStateStore GetStore(string name)
         {
             if (registeredStores.ContainsKey(name))
                 return registeredStores[name];

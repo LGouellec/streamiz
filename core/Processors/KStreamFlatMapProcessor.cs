@@ -22,7 +22,7 @@ namespace kafka_stream_core.Processors
 
         public override void Process(K key, V value)
         {
-            foreach (var newPair in this.mapper.apply(key, value))
+            foreach (var newPair in this.mapper.Apply(key, value))
                 this.Forward(newPair.Key, newPair.Value);
         }
     }

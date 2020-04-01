@@ -5,10 +5,11 @@ using System.Text;
 
 namespace kafka_stream_core.State.Supplier
 {
-    public interface StoreSupplier<T> where T : StateStore
+    public interface StoreSupplier<out T> 
+        where T : IStateStore
     {
         string Name { get; }
 
-        T get();
+        T Get();
     }
 }

@@ -7,24 +7,18 @@ namespace kafka_stream_core.Processors.Internal
     {
         private TaskCreator taskCreator;
         private IAdminClient adminClient;
-        private IConsumer<byte[], byte[]> consumer;
         private int idTask = 0;
 
         private readonly IDictionary<TopicPartition, StreamTask> activeTasks = new Dictionary<TopicPartition, StreamTask>();
         private readonly IDictionary<TopicPartition, StreamTask> revokedTasks = new Dictionary<TopicPartition, StreamTask>();
 
         public IEnumerable<StreamTask> ActiveTasks => activeTasks.Values;
+        public IConsumer<byte[], byte[]> Consumer { get; internal set; }
 
         public TaskManager(TaskCreator taskCreator, IAdminClient adminClient)
         {
             this.taskCreator = taskCreator;
             this.adminClient = adminClient;
-        }
-
-        public TaskManager UseConsumer(IConsumer<byte[], byte[]> consumer)
-        {
-            this.consumer = consumer;
-            return this;
         }
 
         public void CreateTasks(ICollection<TopicPartition> assignment)
@@ -35,7 +29,7 @@ namespace kafka_stream_core.Processors.Internal
                 if (!activeTasks.ContainsKey(partition))
                 {
                     var id = new TaskId { Id = idTask, Partition = partition.Partition.Value, Topic = partition.Topic };
-                    var task = taskCreator.CreateTask(consumer, id, partition);
+                    var task = taskCreator.CreateTask(Consumer, id, partition);
                     task.InitializeStateStores();
                     task.InitializeTopology();
                     activeTasks.Add(partition, task);

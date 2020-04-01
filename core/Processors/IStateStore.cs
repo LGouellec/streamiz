@@ -4,13 +4,13 @@ using System.Text;
 
 namespace kafka_stream_core.Processors
 {
-    public interface StateStore
+    public interface IStateStore
     {
         String Name { get; }
         bool Persistent { get; }
         bool IsOpen { get; }
-        void init(ProcessorContext context, StateStore root);
-        void flush();
-        void close();
+        void Init(ProcessorContext context, IStateStore root);
+        void Flush();
+        void Close();
     }
 }

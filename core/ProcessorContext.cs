@@ -13,16 +13,16 @@ namespace kafka_stream_core
     {
         internal string ApplicationId => Configuration.ApplicationId;
         internal IStreamConfig Configuration { get; private set; }
-        internal RecordContext RecordContext { get; private set; }
+        internal IRecordContext RecordContext { get; private set; }
         internal IRecordCollector RecordCollector { get; private set; }
-        internal StateManager States { get; private set; }
+        internal IStateManager States { get; private set; }
 
-        internal long Timestamp => RecordContext.timestamp;
-        internal string Topic => RecordContext.topic;
-        internal long Offset => RecordContext.offset;
-        internal Partition Partition => RecordContext.partition;
+        internal long Timestamp => RecordContext.Timestamp;
+        internal string Topic => RecordContext.Topic;
+        internal long Offset => RecordContext.Offset;
+        internal Partition Partition => RecordContext.Partition;
 
-        internal ProcessorContext(IStreamConfig configuration, StateManager stateManager)
+        internal ProcessorContext(IStreamConfig configuration, IStateManager stateManager)
         {
             Configuration = configuration;
             States = stateManager;
@@ -35,14 +35,14 @@ namespace kafka_stream_core
             return this;
         }
 
-        internal void setRecordMetaData(ConsumeResult<byte[], byte[]> result)
+        internal void SetRecordMetaData(ConsumeResult<byte[], byte[]> result)
         {
-            this.RecordContext = new RecordContextImpl(result);
+            this.RecordContext = new RecordContext(result);
         }
 
-        internal StateStore GetStateStore(string storeName) => States.GetStore(storeName);
+        internal IStateStore GetStateStore(string storeName) => States.GetStore(storeName);
 
-        internal void Register(StateStore store, StateRestoreCallback callback)
+        internal void Register(IStateStore store, StateRestoreCallback callback)
         {
             States.Register(store, callback);
         }

@@ -19,13 +19,13 @@ namespace kafka_stream_core.Table.Internal.Graph
                 this.predicate = predicate;
             }
 
-            public void close() => ktablegetter.close();
+            public void Close() => ktablegetter.Close();
 
-            public ValueAndTimestamp<V> get(K key) => computeValue(key, ktablegetter.get(key));
+            public ValueAndTimestamp<V> Get(K key) => ComputeValue(key, ktablegetter.Get(key));
 
-            public void init(ProcessorContext context) => ktablegetter.init(context);
+            public void Init(ProcessorContext context) => ktablegetter.Init(context);
 
-            private ValueAndTimestamp<V> computeValue(K key, ValueAndTimestamp<V> valueAndTimestamp)
+            private ValueAndTimestamp<V> ComputeValue(K key, ValueAndTimestamp<V> valueAndTimestamp)
             {
                 ValueAndTimestamp<V> newValueAndTimestamp = null;
 
@@ -42,13 +42,13 @@ namespace kafka_stream_core.Table.Internal.Graph
             }
         }
 
-        private KTableGetter<K, V> parent;
+        private IKTableGetter<K, V> parent;
         private Func<K, V, bool> predicate;
         private bool filterNot;
         private string queryableStoreName;
         private bool sendOldValues = false;
 
-        public KTableFilter(KTableGetter<K, V> parent, Func<K, V, bool> predicate, bool filterNot, string queryableStoreName)
+        public KTableFilter(IKTableGetter<K, V> parent, Func<K, V, bool> predicate, bool filterNot, string queryableStoreName)
         {
             this.parent = parent;
             this.predicate = predicate;
@@ -71,12 +71,12 @@ namespace kafka_stream_core.Table.Internal.Graph
                     var supplier = parent.ValueGetterSupplier;
                     return new GenericKTableValueGetterSupplier<K, V>(
                         supplier.StoreNames,
-                        new KTableFilterValueGetter(this.filterNot, this.predicate, supplier.get()));
+                        new KTableFilterValueGetter(this.filterNot, this.predicate, supplier.Get()));
                 }
             }
         }
 
-        public void enableSendingOldValues()
+        public void EnableSendingOldValues()
         {
             parent.EnableSendingOldValues();
             sendOldValues = true;

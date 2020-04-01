@@ -11,7 +11,7 @@ namespace kafka_stream_core.Processors
     internal interface ISourceProcessor 
     {
         string TopicName { get; }
-        TimestampExtractor Extractor { get; }
+        ITimestampExtractor Extractor { get; }
         Topology.AutoOffsetReset AutoOffsetReset { get; }
     }
 
@@ -19,7 +19,7 @@ namespace kafka_stream_core.Processors
     {
         private readonly string topicName;
 
-        internal SourceProcessor(string name, string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, TimestampExtractor extractor, Topology.AutoOffsetReset autoOffsetReset)
+        internal SourceProcessor(string name, string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, ITimestampExtractor extractor, Topology.AutoOffsetReset autoOffsetReset)
             : base(name, null, keySerdes, valueSerdes)
         {
             this.topicName = topicName;
@@ -35,7 +35,7 @@ namespace kafka_stream_core.Processors
 
         public string TopicName => topicName;
 
-        public TimestampExtractor Extractor { get; }
+        public ITimestampExtractor Extractor { get; }
 
         public Topology.AutoOffsetReset AutoOffsetReset { get; }
 

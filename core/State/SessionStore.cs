@@ -5,7 +5,7 @@ using System.Text;
 
 namespace kafka_stream_core.State
 {
-    public interface SessionStore<K,AGG> : StateStore, ReadOnlySessionStore<K,AGG>
+    public interface SessionStore<K,AGG> : IStateStore, ReadOnlySessionStore<K,AGG>
     {
     }
 }

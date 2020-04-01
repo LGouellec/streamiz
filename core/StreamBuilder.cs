@@ -1,6 +1,5 @@
 ﻿using kafka_stream_core.Crosscutting;
 using kafka_stream_core.Processors.Internal;
-using kafka_stream_core.SerDes;
 using kafka_stream_core.State;
 using kafka_stream_core.Stream;
 using kafka_stream_core.Stream.Internal;
@@ -22,35 +21,33 @@ namespace kafka_stream_core
 
         #region KStream
 
-        public KStream<string, string> stream(string topic) => this.stream(topic, Consumed<string, string>.with(new StringSerDes(), new StringSerDes()));
+        public IKStream<byte[], byte[]> stream(string topic) 
+            => stream(topic, Consumed<byte[], byte[]>.Create());
 
-        public KStream<K, V> stream<K,V>(string topic, Consumed<K, V> consumed)
+        public IKStream<K, V> stream<K,V>(string topic, Consumed<K, V> consumed)
         {
-            return internalStreamBuilder.stream(topic, consumed);
+            return internalStreamBuilder.Stream<K, V>(topic, consumed);
         }
 
         #endregion
 
         #region KTable
+        
+        public IKTable<byte[], byte[]> table(string topic)
+            => table(topic, Consumed<byte[], byte[]>.Create(), Materialized<byte[], byte[], KeyValueStore<Bytes, byte[]>>.Create());
 
-        // TODO
-        //public KTable<object, object> table(string topic) 
-        //    => this.table<object, object>(topic, 
-        //        Consumed<object, object>.with(null, null), 
-        //        Materialized<object, object, KeyValueStore<Bytes, byte[]>>.with(default, default));
-
-        public KTable<K,V> table<K,V>(string topic, Consumed<K,V> consumed, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized = null)
+        public IKTable<K,V> table<K,V>(string topic, Consumed<K,V> consumed, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized = null)
         {
-            materialized?.useProvider(internalStreamBuilder, $"{topic}-").initConsumed(consumed);
+            materialized?.UseProvider(internalStreamBuilder, $"{topic}-").InitConsumed(consumed);
 
-            return internalStreamBuilder.table(topic, consumed, materialized);
+            return internalStreamBuilder.Table(topic, consumed, materialized);
         }
 
         #endregion
 
-        public Topology build()
+        public Topology Build()
         {
-            this.internalStreamBuilder.build();
+            this.internalStreamBuilder.Build();
             return topology;
         }
     }

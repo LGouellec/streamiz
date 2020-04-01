@@ -10,20 +10,26 @@ namespace sample_stream
     {
         static void Main(string[] args)
         {
-            StreamConfig config = new StreamConfig();
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app";
             config.Add("bootstrap.servers", "192.168.56.1:9092");
             config.Add("sasl.mechanism", "Plain");
             config.Add("sasl.username", "admin");
             config.Add("sasl.password", "admin");
             config.Add("security.protocol", "SaslPlaintext");
-            config.NumStreamThreads = 1;
+            config.NumStreamThreads = 2;
 
             StreamBuilder builder = new StreamBuilder();
-            //builder.stream("test").filterNot((k, v) => v.Contains("test")).to("test-output");
-            builder.table("test-ktable", Consumed<string, string>.with(new StringSerDes(), new StringSerDes()), InMemory<string, string>.As("test-ktable-store"));
 
-            Topology t = builder.build();
+            builder.stream("test", Consumed<string, string>.Create())
+                .FilterNot((k, v) => v.Contains("test"))
+                .To("test-output");
+
+            builder.table("test-ktable", 
+                Consumed<string, string>.Create(), 
+                InMemory<string, string>.As("test-ktable-store"));
+
+            Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
 
             try

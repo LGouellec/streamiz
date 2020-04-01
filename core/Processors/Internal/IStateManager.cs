@@ -4,11 +4,11 @@ using System.Text;
 
 namespace kafka_stream_core.Processors.Internal
 {
-    internal interface StateManager
+    internal interface IStateManager
     {
         void Flush();
-        void Register(StateStore store, StateRestoreCallback callback);
+        void Register(IStateStore store, StateRestoreCallback callback);
         void Close();
-        StateStore GetStore(string name);
+        IStateStore GetStore(string name);
     }
 }

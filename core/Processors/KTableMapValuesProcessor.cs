@@ -26,8 +26,8 @@ namespace kafka_stream_core.Processors
 
         public override void Process(K key, Change<V> change)
         {
-            VR newValue = computeValue(key, change.NewValue);
-            VR oldValue = this.sendOldValues ? computeValue(key, change.OldValue) : default(VR);
+            VR newValue = ComputeValue(key, change.NewValue);
+            VR oldValue = this.sendOldValues ? ComputeValue(key, change.OldValue) : default(VR);
 
             if (this.queryableStoreName != null)
             {
@@ -40,13 +40,13 @@ namespace kafka_stream_core.Processors
             }
         }
 
-        private VR computeValue(K key, V value)
+        private VR ComputeValue(K key, V value)
         {
             VR newValue = default(VR);
 
             if (value != null)
             {
-                newValue = mapper.apply(key, value);
+                newValue = mapper.Apply(key, value);
             }
 
             return newValue;

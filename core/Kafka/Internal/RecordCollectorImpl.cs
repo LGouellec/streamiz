@@ -42,7 +42,7 @@ namespace kafka_stream_core.Kafka.Internal
             // TODO :
         }
 
-        public void Send<K, V>(string topic, K key, V value, Headers headers, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer, StreamPartitioner<K, V> partitioner)
+        public void Send<K, V>(string topic, K key, V value, Headers headers, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer, IStreamPartitioner<K, V> partitioner)
         {
             // TODO :
             var k = key != null ? keySerializer.Serialize(key) : null;

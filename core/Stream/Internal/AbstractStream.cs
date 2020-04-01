@@ -9,7 +9,7 @@ namespace kafka_stream_core.Stream.Internal
 {
     internal abstract class AbstractStream<K, V>
     {
-        protected String nameNode;
+        protected string nameNode;
         protected ISerDes<K> keySerdes;
         protected ISerDes<V> valueSerdes;
         protected List<String> setSourceNodes;
@@ -48,30 +48,18 @@ namespace kafka_stream_core.Stream.Internal
         }
 
 
-        protected static WrapperValueMapperWithKey<K, V, VR> withKey<VR>(Func<V, VR> valueMapper)
+        protected static WrapperValueMapperWithKey<K, V, VR> WithKey<VR>(Func<V, VR> valueMapper)
         {
             valueMapper = valueMapper ?? throw new ArgumentNullException(nameof(valueMapper));
 
             return new WrapperValueMapperWithKey<K, V, VR>((readOnlyKey, value) => valueMapper(value));
         }
 
-        protected static WrapperValueMapperWithKey<K, V, VR> withKey<VR>(IValueMapper<V, VR> valueMapper)
+        protected static WrapperValueMapperWithKey<K, V, VR> WithKey<VR>(IValueMapper<V, VR> valueMapper)
         {
             valueMapper = valueMapper ?? throw new ArgumentNullException(nameof(valueMapper));
 
-            return new WrapperValueMapperWithKey<K, V, VR>((readOnlyKey, value) => valueMapper.apply(value));
-        }
-
-        List<String> ensureCopartitionWith(List<AbstractStream<K, V>> otherStreams)
-        {
-            List<String> allSourceNodes = new List<string>(setSourceNodes);
-            foreach (var other in otherStreams)
-            {
-                allSourceNodes.AddRange(other.setSourceNodes);
-            }
-            // TODO : builder.internalTopologyBuilder.copartitionSources(allSourceNodes);
-
-            return allSourceNodes;
+            return new WrapperValueMapperWithKey<K, V, VR>((readOnlyKey, value) => valueMapper.Apply(value));
         }
     }
 }

@@ -19,7 +19,7 @@ namespace kafka_stream_core.State.Internal.Builder
 
         public override kafka_stream_core.State.TimestampedKeyValueStore<K, V> build()
         {
-            var store = storeSupplier.get();
+            var store = storeSupplier.Get();
             return new TimestampedKeyValueStore<K, V>(store, this.keySerdes, this.valueSerdes);
         }
     }

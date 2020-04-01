@@ -9,9 +9,9 @@ namespace kafka_stream_core.Processors
 {
     internal class SinkProcessor<K, V> : AbstractProcessor<K, V>
     {
-        private readonly TopicNameExtractor<K, V> topicNameExtractor;
+        private readonly ITopicNameExtractor<K, V> topicNameExtractor;
 
-        internal SinkProcessor(string name, IProcessor previous, TopicNameExtractor<K, V> topicNameExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+        internal SinkProcessor(string name, IProcessor previous, ITopicNameExtractor<K, V> topicNameExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
             : base(name, previous, keySerdes, valueSerdes)
         {
             this.topicNameExtractor = topicNameExtractor;
@@ -41,7 +41,7 @@ namespace kafka_stream_core.Processors
                 throw new StreamsException($"Invalid (negative) timestamp of {timestamp } for output record <{key}:{value}>.");
             }
 
-            var topicName = this.topicNameExtractor.extract(key, value, this.Context.RecordContext);
+            var topicName = this.topicNameExtractor.Extract(key, value, this.Context.RecordContext);
             // TODO : TO FINISH
             var partitioner = new DefaultStreamPartitioner<K, V>(KeySerDes, null);
             this.Context.RecordCollector.Send<K, V>(topicName, key, value, null, timestamp, KeySerDes, ValueSerDes, partitioner);

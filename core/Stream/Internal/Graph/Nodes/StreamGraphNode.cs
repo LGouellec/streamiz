@@ -28,8 +28,18 @@ namespace kafka_stream_core.Stream.Internal.Graph.Nodes
 
         public bool IsEmpty => ChildNodes.Count == 0;
         internal string[] ParentNodeNames() => ParentNodes.Select(p => p.streamGraphNode).ToArray();
+        public bool AllParentsWrittenToTopology
+        {
+            get
+            {
+                foreach (var parentNode in ParentNodes)
+                    if (!parentNode.HasWrittenToTopology)
+                        return false;
+                return true;
+            }
+        }
 
-        public void appendChild(StreamGraphNode node)
+        public void AppendChild(StreamGraphNode node)
         {
             if (!ChildNodes.Contains(node))
             {
@@ -38,28 +48,20 @@ namespace kafka_stream_core.Stream.Internal.Graph.Nodes
             }
         }
 
-        public bool removeChild(StreamGraphNode node)
+        public bool RemoveChild(StreamGraphNode node)
         {
             return ChildNodes.Remove(node) && node.ParentNodes.Remove(this);
         }
 
-        public void clearChildren()
+        public void ClearChildren()
         {
             foreach (var childNode in ChildNodes)
                 childNode.ParentNodes.Remove(this);
             ChildNodes.Clear();
         }
 
-        public bool allParentsWrittenToTopology()
-        {
-            foreach (var parentNode in ParentNodes)
-                if (!parentNode.HasWrittenToTopology)
-                    return false;
-            return true;
 
-        }
-
-        public abstract void writeToTopology(InternalTopologyBuilder builder);
+        public abstract void WriteToTopology(InternalTopologyBuilder builder);
 
         public override bool Equals(object obj)
         {

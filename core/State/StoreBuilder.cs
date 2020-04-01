@@ -14,7 +14,7 @@ namespace kafka_stream_core.State
     }
 
     public interface StoreBuilder<T>  : StoreBuilder
-        where T : StateStore
+        where T : IStateStore
     {
         StoreBuilder<T> withCachingEnabled();
         StoreBuilder<T> withCachingDisabled();

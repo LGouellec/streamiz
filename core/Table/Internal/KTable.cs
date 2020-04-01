@@ -14,7 +14,7 @@ using System.Collections.Generic;
 
 namespace kafka_stream_core.Table.Internal
 {
-    internal class KTableImpl<K, S, V> : AbstractStream<K, V>, KTable<K, V>, KTableGetter<K, V>
+    internal class KTable<K, S, V> : AbstractStream<K, V>, IKTable<K, V>, IKTableGetter<K, V>
     {
         private readonly IProcessorSupplier<K, S> processorSupplier = null;
         private readonly IProcessorSupplier<K, Change<S>> tableProcessorSupplier = null;
@@ -86,14 +86,14 @@ namespace kafka_stream_core.Table.Internal
 
         #endregion
 
-        internal KTableImpl(string name, ISerDes<K> keySerde, ISerDes<V> valSerde, List<string> sourceNodes, String queryableStoreName, IProcessorSupplier<K, Change<S>> processorSupplier, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder)
+        internal KTable(string name, ISerDes<K> keySerde, ISerDes<V> valSerde, List<string> sourceNodes, String queryableStoreName, IProcessorSupplier<K, Change<S>> processorSupplier, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder)
             : base(name, keySerde, valSerde, sourceNodes, streamsGraphNode, builder)
         {
             this.tableProcessorSupplier = processorSupplier;
             this.queryableStoreName = queryableStoreName;
         }
 
-        internal KTableImpl(string name, ISerDes<K> keySerde, ISerDes<V> valSerde, List<string> sourceNodes, String queryableStoreName, IProcessorSupplier<K, S> processorSupplier, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder)
+        internal KTable(string name, ISerDes<K> keySerde, ISerDes<V> valSerde, List<string> sourceNodes, String queryableStoreName, IProcessorSupplier<K, S> processorSupplier, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder)
             : base(name, keySerde, valSerde, sourceNodes, streamsGraphNode, builder)
         {
             this.processorSupplier = processorSupplier;
@@ -104,49 +104,49 @@ namespace kafka_stream_core.Table.Internal
 
         #region Filter
 
-        public KTable<K, V> filter(Func<K, V, bool> predicate) => doFilter(predicate, null, null, false);
+        public IKTable<K, V> Filter(Func<K, V, bool> predicate) => DoFilter(predicate, null, null, false);
 
-        public KTable<K, V> filter(Func<K, V, bool> predicate, string named) => doFilter(predicate, named, null, false);
+        public IKTable<K, V> Filter(Func<K, V, bool> predicate, string named) => DoFilter(predicate, named, null, false);
 
-        public KTable<K, V> filter(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized)
-            => doFilter(predicate, null, materialized, false);
+        public IKTable<K, V> Filter(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized)
+            => DoFilter(predicate, null, materialized, false);
 
-        public KTable<K, V> filter(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized, string named)
-            => doFilter(predicate, named, materialized, false);
+        public IKTable<K, V> Filter(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized, string named)
+            => DoFilter(predicate, named, materialized, false);
 
-        public KTable<K, V> filterNot(Func<K, V, bool> predicate) => doFilter(predicate, null, null, true);
+        public IKTable<K, V> FilterNot(Func<K, V, bool> predicate) => DoFilter(predicate, null, null, true);
 
-        public KTable<K, V> filterNot(Func<K, V, bool> predicate, string name) => doFilter(predicate, name, null, true);
+        public IKTable<K, V> filterNot(Func<K, V, bool> predicate, string name) => DoFilter(predicate, name, null, true);
 
-        public KTable<K, V> filterNot(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized) 
-            => doFilter(predicate, null, materialized, true);
+        public IKTable<K, V> FilterNot(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized) 
+            => DoFilter(predicate, null, materialized, true);
 
-        public KTable<K, V> filterNot(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized, string named)
-            => doFilter(predicate, named, materialized, true);
+        public IKTable<K, V> FilterNot(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized, string named)
+            => DoFilter(predicate, named, materialized, true);
 
         #endregion
 
         #region ToStream
 
-        public KStream<KR, V> toStream<KR>(Func<K, V, KR> mapper)
-            => this.toStream(mapper, string.Empty);
+        public IKStream<KR, V> ToStream<KR>(Func<K, V, KR> mapper)
+            => this.ToStream(mapper, string.Empty);
 
-        public KStream<KR, V> toStream<KR>(Func<K, V, KR> mapper, string named)
-            => this.toStream(new WrappedKeyValueMapper<K, V, KR>(mapper), named);
+        public IKStream<KR, V> ToStream<KR>(Func<K, V, KR> mapper, string named)
+            => this.ToStream(new WrappedKeyValueMapper<K, V, KR>(mapper), named);
 
-        public KStream<KR, V> toStream<KR>(IKeyValueMapper<K, V, KR> mapper)
-            => this.toStream(mapper, string.Empty);
+        public IKStream<KR, V> ToStream<KR>(IKeyValueMapper<K, V, KR> mapper)
+            => this.ToStream(mapper, string.Empty);
 
-        public KStream<KR, V> toStream<KR>(IKeyValueMapper<K, V, KR> mapper, string named)
+        public IKStream<KR, V> ToStream<KR>(IKeyValueMapper<K, V, KR> mapper, string named)
         {
-            return toStream().selectKey(mapper, named);
+            return ToStream().SelectKey(mapper, named);
         }
 
-        public KStream<K, V> toStream() => this.toStream(null);
+        public IKStream<K, V> ToStream() => this.ToStream(null);
 
-        public KStream<K, V> toStream(string named)
+        public IKStream<K, V> ToStream(string named)
         {
-            string name = this.builder.newProcessorName(TOSTREAM_NAME);
+            string name = this.builder.NewProcessorName(TOSTREAM_NAME);
 
             var p = new WrapperValueMapperWithKey<K, Change<V>, V>((k, v) => v.NewValue);
             IProcessorSupplier<K, Change<V>> processorMapValues = new KStreamMapValues<K, Change<V>, V>(p);
@@ -154,79 +154,79 @@ namespace kafka_stream_core.Table.Internal
 
             ProcessorGraphNode<K, Change<V>> toStreamNode = new ProcessorGraphNode<K, Change<V>>(name, processorParameters);
 
-            builder.addGraphNode(this.node, toStreamNode);
+            builder.AddGraphNode(this.node, toStreamNode);
 
             // we can inherit parent key and value serde
-            return new KStreamImpl<K, V>(name, this.keySerdes, this.valueSerdes, this.setSourceNodes, toStreamNode, builder);
+            return new KStream<K, V>(name, this.keySerdes, this.valueSerdes, this.setSourceNodes, toStreamNode, builder);
         }
 
         #endregion
 
         #region MapValues
 
-        public KTable<K, VR> mapValues<VR>(Func<V, VR> mapper) 
-            => this.mapValues(mapper, null);
+        public IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper) 
+            => this.MapValues(mapper, null);
 
-        public KTable<K, VR> mapValues<VR>(Func<V, VR> mapper, string name)
-            => this.mapValues(mapper, name, null);
+        public IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, string name)
+            => this.MapValues(mapper, name, null);
 
-        public KTable<K, VR> mapValues<VR>(Func<V, VR> mapper, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string name)
-            => this.mapValues(mapper, name, materialized);
+        public IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string name)
+            => this.MapValues(mapper, name, materialized);
 
-        public KTable<K, VR> mapValues<VR>(Func<V, VR> mapper, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
-             => this.mapValues(new WrappedValueMapper<V, VR>(mapper), name, materialized);
+        public IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
+             => this.MapValues(new WrappedValueMapper<V, VR>(mapper), name, materialized);
 
-        public KTable<K, VR> mapValues<VR>(IValueMapper<V, VR> mapper)
-            => this.mapValues(mapper, string.Empty);
+        public IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper)
+            => this.MapValues(mapper, string.Empty);
 
-        public KTable<K, VR> mapValues<VR>(IValueMapper<V, VR> mapper, string name)
-            => this.mapValues(withKey(mapper), name);
+        public IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, string name)
+            => this.MapValues(WithKey(mapper), name);
 
-        public KTable<K, VR> mapValues<VR>(IValueMapper<V, VR> mapper, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
-            => this.mapValues(mapper, null, materialized);
+        public IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
+            => this.MapValues(mapper, null, materialized);
 
-        public KTable<K, VR> mapValues<VR>(IValueMapper<V, VR> mapper, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
-            => this.mapValues(withKey(mapper), name, materialized);
+        public IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
+            => this.MapValues(WithKey(mapper), name, materialized);
 
-        public KTable<K, VR> mapValues<VR>(Func<K, V, VR> mapperWithKey)
-            => this.mapValues(mapperWithKey, null);
+        public IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey)
+            => this.MapValues(mapperWithKey, null);
 
-        public KTable<K, VR> mapValues<VR>(Func<K, V, VR> mapperWithKey, string name)
-            => this.mapValues(mapperWithKey, name, null);
+        public IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, string name)
+            => this.MapValues(mapperWithKey, name, null);
 
-        public KTable<K, VR> mapValues<VR>(Func<K, V, VR> mapperWithKey, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string name)
-            => this.mapValues(mapperWithKey, name, materialized);
+        public IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string name)
+            => this.MapValues(mapperWithKey, name, materialized);
 
-        public KTable<K, VR> mapValues<VR>(Func<K, V, VR> mapperWithKey, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
-            => this.mapValues(new WrapperValueMapperWithKey<K, V, VR>(mapperWithKey), name, materialized);
+        public IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
+            => this.MapValues(new WrapperValueMapperWithKey<K, V, VR>(mapperWithKey), name, materialized);
 
-        public KTable<K, VR> mapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey)
-            => this.mapValues(mapperWithKey, string.Empty);
+        public IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey)
+            => this.MapValues(mapperWithKey, string.Empty);
 
-        public KTable<K, VR> mapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string name)
-            => this.mapValues(mapperWithKey, name, null);
+        public IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string name)
+            => this.MapValues(mapperWithKey, name, null);
 
-        public KTable<K, VR> mapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
-            => this.mapValues(mapperWithKey, null, materialized);
+        public IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
+            => this.MapValues(mapperWithKey, null, materialized);
 
-        public KTable<K, VR> mapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
+        public IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
             => doMapValues(mapperWithKey, name, materialized);
 
         #endregion
 
         #region GroupBy
 
-        public KGroupedTable<K1, V1> groupBy<K1, V1>(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> keySelector)
-            => this.groupBy(keySelector, Grouped<K1, V1>.With(null, null));
+        public IKGroupedTable<K1, V1> GroupBy<K1, V1>(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> keySelector)
+            => this.GroupBy(keySelector, Grouped<K1, V1>.Create(null, null));
 
-        public KGroupedTable<K1, V1> groupBy<K1, V1>(Func<K, V, KeyValuePair<K1, V1>> keySelector)
-            => this.groupBy(keySelector, Grouped<K1, V1>.With(null, null));
+        public IKGroupedTable<K1, V1> GroupBy<K1, V1>(Func<K, V, KeyValuePair<K1, V1>> keySelector)
+            => this.GroupBy(keySelector, Grouped<K1, V1>.Create(null, null));
 
-        public KGroupedTable<K1, V1> groupBy<K1, V1>(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> keySelector, Grouped<K1, V1> grouped)
-            => doGroup(keySelector, grouped);
+        public IKGroupedTable<K1, V1> GroupBy<K1, V1>(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> keySelector, Grouped<K1, V1> grouped)
+            => DoGroup(keySelector, grouped);
 
-        public KGroupedTable<K1, V1> groupBy<K1, V1>(Func<K, V, KeyValuePair<K1, V1>> keySelector, Grouped<K1, V1> grouped)
-            => this.groupBy(new WrappedKeyValueMapper<K, V, KeyValuePair<K1, V1>>(keySelector), grouped);
+        public IKGroupedTable<K1, V1> GroupBy<K1, V1>(Func<K, V, KeyValuePair<K1, V1>> keySelector, Grouped<K1, V1> grouped)
+            => this.GroupBy(new WrappedKeyValueMapper<K, V, KeyValuePair<K1, V1>>(keySelector), grouped);
 
         #endregion
 
@@ -234,7 +234,7 @@ namespace kafka_stream_core.Table.Internal
 
         #region Privates
 
-        private KTable<K, V> doFilter(Func<K, V, bool> predicate, string named, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materializedInternal, bool filterNot)
+        private IKTable<K, V> DoFilter(Func<K, V, bool> predicate, string named, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materializedInternal, bool filterNot)
         {
             ISerDes<K> keySerde;
             ISerDes<V> valueSerde;
@@ -247,7 +247,7 @@ namespace kafka_stream_core.Table.Internal
                 // materialize the store; but we still need to burn one index BEFORE generating the processor to keep compatibility.
                 if (materializedInternal.StoreName == null)
                 {
-                    builder.newStoreName(FILTER_NAME);
+                    builder.NewStoreName(FILTER_NAME);
                 }
                 // we can inherit parent key and value serde if user do not provide specific overrides, more specifically:
                 // we preserve the key following the order of 1) materialized, 2) parent
@@ -267,7 +267,7 @@ namespace kafka_stream_core.Table.Internal
                 storeBuilder = null;
             }
 
-            var name = this.builder.newProcessorName(FILTER_NAME);
+            var name = this.builder.NewProcessorName(FILTER_NAME);
 
             IProcessorSupplier<K, Change<V>> processorSupplier = new KTableFilter<K, V>(this, predicate, filterNot, queryableStoreName);
 
@@ -279,9 +279,9 @@ namespace kafka_stream_core.Table.Internal
                storeBuilder
             );
 
-            builder.addGraphNode(this.node, tableNode);
+            builder.AddGraphNode(this.node, tableNode);
 
-            return new KTableImpl<K, V, V>(name,
+            return new KTable<K, V, V>(name,
                                     keySerde,
                                     valueSerde,
                                     this.setSourceNodes,
@@ -291,7 +291,7 @@ namespace kafka_stream_core.Table.Internal
                                     builder);
         }
 
-        private KTable<K, VR> doMapValues<VR>(IValueMapperWithKey<K, V, VR> mapper, string named, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materializedInternal)
+        private IKTable<K, VR> DoMapValues<VR>(IValueMapperWithKey<K, V, VR> mapper, string named, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materializedInternal)
         {
             ISerDes<K> keySerde;
             ISerDes<VR> valueSerde;
@@ -304,7 +304,7 @@ namespace kafka_stream_core.Table.Internal
                 // materialize the store; but we still need to burn one index BEFORE generating the processor to keep compatibility.
                 if (materializedInternal.StoreName == null)
                 {
-                    builder.newStoreName(MAPVALUES_NAME);
+                    builder.NewStoreName(MAPVALUES_NAME);
                 }
                 keySerde = materializedInternal.KeySerdes != null ? materializedInternal.KeySerdes : this.keySerdes;
                 valueSerde = materializedInternal.ValueSerdes != null ? materializedInternal.ValueSerdes : null;
@@ -320,7 +320,7 @@ namespace kafka_stream_core.Table.Internal
                 storeBuilder = null;
             }
 
-            var name = this.builder.newProcessorName(MAPVALUES_NAME);
+            var name = this.builder.NewProcessorName(MAPVALUES_NAME);
 
             var processorSupplier = new KTableMapValues<K, V, VR>(this, mapper, queryableStoreName);
             var processorParameters = new TableProcessorParameters<K, V>(processorSupplier, name);
@@ -331,12 +331,12 @@ namespace kafka_stream_core.Table.Internal
                storeBuilder
             );
 
-            builder.addGraphNode(this.node, tableNode);
+            builder.AddGraphNode(this.node, tableNode);
 
             // don't inherit parent value serde, since this operation may change the value type, more specifically:
             // we preserve the key following the order of 1) materialized, 2) parent, 3) null
             // we preserve the value following the order of 1) materialized, 2) null
-            return new KTableImpl<K, V, VR>(
+            return new KTable<K, V, VR>(
                 name,
                 keySerde,
                 valueSerde,
@@ -348,9 +348,9 @@ namespace kafka_stream_core.Table.Internal
             );
         }
 
-        private KGroupedTable<K1, V1> doGroup<K1, V1>(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> keySelector, Grouped<K1, V1> grouped)
+        private IKGroupedTable<K1, V1> DoGroup<K1, V1>(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> keySelector, Grouped<K1, V1> grouped)
         {
-            var selectName = this.builder.newProcessorName(SELECT_NAME);
+            var selectName = this.builder.NewProcessorName(SELECT_NAME);
 
             IKTableProcessorSupplier<K, V, KeyValuePair< K1, V1 >> selectSupplier = new KTableRepartitionMap<K, V, K1, V1>(this, keySelector);
             var processorParameters = new TableProcessorParameters<K, V>(selectSupplier, selectName);
@@ -363,11 +363,11 @@ namespace kafka_stream_core.Table.Internal
                null
             );
 
-            builder.addGraphNode(this.node, groupByMapNode);
+            builder.AddGraphNode(this.node, groupByMapNode);
 
             this.EnableSendingOldValues();
 
-            return new KGroupedTableImpl<K1, V1>(
+            return new KGroupedTable<K1, V1>(
                 selectName,
                 grouped,
                 this.setSourceNodes,
@@ -386,7 +386,7 @@ namespace kafka_stream_core.Table.Internal
                 if (processorSupplier != null && processorSupplier is KTableSource<K, V>)
                 {
                     KTableSource<K, V> source = (KTableSource<K, V>)processorSupplier;
-                    source.enableSendingOldValues();
+                    source.EnableSendingOldValues();
                 }
                 // TODO : 
                 //} else if (processorSupplier instanceof KStreamAggProcessorSupplier) {
@@ -394,7 +394,7 @@ namespace kafka_stream_core.Table.Internal
                 //} else
                 else if(tableProcessorSupplier != null && tableProcessorSupplier is IKTableProcessorSupplier)
                 {
-                    (tableProcessorSupplier as IKTableProcessorSupplier).enableSendingOldValues();
+                    (tableProcessorSupplier as IKTableProcessorSupplier).EnableSendingOldValues();
                 }
                 SendOldValues = true;
             }

@@ -8,9 +8,9 @@ using System.Text;
 
 namespace kafka_stream_core.Table.Internal
 {
-    internal class KGroupedTableImpl<K, V> : AbstractStream<K, V>, KGroupedTable<K, V>
+    internal class KGroupedTable<K, V> : AbstractStream<K, V>, IKGroupedTable<K, V>
     {
-        public KGroupedTableImpl(string name, Grouped<K, V> grouped, List<string> sourceNodes, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder) 
+        public KGroupedTable(string name, Grouped<K, V> grouped, List<string> sourceNodes, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder) 
             : base(name, grouped.Key, grouped.Value, sourceNodes, streamsGraphNode, builder)
         {
         }

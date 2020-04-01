@@ -12,16 +12,12 @@ using System.Collections.Generic;
 namespace kafka_stream_core.Table
 {
     public class Materialized<K, V, S>
-        where S : StateStore
+        where S : IStateStore
     {
         private bool queriable = false;
-        protected StoreSupplier<S> storeSupplier;
         protected string storeName;
-        protected ISerDes<V> valueSerde;
-        protected ISerDes<K> keySerde;
         protected bool loggingEnabled = true;
         protected bool cachingEnabled = true;
-        protected IDictionary<string, string> topicConfig = new Dictionary<string, string>();
         protected TimeSpan retention;
 
         #region Ctor
@@ -29,12 +25,12 @@ namespace kafka_stream_core.Table
         protected Materialized(string storeName, StoreSupplier<S> storeSupplier)
         {
             this.storeName = storeName;
-            this.storeSupplier = storeSupplier;
+            this.StoreSupplier = storeSupplier;
         }
 
         protected Materialized(StoreSupplier<S> storeSupplier)
         {
-            this.storeSupplier = storeSupplier;
+            this.StoreSupplier = storeSupplier;
         }
 
         protected Materialized(string storeName)
@@ -44,13 +40,13 @@ namespace kafka_stream_core.Table
 
         protected Materialized(Materialized<K, V, S> materialized)
         {
-            this.storeSupplier = materialized.storeSupplier;
+            this.StoreSupplier = materialized.StoreSupplier;
             this.storeName = materialized.storeName;
-            this.keySerde = materialized.keySerde;
-            this.valueSerde = materialized.valueSerde;
+            this.KeySerdes = materialized.KeySerdes;
+            this.ValueSerdes = materialized.ValueSerdes;
             this.loggingEnabled = materialized.loggingEnabled;
             this.cachingEnabled = materialized.cachingEnabled;
-            this.topicConfig = materialized.topicConfig;
+            this.TopicConfig = materialized.TopicConfig;
             this.retention = materialized.retention;
         }
 
@@ -58,49 +54,70 @@ namespace kafka_stream_core.Table
 
         #region Static
 
-        public static Materialized<K, V, S> @as<K, V, S>(string storeName) where S : StateStore
+        public static Materialized<K, V, S> Create() => new Materialized<K, V, S>(string.Empty);
+
+        public static Materialized<K, V, S> Create<KS, VS>() 
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new() 
+            => Create<KS, VS>(string.Empty);
+
+        public static Materialized<K, V, S> Create<KS, VS>(string storeName) 
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
         {
-            return new Materialized<K, V, S>(storeName);
+            var m = new Materialized<K, V, S>(storeName);
+            m.KeySerdes = new KS();
+            m.ValueSerdes = new VS();
+            return m;
         }
 
-        public static Materialized<K, V, WindowStore<Bytes, byte[]>> @as<K, V>(WindowBytesStoreSupplier supplier)
+        public static Materialized<K, V, WindowStore<Bytes, byte[]>> Create<KS, VS>(WindowBytesStoreSupplier supplier)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
         {
-            return new Materialized<K, V, WindowStore<Bytes, byte[]>>(supplier);
+            var m = new Materialized<K, V, WindowStore<Bytes, byte[]>>(supplier);
+            m.KeySerdes = new KS();
+            m.ValueSerdes = new VS();
+            return m;
         }
 
-        public static Materialized<K, V, SessionStore<Bytes, byte[]>> @as<K, V>(SessionBytesStoreSupplier supplier)
+        public static Materialized<K, V, SessionStore<Bytes, byte[]>> Create<KS, VS>(SessionBytesStoreSupplier supplier)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
         {
-            return new Materialized<K, V, SessionStore<Bytes, byte[]>>(supplier);
+            var m = new Materialized<K, V, SessionStore<Bytes, byte[]>>(supplier);
+            m.KeySerdes = new KS();
+            m.ValueSerdes = new VS();
+            return m;
         }
 
-        public static Materialized<K, V, KeyValueStore<Bytes, byte[]>> @as<K, V>(KeyValueBytesStoreSupplier supplier)
+        public static Materialized<K, V, KeyValueStore<Bytes, byte[]>> Create<KS, VS>(KeyValueBytesStoreSupplier supplier)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
         {
-            return new Materialized<K, V, KeyValueStore<Bytes, byte[]>>(supplier);
-        }
-
-        public static Materialized<K, V, S> with<K, V, S>(ISerDes<K> keySerde, ISerDes<V> valueSerde)
-            where S : StateStore
-        {
-            return new Materialized<K, V, S>(string.Empty).withKeySerde(keySerde).withValueSerde(valueSerde);
+            var m = new Materialized<K, V, KeyValueStore<Bytes, byte[]>>(supplier);
+            m.KeySerdes = new KS();
+            m.ValueSerdes = new VS();
+            return m;
         }
 
         #endregion
 
         #region Property
 
-        public IDictionary<string, string> TopicConfig => topicConfig;
+        public IDictionary<string, string> TopicConfig { get; protected set; }
 
-        public bool LoggingEnabled => loggingEnabled;
+        public bool LoggingEnabled { get; protected set; }
 
-        public bool CachingEnabled => cachingEnabled;
+        public bool CachingEnabled { get; protected set; }
 
-        public StoreSupplier<S> StoreSupplier => storeSupplier;
+        public StoreSupplier<S> StoreSupplier { get; protected set; }
 
-        public ISerDes<K> KeySerdes => this.keySerde;
+        public ISerDes<K> KeySerdes { get; protected set; }
 
-        public ISerDes<V> ValueSerdes => this.valueSerde;
+        public ISerDes<V> ValueSerdes { get; protected set; }
 
-        public string StoreName => storeSupplier != null ? storeSupplier.Name : storeName;
+        public string StoreName => StoreSupplier != null ? StoreSupplier.Name : storeName;
 
         public string QueryableStoreName => queriable ? StoreName : null;
 
@@ -108,49 +125,37 @@ namespace kafka_stream_core.Table
 
         #region Methods
 
-        public Materialized<K, V, S> withValueSerde(ISerDes<V> valueSerde)
-        {
-            this.valueSerde = valueSerde;
-            return this;
-        }
-
-        public Materialized<K, V, S> withKeySerde(ISerDes<K> keySerde)
-        {
-            this.keySerde = keySerde;
-            return this;
-        }
-
-        public Materialized<K, V, S> withLoggingEnabled(IDictionary<string, string> config)
+        public Materialized<K, V, S> WithLoggingEnabled(IDictionary<string, string> config)
         {
             loggingEnabled = true;
-            this.topicConfig = config;
+            this.TopicConfig = config;
             return this;
         }
 
-        public Materialized<K, V, S> withLoggingDisabled()
+        public Materialized<K, V, S> WithLoggingDisabled()
         {
             loggingEnabled = false;
-            this.topicConfig.Clear();
+            this.TopicConfig.Clear();
             return this;
         }
 
-        public Materialized<K, V, S> withCachingEnabled()
+        public Materialized<K, V, S> WithCachingEnabled()
         {
             cachingEnabled = true;
             return this;
         }
 
-        public Materialized<K, V, S> withCachingDisabled()
+        public Materialized<K, V, S> WithCachingDisabled()
         {
             cachingEnabled = false;
             return this;
         }
 
-        public Materialized<K, V, S> withRetention(TimeSpan retention)
+        public Materialized<K, V, S> WithRetention(TimeSpan retention)
         {
-            double retenationMs = retention.TotalMilliseconds;
+            double retentionMs = retention.TotalMilliseconds;
 
-            if (retenationMs < 0)
+            if (retentionMs < 0)
             {
                 throw new ArgumentException("Retention must not be negative.");
             }
@@ -159,23 +164,23 @@ namespace kafka_stream_core.Table
             return this;
         }
     
-        internal Materialized<K, V, S> useProvider(NameProvider provider, string generatedStorePrefix)
+        internal Materialized<K, V, S> UseProvider(INameProvider provider, string generatedStorePrefix)
         {
             queriable = !string.IsNullOrEmpty(StoreName);
             if (!queriable && provider != null)
             {
-                storeName = provider.newStoreName(generatedStorePrefix);
+                storeName = provider.NewStoreName(generatedStorePrefix);
             }
 
             return this;
         }
 
-        internal Materialized<K, V, S> initConsumed(Consumed<K, V> consumed)
+        internal Materialized<K, V, S> InitConsumed(Consumed<K, V> consumed)
         {
             if (this.KeySerdes == null)
-                this.withKeySerde(consumed.KeySerdes);
+                this.KeySerdes = consumed.KeySerdes;
             if (this.ValueSerdes == null)
-                this.withValueSerde(consumed.ValueSerdes);
+                this.ValueSerdes = consumed.ValueSerdes;
 
             return this;
         }
@@ -193,12 +198,15 @@ namespace kafka_stream_core.Table
 
         }
 
-        public static InMemory<K, V> @As(string storeName) => As(storeName, null, null);
+        public static InMemory<K, V> @As(string storeName) => new InMemory<K, V>(storeName, new InMemoryKeyValueBytesStoreSupplier(storeName));
 
-        public static InMemory<K, V> @As(string storeName, ISerDes<K> keySerde, ISerDes<V> valueSerde)
+        public static InMemory<K, V> @As<KS, VS>(string storeName)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
         {
             var m = new InMemory<K,V>(storeName, new InMemoryKeyValueBytesStoreSupplier(storeName));
-            m.withKeySerde(keySerde).withValueSerde(valueSerde);
+            m.KeySerdes = new KS();
+            m.ValueSerdes = new VS();
             return m;
         }
     }

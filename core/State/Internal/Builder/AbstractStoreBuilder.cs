@@ -7,7 +7,7 @@ using System.Text;
 namespace kafka_stream_core.State.Internal.Builder
 {
     internal abstract class AbstractStoreBuilder<K, V, T> : StoreBuilder<T>
-        where T : StateStore
+        where T : IStateStore
     {
         private IDictionary<string, string> logConfig = new Dictionary<string, string>();
         protected readonly string name;

@@ -22,19 +22,23 @@ namespace kafka_stream_core.Stream
             this.valueSerdes = valueSerdes;
         }
 
-        public static Grouped<K, V> @As(string named) 
-            => new Grouped<K, V>(named, null, null);
+        public static Grouped<K, V> Create(string name) 
+            => Create(name, null, null);
 
-        public static Grouped<K, V> WithKeySerde(ISerDes<K> keySerdes) 
-            => new Grouped<K, V>(null, keySerdes, null);
+        public static Grouped<K, V> Create(ISerDes<K> keySerdes, ISerDes<V> valueSerdes) 
+            => Create(null, keySerdes, valueSerdes);
 
-        public static Grouped<K, V> WithValueSerde(ISerDes<V> valueSerdes) 
-            => new Grouped<K, V>(null, null, valueSerdes);
+        public static Grouped<K, V> Create(string name, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+            => new Grouped<K, V>(name, keySerdes, valueSerdes);
 
-        public static Grouped<K, V> With(string named, ISerDes<K> keySerdes, ISerDes<V> valueSerdes) 
-            => new Grouped<K, V>(named, keySerdes, valueSerdes);
+        public static Grouped<K, V> Create<KS, VS>()
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => Create<KS, VS>(null);
 
-        public static Grouped<K, V> With(ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
-            => new Grouped<K, V>(null, keySerdes, valueSerdes);
+        public static Grouped<K, V> Create<KS, VS>(string name)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => new Grouped<K, V>(name, new KS(), new VS());
     }
 }

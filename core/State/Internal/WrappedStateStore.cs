@@ -5,8 +5,8 @@ using System.Text;
 
 namespace kafka_stream_core.State.Internal
 {
-    internal class WrappedStateStore<S, K, V> : StateStore
-        where S : StateStore
+    internal class WrappedStateStore<S, K, V> : IStateStore
+        where S : IStateStore
     {
 
         protected readonly S wrapped;
@@ -24,11 +24,11 @@ namespace kafka_stream_core.State.Internal
 
         public bool IsOpen => wrapped.IsOpen;
 
-        public void close() => wrapped.close();
+        public void Close() => wrapped.Close();
 
-        public void flush() => wrapped.flush();
+        public void Flush() => wrapped.Flush();
 
-        public void init(ProcessorContext context, StateStore root) => wrapped.init(context, root);
+        public void Init(ProcessorContext context, IStateStore root) => wrapped.Init(context, root);
 
         #endregion
     }

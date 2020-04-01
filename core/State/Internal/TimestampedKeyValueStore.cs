@@ -7,17 +7,13 @@ using System.Text;
 namespace kafka_stream_core.State.Internal
 {
     internal class TimestampedKeyValueStore<K, V> :
-        WrappedStateStore<KeyValueStore<Bytes, byte[]>, K, V>,
+        WrappedKeyValueStore<K, ValueAndTimestamp<V>>,
         kafka_stream_core.State.TimestampedKeyValueStore<K, V>
     {
-        private readonly ISerDes<K> keySerdes;
-        private readonly ISerDes<ValueAndTimestamp<V>> valueSerdes;
-
         public TimestampedKeyValueStore(KeyValueStore<Bytes, byte[]> wrapped, ISerDes<K> keySerdes, ISerDes<ValueAndTimestamp<V>> valueSerdes) 
-            : base(wrapped)
+            : base(wrapped, keySerdes, valueSerdes)
         {
-            this.keySerdes = keySerdes;
-            this.valueSerdes = valueSerdes;
+
         }
 
         private Bytes GetKeyBytes(K key) => new Bytes(this.keySerdes.Serialize(key));
@@ -44,5 +40,11 @@ namespace kafka_stream_core.State.Internal
             => FromValue(wrapped.putIfAbsent(GetKeyBytes(key), GetValueBytes(value)));
 
         #endregion
+
+        public override void InitStoreSerDes(ProcessorContext context)
+        {
+            keySerdes = keySerdes == null ? context.Configuration.DefaultKeySerDes as ISerDes<K> : keySerdes;
+            valueSerdes = valueSerdes == null ? new ValueAndTimestampSerDes<V>(context.Configuration.DefaultValueSerDes as ISerDes<V>) : valueSerdes;
+        }
     }
 }

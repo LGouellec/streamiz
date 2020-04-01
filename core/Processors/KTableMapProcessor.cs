@@ -35,14 +35,14 @@ namespace kafka_stream_core.Processors
             // forward oldPair first, to be consistent with reduce and aggregate
             if (change.OldValue != null)
             {
-                KeyValuePair<K1, V1> oldPair = mapper.apply(key, change.OldValue);
+                KeyValuePair<K1, V1> oldPair = mapper.Apply(key, change.OldValue);
                 if (oldPair.Key != null && oldPair.Value != null)
                     this.Forward(oldPair.Key, new Change<V1>(oldPair.Value, default));
             }
 
             if (change.NewValue != null)
             {
-                KeyValuePair<K1, V1> newPair = mapper.apply(key, change.NewValue);
+                KeyValuePair<K1, V1> newPair = mapper.Apply(key, change.NewValue);
                 if (newPair.Key != null && newPair.Value != null)
                     this.Forward(newPair.Key, new Change<V1>(default, newPair.Value));
             }

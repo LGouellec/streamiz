@@ -25,7 +25,7 @@ namespace kafka_stream_core.Processors
 
         void Close();
 
-        StateStore GetStore(String name);
+        IStateStore GetStore(String name);
 
         String ApplicationId { get; }
 

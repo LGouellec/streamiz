@@ -9,7 +9,7 @@ namespace kafka_stream_core.Stream.Internal.Graph.Nodes
             HasWrittenToTopology = true;
         }
 
-        public override void writeToTopology(InternalTopologyBuilder builder)
+        public override void WriteToTopology(InternalTopologyBuilder builder)
         {
         }
     }

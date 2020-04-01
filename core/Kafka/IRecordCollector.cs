@@ -14,6 +14,6 @@ namespace kafka_stream_core.Kafka
         void Close();
         void Offsets();
         void Send<K, V>(String topic, K key, V value, Headers headers, int partition, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer);
-        void Send<K, V>(String topic, K key, V value, Headers headers, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer, StreamPartitioner<K, V> partitioner);
+        void Send<K, V>(String topic, K key, V value, Headers headers, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer, IStreamPartitioner<K, V> partitioner);
     }
 }

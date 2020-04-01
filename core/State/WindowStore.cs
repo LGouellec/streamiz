@@ -5,7 +5,7 @@ using System.Text;
 
 namespace kafka_stream_core.State
 {
-    public interface WindowStore<K,V> : StateStore, ReadOnlyWindowStore<K,V>
+    public interface WindowStore<K,V> : IStateStore, ReadOnlyWindowStore<K,V>
     {
     }
 }

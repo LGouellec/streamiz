@@ -7,16 +7,16 @@ namespace kafka_stream_core.Stream.Internal.Graph.Nodes
         protected string topicName;
         protected Consumed<K, V> consumed;
 
-        public StreamSourceNode(string topicName, string streamGraphNode, Consumed<K,V> consumed) 
+        public StreamSourceNode(string topicName, string streamGraphNode, Consumed<K, V> consumed) 
             : base(streamGraphNode)
         {
             this.topicName = topicName;
             this.consumed = consumed;
         }
 
-        public override void writeToTopology(InternalTopologyBuilder builder)
+        public override void WriteToTopology(InternalTopologyBuilder builder)
         {
-            builder.addSourceOperator(topicName, this.streamGraphNode, consumed);
+            builder.AddSourceOperator(topicName, this.streamGraphNode, consumed);
         }
     }
 }
