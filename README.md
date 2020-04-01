@@ -33,6 +33,17 @@ I need contribution ;)
 
 TODO
 
+# Priority feature for stateless beta version
+
+- Adopt C# Syntax  [ ]
+- Configuration property [ ]
+- State thread + task implementation [ ]
+- Naming Kafka Streams DSL Topologies [ ]
+- Logging [ ]
+- [EOS](https://github.com/LGouellec/kafka-stream-net/issues/2) [ ]
+- Unit test (TestTopologyDriver, ...) [ ]
+- Test and validate all stateless processor [ ]
+
 # TODO implementation
 
 - Subtopology impl [ ]
@@ -45,7 +56,7 @@ TODO
 - Repartition impl [ ]
 - Logging [ ]
 - Unit test (TestTopologyDriver, ...) [ ]
-- [EOS](https://github.com/LGouellec/kafka-stream-net/issues/2) [ ] : 
+- [EOS](https://github.com/LGouellec/kafka-stream-net/issues/2) [ ]
 - Configuration property [ ]
 - Rocks DB state implementation [ ]
 - Optimizing Kafka Streams Topologies  [ ]
@@ -56,7 +67,6 @@ TODO
 Some documentations for help during implementation :
 https://docs.confluent.io/current/streams/index.html
 https://kafka.apache.org/20/documentation/streams/developer-guide/dsl-api.html#stateless-transformations
-
 
 # Usage
 
