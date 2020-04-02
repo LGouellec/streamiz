@@ -21,12 +21,13 @@ namespace sample_stream
 
             StreamBuilder builder = new StreamBuilder();
 
-            builder.stream("test", Consumed<string, string>.Create())
+            builder.Stream<string, string, StringSerDes, StringSerDes>("test")
                 .FilterNot((k, v) => v.Contains("test"))
                 .To("test-output");
 
-            builder.table("test-ktable", 
-                Consumed<string, string>.Create(), 
+            builder.Table<string, string, StringSerDes, StringSerDes>(
+                "test-ktable",
+                null,
                 InMemory<string, string>.As("test-ktable-store"));
 
             Topology t = builder.Build();

@@ -4,6 +4,7 @@ using kafka_stream_core.Processors.Internal;
 using kafka_stream_core.State;
 using kafka_stream_core.State.Internal;
 using kafka_stream_core.Stream;
+using kafka_stream_core.Stream.Internal;
 using kafka_stream_core.Stream.Internal.Graph.Nodes;
 using kafka_stream_core.Table;
 using System;
@@ -28,7 +29,7 @@ namespace kafka_stream_core.Table.Internal.Graph.Nodes
         private bool shouldReuseSourceTopicForChangelog = false;
 
         public TableSourceNode(string topicName, string streamGraphNode,
-                string sourceName, Consumed<K, V> consumed,
+                string sourceName, ConsumedInternal<K, V> consumed,
                 Materialized<K, V, S> materialized, ProcessorParameters<K, V> processorParameters, bool isGlobalKTable = false)
             : base(topicName, streamGraphNode, consumed)
         {

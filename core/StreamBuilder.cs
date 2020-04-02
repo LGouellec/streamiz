@@ -1,5 +1,7 @@
 ﻿using kafka_stream_core.Crosscutting;
+using kafka_stream_core.Processors;
 using kafka_stream_core.Processors.Internal;
+using kafka_stream_core.SerDes;
 using kafka_stream_core.State;
 using kafka_stream_core.Stream;
 using kafka_stream_core.Stream.Internal;
@@ -21,26 +23,53 @@ namespace kafka_stream_core
 
         #region KStream
 
-        public IKStream<byte[], byte[]> stream(string topic) 
-            => stream(topic, Consumed<byte[], byte[]>.Create());
+        public IKStream<byte[], byte[]> Stream(string topic, StreamOptions options = null) => Stream<byte[], byte[], ByteArraySerDes, ByteArraySerDes>(topic, options);
 
-        public IKStream<K, V> stream<K,V>(string topic, Consumed<K, V> consumed)
+        public IKStream<K, V> Stream<K, V>(string topic, StreamOptions options = null)
         {
-            return internalStreamBuilder.Stream<K, V>(topic, consumed);
+            var consumedInternal = new ConsumedInternal<K, V>(null, null, options?.Extractor, options == null ? Topology.AutoOffsetReset.EARLIEST : options.AutoOffsetReset);
+            return internalStreamBuilder.Stream(topic, consumedInternal);
+        }
+
+        public IKStream<K, V> Stream<K, V, KS, VS>(string topic, StreamOptions options = null)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+        {
+            var consumedInternal = new ConsumedInternal<K, V>(new KS(), new VS(), options?.Extractor, options == null ? Topology.AutoOffsetReset.EARLIEST : options.AutoOffsetReset);
+            return internalStreamBuilder.Stream(topic, consumedInternal);
         }
 
         #endregion
 
         #region KTable
-        
-        public IKTable<byte[], byte[]> table(string topic)
-            => table(topic, Consumed<byte[], byte[]>.Create(), Materialized<byte[], byte[], KeyValueStore<Bytes, byte[]>>.Create());
 
-        public IKTable<K,V> table<K,V>(string topic, Consumed<K,V> consumed, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized = null)
+        public IKTable<byte[], byte[]> Table(string topic, StreamOptions options = null)
+            => Table<byte[], byte[], ByteArraySerDes, ByteArraySerDes>(topic, options, Materialized<byte[], byte[], KeyValueStore<Bytes, byte[]>>.Create());
+
+        public IKTable<K, V> Table<K, V>(string topic, StreamOptions options = null)
+            => Table(topic, options, Materialized<K, V, KeyValueStore<Bytes, byte[]>>.Create());
+
+        public IKTable<K,V> Table<K,V>(string topic, StreamOptions options = null, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized = null)
         {
-            materialized?.UseProvider(internalStreamBuilder, $"{topic}-").InitConsumed(consumed);
+            var consumedInternal = new ConsumedInternal<K, V>(null, null, options?.Extractor, options == null ? Topology.AutoOffsetReset.EARLIEST : options.AutoOffsetReset);
+            materialized?.UseProvider(internalStreamBuilder, $"{topic}-")?.InitConsumed(consumedInternal);
 
-            return internalStreamBuilder.Table(topic, consumed, materialized);
+            return internalStreamBuilder.Table(topic, consumedInternal, materialized);
+        }
+
+        public IKTable<K, V> Table<K, V, KS, VS>(string topic, StreamOptions options = null)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => Table<K, V, KS, VS>(topic, options, Materialized<K, V, KeyValueStore<Bytes, byte[]>>.Create<KS, VS>());
+
+        public IKTable<K, V> Table<K, V, KS, VS>(string topic, StreamOptions options = null, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized = null)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+        {
+            var consumedInternal = new ConsumedInternal<K, V>(null, null, options?.Extractor, options == null ? Topology.AutoOffsetReset.EARLIEST : options.AutoOffsetReset);
+            materialized?.UseProvider(internalStreamBuilder, $"{topic}-")?.InitConsumed(consumedInternal);
+
+            return internalStreamBuilder.Table(topic, consumedInternal, materialized);
         }
 
         #endregion

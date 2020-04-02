@@ -175,7 +175,7 @@ namespace kafka_stream_core.Table
             return this;
         }
 
-        internal Materialized<K, V, S> InitConsumed(Consumed<K, V> consumed)
+        internal Materialized<K, V, S> InitConsumed(ConsumedInternal<K, V> consumed)
         {
             if (this.KeySerdes == null)
                 this.KeySerdes = consumed.KeySerdes;

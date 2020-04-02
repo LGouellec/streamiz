@@ -210,7 +210,7 @@ namespace kafka_stream_core.Table.Internal
             => this.MapValues(mapperWithKey, null, materialized);
 
         public IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
-            => doMapValues(mapperWithKey, name, materialized);
+            => DoMapValues(mapperWithKey, name, materialized);
 
         #endregion
 

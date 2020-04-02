@@ -147,7 +147,7 @@ namespace kafka_stream_core.Processors.Internal
 
         #region Add Processors / State Store
 
-        internal void AddSourceOperator<K,V>(string topic, string nameNode, Consumed<K, V> consumed)
+        internal void AddSourceOperator<K,V>(string topic, string nameNode, ConsumedInternal<K, V> consumed)
         {
             if (!sourceOperators.ContainsKey(nameNode))
             {

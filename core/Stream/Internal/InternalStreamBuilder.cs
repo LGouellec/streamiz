@@ -35,7 +35,7 @@ namespace kafka_stream_core.Stream.Internal
 
         private int NextIndex { get { lock (_locker) return ++index; } }
 
-        internal KStream<K, V> Stream<K, V>(string topic, Consumed<K, V> consumed)
+        internal KStream<K, V> Stream<K, V>(string topic, ConsumedInternal<K, V> consumed)
         {
             var name = NewProcessorName(KStream<byte, byte>.SOURCE_NAME);
             var node = new StreamSourceNode<K,V>(topic, name, consumed);
@@ -66,7 +66,7 @@ namespace kafka_stream_core.Stream.Internal
             return $"{prefix}{KTable<byte, byte, byte>.STATE_STORE_NAME}{NextIndex.ToString("D10")}";
         }
 
-        internal IKTable<K, V> Table<K, V>(string topic, Consumed<K, V> consumed, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized)
+        internal IKTable<K, V> Table<K, V>(string topic, ConsumedInternal<K, V> consumed, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized)
         {
             var sourceName = NewProcessorName(KStream<byte, byte>.SOURCE_NAME);
             var tableSourceName = NewProcessorName(KTable<byte, byte, byte>.SOURCE_NAME);
