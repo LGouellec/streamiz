@@ -38,9 +38,20 @@ namespace kafka_stream_core
 
         int NumStreamThreads { get; }
 
+        /// <summary>
+        /// Default key serdes for consumer and materialized state store
+        /// </summary>
         ISerDes DefaultKeySerDes { get; }
 
+        /// <summary>
+        /// Default value serdes for consumer and materialized state store
+        /// </summary>
         ISerDes DefaultValueSerDes { get; }
+
+        /// <summary>
+        /// AutoOffsetReset
+        /// </summary>
+        AutoOffsetReset AutoOffsetReset { get; }
 
         #endregion
     }
@@ -112,6 +123,12 @@ namespace kafka_stream_core
 
         #region IStreamConfig Property
 
+        public AutoOffsetReset AutoOffsetReset
+        {
+            get => this["auto.offset.reset"];
+            set => this.AddOrUpdate("auto.offset.reset", value);
+        }
+
         public int NumStreamThreads
         {
             get => Convert.ToInt32(this[numStreamThreadsCst]);
@@ -151,6 +168,7 @@ namespace kafka_stream_core
             NumStreamThreads = 1;
             DefaultKeySerDes = new ByteArraySerDes();
             DefaultValueSerDes = new ByteArraySerDes();
+            AutoOffsetReset = AutoOffsetReset.Earliest;
         }
 
         public StreamConfig(IDictionary<string, dynamic> properties)
@@ -187,7 +205,7 @@ namespace kafka_stream_core
                 SecurityProtocol = SecurityProtocol.SaslPlaintext,
                 GroupId = this.ApplicationId,
                 EnableAutoCommit = false,
-                AutoOffsetReset = AutoOffsetReset.Earliest
+                AutoOffsetReset = this.AutoOffsetReset
             };
         }
 

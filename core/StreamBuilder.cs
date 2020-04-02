@@ -27,7 +27,7 @@ namespace kafka_stream_core
 
         public IKStream<K, V> Stream<K, V>(string topic, StreamOptions options = null)
         {
-            var consumedInternal = new ConsumedInternal<K, V>(null, null, options?.Extractor, options == null ? Topology.AutoOffsetReset.EARLIEST : options.AutoOffsetReset);
+            var consumedInternal = new ConsumedInternal<K, V>(null, null, options?.Extractor);
             return internalStreamBuilder.Stream(topic, consumedInternal);
         }
 
@@ -35,7 +35,7 @@ namespace kafka_stream_core
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
-            var consumedInternal = new ConsumedInternal<K, V>(new KS(), new VS(), options?.Extractor, options == null ? Topology.AutoOffsetReset.EARLIEST : options.AutoOffsetReset);
+            var consumedInternal = new ConsumedInternal<K, V>(new KS(), new VS(), options?.Extractor);
             return internalStreamBuilder.Stream(topic, consumedInternal);
         }
 
@@ -51,7 +51,7 @@ namespace kafka_stream_core
 
         public IKTable<K,V> Table<K,V>(string topic, StreamOptions options = null, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized = null)
         {
-            var consumedInternal = new ConsumedInternal<K, V>(null, null, options?.Extractor, options == null ? Topology.AutoOffsetReset.EARLIEST : options.AutoOffsetReset);
+            var consumedInternal = new ConsumedInternal<K, V>(null, null, options?.Extractor);
             materialized?.UseProvider(internalStreamBuilder, $"{topic}-")?.InitConsumed(consumedInternal);
 
             return internalStreamBuilder.Table(topic, consumedInternal, materialized);
@@ -66,7 +66,7 @@ namespace kafka_stream_core
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
-            var consumedInternal = new ConsumedInternal<K, V>(new KS(), new VS(), options?.Extractor, options == null ? Topology.AutoOffsetReset.EARLIEST : options.AutoOffsetReset);
+            var consumedInternal = new ConsumedInternal<K, V>(new KS(), new VS(), options?.Extractor);
             materialized?.UseProvider(internalStreamBuilder, $"{topic}-")?.InitConsumed(consumedInternal);
 
             return internalStreamBuilder.Table(topic, consumedInternal, materialized);

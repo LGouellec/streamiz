@@ -1,4 +1,5 @@
-﻿using kafka_stream_core;
+﻿using Confluent.Kafka;
+using kafka_stream_core;
 using kafka_stream_core.SerDes;
 using kafka_stream_core.Stream;
 using kafka_stream_core.Table;
@@ -20,8 +21,9 @@ namespace sample_stream
             config.Add("sasl.username", "admin");
             config.Add("sasl.password", "admin");
             config.Add("security.protocol", "SaslPlaintext");
+            config.AutoOffsetReset = AutoOffsetReset.Earliest;
             config.NumStreamThreads = 2;
-
+            
             StreamBuilder builder = new StreamBuilder();
 
             builder.Stream<string, string>("test")

@@ -1,10 +1,7 @@
-﻿using kafka_stream_core.Crosscutting;
-using kafka_stream_core.SerDes;
-using kafka_stream_core.Stream;
+﻿using kafka_stream_core.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace kafka_stream_core.Processors
 {
@@ -12,23 +9,21 @@ namespace kafka_stream_core.Processors
     {
         string TopicName { get; }
         ITimestampExtractor Extractor { get; }
-        Topology.AutoOffsetReset AutoOffsetReset { get; }
     }
 
     internal class SourceProcessor<K,V> : AbstractProcessor<K, V>, ISourceProcessor
     {
         private readonly string topicName;
 
-        internal SourceProcessor(string name, string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, ITimestampExtractor extractor, Topology.AutoOffsetReset autoOffsetReset)
+        internal SourceProcessor(string name, string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, ITimestampExtractor extractor)
             : base(name, null, keySerdes, valueSerdes)
         {
             this.topicName = topicName;
             this.Extractor = extractor;
-            this.AutoOffsetReset = autoOffsetReset;
         }
 
         private SourceProcessor(SourceProcessor<K,V> sourceProcessor)
-            : this(sourceProcessor.Name, sourceProcessor.TopicName, sourceProcessor.KeySerDes, sourceProcessor.ValueSerDes, sourceProcessor.Extractor, sourceProcessor.AutoOffsetReset)
+            : this(sourceProcessor.Name, sourceProcessor.TopicName, sourceProcessor.KeySerDes, sourceProcessor.ValueSerDes, sourceProcessor.Extractor)
         {
             this.StateStores = new List<string>(sourceProcessor.StateStores);
         }
@@ -36,8 +31,6 @@ namespace kafka_stream_core.Processors
         public string TopicName => topicName;
 
         public ITimestampExtractor Extractor { get; }
-
-        public Topology.AutoOffsetReset AutoOffsetReset { get; }
 
         public override void Init(ProcessorContext context)
         {
