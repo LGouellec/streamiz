@@ -83,15 +83,16 @@ config.NumStreamThreads = 2;
 
 StreamBuilder builder = new StreamBuilder();
 
-builder.stream("test", Consumed<string, string>.Create())
-    .filterNot((k, v) => v.Contains("test"))
-    .to("test-output");
+builder.Stream<string, string, StringSerDes, StringSerDes>("test")
+    .FilterNot((k, v) => v.Contains("test"))
+    .To("test-output");
 
-builder.table("test-ktable", 
-    Consumed<string, string>.Create(), 
+builder.Table<string, string, StringSerDes, StringSerDes>(
+    "test-ktable",
+    StreamOptions.Create(),
     InMemory<string, string>.As("test-ktable-store"));
 
-Topology t = builder.build();
+Topology t = builder.Build();
 KafkaStream stream = new KafkaStream(t, config);
 
 try

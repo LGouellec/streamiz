@@ -27,7 +27,7 @@ namespace sample_stream
 
             builder.Table<string, string, StringSerDes, StringSerDes>(
                 "test-ktable",
-                null,
+                StreamOptions.Create(),
                 InMemory<string, string>.As("test-ktable-store"));
 
             Topology t = builder.Build();
