@@ -1,4 +1,5 @@
 ﻿using kafka_stream_core.Crosscutting;
+using kafka_stream_core.Processors;
 using kafka_stream_core.SerDes;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,12 @@ namespace kafka_stream_core.State.Internal
         {
             keySerdes = keySerdes == null ? context.Configuration.DefaultKeySerDes as ISerDes<K> : keySerdes;
             valueSerdes = valueSerdes == null ? context.Configuration.DefaultValueSerDes as ISerDes<V> : valueSerdes;
+        }
+
+        public override void Init(ProcessorContext context, IStateStore root)
+        {
+            base.Init(context, root);
+            InitStoreSerDes(context);
         }
     }
 }

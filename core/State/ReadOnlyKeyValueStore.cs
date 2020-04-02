@@ -6,13 +6,13 @@ namespace kafka_stream_core.State
 {
     public interface ReadOnlyKeyValueStore<K, V>
     {
-        V get(K key);
+        V Get(K key);
 
         // TODO : 
         //KeyValueIterator<K, V> range(K from, K to);
 
         //KeyValueIterator<K, V> all();
 
-        long approximateNumEntries();
+        long ApproximateNumEntries();
     }
 }

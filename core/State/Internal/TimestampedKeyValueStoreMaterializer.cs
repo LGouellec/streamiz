@@ -17,7 +17,7 @@ namespace kafka_stream_core.State.Internal
             this.materialized = materializedInternal;
         }
 
-        public StoreBuilder<kafka_stream_core.State.TimestampedKeyValueStore<K, V>> materialize()
+        public StoreBuilder<kafka_stream_core.State.TimestampedKeyValueStore<K, V>> Materialize()
         {
             KeyValueBytesStoreSupplier supplier = (KeyValueBytesStoreSupplier)materialized.StoreSupplier;
             if (supplier == null)
@@ -28,23 +28,23 @@ namespace kafka_stream_core.State.Internal
                 supplier = new InMemoryKeyValueBytesStoreSupplier(name);
             }
 
-            StoreBuilder<kafka_stream_core.State.TimestampedKeyValueStore< K, V >> builder = Stores.timestampedKeyValueStoreBuilder(
+            StoreBuilder<kafka_stream_core.State.TimestampedKeyValueStore< K, V >> builder = Stores.TimestampedKeyValueStoreBuilder(
                  supplier,
                  materialized.KeySerdes,
                  materialized.ValueSerdes);
 
             if (materialized.LoggingEnabled)
             {
-                builder.withLoggingEnabled(materialized.TopicConfig);
+                builder.WithLoggingEnabled(materialized.TopicConfig);
             }
             else
             {
-                builder.withLoggingDisabled();
+                builder.WithLoggingDisabled();
             }
 
             if (materialized.CachingEnabled)
             {
-                builder.withCachingEnabled();
+                builder.WithCachingEnabled();
             }
             
             return builder;

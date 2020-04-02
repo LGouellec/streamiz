@@ -37,7 +37,7 @@ namespace kafka_stream_core.Processors
 
             if (queryableStoreName != null)
             {
-                store.put(key, ValueAndTimestamp<V>.make(newValue, Context.Timestamp));
+                store.Put(key, ValueAndTimestamp<V>.Make(newValue, Context.Timestamp));
                 //TODO : tupleForwarder.maybeForward(key, newValue, oldValue);
             }
             else

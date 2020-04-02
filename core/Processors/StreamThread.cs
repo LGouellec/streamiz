@@ -196,6 +196,7 @@ namespace kafka_stream_core.Processors
         private readonly TimeSpan consumeTimeout;
         private readonly string threadId;
         private readonly string clientId;
+        private CancellationToken token;
 
         private readonly object stateLock = new object();
 
@@ -228,14 +229,15 @@ namespace kafka_stream_core.Processors
         {
             IsRunning = false;
             consumer.Unsubscribe();
-            manager.Close();
             thread.Join();
+            manager.Close();
+            consumer.Dispose();
             IsDisposable = true;
         }
 
         public void Run()
         {
-            while (IsRunning)
+            while (!token.IsCancellationRequested)
             {
                 ConsumeResult<byte[], byte[]> record = null;
 
@@ -280,8 +282,9 @@ namespace kafka_stream_core.Processors
             }
         }
 
-        public void Start()
+        public void Start(CancellationToken token)
         {
+            this.token = token;
             IsRunning = true;
             consumer.Subscribe(builder.GetSourceTopics());
             SetState(State.STARTING);

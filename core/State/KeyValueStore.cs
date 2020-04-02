@@ -7,12 +7,12 @@ namespace kafka_stream_core.State
 {
     public interface KeyValueStore<K, V> : IStateStore, ReadOnlyKeyValueStore<K, V>
     {
-        void put(K key, V value);
+        void Put(K key, V value);
 
-        V putIfAbsent(K key, V value);
+        V PutIfAbsent(K key, V value);
 
-        void putAll(IEnumerable<KeyValuePair<K, V>> entries);
+        void PutAll(IEnumerable<KeyValuePair<K, V>> entries);
 
-        V delete(K key);
+        V Delete(K key);
     }
 }

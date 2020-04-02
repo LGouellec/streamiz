@@ -57,7 +57,7 @@ namespace kafka_stream_core.Processors
 
             if (queryableName != null)
             {
-                 ValueAndTimestamp<V> oldValueAndTimestamp = store.get(key);
+                 ValueAndTimestamp<V> oldValueAndTimestamp = store.Get(key);
                  V oldValue;
                 if (oldValueAndTimestamp != null)
                 {
@@ -71,7 +71,7 @@ namespace kafka_stream_core.Processors
                 {
                     oldValue = default(V);
                 }
-                store.put(key, ValueAndTimestamp<V>.make(value, Context.Timestamp));
+                store.Put(key, ValueAndTimestamp<V>.Make(value, Context.Timestamp));
                 //tupleForwarder.maybeForward(key, value, oldValue);
             }
             else

@@ -37,7 +37,7 @@ namespace kafka_stream_core.Table.Internal.Graph
                     timestamp = valueAndTimestamp.Timestamp;
                 }
 
-                return ValueAndTimestamp<VR>.make(newValue, timestamp);
+                return ValueAndTimestamp<VR>.Make(newValue, timestamp);
             }
         }
 

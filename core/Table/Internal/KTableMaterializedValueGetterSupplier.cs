@@ -19,7 +19,7 @@ namespace kafka_stream_core.Table.Internal
 
             public void Close(){}
 
-            public ValueAndTimestamp<V> Get(K key) => store.get(key);
+            public ValueAndTimestamp<V> Get(K key) => store.Get(key);
 
             public void Init(ProcessorContext context)
             {

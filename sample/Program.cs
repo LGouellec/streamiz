@@ -3,6 +3,7 @@ using kafka_stream_core.SerDes;
 using kafka_stream_core.Stream;
 using kafka_stream_core.Table;
 using System;
+using System.Threading;
 
 namespace sample_stream
 {
@@ -10,6 +11,8 @@ namespace sample_stream
     {
         static void Main(string[] args)
         {
+            CancellationTokenSource source = new CancellationTokenSource();
+
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app";
             config.Add("bootstrap.servers", "192.168.56.1:9092");
@@ -21,11 +24,11 @@ namespace sample_stream
 
             StreamBuilder builder = new StreamBuilder();
 
-            builder.Stream<string, string, StringSerDes, StringSerDes>("test")
+            builder.Stream<string, string>("test")
                 .FilterNot((k, v) => v.Contains("test"))
                 .To("test-output");
 
-            builder.Table<string, string, StringSerDes, StringSerDes>(
+            builder.Table(
                 "test-ktable",
                 StreamOptions.Create(),
                 InMemory<string, string>.As("test-ktable-store"));
@@ -33,17 +36,12 @@ namespace sample_stream
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
 
-            try
-            {
-                stream.Start();
-                Console.ReadKey();
-                stream.Stop();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message + ":" + e.StackTrace);
-                stream.Kill();
-            }
+            Console.CancelKeyPress += (o, e) => {
+                source.Cancel();
+                stream.Close();
+            };
+
+            stream.Start(source.Token);
         }
     }
 }

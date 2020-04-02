@@ -28,7 +28,7 @@ namespace kafka_stream_core.State.Internal
 
         public void Flush() => wrapped.Flush();
 
-        public void Init(ProcessorContext context, IStateStore root) => wrapped.Init(context, root);
+        public virtual void Init(ProcessorContext context, IStateStore root) => wrapped.Init(context, root);
 
         #endregion
     }

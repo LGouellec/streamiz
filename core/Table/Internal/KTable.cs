@@ -257,7 +257,7 @@ namespace kafka_stream_core.Table.Internal
 
                 queryableStoreName = materializedInternal.QueryableStoreName;
                 // only materialize if materialized is specified and it has queryable name
-                storeBuilder = queryableStoreName != null ? (new TimestampedKeyValueStoreMaterializer<K, V>(materializedInternal)).materialize() : null;
+                storeBuilder = queryableStoreName != null ? (new TimestampedKeyValueStoreMaterializer<K, V>(materializedInternal)).Materialize() : null;
             }
             else
             {
@@ -310,7 +310,7 @@ namespace kafka_stream_core.Table.Internal
                 valueSerde = materializedInternal.ValueSerdes != null ? materializedInternal.ValueSerdes : null;
                 queryableStoreName = materializedInternal.QueryableStoreName;
                 // only materialize if materialized is specified and it has queryable name
-                storeBuilder = queryableStoreName != null ? (new TimestampedKeyValueStoreMaterializer<K, VR>(materializedInternal)).materialize() : null;
+                storeBuilder = queryableStoreName != null ? (new TimestampedKeyValueStoreMaterializer<K, VR>(materializedInternal)).Materialize() : null;
             }
             else
             {

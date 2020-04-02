@@ -27,7 +27,7 @@ namespace kafka_stream_core.Table.Internal.Graph
             {
                 ValueAndTimestamp<V> valueAndTimestamp = parentTableGetter.Get(key);
                 var v = mapper.Apply(key, valueAndTimestamp != null ? default : valueAndTimestamp.Value);
-                return ValueAndTimestamp<KeyValuePair<K1, V1>>.make(v, valueAndTimestamp == null ? context.Timestamp : valueAndTimestamp.Timestamp);
+                return ValueAndTimestamp<KeyValuePair<K1, V1>>.Make(v, valueAndTimestamp == null ? context.Timestamp : valueAndTimestamp.Timestamp);
             }
 
             public void Init(ProcessorContext context)

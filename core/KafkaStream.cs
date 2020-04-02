@@ -5,6 +5,7 @@ using kafka_stream_core.Processors;
 using kafka_stream_core.Stream;
 using kafka_stream_core.Stream.Internal;
 using System;
+using System.Threading;
 
 namespace kafka_stream_core
 {
@@ -25,7 +26,7 @@ namespace kafka_stream_core
 
             // sanity check
             this.processorTopology = topology.Builder.BuildTopology();
-            
+
             this.threads = new IThread[this.configuration.NumStreamThreads];
 
             for (int i = 0; i < this.configuration.NumStreamThreads; ++i)
@@ -46,33 +47,16 @@ namespace kafka_stream_core
             }
         }
 
-        public void Start()
+        public void Start(CancellationToken token = default)
         {
             foreach (var t in threads)
-                t.Start();
+                t.Start(token);
         }
 
-        public void Stop()
+        public void Close()
         {
             foreach (var t in threads)
                 t.Dispose();
-        }
-
-        public void Kill()
-        {
-            foreach (var t in threads)
-            {
-                if (!t.IsDisposable)
-                {
-                    try
-                    {
-                        t.Dispose();
-                    }catch(Exception e)
-                    {
-                        // TODO
-                    }
-                }
-            }
         }
     }
 }

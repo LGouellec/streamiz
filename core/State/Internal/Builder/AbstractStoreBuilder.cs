@@ -13,7 +13,6 @@ namespace kafka_stream_core.State.Internal.Builder
         protected readonly string name;
         protected readonly ISerDes<K> keySerdes;
         protected readonly ISerDes<V> valueSerdes;
-        private DateTime time;
         bool enableCaching;
         bool enableLogging = true;
 
@@ -21,30 +20,29 @@ namespace kafka_stream_core.State.Internal.Builder
         public IDictionary<string, string> LogConfig => logConfig;
         public bool LoggingEnabled => enableLogging;
 
-        public AbstractStoreBuilder(String name, ISerDes<K> keySerde, ISerDes<V> valueSerde, DateTime time)
+        public AbstractStoreBuilder(String name, ISerDes<K> keySerde, ISerDes<V> valueSerde)
         {
             this.name = name;
             this.keySerdes = keySerde;
             this.valueSerdes = valueSerde;
-            this.time = time;
         }
 
 
-        public StoreBuilder<T> withCachingEnabled()
+        public StoreBuilder<T> WithCachingEnabled()
         {
             enableCaching = true;
             return this;
         }
 
 
-        public StoreBuilder<T> withCachingDisabled()
+        public StoreBuilder<T> WithCachingDisabled()
         {
             enableCaching = false;
             return this;
         }
 
 
-        public StoreBuilder<T> withLoggingEnabled(IDictionary<String, String> config)
+        public StoreBuilder<T> WithLoggingEnabled(IDictionary<String, String> config)
         {
             enableLogging = true;
             logConfig = config;
@@ -52,15 +50,15 @@ namespace kafka_stream_core.State.Internal.Builder
         }
 
 
-        public StoreBuilder<T> withLoggingDisabled()
+        public StoreBuilder<T> WithLoggingDisabled()
         {
             enableLogging = false;
             logConfig.Clear();
             return this;
         }
 
-        public abstract T build();
+        public abstract T Build();
 
-        object StoreBuilder.build() => this.build();
+        object StoreBuilder.build() => this.Build();
     }
 }

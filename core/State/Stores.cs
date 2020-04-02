@@ -9,17 +9,16 @@ namespace kafka_stream_core.State
 {
     internal static class Stores
     {
-        public static KeyValueBytesStoreSupplier persistentTimestampedKeyValueStore(string name)
+        public static KeyValueBytesStoreSupplier PersistentTimestampedKeyValueStore(string name)
         {
             // TODO : RocksDB IMPLEMENTATION
             //return new RocksDbKeyValueBytesStoreSupplier(name, true);
             return null;
         }
 
-        public static StoreBuilder<kafka_stream_core.State.TimestampedKeyValueStore<K, V>> timestampedKeyValueStoreBuilder<K, V>(KeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
+        public static StoreBuilder<kafka_stream_core.State.TimestampedKeyValueStore<K, V>> TimestampedKeyValueStoreBuilder<K, V>(KeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
         {
-            return new TimestampedKeyValueStoreBuilder<K, V>(supplier, keySerde, valueSerde, DateTime.Now);
+            return new TimestampedKeyValueStoreBuilder<K, V>(supplier, keySerde, valueSerde);
         }
-
     }
 }

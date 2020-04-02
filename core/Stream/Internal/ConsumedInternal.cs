@@ -12,12 +12,12 @@ namespace kafka_stream_core.Stream.Internal
 
         public ConsumedInternal(
             ISerDes<K> keySerdes,
-            ISerDes<V> value,
+            ISerDes<V> valueSerdes,
             ITimestampExtractor timestampExtractor,
             Topology.AutoOffsetReset autoOffset)
         {
             KeySerdes = keySerdes;
-            ValueSerdes = ValueSerdes;
+            ValueSerdes = valueSerdes;
             TimestampExtractor = timestampExtractor;
             AutoOffsetReset = autoOffset;
         }
