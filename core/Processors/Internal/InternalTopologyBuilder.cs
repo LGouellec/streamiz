@@ -151,7 +151,7 @@ namespace kafka_stream_core.Processors.Internal
         {
             if (!sourceOperators.ContainsKey(nameNode))
             {
-                SourceProcessor<K, V> source = new SourceProcessor<K, V>(nameNode, topic, consumed.KeySerdes, consumed.ValueSerdes, consumed.TimestampExtractor, consumed.AutoOffsetReset);
+                SourceProcessor<K, V> source = new SourceProcessor<K, V>(nameNode, topic, consumed.KeySerdes, consumed.ValueSerdes, consumed.TimestampExtractor);
                 sourceOperators.Add(nameNode, source);
             }
             else

@@ -114,19 +114,26 @@ namespace kafka_stream_core.Stream.Internal
 
         #region To
 
-        public void To(Func<K, V, IRecordContext, string> topicExtractor)
-            => To(topicExtractor, Produced<K, V>.Create(keySerdes, valueSerdes));
+        public void To(string topicName) => To(new StaticTopicNameExtractor<K, V>(topicName));
 
-        public void To(Func<K, V, IRecordContext, string> topicExtractor, Produced<K, V> produced)
-            => To(new WrapperTopicNameExtractor<K, V>(topicExtractor), produced);
+        public void To(ITopicNameExtractor<K, V> topicExtractor) => doTo(topicExtractor, Produced<K, V>.Create(keySerdes, valueSerdes));
 
-        public void To(string topicName, Produced<K, V> produced) => To(new StaticTopicNameExtractor<K, V>(topicName), produced);
+        public void To(Func<K, V, IRecordContext, string> topicExtractor) => To(new WrapperTopicNameExtractor<K, V>(topicExtractor));
 
-        public void To(string topicName) => To(topicName, Produced<K, V>.Create(keySerdes, valueSerdes));
+        public void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => To<KS, VS>(new WrapperTopicNameExtractor<K, V>(topicExtractor));
 
-        public void To(ITopicNameExtractor<K, V> topicExtractor) => To(topicExtractor, Produced<K, V>.Create(keySerdes, valueSerdes));
+        public void To<KS, VS>(string topicName)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => To<KS, VS>(new StaticTopicNameExtractor<K, V>(topicName));
 
-        public void To(ITopicNameExtractor<K, V> topicExtractor, Produced<K, V> produced) => doTo(topicExtractor, produced);
+        public void To<KS, VS>(ITopicNameExtractor<K, V> topicExtractor)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => doTo(topicExtractor, Produced<K, V>.Create<KS, VS>());
 
         #endregion
 

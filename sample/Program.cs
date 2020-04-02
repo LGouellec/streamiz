@@ -28,6 +28,7 @@ namespace sample_stream
 
             builder.Stream<string, string>("test")
                 .FilterNot((k, v) => v.Contains("test"))
+                .Peek((k,v) => Console.WriteLine($"Key : {k} | Value : {v}"))
                 .To("test-output");
 
             builder.Table(

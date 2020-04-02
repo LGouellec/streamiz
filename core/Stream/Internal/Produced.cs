@@ -1,8 +1,8 @@
 ﻿using kafka_stream_core.SerDes;
 
-namespace kafka_stream_core.Stream
+namespace kafka_stream_core.Stream.Internal
 {
-    public class Produced<K, V>
+    internal class Produced<K, V>
     {
         internal ISerDes<K> KeySerdes { get; }
         internal ISerDes<V> ValueSerdes { get; }

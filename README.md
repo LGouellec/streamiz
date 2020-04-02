@@ -72,6 +72,8 @@ https://kafka.apache.org/20/documentation/streams/developer-guide/dsl-api.html#s
 
 Sample code
 ```
+CancellationTokenSource source = new CancellationTokenSource();
+
 var config = new StreamConfig<StringSerDes, StringSerDes>();
 config.ApplicationId = "test-app";
 config.Add("bootstrap.servers", "192.168.56.1:9092");
@@ -79,15 +81,17 @@ config.Add("sasl.mechanism", "Plain");
 config.Add("sasl.username", "admin");
 config.Add("sasl.password", "admin");
 config.Add("security.protocol", "SaslPlaintext");
+config.AutoOffsetReset = AutoOffsetReset.Earliest;
 config.NumStreamThreads = 2;
 
 StreamBuilder builder = new StreamBuilder();
 
-builder.Stream<string, string, StringSerDes, StringSerDes>("test")
+builder.Stream<string, string>("test")
     .FilterNot((k, v) => v.Contains("test"))
+    .Peek((k,v) => Console.WriteLine($"Key : {k} | Value : {v}"))
     .To("test-output");
 
-builder.Table<string, string, StringSerDes, StringSerDes>(
+builder.Table(
     "test-ktable",
     StreamOptions.Create(),
     InMemory<string, string>.As("test-ktable-store"));
@@ -95,15 +99,10 @@ builder.Table<string, string, StringSerDes, StringSerDes>(
 Topology t = builder.Build();
 KafkaStream stream = new KafkaStream(t, config);
 
-try
-{
-    stream.Start();
-    Console.ReadKey();
-    stream.Stop();
-}
-catch (Exception e)
-{
-    Console.WriteLine(e.Message + ":" + e.StackTrace);
-    stream.Kill();
-}
+Console.CancelKeyPress += (o, e) => {
+    source.Cancel();
+    stream.Close();
+};
+
+stream.Start(source.Token);
 ```

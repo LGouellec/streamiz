@@ -1,4 +1,5 @@
 ﻿using kafka_stream_core.Processors;
+using kafka_stream_core.SerDes;
 using System;
 using System.Collections.Generic;
 
@@ -12,12 +13,12 @@ namespace kafka_stream_core.Stream
         IKStream<K, V> Filter(Func<K, V, bool> predicate, string named);
         IKStream<K, V> FilterNot(Func<K, V, bool> predicate);
         IKStream<K, V> FilterNot(Func<K, V, bool> predicate, string named);
-        void To(string topicName, Produced<K, V> produced);
         void To(string topicName);
         void To(Func<K, V, IRecordContext, string> topicExtractor);
-        void To(Func<K, V, IRecordContext, string> topicExtractor, Produced<K, V> produced);
         void To(ITopicNameExtractor<K, V> topicExtractor);
-        void To(ITopicNameExtractor<K, V> topicExtractor, Produced<K, V> produced);
+        void To<KS, VS>(string topicName) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new();
+        void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new();
+        void To<KS, VS>(ITopicNameExtractor<K, V> topicExtractor) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new();
         IKStream<KR, VR> FlatMap<KR, VR>(IKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper);
         IKStream<KR, VR> FlatMap<KR, VR>(IKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named);
         IKStream<KR, VR> FlatMap<KR, VR>(Func<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper);

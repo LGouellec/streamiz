@@ -120,18 +120,19 @@ namespace kafka_stream_core
         private string numStreamThreadsCst = "num.stream.threads";
         private string defaultKeySerDesCst = "default.key.serdes";
         private string defaultValueSerDesCst = "default.value.serdes";
+        private string autoOffsetResetCst = "auto.offset.reset";
 
         #region IStreamConfig Property
 
         public AutoOffsetReset AutoOffsetReset
         {
-            get => this["auto.offset.reset"];
-            set => this.AddOrUpdate("auto.offset.reset", value);
+            get => this[autoOffsetResetCst];
+            set => this.AddOrUpdate(autoOffsetResetCst, value);
         }
 
         public int NumStreamThreads
         {
-            get => Convert.ToInt32(this[numStreamThreadsCst]);
+            get => this[numStreamThreadsCst];
             set => this.AddOrUpdate(numStreamThreadsCst, value);
         }
 
@@ -149,13 +150,13 @@ namespace kafka_stream_core
 
         public ISerDes DefaultKeySerDes
         {
-            get => this[defaultKeySerDesCst] as ISerDes;
+            get => this[defaultKeySerDesCst];
             set => this.AddOrUpdate(defaultKeySerDesCst, value);
         }
 
         public ISerDes DefaultValueSerDes
         {
-            get => this[defaultValueSerDesCst] as ISerDes;
+            get => this[defaultValueSerDesCst];
             set => this.AddOrUpdate(defaultValueSerDesCst, value);
         }
 
