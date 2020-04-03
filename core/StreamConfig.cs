@@ -4,11 +4,14 @@ using kafka_stream_core.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security;
-using System.Text;
 
 namespace kafka_stream_core
 {
+    /// <summary>
+    /// Interface stream configuration for a <see cref="KafkaStream"/> instance.
+    /// See <see cref="StreamConfig"/> to obtain implementation about this interface.
+    /// You could develop your own implementation and get it in your <see cref="KafkaStream"/> instance.
+    /// </summary>
     public interface IStreamConfig
     {
         #region Methods 
@@ -27,34 +30,46 @@ namespace kafka_stream_core
 
         #region Stream Config Property
 
-        //// / <summary>
-        //// / An identifier for the stream processing application. Must be unique within the Kafka cluster. It is used as 1) the default client-id prefix, 2) the group-id for membership management, 3) the changelog topic prefix.
-        //// / </summary>
+        //// <summary>
+        //// An identifier for the stream processing application. Must be unique within the Kafka cluster. It is used as 1) the default client-id prefix, 2) the group-id for membership management, 3) the changelog topic prefix.
+        //// </summary>
         string ApplicationId { get; }
 
-        //// / <summary>
-        //// / An ID prefix string used for the client IDs of internal consumer, producer and restore-consumer, with pattern '<client.id>-StreamThread-<threadSequenceNumber>-<consumer|producer|restore-consumer>'.
-        //// / </summary>
+        //// <summary>
+        //// An ID prefix string used for the client IDs of internal consumer, producer and restore-consumer, with pattern '<client.id>-StreamThread-<threadSequenceNumber>-<consumer|producer|restore-consumer>'.
+        //// </summary>
         string ClientId { get; }
 
-        //// / <summary>
-        //// / 
-        //// / </summary>
+        //// <summary>
+        //// 
+        //// /summary>
         int NumStreamThreads { get; }
 
-        //// / <summary>
-        //// / Default key serdes for consumer and materialized state store
-        //// / </summary>
+        //// <summary>
+        //// Default key serdes for consumer and materialized state store
+        //// </summary>
         ISerDes DefaultKeySerDes { get; }
 
-        //// / <summary>
-        //// / Default value serdes for consumer and materialized state store
-        //// / </summary>
+        //// <summary>
+        //// Default value serdes for consumer and materialized state store
+        //// </summary>
         ISerDes DefaultValueSerDes { get; }
 
         #endregion
     }
 
+    /// <summary>
+    /// Implementation of <see cref="IStreamConfig"/>. Contains all configuration for your stream.
+    /// By default, Kafka Streams does not allow users to overwrite the following properties (Streams setting shown in parentheses)
+    ///    - EnableAutoCommit = (false) - Streams client will always disable/turn off auto committing
+    /// <exemple>
+    /// <code>
+    /// var config = new StreamConfig();
+    /// config.ApplicationId = "test-app";
+    /// config.BootstrapServers = "localhost:9092";
+    /// </code>
+    /// </exemple>
+    /// </summary>
     public class StreamConfig : Dictionary<string, dynamic>, IStreamConfig
     {
         #region Not used for moment
@@ -1584,6 +1599,20 @@ namespace kafka_stream_core
         #endregion
     }
 
+    /// <summary>
+    /// Implementation of <see cref="IStreamConfig"/>. Contains all configuration for your stream.
+    /// By default, Kafka Streams does not allow users to overwrite the following properties (Streams setting shown in parentheses)
+    ///    - EnableAutoCommit = (false) - Streams client will always disable/turn off auto committing
+    /// <exemple>
+    /// <code>
+    /// var config = new StreamConfig<StringSerDes, StringSerDes>();
+    /// config.ApplicationId = "test-app";
+    /// config.BootstrapServers = "localhost:9092";
+    /// </code>
+    /// </exemple>
+    /// </summary>
+    /// <typeparam name="KS">Default key serdes</typeparam>
+    /// <typeparam name="VS">Default value serdes</typeparam>
     public class StreamConfig<KS, VS> : StreamConfig
         where KS : ISerDes, new()
         where VS : ISerDes, new()
