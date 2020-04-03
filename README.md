@@ -36,7 +36,7 @@ TODO
 # Priority feature for stateless beta version
 
 - Adopt C# Syntax  [X]
-- Configuration property [ ]
+- Configuration property [X]
 - State thread + task implementation [ ]
 - Naming Kafka Streams DSL Topologies [ ]
 - Logging [ ]
@@ -76,11 +76,11 @@ CancellationTokenSource source = new CancellationTokenSource();
 
 var config = new StreamConfig<StringSerDes, StringSerDes>();
 config.ApplicationId = "test-app";
-config.Add("bootstrap.servers", "192.168.56.1:9092");
-config.Add("sasl.mechanism", "Plain");
-config.Add("sasl.username", "admin");
-config.Add("sasl.password", "admin");
-config.Add("security.protocol", "SaslPlaintext");
+config.BootstrapServers = "192.168.56.1:9092";
+config.SaslMechanism = SaslMechanism.Plain;
+config.SaslUsername = "admin";
+config.SaslPassword = "admin";
+config.SecurityProtocol = SecurityProtocol.SaslPlaintext;
 config.AutoOffsetReset = AutoOffsetReset.Earliest;
 config.NumStreamThreads = 2;
 
