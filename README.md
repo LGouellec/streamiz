@@ -35,7 +35,7 @@ TODO
 
 # Priority feature for stateless beta version
 
-- Adopt C# Syntax  [ ]
+- Adopt C# Syntax  [X]
 - Configuration property [ ]
 - State thread + task implementation [ ]
 - Naming Kafka Streams DSL Topologies [ ]
