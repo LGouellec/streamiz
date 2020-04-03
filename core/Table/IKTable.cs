@@ -1,4 +1,5 @@
 ﻿using kafka_stream_core.Crosscutting;
+using kafka_stream_core.SerDes;
 using kafka_stream_core.State;
 using kafka_stream_core.Stream;
 using kafka_stream_core.Table.Internal;
@@ -44,9 +45,9 @@ namespace kafka_stream_core.Table
         IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string name);
         IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized);
         IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized);
-        IKGroupedTable<K1, V1> GroupBy<K1, V1>(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> keySelector);
-        IKGroupedTable<K1, V1> GroupBy<K1, V1>(Func<K, V, KeyValuePair<K1, V1>> keySelector);
-        IKGroupedTable<K1, V1> GroupBy<K1, V1>(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> keySelector, Grouped<K1, V1> grouped);
-        IKGroupedTable<K1, V1> GroupBy<K1, V1>(Func<K, V, KeyValuePair<K1, V1>> keySelector, Grouped<K1, V1> grouped);
+        IKGroupedTable<KR, VR> GroupBy<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> keySelector);
+        IKGroupedTable<KR, VR> GroupBy<KR, VR>(Func<K, V, KeyValuePair<KR, VR>> keySelector);
+        IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> keySelector) where KRS : ISerDes<KR>, new() where VRS : ISerDes<VR>, new();
+        IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(Func<K, V, KeyValuePair<KR, VR>> keySelector) where KRS : ISerDes<KR>, new() where VRS : ISerDes<VR>, new();
     }
 }

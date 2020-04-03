@@ -216,17 +216,21 @@ namespace kafka_stream_core.Table.Internal
 
         #region GroupBy
 
-        public IKGroupedTable<K1, V1> GroupBy<K1, V1>(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> keySelector)
-            => this.GroupBy(keySelector, Grouped<K1, V1>.Create(null, null));
+        public IKGroupedTable<KR, VR> GroupBy<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> keySelector)
+            => DoGroup(keySelector, Grouped<KR, VR>.Create(null, null));
 
-        public IKGroupedTable<K1, V1> GroupBy<K1, V1>(Func<K, V, KeyValuePair<K1, V1>> keySelector)
-            => this.GroupBy(keySelector, Grouped<K1, V1>.Create(null, null));
+        public IKGroupedTable<KR, VR> GroupBy<KR, VR>(Func<K, V, KeyValuePair<KR, VR>> keySelector)
+            => this.GroupBy(new WrappedKeyValueMapper<K, V, KeyValuePair<KR, VR>>(keySelector));
 
-        public IKGroupedTable<K1, V1> GroupBy<K1, V1>(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> keySelector, Grouped<K1, V1> grouped)
-            => DoGroup(keySelector, grouped);
+        public IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> keySelector)
+            where KRS : ISerDes<KR>, new()
+            where VRS : ISerDes<VR>, new()
+            => DoGroup(keySelector, Grouped<KR, VR>.Create<KRS, VRS>());
 
-        public IKGroupedTable<K1, V1> GroupBy<K1, V1>(Func<K, V, KeyValuePair<K1, V1>> keySelector, Grouped<K1, V1> grouped)
-            => this.GroupBy(new WrappedKeyValueMapper<K, V, KeyValuePair<K1, V1>>(keySelector), grouped);
+        public IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(Func<K, V, KeyValuePair<KR, VR>> keySelector)
+            where KRS : ISerDes<KR>, new()
+            where VRS : ISerDes<VR>, new()
+            => this.GroupBy(new WrappedKeyValueMapper<K, V, KeyValuePair<KR, VR>>(keySelector));
 
         #endregion
 

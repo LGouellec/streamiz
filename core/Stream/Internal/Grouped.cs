@@ -1,11 +1,8 @@
 ﻿using kafka_stream_core.SerDes;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace kafka_stream_core.Stream
+namespace kafka_stream_core.Stream.Internal
 {
-    public class Grouped<K,V>
+    internal class Grouped<K, V>
     {
         protected readonly string named;
         protected readonly ISerDes<K> keySerdes;
@@ -22,10 +19,10 @@ namespace kafka_stream_core.Stream
             this.valueSerdes = valueSerdes;
         }
 
-        public static Grouped<K, V> Create(string name) 
+        public static Grouped<K, V> Create(string name)
             => Create(name, null, null);
 
-        public static Grouped<K, V> Create(ISerDes<K> keySerdes, ISerDes<V> valueSerdes) 
+        public static Grouped<K, V> Create(ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
             => Create(null, keySerdes, valueSerdes);
 
         public static Grouped<K, V> Create(string name, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
@@ -40,5 +37,13 @@ namespace kafka_stream_core.Stream
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
             => new Grouped<K, V>(name, new KS(), new VS());
+
+        public static Grouped<K, V> Create<KS>(ISerDes<V> valueSerdes)
+            where KS : ISerDes<K>, new()
+            => Create<KS>(null, valueSerdes);
+
+        public static Grouped<K, V> Create<KS>(string name, ISerDes<V> valueSerdes)
+            where KS : ISerDes<K>, new()
+            => new Grouped<K, V>(name, new KS(), valueSerdes);
     }
 }

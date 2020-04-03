@@ -54,9 +54,9 @@ namespace kafka_stream_core.Stream
         IKStream<KR, V> SelectKey<KR>(Func<K, V, KR> mapper, string named);
         IKGroupedStream<KR, V> GroupBy<KR>(IKeyValueMapper<K, V, KR> keySelector);
         IKGroupedStream<KR, V> GroupBy<KR>(Func<K, V, KR> keySelector);
-        IKGroupedStream<KR, V> GroupBy<KR>(IKeyValueMapper<K, V, KR> keySelector, Grouped<KR, V> grouped);
-        IKGroupedStream<KR, V> GroupBy<KR>(Func<K, V, KR> keySelector, Grouped<KR, V> grouped);
+        IKGroupedStream<KR, V> GroupBy<KR, KRS>(IKeyValueMapper<K, V, KR> keySelector) where KRS : ISerDes<KR>, new();
+        IKGroupedStream<KR, V> GroupBy<KR, KRS>(Func<K, V, KR> keySelector) where KRS : ISerDes<KR>, new();
         IKGroupedStream<K, V> GroupByKey();
-        IKGroupedStream<K, V> GroupByKey(Grouped<K, V> grouped);
+        IKGroupedStream<K, V> GroupByKey<KS, VS>() where KS : ISerDes<K>, new() where VS : ISerDes<V>, new();
     }
 }

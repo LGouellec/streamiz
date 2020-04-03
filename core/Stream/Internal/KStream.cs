@@ -71,9 +71,9 @@ namespace kafka_stream_core.Stream.Internal
 
         #region Branch
 
-        public IKStream<K, V>[] Branch(params Func<K, V, bool>[] predicates) => doBranch(string.Empty, predicates);
+        public IKStream<K, V>[] Branch(params Func<K, V, bool>[] predicates) => DoBranch(string.Empty, predicates);
 
-        public IKStream<K, V>[] Branch(string named, params Func<K, V, bool>[] predicates) => doBranch(named, predicates);
+        public IKStream<K, V>[] Branch(string named, params Func<K, V, bool>[] predicates) => DoBranch(named, predicates);
 
         #endregion
 
@@ -116,7 +116,7 @@ namespace kafka_stream_core.Stream.Internal
 
         public void To(string topicName) => To(new StaticTopicNameExtractor<K, V>(topicName));
 
-        public void To(ITopicNameExtractor<K, V> topicExtractor) => doTo(topicExtractor, Produced<K, V>.Create(keySerdes, valueSerdes));
+        public void To(ITopicNameExtractor<K, V> topicExtractor) => DoTo(topicExtractor, Produced<K, V>.Create(keySerdes, valueSerdes));
 
         public void To(Func<K, V, IRecordContext, string> topicExtractor) => To(new WrapperTopicNameExtractor<K, V>(topicExtractor));
 
@@ -133,7 +133,7 @@ namespace kafka_stream_core.Stream.Internal
         public void To<KS, VS>(ITopicNameExtractor<K, V> topicExtractor)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
-            => doTo(topicExtractor, Produced<K, V>.Create<KS, VS>());
+            => DoTo(topicExtractor, Produced<K, V>.Create<KS, VS>());
 
         #endregion
 
@@ -349,7 +349,7 @@ namespace kafka_stream_core.Stream.Internal
 
         public IKStream<KR, V> SelectKey<KR>(IKeyValueMapper<K, V, KR> mapper, string named)
         {
-            ProcessorGraphNode<K, V> selectKeyProcessorNode = internalSelectKey(mapper, named);
+            ProcessorGraphNode<K, V> selectKeyProcessorNode = InternalSelectKey(mapper, named);
             selectKeyProcessorNode.KeyChangingOperation = true;
 
             builder.AddGraphNode(node, selectKeyProcessorNode);
@@ -369,25 +369,36 @@ namespace kafka_stream_core.Stream.Internal
         #region GroupBy
 
         public IKGroupedStream<KR, V> GroupBy<KR>(IKeyValueMapper<K, V, KR> keySelector)
-            => this.GroupBy(keySelector, Grouped<KR, V>.Create(null, valueSerdes));
+            => DoGroup(keySelector, Grouped<KR, V>.Create(null, valueSerdes));
 
         public IKGroupedStream<KR, V> GroupBy<KR>(Func<K, V, KR> keySelector)
-            => this.GroupBy(keySelector, Grouped<KR, V>.Create(null, valueSerdes));
+            => this.GroupBy(new WrappedKeyValueMapper<K, V, KR>(keySelector));
 
-        public IKGroupedStream<KR, V> GroupBy<KR>(IKeyValueMapper<K, V, KR> keySelector, Grouped<KR, V> grouped)
-            => doGroup(keySelector, grouped);
+        public IKGroupedStream<KR, V> GroupBy<KR, KS>(IKeyValueMapper<K, V, KR> keySelector)
+             where KS : ISerDes<KR>, new()
+            => DoGroup(keySelector, Grouped<KR, V>.Create<KS>(valueSerdes));
 
-        public IKGroupedStream<KR, V> GroupBy<KR>(Func<K, V, KR> keySelector, Grouped<KR, V> grouped)
-            => this.GroupBy(new WrappedKeyValueMapper<K, V, KR>(keySelector), grouped);
+        public IKGroupedStream<KR, V> GroupBy<KR, KS>(Func<K, V, KR> keySelector)
+             where KS : ISerDes<KR>, new()
+            => this.GroupBy<KR, KS>(new WrappedKeyValueMapper<K, V, KR>(keySelector));
 
         public IKGroupedStream<K, V> GroupByKey()
-            => this.GroupByKey(Grouped<K, V>.Create(this.keySerdes, this.valueSerdes));
-
-        public IKGroupedStream<K, V> GroupByKey(Grouped<K, V> grouped)
         {
             return new KGroupedStream<K, V>(
                 this.nameNode,
-                grouped,
+                Grouped<K, V>.Create(this.keySerdes, this.valueSerdes),
+                this.setSourceNodes,
+                this.node,
+                builder);
+        }
+
+        public IKGroupedStream<K, V> GroupByKey<KS, VS>()
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+        {
+            return new KGroupedStream<K, V>(
+                this.nameNode,
+                Grouped<K, V>.Create<KS, VS>(null),
                 this.setSourceNodes,
                 this.node,
                 builder);
@@ -397,7 +408,7 @@ namespace kafka_stream_core.Stream.Internal
 
         #region Private
 
-        private void doTo(ITopicNameExtractor<K, V> topicExtractor, Produced<K, V> produced)
+        private void DoTo(ITopicNameExtractor<K, V> topicExtractor, Produced<K, V> produced)
         {
             string name = this.builder.NewProcessorName(SINK_NAME);
 
@@ -405,7 +416,7 @@ namespace kafka_stream_core.Stream.Internal
             this.builder.AddGraphNode(node, sinkNode);
         }
 
-        private IKStream<K, V>[] doBranch(string named, params Func<K, V, bool>[] predicates)
+        private IKStream<K, V>[] DoBranch(string named, params Func<K, V, bool>[] predicates)
         {
             if (predicates.Length == 0)
                 throw new ArgumentException("branch() requires at least one predicate");
@@ -433,9 +444,9 @@ namespace kafka_stream_core.Stream.Internal
             return branchChildren;
         }
 
-        private IKGroupedStream<KR, V> doGroup<KR>(IKeyValueMapper<K, V, KR> keySelector, Grouped<KR, V> grouped)
+        private IKGroupedStream<KR, V> DoGroup<KR>(IKeyValueMapper<K, V, KR> keySelector, Grouped<KR, V> grouped)
         {
-            ProcessorGraphNode<K, V> selectKeyMapNode = internalSelectKey(keySelector, grouped.Named);
+            ProcessorGraphNode<K, V> selectKeyMapNode = InternalSelectKey(keySelector, grouped.Named);
             selectKeyMapNode.KeyChangingOperation = true;
 
             builder.AddGraphNode(this.node, selectKeyMapNode);
@@ -448,7 +459,7 @@ namespace kafka_stream_core.Stream.Internal
                 builder);
         }
 
-        private ProcessorGraphNode<K, V> internalSelectKey<KR>(IKeyValueMapper<K, V, KR> mapper, string named)
+        private ProcessorGraphNode<K, V> InternalSelectKey<KR>(IKeyValueMapper<K, V, KR> mapper, string named)
         {
             var name = this.builder.NewProcessorName(KEY_SELECT_NAME);
 

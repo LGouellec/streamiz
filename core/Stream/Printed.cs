@@ -1,5 +1,4 @@
-﻿using kafka_stream_core.Errors;
-using kafka_stream_core.Processors;
+﻿using kafka_stream_core.Processors;
 using kafka_stream_core.Stream.Internal.Graph;
 using System;
 using System.IO;
