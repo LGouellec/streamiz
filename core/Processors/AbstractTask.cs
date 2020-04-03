@@ -17,7 +17,7 @@ namespace kafka_stream_core.Processors
         protected bool taskInitialized;
         protected bool taskClosed;
         protected bool commitNeeded;
-        protected StateManager stateMgr;
+        protected IStateManager stateMgr;
         protected ILog log;
         
         internal AbstractTask(TaskId id, TopicPartition partition, ProcessorTopology topology, IConsumer<byte[], byte[]> consumer, IStreamConfig config)
@@ -55,7 +55,7 @@ namespace kafka_stream_core.Processors
         public abstract bool CanProcess { get; }
         public abstract void Close();
         public abstract void Commit();
-        public abstract StateStore GetStore(string name);
+        public abstract IStateStore GetStore(string name);
         public abstract void InitializeTopology();
         public abstract bool InitializeStateStores();
         public abstract void Resume();
@@ -76,7 +76,7 @@ namespace kafka_stream_core.Processors
             {
                 var store = kv.Value;
                 log.Debug($"Initializing store {kv.Key}");
-                store.init(Context, store);
+                store.Init(Context, store);
             }
         }
     }

@@ -21,26 +21,26 @@ namespace kafka_stream_core.Table.Internal.Graph
                 this.parentTableGetter = parentTableGetter;
             }
 
-            public void close() => parentTableGetter.close();
+            public void Close() => parentTableGetter.Close();
 
-            public ValueAndTimestamp<KeyValuePair<K1, V1>> get(K key)
+            public ValueAndTimestamp<KeyValuePair<K1, V1>> Get(K key)
             {
-                ValueAndTimestamp<V> valueAndTimestamp = parentTableGetter.get(key);
-                var v = mapper.apply(key, valueAndTimestamp != null ? default : valueAndTimestamp.Value);
-                return ValueAndTimestamp<KeyValuePair<K1, V1>>.make(v, valueAndTimestamp == null ? context.Timestamp : valueAndTimestamp.Timestamp);
+                ValueAndTimestamp<V> valueAndTimestamp = parentTableGetter.Get(key);
+                var v = mapper.Apply(key, valueAndTimestamp != null ? default : valueAndTimestamp.Value);
+                return ValueAndTimestamp<KeyValuePair<K1, V1>>.Make(v, valueAndTimestamp == null ? context.Timestamp : valueAndTimestamp.Timestamp);
             }
 
-            public void init(ProcessorContext context)
+            public void Init(ProcessorContext context)
             {
                 this.context = context;
-                parentTableGetter.init(context);
+                parentTableGetter.Init(context);
             }
         }
 
-        private readonly KTableGetter<K, V> parentTable;
+        private readonly IKTableGetter<K, V> parentTable;
         private readonly IKeyValueMapper<K, V, KeyValuePair<K1, V1>> mapper;
 
-        public KTableRepartitionMap(KTableGetter<K, V> parent, IKeyValueMapper<K, V, KeyValuePair<K1, V1>> mapper)
+        public KTableRepartitionMap(IKTableGetter<K, V> parent, IKeyValueMapper<K, V, KeyValuePair<K1, V1>> mapper)
         {
             this.parentTable = parent;
             this.mapper = mapper;
@@ -53,11 +53,11 @@ namespace kafka_stream_core.Table.Internal.Graph
                 var supplier = parentTable.ValueGetterSupplier;
                 return new GenericKTableValueGetterSupplier<K, KeyValuePair<K1, V1>>(
                     null,
-                    new KTableMapValueGetter(this.mapper, supplier.get()));
+                    new KTableMapValueGetter(this.mapper, supplier.Get()));
             }
         }
 
-        public void enableSendingOldValues()
+        public void EnableSendingOldValues()
         {
             throw new InvalidOperationException("KTableRepartitionMap should always require sending old values.");
         }

@@ -16,7 +16,7 @@ namespace kafka_stream_core.Table.Internal.Graph
             this.sendOldValues = false;
         }
 
-        public void enableSendingOldValues()
+        public void EnableSendingOldValues()
         {
             this.sendOldValues = true;
             this.QueryableName = StoreName;

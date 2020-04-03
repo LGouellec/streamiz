@@ -16,6 +16,6 @@ namespace kafka_stream_core.Table.Internal
 
         public string[] StoreNames { get; }
 
-        public IKTableValueGetter<K, V> get() => getter;
+        public IKTableValueGetter<K, V> Get() => getter;
     }
 }

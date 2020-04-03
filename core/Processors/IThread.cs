@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace kafka_stream_core.Processors
 {
@@ -9,6 +10,6 @@ namespace kafka_stream_core.Processors
         string Name { get; }
         bool IsRunning { get; }
         void Run();
-        void Start();
+        void Start(CancellationToken token);
     }
 }

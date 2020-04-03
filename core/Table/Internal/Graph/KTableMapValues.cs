@@ -20,33 +20,33 @@ namespace kafka_stream_core.Table.Internal.Graph
                 this.mapper = mapper;
             }
 
-            public void close() => ktablegetter.close();
+            public void Close() => ktablegetter.Close();
 
-            public ValueAndTimestamp<VR> get(K key) => computeValue(key, ktablegetter.get(key));
+            public ValueAndTimestamp<VR> Get(K key) => ComputeValue(key, ktablegetter.Get(key));
 
-            public void init(ProcessorContext context) => ktablegetter.init(context);
+            public void Init(ProcessorContext context) => ktablegetter.Init(context);
 
-            private ValueAndTimestamp<VR> computeValue(K key, ValueAndTimestamp<V> valueAndTimestamp)
+            private ValueAndTimestamp<VR> ComputeValue(K key, ValueAndTimestamp<V> valueAndTimestamp)
             {
                 VR newValue = default(VR);
                 long timestamp = 0;
 
                 if (valueAndTimestamp != null)
                 {
-                    newValue = mapper.apply(key, valueAndTimestamp.Value);
+                    newValue = mapper.Apply(key, valueAndTimestamp.Value);
                     timestamp = valueAndTimestamp.Timestamp;
                 }
 
-                return ValueAndTimestamp<VR>.make(newValue, timestamp);
+                return ValueAndTimestamp<VR>.Make(newValue, timestamp);
             }
         }
 
-        private readonly KTableGetter<K, V> parentTable;
+        private readonly IKTableGetter<K, V> parentTable;
         private readonly IValueMapperWithKey<K, V, VR> mapper;
         private readonly string queryableName;
         private bool sendOldValues = false;
 
-        public KTableMapValues(KTableGetter<K, V> parent, IValueMapperWithKey<K, V, VR> mapper, string queryableName)
+        public KTableMapValues(IKTableGetter<K, V> parent, IValueMapperWithKey<K, V, VR> mapper, string queryableName)
         {
             this.parentTable = parent;
             this.mapper = mapper;
@@ -68,12 +68,12 @@ namespace kafka_stream_core.Table.Internal.Graph
                     var supplier = parentTable.ValueGetterSupplier;
                     return new GenericKTableValueGetterSupplier<K, VR>(
                         supplier.StoreNames,
-                        new KTableMapValuesValueGetter<K, V, VR>(this.mapper, supplier.get()));
+                        new KTableMapValuesValueGetter<K, V, VR>(this.mapper, supplier.Get()));
                 }
             }
         }
 
-        public void enableSendingOldValues()
+        public void EnableSendingOldValues()
         {
             parentTable.EnableSendingOldValues();
             sendOldValues = true;

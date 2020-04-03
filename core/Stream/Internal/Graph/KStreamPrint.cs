@@ -18,7 +18,7 @@ namespace kafka_stream_core.Stream.Internal.Graph
 
         public void Apply(K key, V value)
         {
-            string data = $"[{label}]: {mapper.apply(key, value)}";
+            string data = $"[{label}]: {mapper.Apply(key, value)}";
             writer.WriteLine(data);
             writer.Flush();
         }

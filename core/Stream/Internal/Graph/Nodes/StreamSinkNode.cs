@@ -13,19 +13,19 @@ namespace kafka_stream_core.Stream.Internal.Graph.Nodes
 
     internal class StreamSinkNode<K, V> : StreamSinkNode
     {
-        private TopicNameExtractor<K, V> topicNameExtractor;
+        private ITopicNameExtractor<K, V> topicNameExtractor;
         private Produced<K, V> produced;
 
-        public StreamSinkNode(TopicNameExtractor<K, V> topicNameExtractor, string streamGraphNode, Produced<K, V> produced)
+        public StreamSinkNode(ITopicNameExtractor<K, V> topicNameExtractor, string streamGraphNode, Produced<K, V> produced)
             : base(streamGraphNode)
         {
             this.topicNameExtractor = topicNameExtractor;
             this.produced = produced;
         }
 
-        public override void writeToTopology(InternalTopologyBuilder builder)
+        public override void WriteToTopology(InternalTopologyBuilder builder)
         {
-            builder.addSinkOperator(topicNameExtractor, this.streamGraphNode, produced);
+            builder.AddSinkOperator(topicNameExtractor, this.streamGraphNode, produced);
         }
     }
 }

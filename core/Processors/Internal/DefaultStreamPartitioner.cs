@@ -6,7 +6,7 @@ using System.Text;
 
 namespace kafka_stream_core.Processors.Internal
 {
-    internal class DefaultStreamPartitioner<K,V> : StreamPartitioner<K,V>
+    internal class DefaultStreamPartitioner<K,V> : IStreamPartitioner<K,V>
     {
         private readonly Metadata cluster;
         // TODO : Use Kafka Serializer with context
@@ -23,7 +23,7 @@ namespace kafka_stream_core.Processors.Internal
 
         public ISerDes<K> KeySerializer => keySerializer;
 
-        public int partition(string topic, K key, V value, int numPartitions)
+        public int Partition(string topic, K key, V value, int numPartitions)
         {
             // TODO
             return 1;

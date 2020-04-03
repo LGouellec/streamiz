@@ -4,6 +4,7 @@ using kafka_stream_core.Processors.Internal;
 using kafka_stream_core.State;
 using kafka_stream_core.State.Internal;
 using kafka_stream_core.Stream;
+using kafka_stream_core.Stream.Internal;
 using kafka_stream_core.Stream.Internal.Graph.Nodes;
 using kafka_stream_core.Table;
 using System;
@@ -19,7 +20,7 @@ namespace kafka_stream_core.Table.Internal.Graph.Nodes
     }
 
     internal class TableSourceNode<K, V, S> : StreamSourceNode<K, V>, ITableSourceNode
-        where S : StateStore
+        where S : IStateStore
     {
         private readonly Materialized<K, V, S> materialized;
         private readonly ProcessorParameters<K, V> processorParameters;
@@ -28,7 +29,7 @@ namespace kafka_stream_core.Table.Internal.Graph.Nodes
         private bool shouldReuseSourceTopicForChangelog = false;
 
         public TableSourceNode(string topicName, string streamGraphNode,
-                string sourceName, Consumed<K, V> consumed,
+                string sourceName, ConsumedInternal<K, V> consumed,
                 Materialized<K, V, S> materialized, ProcessorParameters<K, V> processorParameters, bool isGlobalKTable = false)
             : base(topicName, streamGraphNode, consumed)
         {
@@ -42,7 +43,7 @@ namespace kafka_stream_core.Table.Internal.Graph.Nodes
 
         public string NodeName => this.streamGraphNode;
 
-        public void reuseSourceTopicForChangeLog(bool shouldReuseSourceTopicForChangelog)
+        public void ReuseSourceTopicForChangeLog(bool shouldReuseSourceTopicForChangelog)
         {
             this.shouldReuseSourceTopicForChangelog = shouldReuseSourceTopicForChangelog;
         }
@@ -57,11 +58,11 @@ namespace kafka_stream_core.Table.Internal.Graph.Nodes
                    "} " + base.ToString();
         }
 
-        public override void writeToTopology(InternalTopologyBuilder builder)
+        public override void WriteToTopology(InternalTopologyBuilder builder)
         {
             // TODO: we assume source KTables can only be timestamped-key-value stores for now.
             // should be expanded for other types of stores as well.
-            StoreBuilder<State.TimestampedKeyValueStore<K, V>> storeBuilder = new TimestampedKeyValueStoreMaterializer<K, V>(materialized as Materialized<K, V, KeyValueStore<Bytes, byte[]>>).materialize();
+            StoreBuilder<State.TimestampedKeyValueStore<K, V>> storeBuilder = new TimestampedKeyValueStoreMaterializer<K, V>(materialized as Materialized<K, V, KeyValueStore<Bytes, byte[]>>).Materialize();
 
             if (isGlobalKTable)
             {
@@ -77,14 +78,14 @@ namespace kafka_stream_core.Table.Internal.Graph.Nodes
             }
             else
             {
-                builder.addSourceOperator<K, V>(this.topicName, sourceName, consumed);
-                builder.addProcessor<K, V>(processorParameters.ProcessorName, processorParameters.Processor);
+                builder.AddSourceOperator<K, V>(this.topicName, sourceName, consumed);
+                builder.AddProcessor<K, V>(processorParameters.ProcessorName, processorParameters.Processor);
 
                 //// only add state store if the source KTable should be materialized
                 KTableSource<K, V> ktableSource = (KTableSource<K, V>)processorParameters.Processor;
                 if (ktableSource.QueryableName != null)
                 {
-                    builder.addStateStore(storeBuilder, this.streamGraphNode);
+                    builder.AddStateStore(storeBuilder, this.streamGraphNode);
 
                     // TODO :
 

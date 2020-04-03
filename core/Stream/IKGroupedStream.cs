@@ -1,6 +1,6 @@
 ﻿namespace kafka_stream_core.Stream
 {
-    public interface KGroupedStream<K, V>
+    public interface IKGroupedStream<K, V>
     {
         // TODO : Statefull operation
     }

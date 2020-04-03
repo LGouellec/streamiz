@@ -38,14 +38,25 @@ namespace kafka_stream_core
 
         int NumStreamThreads { get; }
 
+        /// <summary>
+        /// Default key serdes for consumer and materialized state store
+        /// </summary>
         ISerDes DefaultKeySerDes { get; }
 
+        /// <summary>
+        /// Default value serdes for consumer and materialized state store
+        /// </summary>
         ISerDes DefaultValueSerDes { get; }
+
+        /// <summary>
+        /// AutoOffsetReset
+        /// </summary>
+        AutoOffsetReset AutoOffsetReset { get; }
 
         #endregion
     }
 
-    public class StreamConfig : Dictionary<string, string>, IStreamConfig
+    public class StreamConfig : Dictionary<string, dynamic>, IStreamConfig
     {
         #region Not used for moment
 
@@ -60,47 +71,47 @@ namespace kafka_stream_core
         public static readonly string AT_LEAST_ONCE = "at_least_once";
         public static readonly string EXACTLY_ONCE = "exactly_once";
 
-        private string Optimize
-        {
-            get => this[topologyOptimizationCst];
-            set => this.AddOrUpdate(topologyOptimizationCst, value);
-        }
+        //private string Optimize
+        //{
+        //    get => this[topologyOptimizationCst];
+        //    set => this.AddOrUpdate(topologyOptimizationCst, value);
+        //}
 
-        private string ApplicationServer
-        {
-            get => this[applicationServerCst];
-            set => this.AddOrUpdate(applicationServerCst, value);
-        }
+        //private string ApplicationServer
+        //{
+        //    get => this[applicationServerCst];
+        //    set => this.AddOrUpdate(applicationServerCst, value);
+        //}
 
-        private string ProcessingGuaranteeConfig
-        {
-            get => this[processingGuaranteeCst];
-            set
-            {
-                if (value.Equals(AT_LEAST_ONCE) || value.Equals(EXACTLY_ONCE))
-                    this.AddOrUpdate(processingGuaranteeCst, value);
-                else
-                    throw new InvalidOperationException($"ProcessingGuaranteeConfig value must equal to {AT_LEAST_ONCE} or {EXACTLY_ONCE}");
-            }
-        }
+        //private string ProcessingGuaranteeConfig
+        //{
+        //    get => this[processingGuaranteeCst];
+        //    set
+        //    {
+        //        if (value.Equals(AT_LEAST_ONCE) || value.Equals(EXACTLY_ONCE))
+        //            this.AddOrUpdate(processingGuaranteeCst, value);
+        //        else
+        //            throw new InvalidOperationException($"ProcessingGuaranteeConfig value must equal to {AT_LEAST_ONCE} or {EXACTLY_ONCE}");
+        //    }
+        //}
 
-        private long PollMsConfig
-        {
-            get => Convert.ToInt64(this[pollMsCst]);
-            set => this.AddOrUpdate(pollMsCst, value.ToString());
-        }
+        //private long PollMsConfig
+        //{
+        //    get => Convert.ToInt64(this[pollMsCst]);
+        //    set => this.AddOrUpdate(pollMsCst, value.ToString());
+        //}
 
-        private long StateCleanupDelayMs
-        {
-            get => Convert.ToInt64(this[stateCleanupDelayMsCst]);
-            set => this.AddOrUpdate(stateCleanupDelayMsCst, value.ToString());
-        }
+        //private long StateCleanupDelayMs
+        //{
+        //    get => Convert.ToInt64(this[stateCleanupDelayMsCst]);
+        //    set => this.AddOrUpdate(stateCleanupDelayMsCst, value.ToString());
+        //}
 
-        private long CacheMaxBytesBuffering
-        {
-            get => Convert.ToInt64(this[cacheMaxBytesBufferingCst]);
-            set => this.AddOrUpdate(cacheMaxBytesBufferingCst, value.ToString());
-        }
+        //private long CacheMaxBytesBuffering
+        //{
+        //    get => Convert.ToInt64(this[cacheMaxBytesBufferingCst]);
+        //    set => this.AddOrUpdate(cacheMaxBytesBufferingCst, value.ToString());
+        //}
 
         #endregion
 
@@ -109,13 +120,20 @@ namespace kafka_stream_core
         private string numStreamThreadsCst = "num.stream.threads";
         private string defaultKeySerDesCst = "default.key.serdes";
         private string defaultValueSerDesCst = "default.value.serdes";
+        private string autoOffsetResetCst = "auto.offset.reset";
 
         #region IStreamConfig Property
 
+        public AutoOffsetReset AutoOffsetReset
+        {
+            get => this[autoOffsetResetCst];
+            set => this.AddOrUpdate(autoOffsetResetCst, value);
+        }
+
         public int NumStreamThreads
         {
-            get => Convert.ToInt32(this[numStreamThreadsCst]);
-            set => this.AddOrUpdate(numStreamThreadsCst, value.ToString());
+            get => this[numStreamThreadsCst];
+            set => this.AddOrUpdate(numStreamThreadsCst, value);
         }
 
         public string ClientId
@@ -132,14 +150,14 @@ namespace kafka_stream_core
 
         public ISerDes DefaultKeySerDes
         {
-            get => this[defaultKeySerDesCst].CreateSerDes();
-            set => this.AddOrUpdate(defaultKeySerDesCst, value.GetType().AssemblyQualifiedName);
+            get => this[defaultKeySerDesCst];
+            set => this.AddOrUpdate(defaultKeySerDesCst, value);
         }
 
         public ISerDes DefaultValueSerDes
         {
-            get => this[defaultValueSerDesCst].CreateSerDes();
-            set => this.AddOrUpdate(defaultValueSerDesCst, value.GetType().AssemblyQualifiedName);
+            get => this[defaultValueSerDesCst];
+            set => this.AddOrUpdate(defaultValueSerDesCst, value);
         }
 
         #endregion
@@ -149,16 +167,16 @@ namespace kafka_stream_core
         public StreamConfig()
         {
             NumStreamThreads = 1;
-            Optimize = "";
-            DefaultKeySerDes = new StringSerDes();
-            DefaultValueSerDes = new StringSerDes();
+            DefaultKeySerDes = new ByteArraySerDes();
+            DefaultValueSerDes = new ByteArraySerDes();
+            AutoOffsetReset = AutoOffsetReset.Earliest;
         }
 
-        public StreamConfig(IDictionary<string, string> properties)
+        public StreamConfig(IDictionary<string, dynamic> properties)
             : this()
         {
             foreach (var k in properties)
-                this.AddOrUpdate(k.Key, k.Value);
+                DictionaryExtensions.AddOrUpdate(this, k.Key, k.Value);
         }
 
         #endregion
@@ -188,7 +206,7 @@ namespace kafka_stream_core
                 SecurityProtocol = SecurityProtocol.SaslPlaintext,
                 GroupId = this.ApplicationId,
                 EnableAutoCommit = false,
-                AutoOffsetReset = AutoOffsetReset.Earliest
+                AutoOffsetReset = this.AutoOffsetReset
             };
         }
 
@@ -212,5 +230,17 @@ namespace kafka_stream_core
         }
 
         #endregion
+    }
+
+    public class StreamConfig<KS, VS> : StreamConfig
+        where KS : ISerDes, new()
+        where VS : ISerDes, new()
+    {
+        public StreamConfig()
+            :base()
+        {
+            DefaultKeySerDes = new KS();
+            DefaultValueSerDes = new VS();
+        }
     }
 }

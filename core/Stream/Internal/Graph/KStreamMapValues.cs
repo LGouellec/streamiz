@@ -14,7 +14,8 @@ namespace kafka_stream_core.Stream.Internal.Graph
             this.mapper = mapper;
         }
 
-        public IProcessor<K, V> Get() => new KStreamMapProcessor<K, V, K, V1>(null, 
-            (key, value) => new KeyValuePair<K, V1>(key, this.mapper.apply(key, value)));
+        public IProcessor<K, V> Get() => new KStreamMapProcessor<K, V, K, V1>(
+            new WrappedKeyValueMapper<K, V, KeyValuePair<K, V1>>(
+                (key, value) => new KeyValuePair<K, V1>(key, this.mapper.Apply(key, value))));
     }
 }

@@ -1,18 +1,15 @@
 ﻿using kafka_stream_core.State;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace kafka_stream_core.SerDes
 {
     internal class ValueAndTimestampSerDes<V> : AbstractSerDes<ValueAndTimestamp<V>>
     {
-        private readonly ISerDes<V> innerSerdes;
+        public ISerDes<V> InnerSerdes { get; internal set; }
 
         public ValueAndTimestampSerDes(ISerDes<V> innerSerdes)
         {
-            this.innerSerdes = innerSerdes;
+            this.InnerSerdes = innerSerdes;
         }
 
         public override ValueAndTimestamp<V> Deserialize(byte[] data)
@@ -23,8 +20,8 @@ namespace kafka_stream_core.SerDes
                 long t = reader.ReadInt64();
                 int length = reader.ReadInt32();
                 byte[] d = reader.ReadBytes(length);
-                V v = innerSerdes.Deserialize(d);
-                ValueAndTimestamp<V> obj = ValueAndTimestamp<V>.make(v, t);
+                V v = InnerSerdes.Deserialize(d);
+                ValueAndTimestamp<V> obj = ValueAndTimestamp<V>.Make(v, t);
                 return obj;
             }
         }
@@ -34,7 +31,7 @@ namespace kafka_stream_core.SerDes
             using(var stream = new MemoryStream())
             using (var writer = new BinaryWriter(stream))
             {
-                byte[] innerobj = innerSerdes.Serialize(data.Value);
+                byte[] innerobj = InnerSerdes.Serialize(data.Value);
 
                 writer.Write(data.Timestamp);
                 writer.Write(innerobj.Length);

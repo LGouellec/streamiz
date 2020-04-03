@@ -47,7 +47,7 @@ namespace kafka_stream_core.Processors
             consumer.Commit();
         }
 
-        public override StateStore GetStore(string name)
+        public override IStateStore GetStore(string name)
         {
             return null;
         }
@@ -83,7 +83,7 @@ namespace kafka_stream_core.Processors
                 var record = queue.GetNextRecord();
                 if (record != null)
                 {
-                    this.Context.setRecordMetaData(record);
+                    this.Context.SetRecordMetaData(record);
                     // PB WITH CONTEXT AND PROCESSOR
                     processor.Process(record.Key, record.Value);
                     queue.Commit();

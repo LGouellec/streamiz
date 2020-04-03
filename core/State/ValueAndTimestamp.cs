@@ -15,7 +15,7 @@ namespace kafka_stream_core.State
             this.Value = value;
         }
 
-        public static ValueAndTimestamp<V> make(V value, long timestamp)
+        public static ValueAndTimestamp<V> Make(V value, long timestamp)
         {
             return value == null ? null : new ValueAndTimestamp<V>(timestamp, value);
         }

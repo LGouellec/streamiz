@@ -22,38 +22,38 @@ namespace kafka_stream_core.State.InMemory
 
         public bool IsOpen { get; private set; } = false;
 
-        public long approximateNumEntries() => size;
+        public long ApproximateNumEntries() => size;
 
-        public void close() {
+        public void Close() {
             map.Clear();
             size = 0;
             IsOpen = false;
         }
 
-        public byte[] delete(Bytes key)
+        public byte[] Delete(Bytes key)
         {
             byte[] v = map.ContainsKey(key) ? map[key] : null;
             size -= map.Remove(key) ? 1 : 0;
             return v;
         }
 
-        public void flush(){ /* Nothing => IN MEMORY */ }
+        public void Flush(){ /* Nothing => IN MEMORY */ }
 
-        public byte[] get(Bytes key) => map.ContainsKey(key) ? map[key] : null;
+        public byte[] Get(Bytes key) => map.ContainsKey(key) ? map[key] : null;
 
-        public void init(ProcessorContext context, StateStore root)
+        public void Init(ProcessorContext context, IStateStore root)
         {
             size = 0;
             if (root != null)
             {
                 // register the store
-                context.Register(root, (key, value) => put(key, value));
+                context.Register(root, (key, value) => Put(key, value));
             }
 
             IsOpen = true;
         }
 
-        public void put(Bytes key, byte[] value)
+        public void Put(Bytes key, byte[] value)
         {
             if (value == null)
                 size -= map.Remove(key) ? 1 : 0;
@@ -61,17 +61,17 @@ namespace kafka_stream_core.State.InMemory
                 size += map.AddOrUpdate(key, value) ? 1 : 0;
         }
 
-        public void putAll(IEnumerable<KeyValuePair<Bytes, byte[]>> entries)
+        public void PutAll(IEnumerable<KeyValuePair<Bytes, byte[]>> entries)
         {
             foreach (var kp in entries)
-                this.put(kp.Key, kp.Value);
+                this.Put(kp.Key, kp.Value);
         }
 
-        public byte[] putIfAbsent(Bytes key, byte[] value)
+        public byte[] PutIfAbsent(Bytes key, byte[] value)
         {
             if(!map.ContainsKey(key))
             {
-                this.put(key, value);
+                this.Put(key, value);
             }
             // TODO : 
             return null;

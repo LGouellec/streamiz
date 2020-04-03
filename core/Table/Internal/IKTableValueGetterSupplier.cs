@@ -6,7 +6,7 @@ namespace kafka_stream_core.Table.Internal
 {
     internal interface IKTableValueGetterSupplier<K,V>
     {
-        IKTableValueGetter<K, V> get();
+        IKTableValueGetter<K, V> Get();
 
         String[] StoreNames { get; }
     }

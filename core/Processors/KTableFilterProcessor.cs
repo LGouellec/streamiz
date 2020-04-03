@@ -27,8 +27,8 @@ namespace kafka_stream_core.Processors
 
         public override void Process(K key, Change<V> change)
         {
-            V newValue = computeValue(key, change.NewValue);
-            V oldValue = sendOldValues ? computeValue(key, change.OldValue) : default(V);
+            V newValue = ComputeValue(key, change.NewValue);
+            V oldValue = sendOldValues ? ComputeValue(key, change.OldValue) : default(V);
 
             if (sendOldValues && oldValue == null && newValue == null)
             {
@@ -37,7 +37,7 @@ namespace kafka_stream_core.Processors
 
             if (queryableStoreName != null)
             {
-                store.put(key, ValueAndTimestamp<V>.make(newValue, Context.Timestamp));
+                store.Put(key, ValueAndTimestamp<V>.Make(newValue, Context.Timestamp));
                 //TODO : tupleForwarder.maybeForward(key, newValue, oldValue);
             }
             else
@@ -46,7 +46,7 @@ namespace kafka_stream_core.Processors
             }
         }
 
-        private V computeValue(K key, V value)
+        private V ComputeValue(K key, V value)
         {
             V newValue = default(V);
 

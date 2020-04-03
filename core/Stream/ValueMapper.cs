@@ -6,7 +6,7 @@ namespace kafka_stream_core.Stream
 {
     public interface IValueMapper<V, VR>
     {
-        VR apply(V value);
+        VR Apply(V value);
     }
 
     public class WrappedValueMapper<V, VR> : IValueMapper<V, VR>
@@ -18,6 +18,6 @@ namespace kafka_stream_core.Stream
             this.wrappedFunction = function;
         }
 
-        public VR apply(V value) => wrappedFunction.Invoke(value);
+        public VR Apply(V value) => wrappedFunction.Invoke(value);
     }
 }

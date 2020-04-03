@@ -17,11 +17,11 @@ namespace kafka_stream_core.Table.Internal
                 this.storeName = storeName;
             }
 
-            public void close() { }
+            public void Close() { }
 
-            public ValueAndTimestamp<V> get(K key) => store.get(key);
+            public ValueAndTimestamp<V> Get(K key) => store.Get(key);
 
-            public void init(ProcessorContext context)
+            public void Init(ProcessorContext context)
             {
                 store = (TimestampedKeyValueStore<K, V>)context.GetStateStore(storeName);
             }
@@ -37,6 +37,6 @@ namespace kafka_stream_core.Table.Internal
 
         public string[] StoreNames => new string[1] { queryableStoreName };
 
-        public IKTableValueGetter<K, V> get() => new KTableSourceValueGetter(this.queryableStoreName);
+        public IKTableValueGetter<K, V> Get() => new KTableSourceValueGetter(this.queryableStoreName);
     }
 }

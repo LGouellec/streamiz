@@ -5,7 +5,7 @@ namespace kafka_stream_core.Processors
 {
     internal interface IKTableProcessorSupplier
     {
-        void enableSendingOldValues();
+        void EnableSendingOldValues();
     }
 
     internal interface IKTableProcessorSupplier<K,V,T> : IKTableProcessorSupplier, IProcessorSupplier<K, Change<V>>

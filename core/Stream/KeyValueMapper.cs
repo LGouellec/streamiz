@@ -4,7 +4,7 @@ namespace kafka_stream_core.Stream
 {
     public interface IKeyValueMapper<K, V, VR>
     {
-        VR apply(K key, V value);
+        VR Apply(K key, V value);
     }
 
     public class WrappedKeyValueMapper<K, V, VR> : IKeyValueMapper<K, V, VR>
@@ -15,6 +15,6 @@ namespace kafka_stream_core.Stream
         {
             this.wrappedFunction = function;
         }
-        public VR apply(K key, V value) => wrappedFunction.Invoke(key, value);
+        public VR Apply(K key, V value) => wrappedFunction.Invoke(key, value);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using kafka_stream_core.Crosscutting;
+using kafka_stream_core.Processors;
 using kafka_stream_core.Processors.Internal;
 using kafka_stream_core.SerDes;
 using kafka_stream_core.State;
@@ -22,35 +23,60 @@ namespace kafka_stream_core
 
         #region KStream
 
-        public KStream<string, string> stream(string topic) => this.stream(topic, Consumed<string, string>.with(new StringSerDes(), new StringSerDes()));
+        public IKStream<byte[], byte[]> Stream(string topic, StreamOptions options = null) => Stream<byte[], byte[], ByteArraySerDes, ByteArraySerDes>(topic, options);
 
-        public KStream<K, V> stream<K,V>(string topic, Consumed<K, V> consumed)
+        public IKStream<K, V> Stream<K, V>(string topic, StreamOptions options = null)
         {
-            return internalStreamBuilder.stream(topic, consumed);
+            var consumedInternal = new ConsumedInternal<K, V>(null, null, options?.Extractor);
+            return internalStreamBuilder.Stream(topic, consumedInternal);
+        }
+
+        public IKStream<K, V> Stream<K, V, KS, VS>(string topic, StreamOptions options = null)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+        {
+            var consumedInternal = new ConsumedInternal<K, V>(new KS(), new VS(), options?.Extractor);
+            return internalStreamBuilder.Stream(topic, consumedInternal);
         }
 
         #endregion
 
         #region KTable
 
-        // TODO
-        //public KTable<object, object> table(string topic) 
-        //    => this.table<object, object>(topic, 
-        //        Consumed<object, object>.with(null, null), 
-        //        Materialized<object, object, KeyValueStore<Bytes, byte[]>>.with(default, default));
+        public IKTable<byte[], byte[]> Table(string topic, StreamOptions options = null)
+            => Table<byte[], byte[], ByteArraySerDes, ByteArraySerDes>(topic, options, Materialized<byte[], byte[], KeyValueStore<Bytes, byte[]>>.Create());
 
-        public KTable<K,V> table<K,V>(string topic, Consumed<K,V> consumed, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized = null)
+        public IKTable<K, V> Table<K, V>(string topic, StreamOptions options = null)
+            => Table(topic, options, Materialized<K, V, KeyValueStore<Bytes, byte[]>>.Create());
+
+        public IKTable<K,V> Table<K,V>(string topic, StreamOptions options = null, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized = null)
         {
-            materialized?.useProvider(internalStreamBuilder, $"{topic}-").initConsumed(consumed);
+            var consumedInternal = new ConsumedInternal<K, V>(null, null, options?.Extractor);
+            materialized?.UseProvider(internalStreamBuilder, $"{topic}-")?.InitConsumed(consumedInternal);
 
-            return internalStreamBuilder.table(topic, consumed, materialized);
+            return internalStreamBuilder.Table(topic, consumedInternal, materialized);
+        }
+
+        public IKTable<K, V> Table<K, V, KS, VS>(string topic, StreamOptions options = null)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => Table<K, V, KS, VS>(topic, options, Materialized<K, V, KeyValueStore<Bytes, byte[]>>.Create<KS, VS>());
+
+        public IKTable<K, V> Table<K, V, KS, VS>(string topic, StreamOptions options = null, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized = null)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+        {
+            var consumedInternal = new ConsumedInternal<K, V>(new KS(), new VS(), options?.Extractor);
+            materialized?.UseProvider(internalStreamBuilder, $"{topic}-")?.InitConsumed(consumedInternal);
+
+            return internalStreamBuilder.Table(topic, consumedInternal, materialized);
         }
 
         #endregion
 
-        public Topology build()
+        public Topology Build()
         {
-            this.internalStreamBuilder.build();
+            this.internalStreamBuilder.Build();
             return topology;
         }
     }

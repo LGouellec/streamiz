@@ -7,10 +7,10 @@ namespace kafka_stream_core.Table.Internal
 {
     internal interface IKTableValueGetter<K,V>
     {
-        void init(ProcessorContext context);
+        void Init(ProcessorContext context);
 
-        ValueAndTimestamp<V> get(K key);
+        ValueAndTimestamp<V> Get(K key);
 
-        void close();
+        void Close();
     }
 }

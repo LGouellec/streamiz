@@ -7,19 +7,19 @@ namespace kafka_stream_core.State
 {
     public interface StoreBuilder
     {
-        IDictionary<String, String> LogConfig { get; }
+        IDictionary<string, string> LogConfig { get; }
         bool LoggingEnabled { get; }
-        String Name { get; }
+        string Name { get; }
         object build();
     }
 
     public interface StoreBuilder<T>  : StoreBuilder
-        where T : StateStore
+        where T : IStateStore
     {
-        StoreBuilder<T> withCachingEnabled();
-        StoreBuilder<T> withCachingDisabled();
-        StoreBuilder<T> withLoggingEnabled(IDictionary<String, String> config);
-        StoreBuilder<T> withLoggingDisabled();
-        T build();
+        StoreBuilder<T> WithCachingEnabled();
+        StoreBuilder<T> WithCachingDisabled();
+        StoreBuilder<T> WithLoggingEnabled(IDictionary<String, String> config);
+        StoreBuilder<T> WithLoggingDisabled();
+        T Build();
     }
 }

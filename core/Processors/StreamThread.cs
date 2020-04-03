@@ -142,28 +142,28 @@ namespace kafka_stream_core.Processors
 
         #region Static 
 
-        private static String getTaskProducerClientId(String threadClientId, TaskId taskId)
+        private static string GetTaskProducerClientId(string threadClientId, TaskId taskId)
         {
             return threadClientId + "-" + taskId + "-producer";
         }
 
-        private static String getThreadProducerClientId(String threadClientId)
+        private static string GetThreadProducerClientId(string threadClientId)
         {
             return threadClientId + "-producer";
         }
 
-        private static String getConsumerClientId(String threadClientId)
+        private static string GetConsumerClientId(string threadClientId)
         {
             return threadClientId + "-consumer";
         }
 
-        private static String getRestoreConsumerClientId(String threadClientId)
+        private static string GetRestoreConsumerClientId(string threadClientId)
         {
             return threadClientId + "-restore-consumer";
         }
 
         // currently admin client is shared among all threads
-        public static String getSharedAdminClientId(String clientId)
+        public static string GetSharedAdminClientId(string clientId)
         {
             return clientId + "-admin";
         }
@@ -177,11 +177,10 @@ namespace kafka_stream_core.Processors
 
             var listener = new StreamsRebalanceListener(manager);
             var consumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig(clientId), listener);
-
-            manager.UseConsumer(consumer);
+            manager.Consumer = consumer;
 
             var thread = new StreamThread(threadId, clientId, manager, consumer, builder, TimeSpan.FromMilliseconds(1000));
-            listener.UseStreamThread(thread);
+            listener.Thread = thread;
 
             return thread;
         }
@@ -197,6 +196,7 @@ namespace kafka_stream_core.Processors
         private readonly TimeSpan consumeTimeout;
         private readonly string threadId;
         private readonly string clientId;
+        private CancellationToken token;
 
         private readonly object stateLock = new object();
 
@@ -229,14 +229,15 @@ namespace kafka_stream_core.Processors
         {
             IsRunning = false;
             consumer.Unsubscribe();
-            manager.Close();
             thread.Join();
+            manager.Close();
+            consumer.Dispose();
             IsDisposable = true;
         }
 
         public void Run()
         {
-            while (IsRunning)
+            while (!token.IsCancellationRequested)
             {
                 ConsumeResult<byte[], byte[]> record = null;
 
@@ -281,8 +282,9 @@ namespace kafka_stream_core.Processors
             }
         }
 
-        public void Start()
+        public void Start(CancellationToken token)
         {
+            this.token = token;
             IsRunning = true;
             consumer.Subscribe(builder.GetSourceTopics());
             SetState(State.STARTING);

@@ -20,9 +20,9 @@ namespace kafka_stream_core.Stream.Internal.Graph.Nodes
             this.ProcessorParameters = @parameters;
         }
 
-        public override void writeToTopology(InternalTopologyBuilder builder)
+        public override void WriteToTopology(InternalTopologyBuilder builder)
         {
-            builder.addProcessor(ProcessorParameters.ProcessorName, ProcessorParameters.Processor);
+            builder.AddProcessor(ProcessorParameters.ProcessorName, ProcessorParameters.Processor);
         }
     }
 }

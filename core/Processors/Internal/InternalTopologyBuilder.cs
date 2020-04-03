@@ -15,7 +15,7 @@ namespace kafka_stream_core.Processors.Internal
         private IDictionary<string, IProcessor> sourceOperators = new Dictionary<string, IProcessor>();
         private IDictionary<string, IProcessor> sinkOperators = new Dictionary<string, IProcessor>();
         private IDictionary<string, IProcessor> processorOperators = new Dictionary<string, IProcessor>();
-        private IDictionary<string, StateStore> stateStores = new Dictionary<string, StateStore>();
+        private IDictionary<string, IStateStore> stateStores = new Dictionary<string, IStateStore>();
 
         private IDictionary<string, StoreBuilder> storeBuilders = new Dictionary<string, StoreBuilder>();
 
@@ -25,7 +25,7 @@ namespace kafka_stream_core.Processors.Internal
         {
         }
 
-        public ProcessorTopology buildTopology()
+        public ProcessorTopology BuildTopology()
         {
             var topology = new ProcessorTopology(root, sourceOperators, sinkOperators, processorOperators, stateStores);
             return topology;
@@ -33,15 +33,15 @@ namespace kafka_stream_core.Processors.Internal
 
         internal IEnumerable<string> GetSourceTopics() => sourceOperators.Values.Select(o => (o as ISourceProcessor).TopicName);
 
-        internal void buildAndOptimizeTopology(RootNode root, IList<StreamGraphNode> nodes)
+        internal void BuildAndOptimizeTopology(RootNode root, IList<StreamGraphNode> nodes)
         {
             if (this.root == null)
             {
                 foreach (var node in nodes)
                 {
-                    if (node.allParentsWrittenToTopology() && !node.HasWrittenToTopology)
+                    if (node.AllParentsWrittenToTopology && !node.HasWrittenToTopology)
                     {
-                        node.writeToTopology(this);
+                        node.WriteToTopology(this);
                         node.HasWrittenToTopology = true;
                     }
                 }
@@ -50,20 +50,20 @@ namespace kafka_stream_core.Processors.Internal
 
                 foreach(var source in sourceOperators)
                 {
-                    this.applyChildNodes(source.Value, this.root, root);
+                    this.ApplyChildNodes(source.Value, this.root, root);
                     this.root.SetNextProcessor(source.Value);
                 }
 
                 foreach(var builder in storeBuilders)
                 {
-                    stateStores.Add(builder.Key, builder.Value.build() as StateStore);
+                    stateStores.Add(builder.Key, builder.Value.build() as IStateStore);
                 }
             }
             else
                 throw new Exception("Topology already built !");
         }
 
-        private void applyChildNodes(IProcessor value, IProcessor previous, StreamGraphNode root)
+        private void ApplyChildNodes(IProcessor value, IProcessor previous, StreamGraphNode root)
         {
             StreamGraphNode r = null;
             while(r == null)
@@ -108,14 +108,14 @@ namespace kafka_stream_core.Processors.Internal
                         if (f != null)
                         {
                             value.SetNextProcessor(f);
-                            this.applyChildNodes(f, value, n);
+                            this.ApplyChildNodes(f, value, n);
                         }
                     }
                 }
             }
         }
 
-        private void connectProcessorAndStateStore(String processorName, String stateStoreName)
+        private void ConnectProcessorAndStateStore(String processorName, String stateStoreName)
         {
             // TODO : 
             //if (globalStateBuilders.containsKey(stateStoreName))
@@ -147,18 +147,18 @@ namespace kafka_stream_core.Processors.Internal
 
         #region Add Processors / State Store
 
-        internal void addSourceOperator<K,V>(string topic, string nameNode, Consumed<K,V> consumed)
+        internal void AddSourceOperator<K,V>(string topic, string nameNode, ConsumedInternal<K, V> consumed)
         {
             if (!sourceOperators.ContainsKey(nameNode))
             {
-                SourceProcessor<K, V> source = new SourceProcessor<K, V>(nameNode, topic, consumed.KeySerdes, consumed.ValueSerdes, consumed.TimestampExtractor, consumed.AutoOffsetReset);
+                SourceProcessor<K, V> source = new SourceProcessor<K, V>(nameNode, topic, consumed.KeySerdes, consumed.ValueSerdes, consumed.TimestampExtractor);
                 sourceOperators.Add(nameNode, source);
             }
             else
                 throw new Exception("Source operator already exist !");
         }
 
-        internal void addSinkOperator<K, V>(TopicNameExtractor<K,V> topicNameExtractor, string nameNode, Produced<K,V> produced)
+        internal void AddSinkOperator<K, V>(ITopicNameExtractor<K,V> topicNameExtractor, string nameNode, Produced<K,V> produced)
         {
             if (!sinkOperators.ContainsKey(nameNode))
             {
@@ -169,7 +169,7 @@ namespace kafka_stream_core.Processors.Internal
                 throw new Exception("Sink operator already exist !");
         }
 
-        internal void addProcessor<K, V>(string nameNode, IProcessorSupplier<K, V> processor)
+        internal void AddProcessor<K, V>(string nameNode, IProcessorSupplier<K, V> processor)
         {
             if (!processorOperators.ContainsKey(nameNode))
             {
@@ -181,14 +181,14 @@ namespace kafka_stream_core.Processors.Internal
                 throw new Exception("Processor operator already exist !");
         }
 
-        internal  void addStateStore<S>(StoreBuilder<S> storeBuilder, params String [] processorNames)
-            where  S : StateStore
+        internal  void AddStateStore<S>(StoreBuilder<S> storeBuilder, params String [] processorNames)
+            where  S : IStateStore
         {
-            this.addStateStore<S>(storeBuilder, false, processorNames);
+            this.AddStateStore<S>(storeBuilder, false, processorNames);
         }
 
-        internal void addStateStore<S>(StoreBuilder<S> storeBuilder, bool allowOverride, params String [] processorNames)
-            where S : StateStore
+        internal void AddStateStore<S>(StoreBuilder<S> storeBuilder, bool allowOverride, params String [] processorNames)
+            where S : IStateStore
         {
             if (!allowOverride && storeBuilders.ContainsKey(storeBuilder.Name))
             {
@@ -201,7 +201,7 @@ namespace kafka_stream_core.Processors.Internal
             {
                 foreach ( String processorName in processorNames)
                 {
-                    connectProcessorAndStateStore(processorName, storeBuilder.Name);
+                    ConnectProcessorAndStateStore(processorName, storeBuilder.Name);
                 }
             }
         }
