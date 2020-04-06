@@ -9,7 +9,7 @@ namespace kafka_stream_core.Stream
         VR Apply(V value);
     }
 
-    public class WrappedValueMapper<V, VR> : IValueMapper<V, VR>
+    internal class WrappedValueMapper<V, VR> : IValueMapper<V, VR>
     {
         private readonly Func<V, VR> wrappedFunction;
 

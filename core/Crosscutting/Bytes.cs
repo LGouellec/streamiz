@@ -5,7 +5,7 @@ using System.Numerics;
 
 namespace kafka_stream_core.Crosscutting
 {
-    public class BytesComparer : IEqualityComparer<Bytes>
+    internal class BytesComparer : IEqualityComparer<Bytes>
     {
         public bool Equals(Bytes x, Bytes y)
         {

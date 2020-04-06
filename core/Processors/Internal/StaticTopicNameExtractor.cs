@@ -1,6 +1,6 @@
 ﻿namespace kafka_stream_core.Processors.Internal
 {
-    public class StaticTopicNameExtractor<K, V> : ITopicNameExtractor<K, V>
+    internal class StaticTopicNameExtractor<K, V> : ITopicNameExtractor<K, V>
     {
         public string TopicName { get; }
 

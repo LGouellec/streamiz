@@ -5,7 +5,7 @@ using Confluent.Kafka;
 
 namespace kafka_stream_core.Kafka.Internal
 {
-    public class DefaultKafkaClientSupplier : IKafkaSupplier
+    internal class DefaultKafkaClientSupplier : IKafkaSupplier
     {
         public IAdminClient GetAdmin(AdminClientConfig config)
         {

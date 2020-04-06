@@ -10,136 +10,8 @@ using System.Threading;
 
 namespace kafka_stream_core.Processors
 {
-    public class StreamThread : IThread
+    internal class StreamThread : IThread
     {
-        #region State Thread
-        /**
-         * Stream thread states are the possible states that a stream thread can be in.
-         * A thread must only be in one state at a time
-         * The expected state transitions with the following defined states is:
-         *
-         * <pre>
-         *                 +-------------+
-         *          +<---- | Created (0) |
-         *          |      +-----+-------+
-                 *          |            |
-                 *          |            v
-                 *          |      +-----+-------+
-                 *          +<---- | Starting (1)|----->+
-                 *          |      +-----+-------+      |
-                 *          |            |              |
-                 *          |            |              |
-                 *          |            v              |
-                 *          |      +-----+-------+      |
-                 *          +<---- | Partitions  |      |
-                 *          |      | Revoked (2) | <----+
-                 *          |      +-----+-------+      |
-                 *          |           |  ^            |
-                 *          |           |  |            |
-                 *          |           v  |            |
-                 *          |      +-----+-------+      |
-                 *          +<---- | Partitions  |      |
-                 *          |      | Assigned (3)| <----+
-                 *          |      +-----+-------+      |
-                 *          |            |              |
-                 *          |            |              |
-                 *          |            v              |
-                 *          |      +-----+-------+      |
-                 *          |      | Running (4) | ---->+
-                 *          |      +-----+-------+
-                 *          |            |
-                 *          |            |
-                 *          |            v
-                 *          |      +-----+-------+
-                 *          +----> | Pending     |
-                 *                 | Shutdown (5)|
-                 *                 +-----+-------+
-                 *                       |
-                 *                       v
-                 *                 +-----+-------+
-                 *                 | Dead (6)    |
-                 *                 +-------------+
-                 * </pre>
-                 *
-                 * Note the following:
-                 * <ul>
-                 *     <li>Any state can go to PENDING_SHUTDOWN. That is because streams can be closed at any time.</li>
-                 *     <li>
-                 *         State PENDING_SHUTDOWN may want to transit to some other states other than DEAD,
-                 *         in the corner case when the shutdown is triggered while the thread is still in the rebalance loop.
-                 *         In this case we will forbid the transition but will not treat as an error.
-                 *     </li>
-                 *     <li>
-                 *         State PARTITIONS_REVOKED may want transit to itself indefinitely, in the corner case when
-                 *         the coordinator repeatedly fails in-between revoking partitions and assigning new partitions.
-                 *         Also during streams instance start up PARTITIONS_REVOKED may want to transit to itself as well.
-                 *         In this case we will allow the transition but it will be a no-op as the set of revoked partitions
-                 *         should be empty.
-                 *     </li>
-                 * </ul>
-             */
-        internal class State : ThreadStateTransitionValidator
-        {
-            public static State CREATED = new State(1, 5).Order(0).Name("CREATED");
-            public static State STARTING = new State(2, 3, 5).Order(1).Name("STARTING");
-            public static State PARTITIONS_REVOKED = new State(2, 3, 5).Order(2).Name("PARTITIONS_REVOKED");
-            public static State PARTITIONS_ASSIGNED = new State(2, 3, 4, 5).Order(3).Name("PARTITIONS_ASSIGNED");
-            public static State RUNNING = new State(2, 3, 5).Order(4).Name("RUNNING");
-            public static State PENDING_SHUTDOWN = new State(6).Order(5).Name("PENDING_SHUTDOWN");
-            public static State DEAD = new State().Order(6).Name("DEAD");
-
-            private ISet<int> validTransitions = new HashSet<int>();
-            private int ordinal = 0;
-            private string name;
-
-            private State(params int[] validTransitions)
-            {
-                this.validTransitions.AddRange(validTransitions);
-            }
-
-            private State Order(int ordinal)
-            {
-                this.ordinal = ordinal;
-                return this;
-            }
-
-            private State Name(string name)
-            {
-                this.name = name;
-                return this;
-            }
-
-            public bool IsRunning()
-            {
-                return this.Equals(RUNNING) || this.Equals(STARTING) || this.Equals(PARTITIONS_REVOKED) || this.Equals(PARTITIONS_ASSIGNED);
-            }
-
-            public bool IsValidTransition(ThreadStateTransitionValidator newState)
-            {
-                return validTransitions.Contains(((State)newState).ordinal);
-            }
-
-            public static bool operator ==(State a, State b) => a?.ordinal == b?.ordinal;
-            public static bool operator !=(State a, State b) => a?.ordinal != b?.ordinal;
-
-            public override bool Equals(object obj)
-            {
-                return obj is State && ((State)obj).ordinal.Equals(this.ordinal);
-            }
-
-            public override int GetHashCode()
-            {
-                return this.ordinal.GetHashCode();
-            }
-
-            public override string ToString()
-            {
-                return $"State Thread : {this.name}";
-            }
-        }
-
-        #endregion
-
         #region Static 
 
         private static string GetTaskProducerClientId(string threadClientId, TaskId taskId)
@@ -168,18 +40,19 @@ namespace kafka_stream_core.Processors
             return clientId + "-admin";
         }
 
-        internal static IThread Create(string threadId, string clientId, InternalTopologyBuilder builder, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IAdminClient adminClient)
+        internal static IThread Create(string threadId, string clientId, InternalTopologyBuilder builder, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IAdminClient adminClient, int threadInd)
         {
+            var customerID = $"{clientId}-StreamThread-{threadInd}";
             var producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig());
 
             var taskCreator = new TaskCreator(builder, configuration, threadId, kafkaSupplier, producer);
             var manager = new TaskManager(taskCreator, adminClient);
 
             var listener = new StreamsRebalanceListener(manager);
-            var consumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig(clientId), listener);
+            var consumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig(customerID), listener);
             manager.Consumer = consumer;
 
-            var thread = new StreamThread(threadId, clientId, manager, consumer, builder, TimeSpan.FromMilliseconds(1000));
+            var thread = new StreamThread(threadId, customerID, manager, consumer, builder, TimeSpan.FromMilliseconds(1000));
             listener.Thread = thread;
 
             return thread;
@@ -187,7 +60,7 @@ namespace kafka_stream_core.Processors
 
         #endregion
 
-        internal State StateThread { get; private set; }
+        public ThreadState State { get; private set; }
 
         private readonly Thread thread;
         private readonly IConsumer<byte[], byte[]> consumer;
@@ -199,6 +72,8 @@ namespace kafka_stream_core.Processors
         private CancellationToken token;
 
         private readonly object stateLock = new object();
+
+        public event ThreadStateListener StateChanged;
 
         private StreamThread(string threadId, string clientId, TaskManager manager, IConsumer<byte[], byte[]> consumer, InternalTopologyBuilder builder, TimeSpan timeSpan)
         {
@@ -212,7 +87,7 @@ namespace kafka_stream_core.Processors
             this.thread = new Thread(this.Run);
             this.thread.Name = this.threadId;
 
-            StateThread = State.CREATED;
+            State = ThreadState.CREATED;
         }
 
         #region IThread Impl
@@ -241,21 +116,21 @@ namespace kafka_stream_core.Processors
             {
                 ConsumeResult<byte[], byte[]> record = null;
 
-                if (StateThread == State.PARTITIONS_ASSIGNED)
+                if (State == ThreadState.PARTITIONS_ASSIGNED)
                 {
                     record = PollRequest(TimeSpan.Zero);
                 }
-                else if (StateThread == State.PARTITIONS_REVOKED)
+                else if (State == ThreadState.PARTITIONS_REVOKED)
                 {
                     record = PollRequest(TimeSpan.Zero);
                 }
-                else if (StateThread == State.RUNNING || StateThread == State.STARTING)
+                else if (State == ThreadState.RUNNING || State == ThreadState.STARTING)
                 {
                     record = PollRequest(consumeTimeout);
                 }
                 else
                 {
-                    throw new StreamsException("Unexpected state " + StateThread + " during normal iteration");
+                    throw new StreamsException("Unexpected state " + State + " during normal iteration");
                 }
                 
                 if (record != null)
@@ -275,9 +150,9 @@ namespace kafka_stream_core.Processors
                     }
                 }
 
-                if (StateThread == State.PARTITIONS_ASSIGNED)
+                if (State == ThreadState.PARTITIONS_ASSIGNED)
                 {
-                    SetState(State.RUNNING);
+                    SetState(ThreadState.RUNNING);
                 }
             }
         }
@@ -287,7 +162,7 @@ namespace kafka_stream_core.Processors
             this.token = token;
             IsRunning = true;
             consumer.Subscribe(builder.GetSourceTopics());
-            SetState(State.STARTING);
+            SetState(ThreadState.STARTING);
             thread.Start();
         }
 
@@ -298,15 +173,15 @@ namespace kafka_stream_core.Processors
             return consumer.Consume(ts);
         }
 
-        internal State SetState(State newState)
+        internal ThreadState SetState(ThreadState newState)
         {
-            State oldState;
+            ThreadState oldState;
 
             lock (stateLock)
             {
-                oldState = StateThread;
+                oldState = State;
 
-                if (StateThread == State.PENDING_SHUTDOWN && newState != State.DEAD)
+                if (State == ThreadState.PENDING_SHUTDOWN && newState != ThreadState.DEAD)
                 {
                     // TODO
                     //log.debug("Ignoring request to transit from PENDING_SHUTDOWN to {}: " +
@@ -315,7 +190,7 @@ namespace kafka_stream_core.Processors
                     // refused but we do not throw exception here
                     return null;
                 }
-                else if (StateThread == State.DEAD)
+                else if (State == ThreadState.DEAD)
                 {
                     //log.debug("Ignoring request to transit from DEAD to {}: " +
                     //              "no valid next state after DEAD", newState);
@@ -323,7 +198,7 @@ namespace kafka_stream_core.Processors
                     // will be refused but we do not throw exception here
                     return null;
                 }
-                else if (!StateThread.IsValidTransition(newState))
+                else if (!State.IsValidTransition(newState))
                 {
                     string logPrefix = "";
                     //log.error("Unexpected state transition from {} to {}", oldState, newState);
@@ -334,7 +209,7 @@ namespace kafka_stream_core.Processors
                     //log.info("State transition from {} to {}", oldState, newState);
                 }
 
-                StateThread = newState;
+                State = newState;
                 //if (newState == State.RUNNING)
                 //{
                 //    updateThreadMetadata(taskManager.activeTasks(), taskManager.standbyTasks());
@@ -345,8 +220,7 @@ namespace kafka_stream_core.Processors
                 //}
             }
 
-            // TODO :
-            //Listener?.onChange(this, StateThread, oldState);
+            StateChanged?.Invoke(this, oldState, State);
 
             return oldState;
         }

@@ -6,6 +6,7 @@ namespace kafka_stream_core.Stream.Internal
     {
         internal ISerDes<K> KeySerdes { get; }
         internal ISerDes<V> ValueSerdes { get; }
+        internal string Named { get; private set; }
 
 
         internal Produced(ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
@@ -24,6 +25,12 @@ namespace kafka_stream_core.Stream.Internal
         internal static Produced<K, V> Create(ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
         {
             return new Produced<K, V>(keySerdes, valueSerdes);
+        }
+
+        internal Produced<K, V> WithName(string named)
+        {
+            Named = named;
+            return this;
         }
     }
 }

@@ -4,7 +4,7 @@ namespace kafka_stream_core.Stream.Internal
 {
     internal class Grouped<K, V>
     {
-        protected readonly string named;
+        private readonly string named;
         protected readonly ISerDes<K> keySerdes;
         protected readonly ISerDes<V> valueSerdes;
 

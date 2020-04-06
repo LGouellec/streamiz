@@ -104,49 +104,31 @@ namespace kafka_stream_core.Table.Internal
 
         #region Filter
 
-        public IKTable<K, V> Filter(Func<K, V, bool> predicate) => DoFilter(predicate, null, null, false);
+        public IKTable<K, V> Filter(Func<K, V, bool> predicate, string named = null) => DoFilter(predicate, named, null, false);
 
-        public IKTable<K, V> Filter(Func<K, V, bool> predicate, string named) => DoFilter(predicate, named, null, false);
-
-        public IKTable<K, V> Filter(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized)
-            => DoFilter(predicate, null, materialized, false);
-
-        public IKTable<K, V> Filter(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized, string named)
+        public IKTable<K, V> Filter(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized, string named = null)
             => DoFilter(predicate, named, materialized, false);
 
-        public IKTable<K, V> FilterNot(Func<K, V, bool> predicate) => DoFilter(predicate, null, null, true);
+        public IKTable<K, V> FilterNot(Func<K, V, bool> predicate, string named = null) => DoFilter(predicate, named, null, true);
 
-        public IKTable<K, V> filterNot(Func<K, V, bool> predicate, string name) => DoFilter(predicate, name, null, true);
-
-        public IKTable<K, V> FilterNot(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized) 
-            => DoFilter(predicate, null, materialized, true);
-
-        public IKTable<K, V> FilterNot(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized, string named)
+        public IKTable<K, V> FilterNot(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized, string named = null)
             => DoFilter(predicate, named, materialized, true);
 
         #endregion
 
         #region ToStream
 
-        public IKStream<KR, V> ToStream<KR>(Func<K, V, KR> mapper)
-            => this.ToStream(mapper, string.Empty);
-
-        public IKStream<KR, V> ToStream<KR>(Func<K, V, KR> mapper, string named)
+        public IKStream<KR, V> ToStream<KR>(Func<K, V, KR> mapper, string named = null)
             => this.ToStream(new WrappedKeyValueMapper<K, V, KR>(mapper), named);
 
-        public IKStream<KR, V> ToStream<KR>(IKeyValueMapper<K, V, KR> mapper)
-            => this.ToStream(mapper, string.Empty);
-
-        public IKStream<KR, V> ToStream<KR>(IKeyValueMapper<K, V, KR> mapper, string named)
+        public IKStream<KR, V> ToStream<KR>(IKeyValueMapper<K, V, KR> mapper, string named = null)
         {
             return ToStream().SelectKey(mapper, named);
         }
 
-        public IKStream<K, V> ToStream() => this.ToStream(null);
-
-        public IKStream<K, V> ToStream(string named)
+        public IKStream<K, V> ToStream(string named = null)
         {
-            string name = this.builder.NewProcessorName(TOSTREAM_NAME);
+            string name = new NamedInternal(named).OrElseGenerateWithPrefix(this.builder, TOSTREAM_NAME);
 
             var p = new WrapperValueMapperWithKey<K, Change<V>, V>((k, v) => v.NewValue);
             IProcessorSupplier<K, Change<V>> processorMapValues = new KStreamMapValues<K, Change<V>, V>(p);
@@ -167,70 +149,50 @@ namespace kafka_stream_core.Table.Internal
         public IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper) 
             => this.MapValues(mapper, null);
 
-        public IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, string name)
-            => this.MapValues(mapper, name, null);
+        public IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, string named = null)
+            => this.MapValues(mapper, null, named);
 
-        public IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string name)
-            => this.MapValues(mapper, name, materialized);
 
-        public IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
-             => this.MapValues(new WrappedValueMapper<V, VR>(mapper), name, materialized);
+        public IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string named = null)
+             => this.MapValues(new WrappedValueMapper<V, VR>(mapper), materialized, named);
 
-        public IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper)
-            => this.MapValues(mapper, string.Empty);
+        public IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, string named = null)
+            => this.MapValues(WithKey(mapper), named);
 
-        public IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, string name)
-            => this.MapValues(WithKey(mapper), name);
+        public IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string named = null)
+            => this.MapValues(WithKey(mapper), materialized, named);
 
-        public IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
-            => this.MapValues(mapper, null, materialized);
+        public IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, string named = null)
+            => this.MapValues(mapperWithKey, null, named);
 
-        public IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
-            => this.MapValues(WithKey(mapper), name, materialized);
+        public IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string named = null)
+            => this.MapValues(new WrapperValueMapperWithKey<K, V, VR>(mapperWithKey), materialized, named);
 
-        public IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey)
-            => this.MapValues(mapperWithKey, null);
+        public IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string named = null)
+            => this.MapValues(mapperWithKey, null, named);
 
-        public IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, string name)
-            => this.MapValues(mapperWithKey, name, null);
-
-        public IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string name)
-            => this.MapValues(mapperWithKey, name, materialized);
-
-        public IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
-            => this.MapValues(new WrapperValueMapperWithKey<K, V, VR>(mapperWithKey), name, materialized);
-
-        public IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey)
-            => this.MapValues(mapperWithKey, string.Empty);
-
-        public IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string name)
-            => this.MapValues(mapperWithKey, name, null);
-
-        public IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
-            => this.MapValues(mapperWithKey, null, materialized);
-
-        public IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string name, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized)
-            => DoMapValues(mapperWithKey, name, materialized);
+        public IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string named)
+            => DoMapValues(mapperWithKey, named, materialized);
 
         #endregion
 
         #region GroupBy
 
-        public IKGroupedTable<KR, VR> GroupBy<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> keySelector)
-            => DoGroup(keySelector, Grouped<KR, VR>.Create(null, null));
+        public IKGroupedTable<KR, VR> GroupBy<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> keySelector, string named = null)
+            => DoGroup(keySelector, Grouped<KR, VR>.Create(named, null, null));
 
-        public IKGroupedTable<KR, VR> GroupBy<KR, VR>(Func<K, V, KeyValuePair<KR, VR>> keySelector)
-            => this.GroupBy(new WrappedKeyValueMapper<K, V, KeyValuePair<KR, VR>>(keySelector));
+        public IKGroupedTable<KR, VR> GroupBy<KR, VR>(Func<K, V, KeyValuePair<KR, VR>> keySelector, string named = null)
+            => this.GroupBy(new WrappedKeyValueMapper<K, V, KeyValuePair<KR, VR>>(keySelector), named);
 
-        public IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> keySelector)
+        public IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> keySelector, string named = null)
             where KRS : ISerDes<KR>, new()
             where VRS : ISerDes<VR>, new()
-            => DoGroup(keySelector, Grouped<KR, VR>.Create<KRS, VRS>());
+            => DoGroup(keySelector, Grouped<KR, VR>.Create<KRS, VRS>(named));
 
-        public IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(Func<K, V, KeyValuePair<KR, VR>> keySelector)
+        public IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(Func<K, V, KeyValuePair<KR, VR>> keySelector, string named = null)
             where KRS : ISerDes<KR>, new()
             where VRS : ISerDes<VR>, new()
-            => this.GroupBy(new WrappedKeyValueMapper<K, V, KeyValuePair<KR, VR>>(keySelector));
+            => this.GroupBy(new WrappedKeyValueMapper<K, V, KeyValuePair<KR, VR>>(keySelector), named);
 
         #endregion
 
@@ -271,7 +233,7 @@ namespace kafka_stream_core.Table.Internal
                 storeBuilder = null;
             }
 
-            var name = this.builder.NewProcessorName(FILTER_NAME);
+            var name = new NamedInternal(named).OrElseGenerateWithPrefix(this.builder, FILTER_NAME);
 
             IProcessorSupplier<K, Change<V>> processorSupplier = new KTableFilter<K, V>(this, predicate, filterNot, queryableStoreName);
 
@@ -324,7 +286,7 @@ namespace kafka_stream_core.Table.Internal
                 storeBuilder = null;
             }
 
-            var name = this.builder.NewProcessorName(MAPVALUES_NAME);
+            var name = new NamedInternal(named).OrElseGenerateWithPrefix(this.builder, MAPVALUES_NAME);
 
             var processorSupplier = new KTableMapValues<K, V, VR>(this, mapper, queryableStoreName);
             var processorParameters = new TableProcessorParameters<K, V>(processorSupplier, name);
@@ -354,7 +316,7 @@ namespace kafka_stream_core.Table.Internal
 
         private IKGroupedTable<K1, V1> DoGroup<K1, V1>(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> keySelector, Grouped<K1, V1> grouped)
         {
-            var selectName = this.builder.NewProcessorName(SELECT_NAME);
+            var selectName = new NamedInternal(grouped.Named).OrElseGenerateWithPrefix(this.builder, SELECT_NAME);
 
             IKTableProcessorSupplier<K, V, KeyValuePair< K1, V1 >> selectSupplier = new KTableRepartitionMap<K, V, K1, V1>(this, keySelector);
             var processorParameters = new TableProcessorParameters<K, V>(selectSupplier, selectName);

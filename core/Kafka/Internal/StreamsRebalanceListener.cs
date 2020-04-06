@@ -21,13 +21,13 @@ namespace kafka_stream_core.Kafka.Internal
         public void PartitionsAssigned(IConsumer<byte[], byte[]> consumer, List<TopicPartition> partitions)
         {
             manager.CreateTasks(partitions);
-            Thread.SetState(StreamThread.State.PARTITIONS_ASSIGNED);
+            Thread.SetState(ThreadState.PARTITIONS_ASSIGNED);
         }
 
         public void PartitionsRevoked(IConsumer<byte[], byte[]> consumer, List<TopicPartitionOffset> partitions)
         {
             manager.RevokeTasks(new List<TopicPartition>(partitions.Select(p => p.TopicPartition)));
-            Thread.SetState(StreamThread.State.PARTITIONS_REVOKED);
+            Thread.SetState(ThreadState.PARTITIONS_REVOKED);
         }
     }
 }

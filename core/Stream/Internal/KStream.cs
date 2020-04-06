@@ -79,9 +79,9 @@ namespace kafka_stream_core.Stream.Internal
 
         #region Filter
 
-        public IKStream<K, V> Filter(Func<K, V, bool> predicate, string named)
+        public IKStream<K, V> Filter(Func<K, V, bool> predicate, string named = null)
         {
-            string name = this.builder.NewProcessorName(FILTER_NAME);
+            string name = new NamedInternal(named).OrElseGenerateWithPrefix(this.builder, FILTER_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFilter<K, V>(predicate), name);
             ProcessorGraphNode<K, V> filterProcessorNode = new ProcessorGraphNode<K, V>(name, processorParameters);
 
@@ -90,21 +90,16 @@ namespace kafka_stream_core.Stream.Internal
 
         }
 
-        public IKStream<K, V> FilterNot(Func<K, V, bool> predicate, string named)
+        public IKStream<K, V> FilterNot(Func<K, V, bool> predicate, string named = null)
         {
-            string name = this.builder.NewProcessorName(FILTER_NAME);
+            // TODO : Refactor with Filter and bool parameters
+            string name = new NamedInternal(named).OrElseGenerateWithPrefix(this.builder, FILTER_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFilter<K, V>(predicate, true), name);
             ProcessorGraphNode<K, V> filterProcessorNode = new ProcessorGraphNode<K, V>(name, processorParameters);
             this.builder.AddGraphNode(node, filterProcessorNode);
             return new KStream<K, V>(name, this.keySerdes, this.valueSerdes, this.setSourceNodes, filterProcessorNode, this.builder);
 
         }
-
-        public IKStream<K, V> Filter(Func<K, V, bool> predicate)
-            => this.Filter(predicate, string.Empty);
-
-        public IKStream<K, V> FilterNot(Func<K, V, bool> predicate)
-            => this.FilterNot(predicate, string.Empty);
 
         #endregion
 
@@ -114,43 +109,37 @@ namespace kafka_stream_core.Stream.Internal
 
         #region To
 
-        public void To(string topicName) => To(new StaticTopicNameExtractor<K, V>(topicName));
+        public void To(string topicName, string named = null) => To(new StaticTopicNameExtractor<K, V>(topicName), named);
 
-        public void To(ITopicNameExtractor<K, V> topicExtractor) => DoTo(topicExtractor, Produced<K, V>.Create(keySerdes, valueSerdes));
+        public void To(ITopicNameExtractor<K, V> topicExtractor, string named = null) => DoTo(topicExtractor, Produced<K, V>.Create(keySerdes, valueSerdes).WithName(named));
 
-        public void To(Func<K, V, IRecordContext, string> topicExtractor) => To(new WrapperTopicNameExtractor<K, V>(topicExtractor));
+        public void To(Func<K, V, IRecordContext, string> topicExtractor, string named = null) => To(new WrapperTopicNameExtractor<K, V>(topicExtractor), named);
 
-        public void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor)
+        public void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor, string named = null)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
-            => To<KS, VS>(new WrapperTopicNameExtractor<K, V>(topicExtractor));
+            => To<KS, VS>(new WrapperTopicNameExtractor<K, V>(topicExtractor), named);
 
-        public void To<KS, VS>(string topicName)
+        public void To<KS, VS>(string topicName, string named = null)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
-            => To<KS, VS>(new StaticTopicNameExtractor<K, V>(topicName));
+            => To<KS, VS>(new StaticTopicNameExtractor<K, V>(topicName), named);
 
-        public void To<KS, VS>(ITopicNameExtractor<K, V> topicExtractor)
+        public void To<KS, VS>(ITopicNameExtractor<K, V> topicExtractor, string named = null)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
-            => DoTo(topicExtractor, Produced<K, V>.Create<KS, VS>());
+            => DoTo(topicExtractor, Produced<K, V>.Create<KS, VS>().WithName(named));
 
         #endregion
 
         #region FlatMap
 
-        public IKStream<KR, VR> FlatMap<KR, VR>(Func<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper)
-            => this.FlatMap(mapper, string.Empty);
-
-        public IKStream<KR, VR> FlatMap<KR, VR>(Func<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named)
+        public IKStream<KR, VR> FlatMap<KR, VR>(Func<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named = null)
             => this.FlatMap(new WrappedKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>>(mapper), named);
 
-        public IKStream<KR, VR> FlatMap<KR, VR>(IKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper)
-            => this.FlatMap(mapper, string.Empty);
-
-        public IKStream<KR, VR> FlatMap<KR, VR>(IKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named)
+        public IKStream<KR, VR> FlatMap<KR, VR>(IKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named = null)
         {
-            var name = this.builder.NewProcessorName(FLATMAP_NAME);
+            var name = new NamedInternal(named).OrElseGenerateWithPrefix(this.builder, FLATMAP_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFlatMap<K, V, KR, VR>(mapper), name);
             ProcessorGraphNode<K, V> flatMapNode = new ProcessorGraphNode<K, V>(name, processorParameters);
             flatMapNode.KeyChangingOperation = true;
@@ -165,32 +154,20 @@ namespace kafka_stream_core.Stream.Internal
 
         #region FlatMapValues
 
-        public IKStream<K, VR> FlatMapValues<VR>(Func<V, IEnumerable<VR>> mapper)
-            => this.FlatMapValues(mapper, string.Empty);
-
-        public IKStream<K, VR> FlatMapValues<VR>(Func<V, IEnumerable<VR>> mapper, string named)
+        public IKStream<K, VR> FlatMapValues<VR>(Func<V, IEnumerable<VR>> mapper, string named = null)
             => this.FlatMapValues(new WrappedValueMapper<V, IEnumerable<VR>>(mapper), named);
 
-        public IKStream<K, VR> FlatMapValues<VR>(Func<K, V, IEnumerable<VR>> mapper)
-            => this.FlatMapValues(mapper, string.Empty);
-
-        public IKStream<K, VR> FlatMapValues<VR>(Func<K, V, IEnumerable<VR>> mapper, string named)
+        public IKStream<K, VR> FlatMapValues<VR>(Func<K, V, IEnumerable<VR>> mapper, string named = null)
             => this.FlatMapValues(new WrapperValueMapperWithKey<K, V, IEnumerable<VR>>(mapper), named);
 
-        public IKStream<K, VR> FlatMapValues<VR>(IValueMapper<V, IEnumerable<VR>> mapper)
-            => this.FlatMapValues(mapper, null);
-
-        public IKStream<K, VR> FlatMapValues<VR>(IValueMapper<V, IEnumerable<VR>> mapper, string named)
+        public IKStream<K, VR> FlatMapValues<VR>(IValueMapper<V, IEnumerable<VR>> mapper, string named = null)
             => this.FlatMapValues(WithKey(mapper), named);
 
-        public IKStream<K, VR> FlatMapValues<VR>(IValueMapperWithKey<K, V, IEnumerable<VR>> mapper)
-            => this.FlatMapValues(mapper, null);
-
-        public IKStream<K, VR> FlatMapValues<VR>(IValueMapperWithKey<K, V, IEnumerable<VR>> mapper, string named)
+        public IKStream<K, VR> FlatMapValues<VR>(IValueMapperWithKey<K, V, IEnumerable<VR>> mapper, string named = null)
         {
-             var name = this.builder.NewProcessorName(FLATMAPVALUES_NAME);
+            var name = new NamedInternal(named).OrElseGenerateWithPrefix(this.builder, FLATMAPVALUES_NAME);
 
-            ProcessorParameters<K,V> processorParameters = new ProcessorParameters<K, V>(new KStreamFlatMapValues<K, V, VR>(mapper), name);
+            ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFlatMapValues<K, V, VR>(mapper), name);
             ProcessorGraphNode<K, V> flatMapValuesNode = new ProcessorGraphNode<K, V>(name, processorParameters);
             flatMapValuesNode.ValueChangingOperation = true;
 
@@ -210,11 +187,9 @@ namespace kafka_stream_core.Stream.Internal
 
         #region Foreach
 
-        public void Foreach(Action<K, V> action) => this.Foreach(action, string.Empty);
-
-        public void Foreach(Action<K, V> action, string named)
+        public void Foreach(Action<K, V> action, string named = null)
         {
-            String name = this.builder.NewProcessorName(FOREACH_NAME);
+            String name = new NamedInternal(named).OrElseGenerateWithPrefix(this.builder, FOREACH_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamPeek<K, V>(action, false), name);
             ProcessorGraphNode<K, V> foreachNode = new ProcessorGraphNode<K, V>(name, processorParameters);
 
@@ -225,11 +200,9 @@ namespace kafka_stream_core.Stream.Internal
 
         #region Peek
 
-        public IKStream<K, V> Peek(Action<K, V> action) => this.Peek(action, string.Empty);
-
-        public IKStream<K, V> Peek(Action<K, V> action, string named)
+        public IKStream<K, V> Peek(Action<K, V> action, string named = null)
         {
-            String name = this.builder.NewProcessorName(PEEK_NAME);
+            String name = new NamedInternal(named).OrElseGenerateWithPrefix(this.builder, PEEK_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamPeek<K, V>(action, true), name);
             ProcessorGraphNode<K, V> peekNode = new ProcessorGraphNode<K, V>(name, processorParameters);
 
@@ -248,18 +221,12 @@ namespace kafka_stream_core.Stream.Internal
 
         #region Map
 
-        public IKStream<KR, VR> Map<KR, VR>(Func<K, V, KeyValuePair<KR, VR>> mapper)
-            => this.Map(mapper, string.Empty);
-
-        public IKStream<KR, VR> Map<KR, VR>(Func<K, V, KeyValuePair<KR, VR>> mapper, string named)
+        public IKStream<KR, VR> Map<KR, VR>(Func<K, V, KeyValuePair<KR, VR>> mapper, string named = null)
             => this.Map(new WrappedKeyValueMapper<K, V, KeyValuePair<KR, VR>>(mapper), named);
 
-        public IKStream<KR, VR> Map<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper)
-            => this.Map(mapper, string.Empty);
-
-        public IKStream<KR, VR> Map<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper, string named)
+        public IKStream<KR, VR> Map<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper, string named = null)
         {
-            string name = this.builder.NewProcessorName(MAP_NAME);
+            string name = new NamedInternal(named).OrElseGenerateWithPrefix(this.builder, MAP_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamMap<K, V, KR, VR>(mapper), name);
             ProcessorGraphNode<K, V> mapProcessorNode = new ProcessorGraphNode<K, V>(name, processorParameters);
             mapProcessorNode.KeyChangingOperation = true;
@@ -280,30 +247,20 @@ namespace kafka_stream_core.Stream.Internal
 
         #region MapValues
 
-        public IKStream<K, VR> MapValues<VR>(Func<V, VR> mapper)
-            => this.MapValues(mapper, string.Empty);
 
-        public IKStream<K, VR> MapValues<VR>(Func<V, VR> mapper, string named)
+        public IKStream<K, VR> MapValues<VR>(Func<V, VR> mapper, string named = null)
             => this.MapValues(new WrappedValueMapper<V, VR>(mapper), named);
 
-        public IKStream<K, VR> MapValues<VR>(Func<K, V, VR> mapper)
-            => this.MapValues(mapper, string.Empty);
 
-        public IKStream<K, VR> MapValues<VR>(Func<K, V, VR> mapper, string named)
+        public IKStream<K, VR> MapValues<VR>(Func<K, V, VR> mapper, string named = null)
             => this.MapValues(new WrapperValueMapperWithKey<K, V, VR>(mapper), named);
 
-        public IKStream<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper)
-            => this.MapValues<VR>(mapper, null);
-
-        public IKStream<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, string named)
+        public IKStream<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, string named = null)
             => this.MapValues<VR>(WithKey(mapper), named);
 
-        public IKStream<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapper)
-            => this.MapValues<VR>(mapper, null);
-
-        public IKStream<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapper, string named)
+        public IKStream<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapper, string named = null)
         {
-            String name = this.builder.NewProcessorName(MAPVALUES_NAME);
+            String name = new NamedInternal(named).OrElseGenerateWithPrefix(this.builder, MAPVALUES_NAME);
 
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamMapValues<K, V, VR>(mapper), name);
             ProcessorGraphNode<K, V> mapValuesProcessorNode = new ProcessorGraphNode<K, V>(name, processorParameters);
@@ -327,7 +284,7 @@ namespace kafka_stream_core.Stream.Internal
 
         public void Print(Printed<K, V> printed)
         {
-            var name = this.builder.NewProcessorName(PRINTING_NAME);
+            var name = new NamedInternal(printed.Name).OrElseGenerateWithPrefix(this.builder, PRINTING_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(printed.Build(this.nameNode), name);
             ProcessorGraphNode<K, V> printNode = new ProcessorGraphNode<K, V>(name, processorParameters);
 
@@ -338,16 +295,10 @@ namespace kafka_stream_core.Stream.Internal
 
         #region SelectKey
 
-        public IKStream<KR, V> SelectKey<KR>(Func<K, V, KR> mapper)
-            => this.SelectKey(mapper, string.Empty);
-
-        public IKStream<KR, V> SelectKey<KR>(Func<K, V, KR> mapper, string named)
+        public IKStream<KR, V> SelectKey<KR>(Func<K, V, KR> mapper, string named = null)
             => this.SelectKey(new WrappedKeyValueMapper<K, V, KR>(mapper), named);
 
-        public IKStream<KR, V> SelectKey<KR>(IKeyValueMapper<K, V, KR> mapper)
-            => this.SelectKey(mapper, string.Empty);
-
-        public IKStream<KR, V> SelectKey<KR>(IKeyValueMapper<K, V, KR> mapper, string named)
+        public IKStream<KR, V> SelectKey<KR>(IKeyValueMapper<K, V, KR> mapper, string named = null)
         {
             ProcessorGraphNode<K, V> selectKeyProcessorNode = InternalSelectKey(mapper, named);
             selectKeyProcessorNode.KeyChangingOperation = true;
@@ -368,37 +319,37 @@ namespace kafka_stream_core.Stream.Internal
 
         #region GroupBy
 
-        public IKGroupedStream<KR, V> GroupBy<KR>(IKeyValueMapper<K, V, KR> keySelector)
-            => DoGroup(keySelector, Grouped<KR, V>.Create(null, valueSerdes));
+        public IKGroupedStream<KR, V> GroupBy<KR>(IKeyValueMapper<K, V, KR> keySelector, string named = null)
+            => DoGroup(keySelector, Grouped<KR, V>.Create(named, null, valueSerdes));
 
-        public IKGroupedStream<KR, V> GroupBy<KR>(Func<K, V, KR> keySelector)
-            => this.GroupBy(new WrappedKeyValueMapper<K, V, KR>(keySelector));
+        public IKGroupedStream<KR, V> GroupBy<KR>(Func<K, V, KR> keySelector, string named = null)
+            => this.GroupBy(new WrappedKeyValueMapper<K, V, KR>(keySelector), named);
 
-        public IKGroupedStream<KR, V> GroupBy<KR, KS>(IKeyValueMapper<K, V, KR> keySelector)
+        public IKGroupedStream<KR, V> GroupBy<KR, KS>(IKeyValueMapper<K, V, KR> keySelector, string named = null)
              where KS : ISerDes<KR>, new()
-            => DoGroup(keySelector, Grouped<KR, V>.Create<KS>(valueSerdes));
+            => DoGroup(keySelector, Grouped<KR, V>.Create<KS>(named, valueSerdes));
 
-        public IKGroupedStream<KR, V> GroupBy<KR, KS>(Func<K, V, KR> keySelector)
+        public IKGroupedStream<KR, V> GroupBy<KR, KS>(Func<K, V, KR> keySelector, string named = null)
              where KS : ISerDes<KR>, new()
-            => this.GroupBy<KR, KS>(new WrappedKeyValueMapper<K, V, KR>(keySelector));
+            => this.GroupBy<KR, KS>(new WrappedKeyValueMapper<K, V, KR>(keySelector), named);
 
-        public IKGroupedStream<K, V> GroupByKey()
+        public IKGroupedStream<K, V> GroupByKey(string named = null)
         {
             return new KGroupedStream<K, V>(
                 this.nameNode,
-                Grouped<K, V>.Create(this.keySerdes, this.valueSerdes),
+                Grouped<K, V>.Create(named, this.keySerdes, this.valueSerdes),
                 this.setSourceNodes,
                 this.node,
                 builder);
         }
 
-        public IKGroupedStream<K, V> GroupByKey<KS, VS>()
+        public IKGroupedStream<K, V> GroupByKey<KS, VS>(string named = null)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
             return new KGroupedStream<K, V>(
                 this.nameNode,
-                Grouped<K, V>.Create<KS, VS>(null),
+                Grouped<K, V>.Create<KS, VS>(named),
                 this.setSourceNodes,
                 this.node,
                 builder);
@@ -410,21 +361,22 @@ namespace kafka_stream_core.Stream.Internal
 
         private void DoTo(ITopicNameExtractor<K, V> topicExtractor, Produced<K, V> produced)
         {
-            string name = this.builder.NewProcessorName(SINK_NAME);
+            string name = new NamedInternal(produced.Named).OrElseGenerateWithPrefix(this.builder, SINK_NAME);
 
             StreamSinkNode<K, V> sinkNode = new StreamSinkNode<K, V>(topicExtractor, name, produced);
             this.builder.AddGraphNode(node, sinkNode);
         }
 
-        private IKStream<K, V>[] DoBranch(string named, params Func<K, V, bool>[] predicates)
+        private IKStream<K, V>[] DoBranch(string named = null, params Func<K, V, bool>[] predicates)
         {
+            var namedInternal = new NamedInternal(named);
             if (predicates.Length == 0)
                 throw new ArgumentException("branch() requires at least one predicate");
 
-            String branchName = this.builder.NewProcessorName(BRANCH_NAME);
+            String branchName = namedInternal.OrElseGenerateWithPrefix(this.builder, BRANCH_NAME);
             String[] childNames = new String[predicates.Length];
             for (int i = 0; i < predicates.Length; i++)
-                childNames[i] = $"{this.builder.NewProcessorName(BRANCHCHILD_NAME)}-predicate-{i}";
+                childNames[i] = namedInternal.SuffixWithOrElseGet($"predicate-{i}", this.builder, BRANCHCHILD_NAME);
 
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamBranch<K, V>(predicates, childNames), branchName);
             ProcessorGraphNode<K, V> branchNode = new ProcessorGraphNode<K, V>(branchName, processorParameters);
@@ -459,15 +411,15 @@ namespace kafka_stream_core.Stream.Internal
                 builder);
         }
 
-        private ProcessorGraphNode<K, V> InternalSelectKey<KR>(IKeyValueMapper<K, V, KR> mapper, string named)
+        private ProcessorGraphNode<K, V> InternalSelectKey<KR>(IKeyValueMapper<K, V, KR> mapper, string named = null)
         {
-            var name = this.builder.NewProcessorName(KEY_SELECT_NAME);
+            var name = new NamedInternal(named).OrElseGenerateWithPrefix(this.builder, KEY_SELECT_NAME);
 
-            WrappedKeyValueMapper<K, V, KeyValuePair<KR, V>> internalMapper = 
+            WrappedKeyValueMapper<K, V, KeyValuePair<KR, V>> internalMapper =
                 new WrappedKeyValueMapper<K, V, KeyValuePair<KR, V>>(
                 (key, value) => new KeyValuePair<KR, V>(mapper.Apply(key, value), value));
 
-            KStreamMap <K, V, KR, V> kStreamMap = new KStreamMap<K, V, KR, V>(internalMapper);
+            KStreamMap<K, V, KR, V> kStreamMap = new KStreamMap<K, V, KR, V>(internalMapper);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(kStreamMap, name);
 
             return new ProcessorGraphNode<K, V>(name, processorParameters);

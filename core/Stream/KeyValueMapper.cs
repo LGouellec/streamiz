@@ -7,7 +7,7 @@ namespace kafka_stream_core.Stream
         VR Apply(K key, V value);
     }
 
-    public class WrappedKeyValueMapper<K, V, VR> : IKeyValueMapper<K, V, VR>
+    internal class WrappedKeyValueMapper<K, V, VR> : IKeyValueMapper<K, V, VR>
     {
         private readonly Func<K, V, VR> wrappedFunction;
 

@@ -1513,6 +1513,7 @@ namespace kafka_stream_core
 
         public StreamConfig(IDictionary<string, dynamic> properties)
         {
+            ClientId = null;
             NumStreamThreads = 1;
             DefaultKeySerDes = new ByteArraySerDes();
             DefaultValueSerDes = new ByteArraySerDes();

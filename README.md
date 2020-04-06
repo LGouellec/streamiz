@@ -37,8 +37,8 @@ TODO
 
 - Adopt C# Syntax  [X]
 - Configuration property [X]
-- State thread + task implementation [ ]
-- Naming Kafka Streams DSL Topologies [ ]
+- State thread + stream implementation [X]
+- Naming Kafka Streams DSL Topologies [X]
 - Logging [ ]
 - [EOS](https://github.com/LGouellec/kafka-stream-net/issues/2) [ ]
 - Unit test (TestTopologyDriver, ...) [ ]
@@ -72,37 +72,40 @@ https://kafka.apache.org/20/documentation/streams/developer-guide/dsl-api.html#s
 
 Sample code
 ```
-CancellationTokenSource source = new CancellationTokenSource();
+static void Main(string[] args)
+{
+    CancellationTokenSource source = new CancellationTokenSource();
+    
+    var config = new StreamConfig<StringSerDes, StringSerDes>();
+    config.ApplicationId = "test-app";
+    config.BootstrapServers = "192.168.56.1:9092";
+    config.SaslMechanism = SaslMechanism.Plain;
+    config.SaslUsername = "admin";
+    config.SaslPassword = "admin";
+    config.SecurityProtocol = SecurityProtocol.SaslPlaintext;
+    config.AutoOffsetReset = AutoOffsetReset.Earliest;
+    config.NumStreamThreads = 2;
+    
+    StreamBuilder builder = new StreamBuilder();
 
-var config = new StreamConfig<StringSerDes, StringSerDes>();
-config.ApplicationId = "test-app";
-config.BootstrapServers = "192.168.56.1:9092";
-config.SaslMechanism = SaslMechanism.Plain;
-config.SaslUsername = "admin";
-config.SaslPassword = "admin";
-config.SecurityProtocol = SecurityProtocol.SaslPlaintext;
-config.AutoOffsetReset = AutoOffsetReset.Earliest;
-config.NumStreamThreads = 2;
+    builder.Stream<string, string>("test")
+        .FilterNot((k, v) => v.Contains("test"))
+        .Peek((k,v) => Console.WriteLine($"Key : {k} | Value : {v}"))
+        .To("test-output");
 
-StreamBuilder builder = new StreamBuilder();
+    builder.Table(
+        "test-ktable",
+        StreamOptions.Create(),
+        InMemory<string, string>.As("test-ktable-store"));
 
-builder.Stream<string, string>("test")
-    .FilterNot((k, v) => v.Contains("test"))
-    .Peek((k,v) => Console.WriteLine($"Key : {k} | Value : {v}"))
-    .To("test-output");
+    Topology t = builder.Build();
+    KafkaStream stream = new KafkaStream(t, config);
 
-builder.Table(
-    "test-ktable",
-    StreamOptions.Create(),
-    InMemory<string, string>.As("test-ktable-store"));
+    Console.CancelKeyPress += (o, e) => {
+        source.Cancel();
+        stream.Close();
+    };
 
-Topology t = builder.Build();
-KafkaStream stream = new KafkaStream(t, config);
-
-Console.CancelKeyPress += (o, e) => {
-    source.Cancel();
-    stream.Close();
-};
-
-stream.Start(source.Token);
+    stream.Start(source.Token);
+}
 ```
