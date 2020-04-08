@@ -24,6 +24,7 @@ namespace kafka_stream_core.Processors
 
         public override void Process(K key, V value)
         {
+            LogProcessingKeyValue(key, value);
             this.action.Invoke(key, value);
             if (this.forwardDownStream)
                 this.Forward(key, value);

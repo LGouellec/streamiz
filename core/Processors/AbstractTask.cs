@@ -19,10 +19,12 @@ namespace kafka_stream_core.Processors
         protected bool commitNeeded;
         protected IStateManager stateMgr;
         protected ILog log;
-        
+        protected readonly string logPrefix = "";
+
         internal AbstractTask(TaskId id, TopicPartition partition, ProcessorTopology topology, IConsumer<byte[], byte[]> consumer, IStreamConfig config)
         {
             this.log = Logger.GetLogger(this.GetType());
+            logPrefix = $"stream-task[{id.Topic}|{id.Partition}] ";
 
             Partition = partition;
             Id = id;
@@ -70,13 +72,40 @@ namespace kafka_stream_core.Processors
                 return;
             }
 
-            log.Debug("Initializing state stores");
+            log.Debug($"{logPrefix}Initializing state stores");
 
             foreach (var kv in Topology.StateStores)
             {
                 var store = kv.Value;
-                log.Debug($"Initializing store {kv.Key}");
+                log.Debug($"{logPrefix}Initializing store {kv.Key}");
                 store.Init(Context, store);
+            }
+        }
+
+        protected void FlushState()
+        {
+            try
+            {
+                stateMgr.Flush();
+            }
+            catch (Exception e)
+            {
+                log.Error($"{logPrefix}Error during flush state store with exception :", e);
+                throw e;
+            }
+        }
+
+        protected void CloseStateManager()
+        {
+            log.Debug($"{logPrefix}Closing state manager");
+            try
+            {
+                stateMgr.Close();
+            }
+            catch (Exception e)
+            {
+                log.Error($"{logPrefix}Error during closing state store with exception :", e);
+                throw e;
             }
         }
     }

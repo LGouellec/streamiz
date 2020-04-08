@@ -24,6 +24,7 @@ namespace kafka_stream_core.Processors
 
         public override void Process(K key, V value)
         {
+            LogProcessingKeyValue(key, value);
             for (int i = 0; i < this.predicates.Length; i++)
             {
                 if (this.predicates[i].Invoke(key, value))

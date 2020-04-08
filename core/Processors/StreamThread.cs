@@ -4,6 +4,7 @@ using kafka_stream_core.Errors;
 using kafka_stream_core.Kafka;
 using kafka_stream_core.Kafka.Internal;
 using kafka_stream_core.Processors.Internal;
+using log4net;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -62,6 +63,7 @@ namespace kafka_stream_core.Processors
 
         public ThreadState State { get; private set; }
 
+        private readonly ILog log = Logger.GetLogger(typeof(StreamThread));
         private readonly Thread thread;
         private readonly IConsumer<byte[], byte[]> consumer;
         private readonly TaskManager manager;
@@ -69,6 +71,7 @@ namespace kafka_stream_core.Processors
         private readonly TimeSpan consumeTimeout;
         private readonly string threadId;
         private readonly string clientId;
+        private readonly string logPrefix = "";
         private CancellationToken token;
 
         private readonly object stateLock = new object();
@@ -83,6 +86,7 @@ namespace kafka_stream_core.Processors
             this.consumeTimeout = timeSpan;
             this.threadId = threadId;
             this.clientId = clientId;
+            logPrefix = $"stream-thread[{threadId}] ";
 
             this.thread = new Thread(this.Run);
             this.thread.Name = this.threadId;
@@ -102,67 +106,111 @@ namespace kafka_stream_core.Processors
 
         public void Dispose()
         {
-            IsRunning = false;
-            consumer.Unsubscribe();
-            thread.Join();
-            manager.Close();
-            consumer.Dispose();
-            IsDisposable = true;
+            try
+            {
+                SetState(ThreadState.PENDING_SHUTDOWN);
+                log.Info($"{logPrefix}Shutting down");
+
+                IsRunning = false;
+                consumer.Unsubscribe();
+                thread.Join();
+                manager.Close();
+                try
+                {
+                    consumer.Dispose();
+                }catch(Exception e)
+                {
+                    log.Error($"{logPrefix}Failed to close consumer due to the following error:", e);
+                }
+                IsDisposable = true;
+                SetState(ThreadState.DEAD);
+                log.Info($"{logPrefix}Shutdown complete");
+            }
+            catch(Exception e)
+            {
+                log.Error($"{logPrefix}Failed to close stream thread due to the following error:", e);
+            }
         }
 
         public void Run()
         {
-            while (!token.IsCancellationRequested)
+            if (IsRunning)
             {
-                ConsumeResult<byte[], byte[]> record = null;
-
-                if (State == ThreadState.PARTITIONS_ASSIGNED)
+                try
                 {
-                    record = PollRequest(TimeSpan.Zero);
-                }
-                else if (State == ThreadState.PARTITIONS_REVOKED)
-                {
-                    record = PollRequest(TimeSpan.Zero);
-                }
-                else if (State == ThreadState.RUNNING || State == ThreadState.STARTING)
-                {
-                    record = PollRequest(consumeTimeout);
-                }
-                else
-                {
-                    throw new StreamsException("Unexpected state " + State + " during normal iteration");
-                }
-                
-                if (record != null)
-                {
-                    var task = manager.ActiveTaskFor(record.TopicPartition);
-                    if (task != null)
-                        task.AddRecords(record.TopicPartition, new List<ConsumeResult<byte[], byte[]>> { record });
-                }
-
-                foreach (var t in manager.ActiveTasks)
-                {
-                    if (t.CanProcess)
+                    while (!token.IsCancellationRequested)
                     {
-                        bool b = t.Process();
-                        if (b && t.CommitNeeded)
-                            t.Commit();
-                    }
-                }
+                        ConsumeResult<byte[], byte[]> record = null;
 
-                if (State == ThreadState.PARTITIONS_ASSIGNED)
+                        if (State == ThreadState.PARTITIONS_ASSIGNED)
+                        {
+                            record = PollRequest(TimeSpan.Zero);
+                        }
+                        else if (State == ThreadState.PARTITIONS_REVOKED)
+                        {
+                            record = PollRequest(TimeSpan.Zero);
+                        }
+                        else if (State == ThreadState.RUNNING || State == ThreadState.STARTING)
+                        {
+                            record = PollRequest(consumeTimeout);
+                        }
+                        else
+                        {
+                            log.Error($"{logPrefix}Unexpected state {State} during normal iteration");
+                            throw new StreamsException($"Unexpected state {State} during normal iteration");
+                        }
+
+                        if (record != null)
+                        {
+                            var task = manager.ActiveTaskFor(record.TopicPartition);
+                            if (task != null)
+                                task.AddRecords(record.TopicPartition, new List<ConsumeResult<byte[], byte[]>> { record });
+                        }
+
+                        foreach (var t in manager.ActiveTasks)
+                        {
+                            if (t.CanProcess)
+                            {
+                                bool b = t.Process();
+                                if (b && t.CommitNeeded)
+                                    t.Commit();
+                            }
+                        }
+
+                        if (State == ThreadState.PARTITIONS_ASSIGNED)
+                        {
+                            SetState(ThreadState.RUNNING);
+                        }
+                    }
+                }catch(KafkaException e)
                 {
-                    SetState(ThreadState.RUNNING);
+                    log.Error($"{logPrefix}Encountered the following unexpected Kafka exception during processing, tis usually indicate Streams internal errors:", e);
+                    throw e;
+                }catch(Exception e)
+                {
+                    log.Error($"{logPrefix}Encountered the following error during processing:", e);
+                    throw e;
+                }
+                finally
+                {
+                    this.Dispose();
                 }
             }
         }
 
         public void Start(CancellationToken token)
         {
+            log.Info($"{logPrefix}Starting");
+            if (SetState(ThreadState.STARTING) == null)
+            {
+                log.Info($"{logPrefix}StreamThread already shutdown. Not running");
+                IsRunning = false;
+                return;
+            }
+
             this.token = token;
             IsRunning = true;
             consumer.Subscribe(builder.GetSourceTopics());
-            SetState(ThreadState.STARTING);
             thread.Start();
         }
 
@@ -183,17 +231,14 @@ namespace kafka_stream_core.Processors
 
                 if (State == ThreadState.PENDING_SHUTDOWN && newState != ThreadState.DEAD)
                 {
-                    // TODO
-                    //log.debug("Ignoring request to transit from PENDING_SHUTDOWN to {}: " +
-                    //              "only DEAD state is a valid next state", newState);
+                    log.Debug($"{logPrefix}Ignoring request to transit from PENDING_SHUTDOWN to {newState}: only DEAD state is a valid next state");
                     // when the state is already in PENDING_SHUTDOWN, all other transitions will be
                     // refused but we do not throw exception here
                     return null;
                 }
                 else if (State == ThreadState.DEAD)
                 {
-                    //log.debug("Ignoring request to transit from DEAD to {}: " +
-                    //              "no valid next state after DEAD", newState);
+                    log.Debug($"{logPrefix}Ignoring request to transit from DEAD to {newState}: no valid next state after DEAD");
                     // when the state is already in NOT_RUNNING, all its transitions
                     // will be refused but we do not throw exception here
                     return null;
@@ -201,23 +246,15 @@ namespace kafka_stream_core.Processors
                 else if (!State.IsValidTransition(newState))
                 {
                     string logPrefix = "";
-                    //log.error("Unexpected state transition from {} to {}", oldState, newState);
+                    log.Error($"{logPrefix}Unexpected state transition from {oldState} to {newState}");
                     throw new StreamsException($"{logPrefix}Unexpected state transition from {oldState} to {newState}");
                 }
                 else
                 {
-                    //log.info("State transition from {} to {}", oldState, newState);
+                    log.Info($"{logPrefix}State transition from {oldState} to {newState}");
                 }
 
                 State = newState;
-                //if (newState == State.RUNNING)
-                //{
-                //    updateThreadMetadata(taskManager.activeTasks(), taskManager.standbyTasks());
-                //}
-                //else
-                //{
-                //    updateThreadMetadata(Collections.emptyMap(), Collections.emptyMap());
-                //}
             }
 
             StateChanged?.Invoke(this, oldState, State);

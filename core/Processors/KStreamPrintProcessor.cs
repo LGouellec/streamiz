@@ -23,6 +23,7 @@ namespace kafka_stream_core.Processors
 
         public override void Process(K key, V value)
         {
+            LogProcessingKeyValue(key, value);
             actionPrint.Apply(key, value);
         }
 

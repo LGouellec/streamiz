@@ -27,7 +27,7 @@ namespace kafka_stream_core
 
         public IKStream<K, V> Stream<K, V>(string topic, StreamOptions options = null)
         {
-            var consumedInternal = new ConsumedInternal<K, V>(options.Named, null, null, options?.Extractor);
+            var consumedInternal = new ConsumedInternal<K, V>(options?.Named, null, null, options?.Extractor);
             return internalStreamBuilder.Stream(topic, consumedInternal);
         }
 
@@ -35,7 +35,7 @@ namespace kafka_stream_core
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
-            var consumedInternal = new ConsumedInternal<K, V>(options.Named, new KS(), new VS(), options?.Extractor);
+            var consumedInternal = new ConsumedInternal<K, V>(options?.Named, new KS(), new VS(), options?.Extractor);
             return internalStreamBuilder.Stream(topic, consumedInternal);
         }
 

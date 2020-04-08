@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using Confluent.Kafka;
+using kafka_stream_core.Crosscutting;
 using kafka_stream_core.Kafka;
+using log4net;
 
 namespace kafka_stream_core.Processors.Internal
 {
@@ -13,6 +15,7 @@ namespace kafka_stream_core.Processors.Internal
         private string threadId;
         private IKafkaSupplier kafkaSupplier;
         private IProducer<byte[], byte[]> producer;
+        private readonly ILog log = Logger.GetLogger(typeof(TaskCreator));
 
         public TaskCreator(InternalTopologyBuilder builder, IStreamConfig configuration, string threadId, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer)
             : base(builder, configuration)
@@ -27,6 +30,7 @@ namespace kafka_stream_core.Processors.Internal
         public override StreamTask CreateTask(IConsumer<byte[], byte[]> consumer, TaskId id, TopicPartition partition)
         {
             var processorTopology = this.builder.BuildTopology();
+            log.Debug($"Created task {id} with assigned partition {partition}");
 
             return new StreamTask(
                 threadId,

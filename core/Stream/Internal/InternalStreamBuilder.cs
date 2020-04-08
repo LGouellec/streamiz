@@ -37,7 +37,7 @@ namespace kafka_stream_core.Stream.Internal
 
         internal KStream<K, V> Stream<K, V>(string topic, ConsumedInternal<K, V> consumed)
         {
-            var name = new NamedInternal(consumed.Named).OrElseGenerateWithPrefix(this, KStream<byte, byte>.SOURCE_NAME);
+            var name = new Named(consumed.Named).OrElseGenerateWithPrefix(this, KStream<byte, byte>.SOURCE_NAME);
             var node = new StreamSourceNode<K,V>(topic, name, consumed);
             this.AddGraphNode(root, node);
             KStream<K, V> stream = new KStream<K, V>(name, consumed.KeySerdes, consumed.ValueSerdes, new List<string> { name }, node, this);
@@ -68,8 +68,8 @@ namespace kafka_stream_core.Stream.Internal
 
         internal IKTable<K, V> Table<K, V>(string topic, ConsumedInternal<K, V> consumed, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized)
         {
-            var sourceName = new NamedInternal(consumed.Named).SuffixWithOrElseGet(TABLE_SOURCE_SUFFIX, this, KStream<byte, byte>.SOURCE_NAME);
-            var tableSourceName = new NamedInternal(consumed.Named).OrElseGenerateWithPrefix(this, KTable<byte, byte, byte>.SOURCE_NAME);
+            var sourceName = new Named(consumed.Named).SuffixWithOrElseGet(TABLE_SOURCE_SUFFIX, this, KStream<byte, byte>.SOURCE_NAME);
+            var tableSourceName = new Named(consumed.Named).OrElseGenerateWithPrefix(this, KTable<byte, byte, byte>.SOURCE_NAME);
 
             KTableSource<K, V> tableSource = new KTableSource<K,V>(materialized.StoreName , materialized.QueryableStoreName);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K,V>(tableSource, tableSourceName);

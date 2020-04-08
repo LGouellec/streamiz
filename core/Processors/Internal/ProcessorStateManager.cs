@@ -20,7 +20,7 @@ namespace kafka_stream_core.Processors.Internal
         public ProcessorStateManager(TaskId taskId, TopicPartition partition)
         {
             this.log = Logger.GetLogger(typeof(ProcessorStateManager));
-            this.logPrefix = $"task [{taskId}] ";
+            this.logPrefix = $"stream-task[{taskId.Topic}|{taskId.Partition}] ";
         }
 
         public static string StoreChangelogTopic(string applicationId, String storeName)
@@ -32,11 +32,11 @@ namespace kafka_stream_core.Processors.Internal
 
         public void Flush()
         {
-            log.Debug("Flushing all stores registered in the state manager");
+            log.Debug($"{logPrefix}Flushing all stores registered in the state manager");
 
             foreach (var state in registeredStores)
             {
-                log.Debug($"Flushing store {state.Key}");
+                log.Debug($"{logPrefix}Flushing store {state.Key}");
                 state.Value.Flush();
             }
         }
@@ -44,7 +44,7 @@ namespace kafka_stream_core.Processors.Internal
         public void Register(IStateStore store, StateRestoreCallback callback)
         {
             string storeName = store.Name;
-            log.Debug($"Registering state store {storeName} to its state manager");
+            log.Debug($"{logPrefix}Registering state store {storeName} to its state manager");
 
             if (registeredStores.ContainsKey(storeName))
             {
@@ -96,11 +96,11 @@ namespace kafka_stream_core.Processors.Internal
 
         public void Close()
         {
-            log.Debug("Closing its state manager and all the registered state stores");
+            log.Debug($"{logPrefix}Closing its state manager and all the registered state stores");
 
             foreach (var state in registeredStores)
             {
-                log.Debug($"Closing storage engine {state.Key}");
+                log.Debug($"{logPrefix}Closing storage engine {state.Key}");
                 state.Value.Close();
             }
         }

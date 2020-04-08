@@ -1,12 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using kafka_stream_core.Crosscutting;
+using kafka_stream_core.Processors.Internal;
 using kafka_stream_core.SerDes;
+using log4net;
 
 namespace kafka_stream_core.Processors
 {
     internal abstract class AbstractProcessor<K, V> : IProcessor<K, V>
     {
+        protected ILog log = null;
+        protected string logPrefix = "";
+
         public ProcessorContext Context { get; protected set; }
 
         public string Name { get; private set; }
@@ -24,6 +30,7 @@ namespace kafka_stream_core.Processors
 
         public IList<IProcessor> Next { get; private set; } = null;
 
+        #region Ctor
 
         public AbstractProcessor()
             : this(null, null)
@@ -49,7 +56,11 @@ namespace kafka_stream_core.Processors
             Key = keySerdes;
             Value = valueSerdes;
             StateStores = stateStores != null ? new List<string>(stateStores) : new List<string>();
+
+            log = Logger.GetLogger(this.GetType());
         }
+
+        #endregion
 
         public virtual void Close()
         {
@@ -60,6 +71,7 @@ namespace kafka_stream_core.Processors
 
         public virtual void Forward<K1, V1>(K1 key, V1 value)
         {
+            this.log.Debug($"{logPrefix}Forward<{typeof(K1).Name},{typeof(V1).Name}> message with key {key} and value {value} to each next processor");
             foreach (var n in Next)
                 if (n is IProcessor<K1, V1>)
                     (n as IProcessor<K1, V1>).Process(key, value);
@@ -68,12 +80,18 @@ namespace kafka_stream_core.Processors
         public virtual void Forward<K1, V1>(K1 key, V1 value, string name)
         {
             foreach (var n in Next)
+            {
                 if (n is IProcessor<K1, V1> && n.Name.Equals(name))
+                {
+                    this.log.Debug($"{logPrefix}Forward<{typeof(K1).Name},{typeof(V1).Name}> message with key {key} and value {value} to processor {name}");
                     (n as IProcessor<K1, V1>).Process(key, value);
+                }
+            }
         }
 
         public virtual void Forward(K key, V value)
         {
+            this.log.Debug($"{logPrefix}Forward<{typeof(K).Name},{typeof(V).Name}> message with key {key} and value {value} to each next processor");
             foreach (var n in Next)
             {
                 if (n is IProcessor<K, V>)
@@ -89,6 +107,7 @@ namespace kafka_stream_core.Processors
             {
                 if (n.Name.Equals(name))
                 {
+                    this.log.Debug($"{logPrefix}Forward<{typeof(K).Name},{typeof(V).Name}> message with key {key} and value {value} to processor {name}");
                     if (n is IProcessor<K, V>)
                         (n as IProcessor<K, V>).Process(key, value);
                     else
@@ -101,9 +120,20 @@ namespace kafka_stream_core.Processors
 
         public virtual void Init(ProcessorContext context)
         {
+            this.log.Debug($"{logPrefix}Initializing process context");
             this.Context = context;
             foreach (var n in Next)
                 n.Init(context);
+            this.log.Debug($"{logPrefix}Process context initialized");
+        }
+
+        protected void LogProcessingKeyValue(K key, V value) => log.Debug($"Process<{typeof(K).Name},{typeof(V).Name}> message with key {key} and {value} with record metadata [topic:{Context.RecordContext.Topic}|partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}]");
+
+        #region Setter
+
+        internal void SetTaskId(TaskId id)
+        {
+            logPrefix = $"stream-task[{id.Topic}|{id.Partition}]|processor[{Name}]- ";
         }
 
         public void SetPreviousProcessor(IProcessor prev)
@@ -129,6 +159,10 @@ namespace kafka_stream_core.Processors
             this.Name = name;
         }
 
+        #endregion
+
+        #region Process object
+
         public void Process(object key, object value)
         {
             if (key != null && key is byte[] && KeySerDes != null)
@@ -140,6 +174,8 @@ namespace kafka_stream_core.Processors
             if ((key == null || key is K) && (value == null || value is V))
                 this.Process((K)key, (V)value);
         }
+
+        #endregion
 
         #region Abstract
 

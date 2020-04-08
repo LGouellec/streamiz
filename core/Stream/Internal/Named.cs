@@ -2,12 +2,12 @@
 
 namespace kafka_stream_core.Stream.Internal
 {
-    internal class NamedInternal
+    internal class Named
     {
         private static int MAX_NAME_LENGTH = 249;
         private readonly string name;
 
-        public NamedInternal(string name)
+        public Named(string name)
         {
             this.name = name;
         }

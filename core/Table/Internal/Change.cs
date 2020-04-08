@@ -14,5 +14,7 @@ namespace kafka_stream_core.Table.Internal
             this.OldValue = old;
             this.NewValue = @new;
         }
+
+        public override string ToString() => $"OldValue:{OldValue}|NewValue:{NewValue}";
     }
 }

@@ -1,6 +1,8 @@
 ﻿using Confluent.Kafka;
+using kafka_stream_core.Crosscutting;
 using kafka_stream_core.Processors;
 using kafka_stream_core.SerDes;
+using log4net;
 using System;
 using System.Collections.Generic;
 
@@ -8,13 +10,15 @@ namespace kafka_stream_core.Kafka.Internal
 {
     internal class RecordCollectorImpl : IRecordCollector
     {
+        // TODO : log
         private IProducer<byte[], byte[]> producer;
         private readonly IDictionary<TopicPartition, long> offsets;
         private readonly string logPrefix;
+        private readonly ILog log = Logger.GetLogger(typeof(RecordCollectorImpl));
 
-        public RecordCollectorImpl(string streamTaskId)
+        public RecordCollectorImpl(string logPrefix)
         {
-            this.logPrefix = $"task [{streamTaskId}] ";
+            this.logPrefix = $"{logPrefix}";
         }
 
         public void Init(IProducer<byte[], byte[]> producer)

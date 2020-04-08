@@ -6,9 +6,12 @@ using kafka_stream_core.Kafka.Internal;
 using kafka_stream_core.Processors;
 using kafka_stream_core.Stream;
 using kafka_stream_core.Stream.Internal;
+using log4net;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+
+// TODO : Mettre des logs dans le recordqueue avec taille buffer etc ...
 
 namespace kafka_stream_core
 {
@@ -129,7 +132,8 @@ namespace kafka_stream_core
         private readonly ProcessorTopology processorTopology;
         private readonly IAdminClient adminClient;
         private readonly string clientId;
-
+        private readonly ILog logger = Logger.GetLogger(typeof(KafkaStream));
+        private readonly string logPrefix = "";
         private readonly object stateLock = new object();
 
         internal State StreamState { get; private set; }
@@ -140,10 +144,11 @@ namespace kafka_stream_core
         {
             this.topology = topology;
             this.configuration = configuration;
-            this.kafkaSupplier = new DefaultKafkaClientSupplier();
+            this.kafkaSupplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(configuration));
 
             var processID = Guid.NewGuid();
             clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{this.configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;
+            logPrefix = $"stream-application[{configuration.ApplicationId}] ";
 
             // sanity check
             this.processorTopology = topology.Builder.BuildTopology();
@@ -180,7 +185,7 @@ namespace kafka_stream_core
         {
             if (SetState(State.REBALANCING))
             {
-                //log.debug("Starting Streams client");
+                logger.Debug($"{logPrefix}Starting Streams client");
 
                 foreach (var t in threads)
                     t.Start(token);
@@ -193,7 +198,7 @@ namespace kafka_stream_core
             {
                 // if transition failed, it means it was either in PENDING_SHUTDOWN
                 // or NOT_RUNNING already; just check that all threads have been stopped
-                //log.info("Already in the pending shutdown state, wait to complete shutdown");
+                logger.Info($"{logPrefix}Already in the pending shutdown state, wait to complete shutdown");
             }
             else
             {
@@ -201,7 +206,7 @@ namespace kafka_stream_core
                     t.Dispose();
 
                 SetState(State.NOT_RUNNING);
-                //log.info("Streams client stopped completely");
+                logger.Info($"{logPrefix}Streams client stopped completely");
             }
         }
 
@@ -222,7 +227,7 @@ namespace kafka_stream_core
                     }
                     else
                     {
-                        //log.debug($"Cannot transit to {targetState} within {waitMs}ms");StreamState
+                        logger.Debug($"{logPrefix}Cannot transit to {targetState} within {waitMs}ms");
                         return false;
                     }
                     elapsedMs = DateTime.Now.Millisecond - begin;
@@ -266,7 +271,7 @@ namespace kafka_stream_core
                 }
                 else
                 {
-                    //log.info("State transition from {} to {}", oldState, newState);
+                    logger.Info($"{logPrefix}State transition from {oldState} to {newState}");
                 }
                 StreamState = newState;
             }

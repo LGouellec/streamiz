@@ -24,6 +24,7 @@ namespace kafka_stream_core.Processors
 
         public override void Process(K key, Change<V> change)
         {
+            LogProcessingKeyValue(key, change);
             // the original key should never be null
             if (key == null)
             {

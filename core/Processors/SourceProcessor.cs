@@ -45,7 +45,7 @@ namespace kafka_stream_core.Processors
 
         public override void Process(K key, V value)
         {
-            Console.WriteLine("Source Operator => Key: " + key + " | Value : " + value);
+            LogProcessingKeyValue(key, value);
 
             foreach (var n in Next)
                 if (n is IProcessor<K, V>)

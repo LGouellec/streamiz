@@ -27,6 +27,7 @@ namespace kafka_stream_core.Processors
 
         public override void Process(K key, Change<V> change)
         {
+            LogProcessingKeyValue(key, change);
             V newValue = ComputeValue(key, change.NewValue);
             V oldValue = sendOldValues ? ComputeValue(key, change.OldValue) : default(V);
 

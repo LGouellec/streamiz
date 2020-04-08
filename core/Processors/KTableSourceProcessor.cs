@@ -8,8 +8,6 @@ namespace kafka_stream_core.Processors
 {
     internal class KTableSourceProcessor<K, V> : AbstractProcessor<K, V>
     {
-        private static readonly ILog LOG = Logger.GetLogger(typeof(KTableSourceProcessor<K, V>));
-
         private string storeName;
         private string queryableName;
         private bool sendOldValues;
@@ -49,9 +47,10 @@ namespace kafka_stream_core.Processors
 
         public override void Process(K key, V value)
         {
-            if(key == null)
+            LogProcessingKeyValue(key, value);
+            if (key == null)
             {
-                LOG.Warn($"Skipping record due to null key. topic=[{Context.Topic}] partition=[{Context.Partition}] offset=[{Context.Offset}]");
+                log.Warn($"Skipping record due to null key. topic=[{Context.Topic}] partition=[{Context.Partition}] offset=[{Context.Offset}]");
                 return;
             }
 
@@ -64,7 +63,7 @@ namespace kafka_stream_core.Processors
                     oldValue = oldValueAndTimestamp.Value;
                     if (Context.Timestamp < oldValueAndTimestamp.Timestamp)
                     {
-                        LOG.Warn($"Detected out-of-order KTable update for {store.Name} at offset {Context.Offset}, partition {Context.Partition}.");
+                        log.Warn($"Detected out-of-order KTable update for {store.Name} at offset {Context.Offset}, partition {Context.Partition}.");
                     }
                 }
                 else

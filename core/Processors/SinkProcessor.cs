@@ -35,6 +35,8 @@ namespace kafka_stream_core.Processors
 
         public override void Process(K key, V value)
         {
+            LogProcessingKeyValue(key, value);
+
             long timestamp = Context.Timestamp;
             if (timestamp < 0)
             {

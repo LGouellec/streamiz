@@ -128,7 +128,7 @@ namespace kafka_stream_core.Table.Internal
 
         public IKStream<K, V> ToStream(string named = null)
         {
-            string name = new NamedInternal(named).OrElseGenerateWithPrefix(this.builder, TOSTREAM_NAME);
+            string name = new Named(named).OrElseGenerateWithPrefix(this.builder, TOSTREAM_NAME);
 
             var p = new WrapperValueMapperWithKey<K, Change<V>, V>((k, v) => v.NewValue);
             IProcessorSupplier<K, Change<V>> processorMapValues = new KStreamMapValues<K, Change<V>, V>(p);
@@ -233,7 +233,7 @@ namespace kafka_stream_core.Table.Internal
                 storeBuilder = null;
             }
 
-            var name = new NamedInternal(named).OrElseGenerateWithPrefix(this.builder, FILTER_NAME);
+            var name = new Named(named).OrElseGenerateWithPrefix(this.builder, FILTER_NAME);
 
             IProcessorSupplier<K, Change<V>> processorSupplier = new KTableFilter<K, V>(this, predicate, filterNot, queryableStoreName);
 
@@ -286,7 +286,7 @@ namespace kafka_stream_core.Table.Internal
                 storeBuilder = null;
             }
 
-            var name = new NamedInternal(named).OrElseGenerateWithPrefix(this.builder, MAPVALUES_NAME);
+            var name = new Named(named).OrElseGenerateWithPrefix(this.builder, MAPVALUES_NAME);
 
             var processorSupplier = new KTableMapValues<K, V, VR>(this, mapper, queryableStoreName);
             var processorParameters = new TableProcessorParameters<K, V>(processorSupplier, name);
@@ -316,7 +316,7 @@ namespace kafka_stream_core.Table.Internal
 
         private IKGroupedTable<K1, V1> DoGroup<K1, V1>(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> keySelector, Grouped<K1, V1> grouped)
         {
-            var selectName = new NamedInternal(grouped.Named).OrElseGenerateWithPrefix(this.builder, SELECT_NAME);
+            var selectName = new Named(grouped.Named).OrElseGenerateWithPrefix(this.builder, SELECT_NAME);
 
             IKTableProcessorSupplier<K, V, KeyValuePair< K1, V1 >> selectSupplier = new KTableRepartitionMap<K, V, K1, V1>(this, keySelector);
             var processorParameters = new TableProcessorParameters<K, V>(selectSupplier, selectName);

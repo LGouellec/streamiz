@@ -1,8 +1,10 @@
 ﻿using Confluent.Kafka;
+using kafka_stream_core.Crosscutting;
 using kafka_stream_core.Kafka;
 using kafka_stream_core.Kafka.Internal;
 using kafka_stream_core.Processors.Internal;
 using kafka_stream_core.Stream.Internal;
+using log4net;
 using System.Collections.Generic;
 
 namespace kafka_stream_core.Processors
@@ -18,12 +20,12 @@ namespace kafka_stream_core.Processors
             : base(id, partition, processorTopology, consumer, configuration)
         {
             this.producer = producer;
-            this.collector = new RecordCollectorImpl(threadId);
+            this.collector = new RecordCollectorImpl(logPrefix);
             collector.Init(producer);
 
             Context = new ProcessorContext(configuration, stateMgr).UseRecordCollector(collector);
             processor = processorTopology.GetSourceProcessor(partition.Topic);
-            queue = new RecordQueue<ConsumeResult<byte[], byte[]>>(100);
+            queue = new RecordQueue<ConsumeResult<byte[], byte[]>>(100, logPrefix, $"record-queue-{id.Topic}-{id.Partition}");
         }
 
         #region Private
@@ -36,13 +38,34 @@ namespace kafka_stream_core.Processors
 
         public override void Close()
         {
+            log.Info($"{logPrefix}Closing");
+            FlushState();
             processor.Close();
+            CloseStateManager();
+            log.Info($"{logPrefix}Closed");
         }
 
         public override void Commit()
         {
-            // TODO :
-            consumer.Commit();
+            log.Debug($"{logPrefix}Comitting");
+
+            FlushState();
+            // TODO: producer eos
+            
+            try
+            {
+                consumer.Commit();
+            }
+            catch (TopicPartitionOffsetException e)
+            {
+                log.Info($"{logPrefix}Committing failed with a non-fatal error: {e.Message}, we can ignore this since commit may succeed still");
+            }
+            catch (KafkaException e)
+            {
+                // TODO : get info about offset committing
+                log.Error($"{logPrefix}Error during committing offset ......", e);
+            }
+            commitNeeded = false;
         }
 
         public override IStateStore GetStore(string name)
@@ -52,12 +75,14 @@ namespace kafka_stream_core.Processors
 
         public override void InitializeTopology()
         {
+            log.Debug($"{logPrefix}Initializing topology with processor source : {processor}.");
             processor.Init(Context);
             taskInitialized = true;
         }
 
         public override bool InitializeStateStores()
         {
+            log.Debug($"{logPrefix}Initializing state stores.");
             RegisterStateStores();
             return false;
         }
@@ -82,8 +107,12 @@ namespace kafka_stream_core.Processors
                 if (record != null)
                 {
                     this.Context.SetRecordMetaData(record);
-                    // PB WITH CONTEXT AND PROCESSOR
+
+                    var recordInfo = $"Topic:{record.Topic}|Partition:{record.Partition.Value}|Offset:{record.Offset}|Timestamp:{record.Timestamp.UnixTimestampMs}";
+                    log.Debug($"{logPrefix}Start processing one record [{recordInfo}]");
                     processor.Process(record.Key, record.Value);
+                    log.Debug($"{logPrefix}Completed processing one record [{recordInfo}]");
+
                     queue.Commit();
                     commitNeeded = true;
                     return true;
@@ -98,17 +127,17 @@ namespace kafka_stream_core.Processors
             foreach (var r in records)
                 queue.AddRecord(r);
 
-            if (queue.MaxSize <= queue.Size)
-                consumer.Pause(new List<TopicPartition> { partition });
+            // TODO : NO PAUSE FOR MOMENT
+            //if (queue.MaxSize <= queue.Size)
+            //    consumer.Pause(new List<TopicPartition> { partition });
 
-            // TODO : 
-            //final int newQueueSize = partitionGroup.addRawRecords(partition, records);
+            int newQueueSize = queue.Size;
 
-            //if (log.isTraceEnabled())
-            //{
-            //    log.trace("Added records into the buffered queue of partition {}, new queue size is {}", partition, newQueueSize);
-            //}
-
+            if (log.IsDebugEnabled)
+            {
+                log.Debug($"{logPrefix}Added records into the buffered queue of partition {partition}, new queue size is {newQueueSize}");
+            }
+            
             //// if after adding these records, its partition queue's buffered size has been
             //// increased beyond the threshold, we can then pause the consumption for this partition
             //if (newQueueSize > maxBufferedSize)

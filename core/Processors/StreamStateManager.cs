@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Text;
 using kafka_stream_core.Crosscutting;
 using kafka_stream_core.Processors.Internal;
+using log4net;
 
 namespace kafka_stream_core.Processors
 {
     internal class StreamStateManager
     {
+        private readonly ILog log = Logger.GetLogger(typeof(StreamStateManager));
         private readonly Dictionary<long, ThreadState> threadState;
         private readonly KafkaStream stream;
         private static readonly object threadStatesLock = new object();
@@ -31,8 +33,7 @@ namespace kafka_stream_core.Processors
 
             if (stream.SetState(KafkaStream.State.ERROR))
             {
-                //TODO :
-                //log.error("All stream threads have died. The instance will be in error state and should be closed.");
+                log.Error("All stream threads have died. The instance will be in error state and should be closed.");
             }
         }
 

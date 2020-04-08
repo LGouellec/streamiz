@@ -25,8 +25,11 @@ namespace kafka_stream_core.Processors
 
         public override void Process(K key, V value)
         {
+            LogProcessingKeyValue(key, value);
             if ((!not && predicate.Invoke(key, value)) || (not && !predicate.Invoke(key, value)))
+            {
                 this.Forward(key, value);
+            }
         }
     }
 }

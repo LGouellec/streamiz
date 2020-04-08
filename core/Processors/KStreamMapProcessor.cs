@@ -23,6 +23,7 @@ namespace kafka_stream_core.Processors
 
         public override void Process(K key, V value)
         {
+            LogProcessingKeyValue(key, value);
             KeyValuePair<K1, V1> newPair = this.mapper.Apply(key, value);
             this.Forward(newPair.Key, newPair.Value);
         }
