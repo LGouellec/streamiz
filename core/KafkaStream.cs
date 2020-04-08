@@ -11,7 +11,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-// TODO : Mettre des logs dans le recordqueue avec taille buffer etc ...
 
 namespace kafka_stream_core
 {

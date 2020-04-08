@@ -104,42 +104,23 @@ namespace kafka_stream_core.Processors
 
         public int Id => thread.ManagedThreadId;
 
-        public void Dispose()
-        {
-            try
-            {
-                SetState(ThreadState.PENDING_SHUTDOWN);
-                log.Info($"{logPrefix}Shutting down");
-
-                IsRunning = false;
-                consumer.Unsubscribe();
-                thread.Join();
-                manager.Close();
-                try
-                {
-                    consumer.Dispose();
-                }catch(Exception e)
-                {
-                    log.Error($"{logPrefix}Failed to close consumer due to the following error:", e);
-                }
-                IsDisposable = true;
-                SetState(ThreadState.DEAD);
-                log.Info($"{logPrefix}Shutdown complete");
-            }
-            catch(Exception e)
-            {
-                log.Error($"{logPrefix}Failed to close stream thread due to the following error:", e);
-            }
-        }
+        public void Dispose() => Close(true);
 
         public void Run()
         {
+            Exception exception = null;
             if (IsRunning)
             {
-                try
+                while (!token.IsCancellationRequested)
                 {
-                    while (!token.IsCancellationRequested)
+                    try
                     {
+                        if(exception != null)
+                        {
+                            this.Close(true);
+                            throw exception;
+                        }
+
                         ConsumeResult<byte[], byte[]> record = null;
 
                         if (State == ThreadState.PARTITIONS_ASSIGNED)
@@ -182,18 +163,16 @@ namespace kafka_stream_core.Processors
                             SetState(ThreadState.RUNNING);
                         }
                     }
-                }catch(KafkaException e)
-                {
-                    log.Error($"{logPrefix}Encountered the following unexpected Kafka exception during processing, tis usually indicate Streams internal errors:", e);
-                    throw e;
-                }catch(Exception e)
-                {
-                    log.Error($"{logPrefix}Encountered the following error during processing:", e);
-                    throw e;
-                }
-                finally
-                {
-                    this.Dispose();
+                    catch (KafkaException e)
+                    {
+                        log.Error($"{logPrefix}Encountered the following unexpected Kafka exception during processing, tis usually indicate Streams internal errors:", e);
+                        exception = e;
+                    }
+                    catch (Exception e)
+                    {
+                        log.Error($"{logPrefix}Encountered the following error during processing:", e);
+                        exception = e;
+                    }
                 }
             }
         }
@@ -215,6 +194,40 @@ namespace kafka_stream_core.Processors
         }
 
         #endregion
+
+        private void Close(bool cleanUp = true)
+        {
+            try
+            {
+                if (!IsDisposable)
+                {
+                    log.Info($"{logPrefix}Shutting down");
+
+                    SetState(ThreadState.PENDING_SHUTDOWN);
+
+                    IsRunning = false;
+                    consumer.Unsubscribe();
+                    if (cleanUp && thread.IsAlive && !thread.Join(TimeSpan.FromSeconds(30)))
+                        thread.Abort();
+                    manager.Close();
+                    try
+                    {
+                        consumer.Dispose();
+                    }
+                    catch (Exception e)
+                    {
+                        log.Error($"{logPrefix}Failed to close consumer due to the following error:", e);
+                    }
+                    IsDisposable = true;
+                    SetState(ThreadState.DEAD);
+                    log.Info($"{logPrefix}Shutdown complete");
+                }
+            }
+            catch (Exception e)
+            {
+                log.Error($"{logPrefix}Failed to close stream thread due to the following error:", e);
+            }
+        }
 
         private ConsumeResult<byte[], byte[]> PollRequest(TimeSpan ts)
         {

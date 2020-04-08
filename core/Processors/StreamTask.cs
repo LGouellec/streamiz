@@ -20,7 +20,7 @@ namespace kafka_stream_core.Processors
             : base(id, partition, processorTopology, consumer, configuration)
         {
             this.producer = producer;
-            this.collector = new RecordCollectorImpl(logPrefix);
+            this.collector = new RecordCollector(logPrefix);
             collector.Init(producer);
 
             Context = new ProcessorContext(configuration, stateMgr).UseRecordCollector(collector);

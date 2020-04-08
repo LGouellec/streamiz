@@ -23,7 +23,7 @@ namespace sample_stream
             config.SaslPassword = "admin";
             config.SecurityProtocol = SecurityProtocol.SaslPlaintext;
             config.AutoOffsetReset = AutoOffsetReset.Earliest;
-            config.NumStreamThreads = 2;
+            config.NumStreamThreads = 1;
             
             StreamBuilder builder = new StreamBuilder();
 

@@ -8,15 +8,15 @@ using System.Collections.Generic;
 
 namespace kafka_stream_core.Kafka.Internal
 {
-    internal class RecordCollectorImpl : IRecordCollector
+    internal class RecordCollector : IRecordCollector
     {
         // TODO : log
         private IProducer<byte[], byte[]> producer;
         private readonly IDictionary<TopicPartition, long> offsets;
         private readonly string logPrefix;
-        private readonly ILog log = Logger.GetLogger(typeof(RecordCollectorImpl));
+        private readonly ILog log = Logger.GetLogger(typeof(RecordCollector));
 
-        public RecordCollectorImpl(string logPrefix)
+        public RecordCollector(string logPrefix)
         {
             this.logPrefix = $"{logPrefix}";
         }

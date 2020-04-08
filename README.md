@@ -39,7 +39,7 @@ TODO
 - Configuration property [X]
 - State thread + stream implementation [X]
 - Naming Kafka Streams DSL Topologies [X]
-- Logging [ ]
+- Logging [X]
 - [EOS](https://github.com/LGouellec/kafka-stream-net/issues/2) [ ]
 - Unit test (TestTopologyDriver, ...) [ ]
 - Test and validate all stateless processor [ ]

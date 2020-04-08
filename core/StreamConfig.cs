@@ -18,6 +18,8 @@ namespace kafka_stream_core
 
         ProducerConfig ToProducerConfig();
 
+        ProducerConfig ToProducerConfig(string clientId);
+
         ConsumerConfig ToConsumerConfig();
 
         ConsumerConfig ToConsumerConfig(string clientid);
@@ -1576,7 +1578,14 @@ namespace kafka_stream_core
             set => this.AddOrUpdate(defaultValueSerDesCst, value);
         }
 
-        public ProducerConfig ToProducerConfig() => _producerConfig;
+        public ProducerConfig ToProducerConfig() => ToProducerConfig(this.ClientId);
+
+        public ProducerConfig ToProducerConfig(string clientId)
+        {
+            ProducerConfig config = new ProducerConfig(_producerConfig);
+            config.ClientId = clientId;
+            return config;
+        }
 
         public ConsumerConfig ToConsumerConfig() => ToConsumerConfig(this.ClientId);
 
