@@ -62,9 +62,9 @@ TODO : Processor API
 - State thread + stream implementation [X]
 - Naming Kafka Streams DSL Topologies [X]
 - Logging [X]
-- [EOS](https://github.com/LGouellec/kafka-stream-net/issues/2) [ ]
-- Unit test (TestTopologyDriver, ...) [ ]
 - Test and validate all stateless processor [X]
+- Unit test (TestTopologyDriver, ...) [ ]
+- [EOS](https://github.com/LGouellec/kafka-stream-net/issues/2) [ ]
 
 # TODO implementation
 
