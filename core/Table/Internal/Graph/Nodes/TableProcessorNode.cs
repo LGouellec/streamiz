@@ -7,7 +7,15 @@ using System.Text;
 
 namespace kafka_stream_core.Table.Internal.Graph.Nodes
 {
-    internal class TableProcessorNode<K, V, KS, VS> : StreamGraphNode
+    internal abstract class TableProcessorNode : StreamGraphNode
+    {
+        internal TableProcessorNode(string streamGraphNode) 
+            : base(streamGraphNode)
+        {
+        }
+    }
+
+    internal class TableProcessorNode<K, V, KS, VS> : TableProcessorNode
     {
         private ProcessorParameters<K, Change<V>> processorParameters;
         private StoreBuilder<TimestampedKeyValueStore<KS, VS>> storeBuilder;

@@ -55,6 +55,7 @@ namespace kafka_stream_core.Processors
         public override object Clone()
         {
             SourceProcessor<K, V> source = new SourceProcessor<K, V>(this);
+            source.SetProcessorName(this.Name);
             this.CloneRecursiveChild(source, this.Next);
             return source;
         }
@@ -68,6 +69,7 @@ namespace kafka_stream_core.Processors
                 foreach(var c in child)
                 {
                     var processor = c.Clone() as IProcessor;
+                    processor.SetProcessorName(c.Name);
                     CloneRecursiveChild(processor, c.Next);
                     root.SetNextProcessor(processor);
                 }

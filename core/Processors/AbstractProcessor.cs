@@ -127,7 +127,7 @@ namespace kafka_stream_core.Processors
             this.log.Debug($"{logPrefix}Process context initialized");
         }
 
-        protected void LogProcessingKeyValue(K key, V value) => log.Debug($"Process<{typeof(K).Name},{typeof(V).Name}> message with key {key} and {value} with record metadata [topic:{Context.RecordContext.Topic}|partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}]");
+        protected void LogProcessingKeyValue(K key, V value) => log.Debug($"{logPrefix}Process<{typeof(K).Name},{typeof(V).Name}> message with key {key} and {value} with record metadata [topic:{Context.RecordContext.Topic}|partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}]");
 
         #region Setter
 

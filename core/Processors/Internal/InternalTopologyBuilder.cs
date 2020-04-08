@@ -90,7 +90,10 @@ namespace kafka_stream_core.Processors.Internal
                 {
                     var tableSourceProcessor = processorOperators.FirstOrDefault(kp => kp.Key.Equals((r as ITableSourceNode).NodeName)).Value;
                     if (tableSourceProcessor != null)
+                    {
                         value.SetNextProcessor(tableSourceProcessor);
+                        value = tableSourceProcessor;
+                    }
                 }
 
                 IList<StreamGraphNode> list = r.ChildNodes;
@@ -102,7 +105,7 @@ namespace kafka_stream_core.Processors.Internal
                         if (f != null)
                             value.SetNextProcessor(f);
                     }
-                    else if (n is ProcessorGraphNode)
+                    else if (n is ProcessorGraphNode || n is TableProcessorNode)
                     {
                         var f = processorOperators.FirstOrDefault(kp => kp.Key.Equals(n.streamGraphNode)).Value;
                         if (f != null)

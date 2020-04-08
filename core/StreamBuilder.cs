@@ -46,27 +46,23 @@ namespace kafka_stream_core
         public IKTable<byte[], byte[]> Table(string topic, StreamOptions options = null)
             => Table<byte[], byte[], ByteArraySerDes, ByteArraySerDes>(topic, options, Materialized<byte[], byte[], KeyValueStore<Bytes, byte[]>>.Create());
 
-        public IKTable<K, V> Table<K, V>(string topic, StreamOptions options = null)
-            => Table(topic, options, Materialized<K, V, KeyValueStore<Bytes, byte[]>>.Create());
-
         public IKTable<K,V> Table<K,V>(string topic, StreamOptions options = null, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized = null)
         {
-            var consumedInternal = new ConsumedInternal<K, V>(options.Named, null, null, options?.Extractor);
+            materialized = materialized == null ? Materialized<K, V, KeyValueStore<Bytes, byte[]>>.Create() : materialized;
+
+            var consumedInternal = new ConsumedInternal<K, V>(options?.Named, null, null, options?.Extractor);
             materialized?.UseProvider(internalStreamBuilder, $"{topic}-")?.InitConsumed(consumedInternal);
 
             return internalStreamBuilder.Table(topic, consumedInternal, materialized);
         }
 
-        public IKTable<K, V> Table<K, V, KS, VS>(string topic, StreamOptions options = null)
-            where KS : ISerDes<K>, new()
-            where VS : ISerDes<V>, new()
-            => Table<K, V, KS, VS>(topic, options, Materialized<K, V, KeyValueStore<Bytes, byte[]>>.Create<KS, VS>());
-
         public IKTable<K, V> Table<K, V, KS, VS>(string topic, StreamOptions options = null, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized = null)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
-            var consumedInternal = new ConsumedInternal<K, V>(options.Named, new KS(), new VS(), options?.Extractor);
+            materialized = materialized == null ? Materialized<K, V, KeyValueStore<Bytes, byte[]>>.Create<KS, VS>() : materialized;
+
+            var consumedInternal = new ConsumedInternal<K, V>(options?.Named, new KS(), new VS(), options?.Extractor);
             materialized?.UseProvider(internalStreamBuilder, $"{topic}-")?.InitConsumed(consumedInternal);
 
             return internalStreamBuilder.Table(topic, consumedInternal, materialized);

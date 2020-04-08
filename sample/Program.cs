@@ -9,6 +9,19 @@ using System.Threading;
 
 namespace sample_stream
 {
+    class CharSerdes : AbstractSerDes<char>
+    {
+        public override char Deserialize(byte[] data)
+        {
+            return BitConverter.ToChar(data, 0);
+        }
+
+        public override byte[] Serialize(char data)
+        {
+            return BitConverter.GetBytes(data);
+        }
+    }
+
     class Program
     {
         static void Main(string[] args)
@@ -27,15 +40,13 @@ namespace sample_stream
             
             StreamBuilder builder = new StreamBuilder();
 
-            builder.Stream<string, string>("test")
-                .FilterNot((k, v) => v.Contains("test"))
-                .Peek((k,v) => Console.WriteLine($"Key : {k} | Value : {v}"))
-                .To("test-output");
+            //var streams = builder.Stream<string, string>("test")
+            //    .Branch((k, v) => v.Length % 2 == 0, (k, v) => v.Length % 2 > 0);
+            //streams[0].To("test-output-pair");
+            //streams[1].To("test-output-impair");
 
-            builder.Table(
-                "test-ktable",
-                StreamOptions.Create(),
-                InMemory<string, string>.As("test-ktable-store"));
+            // BUG : KTableSourceProcessor not have next processor
+            builder.Stream<string, string>("test");
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);

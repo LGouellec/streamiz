@@ -6,32 +6,54 @@ It's a rewriting inspired by [Kafka Streams](https://github.com/apache/kafka/tre
 
 I need contribution ;)
 
-# Stateless operator implemention
+# Stateless processor implemention
 
 |Operator Name|Method|TODO|IMPLEMENTED|TESTED|DONE|
 |---|---|---|---|---|---|
-|Branch|KStream -> KStream[]|   | &#9745; |   |   |
-|Filter|KStream -> KStream|   |&#9745;|   |   |
-|Filter|KTable -> KTable|   |&#9745;|   |   |
-|InverseFilter|KStream -> KStream|   |&#9745;|   |   |
-|InverseFilter|KTable -> KTable|   |&#9745;|   |   |
-|FlatMap|KStream → KStream|   |&#9745;|   |   |
-|FlatMapValues|KStream → KStream|   |&#9745;|   |   |
-|Foreach|KStream → void|   |&#9745;|   |   |
-|GroupByKey|KStream → KGroupedStream|   |&#9745;|   |   |
-|GroupBy|KStream → KGroupedStream|   |&#9745;|   |   |
-|GroupBy|KTable → KGroupedTable|   |&#9745;|   |   |
-|Map|KStream → KStream|   |&#9745;|   |   |
-|MapValues|KStream → KStream|   |&#9745;|   |   |
-|MapValues|KTable → KTable|   |&#9745;|   |   |
-|Peek|KStream → KStream|   |&#9745;|   |   |
-|Print|KStream → void|   |&#9745;|   |   |
-|SelectKey|KStream → KStream|   |&#9745;|   |   |
-|Table to Steam|KTable → KStream|   |&#9745;|   |   |
+|Branch|KStream -> KStream[]|   |   |&#9745;|   |
+|Filter|KStream -> KStream|   |   |&#9745;|   |
+|Filter|KTable -> KTable|   |   |&#9745;|   |
+|InverseFilter|KStream -> KStream|   |   |&#9745;|   |
+|InverseFilter|KTable -> KTable|   |   |&#9745;|   |
+|FlatMap|KStream → KStream|   |   |&#9745;|   |
+|FlatMapValues|KStream → KStream|   |   |&#9745;|   |
+|Foreach|KStream → void|   |   |&#9745;|   |
+|GroupByKey|KStream → KGroupedStream|   |   |&#9745;|   |
+|GroupBy|KStream → KGroupedStream|   |   |&#9745;|   |
+|GroupBy|KTable → KGroupedTable|   |   |&#9745;|   |
+|Map|KStream → KStream|   |   |&#9745;|   |
+|MapValues|KStream → KStream|   |   |&#9745;|   |
+|MapValues|KTable → KTable|   |   |&#9745;|   |
+|Peek|KStream → KStream|   |   |&#9745;|   |
+|Print|KStream → void|   |   |&#9745;|   |
+|SelectKey|KStream → KStream|   |   |&#9745;|   |
+|Table to Steam|KTable → KStream|   |   |&#9745;|   |
 
-# Statefull operator implementation
+# Statefull processor implementation
 
-TODO
+|Operator Name|Method|TODO|IMPLEMENTED|TESTED|DONE|
+|---|---|---|---|---|---|
+|Aggregate|KGroupedStream -> KTable|&#9745;|   |   |   |
+|Aggregate|KGroupedTable -> KTable|&#9745;|   |   |   |
+|Aggregate(windowed)|KGroupedStream -> KTable|&#9745;|   |   |   |
+|Count|KGroupedStream -> KTable|&#9745;|   |   |   |
+|Count|KGroupedTable -> KTable|&#9745;|   |   |   |
+|Count(windowed)|KGroupedStream → KStream|&#9745;|   |   |   |
+|Reduce|KGroupedStream → KTable|&#9745;|   |   |   |
+|Reduce|KGroupedTable → KTable|&#9745;|   |   |   |
+|Reduce(windowed)|KGroupedStream → KTable|&#9745;|   |   |   |
+|InnerJoin(windowed)|(KStream,KStream) → KStream|&#9745;|   |   |   |
+|LeftJoin(windowed)|(KStream,KStream) → KStream|&#9745;|   |   |   |
+|OuterJoin(windowed)|(KStream,KStream) → KStream|&#9745;|   |   |   |
+|InnerJoin(windowed)|(KTable,KTable) → KTable|&#9745;|   |   |   |
+|LeftJoin(windowed)|(KTable,KTable) → KTable|&#9745;|   |   |   |
+|OuterJoin(windowed)|(KTable,KTable) → KTable|&#9745;|   |   |   |
+|InnerJoin(windowed)|(KStream,KTable) → KStream|&#9745;|   |   |   |
+|LeftJoin(windowed)|(KStream,KTable) → KStream|&#9745;|   |   |   |
+|InnerJoin(windowed)|(KStream,GlobalKTable) → KStream|&#9745;|   |   |   |
+|LeftJoin(windowed)|(KStream,GlobalKTable) → KStream|&#9745;|   |   |   |
+
+TODO : Processor API
 
 # Priority feature for stateless beta version
 
@@ -42,27 +64,23 @@ TODO
 - Logging [X]
 - [EOS](https://github.com/LGouellec/kafka-stream-net/issues/2) [ ]
 - Unit test (TestTopologyDriver, ...) [ ]
-- Test and validate all stateless processor [ ]
+- Test and validate all stateless processor [X]
 
 # TODO implementation
 
+- Statefull processors impl [ ]
 - Subtopology impl [ ]
 - Task restoring [ ]
 - Topology description [ ]
-- State thread + task implementation [ ]
 - Global state store [ ]
-- Naming Kafka Streams DSL Topologies [ ]
 - Processor API [ ]
 - Repartition impl [ ]
-- Logging [ ]
 - Unit test (TestTopologyDriver, ...) [ ]
 - [EOS](https://github.com/LGouellec/kafka-stream-net/issues/2) [ ]
-- Configuration property [ ]
 - Rocks DB state implementation [ ]
 - Optimizing Kafka Streams Topologies  [ ]
 - Interactive Queries [ ]
 - Metrics [ ]
-- Adopt C# Syntax  [ ]
 
 Some documentations for help during implementation :
 https://docs.confluent.io/current/streams/index.html

@@ -49,5 +49,7 @@ namespace kafka_stream_core.Processors
             if (!Previous.Contains(prev) && prev != null)
                 Previous.Add(prev);
         }
+
+        public void SetProcessorName(string name){}
     }
 }
