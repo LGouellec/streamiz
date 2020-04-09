@@ -73,7 +73,7 @@ TODO : Processor API
 - Task restoring [ ]
 - Topology description [ ]
 - Global state store [ ]
-- Processor API [ ]
+- Processor API [ ] + Refactor topology node processor builder [ ]
 - Repartition impl [ ]
 - Unit test (TestTopologyDriver, ...) [ ]
 - [EOS](https://github.com/LGouellec/kafka-stream-net/issues/2) [ ]

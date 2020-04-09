@@ -58,6 +58,8 @@ namespace kafka_stream_core
         ISerDes DefaultValueSerDes { get; }
 
         #endregion
+
+        void Update(string k, dynamic v);
     }
 
     /// <summary>
@@ -133,11 +135,11 @@ namespace kafka_stream_core
 
         #region Stream config constants
 
-        private string applicatonIdCst = "application.id";
-        private string clientIdCst = "client.id";
-        private string numStreamThreadsCst = "num.stream.threads";
-        private string defaultKeySerDesCst = "default.key.serdes";
-        private string defaultValueSerDesCst = "default.value.serdes";
+        internal static string applicatonIdCst = "application.id";
+        internal static string clientIdCst = "client.id";
+        internal static string numStreamThreadsCst = "num.stream.threads";
+        internal static string defaultKeySerDesCst = "default.key.serdes";
+        internal static string defaultValueSerDesCst = "default.value.serdes";
 
         #endregion
 
@@ -1576,6 +1578,11 @@ namespace kafka_stream_core
         {
             get => this[defaultValueSerDesCst];
             set => this.AddOrUpdate(defaultValueSerDesCst, value);
+        }
+
+        public void Update(string key, dynamic value)
+        {
+            this.AddOrUpdate(key, value);
         }
 
         public ProducerConfig ToProducerConfig() => ToProducerConfig(this.ClientId);
