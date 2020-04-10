@@ -18,7 +18,11 @@ namespace kafka_stream_core.Mock
         private readonly InternalTopologyBuilder topologyBuilder;
         private readonly IStreamConfig configuration;
         private readonly ProcessorTopology processorTopology;
+
         private readonly IDictionary<string, IPipeInput> inputs = new Dictionary<string, IPipeInput>();
+        private readonly IDictionary<string, IPipeOutput> outputs = new Dictionary<string, IPipeOutput>();
+        private readonly PipeBuilder pipeBuilder = new PipeBuilder();
+
         private readonly IThread threadTopology = null;
 
         public TopologyTestDriver(Topology topology, IStreamConfig config)
@@ -37,6 +41,8 @@ namespace kafka_stream_core.Mock
 
             var processID = Guid.NewGuid();
             var clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{this.configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;
+            this.configuration.ClientId = clientId;
+
             var kafkaSupplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(configuration));
 
             this.processorTopology = this.topologyBuilder.BuildTopology();
@@ -65,8 +71,21 @@ namespace kafka_stream_core.Mock
 
             foreach (var k in inputs)
                 k.Value.Dispose();
+
+            foreach (var k in outputs)
+                k.Value.Dispose();
         }
 
-        public TestInputTopic CreateInputTopic() { return null; }
+        public TestInputTopic CreateInputTopic()
+        {
+            var pipe = pipeBuilder.Input("", this.configuration.ToProducerConfig());
+            return null;
+        }
+
+        public TestOutputTopic CreateOuputTopic()
+        {
+            var pipe = pipeBuilder.Output("", TimeSpan.FromSeconds(1), this.configuration.ToConsumerConfig());
+            return null;
+        }
     }
 }
