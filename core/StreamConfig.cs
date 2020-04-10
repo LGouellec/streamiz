@@ -14,6 +14,11 @@ namespace kafka_stream_core
     /// </summary>
     public interface IStreamConfig
     {
+        void AddConfig(string key, string value);
+        void AddAdminConfig(string key, string value);
+        void AddConsumerConfig(string key, string value);
+        void AddProducerConfig(string key, string value);
+
         #region Methods 
 
         ProducerConfig ToProducerConfig();
@@ -35,31 +40,29 @@ namespace kafka_stream_core
         //// <summary>
         //// An identifier for the stream processing application. Must be unique within the Kafka cluster. It is used as 1) the default client-id prefix, 2) the group-id for membership management, 3) the changelog topic prefix.
         //// </summary>
-        string ApplicationId { get; }
+        string ApplicationId { get; set; }
 
         //// <summary>
         //// An ID prefix string used for the client IDs of internal consumer, producer and restore-consumer, with pattern '<client.id>-StreamThread-<threadSequenceNumber>-<consumer|producer|restore-consumer>'.
         //// </summary>
-        string ClientId { get; }
+        string ClientId { get; set; }
 
         //// <summary>
         //// 
         //// /summary>
-        int NumStreamThreads { get; }
+        int NumStreamThreads { get; set;  }
 
         //// <summary>
         //// Default key serdes for consumer and materialized state store
         //// </summary>
-        ISerDes DefaultKeySerDes { get; }
+        ISerDes DefaultKeySerDes { get; set; }
 
         //// <summary>
         //// Default value serdes for consumer and materialized state store
         //// </summary>
-        ISerDes DefaultValueSerDes { get; }
+        ISerDes DefaultValueSerDes { get; set; }
 
         #endregion
-
-        void Update(string k, dynamic v);
     }
 
     /// <summary>
@@ -148,7 +151,18 @@ namespace kafka_stream_core
         private readonly AdminClientConfig _adminClientConfig = null;
         private readonly ClientConfig _config = null;
 
+        private readonly IDictionary<string, string> _internalConsumerConfig = new Dictionary<string, string>();
+        private readonly IDictionary<string, string> _internalProducerConfig = new Dictionary<string, string>();
+        private readonly IDictionary<string, string> _internalAdminConfig = new Dictionary<string, string>();
+
         #region ClientConfig
+
+        public void AddConfig(string key, string value)
+        {
+            AddConsumerConfigValue(key, value);
+            AddAdminConfigValue(key, value);
+            AddProducerConfigValue(key, value);
+        }
 
         /// <summary>
         /// Timeout for broker API version requests. default: 10000 importance: low
@@ -1175,6 +1189,8 @@ namespace kafka_stream_core
 
         #region ConsumerConfig
 
+        public void AddConsumerConfig(string key, string value) => _internalConsumerConfig.AddOrUpdate(key, value);
+
         //// <summary>
         //// Controls how to read messages written transactionally: `read_committed` - only
         //// return transactional messages which have been committed. `read_uncommitted` -
@@ -1339,6 +1355,8 @@ namespace kafka_stream_core
         #endregion
 
         #region ProducerConfig
+
+        public void AddProducerConfig(string key, string value) => _internalProducerConfig.AddOrUpdate(key, value);
 
         /// <summary>
         /// The threshold of outstanding not yet transmitted broker requests needed to backpressure
@@ -1505,6 +1523,8 @@ namespace kafka_stream_core
 
         #region AdminConfig
 
+        public void AddAdminConfig(string key, string value) => _internalAdminConfig.AddOrUpdate(key, value);
+
         #endregion
 
         #region Ctor
@@ -1580,16 +1600,12 @@ namespace kafka_stream_core
             set => this.AddOrUpdate(defaultValueSerDesCst, value);
         }
 
-        public void Update(string key, dynamic value)
-        {
-            this.AddOrUpdate(key, value);
-        }
-
         public ProducerConfig ToProducerConfig() => ToProducerConfig(this.ClientId);
 
         public ProducerConfig ToProducerConfig(string clientId)
         {
-            ProducerConfig config = new ProducerConfig(_producerConfig);
+            var c = _producerConfig.Union(_internalProducerConfig).ToDictionary();
+            ProducerConfig config = new ProducerConfig(c);
             config.ClientId = clientId;
             return config;
         }
@@ -1598,7 +1614,8 @@ namespace kafka_stream_core
 
         public ConsumerConfig ToConsumerConfig(string clientId)
         {
-            var config = new ConsumerConfig(_consumerConfig);
+            var c = _consumerConfig.Union(_internalConsumerConfig).ToDictionary();
+            var config = new ConsumerConfig(c);
             config.GroupId = this.ApplicationId;
             config.ClientId = clientId;
             return config;
@@ -1608,7 +1625,8 @@ namespace kafka_stream_core
 
         public AdminClientConfig ToAdminConfig(string clientId)
         {
-            var config = new AdminClientConfig(_adminClientConfig);
+            var c = _adminClientConfig.Union(_internalAdminConfig).ToDictionary();
+            var config = new AdminClientConfig(c);
             config.ClientId = clientId;
             return config;
         }

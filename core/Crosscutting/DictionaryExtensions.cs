@@ -19,5 +19,13 @@ namespace kafka_stream_core.Crosscutting
                 return true;
             }
         }
+    
+        public static IDictionary<K, V> ToDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>> source)
+        {
+            Dictionary<K, V> r = new Dictionary<K, V>();
+            foreach (var s in source)
+                r.Add(s.Key, s.Value);
+            return r;
+        }
     }
 }

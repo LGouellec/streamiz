@@ -12,7 +12,7 @@ namespace sample_stream
         static void Main(string[] args)
         {
             CancellationTokenSource source = new CancellationTokenSource();
-            
+
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app";
             config.BootstrapServers = "192.168.56.1:9092";

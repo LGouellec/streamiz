@@ -1,20 +1,25 @@
 ﻿using Confluent.Kafka;
+using kafka_stream_core.Kafka.Internal;
+using kafka_stream_core.Mock.Pipes;
+using kafka_stream_core.Processors;
 using kafka_stream_core.Processors.Internal;
 using kafka_stream_core.Stream;
 using kafka_stream_core.Stream.Internal;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace kafka_stream_core.Mock
 {
-    // TODO : 
-    // test.mock.num.brokers = 3
-    public class TopologyTestDriver
+    public class TopologyTestDriver : IDisposable
     {
+        private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
         private readonly InternalTopologyBuilder topologyBuilder;
         private readonly IStreamConfig configuration;
         private readonly ProcessorTopology processorTopology;
+        private readonly IDictionary<string, IPipeInput> inputs = new Dictionary<string, IPipeInput>();
+        private readonly IThread threadTopology = null;
 
         public TopologyTestDriver(Topology topology, IStreamConfig config)
             :this(topology.Builder, config)
@@ -26,10 +31,42 @@ namespace kafka_stream_core.Mock
         {
             this.topologyBuilder = builder;
             this.configuration = config;
-            this.configuration.Update(StreamConfig.numStreamThreadsCst, 1);
+            this.configuration.NumStreamThreads = 1;
+            // MOCK CLUSTER
+            this.configuration.AddConfig("test.mock.num.brokers", "3");
 
+            var processID = Guid.NewGuid();
+            var clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{this.configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;
+            var kafkaSupplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(configuration));
 
             this.processorTopology = this.topologyBuilder.BuildTopology();
+
+            this.threadTopology = StreamThread.Create(
+                $"{this.configuration.ApplicationId.ToLower()}-stream-thread-0",
+                clientId,
+                builder,
+                config,
+                kafkaSupplier,
+                kafkaSupplier.GetAdmin(configuration.ToAdminConfig($"{clientId}-admin")),
+                0);
+
+            RunDriver();
         }
+
+        private void RunDriver()
+        {
+            threadTopology.Start(tokenSource.Token);
+        }
+
+        public void Dispose()
+        {
+            tokenSource.Cancel();
+            threadTopology.Dispose();
+
+            foreach (var k in inputs)
+                k.Value.Dispose();
+        }
+
+        public TestInputTopic CreateInputTopic() { return null; }
     }
 }
