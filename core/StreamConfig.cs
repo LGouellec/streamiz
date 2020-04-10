@@ -159,9 +159,9 @@ namespace kafka_stream_core
 
         public void AddConfig(string key, string value)
         {
-            AddConsumerConfigValue(key, value);
-            AddAdminConfigValue(key, value);
-            AddProducerConfigValue(key, value);
+            AddConsumerConfig(key, value);
+            AddAdminConfig(key, value);
+            AddProducerConfig(key, value);
         }
 
         /// <summary>
