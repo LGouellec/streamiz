@@ -3,6 +3,7 @@ using kafka_stream_core.Kafka.Internal;
 using kafka_stream_core.Mock.Pipes;
 using kafka_stream_core.Processors;
 using kafka_stream_core.Processors.Internal;
+using kafka_stream_core.SerDes;
 using kafka_stream_core.Stream;
 using kafka_stream_core.Stream.Internal;
 using System;
@@ -35,6 +36,7 @@ namespace kafka_stream_core.Mock
         {
             this.topologyBuilder = builder;
             this.configuration = config;
+            // ONLY 1 thread for test driver
             this.configuration.NumStreamThreads = 1;
             // MOCK CLUSTER
             this.configuration.AddConfig("test.mock.num.brokers", "3");
@@ -76,11 +78,23 @@ namespace kafka_stream_core.Mock
                 k.Value.Dispose();
         }
 
-        public TestInputTopic CreateInputTopic()
+        #region Create Input Topic
+
+        public TestInputTopic<K,V> CreateInputTopic<K, V>(string topicName)
+            => CreateInputTopic<K, V>(topicName, null, null);
+
+        public TestInputTopic<K,V> CreateInputTopic<K, V>(string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
         {
-            var pipe = pipeBuilder.Input("", this.configuration.ToProducerConfig());
+            var pipe = pipeBuilder.Input(topicName, this.configuration);
             return null;
         }
+
+        public TestInputTopic<K, V> CreateInputTopic<K, V, KS, VS>(string topicName)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => CreateInputTopic<K, V>(topicName, new KS(), new VS());
+
+        #endregion
 
         public TestOutputTopic CreateOuputTopic()
         {

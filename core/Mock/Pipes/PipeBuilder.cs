@@ -7,12 +7,12 @@ namespace kafka_stream_core.Mock.Pipes
 {
     internal class PipeBuilder
     {
-        internal IPipeInput Input(string topic, ProducerConfig configuration)
+        internal IPipeInput Input(string topic, IStreamConfig configuration)
         {
             return null;
         }
 
-        internal IPipeOutput Output(string topic, TimeSpan consumeTimeout, ConsumerConfig configuration)
+        internal IPipeOutput Output(string topic, TimeSpan consumeTimeout, IStreamConfig configuration)
         {
             return null;
         }

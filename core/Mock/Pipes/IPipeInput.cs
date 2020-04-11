@@ -6,7 +6,7 @@ namespace kafka_stream_core.Mock.Pipes
 {
     internal interface IPipeInput : IDisposable
     {
-        void Pipe(byte[] key, byte[] value);
+        void Pipe(byte[] key, byte[] value, long timestamp);
         void Flush();
     }
 }
