@@ -8,6 +8,11 @@ using System.Text;
 
 namespace kafka_stream_core.Mock
 {
+    /// <summary>
+    /// Not threadsafe
+    /// </summary>
+    /// <typeparam name="K"></typeparam>
+    /// <typeparam name="V"></typeparam>
     public class TestInputTopic<K, V>
     {
         private readonly IPipeInput pipe;
@@ -39,7 +44,7 @@ namespace kafka_stream_core.Mock
 
         private void PipeInput(TestRecord<K, V> record)
         {
-            long ts = record.Timestamp.HasValue ? record.Timestamp.Value : DateTime.Now.GetMilliseconds();
+            DateTime ts = record.Timestamp.HasValue ? record.Timestamp.Value : DateTime.Now;
             var tuple = GetBytes(record.Key, record.Value);
             pipe.Pipe(tuple.Item1, tuple.Item2, ts);
             pipe.Flush();
@@ -48,13 +53,13 @@ namespace kafka_stream_core.Mock
         public void PipeInput(V value)
             => PipeInput(new TestRecord<K, V> { Value = value });
 
-        public void PipeInput(V value, long timestamp)
+        public void PipeInput(V value, DateTime timestamp)
             => PipeInput(new TestRecord<K, V> { Value = value, Timestamp = timestamp });
 
         public void PipeInput(K key, V value)
             => PipeInput(new TestRecord<K, V> { Value = value, Key = key });
 
-        public void PipeInput(K key, V value, long timestamp)
+        public void PipeInput(K key, V value, DateTime timestamp)
             => PipeInput(new TestRecord<K, V> { Key = key, Value = value, Timestamp = timestamp });
 
         #endregion
@@ -65,7 +70,7 @@ namespace kafka_stream_core.Mock
         {
             foreach (var record in records)
             {
-                long ts = record.Timestamp.HasValue ? record.Timestamp.Value : DateTime.Now.GetMilliseconds();
+                DateTime ts = record.Timestamp.HasValue ? record.Timestamp.Value : DateTime.Now;
                 var tuple = GetBytes(record.Key, record.Value);
                 pipe.Pipe(tuple.Item1, tuple.Item2, ts);
             }
@@ -79,9 +84,9 @@ namespace kafka_stream_core.Mock
         public void PipeInputs(IEnumerable<KeyValuePair<K, V>> inputs)
             => PipeInputs(inputs.Select(kv => new TestRecord<K, V> { Value = kv.Value, Key = kv.Key }));
 
-        public void PipeInputs(IEnumerable<KeyValuePair<K,V>> inputs, long timestamp, TimeSpan advance)
+        public void PipeInputs(IEnumerable<KeyValuePair<K,V>> inputs, DateTime timestamp, TimeSpan advance)
         {
-            long ts = timestamp;
+            DateTime ts = timestamp;
             var records = new List<TestRecord<K, V>>();
             foreach(var i in inputs)
             {
@@ -92,7 +97,7 @@ namespace kafka_stream_core.Mock
                     Timestamp = ts
                 };
                 records.Add(r);
-                ts += (long)advance.TotalMilliseconds;
+                ts += advance;
             }
 
             this.PipeInputs(records);

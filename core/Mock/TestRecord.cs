@@ -8,6 +8,6 @@ namespace kafka_stream_core.Mock
     {
         public K Key { get; set; }
         public V Value { get; set; }
-        public long? Timestamp { get; set; }
+        public DateTime? Timestamp { get; set; }
     }
 }

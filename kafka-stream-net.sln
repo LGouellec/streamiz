@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29519.87
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kafka-stream-core", "core\kafka-stream-core.csproj", "{4812257D-B650-44DA-AD06-1E9EFC4E7992}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "sample-stream", "sample\sample-stream.csproj", "{57CA84AD-2E9F-4E4D-94B7-B8CF534B0B0E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "sample-stream", "samples\sample-stream\sample-stream.csproj", "{57CA84AD-2E9F-4E4D-94B7-B8CF534B0B0E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Producer", "test\Producer\Producer.csproj", "{A8367BFB-F9E0-43D6-AE4E-DA4FC353D413}"
 EndProject
@@ -18,6 +18,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Consumer", "test\Consumer\Consumer.csproj", "{F725913E-F02E-4E77-9F99-A219C453E111}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GenerateData", "GenerateData", "{E3C25908-114E-4CD0-BD07-4660152F3A70}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sample-test-driver", "samples\sample-test-driver\sample-test-driver.csproj", "{5671E175-D880-4B49-A0ED-47F6531DDF32}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -77,6 +79,18 @@ Global
 		{F725913E-F02E-4E77-9F99-A219C453E111}.Release|x64.Build.0 = Release|Any CPU
 		{F725913E-F02E-4E77-9F99-A219C453E111}.Release|x86.ActiveCfg = Release|Any CPU
 		{F725913E-F02E-4E77-9F99-A219C453E111}.Release|x86.Build.0 = Release|Any CPU
+		{5671E175-D880-4B49-A0ED-47F6531DDF32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5671E175-D880-4B49-A0ED-47F6531DDF32}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5671E175-D880-4B49-A0ED-47F6531DDF32}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5671E175-D880-4B49-A0ED-47F6531DDF32}.Debug|x64.Build.0 = Debug|Any CPU
+		{5671E175-D880-4B49-A0ED-47F6531DDF32}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5671E175-D880-4B49-A0ED-47F6531DDF32}.Debug|x86.Build.0 = Debug|Any CPU
+		{5671E175-D880-4B49-A0ED-47F6531DDF32}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5671E175-D880-4B49-A0ED-47F6531DDF32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5671E175-D880-4B49-A0ED-47F6531DDF32}.Release|x64.ActiveCfg = Release|Any CPU
+		{5671E175-D880-4B49-A0ED-47F6531DDF32}.Release|x64.Build.0 = Release|Any CPU
+		{5671E175-D880-4B49-A0ED-47F6531DDF32}.Release|x86.ActiveCfg = Release|Any CPU
+		{5671E175-D880-4B49-A0ED-47F6531DDF32}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -86,6 +100,7 @@ Global
 		{57CA84AD-2E9F-4E4D-94B7-B8CF534B0B0E} = {FFB1B148-D781-4D08-A1E8-4A7F7147FCD4}
 		{A8367BFB-F9E0-43D6-AE4E-DA4FC353D413} = {E3C25908-114E-4CD0-BD07-4660152F3A70}
 		{F725913E-F02E-4E77-9F99-A219C453E111} = {E3C25908-114E-4CD0-BD07-4660152F3A70}
+		{5671E175-D880-4B49-A0ED-47F6531DDF32} = {FFB1B148-D781-4D08-A1E8-4A7F7147FCD4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {66BAF5BD-970F-480F-92B9-761323FFAA58}

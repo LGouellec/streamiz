@@ -1,5 +1,7 @@
 ﻿using Confluent.Kafka;
+using kafka_stream_core.Errors;
 using kafka_stream_core.Kafka.Internal;
+using kafka_stream_core.Mock.Kafka;
 using kafka_stream_core.Mock.Pipes;
 using kafka_stream_core.Processors;
 using kafka_stream_core.Processors.Internal;
@@ -30,22 +32,18 @@ namespace kafka_stream_core.Mock
             :this(topology.Builder, config)
         { }
 
-        // https://github.com/confluentinc/confluent-kafka-dotnet/blob/1.4.x/test/Confluent.Kafka.UnitTests/MoqExample.cs
-
         private TopologyTestDriver(InternalTopologyBuilder builder, IStreamConfig config)
         {
             this.topologyBuilder = builder;
             this.configuration = config;
             // ONLY 1 thread for test driver
             this.configuration.NumStreamThreads = 1;
-            // MOCK CLUSTER
-            this.configuration.AddConfig("test.mock.num.brokers", "3");
 
             var processID = Guid.NewGuid();
             var clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{this.configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;
             this.configuration.ClientId = clientId;
 
-            var kafkaSupplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(configuration));
+            var kafkaSupplier = new MockKafkaSupplier();
 
             this.processorTopology = this.topologyBuilder.BuildTopology();
 
@@ -63,7 +61,22 @@ namespace kafka_stream_core.Mock
 
         private void RunDriver()
         {
+            bool isRunningState = false;
+            DateTime dt = DateTime.Now;
+            TimeSpan timeout = TimeSpan.FromSeconds(30);
+
+            threadTopology.StateChanged += (thread, old, @new) => {
+                if (@new is Processors.ThreadState && ((Processors.ThreadState)@new) == Processors.ThreadState.RUNNING)
+                    isRunningState = true;
+            };
+
             threadTopology.Start(tokenSource.Token);
+            while (!isRunningState)
+            {
+                Thread.Sleep(250);
+                if (DateTime.Now > dt + timeout)
+                    throw new StreamsException("Test topology driver can't initiliaze state !");
+            }
         }
 
         public void Dispose()
@@ -86,7 +99,8 @@ namespace kafka_stream_core.Mock
         public TestInputTopic<K,V> CreateInputTopic<K, V>(string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
         {
             var pipe = pipeBuilder.Input(topicName, this.configuration);
-            return null;
+            inputs.Add(topicName, pipe);
+            return new TestInputTopic<K, V>(pipe, this.configuration, keySerdes, valueSerdes);
         }
 
         public TestInputTopic<K, V> CreateInputTopic<K, V, KS, VS>(string topicName)
@@ -96,10 +110,28 @@ namespace kafka_stream_core.Mock
 
         #endregion
 
-        public TestOutputTopic CreateOuputTopic()
+        #region Create Output Topic
+
+        public TestOutputTopic<K, V> CreateOuputTopic<K, V>(string topicName)
+            => CreateOuputTopic<K, V>(topicName, TimeSpan.FromSeconds(5), null, null);
+
+        public TestOutputTopic<K, V> CreateOuputTopic<K, V>(string topicName, TimeSpan consumeTimeout, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
         {
-            var pipe = pipeBuilder.Output("", TimeSpan.FromSeconds(1), this.configuration.ToConsumerConfig());
-            return null;
+            var pipe = pipeBuilder.Output(topicName, consumeTimeout, this.configuration, this.tokenSource.Token);
+            outputs.Add(topicName, pipe);
+            return new TestOutputTopic<K, V>(pipe, this.configuration, keySerdes, valueSerdes);
         }
+
+        public TestOutputTopic<K, V> CreateOuputTopic<K, V, KS, VS>(string topicName)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => CreateOuputTopic<K, V, KS, VS>(topicName, TimeSpan.FromSeconds(5));
+
+        public TestOutputTopic<K, V> CreateOuputTopic<K, V, KS, VS>(string topicName, TimeSpan consumeTimeout)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => CreateOuputTopic<K, V>(topicName, consumeTimeout, new KS(), new VS());
+
+        #endregion
     }
 }
