@@ -26,16 +26,14 @@ namespace kafka_stream_core.Mock.Kafka
             partitions[partition].AddMessageInLog(key, value);
         }
 
-        public (byte[], byte[]) GetMessage(int consumerOffset)
+        public TestRecord<byte[], byte[]> GetMessage(int partition, long consumerOffset)
         {
-            for (int i = 0; i < this.partitionNumber; ++i)
+            if (this.partitions[partition].Size > consumerOffset)
             {
-                if (this.partitions[i].Size > consumerOffset)
-                {
-                    return this.partitions[i].GetMessage(consumerOffset);
-                }
+                return this.partitions[partition].GetMessage(consumerOffset);
             }
-            return default;
+            else
+                return null;
         }
     }
 }

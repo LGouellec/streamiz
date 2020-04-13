@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using kafka_stream_core.Errors;
 using kafka_stream_core.Kafka;
 using System;
 using System.Collections.Generic;
@@ -174,10 +175,20 @@ namespace kafka_stream_core.Mock.Kafka
             => Consume(TimeSpan.FromMilliseconds(millisecondsTimeout));
 
         public ConsumeResult<byte[], byte[]> Consume(CancellationToken cancellationToken)
-            => MockCluster.Instance.Consume(cancellationToken);
+        {
+            if (this.Subscription.Count == 0)
+                throw new StreamsException("No subscription have been done !");
+
+            return MockCluster.Instance.Consume(this, cancellationToken);
+        }
 
         public ConsumeResult<byte[], byte[]> Consume(TimeSpan timeout)
-            => MockCluster.Instance.Consume(timeout);
+        {
+            if (this.Subscription.Count == 0)
+                throw new StreamsException("No subscription have been done !");
+            
+            return MockCluster.Instance.Consume(this, timeout);
+        }
 
         #endregion
 

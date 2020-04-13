@@ -16,8 +16,8 @@ namespace kafka_stream_core.Mock.Kafka
         {
             public string Topic { get; set; }
             public int Partition { get; set; }
-            public int OffsetComitted { get; set; }
-            public int OffsetConsumed { get; set; }
+            public long OffsetComitted { get; set; }
+            public long OffsetConsumed { get; set; }
 
             public override bool Equals(object obj)
             {
@@ -36,7 +36,7 @@ namespace kafka_stream_core.Mock.Kafka
         public string Name { get; set; }
         public List<TopicPartition> Partitions { get; set; }
         public List<string> Topics { get; set; }
-        public MockConsumer Customer { get; set; }
+        public MockConsumer Consumer { get; set; }
         public IConsumerRebalanceListener RebalanceListener { get; set; }
         public bool Assigned { get; set; } = false;
         public List<MockTopicPartitionOffset> TopicPartitionsOffset { get; set; }
@@ -76,19 +76,18 @@ namespace kafka_stream_core.Mock.Kafka
 
         #endregion
 
-        private readonly IList<MockTopic> topics = new List<MockTopic>();
+        private readonly IDictionary<string ,MockTopic> topics = new Dictionary<string, MockTopic>();
         private readonly IDictionary<string, MockConsumerInformation> consumers = new Dictionary<string, MockConsumerInformation>();
-        private readonly IDictionary<string, int> consumersOffsets = new Dictionary<string, int>();
         private readonly IDictionary<string, List<string>> consumerGroups = new Dictionary<string, List<string>>();
 
         #region Topic Gesture
 
         private bool CreateTopic(string topic, int partitions = 4)
         {
-            if (!topics.Any(t => t.Name.Equals(topic, StringComparison.InvariantCultureIgnoreCase)))
+            if (!topics.Values.Any(t => t.Name.Equals(topic, StringComparison.InvariantCultureIgnoreCase)))
             {
                 var t = new MockTopic(topic, partitions);
-                topics.Add(t);
+                topics.Add(topic, t);
                 return true;
             }
             return false;
@@ -96,7 +95,7 @@ namespace kafka_stream_core.Mock.Kafka
 
         internal void CloseConsumer(string name)
         {
-            this.Unsubscribe(this.consumers[name].Customer);
+            this.Unsubscribe(this.consumers[name].Consumer);
             consumers.Remove(name);
         }
 
@@ -111,7 +110,7 @@ namespace kafka_stream_core.Mock.Kafka
                 {
                     GroupId = consumer.MemberId,
                     Name = consumer.Name,
-                    Customer = consumer,
+                    Consumer = consumer,
                     Topics = new List<string>(topics),
                     RebalanceListener = consumer.Listener,
                     Partitions = new List<TopicPartition>(),
@@ -142,6 +141,22 @@ namespace kafka_stream_core.Mock.Kafka
 
         #region Partitions Gesture
 
+        private void CheckAssignedPartitions()
+        {
+            foreach (var group in consumerGroups.Keys)
+            {
+                var consumers = consumerGroups[group];
+                foreach(var c in consumers)
+                {
+                    var consumer = this.consumers[c];
+                    if(!consumer.Assigned)
+                    {
+                        // TODO : 
+                    }
+                }
+            }
+        }
+
         internal void Assign(MockConsumer mockConsumer, IEnumerable<TopicPartition> topicPartitions)
         {
             if (consumers.ContainsKey(mockConsumer.Name))
@@ -164,11 +179,11 @@ namespace kafka_stream_core.Mock.Kafka
                     {
                         var parts = cus.Partitions.Join(topicPartitions, (t) => t, (t) => t, (t1, t2) => t1);
                         var pList = cus.TopicPartitionsOffset.Select(f => new TopicPartitionOffset(f.Topic, f.Partition, f.OffsetComitted)).ToList();
-                        cus.RebalanceListener.PartitionsRevoked(cus.Customer, pList);
+                        cus.RebalanceListener.PartitionsRevoked(cus.Consumer, pList);
                         foreach (var j in parts)
                             cus.Partitions.Remove(j);
 
-                        cus.RebalanceListener.PartitionsAssigned(cus.Customer, cus.Partitions);
+                        cus.RebalanceListener.PartitionsAssigned(cus.Consumer, cus.Partitions);
                     }
 
                     c.Partitions = new List<TopicPartition>(topicPartitions);
@@ -183,7 +198,8 @@ namespace kafka_stream_core.Mock.Kafka
                                 Topic = k.Topic
                             });
                     }
-                    c.RebalanceListener.PartitionsAssigned(c.Customer, c.Partitions);
+                    c.RebalanceListener.PartitionsAssigned(c.Consumer, c.Partitions);
+                    c.Assigned = true;
                 }
                 else
                     throw new StreamsException($"Consumer {mockConsumer.Name} was already assigned partitions. Please call unassigne before !");
@@ -198,7 +214,7 @@ namespace kafka_stream_core.Mock.Kafka
             {
                 var c = consumers[mockConsumer.Name];
                 var pList = c.TopicPartitionsOffset.Select(f => new TopicPartitionOffset(f.Topic, f.Partition, f.OffsetComitted)).ToList();
-                c.RebalanceListener.PartitionsRevoked(c.Customer, pList);
+                c.RebalanceListener.PartitionsRevoked(c.Consumer, pList);
 
                 // Rebalance on other consumer in the same group
                 var otherConsumers = consumerGroups[mockConsumer.MemberId].Select(i => consumers[i]).Where(i => !i.Name.Equals(mockConsumer.Name)).ToList();
@@ -229,11 +245,12 @@ namespace kafka_stream_core.Mock.Kafka
                                 Topic = k.Topic
                             });
 
-                    otherConsumers[i].RebalanceListener.PartitionsAssigned(otherConsumers[i].Customer, otherConsumers[i].Partitions);
+                    otherConsumers[i].RebalanceListener.PartitionsAssigned(otherConsumers[i].Consumer, otherConsumers[i].Partitions);
                     j += partEach;
                 }
 
                 c.Partitions.Clear();
+                c.Assigned = false;
             }
             else
                 throw new StreamsException($"Consumer {mockConsumer.Name} unknown !");
@@ -246,23 +263,80 @@ namespace kafka_stream_core.Mock.Kafka
 
         internal List<TopicPartitionOffset> Commit(MockConsumer mockConsumer)
         {
-            throw new NotImplementedException();
+            if (consumers.ContainsKey(mockConsumer.Name))
+            {
+                var c = consumers[mockConsumer.Name];
+                foreach (var p in c.TopicPartitionsOffset)
+                    p.OffsetComitted = p.OffsetConsumed;
+
+                return c.TopicPartitionsOffset.Select(t => new TopicPartitionOffset(new TopicPartition(t.Topic, t.Partition), t.OffsetComitted)).ToList();
+            }
+            else
+                throw new StreamsException($"Consumer {mockConsumer.Name} unknown !");
         }
 
         internal void Commit(MockConsumer mockConsumer, IEnumerable<TopicPartitionOffset> offsets)
         {
-            throw new NotImplementedException();
+            if (consumers.ContainsKey(mockConsumer.Name))
+            {
+                var c = consumers[mockConsumer.Name];
+                foreach(var o in offsets)
+                {
+                    var p = c.TopicPartitionsOffset.FirstOrDefault(t => t.Topic.Equals(o.Topic) && t.Partition.Equals(o.Partition));
+                    if(p != null)
+                    {
+                        p.OffsetConsumed = o.Offset.Value;
+                        p.OffsetComitted = o.Offset.Value;
+                    }
+                }
+            }
+            else
+                throw new StreamsException($"Consumer {mockConsumer.Name} unknown !");
         }
 
-        internal ConsumeResult<byte[], byte[]> Consume(TimeSpan timeout)
+        internal ConsumeResult<byte[], byte[]> Consume(MockConsumer mockConsumer, TimeSpan timeout)
         {
-            throw new NotImplementedException();
+            DateTime dt = DateTime.Now;
+            ConsumeResult<byte[], byte[]> result = null;
+            if (consumers.ContainsKey(mockConsumer.Name))
+            {
+                var c = consumers[mockConsumer.Name];
+                if (c.Partitions.Count == 0)
+                    CheckAssignedPartitions();
+
+                foreach (var p in c.Partitions)
+                {
+                    if ((dt += timeout) < DateTime.Now)
+                        break;
+                    var topic = topics[p.Topic];
+                    var offset = c.TopicPartitionsOffset.FirstOrDefault(t => t.Topic.Equals(p.Topic) && t.Partition.Equals(p.Partition));
+                    var record = topic.GetMessage(p.Partition, offset.OffsetConsumed);
+                    if (record != null)
+                    {
+                        result = new ConsumeResult<byte[], byte[]>
+                        {
+                            Offset = offset.OffsetConsumed,
+                            Topic = p.Topic,
+                            Partition = p.Partition,
+                            Message = new Message<byte[], byte[]> { Key = record.Key, Value = record.Value }
+                        };
+                        ++offset.OffsetConsumed;
+                        break;
+                    }
+                }
+
+                return result;
+            }
+            else
+                throw new StreamsException($"Consumer {mockConsumer.Name} unknown !");
         }
 
-        internal ConsumeResult<byte[], byte[]> Consume(CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
+        internal ConsumeResult<byte[], byte[]> Consume(MockConsumer mockConsumer, CancellationToken cancellationToken)
+            => Consume(mockConsumer, TimeSpan.FromSeconds(10));
+
+        #endregion
+
+        #region Producer Gesture
 
         #endregion
     }
