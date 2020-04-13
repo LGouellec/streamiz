@@ -18,6 +18,8 @@ namespace kafka_stream_core.Mock.Kafka
             this.clientId = clientId;
         }
 
+        public IConsumerRebalanceListener Listener { get; private set; }
+
         #region IConsumer Impl
 
         public string MemberId => groupId;
@@ -36,27 +38,29 @@ namespace kafka_stream_core.Mock.Kafka
 
         public void Assign(TopicPartition partition)
         {
-            throw new NotImplementedException();
+            MockCluster.Instance.Assign(this, new List<TopicPartition> { partition });
         }
 
         public void Assign(TopicPartitionOffset partition)
         {
-            throw new NotImplementedException();
+            // TODO
         }
 
         public void Assign(IEnumerable<TopicPartitionOffset> partitions)
         {
-            throw new NotImplementedException();
+            // TODO
         }
 
         public void Assign(IEnumerable<TopicPartition> partitions)
         {
-            throw new NotImplementedException();
+            MockCluster.Instance.Assign(this, partitions);
         }
 
         public void Close()
         {
-            throw new NotImplementedException();
+            MockCluster.Instance.CloseConsumer(this.Name);
+            Assignment.Clear();
+            Subscription.Clear();
         }
 
         public List<TopicPartitionOffset> Commit()
@@ -91,67 +95,79 @@ namespace kafka_stream_core.Mock.Kafka
 
         public WatermarkOffsets GetWatermarkOffsets(TopicPartition topicPartition)
         {
+            // TODO
             throw new NotImplementedException();
         }
 
         public List<TopicPartitionOffset> OffsetsForTimes(IEnumerable<TopicPartitionTimestamp> timestampsToSearch, TimeSpan timeout)
         {
+            // TODO : 
             throw new NotImplementedException();
         }
 
         public void Pause(IEnumerable<TopicPartition> partitions)
         {
-            throw new NotImplementedException();
+            // TODO : 
         }
 
         public Offset Position(TopicPartition partition)
         {
+            // TODO
             throw new NotImplementedException();
         }
 
         public WatermarkOffsets QueryWatermarkOffsets(TopicPartition topicPartition, TimeSpan timeout)
         {
+            // TODO
             throw new NotImplementedException();
         }
 
         public void Resume(IEnumerable<TopicPartition> partitions)
         {
+            // TODO
             throw new NotImplementedException();
         }
 
         public void Seek(TopicPartitionOffset tpo)
         {
+            // TODO
             throw new NotImplementedException();
         }
 
         public void StoreOffset(TopicPartitionOffset offset)
-        {
+        { 
+            // TODO
             throw new NotImplementedException();
         }
 
         public void StoreOffset(ConsumeResult<byte[], byte[]> result)
         {
+            // TODO
             throw new NotImplementedException();
         }
 
         public void Subscribe(IEnumerable<string> topics)
         {
-            throw new NotImplementedException();
+            MockCluster.Instance.SubscribeTopic(this, topics);
+            Subscription.AddRange(topics);
         }
 
         public void Subscribe(string topic)
         {
-            throw new NotImplementedException();
+            MockCluster.Instance.SubscribeTopic(this, new List<string> { topic });
+            Subscription.Add(topic);
         }
 
         public void Unassign()
         {
-            throw new NotImplementedException();
+            MockCluster.Instance.Unassign(this);
+            Assignment.Clear();
         }
 
         public void Unsubscribe()
         {
-            throw new NotImplementedException();
+            MockCluster.Instance.Unsubscribe(this);
+            Subscription.Clear();
         }
 
         public ConsumeResult<byte[], byte[]> Consume(int millisecondsTimeout)
@@ -173,7 +189,7 @@ namespace kafka_stream_core.Mock.Kafka
 
         internal void SetRebalanceListener(IConsumerRebalanceListener rebalanceListener)
         {
-            
+            Listener = rebalanceListener;   
         }
     }
 }
