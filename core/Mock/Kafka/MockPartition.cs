@@ -8,7 +8,7 @@ namespace kafka_stream_core.Mock.Kafka
     {
         private readonly int indice = 0;
         private readonly List<(byte[], byte[])> log = new List<(byte[], byte[])>();
-        private int sizeLog;
+        private int sizeLog = 0;
 
         public MockPartition(int indice)
         {

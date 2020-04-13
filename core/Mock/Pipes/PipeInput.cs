@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using kafka_stream_core.Kafka;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,7 +13,7 @@ namespace kafka_stream_core.Mock.Pipes
         const int size = 10;
         private readonly Queue<(byte[], byte[], DateTime)> buffer = new Queue<(byte[], byte[], DateTime)>(size);
 
-        public PipeInput(string topicName, IStreamConfig configuration)
+        public PipeInput(string topicName, IStreamConfig configuration, IKafkaSupplier kafkaSupplier)
         {
             this.topicName = topicName;
             var builder = new ProducerBuilder<byte[], byte[]>(configuration.ToProducerConfig($"pipe-input-{configuration.ApplicationId}-{topicName}"));

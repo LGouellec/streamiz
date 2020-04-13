@@ -1,5 +1,6 @@
 ﻿using Confluent.Kafka;
 using kafka_stream_core.Errors;
+using kafka_stream_core.Kafka;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -18,7 +19,7 @@ namespace kafka_stream_core.Mock.Pipes
         private readonly Queue<(byte[], byte[])> queue = new Queue<(byte[], byte[])>();
         private readonly object _lock = new object();
 
-        public PipeOutput(string topicName, TimeSpan timeout, IStreamConfig configuration, CancellationToken token)
+        public PipeOutput(string topicName, TimeSpan timeout, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, CancellationToken token)
         {
             this.topicName = topicName;
             this.timeout = timeout;

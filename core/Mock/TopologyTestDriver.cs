@@ -1,5 +1,6 @@
 ﻿using Confluent.Kafka;
 using kafka_stream_core.Errors;
+using kafka_stream_core.Kafka;
 using kafka_stream_core.Kafka.Internal;
 using kafka_stream_core.Mock.Kafka;
 using kafka_stream_core.Mock.Pipes;
@@ -24,9 +25,10 @@ namespace kafka_stream_core.Mock
 
         private readonly IDictionary<string, IPipeInput> inputs = new Dictionary<string, IPipeInput>();
         private readonly IDictionary<string, IPipeOutput> outputs = new Dictionary<string, IPipeOutput>();
-        private readonly PipeBuilder pipeBuilder = new PipeBuilder();
+        private readonly PipeBuilder pipeBuilder = null;
 
         private readonly IThread threadTopology = null;
+        private readonly IKafkaSupplier kafkaSupplier = null;
 
         public TopologyTestDriver(Topology topology, IStreamConfig config)
             :this(topology.Builder, config)
@@ -43,7 +45,8 @@ namespace kafka_stream_core.Mock
             var clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{this.configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;
             this.configuration.ClientId = clientId;
 
-            var kafkaSupplier = new MockKafkaSupplier();
+            kafkaSupplier = new MockKafkaSupplier();
+            pipeBuilder = new PipeBuilder(kafkaSupplier);
 
             this.processorTopology = this.topologyBuilder.BuildTopology();
 
@@ -66,7 +69,7 @@ namespace kafka_stream_core.Mock
             TimeSpan timeout = TimeSpan.FromSeconds(30);
 
             threadTopology.StateChanged += (thread, old, @new) => {
-                if (@new is Processors.ThreadState && ((Processors.ThreadState)@new) == Processors.ThreadState.RUNNING)
+                if (@new is Processors.ThreadState && ((Processors.ThreadState)@new) == Processors.ThreadState.PARTITIONS_ASSIGNED)
                     isRunningState = true;
             };
 
@@ -75,7 +78,7 @@ namespace kafka_stream_core.Mock
             {
                 Thread.Sleep(250);
                 if (DateTime.Now > dt + timeout)
-                    throw new StreamsException("Test topology driver can't initiliaze state !");
+                    throw new StreamsException($"Test topology driver can't initiliaze state after {timeout.TotalSeconds} seconds !");
             }
         }
 

@@ -17,9 +17,12 @@ namespace kafka_stream_core.Mock.Kafka
             this.partitionNumber = part;
 
             this.partitions = new MockPartition[this.partitionNumber];
+            for (int i = 0; i < this.partitionNumber; ++i)
+                this.partitions[i] = new MockPartition(i);
         }
 
         public string Name => topic;
+        public int PartitionNumber => partitionNumber;
 
         public void AddMessage(byte[] key, byte[] value, int partition)
         {

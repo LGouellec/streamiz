@@ -10,7 +10,7 @@ namespace kafka_stream_core.Mock.Kafka
     {
         public IAdminClient GetAdmin(AdminClientConfig config)
         {
-            throw new NotImplementedException();
+            return new MockAdminClient();
         }
 
         public IConsumer<byte[], byte[]> GetConsumer(ConsumerConfig config, IConsumerRebalanceListener rebalanceListener)
@@ -23,7 +23,7 @@ namespace kafka_stream_core.Mock.Kafka
 
         public IProducer<byte[], byte[]> GetProducer(ProducerConfig config)
         {
-            throw new NotImplementedException();
+            return new MockProducer();
         }
 
         public IConsumer<byte[], byte[]> GetRestoreConsumer(ConsumerConfig config)

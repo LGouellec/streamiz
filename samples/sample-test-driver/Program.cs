@@ -1,5 +1,6 @@
 ﻿using Confluent.Kafka;
 using kafka_stream_core;
+using kafka_stream_core.Crosscutting;
 using kafka_stream_core.Mock;
 using kafka_stream_core.SerDes;
 using kafka_stream_core.Stream;

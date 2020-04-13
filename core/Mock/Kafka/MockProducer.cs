@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace kafka_stream_core.Mock.Kafka
 {
-    internal class MockProducer<K, V> : IProducer<K, V>
+    internal class MockProducer : IProducer<byte[], byte[]>
     {
         #region IProducer Impl
 
@@ -60,22 +60,22 @@ namespace kafka_stream_core.Mock.Kafka
             throw new NotImplementedException();
         }
 
-        public void Produce(string topic, Message<K, V> message, Action<DeliveryReport<K, V>> deliveryHandler = null)
+        public void Produce(string topic, Message<byte[], byte[]> message, Action<DeliveryReport<byte[], byte[]>> deliveryHandler = null)
         {
             throw new NotImplementedException();
         }
 
-        public void Produce(TopicPartition topicPartition, Message<K, V> message, Action<DeliveryReport<K, V>> deliveryHandler = null)
+        public void Produce(TopicPartition topicPartition, Message<byte[], byte[]> message, Action<DeliveryReport<byte[], byte[]>> deliveryHandler = null)
         {
             throw new NotImplementedException();
         }
 
-        public Task<DeliveryResult<K, V>> ProduceAsync(string topic, Message<K, V> message, CancellationToken cancellationToken = default)
+        public Task<DeliveryResult<byte[], byte[]>> ProduceAsync(string topic, Message<byte[], byte[]> message, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public Task<DeliveryResult<K, V>> ProduceAsync(TopicPartition topicPartition, Message<K, V> message, CancellationToken cancellationToken = default)
+        public Task<DeliveryResult<byte[], byte[]>> ProduceAsync(TopicPartition topicPartition, Message<byte[], byte[]> message, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }

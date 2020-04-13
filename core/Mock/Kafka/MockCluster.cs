@@ -104,7 +104,7 @@ namespace kafka_stream_core.Mock.Kafka
             foreach (var t in topics)
                 this.CreateTopic(t);
 
-            if (consumers.ContainsKey(consumer.Name))
+            if (!consumers.ContainsKey(consumer.Name))
             {
                 var cons = new MockConsumerInformation
                 {
@@ -141,17 +141,63 @@ namespace kafka_stream_core.Mock.Kafka
 
         #region Partitions Gesture
 
-        private void CheckAssignedPartitions()
+        private IEnumerable<TopicPartition> Generate(string topic, int start, int number)
+        {
+            for (int i = start; i < start + number; ++i)
+                yield return new TopicPartition(topic, i);
+        }
+
+        private void NeedRebalance()
         {
             foreach (var group in consumerGroups.Keys)
             {
+                var map = new Dictionary<string, List<MockConsumerInformation>>();
                 var consumers = consumerGroups[group];
                 foreach(var c in consumers)
                 {
                     var consumer = this.consumers[c];
-                    if(!consumer.Assigned)
+                    consumer.Topics.ForEach((t) =>
                     {
-                        // TODO : 
+                        if (map.ContainsKey(t))
+                            map[t].Add(consumer);
+                        else
+                            map.Add(t, new List<MockConsumerInformation> { consumer });
+                    });
+                }
+            
+                foreach(var kv in map)
+                {
+                    var topicPartitionNumber = this.topics[kv.Key].PartitionNumber;
+                    int numbPartEach = topicPartitionNumber / kv.Value.Count;
+                    int modulo = topicPartitionNumber % kv.Value.Count;
+
+                    int j = 0;
+                    for (int i = 0; i < kv.Value.Count; ++i)
+                    {
+                        List<TopicPartition> parts = null;
+                        if (i == kv.Value.Count - 1)
+                        {
+                            parts = new List<TopicPartition>(Generate(kv.Key, j, numbPartEach + modulo));
+                        }
+                        else
+                        {
+                            parts = new List<TopicPartition>(Generate(kv.Key, j, numbPartEach));
+                        }
+
+                        kv.Value[i].Partitions.AddRange(parts);
+                        foreach (var k in parts)
+                            if (!kv.Value[i].TopicPartitionsOffset.Any(m => m.Topic.Equals(k.Topic) && m.Partition.Equals(k.Partition)))
+                                kv.Value[i].TopicPartitionsOffset.Add(new MockTopicPartitionOffset
+                                {
+                                    OffsetComitted = 0,
+                                    OffsetConsumed = 0,
+                                    Partition = k.Partition,
+                                    Topic = k.Topic
+                                });
+
+                        kv.Value[i].RebalanceListener.PartitionsAssigned(kv.Value[i].Consumer, kv.Value[i].Partitions);
+                        kv.Value[i].Assigned = true;
+                        j += numbPartEach;
                     }
                 }
             }
@@ -159,6 +205,9 @@ namespace kafka_stream_core.Mock.Kafka
 
         internal void Assign(MockConsumer mockConsumer, IEnumerable<TopicPartition> topicPartitions)
         {
+            foreach (var t in topicPartitions)
+                this.CreateTopic(t.Topic);
+
             if (consumers.ContainsKey(mockConsumer.Name))
             {
                 var c = consumers[mockConsumer.Name];
@@ -184,6 +233,7 @@ namespace kafka_stream_core.Mock.Kafka
                             cus.Partitions.Remove(j);
 
                         cus.RebalanceListener.PartitionsAssigned(cus.Consumer, cus.Partitions);
+                        cus.Assigned = true;
                     }
 
                     c.Partitions = new List<TopicPartition>(topicPartitions);
@@ -246,6 +296,7 @@ namespace kafka_stream_core.Mock.Kafka
                             });
 
                     otherConsumers[i].RebalanceListener.PartitionsAssigned(otherConsumers[i].Consumer, otherConsumers[i].Partitions);
+                    otherConsumers[i].Assigned = true;
                     j += partEach;
                 }
 
@@ -296,13 +347,16 @@ namespace kafka_stream_core.Mock.Kafka
 
         internal ConsumeResult<byte[], byte[]> Consume(MockConsumer mockConsumer, TimeSpan timeout)
         {
+            foreach (var t in mockConsumer.Subscription)
+                this.CreateTopic(t);
+
             DateTime dt = DateTime.Now;
             ConsumeResult<byte[], byte[]> result = null;
             if (consumers.ContainsKey(mockConsumer.Name))
             {
                 var c = consumers[mockConsumer.Name];
-                if (c.Partitions.Count == 0)
-                    CheckAssignedPartitions();
+                if (!c.Assigned)
+                    NeedRebalance();
 
                 foreach (var p in c.Partitions)
                 {
