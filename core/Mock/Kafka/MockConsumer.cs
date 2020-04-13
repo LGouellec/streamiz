@@ -65,26 +65,26 @@ namespace kafka_stream_core.Mock.Kafka
 
         public List<TopicPartitionOffset> Commit()
         {
-            throw new NotImplementedException();
+            return MockCluster.Instance.Commit(this);
         }
 
         public void Commit(IEnumerable<TopicPartitionOffset> offsets)
         {
-            throw new NotImplementedException();
+            MockCluster.Instance.Commit(this, offsets);
         }
 
         public void Commit(ConsumeResult<byte[], byte[]> result)
-        {
-            throw new NotImplementedException();
-        }
+            => this.Commit(new List<TopicPartitionOffset> { new TopicPartitionOffset(result.TopicPartition, result.Offset) });
 
         public List<TopicPartitionOffset> Committed(TimeSpan timeout)
         {
+            // TODO : 
             throw new NotImplementedException();
         }
 
         public List<TopicPartitionOffset> Committed(IEnumerable<TopicPartition> partitions, TimeSpan timeout)
         {
+            // TODO : 
             throw new NotImplementedException();
         }
 
@@ -171,19 +171,13 @@ namespace kafka_stream_core.Mock.Kafka
         }
 
         public ConsumeResult<byte[], byte[]> Consume(int millisecondsTimeout)
-        {
-            throw new NotImplementedException();
-        }
+            => Consume(TimeSpan.FromMilliseconds(millisecondsTimeout));
 
         public ConsumeResult<byte[], byte[]> Consume(CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
+            => MockCluster.Instance.Consume(cancellationToken);
 
         public ConsumeResult<byte[], byte[]> Consume(TimeSpan timeout)
-        {
-            throw new NotImplementedException();
-        }
+            => MockCluster.Instance.Consume(timeout);
 
         #endregion
 

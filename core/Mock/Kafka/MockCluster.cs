@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using static kafka_stream_core.Mock.Kafka.MockConsumerInformation;
 
 namespace kafka_stream_core.Mock.Kafka
@@ -242,6 +243,26 @@ namespace kafka_stream_core.Mock.Kafka
         #endregion
 
         #region Consumer (Read + Commit) Gesture
+
+        internal List<TopicPartitionOffset> Commit(MockConsumer mockConsumer)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void Commit(MockConsumer mockConsumer, IEnumerable<TopicPartitionOffset> offsets)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal ConsumeResult<byte[], byte[]> Consume(TimeSpan timeout)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal ConsumeResult<byte[], byte[]> Consume(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
 
         #endregion
     }
