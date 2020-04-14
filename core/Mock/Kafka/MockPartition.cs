@@ -25,6 +25,6 @@ namespace kafka_stream_core.Mock.Kafka
         }
 
         internal TestRecord<byte[], byte[]> GetMessage(long offset) =>
-            offset < Size - 1 ? new TestRecord<byte[], byte[]> { Key = log[(int)offset].Item1, Value = log[(int)offset].Item2 } : null;
+            offset <= Size - 1 ? new TestRecord<byte[], byte[]> { Key = log[(int)offset].Item1, Value = log[(int)offset].Item2 } : null;
     }
 }

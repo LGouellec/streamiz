@@ -14,7 +14,7 @@ namespace sample_test_driver
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-test-driver-app";
-
+            
             StreamBuilder builder = new StreamBuilder();
 
             builder.Stream<string, string>("test")
@@ -26,9 +26,10 @@ namespace sample_test_driver
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("test");
-                var outputTopic = driver.CreateOuputTopic<string, string>("test-output", TimeSpan.FromSeconds(100));
+                var outputTopic = driver.CreateOuputTopic<string, string>("test-output", TimeSpan.FromSeconds(5));
                 inputTopic.PipeInput("test", "coucou");
-                var r = outputTopic.ReadKeyValue();
+                inputTopic.PipeInput("test", "test-coucou");
+                var r = outputTopic.ReadKeyValueList();
             }
         }
     }

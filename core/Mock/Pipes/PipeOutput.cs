@@ -1,8 +1,10 @@
 ﻿using Confluent.Kafka;
+using kafka_stream_core.Crosscutting;
 using kafka_stream_core.Errors;
 using kafka_stream_core.Kafka;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -19,14 +21,22 @@ namespace kafka_stream_core.Mock.Pipes
         private readonly Queue<(byte[], byte[])> queue = new Queue<(byte[], byte[])>();
         private readonly object _lock = new object();
 
+        public int Size
+        {
+            get
+            {
+                lock (_lock)
+                    return queue.Count;
+            }
+        }
+
         public PipeOutput(string topicName, TimeSpan timeout, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, CancellationToken token)
         {
             this.topicName = topicName;
             this.timeout = timeout;
 
-            var builder = new ConsumerBuilder<byte[], byte[]>(configuration.ToConsumerConfig($"pipe-output-{configuration.ApplicationId}-{topicName}"));
-            this.consumer = builder.Build();
-
+            this.consumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig($"pipe-output-{configuration.ApplicationId}-{topicName}"), null);
+            
             this.token = token;
             this.readThread = new Thread(ReadThread);
             this.readThread.Start();
@@ -60,7 +70,7 @@ namespace kafka_stream_core.Mock.Pipes
         public KeyValuePair<byte[], byte[]> Read()
         {
             int count = 0;
-            while (count <= 1)
+            while (count <= 10)
             {
                 int size = 0;
                 lock (_lock)
@@ -73,13 +83,32 @@ namespace kafka_stream_core.Mock.Pipes
                 }
                 else
                 {
-                    // REFACTOR
-                    Thread.Sleep(timeout);
+                    Thread.Sleep((int)timeout.TotalMilliseconds / 10);
                     ++count;
                 }
             }
 
             throw new StreamsException($"No record found in topic {topicName} after {timeout.TotalSeconds}s !");
+        }
+
+        public List<PipeOutputInfo> GetInfos()
+        {
+            List<PipeOutputInfo> l = new List<PipeOutputInfo>();
+            var watermark = this.consumer.GetWatermarkOffsets();
+            var offsets = this.consumer.Committed(TimeSpan.FromSeconds(1));
+            foreach(var o in offsets)
+            {
+                var w = watermark.FirstOrDefault(f => f.Topic.Equals(o.Topic) && f.Partition.Equals(o.Partition));
+                l.Add(new PipeOutputInfo
+                {
+                    Offset = o.Offset.Value,
+                    Topic = o.Topic,
+                    Partition = o.Partition,
+                    High = w != null ? w.High.Value : o.Offset.Value,
+                    Low = w != null ? w.Low.Value : o.Offset.Value
+                });
+            }
+            return l;
         }
     }
 }

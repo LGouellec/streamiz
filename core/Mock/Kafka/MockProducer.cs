@@ -9,80 +9,85 @@ namespace kafka_stream_core.Mock.Kafka
 {
     internal class MockProducer : IProducer<byte[], byte[]>
     {
+        public MockProducer(string name)
+        {
+            Name = name;
+        }
+
         #region IProducer Impl
 
-        public Handle Handle => throw new NotImplementedException();
+        public Handle Handle => null;
 
-        public string Name => throw new NotImplementedException();
+        public string Name { get; }
 
         public void AbortTransaction(TimeSpan timeout)
         {
-            throw new NotImplementedException();
+            // TODO : 
         }
 
-        public int AddBrokers(string brokers)
-        {
-            throw new NotImplementedException();
-        }
+        public int AddBrokers(string brokers) => 0;
 
         public void BeginTransaction()
         {
-            throw new NotImplementedException();
+            // TODO
         }
 
         public void CommitTransaction(TimeSpan timeout)
         {
-            throw new NotImplementedException();
+            // TODO
         }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            // TODO
         }
 
         public int Flush(TimeSpan timeout)
         {
-            throw new NotImplementedException();
+            // TODO
+            return 0;
         }
 
         public void Flush(CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            // TODO : 
         }
 
         public void InitTransactions(TimeSpan timeout)
         {
-            throw new NotImplementedException();
+            // TODO : 
         }
 
-        public int Poll(TimeSpan timeout)
-        {
-            throw new NotImplementedException();
-        }
+        public int Poll(TimeSpan timeout) => 0;
+
 
         public void Produce(string topic, Message<byte[], byte[]> message, Action<DeliveryReport<byte[], byte[]>> deliveryHandler = null)
         {
-            throw new NotImplementedException();
+            var result = MockCluster.Instance.Produce(topic, message);
+            deliveryHandler?.Invoke(result);
         }
 
         public void Produce(TopicPartition topicPartition, Message<byte[], byte[]> message, Action<DeliveryReport<byte[], byte[]>> deliveryHandler = null)
         {
-            throw new NotImplementedException();
+            var result = MockCluster.Instance.Produce(topicPartition, message);
+            deliveryHandler?.Invoke(result);
         }
 
         public Task<DeliveryResult<byte[], byte[]>> ProduceAsync(string topic, Message<byte[], byte[]> message, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            var r = MockCluster.Instance.Produce(topic, message) as DeliveryResult<byte[], byte[]>;
+            return Task.FromResult(r);
         }
 
         public Task<DeliveryResult<byte[], byte[]>> ProduceAsync(TopicPartition topicPartition, Message<byte[], byte[]> message, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            var r = MockCluster.Instance.Produce(topicPartition, message) as DeliveryResult<byte[], byte[]>;
+            return Task.FromResult(r);
         }
 
         public void SendOffsetsToTransaction(IEnumerable<TopicPartitionOffset> offsets, IConsumerGroupMetadata groupMetadata, TimeSpan timeout)
         {
-            throw new NotImplementedException();
+            // TODO
         }
 
         #endregion

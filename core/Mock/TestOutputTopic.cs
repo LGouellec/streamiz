@@ -1,7 +1,10 @@
-﻿using kafka_stream_core.Mock.Pipes;
+﻿using kafka_stream_core.Errors;
+using kafka_stream_core.Mock.Kafka;
+using kafka_stream_core.Mock.Pipes;
 using kafka_stream_core.SerDes;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace kafka_stream_core.Mock
@@ -31,16 +34,32 @@ namespace kafka_stream_core.Mock
             this.valueSerdes = valueSerdes;
         }
 
-        public bool IsEmpty { get; }
+        public bool IsEmpty
+        {
+            get
+            {
+                var infos = pipe.GetInfos();
+                foreach (var i in infos)
+                    if (i.Offset < i.High)
+                        return false;
+                return true;
+            }
+        }
 
-        public int QueueSize { get; }
+        public int QueueSize => pipe.Size;
 
         private TestRecord<K, V> ReadRecord()
         {
-            var record = pipe.Read();
-            var key = keySerdes != null ? keySerdes.Deserialize(record.Key) : (K)configuration.DefaultKeySerDes.DeserializeObject(record.Key);
-            var value = valueSerdes != null ? valueSerdes.Deserialize(record.Value) : (V)configuration.DefaultValueSerDes.DeserializeObject(record.Value);
-            return new TestRecord<K, V> { Key = key, Value = value };
+            try
+            {
+                var record = pipe.Read();
+                var key = keySerdes != null ? keySerdes.Deserialize(record.Key) : (K)configuration.DefaultKeySerDes.DeserializeObject(record.Key);
+                var value = valueSerdes != null ? valueSerdes.Deserialize(record.Value) : (V)configuration.DefaultValueSerDes.DeserializeObject(record.Value);
+                return new TestRecord<K, V> { Key = key, Value = value };
+            }catch(StreamsException e)
+            {
+                return new TestRecord<K, V> { Key = default(K), Value = default(V) };
+            }
         }
 
         #region Read 
@@ -66,12 +85,7 @@ namespace kafka_stream_core.Mock
         }
 
         public IEnumerable<V> ReadValueList()
-        {
-            List<V> records = new List<V>();
-            while (!IsEmpty)
-                records.Add(this.ReadValue());
-            return records;
-        }
+            => ReadKeyValueList().Select(kv => kv.Value).ToList();
 
         #endregion
     }

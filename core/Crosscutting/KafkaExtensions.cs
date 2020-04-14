@@ -8,6 +8,17 @@ namespace kafka_stream_core.Crosscutting
 {
     internal static class KafkaExtensions
     {
+        internal static List<WatermarkOffsetsByTopicPartition> GetWatermarkOffsets<K, V>(this IConsumer<K, V> consumer)
+        {
+            List<WatermarkOffsetsByTopicPartition> l = new List<WatermarkOffsetsByTopicPartition>();
+            foreach (var p in consumer.Assignment)
+            {
+                var w = consumer.GetWatermarkOffsets(p);
+                l.Add(new WatermarkOffsetsByTopicPartition(p.Topic, p.Partition, w.Low, w.High);
+            }
+            return l;
+        }
+
         internal static IEnumerable<ConsumeResult<K, V>> ConsumeRecords<K, V>(this IConsumer<K, V> consumer, TimeSpan timeout)
         {
             List<ConsumeResult<K, V>> records = new List<ConsumeResult<K, V>>();

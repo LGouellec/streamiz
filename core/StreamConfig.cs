@@ -1566,6 +1566,21 @@ namespace kafka_stream_core
             EnableAutoCommit = false;
         }
 
+        public StreamConfig(StreamConfig config)
+        {
+            foreach (var k in config)
+                DictionaryExtensions.AddOrUpdate(this, k.Key, k.Value);
+
+            _internalConsumerConfig = new Dictionary<string, string>(config._internalConsumerConfig);
+            _internalAdminConfig = new Dictionary<string, string>(config._internalAdminConfig);
+            _internalProducerConfig = new Dictionary<string, string>(config._internalProducerConfig);
+
+            _consumerConfig = new ConsumerConfig(config._consumerConfig);
+            _producerConfig = new ProducerConfig(config._producerConfig);
+            _adminClientConfig = new AdminClientConfig(config._adminClientConfig);
+            _config = new ClientConfig(config._config);
+        }
+
         #endregion
 
         #region IStreamConfig Impl

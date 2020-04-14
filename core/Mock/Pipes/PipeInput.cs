@@ -16,8 +16,7 @@ namespace kafka_stream_core.Mock.Pipes
         public PipeInput(string topicName, IStreamConfig configuration, IKafkaSupplier kafkaSupplier)
         {
             this.topicName = topicName;
-            var builder = new ProducerBuilder<byte[], byte[]>(configuration.ToProducerConfig($"pipe-input-{configuration.ApplicationId}-{topicName}"));
-            this.producer = builder.Build();
+            this.producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig($"pipe-input-{configuration.ApplicationId}-{topicName}"));
         }
 
         public void Dispose()
@@ -40,6 +39,7 @@ namespace kafka_stream_core.Mock.Pipes
                         int a = 1;
                     });
             }
+            this.producer.Flush();
         }
 
         public void Pipe(byte[] key, byte[] value, DateTime timestamp)

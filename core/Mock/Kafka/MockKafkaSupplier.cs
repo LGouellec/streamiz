@@ -23,7 +23,7 @@ namespace kafka_stream_core.Mock.Kafka
 
         public IProducer<byte[], byte[]> GetProducer(ProducerConfig config)
         {
-            return new MockProducer();
+            return new MockProducer(config.ClientId);
         }
 
         public IConsumer<byte[], byte[]> GetRestoreConsumer(ConsumerConfig config)

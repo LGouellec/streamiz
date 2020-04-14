@@ -21,6 +21,7 @@ namespace kafka_stream_core.Mock
         private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
         private readonly InternalTopologyBuilder topologyBuilder;
         private readonly IStreamConfig configuration;
+        private readonly IStreamConfig topicConfiguration;
         private readonly ProcessorTopology processorTopology;
 
         private readonly IDictionary<string, IPipeInput> inputs = new Dictionary<string, IPipeInput>();
@@ -38,6 +39,10 @@ namespace kafka_stream_core.Mock
         {
             this.topologyBuilder = builder;
             this.configuration = config;
+
+            this.topicConfiguration = config is StreamConfig ? new StreamConfig((StreamConfig)config) : config;
+            this.topicConfiguration.ApplicationId = $"test-driver-{this.configuration.ApplicationId}";
+
             // ONLY 1 thread for test driver
             this.configuration.NumStreamThreads = 1;
 
@@ -101,9 +106,9 @@ namespace kafka_stream_core.Mock
 
         public TestInputTopic<K,V> CreateInputTopic<K, V>(string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
         {
-            var pipe = pipeBuilder.Input(topicName, this.configuration);
+            var pipe = pipeBuilder.Input(topicName, this.topicConfiguration);
             inputs.Add(topicName, pipe);
-            return new TestInputTopic<K, V>(pipe, this.configuration, keySerdes, valueSerdes);
+            return new TestInputTopic<K, V>(pipe, this.topicConfiguration, keySerdes, valueSerdes);
         }
 
         public TestInputTopic<K, V> CreateInputTopic<K, V, KS, VS>(string topicName)
@@ -120,9 +125,9 @@ namespace kafka_stream_core.Mock
 
         public TestOutputTopic<K, V> CreateOuputTopic<K, V>(string topicName, TimeSpan consumeTimeout, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
         {
-            var pipe = pipeBuilder.Output(topicName, consumeTimeout, this.configuration, this.tokenSource.Token);
+            var pipe = pipeBuilder.Output(topicName, consumeTimeout, this.topicConfiguration, this.tokenSource.Token);
             outputs.Add(topicName, pipe);
-            return new TestOutputTopic<K, V>(pipe, this.configuration, keySerdes, valueSerdes);
+            return new TestOutputTopic<K, V>(pipe, this.topicConfiguration, keySerdes, valueSerdes);
         }
 
         public TestOutputTopic<K, V> CreateOuputTopic<K, V, KS, VS>(string topicName)
