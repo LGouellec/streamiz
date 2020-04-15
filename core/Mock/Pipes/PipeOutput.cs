@@ -2,6 +2,7 @@
 using kafka_stream_core.Crosscutting;
 using kafka_stream_core.Errors;
 using kafka_stream_core.Kafka;
+using log4net;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,7 @@ namespace kafka_stream_core.Mock.Pipes
     {
         private readonly string topicName;
         private readonly TimeSpan timeout;
+        private readonly ILog logger = Logger.GetLogger(typeof(PipeOutput));
 
         private readonly CancellationToken token;
         private readonly Thread readThread;
@@ -72,7 +74,8 @@ namespace kafka_stream_core.Mock.Pipes
 
         public void Dispose()
         {
-            if (queue.Count > 0) ; // TODO : logger
+            if (queue.Count > 0)
+                logger.Warn($"Dispose pipe queue for topic {this.topicName} whereas it's not empty (Size : {queue.Count})");
 
             consumer.Unsubscribe();
             readThread.Join();

@@ -74,7 +74,7 @@ namespace kafka_stream_core.Mock
             TimeSpan timeout = TimeSpan.FromSeconds(30);
 
             threadTopology.StateChanged += (thread, old, @new) => {
-                if (@new is Processors.ThreadState && ((Processors.ThreadState)@new) == Processors.ThreadState.PARTITIONS_ASSIGNED)
+                if (@new is Processors.ThreadState && ((Processors.ThreadState)@new) == Processors.ThreadState.RUNNING)
                     isRunningState = true;
             };
 
