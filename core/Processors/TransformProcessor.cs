@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using kafka_stream_core.SerDes;
+using Kafka.Streams.Net.SerDes;
 
-namespace kafka_stream_core.Processors
+namespace Kafka.Streams.Net.Processors
 {
     internal class TransformProcessor<K, V, K1, V1> : AbstractProcessor<K, V>
     {

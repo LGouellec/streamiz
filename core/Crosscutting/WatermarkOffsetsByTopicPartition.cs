@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Crosscutting
+namespace Kafka.Streams.Net.Crosscutting
 {
     internal class WatermarkOffsetsByTopicPartition : WatermarkOffsets
     {

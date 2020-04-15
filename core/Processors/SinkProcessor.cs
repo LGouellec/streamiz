@@ -1,11 +1,11 @@
-﻿using kafka_stream_core.Errors;
-using kafka_stream_core.Processors.Internal;
-using kafka_stream_core.SerDes;
+﻿using Kafka.Streams.Net.Errors;
+using Kafka.Streams.Net.Processors.Internal;
+using Kafka.Streams.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Processors
+namespace Kafka.Streams.Net.Processors
 {
     internal class SinkProcessor<K, V> : AbstractProcessor<K, V>
     {

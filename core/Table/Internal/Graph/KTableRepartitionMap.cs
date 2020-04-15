@@ -1,11 +1,11 @@
-﻿using kafka_stream_core.Processors;
-using kafka_stream_core.State;
-using kafka_stream_core.Stream;
+﻿using Kafka.Streams.Net.Processors;
+using Kafka.Streams.Net.State;
+using Kafka.Streams.Net.Stream;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Table.Internal.Graph
+namespace Kafka.Streams.Net.Table.Internal.Graph
 {
     internal class KTableRepartitionMap<K, V, K1, V1> : IKTableProcessorSupplier<K, V, KeyValuePair<K1, V1>>
     {

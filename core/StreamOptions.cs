@@ -1,7 +1,7 @@
-﻿using kafka_stream_core.Processors;
-using kafka_stream_core.Stream;
+﻿using Kafka.Streams.Net.Processors;
+using Kafka.Streams.Net.Stream;
 
-namespace kafka_stream_core
+namespace Kafka.Streams.Net
 {
     public class StreamOptions
     {

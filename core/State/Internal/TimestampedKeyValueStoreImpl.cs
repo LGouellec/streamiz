@@ -1,18 +1,16 @@
-﻿using kafka_stream_core.Crosscutting;
-using kafka_stream_core.SerDes;
-using System;
+﻿using Kafka.Streams.Net.Crosscutting;
+using Kafka.Streams.Net.SerDes;
 using System.Collections.Generic;
-using System.Text;
 
-namespace kafka_stream_core.State.Internal
+namespace Kafka.Streams.Net.State.Internal
 {
-    internal class TimestampedKeyValueStore<K, V> :
+    internal class TimestampedKeyValueStoreImpl<K, V> :
         WrappedKeyValueStore<K, ValueAndTimestamp<V>>,
-        kafka_stream_core.State.TimestampedKeyValueStore<K, V>
+        TimestampedKeyValueStore<K, V>
     {
         private bool initStoreSerdes = false;
 
-        public TimestampedKeyValueStore(KeyValueStore<Bytes, byte[]> wrapped, ISerDes<K> keySerdes, ISerDes<ValueAndTimestamp<V>> valueSerdes)
+        public TimestampedKeyValueStoreImpl(KeyValueStore<Bytes, byte[]> wrapped, ISerDes<K> keySerdes, ISerDes<ValueAndTimestamp<V>> valueSerdes)
             : base(wrapped, keySerdes, valueSerdes)
         {
 

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace kafka_stream_core.Mock.Kafka
+namespace Kafka.Streams.Net.Mock.Kafka
 {
     internal class MockProducer : IProducer<byte[], byte[]>
     {

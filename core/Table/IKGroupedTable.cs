@@ -1,4 +1,4 @@
-﻿namespace kafka_stream_core.Table
+﻿namespace Kafka.Streams.Net.Table
 {
     public interface IKGroupedTable<K, V>
     {

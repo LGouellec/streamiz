@@ -1,10 +1,10 @@
-﻿using kafka_stream_core.Crosscutting;
+﻿using Kafka.Streams.Net.Crosscutting;
 using log4net;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Processors.Internal
+namespace Kafka.Streams.Net.Processors.Internal
 {
     internal class RecordQueue<T>
     {

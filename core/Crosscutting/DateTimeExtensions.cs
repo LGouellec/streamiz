@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace kafka_stream_core.Crosscutting
+namespace Kafka.Streams.Net.Crosscutting
 {
     public static class DateTimeExtensions
     {

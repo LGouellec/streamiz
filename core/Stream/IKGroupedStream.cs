@@ -1,4 +1,4 @@
-﻿namespace kafka_stream_core.Stream
+﻿namespace Kafka.Streams.Net.Stream
 {
     public interface IKGroupedStream<K, V>
     {

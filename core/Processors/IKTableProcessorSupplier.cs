@@ -1,7 +1,7 @@
-﻿using kafka_stream_core.Table.Internal;
+﻿using Kafka.Streams.Net.Table.Internal;
 using System;
 
-namespace kafka_stream_core.Processors
+namespace Kafka.Streams.Net.Processors
 {
     internal interface IKTableProcessorSupplier
     {

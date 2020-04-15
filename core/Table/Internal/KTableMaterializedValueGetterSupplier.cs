@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using kafka_stream_core.State;
+using Kafka.Streams.Net.State;
 
-namespace kafka_stream_core.Table.Internal
+namespace Kafka.Streams.Net.Table.Internal
 {
     internal class KTableMaterializedValueGetterSupplier<K, V> : IKTableValueGetterSupplier<K, V>
     {

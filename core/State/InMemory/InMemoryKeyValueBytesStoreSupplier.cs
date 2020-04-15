@@ -1,10 +1,10 @@
-﻿using kafka_stream_core.Crosscutting;
-using kafka_stream_core.State.Supplier;
+﻿using Kafka.Streams.Net.Crosscutting;
+using Kafka.Streams.Net.State.Supplier;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.State.InMemory
+namespace Kafka.Streams.Net.State.InMemory
 {
     internal class InMemoryKeyValueBytesStoreSupplier : KeyValueBytesStoreSupplier
     {

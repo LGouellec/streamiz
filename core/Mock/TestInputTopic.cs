@@ -1,12 +1,12 @@
-﻿using kafka_stream_core.Crosscutting;
-using kafka_stream_core.Mock.Pipes;
-using kafka_stream_core.SerDes;
+﻿using Kafka.Streams.Net.Crosscutting;
+using Kafka.Streams.Net.Mock.Pipes;
+using Kafka.Streams.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace kafka_stream_core.Mock
+namespace Kafka.Streams.Net.Mock
 {
     /// <summary>
     /// Not threadsafe

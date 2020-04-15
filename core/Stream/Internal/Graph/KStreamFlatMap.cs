@@ -1,7 +1,7 @@
-﻿using kafka_stream_core.Processors;
+﻿using Kafka.Streams.Net.Processors;
 using System.Collections.Generic;
 
-namespace kafka_stream_core.Stream.Internal.Graph
+namespace Kafka.Streams.Net.Stream.Internal.Graph
 {
     internal class KStreamFlatMap<K, V, K1, V1> : IProcessorSupplier<K, V>
     {

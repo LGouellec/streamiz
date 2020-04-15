@@ -1,8 +1,8 @@
-﻿using kafka_stream_core.Processors;
+﻿using Kafka.Streams.Net.Processors;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace kafka_stream_core.Stream.Internal
+namespace Kafka.Streams.Net.Stream.Internal
 {
     internal class ProcessorTopology
     {

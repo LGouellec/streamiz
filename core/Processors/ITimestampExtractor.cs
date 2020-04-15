@@ -1,6 +1,6 @@
 ﻿using Confluent.Kafka;
 
-namespace kafka_stream_core.Processors
+namespace Kafka.Streams.Net.Processors
 {
     public interface ITimestampExtractor
     {

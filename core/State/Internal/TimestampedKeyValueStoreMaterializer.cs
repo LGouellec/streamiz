@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using kafka_stream_core.Crosscutting;
-using kafka_stream_core.State.InMemory;
-using kafka_stream_core.State.Supplier;
-using kafka_stream_core.Table;
+using Kafka.Streams.Net.Crosscutting;
+using Kafka.Streams.Net.State.InMemory;
+using Kafka.Streams.Net.State.Supplier;
+using Kafka.Streams.Net.Table;
 
-namespace kafka_stream_core.State.Internal
+namespace Kafka.Streams.Net.State.Internal
 {
     internal class TimestampedKeyValueStoreMaterializer<K, V>
     {
@@ -17,7 +17,7 @@ namespace kafka_stream_core.State.Internal
             this.materialized = materializedInternal;
         }
 
-        public StoreBuilder<kafka_stream_core.State.TimestampedKeyValueStore<K, V>> Materialize()
+        public StoreBuilder<TimestampedKeyValueStore<K, V>> Materialize()
         {
             KeyValueBytesStoreSupplier supplier = (KeyValueBytesStoreSupplier)materialized.StoreSupplier;
             if (supplier == null)
@@ -28,7 +28,7 @@ namespace kafka_stream_core.State.Internal
                 supplier = new InMemoryKeyValueBytesStoreSupplier(name);
             }
 
-            StoreBuilder<kafka_stream_core.State.TimestampedKeyValueStore< K, V >> builder = Stores.TimestampedKeyValueStoreBuilder(
+            StoreBuilder<TimestampedKeyValueStore< K, V >> builder = Stores.TimestampedKeyValueStoreBuilder(
                  supplier,
                  materialized.KeySerdes,
                  materialized.ValueSerdes);

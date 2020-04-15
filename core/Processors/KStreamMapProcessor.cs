@@ -1,9 +1,9 @@
-﻿using kafka_stream_core.Stream;
-using kafka_stream_core.Stream.Internal.Graph;
+﻿using Kafka.Streams.Net.Stream;
+using Kafka.Streams.Net.Stream.Internal.Graph;
 using System;
 using System.Collections.Generic;
 
-namespace kafka_stream_core.Processors
+namespace Kafka.Streams.Net.Processors
 {
     internal class KStreamMapProcessor<K, V, K1, V1> : AbstractProcessor<K, V>
     {

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using kafka_stream_core.Errors;
-using kafka_stream_core.Stream;
-using kafka_stream_core.Table.Internal;
+using Kafka.Streams.Net.Errors;
+using Kafka.Streams.Net.Stream;
+using Kafka.Streams.Net.Table.Internal;
 
-namespace kafka_stream_core.Processors
+namespace Kafka.Streams.Net.Processors
 {
     internal class KTableMapProcessor<K, V, K1, V1> : AbstractKTableProcessor<K, V, K1, V1>
     {

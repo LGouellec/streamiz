@@ -1,11 +1,11 @@
-﻿using kafka_stream_core.SerDes;
-using kafka_stream_core.State.Internal.Builder;
-using kafka_stream_core.State.Supplier;
+﻿using Kafka.Streams.Net.SerDes;
+using Kafka.Streams.Net.State.Internal.Builder;
+using Kafka.Streams.Net.State.Supplier;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.State
+namespace Kafka.Streams.Net.State
 {
     internal static class Stores
     {
@@ -16,7 +16,7 @@ namespace kafka_stream_core.State
             return null;
         }
 
-        public static StoreBuilder<kafka_stream_core.State.TimestampedKeyValueStore<K, V>> TimestampedKeyValueStoreBuilder<K, V>(KeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
+        public static StoreBuilder<TimestampedKeyValueStore<K, V>> TimestampedKeyValueStoreBuilder<K, V>(KeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
         {
             return new TimestampedKeyValueStoreBuilder<K, V>(supplier, keySerde, valueSerde);
         }

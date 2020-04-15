@@ -1,6 +1,6 @@
-﻿using kafka_stream_core.SerDes;
+﻿using Kafka.Streams.Net.SerDes;
 
-namespace kafka_stream_core.Stream.Internal
+namespace Kafka.Streams.Net.Stream.Internal
 {
     internal class Produced<K, V>
     {

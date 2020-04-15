@@ -1,14 +1,14 @@
-﻿using kafka_stream_core.Errors;
-using kafka_stream_core.State;
-using kafka_stream_core.Stream;
-using kafka_stream_core.Stream.Internal;
-using kafka_stream_core.Stream.Internal.Graph.Nodes;
-using kafka_stream_core.Table.Internal.Graph.Nodes;
+﻿using Kafka.Streams.Net.Errors;
+using Kafka.Streams.Net.State;
+using Kafka.Streams.Net.Stream;
+using Kafka.Streams.Net.Stream.Internal;
+using Kafka.Streams.Net.Stream.Internal.Graph.Nodes;
+using Kafka.Streams.Net.Table.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace kafka_stream_core.Processors.Internal
+namespace Kafka.Streams.Net.Processors.Internal
 {
     internal class InternalTopologyBuilder
     {

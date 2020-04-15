@@ -1,13 +1,13 @@
 ﻿using Confluent.Kafka;
-using kafka_stream_core.Kafka;
-using kafka_stream_core.Processors;
-using kafka_stream_core.Processors.Internal;
-using kafka_stream_core.State;
+using Kafka.Streams.Net.Kafka;
+using Kafka.Streams.Net.Processors;
+using Kafka.Streams.Net.Processors.Internal;
+using Kafka.Streams.Net.State;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core
+namespace Kafka.Streams.Net
 {
     public class ProcessorContext
     {

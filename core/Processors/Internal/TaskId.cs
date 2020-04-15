@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Processors.Internal
+namespace Kafka.Streams.Net.Processors.Internal
 {
     internal class TaskId
     {

@@ -1,17 +1,17 @@
-﻿using kafka_stream_core.Crosscutting;
-using kafka_stream_core.Processors.Internal;
-using kafka_stream_core.State;
-using kafka_stream_core.Stream.Internal.Graph;
-using kafka_stream_core.Stream.Internal.Graph.Nodes;
-using kafka_stream_core.Table;
-using kafka_stream_core.Table.Internal;
-using kafka_stream_core.Table.Internal.Graph;
-using kafka_stream_core.Table.Internal.Graph.Nodes;
+﻿using Kafka.Streams.Net.Crosscutting;
+using Kafka.Streams.Net.Processors.Internal;
+using Kafka.Streams.Net.State;
+using Kafka.Streams.Net.Stream.Internal.Graph;
+using Kafka.Streams.Net.Stream.Internal.Graph.Nodes;
+using Kafka.Streams.Net.Table;
+using Kafka.Streams.Net.Table.Internal;
+using Kafka.Streams.Net.Table.Internal.Graph;
+using Kafka.Streams.Net.Table.Internal.Graph.Nodes;
 using log4net;
 using System;
 using System.Collections.Generic;
 
-namespace kafka_stream_core.Stream.Internal
+namespace Kafka.Streams.Net.Stream.Internal
 {
     internal class InternalStreamBuilder : INameProvider
     {

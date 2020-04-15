@@ -1,15 +1,15 @@
-﻿using kafka_stream_core.Crosscutting;
-using kafka_stream_core.Processors;
-using kafka_stream_core.SerDes;
-using kafka_stream_core.State;
-using kafka_stream_core.State.InMemory;
-using kafka_stream_core.State.Supplier;
-using kafka_stream_core.Stream;
-using kafka_stream_core.Stream.Internal;
+﻿using Kafka.Streams.Net.Crosscutting;
+using Kafka.Streams.Net.Processors;
+using Kafka.Streams.Net.SerDes;
+using Kafka.Streams.Net.State;
+using Kafka.Streams.Net.State.InMemory;
+using Kafka.Streams.Net.State.Supplier;
+using Kafka.Streams.Net.Stream;
+using Kafka.Streams.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
 
-namespace kafka_stream_core.Table
+namespace Kafka.Streams.Net.Table
 {
     public class Materialized<K, V, S>
         where S : IStateStore

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace kafka_stream_core.Crosscutting
+namespace Kafka.Streams.Net.Crosscutting
 {
     internal static class LinqExtensions
     {

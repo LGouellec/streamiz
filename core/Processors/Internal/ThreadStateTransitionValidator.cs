@@ -1,4 +1,4 @@
-﻿namespace kafka_stream_core.Processors.Internal
+﻿namespace Kafka.Streams.Net.Processors.Internal
 {
     internal interface ThreadStateTransitionValidator
     {

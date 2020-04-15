@@ -1,14 +1,14 @@
 ﻿using Confluent.Kafka;
-using kafka_stream_core.Crosscutting;
-using kafka_stream_core.Processors.Internal;
-using kafka_stream_core.Stream.Internal;
+using Kafka.Streams.Net.Crosscutting;
+using Kafka.Streams.Net.Processors.Internal;
+using Kafka.Streams.Net.Stream.Internal;
 using log4net;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace kafka_stream_core.Processors
+namespace Kafka.Streams.Net.Processors
 {
     internal abstract class AbstractTask : ITask
     {

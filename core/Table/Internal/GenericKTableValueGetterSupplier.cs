@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Table.Internal
+namespace Kafka.Streams.Net.Table.Internal
 {
     internal class GenericKTableValueGetterSupplier<K, V> : IKTableValueGetterSupplier<K, V>
     {

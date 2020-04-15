@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Errors
+namespace Kafka.Streams.Net.Errors
 {
     public class IllegalStateException : Exception
     {

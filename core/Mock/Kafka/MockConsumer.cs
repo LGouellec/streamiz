@@ -1,12 +1,12 @@
 ﻿using Confluent.Kafka;
-using kafka_stream_core.Errors;
-using kafka_stream_core.Kafka;
+using Kafka.Streams.Net.Errors;
+using Kafka.Streams.Net.Kafka;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace kafka_stream_core.Mock.Kafka
+namespace Kafka.Streams.Net.Mock.Kafka
 {
     internal class MockConsumer : IConsumer<byte[], byte[]>
     {

@@ -1,9 +1,9 @@
-﻿using kafka_stream_core.Processors;
+﻿using Kafka.Streams.Net.Processors;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.State.Internal
+namespace Kafka.Streams.Net.State.Internal
 {
     internal class WrappedStateStore<S, K, V> : IStateStore
         where S : IStateStore

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Stream
+namespace Kafka.Streams.Net.Stream
 {
     public interface IValueMapper<V, VR>
     {

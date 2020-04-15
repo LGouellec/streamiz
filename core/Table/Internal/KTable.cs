@@ -1,18 +1,18 @@
-﻿using kafka_stream_core.Crosscutting;
-using kafka_stream_core.Processors;
-using kafka_stream_core.SerDes;
-using kafka_stream_core.State;
-using kafka_stream_core.State.Internal;
-using kafka_stream_core.Stream;
-using kafka_stream_core.Stream.Internal;
-using kafka_stream_core.Stream.Internal.Graph;
-using kafka_stream_core.Stream.Internal.Graph.Nodes;
-using kafka_stream_core.Table.Internal.Graph;
-using kafka_stream_core.Table.Internal.Graph.Nodes;
+﻿using Kafka.Streams.Net.Crosscutting;
+using Kafka.Streams.Net.Processors;
+using Kafka.Streams.Net.SerDes;
+using Kafka.Streams.Net.State;
+using Kafka.Streams.Net.State.Internal;
+using Kafka.Streams.Net.Stream;
+using Kafka.Streams.Net.Stream.Internal;
+using Kafka.Streams.Net.Stream.Internal.Graph;
+using Kafka.Streams.Net.Stream.Internal.Graph.Nodes;
+using Kafka.Streams.Net.Table.Internal.Graph;
+using Kafka.Streams.Net.Table.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
 
-namespace kafka_stream_core.Table.Internal
+namespace Kafka.Streams.Net.Table.Internal
 {
     internal class KTable<K, S, V> : AbstractStream<K, V>, IKTable<K, V>, IKTableGetter<K, V>
     {
@@ -205,7 +205,7 @@ namespace kafka_stream_core.Table.Internal
             ISerDes<K> keySerde;
             ISerDes<V> valueSerde;
             String queryableStoreName;
-            StoreBuilder<kafka_stream_core.State.TimestampedKeyValueStore<K, V>> storeBuilder;
+            StoreBuilder<TimestampedKeyValueStore<K, V>> storeBuilder;
 
             if (materializedInternal != null)
             {
@@ -262,7 +262,7 @@ namespace kafka_stream_core.Table.Internal
             ISerDes<K> keySerde;
             ISerDes<VR> valueSerde;
             String queryableStoreName;
-            StoreBuilder<kafka_stream_core.State.TimestampedKeyValueStore<K, VR>> storeBuilder;
+            StoreBuilder<TimestampedKeyValueStore<K, VR>> storeBuilder;
 
             if (materializedInternal != null)
             {
@@ -276,7 +276,7 @@ namespace kafka_stream_core.Table.Internal
                 valueSerde = materializedInternal.ValueSerdes != null ? materializedInternal.ValueSerdes : null;
                 queryableStoreName = materializedInternal.QueryableStoreName;
                 // only materialize if materialized is specified and it has queryable name
-                storeBuilder = queryableStoreName != null ? (new TimestampedKeyValueStoreMaterializer<K, VR>(materializedInternal)).Materialize() : null;
+                storeBuilder = queryableStoreName != null ? new TimestampedKeyValueStoreMaterializer<K, VR>(materializedInternal).Materialize() : null;
             }
             else
             {

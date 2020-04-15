@@ -1,11 +1,11 @@
 ﻿using Confluent.Kafka;
-using kafka_stream_core.Processors;
-using kafka_stream_core.SerDes;
+using Kafka.Streams.Net.Processors;
+using Kafka.Streams.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Kafka
+namespace Kafka.Streams.Net.Kafka
 {
     internal interface IRecordCollector
     {

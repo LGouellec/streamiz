@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace kafka_stream_core.Processors
+namespace Kafka.Streams.Net.Processors
 {
     interface IThread : IDisposable
     {

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using kafka_stream_core.Crosscutting;
-using kafka_stream_core.Processors;
+using Kafka.Streams.Net.Crosscutting;
+using Kafka.Streams.Net.Processors;
 
-namespace kafka_stream_core.State.InMemory
+namespace Kafka.Streams.Net.State.InMemory
 {
     internal class InMemoryKeyValueStore : KeyValueStore<Bytes, byte[]>
     {

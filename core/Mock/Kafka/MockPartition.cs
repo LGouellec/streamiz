@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Mock.Kafka
+namespace Kafka.Streams.Net.Mock.Kafka
 {
     internal class MockPartition
     {

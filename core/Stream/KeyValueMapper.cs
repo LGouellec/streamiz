@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace kafka_stream_core.Stream
+namespace Kafka.Streams.Net.Stream
 {
     public interface IKeyValueMapper<K, V, VR>
     {

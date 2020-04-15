@@ -1,11 +1,11 @@
-﻿using kafka_stream_core.Processors.Internal;
-using kafka_stream_core.SerDes;
-using kafka_stream_core.Stream.Internal.Graph.Nodes;
+﻿using Kafka.Streams.Net.Processors.Internal;
+using Kafka.Streams.Net.SerDes;
+using Kafka.Streams.Net.Stream.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Stream.Internal
+namespace Kafka.Streams.Net.Stream.Internal
 {
     internal abstract class AbstractStream<K, V>
     {

@@ -1,6 +1,6 @@
-﻿using kafka_stream_core.Processors.Internal;
+﻿using Kafka.Streams.Net.Processors.Internal;
 
-namespace kafka_stream_core.Stream.Internal.Graph.Nodes
+namespace Kafka.Streams.Net.Stream.Internal.Graph.Nodes
 {
     internal class StreamSourceNode<K, V> : StreamGraphNode
     {

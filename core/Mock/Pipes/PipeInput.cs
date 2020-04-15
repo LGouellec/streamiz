@@ -1,10 +1,10 @@
 ﻿using Confluent.Kafka;
-using kafka_stream_core.Kafka;
+using Kafka.Streams.Net.Kafka;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Mock.Pipes
+namespace Kafka.Streams.Net.Mock.Pipes
 {
     internal class PipeInput : IPipeInput
     {

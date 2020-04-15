@@ -1,10 +1,10 @@
-﻿using kafka_stream_core.Crosscutting;
-using kafka_stream_core.State;
-using kafka_stream_core.Table.Internal;
+﻿using Kafka.Streams.Net.Crosscutting;
+using Kafka.Streams.Net.State;
+using Kafka.Streams.Net.Table.Internal;
 using log4net;
 using System.Collections.Generic;
 
-namespace kafka_stream_core.Processors
+namespace Kafka.Streams.Net.Processors
 {
     internal class KTableSourceProcessor<K, V> : AbstractProcessor<K, V>
     {

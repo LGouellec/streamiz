@@ -1,7 +1,7 @@
 ﻿using Confluent.Kafka;
 using System;
 
-namespace kafka_stream_core.Processors
+namespace Kafka.Streams.Net.Processors
 {
     public interface IRecordContext
     {

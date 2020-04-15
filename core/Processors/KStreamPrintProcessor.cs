@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using kafka_stream_core.Stream.Internal.Graph;
+using Kafka.Streams.Net.Stream.Internal.Graph;
 
-namespace kafka_stream_core.Processors
+namespace Kafka.Streams.Net.Processors
 {
     internal class KStreamPrintProcessor<K, V> : AbstractProcessor<K, V>
     {

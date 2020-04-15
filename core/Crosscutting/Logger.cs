@@ -9,7 +9,7 @@ using System.IO;
 using System.Reflection;
 using System.Xml;
 
-namespace kafka_stream_core.Crosscutting
+namespace Kafka.Streams.Net.Crosscutting
 {
     public static class Logger
     {

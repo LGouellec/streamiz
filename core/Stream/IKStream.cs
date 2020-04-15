@@ -1,9 +1,9 @@
-﻿using kafka_stream_core.Processors;
-using kafka_stream_core.SerDes;
+﻿using Kafka.Streams.Net.Processors;
+using Kafka.Streams.Net.SerDes;
 using System;
 using System.Collections.Generic;
 
-namespace kafka_stream_core.Stream
+namespace Kafka.Streams.Net.Stream
 {
     public interface IKStream<K, V>
     {

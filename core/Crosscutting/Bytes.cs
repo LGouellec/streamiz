@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
-namespace kafka_stream_core.Crosscutting
+namespace Kafka.Streams.Net.Crosscutting
 {
     internal class BytesComparer : IEqualityComparer<Bytes>
     {

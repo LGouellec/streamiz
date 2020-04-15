@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Confluent.Kafka;
-using kafka_stream_core.Processors;
-using kafka_stream_core.Processors.Internal;
+using Kafka.Streams.Net.Processors;
+using Kafka.Streams.Net.Processors.Internal;
 
-namespace kafka_stream_core.Kafka.Internal
+namespace Kafka.Streams.Net.Kafka.Internal
 {
     internal class StreamsRebalanceListener : IConsumerRebalanceListener
     {

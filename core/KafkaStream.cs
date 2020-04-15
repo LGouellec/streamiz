@@ -1,18 +1,18 @@
 ﻿using Confluent.Kafka;
-using kafka_stream_core.Crosscutting;
-using kafka_stream_core.Errors;
-using kafka_stream_core.Kafka;
-using kafka_stream_core.Kafka.Internal;
-using kafka_stream_core.Processors;
-using kafka_stream_core.Stream;
-using kafka_stream_core.Stream.Internal;
+using Kafka.Streams.Net.Crosscutting;
+using Kafka.Streams.Net.Errors;
+using Kafka.Streams.Net.Kafka;
+using Kafka.Streams.Net.Kafka.Internal;
+using Kafka.Streams.Net.Processors;
+using Kafka.Streams.Net.Stream;
+using Kafka.Streams.Net.Stream.Internal;
 using log4net;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 
 
-namespace kafka_stream_core
+namespace Kafka.Streams.Net
 {
     public delegate void StateListener(KafkaStream.State oldState, KafkaStream.State newState);
 

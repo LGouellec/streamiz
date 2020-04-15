@@ -2,7 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <RootNamespace>kafka_stream_core</RootNamespace>
+    <RootNamespace>Kafka.Streams.Net</RootNamespace>
+    <AssemblyName>Kafka.Streams.Net</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Confluent.Kafka;
 
-namespace kafka_stream_core.Processors.Internal
+namespace Kafka.Streams.Net.Processors.Internal
 {
     internal class RecordContext : IRecordContext
     {

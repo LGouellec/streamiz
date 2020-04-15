@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 using Confluent.Kafka;
-using kafka_stream_core.Crosscutting;
-using kafka_stream_core.Kafka;
+using Kafka.Streams.Net.Crosscutting;
+using Kafka.Streams.Net.Kafka;
 using log4net;
 
-namespace kafka_stream_core.Processors.Internal
+namespace Kafka.Streams.Net.Processors.Internal
 {
     internal class TaskCreator : AbstractTaskCreator<StreamTask>
     {

@@ -1,7 +1,7 @@
-﻿using kafka_stream_core.Processors.Internal;
+﻿using Kafka.Streams.Net.Processors.Internal;
 using System;
 
-namespace kafka_stream_core.Processors
+namespace Kafka.Streams.Net.Processors
 {
     public interface ITopicNameExtractor<K, V>
     {

@@ -1,9 +1,9 @@
-﻿using kafka_stream_core.Crosscutting;
+﻿using Kafka.Streams.Net.Crosscutting;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.State.Supplier
+namespace Kafka.Streams.Net.State.Supplier
 {
     public interface WindowBytesStoreSupplier : StoreSupplier<WindowStore<Bytes, byte[]>>
     {

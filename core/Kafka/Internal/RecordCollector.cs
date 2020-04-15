@@ -1,12 +1,12 @@
 ﻿using Confluent.Kafka;
-using kafka_stream_core.Crosscutting;
-using kafka_stream_core.Processors;
-using kafka_stream_core.SerDes;
+using Kafka.Streams.Net.Crosscutting;
+using Kafka.Streams.Net.Processors;
+using Kafka.Streams.Net.SerDes;
 using log4net;
 using System;
 using System.Collections.Generic;
 
-namespace kafka_stream_core.Kafka.Internal
+namespace Kafka.Streams.Net.Kafka.Internal
 {
     internal class RecordCollector : IRecordCollector
     {

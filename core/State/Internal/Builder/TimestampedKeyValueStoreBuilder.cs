@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using kafka_stream_core.SerDes;
-using kafka_stream_core.State.Supplier;
+﻿using Kafka.Streams.Net.SerDes;
+using Kafka.Streams.Net.State.Supplier;
 
-namespace kafka_stream_core.State.Internal.Builder
+namespace Kafka.Streams.Net.State.Internal.Builder
 {
     internal class TimestampedKeyValueStoreBuilder<K, V>
-        : AbstractStoreBuilder<K, ValueAndTimestamp<V>, kafka_stream_core.State.TimestampedKeyValueStore<K, V>>
+        : AbstractStoreBuilder<K, ValueAndTimestamp<V>, TimestampedKeyValueStore<K, V>>
     {
         private readonly KeyValueBytesStoreSupplier storeSupplier;
 
@@ -17,10 +14,10 @@ namespace kafka_stream_core.State.Internal.Builder
             this.storeSupplier = supplier;
         }
 
-        public override kafka_stream_core.State.TimestampedKeyValueStore<K, V> Build()
+        public override TimestampedKeyValueStore<K, V> Build()
         {
             var store = storeSupplier.Get();
-            return new TimestampedKeyValueStore<K, V>(store, this.keySerdes, this.valueSerdes);
+            return new TimestampedKeyValueStoreImpl<K, V>(store, this.keySerdes, this.valueSerdes);
         }
     }
 }

@@ -1,8 +1,8 @@
-﻿using kafka_stream_core.SerDes;
+﻿using Kafka.Streams.Net.SerDes;
 using System;
 using System.Collections.Generic;
 
-namespace kafka_stream_core.Processors
+namespace Kafka.Streams.Net.Processors
 {
     internal interface IProcessor : ICloneable
     {

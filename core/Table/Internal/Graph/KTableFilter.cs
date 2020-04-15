@@ -1,8 +1,8 @@
 ﻿using System;
-using kafka_stream_core.Processors;
-using kafka_stream_core.State;
+using Kafka.Streams.Net.Processors;
+using Kafka.Streams.Net.State;
 
-namespace kafka_stream_core.Table.Internal.Graph
+namespace Kafka.Streams.Net.Table.Internal.Graph
 {
     internal class KTableFilter<K, V> : IKTableProcessorSupplier<K, V, V>
     {

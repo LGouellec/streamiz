@@ -1,13 +1,13 @@
-﻿using kafka_stream_core.Crosscutting;
-using kafka_stream_core.Processors;
-using kafka_stream_core.Processors.Internal;
-using kafka_stream_core.SerDes;
-using kafka_stream_core.State;
-using kafka_stream_core.Stream;
-using kafka_stream_core.Stream.Internal;
-using kafka_stream_core.Table;
+﻿using Kafka.Streams.Net.Crosscutting;
+using Kafka.Streams.Net.Processors;
+using Kafka.Streams.Net.Processors.Internal;
+using Kafka.Streams.Net.SerDes;
+using Kafka.Streams.Net.State;
+using Kafka.Streams.Net.Stream;
+using Kafka.Streams.Net.Stream.Internal;
+using Kafka.Streams.Net.Table;
 
-namespace kafka_stream_core
+namespace Kafka.Streams.Net
 {
     public class StreamBuilder
     {

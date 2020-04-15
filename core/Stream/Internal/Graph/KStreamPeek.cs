@@ -1,9 +1,9 @@
-﻿using kafka_stream_core.Processors;
+﻿using Kafka.Streams.Net.Processors;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Stream.Internal.Graph
+namespace Kafka.Streams.Net.Stream.Internal.Graph
 {
     internal class KStreamPeek<K, V> : IProcessorSupplier<K, V>
     {

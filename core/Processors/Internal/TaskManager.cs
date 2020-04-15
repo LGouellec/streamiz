@@ -1,7 +1,7 @@
 ﻿using Confluent.Kafka;
 using System.Collections.Generic;
 
-namespace kafka_stream_core.Processors.Internal
+namespace Kafka.Streams.Net.Processors.Internal
 {
     internal class TaskManager
     {

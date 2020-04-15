@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Kafka
+namespace Kafka.Streams.Net.Kafka
 {
     public interface IKafkaSupplier
     {

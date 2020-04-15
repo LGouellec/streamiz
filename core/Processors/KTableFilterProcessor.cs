@@ -1,10 +1,10 @@
-﻿using kafka_stream_core.State;
-using kafka_stream_core.Table.Internal;
+﻿using Kafka.Streams.Net.State;
+using Kafka.Streams.Net.Table.Internal;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace kafka_stream_core.Processors
+namespace Kafka.Streams.Net.Processors
 {
     internal class KTableFilterProcessor<K, V> : AbstractKTableProcessor<K, V, K, V>
     {

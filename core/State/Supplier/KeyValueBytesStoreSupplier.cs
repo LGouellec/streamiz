@@ -1,6 +1,6 @@
-﻿using kafka_stream_core.Crosscutting;
+﻿using Kafka.Streams.Net.Crosscutting;
 
-namespace kafka_stream_core.State.Supplier
+namespace Kafka.Streams.Net.State.Supplier
 {
     public interface KeyValueBytesStoreSupplier : StoreSupplier<KeyValueStore<Bytes, byte[]>>
     {

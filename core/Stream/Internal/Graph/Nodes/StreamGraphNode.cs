@@ -1,9 +1,9 @@
-﻿using kafka_stream_core.Processors.Internal;
+﻿using Kafka.Streams.Net.Processors.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace kafka_stream_core.Stream.Internal.Graph.Nodes
+namespace Kafka.Streams.Net.Stream.Internal.Graph.Nodes
 {
     internal abstract class StreamGraphNode
     {

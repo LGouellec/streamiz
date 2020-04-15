@@ -1,7 +1,7 @@
-﻿using kafka_stream_core.Processors;
+﻿using Kafka.Streams.Net.Processors;
 using System;
 
-namespace kafka_stream_core.Stream.Internal.Graph.Nodes
+namespace Kafka.Streams.Net.Stream.Internal.Graph.Nodes
 {
     internal class KStreamFilter<K, V> : IProcessorSupplier<K, V>
     {

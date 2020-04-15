@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace kafka_stream_core.SerDes
+namespace Kafka.Streams.Net.SerDes
 {
     public abstract class AbstractSerDes<T> : ISerDes<T>
     {
