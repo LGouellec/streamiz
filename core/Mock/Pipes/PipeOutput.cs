@@ -30,6 +30,18 @@ namespace kafka_stream_core.Mock.Pipes
             }
         }
 
+        public bool IsEmpty
+        {
+            get
+            {
+                var infos = this.GetInfos();
+                foreach (var i in infos)
+                    if (i.Offset < i.High)
+                        return false;
+                return true;
+            }
+        }
+
         public PipeOutput(string topicName, TimeSpan timeout, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, CancellationToken token)
         {
             this.topicName = topicName;
@@ -109,6 +121,34 @@ namespace kafka_stream_core.Mock.Pipes
                 });
             }
             return l;
+        }
+
+        public IEnumerable<KeyValuePair<byte[], byte[]>> ReadList()
+        {
+            List<KeyValuePair<byte[], byte[]>> records = new List<KeyValuePair<byte[], byte[]>>();
+            int count = 0;
+            while (count <= 10)
+            {
+                int size = 0;
+                lock (_lock)
+                    size = queue.Count;
+
+                if (size > 0)
+                {
+                    for (int i = 0; i < size; ++i)
+                    {
+                        var r = queue.Dequeue();
+                        records.Add(new KeyValuePair<byte[], byte[]>(r.Item1, r.Item2));
+                    }
+                    return records;
+                }
+                else
+                {
+                    Thread.Sleep((int)timeout.TotalMilliseconds / 10);
+                    ++count;
+                }
+            }
+            return records;
         }
     }
 }

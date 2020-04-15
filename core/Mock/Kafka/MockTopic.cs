@@ -48,5 +48,16 @@ namespace kafka_stream_core.Mock.Kafka
 
             partitionNumber = partitionNumber + diff;
         }
+    
+        internal MockPartition GetPartition(int partition)
+        {
+            if (partitionNumber - 1 >= partition)
+                return partitions[partition];
+            else
+            {
+                this.CreateNewPartitions(new Partition(partition));
+                return partitions[partition];
+            }
+        }
     }
 }

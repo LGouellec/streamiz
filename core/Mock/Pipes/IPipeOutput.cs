@@ -16,8 +16,9 @@ namespace kafka_stream_core.Mock.Pipes
     interface IPipeOutput : IDisposable
     {
         KeyValuePair<byte[], byte[]> Read();
-
+        IEnumerable<KeyValuePair<byte[], byte[]>> ReadList();
         List<PipeOutputInfo> GetInfos();
         int Size { get; }
+        bool IsEmpty { get; }
     }
 }

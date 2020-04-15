@@ -18,7 +18,7 @@ namespace sample_test_driver
             StreamBuilder builder = new StreamBuilder();
 
             builder.Stream<string, string>("test")
-                .FilterNot((k, v) => v.Contains("test"))
+                .Filter((k, v) => v.Contains("test"))
                 .To("test-output");
 
             Topology t = builder.Build();

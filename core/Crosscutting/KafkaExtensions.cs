@@ -14,7 +14,7 @@ namespace kafka_stream_core.Crosscutting
             foreach (var p in consumer.Assignment)
             {
                 var w = consumer.GetWatermarkOffsets(p);
-                l.Add(new WatermarkOffsetsByTopicPartition(p.Topic, p.Partition, w.Low, w.High);
+                l.Add(new WatermarkOffsetsByTopicPartition(p.Topic, p.Partition, w.Low, w.High));
             }
             return l;
         }

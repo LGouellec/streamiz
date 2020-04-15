@@ -17,11 +17,14 @@ namespace kafka_stream_core.Mock.Kafka
         }
 
         public int Size => sizeLog;
+        public long LowOffset { get; private set; } = 0;
+        public long HighOffset { get; private set; } = 0;
 
         internal void AddMessageInLog(byte[] key, byte[] value)
         {
             log.Add((key, value));
             ++sizeLog;
+            ++HighOffset;
         }
 
         internal TestRecord<byte[], byte[]> GetMessage(long offset) =>

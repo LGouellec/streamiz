@@ -1,7 +1,10 @@
-﻿using kafka_stream_core.Errors;
+﻿using Confluent.Kafka;
+using kafka_stream_core.Crosscutting;
+using kafka_stream_core.Errors;
 using kafka_stream_core.Mock.Kafka;
 using kafka_stream_core.Mock.Pipes;
 using kafka_stream_core.SerDes;
+using log4net;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +23,7 @@ namespace kafka_stream_core.Mock
         private readonly IStreamConfig configuration;
         private readonly ISerDes<K> keySerdes;
         private readonly ISerDes<V> valueSerdes;
+        private readonly ILog log = Logger.GetLogger(typeof(TestOutputTopic<K, V>));
 
         private TestOutputTopic()
         {
@@ -34,17 +38,7 @@ namespace kafka_stream_core.Mock
             this.valueSerdes = valueSerdes;
         }
 
-        public bool IsEmpty
-        {
-            get
-            {
-                var infos = pipe.GetInfos();
-                foreach (var i in infos)
-                    if (i.Offset < i.High)
-                        return false;
-                return true;
-            }
-        }
+        public bool IsEmpty => pipe.IsEmpty;
 
         public int QueueSize => pipe.Size;
 
@@ -58,7 +52,8 @@ namespace kafka_stream_core.Mock
                 return new TestRecord<K, V> { Key = key, Value = value };
             }catch(StreamsException e)
             {
-                return new TestRecord<K, V> { Key = default(K), Value = default(V) };
+                log.Warn($"{e.Message}");
+                return null;
             }
         }
 
@@ -66,21 +61,32 @@ namespace kafka_stream_core.Mock
 
         public V ReadValue() => this.ReadRecord().Value;
 
-        public KeyValuePair<K, V> ReadKeyValue()
+        public ConsumeResult<K, V> ReadKeyValue()
         {
             var r = this.ReadRecord();
-            return new KeyValuePair<K, V>(r.Key, r.Value);
+
+            return 
+                r != null ? new ConsumeResult<K, V>{
+                                Message = new Message<K, V> { Key = r.Key, Value = r.Value, Timestamp = new Timestamp(r.Timestamp.HasValue ? r.Timestamp.Value : DateTime.Now) }
+                            } 
+                        : null;
         }
 
         #endregion
 
         #region Read List
 
-        public IEnumerable<KeyValuePair<K, V>> ReadKeyValueList()
+        public IEnumerable<ConsumeResult<K, V>> ReadKeyValueList()
         {
-            List<KeyValuePair<K, V>> records = new List<KeyValuePair<K, V>>();
-            while (!IsEmpty)
-                records.Add(this.ReadKeyValue());
+            List<ConsumeResult<K, V>> records = new List<ConsumeResult<K, V>>();
+            foreach(var record in pipe.ReadList())
+            {
+                var key = keySerdes != null ? keySerdes.Deserialize(record.Key) : (K)configuration.DefaultKeySerDes.DeserializeObject(record.Key);
+                var value = valueSerdes != null ? valueSerdes.Deserialize(record.Value) : (V)configuration.DefaultValueSerDes.DeserializeObject(record.Value);
+                records.Add(new ConsumeResult<K, V>{
+                    Message = new Message<K, V> { Key = key, Value = value, Timestamp = new Timestamp(DateTime.Now) }
+                });
+            }
             return records;
         }
 

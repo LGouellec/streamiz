@@ -141,6 +141,26 @@ namespace kafka_stream_core.Mock.Kafka
 
         #region Partitions Gesture
 
+        internal List<TopicPartitionOffset> Comitted(MockConsumer mockConsumer)
+        {
+            var c = consumers[mockConsumer.Name];
+            List<TopicPartitionOffset> list = new List<TopicPartitionOffset>();
+            foreach(var p in c.Partitions)
+            {
+                var offset = c.TopicPartitionsOffset.FirstOrDefault(t => t.Topic.Equals(p.Topic) && t.Partition.Equals(p.Partition));
+                if (offset != null)
+                    list.Add(new TopicPartitionOffset(new TopicPartition(p.Topic, p.Partition), new Offset(offset.OffsetComitted)));
+            }
+            return list;
+        }
+
+        internal WatermarkOffsets GetWatermarkOffsets(TopicPartition topicPartition)
+        {
+            var topic = topics[topicPartition.Topic];
+            var p = topic.GetPartition(topicPartition.Partition);
+            return new WatermarkOffsets(new Offset(p.LowOffset), new Offset(p.HighOffset));
+        }
+
         private IEnumerable<TopicPartition> Generate(string topic, int start, int number)
         {
             for (int i = start; i < start + number; ++i)
@@ -278,36 +298,39 @@ namespace kafka_stream_core.Mock.Kafka
 
                 // Rebalance on other consumer in the same group
                 var otherConsumers = consumerGroups[mockConsumer.MemberId].Select(i => consumers[i]).Where(i => !i.Name.Equals(mockConsumer.Name)).ToList();
-                int partEach = (int)(c.Partitions.Count / otherConsumers.Count);
-                int modulo = c.Partitions.Count % otherConsumers.Count;
-
-                int j = 0;
-                for (int i = 0; i < otherConsumers.Count; ++i)
+                if (otherConsumers.Count > 0)
                 {
-                    List<TopicPartition> parts = null;
-                    if (i == otherConsumers.Count - 1)
-                    {
-                        parts = c.Partitions.GetRange(j, j + partEach + modulo);
-                    }
-                    else
-                    {
-                        parts = c.Partitions.GetRange(j, j + partEach);
-                    }
+                    int partEach = (int)(c.Partitions.Count / otherConsumers.Count);
+                    int modulo = c.Partitions.Count % otherConsumers.Count;
 
-                    otherConsumers[i].Partitions.AddRange(parts);
-                    foreach (var k in parts)
-                        if (!otherConsumers[i].TopicPartitionsOffset.Any(m => m.Topic.Equals(k.Topic) && m.Partition.Equals(k.Partition)))
-                            otherConsumers[i].TopicPartitionsOffset.Add(new MockTopicPartitionOffset
-                            {
-                                OffsetComitted = 0,
-                                OffsetConsumed = 0,
-                                Partition = k.Partition,
-                                Topic = k.Topic
-                            });
+                    int j = 0;
+                    for (int i = 0; i < otherConsumers.Count; ++i)
+                    {
+                        List<TopicPartition> parts = null;
+                        if (i == otherConsumers.Count - 1)
+                        {
+                            parts = c.Partitions.GetRange(j, j + partEach + modulo);
+                        }
+                        else
+                        {
+                            parts = c.Partitions.GetRange(j, j + partEach);
+                        }
 
-                    otherConsumers[i].RebalanceListener?.PartitionsAssigned(otherConsumers[i].Consumer, otherConsumers[i].Partitions);
-                    otherConsumers[i].Assigned = true;
-                    j += partEach;
+                        otherConsumers[i].Partitions.AddRange(parts);
+                        foreach (var k in parts)
+                            if (!otherConsumers[i].TopicPartitionsOffset.Any(m => m.Topic.Equals(k.Topic) && m.Partition.Equals(k.Partition)))
+                                otherConsumers[i].TopicPartitionsOffset.Add(new MockTopicPartitionOffset
+                                {
+                                    OffsetComitted = 0,
+                                    OffsetConsumed = 0,
+                                    Partition = k.Partition,
+                                    Topic = k.Topic
+                                });
+
+                        otherConsumers[i].RebalanceListener?.PartitionsAssigned(otherConsumers[i].Consumer, otherConsumers[i].Partitions);
+                        otherConsumers[i].Assigned = true;
+                        j += partEach;
+                    }
                 }
 
                 c.Partitions.Clear();

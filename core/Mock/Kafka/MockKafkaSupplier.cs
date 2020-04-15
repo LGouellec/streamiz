@@ -16,8 +16,7 @@ namespace kafka_stream_core.Mock.Kafka
         public IConsumer<byte[], byte[]> GetConsumer(ConsumerConfig config, IConsumerRebalanceListener rebalanceListener)
         {
             var consumer = new MockConsumer(config.GroupId, config.ClientId);
-            if(rebalanceListener != null)
-                consumer.SetRebalanceListener(rebalanceListener);
+            consumer.SetRebalanceListener(rebalanceListener);
             return consumer;
         }
 

@@ -79,8 +79,7 @@ namespace kafka_stream_core.Mock.Kafka
 
         public List<TopicPartitionOffset> Committed(TimeSpan timeout)
         {
-            // TODO : 
-            throw new NotImplementedException();
+            return MockCluster.Instance.Comitted(this);        
         }
 
         public List<TopicPartitionOffset> Committed(IEnumerable<TopicPartition> partitions, TimeSpan timeout)
@@ -96,8 +95,7 @@ namespace kafka_stream_core.Mock.Kafka
 
         public WatermarkOffsets GetWatermarkOffsets(TopicPartition topicPartition)
         {
-            // TODO
-            throw new NotImplementedException();
+            return MockCluster.Instance.GetWatermarkOffsets(topicPartition);
         }
 
         public List<TopicPartitionOffset> OffsetsForTimes(IEnumerable<TopicPartitionTimestamp> timestampsToSearch, TimeSpan timeout)
@@ -194,7 +192,20 @@ namespace kafka_stream_core.Mock.Kafka
 
         internal void SetRebalanceListener(IConsumerRebalanceListener rebalanceListener)
         {
-            Listener = rebalanceListener;   
+            Listener = new MockWrappedConsumerRebalanceListener(rebalanceListener, this);   
+        }
+
+        public void PartitionsAssigned(List<TopicPartition> partitions)
+        {
+            Assignment.Clear();
+            Assignment.AddRange(partitions);
+        }
+
+        public void PartitionsRevoked(List<TopicPartitionOffset> partitions)
+        {
+            foreach (var p in partitions)
+                if (Assignment.Contains(p.TopicPartition))
+                    Assignment.Remove(p.TopicPartition);
         }
     }
 }
