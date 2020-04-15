@@ -1,11 +1,11 @@
 ﻿using Confluent.Kafka;
 using Kafka.Streams.Net.SerDes;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Kafka.Streams.Net.Processors.Internal
 {
+    // TODO : Not used for moment
+    // FOR MOMENT, impossible to set customer partitionner with Confluent.Kafka library
+    // FOR TRACKING : https://github.com/confluentinc/confluent-kafka-dotnet/issues/587
     internal class DefaultStreamPartitioner<K,V> : IStreamPartitioner<K,V>
     {
         private readonly Metadata cluster;

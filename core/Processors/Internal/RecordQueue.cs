@@ -6,6 +6,7 @@ using System.Text;
 
 namespace Kafka.Streams.Net.Processors.Internal
 {
+    // TODO : reorganized queue for each queue value and dequeue using timestampextractor
     internal class RecordQueue<T>
     {
         private readonly int maxSize;
@@ -13,15 +14,18 @@ namespace Kafka.Streams.Net.Processors.Internal
         private readonly string logPrefix;
         private readonly ILog log = Logger.GetLogger(typeof(RecordQueue<T>));
         private readonly string nameQueue;
+        // TODO : priority queue by time to implement
+        private readonly ITimestampExtractor timestampExtractor;
 
         public int Size => queue.Count;
         public int MaxSize => maxSize;
 
-        public RecordQueue(int maxSize, string logPrefix, string nameQueue)
+        public RecordQueue(int maxSize, string logPrefix, string nameQueue, ITimestampExtractor timestampExtractor)
         {
             this.maxSize = maxSize;
             this.logPrefix = logPrefix;
             this.nameQueue = nameQueue;
+            this.timestampExtractor = timestampExtractor;
             this.queue = new Queue<T>(this.maxSize);
         }
 

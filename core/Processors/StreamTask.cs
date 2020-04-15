@@ -23,9 +23,14 @@ namespace Kafka.Streams.Net.Processors
             this.collector = new RecordCollector(logPrefix);
             collector.Init(producer);
 
+            var sourceTimestampExtractor = (processorTopology.GetSourceProcessor(id.Topic) as ISourceProcessor).Extractor;
             Context = new ProcessorContext(configuration, stateMgr).UseRecordCollector(collector);
             processor = processorTopology.GetSourceProcessor(partition.Topic);
-            queue = new RecordQueue<ConsumeResult<byte[], byte[]>>(100, logPrefix, $"record-queue-{id.Topic}-{id.Partition}");
+            queue = new RecordQueue<ConsumeResult<byte[], byte[]>>(
+                100,
+                logPrefix,
+                $"record-queue-{id.Topic}-{id.Partition}",
+                sourceTimestampExtractor == null ? configuration.DefaultTimestampExtractor : sourceTimestampExtractor);
         }
 
         #region Private

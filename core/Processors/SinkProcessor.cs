@@ -1,9 +1,6 @@
 ﻿using Kafka.Streams.Net.Errors;
 using Kafka.Streams.Net.Processors.Internal;
 using Kafka.Streams.Net.SerDes;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Kafka.Streams.Net.Processors
 {

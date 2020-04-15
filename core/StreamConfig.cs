@@ -1,5 +1,7 @@
 ﻿using Confluent.Kafka;
 using Kafka.Streams.Net.Crosscutting;
+using Kafka.Streams.Net.Processors;
+using Kafka.Streams.Net.Processors.Internal;
 using Kafka.Streams.Net.SerDes;
 using System;
 using System.Collections.Generic;
@@ -61,6 +63,11 @@ namespace Kafka.Streams.Net
         //// Default value serdes for consumer and materialized state store
         //// </summary>
         ISerDes DefaultValueSerDes { get; set; }
+
+        /// <summary>
+        /// Default timestamp extractor class that implements the <see cref="ITimestampExtractor"/> interface.
+        /// </summary>
+        ITimestampExtractor DefaultTimestampExtractor { get; set; }
 
         #endregion
     }
@@ -143,6 +150,7 @@ namespace Kafka.Streams.Net
         internal static string numStreamThreadsCst = "num.stream.threads";
         internal static string defaultKeySerDesCst = "default.key.serdes";
         internal static string defaultValueSerDesCst = "default.value.serdes";
+        internal static string defaultTimestampExtractorCst = "default.timestamp.extractor";
 
         #endregion
 
@@ -1541,6 +1549,7 @@ namespace Kafka.Streams.Net
             NumStreamThreads = 1;
             DefaultKeySerDes = new ByteArraySerDes();
             DefaultValueSerDes = new ByteArraySerDes();
+            DefaultTimestampExtractor = new FailOnInvalidTimestamp();
 
             if (properties != null)
             {
@@ -1613,6 +1622,12 @@ namespace Kafka.Streams.Net
         {
             get => this[defaultValueSerDesCst];
             set => this.AddOrUpdate(defaultValueSerDesCst, value);
+        }
+
+        public ITimestampExtractor DefaultTimestampExtractor 
+        {
+            get => this[defaultTimestampExtractorCst];
+            set => this.AddOrUpdate(defaultTimestampExtractorCst, value);
         }
 
         public ProducerConfig ToProducerConfig() => ToProducerConfig(this.ClientId);
