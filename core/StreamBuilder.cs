@@ -23,19 +23,20 @@ namespace kafka_stream_core
 
         #region KStream
 
-        public IKStream<byte[], byte[]> Stream(string topic, StreamOptions options = null) => Stream<byte[], byte[], ByteArraySerDes, ByteArraySerDes>(topic, options);
+        public IKStream<byte[], byte[]> Stream(string topic, StreamOptions options = null) 
+            => Stream<byte[], byte[], ByteArraySerDes, ByteArraySerDes>(topic, options);
 
         public IKStream<K, V> Stream<K, V>(string topic, StreamOptions options = null)
-        {
-            var consumedInternal = new ConsumedInternal<K, V>(options?.Named, null, null, options?.Extractor);
-            return internalStreamBuilder.Stream(topic, consumedInternal);
-        }
+            => Stream<K, V>(topic, null, null, options);
 
         public IKStream<K, V> Stream<K, V, KS, VS>(string topic, StreamOptions options = null)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
+            => Stream(topic, new KS(), new VS(), options);
+
+        public IKStream<K, V> Stream<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, StreamOptions options = null)
         {
-            var consumedInternal = new ConsumedInternal<K, V>(options?.Named, new KS(), new VS(), options?.Extractor);
+            var consumedInternal = new ConsumedInternal<K, V>(options?.Named, keySerdes, valueSerdes, options?.Extractor);
             return internalStreamBuilder.Stream(topic, consumedInternal);
         }
 
@@ -66,6 +67,11 @@ namespace kafka_stream_core
             materialized?.UseProvider(internalStreamBuilder, $"{topic}-")?.InitConsumed(consumedInternal);
 
             return internalStreamBuilder.Table(topic, consumedInternal, materialized);
+        }
+
+        public IKTable<K, V> Table<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, StreamOptions options = null, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized = null)
+        {
+            return null;
         }
 
         #endregion

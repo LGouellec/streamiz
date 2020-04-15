@@ -1,6 +1,7 @@
 ﻿using Confluent.Kafka;
 using kafka_stream_core.Crosscutting;
 using log4net;
+using System;
 using System.Threading;
 
 namespace kafka_stream_core.Kafka.Internal
@@ -19,13 +20,13 @@ namespace kafka_stream_core.Kafka.Internal
         internal void LogConsume(IConsumer<byte[], byte[]> consumer, LogMessage message)
         {
             string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
-            log.Debug($"{logPrefix}Log consumer {consumer.Name} - {message.Message}");
+            log.Debug($"{logPrefix}Log consumer {GetName(consumer)} - {message.Message}");
         }
 
         internal void ErrorConsume(IConsumer<byte[], byte[]> consumer, Error error)
         {
             string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
-            log.Error($"{logPrefix}Error consumer {consumer.Name} - {error.Reason}");
+            log.Error($"{logPrefix}Error consumer {GetName(consumer)} - {error.Reason}");
         }
 
         #endregion
@@ -35,13 +36,13 @@ namespace kafka_stream_core.Kafka.Internal
         internal void LogProduce(IProducer<byte[], byte[]> producer, LogMessage message)
         {
             string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
-            log.Debug($"{logPrefix}Log producer {producer.Name} - {message.Message}");
+            log.Debug($"{logPrefix}Log producer {GetName(producer)} - {message.Message}");
         }
 
         internal void ErrorProduce(IProducer<byte[], byte[]> producer, Error error)
         {
             string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
-            log.Error($"{logPrefix}Error producer {producer.Name} - {error.Reason}");
+            log.Error($"{logPrefix}Error producer {GetName(producer)} - {error.Reason}");
         }
 
         #endregion
@@ -51,15 +52,30 @@ namespace kafka_stream_core.Kafka.Internal
         internal void ErrorAdmin(IAdminClient admin, Error error)
         {
             string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
-            log.Error($"{logPrefix}Error admin {admin.Name} - {error.Reason}");
+            log.Error($"{logPrefix}Error admin {GetName(admin)} - {error.Reason}");
         }
 
         internal void LogAdmin(IAdminClient admin, LogMessage message)
         {
             string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
-            log.Debug($"{logPrefix}Log admin {admin.Name} - {message.Message}");
+            log.Debug($"{logPrefix}Log admin {GetName(admin)} - {message.Message}");
         }
 
         #endregion
+
+        private string GetName(IClient client)
+        {
+            // FOR FIX
+            string name = "";
+            try
+            {
+                name = client.Name;
+            }
+            catch (NullReferenceException e)
+            {
+                name = "Unknown";
+            }
+            return name;
+        }
     }
 }

@@ -2,7 +2,7 @@
 
 Proof of Concept : Kafka Stream Implementation for .NET Application [WORK IN PROGRESS]
 
-It's a rewriting inspired by [Kafka Streams](https://github.com/apache/kafka/tree/trunk/streams)
+It's a rewriting inspired by [Kafka Streams](https://github.com/apache/kafka)
 
 I need contribution ;)
 
@@ -73,7 +73,7 @@ TODO : Processor API
 - Task restoring [ ]
 - Topology description [ ]
 - Global state store [ ]
-- Processor API [ ]
+- Processor API [ ] + Refactor topology node processor builder [ ]
 - Repartition impl [ ]
 - Unit test (TestTopologyDriver, ...) [ ]
 - [EOS](https://github.com/LGouellec/kafka-stream-net/issues/2) [ ]
