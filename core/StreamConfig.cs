@@ -9,6 +9,12 @@ using System.Linq;
 
 namespace Kafka.Streams.Net
 {
+    public enum ProcessingGuarantee
+    {
+        AT_LEAST_ONCE,
+        EXACTLY_ONCE
+    }
+
     /// <summary>
     /// Interface stream configuration for a <see cref="KafkaStream"/> instance.
     /// See <see cref="StreamConfig"/> to obtain implementation about this interface.
@@ -68,6 +74,11 @@ namespace Kafka.Streams.Net
         /// Default timestamp extractor class that implements the <see cref="ITimestampExtractor"/> interface.
         /// </summary>
         ITimestampExtractor DefaultTimestampExtractor { get; set; }
+
+        /// <summary>
+        /// The processing guarantee that should be used. Possible values are <see cref="ProcessingGuarantee.AT_LEAST_ONCE"/> (default) and <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>. Note that exactly-once processing requires a cluster of at least three brokers by default what is the recommended setting for production; for development you can change this, by adjusting broker setting 'transaction.state.log.replication.factor' and 'transaction.state.log.min.isr'.
+        /// </summary>
+        ProcessingGuarantee Guarantee { get; set; }
 
         #endregion
     }
@@ -151,6 +162,7 @@ namespace Kafka.Streams.Net
         internal static string defaultKeySerDesCst = "default.key.serdes";
         internal static string defaultValueSerDesCst = "default.value.serdes";
         internal static string defaultTimestampExtractorCst = "default.timestamp.extractor";
+        internal static string processingGuaranteeCst = "processing.guarantee";
 
         #endregion
 
@@ -1550,6 +1562,7 @@ namespace Kafka.Streams.Net
             DefaultKeySerDes = new ByteArraySerDes();
             DefaultValueSerDes = new ByteArraySerDes();
             DefaultTimestampExtractor = new FailOnInvalidTimestamp();
+            Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
 
             if (properties != null)
             {
@@ -1573,6 +1586,13 @@ namespace Kafka.Streams.Net
 
             // property not choice by user !!!!
             EnableAutoCommit = false;
+
+            if(Guarantee == ProcessingGuarantee.EXACTLY_ONCE)
+            {
+                IsolationLevel = Confluent.Kafka.IsolationLevel.ReadCommitted;
+                EnableIdempotence = true;
+                MaxInFlight = 5;
+            }
         }
 
         public StreamConfig(StreamConfig config)
@@ -1629,6 +1649,12 @@ namespace Kafka.Streams.Net
             get => this[defaultTimestampExtractorCst];
             set => this.AddOrUpdate(defaultTimestampExtractorCst, value);
         }
+        
+        public ProcessingGuarantee Guarantee
+        {
+            get => this[processingGuaranteeCst];
+            set => this.AddOrUpdate(processingGuaranteeCst, value);
+        }
 
         public ProducerConfig ToProducerConfig() => ToProducerConfig(this.ClientId);
 
@@ -1670,7 +1696,7 @@ namespace Kafka.Streams.Net
     ///    - EnableAutoCommit = (false) - Streams client will always disable/turn off auto committing
     /// <exemple>
     /// <code>
-    /// var config = new StreamConfig<StringSerDes, StringSerDes>();
+    /// var config = new StreamConfig&lt;StringSerDes, StringSerDes&gt;();
     /// config.ApplicationId = "test-app";
     /// config.BootstrapServers = "localhost:9092";
     /// </code>
