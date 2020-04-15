@@ -27,9 +27,8 @@ namespace sample_test_driver
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("test");
                 var outputTopic = driver.CreateOuputTopic<string, string>("test-output", TimeSpan.FromSeconds(5));
-                inputTopic.PipeInput("test", "coucou");
-                inputTopic.PipeInput("test", "test-coucou");
-                var r = outputTopic.ReadKeyValueList();
+                inputTopic.PipeInput("test", "test-1234");
+                var r = outputTopic.ReadKeyValue();
             }
         }
     }
