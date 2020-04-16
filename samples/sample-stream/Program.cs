@@ -3,6 +3,7 @@ using Kafka.Streams.Net;
 using Kafka.Streams.Net.SerDes;
 using Kafka.Streams.Net.Stream;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace sample_stream
