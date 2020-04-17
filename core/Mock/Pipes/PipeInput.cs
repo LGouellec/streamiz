@@ -33,11 +33,7 @@ namespace Kafka.Streams.Net.Mock.Pipes
             {
                 var record = buffer.Dequeue();
                 this.producer.Produce(topicName, 
-                    new Message<byte[], byte[]> { Key = record.Item1, Value = record.Item2, Timestamp = new Timestamp(record.Item3) }, 
-                    (r) =>
-                    {
-                        int a = 1;
-                    });
+                    new Message<byte[], byte[]> { Key = record.Item1, Value = record.Item2, Timestamp = new Timestamp(record.Item3) });
             }
             this.producer.Flush();
         }

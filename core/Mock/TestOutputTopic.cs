@@ -91,7 +91,7 @@ namespace Kafka.Streams.Net.Mock
         }
 
         public IEnumerable<V> ReadValueList()
-            => ReadKeyValueList().Select(kv => kv.Value).ToList();
+            => ReadKeyValueList().Select(kv => kv.Message.Value).ToList();
 
         #endregion
     }

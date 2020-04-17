@@ -154,18 +154,296 @@ namespace Kafka.Streams.Net.Table
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>a <see cref="IKStream{KR, V}"/> that contains the same records as this <see cref="IKTable{K, V}"/></returns>
         IKStream<KR, V> ToStream<KR>(Func<K, V, KR> mapper, string named = null);
-        
-        IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, string name = null);
+
+        /// <summary>
+        /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
+        /// (with possibly a new type) in the new <see cref="IKTable{K, V}"/>, with default serializers, deserializers, and state store.
+        /// For each <see cref="IKTable{K, V}"/> update the provided <see cref="IValueMapper{V, VR}"/> is applied to the value of the updated record and
+        /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
+        /// Thus, an input record <code>&lt;K,V&gt;</code> can be transformed into an output record <code>&lt;K,VR&gt;</code>.
+        /// This is a stateless record-by-record operation.
+        /// The example below counts the number of token of the value string.
+        /// <example>
+        /// <code>
+        /// var table = builder.Table&lt;string, string&gt;("topic");
+        /// var output = table.MapValues((v) => v.Split(" ").Length);
+        /// </code>
+        /// </example>
+        /// This operation preserves data co-location with respect to the key.
+        /// Thus, NO internal data redistribution is required if a key based operator (like a join) is applied to the result <see cref="IKTable{K, V}"/>
+        /// Note that <see cref="IKTable{K, V}.MapValues{VR}(Func{K, V, VR}, string)"/> for a changelog stream works differently than <see cref="IKStream{K, V}.MapValues{VR}(Func{K, V, VR}, string)"/>
+        /// record stream filters}, because <see cref="KeyValuePair{K, V}"/> with null values (so-called tombstone records)
+        /// have delete semantics.
+        /// Thus, for tombstones the provided value-mapper is not evaluated but the tombstone record is forwarded directly to
+        /// delete the corresponding record in the result <see cref="IKTable{K, VR}"/>
+        /// </summary>
+        /// <typeparam name="VR">the value type of the result <see cref="IKTable{K, VR}"/></typeparam>
+        /// <param name="mapper">a function mapper that computes a new output value</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
+        IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, string named = null);
+
+        /// <summary>
+        /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
+        /// (with possibly a new type) in the new <see cref="IKTable{K, V}"/>, with the <see cref="ISerDes{K}"/> key serde, <see cref="ISerDes{V}"/> value serde},
+        /// and the underlying KeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
+        /// instance.
+        /// For each <see cref="IKTable{K, V}"/> update the provided mapper is applied to the value of the updated record and
+        /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
+        /// Thus, an input record <code>&lt;K,V&gt;</code> can be transformed into an output record <code>&lt;K,VR&gt;</code>.
+        /// This is a stateless record-by-record operation.
+        /// Note that <see cref="IKTable{K, V}.MapValues{VR}(Func{V, VR}, string)"/> for a changelog stream works differently than <see cref="IKStream{K, V}.MapValues{VR}(Func{V, VR}, string)"/>
+        /// because keyvalue records with null values (so-called tombstone records)
+        /// have delete semantics.
+        /// Thus, for tombstones the provided value-mapper is not evaluated but the tombstone record is forwarded directly to
+        /// delete the corresponding record in the result <see cref="IKTable{K, V}"/>.
+        /// </summary>
+        /// <typeparam name="VR">the value type of the result <see cref="IKTable{K, VR}"/></typeparam>
+        /// <param name="mapper">a function mapper that computes a new output value</param>
+        /// <param name="materialized">A materialized that describes how the <see cref="IStateStore"/> for the resulting <see cref="IKTable{K, VR}"/> should be materialized.</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
         IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string named = null);
+
+        /// <summary>
+        /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
+        /// (with possibly a new type) in the new <see cref="IKTable{K, V}"/>, with the <see cref="ISerDes{K}"/> key serde, <see cref="ISerDes{V}"/> value serde},
+        /// and the underlying KeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
+        /// instance.
+        /// For each <see cref="IKTable{K, V}"/> update the provided mapper is applied to the value of the updated record and
+        /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
+        /// Thus, an input record <code>&lt;K,V&gt;</code> can be transformed into an output record <code>&lt;K,VR&gt;</code>.
+        /// This is a stateless record-by-record operation.
+        /// Note that <see cref="IKTable{K, V}.MapValues{VR}(Func{V, VR}, string)"/> for a changelog stream works differently than <see cref="IKStream{K, V}.MapValues{VR}(Func{V, VR}, string)"/>
+        /// because keyvalue records with null values (so-called tombstone records)
+        /// have delete semantics.
+        /// Thus, for tombstones the provided value-mapper is not evaluated but the tombstone record is forwarded directly to
+        /// delete the corresponding record in the result <see cref="IKTable{K, V}"/>.
+        /// </summary>
+        /// <typeparam name="VR">the value type of the result <see cref="IKTable{K, VR}"/></typeparam>
+        /// <param name="mapper">a <see cref="IValueMapper{V, VR}"/> mapper that computes a new output value</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
         IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, string named = null);
+
+        /// <summary>
+        /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
+        /// (with possibly a new type) in the new <see cref="IKTable{K, V}"/>, with the <see cref="ISerDes{K}"/> key serde, <see cref="ISerDes{V}"/> value serde},
+        /// and the underlying KeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
+        /// instance.
+        /// For each <see cref="IKTable{K, V}"/> update the provided mapper is applied to the value of the updated record and
+        /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
+        /// Thus, an input record <code>&lt;K,V&gt;</code> can be transformed into an output record <code>&lt;K,VR&gt;</code>.
+        /// This is a stateless record-by-record operation.
+        /// Note that <see cref="IKTable{K, V}.MapValues{VR}(IValueMapper{V, VR}, Materialized{K, VR, KeyValueStore{Bytes, byte[]}}, string)"/> for a changelog stream works differently than <see cref="IKStream{K, V}.MapValues{VR}(IValueMapper{V, VR}, string)"/>
+        /// because keyvalue records with null values (so-called tombstone records)
+        /// have delete semantics.
+        /// Thus, for tombstones the provided value-mapper is not evaluated but the tombstone record is forwarded directly to
+        /// delete the corresponding record in the result <see cref="IKTable{K, V}"/>.
+        /// </summary>
+        /// <typeparam name="VR">the value type of the result <see cref="IKTable{K, VR}"/></typeparam>
+        /// <param name="mapper">a <see cref="IValueMapper{V, VR}"/> mapper that computes a new output value</param>
+        /// <param name="materialized">A materialized that describes how the <see cref="IStateStore"/> for the resulting <see cref="IKTable{K, VR}"/> should be materialized.</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
         IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string named = null);
+
+        /// <summary>
+        /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
+        /// (with possibly a new type) in the new <see cref="IKTable{K, V}"/>, with the <see cref="ISerDes{K}"/> key serde, <see cref="ISerDes{V}"/> value serde},
+        /// and the underlying KeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
+        /// instance.
+        /// For each <see cref="IKTable{K, V}"/> update the provided mapper is applied to the value of the updated record and
+        /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
+        /// Thus, an input record <code>&lt;K,V&gt;</code> can be transformed into an output record <code>&lt;K,VR&gt;</code>.
+        /// This is a stateless record-by-record operation.
+        /// Note that <see cref="IKTable{K, V}.MapValues{VR}(IValueMapper{V, VR}, Materialized{K, VR, KeyValueStore{Bytes, byte[]}}, string)"/> for a changelog stream works differently than <see cref="IKStream{K, V}.MapValues{VR}(IValueMapper{V, VR}, string)"/>
+        /// because keyvalue records with null values (so-called tombstone records)
+        /// have delete semantics.
+        /// Thus, for tombstones the provided value-mapper is not evaluated but the tombstone record is forwarded directly to
+        /// delete the corresponding record in the result <see cref="IKTable{K, V}"/>.
+        /// </summary>
+        /// <typeparam name="VR">the value type of the result <see cref="IKTable{K, VR}"/></typeparam>
+        /// <param name="mapperWithKey">a function mapper that computes a new output value (key is for readonly usage)</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
         IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, string named = null);
+
+        /// <summary>
+        /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
+        /// (with possibly a new type) in the new <see cref="IKTable{K, V}"/>, with the <see cref="ISerDes{K}"/> key serde, <see cref="ISerDes{V}"/> value serde},
+        /// and the underlying KeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
+        /// instance.
+        /// For each <see cref="IKTable{K, V}"/> update the provided mapper is applied to the value of the updated record and
+        /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
+        /// Thus, an input record <code>&lt;K,V&gt;</code> can be transformed into an output record <code>&lt;K,VR&gt;</code>.
+        /// This is a stateless record-by-record operation.
+        /// Note that <see cref="IKTable{K, V}.MapValues{VR}(IValueMapper{V, VR}, Materialized{K, VR, KeyValueStore{Bytes, byte[]}}, string)"/> for a changelog stream works differently than <see cref="IKStream{K, V}.MapValues{VR}(IValueMapper{V, VR}, string)"/>
+        /// because keyvalue records with null values (so-called tombstone records)
+        /// have delete semantics.
+        /// Thus, for tombstones the provided value-mapper is not evaluated but the tombstone record is forwarded directly to
+        /// delete the corresponding record in the result <see cref="IKTable{K, V}"/>.
+        /// </summary>
+        /// <typeparam name="VR">the value type of the result <see cref="IKTable{K, VR}"/></typeparam>
+        /// <param name="mapperWithKey">a function mapper that computes a new output value (key is for readonly usage)</param>
+        /// <param name="materialized">A materialized that describes how the <see cref="IStateStore"/> for the resulting <see cref="IKTable{K, VR}"/> should be materialized.</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
         IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string named = null);
+
+        /// <summary>
+        /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
+        /// (with possibly a new type) in the new <see cref="IKTable{K, V}"/>, with the <see cref="ISerDes{K}"/> key serde, <see cref="ISerDes{V}"/> value serde},
+        /// and the underlying KeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
+        /// instance.
+        /// For each <see cref="IKTable{K, V}"/> update the provided mapper is applied to the value of the updated record and
+        /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
+        /// Thus, an input record <code>&lt;K,V&gt;</code> can be transformed into an output record <code>&lt;K,VR&gt;</code>.
+        /// This is a stateless record-by-record operation.
+        /// Note that <see cref="IKTable{K, V}.MapValues{VR}(IValueMapper{V, VR}, Materialized{K, VR, KeyValueStore{Bytes, byte[]}}, string)"/> for a changelog stream works differently than <see cref="IKStream{K, V}.MapValues{VR}(IValueMapper{V, VR}, string)"/>
+        /// because keyvalue records with null values (so-called tombstone records)
+        /// have delete semantics.
+        /// Thus, for tombstones the provided value-mapper is not evaluated but the tombstone record is forwarded directly to
+        /// delete the corresponding record in the result <see cref="IKTable{K, V}"/>.
+        /// </summary>
+        /// <typeparam name="VR">the value type of the result <see cref="IKTable{K, VR}"/></typeparam>
+        /// <param name="mapperWithKey">a <see cref="IValueMapperWithKey{K, V, VR}"/> mapper that computes a new output value (key is for readonly usage)</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
         IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string named = null);
+
+        /// <summary>
+        /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
+        /// (with possibly a new type) in the new <see cref="IKTable{K, V}"/>, with the <see cref="ISerDes{K}"/> key serde, <see cref="ISerDes{V}"/> value serde},
+        /// and the underlying KeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
+        /// instance.
+        /// For each <see cref="IKTable{K, V}"/> update the provided mapper is applied to the value of the updated record and
+        /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
+        /// Thus, an input record <code>&lt;K,V&gt;</code> can be transformed into an output record <code>&lt;K,VR&gt;</code>.
+        /// This is a stateless record-by-record operation.
+        /// Note that <see cref="IKTable{K, V}.MapValues{VR}(IValueMapper{V, VR}, Materialized{K, VR, KeyValueStore{Bytes, byte[]}}, string)"/> for a changelog stream works differently than <see cref="IKStream{K, V}.MapValues{VR}(IValueMapper{V, VR}, string)"/>
+        /// because keyvalue records with null values (so-called tombstone records)
+        /// have delete semantics.
+        /// Thus, for tombstones the provided value-mapper is not evaluated but the tombstone record is forwarded directly to
+        /// delete the corresponding record in the result <see cref="IKTable{K, V}"/>.
+        /// </summary>
+        /// <typeparam name="VR">the value type of the result <see cref="IKTable{K, VR}"/></typeparam>
+        /// <param name="mapperWithKey">a <see cref="IValueMapperWithKey{K, V, VR}"/> mapper that computes a new output value (key is for readonly usage)</param>
+        /// <param name="materialized">A materialized that describes how the <see cref="IStateStore"/> for the resulting <see cref="IKTable{K, VR}"/> should be materialized.</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
         IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string named = null);
+
+        /// <summary>
+        /// Re-groups the records of this <see cref="IKTable{K, V}"/> using the provided <see cref="IKeyValueMapper{K, V, VR}"/> and default serializers
+        /// and deserializers.
+        /// Each keyvlaue pair of this <see cref="IKTable{K, V}"/> is mapped to a new keyvalue pair by applying the
+        /// provided <see cref="IKeyValueMapper{K, V, VR}"/>.
+        /// Re-grouping a <see cref="IKTable{K, V}"/> is required before an aggregation operator can be applied to the data.
+        /// The <see cref="IKeyValueMapper{K, V, VR}"/> mapper selects a new key and value (with should both have unmodified type).
+        /// If the new record key is null the record will not be included in the resulting <see cref="IKGroupedTable{KR, VR}"/>
+        /// <p>
+        /// Because a new key is selected, an internal repartitioning topic will be created in Kafka.
+        /// This topic will be named "${applicationId}-&lt;name&gt;-repartition", where "applicationId" is user-specified in
+        /// <see cref="IStreamConfig"/> via parameter <see cref="IStreamConfig.ApplicationId"/>, "&lt;name&gt;" is
+        /// an internally generated name, and "-repartition" is a fixed suffix.
+        /// All data of this <see cref="IKTable{K, V}"/> will be redistributed through the repartitioning topic by writing all update
+        /// records to and rereading all updated records from it, such that the resulting <see cref="IKGroupedTable{KR, VR}"/> is partitioned
+        /// on the new key.
+        /// </p>
+        /// If the key or value type is changed, it is recommended to use <see cref="IKTable{K, V}.GroupBy{KR, VR, KRS, VRS}(IKeyValueMapper{K, V, KeyValuePair{KR, VR}}, string)"/>
+        /// instead.
+        /// </summary>
+        /// <typeparam name="KR">the key type of the result <see cref="IKGroupedTable{KR, VR}"/></typeparam>
+        /// <typeparam name="VR">the value type of the result <see cref="IKGroupedTable{KR, VR}"/></typeparam>
+        /// <param name="keySelector">a <see cref="IKeyValueMapper{K, V, VR}"/> mapper that computes a new grouping key and value to be aggregated</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>a <see cref="IKGroupedTable{KR, VR}"/> that contains the re-grouped records of the original <see cref="IKTable{K, V}"/></returns>
         IKGroupedTable<KR, VR> GroupBy<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> keySelector, string named = null);
+
+        /// <summary>
+        /// Re-groups the records of this <see cref="IKTable{K, V}"/> using the provided <code>Func&lt;K, V, KeyValuePair&lt;KR,VR&gt;&gt;</code> and default serializers
+        /// and deserializers.
+        /// Each keyvlaue pair of this <see cref="IKTable{K, V}"/> is mapped to a new keyvalue pair by applying the
+        /// provided <code>Func&lt;K, V, KeyValuePair&lt;KR,VR&gt;&gt;</code>.
+        /// Re-grouping a <see cref="IKTable{K, V}"/> is required before an aggregation operator can be applied to the data.
+        /// The<code>Func&lt;K, V, KeyValuePair&lt;KR,VR&gt;&gt;</code> mapper selects a new key and value (with should both have unmodified type).
+        /// If the new record key is null the record will not be included in the resulting <see cref="IKGroupedTable{KR, VR}"/>
+        /// <p>
+        /// Because a new key is selected, an internal repartitioning topic will be created in Kafka.
+        /// This topic will be named "${applicationId}-&lt;name&gt;-repartition", where "applicationId" is user-specified in
+        /// <see cref="IStreamConfig"/> via parameter <see cref="IStreamConfig.ApplicationId"/>, "&lt;name&gt;" is
+        /// an internally generated name, and "-repartition" is a fixed suffix.
+        /// All data of this <see cref="IKTable{K, V}"/> will be redistributed through the repartitioning topic by writing all update
+        /// records to and rereading all updated records from it, such that the resulting <see cref="IKGroupedTable{KR, VR}"/> is partitioned
+        /// on the new key.
+        /// </p>
+        /// If the key or value type is changed, it is recommended to use <see cref="IKTable{K, V}.GroupBy{KR, VR, KRS, VRS}(Func{K, V, KeyValuePair{KR, VR}}, string)"/>
+        /// instead.
+        /// </summary>
+        /// <typeparam name="KR">the key type of the result <see cref="IKGroupedTable{KR, VR}"/></typeparam>
+        /// <typeparam name="VR">the value type of the result <see cref="IKGroupedTable{KR, VR}"/></typeparam>
+        /// <param name="keySelector">a function mapper that computes a new grouping key and value to be aggregated</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>a <see cref="IKGroupedTable{KR, VR}"/> that contains the re-grouped records of the original <see cref="IKTable{K, V}"/></returns>
         IKGroupedTable<KR, VR> GroupBy<KR, VR>(Func<K, V, KeyValuePair<KR, VR>> keySelector, string named = null);
+
+        /// <summary>
+        /// Re-groups the records of this <see cref="IKTable{K, V}"/> using the provided <see cref="IKeyValueMapper{K, V, VR}"/> and serdes parameters from (<typeparamref name="KR"/> as key serdes,
+        /// and <typeparamref name="VRS"/> as value serdes) 
+        /// Each keyvlaue pair of this <see cref="IKTable{K, V}"/> is mapped to a new keyvalue pair by applying the
+        /// provided <see cref="IKeyValueMapper{K, V, VR}"/>.
+        /// Re-grouping a <see cref="IKTable{K, V}"/> is required before an aggregation operator can be applied to the data.
+        /// The <see cref="IKeyValueMapper{K, V, VR}"/> mapper selects a new key and value (with should both have unmodified type).
+        /// If the new record key is null the record will not be included in the resulting <see cref="IKGroupedTable{KR, VR}"/>
+        /// <p>
+        /// Because a new key is selected, an internal repartitioning topic will be created in Kafka.
+        /// This topic will be named "${applicationId}-&lt;name&gt;-repartition", where "applicationId" is user-specified in
+        /// <see cref="IStreamConfig"/> via parameter <see cref="IStreamConfig.ApplicationId"/>, "&lt;name&gt;" is
+        /// an internally generated name, and "-repartition" is a fixed suffix.
+        /// All data of this <see cref="IKTable{K, V}"/> will be redistributed through the repartitioning topic by writing all update
+        /// records to and rereading all updated records from it, such that the resulting <see cref="IKGroupedTable{KR, VR}"/> is partitioned
+        /// on the new key.
+        /// </p>
+        /// If the key or value type is changed, it is recommended to use <see cref="IKTable{K, V}.GroupBy{KR, VR, KRS, VRS}(IKeyValueMapper{K, V, KeyValuePair{KR, VR}}, string)"/>
+        /// instead.
+        /// </summary>
+        /// <typeparam name="KR">the key type of the result <see cref="IKGroupedTable{KR, VR}"/></typeparam>
+        /// <typeparam name="VR">the value type of the result <see cref="IKGroupedTable{KR, VR}"/></typeparam>
+        /// <typeparam name="KRS">New serializer for <typeparamref name="KR"/> type</typeparam>
+        /// <typeparam name="VRS">New serializer for <typeparamref name="VR"/> type</typeparam>
+        /// <param name="keySelector">a <see cref="IKeyValueMapper{K, V, VR}"/> mapper that computes a new grouping key and value to be aggregated</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>a <see cref="IKGroupedTable{KR, VR}"/> that contains the re-grouped records of the original <see cref="IKTable{K, V}"/></returns>
         IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> keySelector, string named = null) where KRS : ISerDes<KR>, new() where VRS : ISerDes<VR>, new();
+
+        /// <summary>
+        /// Re-groups the records of this <see cref="IKTable{K, V}"/> using the provided <see cref="IKeyValueMapper{K, V, VR}"/> and serdes parameters from (<typeparamref name="KR"/> as key serdes,
+        /// and <typeparamref name="VRS"/> as value serdes) 
+        /// Each keyvlaue pair of this <see cref="IKTable{K, V}"/> is mapped to a new keyvalue pair by applying the
+        /// provided <code>Func&lt;K, V, KeyValuePair&lt;KR,VR&gt;&gt;</code>.
+        /// Re-grouping a <see cref="IKTable{K, V}"/> is required before an aggregation operator can be applied to the data.
+        /// The<code>Func&lt;K, V, KeyValuePair&lt;KR,VR&gt;&gt;</code> mapper selects a new key and value (with should both have unmodified type).
+        /// If the new record key is null the record will not be included in the resulting <see cref="IKGroupedTable{KR, VR}"/>
+        /// <p>
+        /// Because a new key is selected, an internal repartitioning topic will be created in Kafka.
+        /// This topic will be named "${applicationId}-&lt;name&gt;-repartition", where "applicationId" is user-specified in
+        /// <see cref="IStreamConfig"/> via parameter <see cref="IStreamConfig.ApplicationId"/>, "&lt;name&gt;" is
+        /// an internally generated name, and "-repartition" is a fixed suffix.
+        /// All data of this <see cref="IKTable{K, V}"/> will be redistributed through the repartitioning topic by writing all update
+        /// records to and rereading all updated records from it, such that the resulting <see cref="IKGroupedTable{KR, VR}"/> is partitioned
+        /// on the new key.
+        /// </p>
+        /// If the key or value type is changed, it is recommended to use <see cref="IKTable{K, V}.GroupBy{KR, VR, KRS, VRS}(Func{K, V, KeyValuePair{KR, VR}}, string)"/>
+        /// instead.
+        /// </summary>
+        /// <typeparam name="KR">the key type of the result <see cref="IKGroupedTable{KR, VR}"/></typeparam>
+        /// <typeparam name="VR">the value type of the result <see cref="IKGroupedTable{KR, VR}"/></typeparam>
+        /// <typeparam name="KRS">New serializer for <typeparamref name="KR"/> type</typeparam>
+        /// <typeparam name="VRS">New serializer for <typeparamref name="VR"/> type</typeparam>
+        /// <param name="keySelector">a function mapper that computes a new grouping key and value to be aggregated</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>a <see cref="IKGroupedTable{KR, VR}"/> that contains the re-grouped records of the original <see cref="IKTable{K, V}"/></returns>
         IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(Func<K, V, KeyValuePair<KR, VR>> keySelector, string named = null) where KRS : ISerDes<KR>, new() where VRS : ISerDes<VR>, new();
     }
 }

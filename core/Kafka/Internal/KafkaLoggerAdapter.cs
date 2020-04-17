@@ -71,7 +71,7 @@ namespace Kafka.Streams.Net.Kafka.Internal
             {
                 name = client.Name;
             }
-            catch (NullReferenceException e)
+            catch (NullReferenceException)
             {
                 name = "Unknown";
             }

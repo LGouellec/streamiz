@@ -9,7 +9,7 @@ namespace Kafka.Streams.Net.Table.Internal.Graph
 {
     internal class KTableMapValues<K, V, VR> : IKTableProcessorSupplier<K, V, VR>
     {
-        internal class KTableMapValuesValueGetter<K, V, VR> : IKTableValueGetter<K, VR>
+        internal class KTableMapValuesValueGetter : IKTableValueGetter<K, VR>
         {
             private readonly IKTableValueGetter<K, V> ktablegetter;
             private readonly IValueMapperWithKey<K, V, VR> mapper;
@@ -68,7 +68,7 @@ namespace Kafka.Streams.Net.Table.Internal.Graph
                     var supplier = parentTable.ValueGetterSupplier;
                     return new GenericKTableValueGetterSupplier<K, VR>(
                         supplier.StoreNames,
-                        new KTableMapValuesValueGetter<K, V, VR>(this.mapper, supplier.Get()));
+                        new KTableMapValuesValueGetter(this.mapper, supplier.Get()));
                 }
             }
         }

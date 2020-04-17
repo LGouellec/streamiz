@@ -113,9 +113,9 @@ namespace Kafka.Streams.Net.Processors
                 {
                     this.Context.SetRecordMetaData(record);
 
-                    var recordInfo = $"Topic:{record.Topic}|Partition:{record.Partition.Value}|Offset:{record.Offset}|Timestamp:{record.Timestamp.UnixTimestampMs}";
+                    var recordInfo = $"Topic:{record.Topic}|Partition:{record.Partition.Value}|Offset:{record.Offset}|Timestamp:{record.Message.Timestamp.UnixTimestampMs}";
                     log.Debug($"{logPrefix}Start processing one record [{recordInfo}]");
-                    processor.Process(record.Key, record.Value);
+                    processor.Process(record.Message.Key, record.Message.Key);
                     log.Debug($"{logPrefix}Completed processing one record [{recordInfo}]");
 
                     queue.Commit();

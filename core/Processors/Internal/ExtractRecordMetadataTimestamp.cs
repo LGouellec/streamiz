@@ -6,12 +6,12 @@ namespace Kafka.Streams.Net.Processors.Internal
     {
         public long Extract(ConsumeResult<object, object> record, long partitionTime)
         {
-            if (record.Timestamp.UnixTimestampMs < 0)
+            if (record.Message.Timestamp.UnixTimestampMs < 0)
             {
-                return onInvalidTimestamp(record, record.Timestamp.UnixTimestampMs, partitionTime);
+                return onInvalidTimestamp(record, record.Message.Timestamp.UnixTimestampMs, partitionTime);
             }
 
-            return record.Timestamp.UnixTimestampMs;
+            return record.Message.Timestamp.UnixTimestampMs;
         }
 
         public abstract long onInvalidTimestamp(ConsumeResult<object, object> record, long recordTimestamp, long partitionTime);

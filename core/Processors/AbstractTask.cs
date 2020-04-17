@@ -15,7 +15,7 @@ namespace Kafka.Streams.Net.Processors
         private readonly IStreamConfig configuration;
         protected IConsumer<byte[], byte[]> consumer;
         protected bool taskInitialized;
-        protected bool taskClosed;
+        //protected bool taskClosed;
         protected bool commitNeeded;
         protected IStateManager stateMgr;
         protected ILog log;

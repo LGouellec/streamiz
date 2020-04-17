@@ -66,7 +66,7 @@ namespace Kafka.Streams.Net.Mock.Pipes
                 if (record != null)
                 {
                     lock (_lock)
-                        queue.Enqueue((record.Key, record.Value));
+                        queue.Enqueue((record.Message.Key, record.Message.Value));
                     consumer.Commit();
                 }
             }
