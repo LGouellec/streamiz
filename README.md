@@ -1,6 +1,6 @@
 # Kafka Stream .NET
 
-<img src="./resources/logo.png" width="100">
+<img src="./resources/logo-kstream-net.png" width="100">
 
 ----
 
