@@ -4,6 +4,9 @@ using System.Text;
 
 namespace Kafka.Streams.Net.Processors
 {
+    /// <summary>
+    /// A storage engine for managing state maintained by a stream processor.
+    /// </summary>
     public interface IStateStore
     {
         /// <summary>
