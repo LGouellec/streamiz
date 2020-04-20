@@ -5,6 +5,11 @@ using System.IO;
 
 namespace Streamiz.Kafka.Net.Stream
 {
+    /// <summary>
+    /// An object to define the options used when printing a <see cref="IKStream{K, V}"/>
+    /// </summary>
+    /// <typeparam name="K">key type</typeparam>
+    /// <typeparam name="V">value type</typeparam>
     public class Printed<K, V>
     {
         private Printed(TextWriter writer)
@@ -24,22 +29,41 @@ namespace Streamiz.Kafka.Net.Stream
 
         #region Static
 
+        /// <summary>
+        /// Print the records of a <see cref="IKStream{K, V}"/> to <see cref="Console.Out"/>
+        /// </summary>
+        /// <returns>A new <see cref="Printed{K, V}"/> instance. </returns>
         public static Printed<K, V> ToOut() => new Printed<K, V>(Console.Out);
 
         #endregion
 
+        /// <summary>
+        /// Print the records of a <see cref="IKStream{K, V}"/> with the provided label.
+        /// </summary>
+        /// <param name="label">Label to use</param>
+        /// <returns>Itself</returns>
         public Printed<K, V> WithLabel(string label)
         {
             this.Label = label;
             return this;
         }
 
+        /// <summary>
+        /// Print the records of a <see cref="IKStream{K, V}"/> with the provided function mapper.
+        /// </summary>
+        /// <param name="mapper">Mapper to use</param>
+        /// <returns>Itself</returns>
         public Printed<K, V> WithKeyValueMapper(Func<K, V, string> mapper)
         {
             this.Mapper = new WrappedKeyValueMapper<K, V, string>(mapper);
             return this;
         }
 
+        /// <summary>
+        /// Print the records of a <see cref="IKStream{K, V}"/> with provided processor name.
+        /// </summary>
+        /// <param name="name">Processor name</param>
+        /// <returns>Itself</returns>
         public Printed<K, V> WithName(string name)
         {
             this.Name = name;

@@ -2,13 +2,12 @@
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
-using Streamiz.Kafka.Net.State;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net
 {
+    /// <summary>
+    /// Processor context
+    /// </summary>
     public class ProcessorContext
     {
         internal string ApplicationId => Configuration.ApplicationId;
