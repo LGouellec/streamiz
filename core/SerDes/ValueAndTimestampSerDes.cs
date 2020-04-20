@@ -1,7 +1,7 @@
-﻿using Kafka.Streams.Net.State;
+﻿using Streamiz.Kafka.Net.State;
 using System.IO;
 
-namespace Kafka.Streams.Net.SerDes
+namespace Streamiz.Kafka.Net.SerDes
 {
     internal class ValueAndTimestampSerDes<V> : AbstractSerDes<ValueAndTimestamp<V>>
     {

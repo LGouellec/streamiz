@@ -1,9 +1,9 @@
 ﻿using Confluent.Kafka;
-using Kafka.Streams.Net;
-using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.Mock;
-using Kafka.Streams.Net.SerDes;
-using Kafka.Streams.Net.Stream;
+using Streamiz.Kafka.Net;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Mock;
+using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.Stream;
 using System;
 
 namespace sample_test_driver

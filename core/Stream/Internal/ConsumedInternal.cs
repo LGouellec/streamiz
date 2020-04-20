@@ -1,7 +1,7 @@
-﻿using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.SerDes;
+﻿using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.SerDes;
 
-namespace Kafka.Streams.Net.Stream.Internal
+namespace Streamiz.Kafka.Net.Stream.Internal
 {
     internal class ConsumedInternal<K, V>
     {

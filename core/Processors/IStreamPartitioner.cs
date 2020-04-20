@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Kafka.Streams.Net.Processors
+namespace Streamiz.Kafka.Net.Processors
 {
     internal interface IStreamPartitioner<K, V>
     {

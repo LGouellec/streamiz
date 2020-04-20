@@ -1,9 +1,9 @@
 ﻿using Confluent.Kafka;
-using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.Errors;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
 using log4net;
 
-namespace Kafka.Streams.Net.Processors.Internal
+namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal class FailOnInvalidTimestamp : ExtractRecordMetadataTimestamp
     {

@@ -1,7 +1,7 @@
-﻿using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.Processors.Internal;
+﻿using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.Processors.Internal;
 
-namespace Kafka.Streams.Net.Stream.Internal.Graph.Nodes
+namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
 {
     internal abstract class StreamSinkNode : StreamGraphNode
     {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.State
+namespace Streamiz.Kafka.Net.State
 {
     public interface ReadOnlyKeyValueStore<K, V>
     {

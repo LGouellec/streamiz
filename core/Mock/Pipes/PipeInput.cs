@@ -1,10 +1,10 @@
 ﻿using Confluent.Kafka;
-using Kafka.Streams.Net.Kafka;
+using Streamiz.Kafka.Net.Kafka;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Mock.Pipes
+namespace Streamiz.Kafka.Net.Mock.Pipes
 {
     internal class PipeInput : IPipeInput
     {
@@ -33,11 +33,7 @@ namespace Kafka.Streams.Net.Mock.Pipes
             {
                 var record = buffer.Dequeue();
                 this.producer.Produce(topicName, 
-                    new Message<byte[], byte[]> { Key = record.Item1, Value = record.Item2, Timestamp = new Timestamp(record.Item3) }, 
-                    (r) =>
-                    {
-                        int a = 1;
-                    });
+                    new Message<byte[], byte[]> { Key = record.Item1, Value = record.Item2, Timestamp = new Timestamp(record.Item3) });
             }
             this.producer.Flush();
         }

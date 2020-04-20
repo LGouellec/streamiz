@@ -1,9 +1,9 @@
-﻿using Kafka.Streams.Net.SerDes;
+﻿using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Crosscutting
+namespace Streamiz.Kafka.Net.Crosscutting
 {
     public static class StringExtensions
     {

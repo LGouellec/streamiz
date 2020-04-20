@@ -1,12 +1,12 @@
-﻿using Kafka.Streams.Net.SerDes;
-using Kafka.Streams.Net.Stream;
-using Kafka.Streams.Net.Stream.Internal;
-using Kafka.Streams.Net.Stream.Internal.Graph.Nodes;
+﻿using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Stream.Internal;
+using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Table.Internal
+namespace Streamiz.Kafka.Net.Table.Internal
 {
     internal class KGroupedTable<K, V> : AbstractStream<K, V>, IKGroupedTable<K, V>
     {

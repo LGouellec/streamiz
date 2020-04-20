@@ -1,10 +1,10 @@
-﻿using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.Processors.Internal;
+﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Processors.Internal;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Processors
+namespace Streamiz.Kafka.Net.Processors
 {
     /**
  * Stream thread states are the possible states that a stream thread can be in.

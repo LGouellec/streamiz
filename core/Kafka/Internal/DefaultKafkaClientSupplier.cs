@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Confluent.Kafka;
 
-namespace Kafka.Streams.Net.Kafka.Internal
+namespace Streamiz.Kafka.Net.Kafka.Internal
 {
     internal class DefaultKafkaClientSupplier : IKafkaSupplier
     {

@@ -3,19 +3,17 @@ using System.Collections.Generic;
 using System.Text;
 using Confluent.Kafka;
 
-namespace Kafka.Streams.Net.Processors.Internal
+namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal class RecordContext : IRecordContext
     {
-        private readonly ConsumeResult<byte[], byte[]> result;
-
         public RecordContext(ConsumeResult<byte[], byte[]> result)
         {
             this.Offset = result.Offset;
-            this.Timestamp = result.Timestamp.UnixTimestampMs;
+            this.Timestamp = result.Message.Timestamp.UnixTimestampMs;
             this.Topic = result.Topic;
             this.Partition = result.Partition;
-            this.Headers = result.Headers;
+            this.Headers = result.Message.Headers;
         }
 
         public long Offset { get; }

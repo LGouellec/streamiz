@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Errors
+namespace Streamiz.Kafka.Net.Errors
 {
     public class StreamsException : Exception
     {

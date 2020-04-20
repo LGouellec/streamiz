@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Kafka.Streams.Net.Processors.Internal
+namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal class WrapperTopicNameExtractor<K, V> : ITopicNameExtractor<K, V>
     {

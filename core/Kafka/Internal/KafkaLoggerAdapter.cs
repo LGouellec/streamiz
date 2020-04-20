@@ -1,10 +1,10 @@
 ﻿using Confluent.Kafka;
-using Kafka.Streams.Net.Crosscutting;
+using Streamiz.Kafka.Net.Crosscutting;
 using log4net;
 using System;
 using System.Threading;
 
-namespace Kafka.Streams.Net.Kafka.Internal
+namespace Streamiz.Kafka.Net.Kafka.Internal
 {
     internal class KafkaLoggerAdapter
     {
@@ -71,7 +71,7 @@ namespace Kafka.Streams.Net.Kafka.Internal
             {
                 name = client.Name;
             }
-            catch (NullReferenceException e)
+            catch (NullReferenceException)
             {
                 name = "Unknown";
             }

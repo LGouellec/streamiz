@@ -1,12 +1,12 @@
-﻿using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.Mock.Pipes;
-using Kafka.Streams.Net.SerDes;
+﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Mock.Pipes;
+using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Kafka.Streams.Net.Mock
+namespace Streamiz.Kafka.Net.Mock
 {
     /// <summary>
     /// Not threadsafe

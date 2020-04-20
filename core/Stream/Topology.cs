@@ -1,6 +1,6 @@
-﻿using Kafka.Streams.Net.Processors.Internal;
+﻿using Streamiz.Kafka.Net.Processors.Internal;
 
-namespace Kafka.Streams.Net.Stream
+namespace Streamiz.Kafka.Net.Stream
 {
     public class Topology
     {

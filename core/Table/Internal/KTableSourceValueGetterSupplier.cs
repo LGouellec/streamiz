@@ -1,9 +1,9 @@
-﻿using Kafka.Streams.Net.State;
+﻿using Streamiz.Kafka.Net.State;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Table.Internal
+namespace Streamiz.Kafka.Net.Table.Internal
 {
     internal class KTableSourceValueGetterSupplier<K, V> : IKTableValueGetterSupplier<K, V>
     {

@@ -1,11 +1,11 @@
-﻿using Kafka.Streams.Net.SerDes;
-using Kafka.Streams.Net.State.Internal.Builder;
-using Kafka.Streams.Net.State.Supplier;
+﻿using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State.Internal.Builder;
+using Streamiz.Kafka.Net.State.Supplier;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.State
+namespace Streamiz.Kafka.Net.State
 {
     internal static class Stores
     {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Table.Internal
+namespace Streamiz.Kafka.Net.Table.Internal
 {
     internal class Change<T>
     {

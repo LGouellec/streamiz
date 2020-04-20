@@ -1,7 +1,7 @@
-﻿using Kafka.Streams.Net.SerDes;
-using Kafka.Streams.Net.State.Supplier;
+﻿using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State.Supplier;
 
-namespace Kafka.Streams.Net.State.Internal.Builder
+namespace Streamiz.Kafka.Net.State.Internal.Builder
 {
     internal class TimestampedKeyValueStoreBuilder<K, V>
         : AbstractStoreBuilder<K, ValueAndTimestamp<V>, TimestampedKeyValueStore<K, V>>

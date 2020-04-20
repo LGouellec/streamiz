@@ -1,10 +1,10 @@
-﻿using Kafka.Streams.Net.Crosscutting;
+﻿using Streamiz.Kafka.Net.Crosscutting;
 using log4net;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Processors.Internal
+namespace Streamiz.Kafka.Net.Processors.Internal
 {
     // TODO : reorganized queue for each queue value and dequeue using timestampextractor
     internal class RecordQueue<T>

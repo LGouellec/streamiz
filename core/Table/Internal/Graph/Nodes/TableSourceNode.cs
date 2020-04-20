@@ -1,17 +1,17 @@
-﻿using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.Processors.Internal;
-using Kafka.Streams.Net.State;
-using Kafka.Streams.Net.State.Internal;
-using Kafka.Streams.Net.Stream;
-using Kafka.Streams.Net.Stream.Internal;
-using Kafka.Streams.Net.Stream.Internal.Graph.Nodes;
-using Kafka.Streams.Net.Table;
+﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.Internal;
+using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Stream.Internal;
+using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
+using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Table.Internal.Graph.Nodes
+namespace Streamiz.Kafka.Net.Table.Internal.Graph.Nodes
 {
     internal interface ITableSourceNode
     {

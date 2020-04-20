@@ -1,6 +1,6 @@
-﻿using Kafka.Streams.Net.Crosscutting;
+﻿using Streamiz.Kafka.Net.Crosscutting;
 
-namespace Kafka.Streams.Net.Processors.Internal
+namespace Streamiz.Kafka.Net.Processors.Internal
 {
     public delegate void StateRestoreCallback(Bytes key, byte[] value);
 }

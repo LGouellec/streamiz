@@ -1,11 +1,11 @@
-﻿using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.SerDes;
+﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.State.Internal
+namespace Streamiz.Kafka.Net.State.Internal
 {
     internal class WrappedKeyValueStore<K, V> :
         WrappedStateStore<KeyValueStore<Bytes, byte[]>, K, V>

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.State
+namespace Streamiz.Kafka.Net.State
 {
     public interface ReadOnlySessionStore<K,AGG>
     {

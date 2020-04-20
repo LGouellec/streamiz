@@ -1,9 +1,9 @@
-﻿using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.Stream.Internal.Graph;
+﻿using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.Stream.Internal.Graph;
 using System;
 using System.IO;
 
-namespace Kafka.Streams.Net.Stream
+namespace Streamiz.Kafka.Net.Stream
 {
     public class Printed<K, V>
     {

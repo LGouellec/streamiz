@@ -1,15 +1,15 @@
-﻿using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.State;
-using Kafka.Streams.Net.Stream;
+﻿using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Table.Internal.Graph
+namespace Streamiz.Kafka.Net.Table.Internal.Graph
 {
     internal class KTableMapValues<K, V, VR> : IKTableProcessorSupplier<K, V, VR>
     {
-        internal class KTableMapValuesValueGetter<K, V, VR> : IKTableValueGetter<K, VR>
+        internal class KTableMapValuesValueGetter : IKTableValueGetter<K, VR>
         {
             private readonly IKTableValueGetter<K, V> ktablegetter;
             private readonly IValueMapperWithKey<K, V, VR> mapper;
@@ -68,7 +68,7 @@ namespace Kafka.Streams.Net.Table.Internal.Graph
                     var supplier = parentTable.ValueGetterSupplier;
                     return new GenericKTableValueGetterSupplier<K, VR>(
                         supplier.StoreNames,
-                        new KTableMapValuesValueGetter<K, V, VR>(this.mapper, supplier.Get()));
+                        new KTableMapValuesValueGetter(this.mapper, supplier.Get()));
                 }
             }
         }

@@ -1,8 +1,8 @@
-﻿using Kafka.Streams.Net.Errors;
-using Kafka.Streams.Net.Processors.Internal;
-using Kafka.Streams.Net.SerDes;
+﻿using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.SerDes;
 
-namespace Kafka.Streams.Net.Processors
+namespace Streamiz.Kafka.Net.Processors
 {
     internal class SinkProcessor<K, V> : AbstractProcessor<K, V>
     {

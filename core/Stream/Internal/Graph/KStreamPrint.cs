@@ -1,7 +1,7 @@
-﻿using Kafka.Streams.Net.Processors;
+﻿using Streamiz.Kafka.Net.Processors;
 using System.IO;
 
-namespace Kafka.Streams.Net.Stream.Internal.Graph
+namespace Streamiz.Kafka.Net.Stream.Internal.Graph
 {
     internal class PrintForeachAction<K, V>
     {

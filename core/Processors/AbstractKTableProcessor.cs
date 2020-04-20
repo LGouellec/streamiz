@@ -1,10 +1,10 @@
-﻿using Kafka.Streams.Net.State;
-using Kafka.Streams.Net.Table.Internal;
+﻿using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.Table.Internal;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Processors
+namespace Streamiz.Kafka.Net.Processors
 {
     internal abstract class AbstractKTableProcessor<K, V, KS, VS> : AbstractProcessor<K, Change<V>>
     {

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Kafka.Streams.Net.Stream;
+using Streamiz.Kafka.Net.Stream;
 
-namespace Kafka.Streams.Net.Processors
+namespace Streamiz.Kafka.Net.Processors
 {
     internal class KStreamFlatMapValuesProcessor<K, V, VR> : AbstractProcessor<K, V>
     {

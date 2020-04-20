@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Mock
+namespace Streamiz.Kafka.Net.Mock
 {
     internal class TestRecord<K, V>
     {

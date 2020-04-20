@@ -1,10 +1,10 @@
-﻿using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.SerDes;
+﻿using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.State.Internal.Builder
+namespace Streamiz.Kafka.Net.State.Internal.Builder
 {
     internal abstract class AbstractStoreBuilder<K, V, T> : StoreBuilder<T>
         where T : IStateStore

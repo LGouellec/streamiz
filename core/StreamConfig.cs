@@ -1,13 +1,13 @@
 ﻿using Confluent.Kafka;
-using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.Processors.Internal;
-using Kafka.Streams.Net.SerDes;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Kafka.Streams.Net
+namespace Streamiz.Kafka.Net
 {
     public enum ProcessingGuarantee
     {
@@ -22,52 +22,108 @@ namespace Kafka.Streams.Net
     /// </summary>
     public interface IStreamConfig
     {
+        /// <summary>
+        /// Add keyvalue configuration for producer, consumer and admin client.
+        /// [WARNING] : Maybe will change
+        /// </summary>
+        /// <param name="key">New key</param>
+        /// <param name="value">New value</param>
         void AddConfig(string key, string value);
+
+        /// <summary>
+        /// Add keyvalue configuration for admin client
+        /// [WARNING] : Maybe will change
+        /// </summary>
+        /// <param name="key">New key</param>
+        /// <param name="value">New value</param>
         void AddAdminConfig(string key, string value);
+
+        /// <summary>
+        /// Add keyvalue configuration for consumer
+        /// [WARNING] : Maybe will change
+        /// </summary>
+        /// <param name="key">New key</param>
+        /// <param name="value">New value</param>
         void AddConsumerConfig(string key, string value);
+
+        /// <summary>
+        /// Add keyvalue configuration for producer
+        /// [WARNING] : Maybe will change
+        /// </summary>
+        /// <param name="key">New key</param>
+        /// <param name="value">New value</param>
         void AddProducerConfig(string key, string value);
 
         #region Methods 
 
+        /// <summary>
+        /// Get the configs to the <see cref="IProducer{TKey, TValue}"/>
+        /// </summary>
+        /// <returns>Return <see cref="ProducerConfig"/> for building <see cref="IProducer{TKey, TValue}"/> instance.</returns>
         ProducerConfig ToProducerConfig();
 
+        /// <summary>
+        /// Get the configs to the <see cref="IProducer{TKey, TValue}"/> with specific <paramref name="clientId"/>
+        /// </summary>
+        /// <param name="clientId">Producer client ID</param>
+        /// <returns>Return <see cref="ProducerConfig"/> for building <see cref="IProducer{TKey, TValue}"/> instance.</returns>
         ProducerConfig ToProducerConfig(string clientId);
 
+        /// <summary>
+        /// Get the configs to the <see cref="IConsumer{TKey, TValue}"/>
+        /// </summary>
+        /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
         ConsumerConfig ToConsumerConfig();
 
+        /// <summary>
+        /// Get the configs to the <see cref="IConsumer{TumerKey, TValue}"/> with specific <paramref name="clientid"/>
+        /// </summary>
+        /// <param name="clientid">Consumer client ID</param>
+        /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
         ConsumerConfig ToConsumerConfig(string clientid);
 
+        /// <summary>
+        /// Get the configs to the restore <see cref="IConsumer{TKey, TValue}"/> with specific <paramref name="clientId"/>.
+        /// Restore consumer is using to restore persistent state store.
+        /// </summary>
+        /// <param name="clientId">Consumer client ID</param>
+        /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
         ConsumerConfig ToGlobalConsumerConfig(string clientId);
 
+        /// <summary>
+        /// Get the configs to the <see cref="IAdminClient"/> with specific <paramref name="clientId"/>
+        /// </summary>
+        /// <param name="clientId">Admin client ID</param>
+        /// <returns>Return <see cref="AdminClientConfig"/> for building <see cref="IAdminClient"/> instance.</returns>
         AdminClientConfig ToAdminConfig(string clientId);
 
         #endregion
 
         #region Stream Config Property
 
-        //// <summary>
-        //// An identifier for the stream processing application. Must be unique within the Kafka cluster. It is used as 1) the default client-id prefix, 2) the group-id for membership management, 3) the changelog topic prefix.
-        //// </summary>
+        /// <summary>
+        /// An identifier for the stream processing application. Must be unique within the Kafka cluster. It is used as 1) the default client-id prefix, 2) the group-id for membership management, 3) the changelog topic prefix.
+        /// </summary>
         string ApplicationId { get; set; }
 
-        //// <summary>
-        //// An ID prefix string used for the client IDs of internal consumer, producer and restore-consumer, with pattern '<client.id>-StreamThread-<threadSequenceNumber>-<consumer|producer|restore-consumer>'.
-        //// </summary>
+        /// <summary>
+        /// An ID prefix string used for the client IDs of internal consumer, producer and restore-consumer, with pattern '&lt;client.id&gt;-StreamThread-&lt;threadSequenceNumber&gt;-&lt;consumer|producer|restore-consumer&gt;'.
+        /// </summary>
         string ClientId { get; set; }
 
-        //// <summary>
-        //// 
-        //// /summary>
+        /// <summary>
+        /// The number of threads to execute stream processing.
+        /// /summary>
         int NumStreamThreads { get; set;  }
 
-        //// <summary>
-        //// Default key serdes for consumer and materialized state store
-        //// </summary>
+        /// <summary>
+        /// Default key serdes for consumer and materialized state store
+        /// </summary>
         ISerDes DefaultKeySerDes { get; set; }
 
-        //// <summary>
-        //// Default value serdes for consumer and materialized state store
-        //// </summary>
+        /// <summary>
+        /// Default value serdes for consumer and materialized state store
+        /// </summary>
         ISerDes DefaultValueSerDes { get; set; }
 
         /// <summary>

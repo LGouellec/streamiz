@@ -1,6 +1,6 @@
-﻿using Kafka.Streams.Net.SerDes;
+﻿using Streamiz.Kafka.Net.SerDes;
 
-namespace Kafka.Streams.Net.Stream.Internal
+namespace Streamiz.Kafka.Net.Stream.Internal
 {
     internal class Grouped<K, V>
     {

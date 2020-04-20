@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Kafka.Streams.Net.Crosscutting
+namespace Streamiz.Kafka.Net.Crosscutting
 {
     internal static class KafkaExtensions
     {

@@ -1,18 +1,18 @@
-﻿using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.SerDes;
-using Kafka.Streams.Net.State;
-using Kafka.Streams.Net.State.Internal;
-using Kafka.Streams.Net.Stream;
-using Kafka.Streams.Net.Stream.Internal;
-using Kafka.Streams.Net.Stream.Internal.Graph;
-using Kafka.Streams.Net.Stream.Internal.Graph.Nodes;
-using Kafka.Streams.Net.Table.Internal.Graph;
-using Kafka.Streams.Net.Table.Internal.Graph.Nodes;
+﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.Internal;
+using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Stream.Internal;
+using Streamiz.Kafka.Net.Stream.Internal.Graph;
+using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
+using Streamiz.Kafka.Net.Table.Internal.Graph;
+using Streamiz.Kafka.Net.Table.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
 
-namespace Kafka.Streams.Net.Table.Internal
+namespace Streamiz.Kafka.Net.Table.Internal
 {
     internal class KTable<K, S, V> : AbstractStream<K, V>, IKTable<K, V>, IKTableGetter<K, V>
     {

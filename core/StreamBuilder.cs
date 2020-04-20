@@ -1,13 +1,13 @@
-﻿using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.Processors.Internal;
-using Kafka.Streams.Net.SerDes;
-using Kafka.Streams.Net.State;
-using Kafka.Streams.Net.Stream;
-using Kafka.Streams.Net.Stream.Internal;
-using Kafka.Streams.Net.Table;
+﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Stream.Internal;
+using Streamiz.Kafka.Net.Table;
 
-namespace Kafka.Streams.Net
+namespace Streamiz.Kafka.Net
 {
     public class StreamBuilder
     {

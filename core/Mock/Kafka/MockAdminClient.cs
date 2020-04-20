@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Kafka.Streams.Net.Mock.Kafka
+namespace Streamiz.Kafka.Net.Mock.Kafka
 {
     internal class MockAdminClient : IAdminClient
     {

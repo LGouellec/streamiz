@@ -1,13 +1,13 @@
 ﻿using Confluent.Kafka;
-using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.Kafka;
-using Kafka.Streams.Net.Kafka.Internal;
-using Kafka.Streams.Net.Processors.Internal;
-using Kafka.Streams.Net.Stream.Internal;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Kafka;
+using Streamiz.Kafka.Net.Kafka.Internal;
+using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.Stream.Internal;
 using log4net;
 using System.Collections.Generic;
 
-namespace Kafka.Streams.Net.Processors
+namespace Streamiz.Kafka.Net.Processors
 {
     internal class StreamTask : AbstractTask
     {
@@ -113,9 +113,9 @@ namespace Kafka.Streams.Net.Processors
                 {
                     this.Context.SetRecordMetaData(record);
 
-                    var recordInfo = $"Topic:{record.Topic}|Partition:{record.Partition.Value}|Offset:{record.Offset}|Timestamp:{record.Timestamp.UnixTimestampMs}";
+                    var recordInfo = $"Topic:{record.Topic}|Partition:{record.Partition.Value}|Offset:{record.Offset}|Timestamp:{record.Message.Timestamp.UnixTimestampMs}";
                     log.Debug($"{logPrefix}Start processing one record [{recordInfo}]");
-                    processor.Process(record.Key, record.Value);
+                    processor.Process(record.Message.Key, record.Message.Key);
                     log.Debug($"{logPrefix}Completed processing one record [{recordInfo}]");
 
                     queue.Commit();

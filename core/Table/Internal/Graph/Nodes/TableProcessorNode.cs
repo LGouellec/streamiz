@@ -1,11 +1,11 @@
-﻿using Kafka.Streams.Net.Processors.Internal;
-using Kafka.Streams.Net.State;
-using Kafka.Streams.Net.Stream.Internal.Graph.Nodes;
+﻿using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Table.Internal.Graph.Nodes
+namespace Streamiz.Kafka.Net.Table.Internal.Graph.Nodes
 {
     internal abstract class TableProcessorNode : StreamGraphNode
     {

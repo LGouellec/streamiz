@@ -9,7 +9,7 @@ using System.IO;
 using System.Reflection;
 using System.Xml;
 
-namespace Kafka.Streams.Net.Crosscutting
+namespace Streamiz.Kafka.Net.Crosscutting
 {
     public static class Logger
     {
