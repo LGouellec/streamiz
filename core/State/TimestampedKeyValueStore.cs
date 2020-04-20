@@ -2,7 +2,7 @@
 
 namespace Streamiz.Kafka.Net.State
 {
-    public interface TimestampedKeyValueStore<K,V> : KeyValueStore<K, ValueAndTimestamp<V>>
+    public interface TimestampedKeyValueStore<K,V> : IKeyValueStore<K, ValueAndTimestamp<V>>
     {
     }
 }

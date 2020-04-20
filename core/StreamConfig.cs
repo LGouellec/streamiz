@@ -221,6 +221,12 @@ namespace Streamiz.Kafka.Net
 
         #region ClientConfig
 
+        /// <summary>
+        /// Add keyvalue configuration for producer, consumer and admin client.
+        /// [WARNING] : Maybe will change
+        /// </summary>
+        /// <param name="key">New key</param>
+        /// <param name="value">New value</param>
         public void AddConfig(string key, string value)
         {
             AddConsumerConfig(key, value);
@@ -1253,6 +1259,12 @@ namespace Streamiz.Kafka.Net
 
         #region ConsumerConfig
 
+        /// <summary>
+        /// Add keyvalue configuration for consumer
+        /// [WARNING] : Maybe will change
+        /// </summary>
+        /// <param name="key">New key</param>
+        /// <param name="value">New value</param>
         public void AddConsumerConfig(string key, string value) => _internalConsumerConfig.AddOrUpdate(key, value);
 
         /// <summary>
@@ -1420,6 +1432,12 @@ namespace Streamiz.Kafka.Net
 
         #region ProducerConfig
 
+        /// <summary>
+        /// Add keyvalue configuration for producer
+        /// [WARNING] : Maybe will change
+        /// </summary>
+        /// <param name="key">New key</param>
+        /// <param name="value">New value</param>
         public void AddProducerConfig(string key, string value) => _internalProducerConfig.AddOrUpdate(key, value);
 
         /// <summary>
@@ -1587,18 +1605,37 @@ namespace Streamiz.Kafka.Net
 
         #region AdminConfig
 
+        /// <summary>
+        /// Add keyvalue configuration for admin client
+        /// [WARNING] : Maybe will change
+        /// </summary>
+        /// <param name="key">New key</param>
+        /// <param name="value">New value</param>
         public void AddAdminConfig(string key, string value) => _internalAdminConfig.AddOrUpdate(key, value);
 
         #endregion
 
         #region Ctor
 
+        /// <summary>
+        /// Constructor empty
+        /// </summary>
         public StreamConfig()
             : this(null)
         {
 
         }
 
+        /// <summary>
+        /// Constructor with a dictionary of properties.
+        /// This is stream properties. 
+        /// <para>
+        /// If you want to set specific properties for consumer, producer, admin client or global.
+        /// Please use <see cref="IStreamConfig.AddConsumerConfig(string, string)"/>, <see cref="IStreamConfig.AddProducerConfig(string, string)"/>, 
+        /// <see cref="IStreamConfig.AddAdminConfig(string, string)"/> or <see cref="IStreamConfig.AddConfig(string, string)"/>. WARNING : MAYBE WILL CHANGE
+        /// </para>
+        /// </summary>
+        /// <param name="properties">Dictionary of stream properties</param>
         public StreamConfig(IDictionary<string, dynamic> properties)
         {
             ClientId = null;
@@ -1631,6 +1668,10 @@ namespace Streamiz.Kafka.Net
             EnableAutoCommit = false;
         }
 
+        /// <summary>
+        /// Constructor by copy
+        /// </summary>
+        /// <param name="config">Copy configuration</param>
         public StreamConfig(StreamConfig config)
         {
             foreach (var k in config)
@@ -1650,44 +1691,71 @@ namespace Streamiz.Kafka.Net
 
         #region IStreamConfig Impl
 
+        /// <summary>
+        /// The number of threads to execute stream processing.
+        /// </summary>
         public int NumStreamThreads
         {
             get => this[numStreamThreadsCst];
             set => this.AddOrUpdate(numStreamThreadsCst, value);
         }
 
+        /// <summary>
+        /// An ID prefix string used for the client IDs of internal consumer, producer and restore-consumer, with pattern '&lt;client.id&gt;-StreamThread-&lt;threadSequenceNumber&gt;-&lt;consumer|producer|restore-consumer&gt;'.
+        /// </summary>
         public string ClientId
         {
             get => this[clientIdCst];
             set => this.AddOrUpdate(clientIdCst, value);
         }
 
+        /// <summary>
+        /// An identifier for the stream processing application. Must be unique within the Kafka cluster. It is used as 1) the default client-id prefix, 2) the group-id for membership management, 3) the changelog topic prefix.
+        /// </summary>
         public string ApplicationId
         {
             get => this[applicatonIdCst];
             set => this.AddOrUpdate(applicatonIdCst, value);
         }
 
+        /// <summary>
+        /// Default key serdes for consumer and materialized state store
+        /// </summary>
         public ISerDes DefaultKeySerDes
         {
             get => this[defaultKeySerDesCst];
             set => this.AddOrUpdate(defaultKeySerDesCst, value);
         }
 
+        /// <summary>
+        /// Default value serdes for consumer and materialized state store
+        /// </summary>
         public ISerDes DefaultValueSerDes
         {
             get => this[defaultValueSerDesCst];
             set => this.AddOrUpdate(defaultValueSerDesCst, value);
         }
 
+        /// <summary>
+        /// Default timestamp extractor class that implements the <see cref="ITimestampExtractor"/> interface.
+        /// </summary>
         public ITimestampExtractor DefaultTimestampExtractor 
         {
             get => this[defaultTimestampExtractorCst];
             set => this.AddOrUpdate(defaultTimestampExtractorCst, value);
         }
 
+        /// <summary>
+        /// Get the configs to the <see cref="IProducer{TKey, TValue}"/>
+        /// </summary>
+        /// <returns>Return <see cref="ProducerConfig"/> for building <see cref="IProducer{TKey, TValue}"/> instance.</returns>
         public ProducerConfig ToProducerConfig() => ToProducerConfig(this.ClientId);
 
+        /// <summary>
+        /// Get the configs to the <see cref="IProducer{TKey, TValue}"/> with specific <paramref name="clientId"/>
+        /// </summary>
+        /// <param name="clientId">Producer client ID</param>
+        /// <returns>Return <see cref="ProducerConfig"/> for building <see cref="IProducer{TKey, TValue}"/> instance.</returns
         public ProducerConfig ToProducerConfig(string clientId)
         {
             var c = _producerConfig.Union(_internalProducerConfig).ToDictionary();
@@ -1696,8 +1764,17 @@ namespace Streamiz.Kafka.Net
             return config;
         }
 
+        /// <summary>
+        /// Get the configs to the <see cref="IConsumer{TKey, TValue}"/>
+        /// </summary>
+        /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns
         public ConsumerConfig ToConsumerConfig() => ToConsumerConfig(this.ClientId);
 
+        /// <summary>
+        /// Get the configs to the <see cref="IConsumer{TumerKey, TValue}"/> with specific <paramref name="clientid"/>
+        /// </summary>
+        /// <param name="clientid">Consumer client ID</param>
+        /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns
         public ConsumerConfig ToConsumerConfig(string clientId)
         {
             var c = _consumerConfig.Union(_internalConsumerConfig).ToDictionary();
@@ -1707,8 +1784,19 @@ namespace Streamiz.Kafka.Net
             return config;
         }
 
+        /// <summary>
+        /// Get the configs to the restore <see cref="IConsumer{TKey, TValue}"/> with specific <paramref name="clientId"/>.
+        /// Restore consumer is using to restore persistent state store.
+        /// </summary>
+        /// <param name="clientId">Consumer client ID</param>
+        /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns
         public ConsumerConfig ToGlobalConsumerConfig(string clientId) => ToConsumerConfig(clientId);
 
+        /// <summary>
+        /// Get the configs to the <see cref="IAdminClient"/> with specific <paramref name="clientId"/>
+        /// </summary>
+        /// <param name="clientId">Admin client ID</param>
+        /// <returns>Return <see cref="AdminClientConfig"/> for building <see cref="IAdminClient"/> instance.</returns
         public AdminClientConfig ToAdminConfig(string clientId)
         {
             var c = _adminClientConfig.Union(_internalAdminConfig).ToDictionary();
@@ -1738,11 +1826,23 @@ namespace Streamiz.Kafka.Net
         where KS : ISerDes, new()
         where VS : ISerDes, new()
     {
+        /// <summary>
+        /// Constructor empty
+        /// </summary>
         public StreamConfig()
             : this(null)
         {
         }
 
+        /// <summary>
+        /// Constructor with properties. 
+        /// See <see cref="StreamConfig.StreamConfig(IDictionary{string, dynamic})"/>
+        /// <para>
+        /// <see cref="IStreamConfig.DefaultKeySerDes"/> is set to <code>new KS();</code>
+        /// <see cref="IStreamConfig.DefaultValueSerDes"/> is set to <code>new VS();</code>
+        /// </para>
+        /// </summary>
+        /// <param name="properties">Dictionary of stream properties</param>
         public StreamConfig(IDictionary<string, dynamic> properties)
             : base(properties)
         {

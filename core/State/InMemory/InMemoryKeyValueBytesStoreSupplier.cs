@@ -27,6 +27,6 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// Return a new <see cref="IStateStore"/> instance.
         /// </summary>
         /// <returns>Return a new <see cref="InMemoryKeyValueStore"/>instance.</returns>
-        public KeyValueStore<Bytes, byte[]> Get() => new InMemoryKeyValueStore(this.Name);
+        public IKeyValueStore<Bytes, byte[]> Get() => new InMemoryKeyValueStore(this.Name);
     }
 }

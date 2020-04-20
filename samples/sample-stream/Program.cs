@@ -33,8 +33,7 @@ namespace sample_stream
                 .FilterNot((k, v) => v.Contains("test"))
                 .To("test-output");
 
-            builder.Table("topic",
-                StreamOptions.Create());
+            builder.Table<string, string>("topic");
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);

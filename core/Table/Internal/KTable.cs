@@ -106,12 +106,12 @@ namespace Streamiz.Kafka.Net.Table.Internal
 
         public IKTable<K, V> Filter(Func<K, V, bool> predicate, string named = null) => DoFilter(predicate, named, null, false);
 
-        public IKTable<K, V> Filter(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        public IKTable<K, V> Filter(Func<K, V, bool> predicate, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
             => DoFilter(predicate, named, materialized, false);
 
         public IKTable<K, V> FilterNot(Func<K, V, bool> predicate, string named = null) => DoFilter(predicate, named, null, true);
 
-        public IKTable<K, V> FilterNot(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        public IKTable<K, V> FilterNot(Func<K, V, bool> predicate, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
             => DoFilter(predicate, named, materialized, true);
 
         #endregion
@@ -153,25 +153,25 @@ namespace Streamiz.Kafka.Net.Table.Internal
             => this.MapValues(mapper, null, named);
 
 
-        public IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        public IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
              => this.MapValues(new WrappedValueMapper<V, VR>(mapper), materialized, named);
 
         public IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, string named = null)
             => this.MapValues(WithKey(mapper), named);
 
-        public IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        public IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
             => this.MapValues(WithKey(mapper), materialized, named);
 
         public IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, string named = null)
             => this.MapValues(mapperWithKey, null, named);
 
-        public IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        public IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
             => this.MapValues(new WrapperValueMapperWithKey<K, V, VR>(mapperWithKey), materialized, named);
 
         public IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string named = null)
             => this.MapValues(mapperWithKey, null, named);
 
-        public IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string named)
+        public IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named)
             => DoMapValues(mapperWithKey, named, materialized);
 
         #endregion
@@ -200,7 +200,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
 
         #region Privates
 
-        private IKTable<K, V> DoFilter(Func<K, V, bool> predicate, string named, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materializedInternal, bool filterNot)
+        private IKTable<K, V> DoFilter(Func<K, V, bool> predicate, string named, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materializedInternal, bool filterNot)
         {
             ISerDes<K> keySerde;
             ISerDes<V> valueSerde;
@@ -257,7 +257,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
                                     builder);
         }
 
-        private IKTable<K, VR> DoMapValues<VR>(IValueMapperWithKey<K, V, VR> mapper, string named, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materializedInternal)
+        private IKTable<K, VR> DoMapValues<VR>(IValueMapperWithKey<K, V, VR> mapper, string named, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materializedInternal)
         {
             ISerDes<K> keySerde;
             ISerDes<VR> valueSerde;

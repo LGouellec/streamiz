@@ -1,29 +1,31 @@
 ﻿using Streamiz.Kafka.Net.Processors;
-using Streamiz.Kafka.Net.Stream;
 
 namespace Streamiz.Kafka.Net
 {
-    public class StreamOptions
+    /// <summary>
+    /// NOT USED FOR MOMENT
+    /// </summary>
+    internal class StreamOptions
     {
         internal string Named { get; private set; } = null;
         internal ITimestampExtractor Extractor { get; private set; } = null;
 
-        public static StreamOptions Create() => Create(null, null);
+        private static StreamOptions Create() => Create(null, null);
 
-        public static StreamOptions Create(string named) => Create(null, named);
+        private static StreamOptions Create(string named) => Create(null, named);
 
-        public static StreamOptions Create(ITimestampExtractor extractor) => Create(extractor, null);
+        private static StreamOptions Create(ITimestampExtractor extractor) => Create(extractor, null);
 
-        public static StreamOptions Create(ITimestampExtractor extractor, string named) 
+        private static StreamOptions Create(ITimestampExtractor extractor, string named) 
             => new StreamOptions() { Named = named, Extractor = extractor };
 
-        public StreamOptions WithTimestrampExtractor(ITimestampExtractor extractor)
+        private StreamOptions WithTimestrampExtractor(ITimestampExtractor extractor)
         {
             Extractor = extractor;
             return this;
         }
 
-        public StreamOptions WithNamed(string named)
+        private StreamOptions WithNamed(string named)
         {
             Named = named;
             return this;

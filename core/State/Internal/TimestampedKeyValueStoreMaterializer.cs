@@ -10,9 +10,9 @@ namespace Streamiz.Kafka.Net.State.Internal
 {
     internal class TimestampedKeyValueStoreMaterializer<K, V>
     {
-        private Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized;
+        private Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized;
 
-        public TimestampedKeyValueStoreMaterializer(Materialized<K, V, KeyValueStore<Bytes, byte[]>> materializedInternal)
+        public TimestampedKeyValueStoreMaterializer(Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materializedInternal)
         {
             this.materialized = materializedInternal;
         }

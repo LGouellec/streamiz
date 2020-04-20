@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.Table
     /// var builder = new StreamBuilder();
     /// builder.Table("topic",
     ///         StreamOptions.Create(),
-    ///         Materialized&lt;byte[], byte[], KeyValueStore&lt;Bytes, byte[]&gt;&gt;.Create("test-store"));
+    ///         Materialized&lt;byte[], byte[], IKeyValueStore&lt;Bytes, byte[]&gt;&gt;.Create("test-store"));
     /// </code>
     /// </example>
     /// </summary>
@@ -148,9 +148,9 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         /// <param name="supplier">the <see cref="KeyValueBytesStoreSupplier"/> used to materialize the store</param>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given supplier</returns>
-        public static Materialized<K, V, KeyValueStore<Bytes, byte[]>> Create(KeyValueBytesStoreSupplier supplier)
+        public static Materialized<K, V, IKeyValueStore<Bytes, byte[]>> Create(KeyValueBytesStoreSupplier supplier)
         {
-            var m = new Materialized<K, V, KeyValueStore<Bytes, byte[]>>(supplier);
+            var m = new Materialized<K, V, IKeyValueStore<Bytes, byte[]>>(supplier);
             return m;
         }
 
@@ -233,11 +233,11 @@ namespace Streamiz.Kafka.Net.Table
         /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
         /// <param name="supplier">the <see cref="KeyValueBytesStoreSupplier"/> used to materialize the store</param>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given supplier</returns>
-        public static Materialized<K, V, KeyValueStore<Bytes, byte[]>> Create<KS, VS>(KeyValueBytesStoreSupplier supplier)
+        public static Materialized<K, V, IKeyValueStore<Bytes, byte[]>> Create<KS, VS>(KeyValueBytesStoreSupplier supplier)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
-            var m = new Materialized<K, V, KeyValueStore<Bytes, byte[]>>(supplier)
+            var m = new Materialized<K, V, IKeyValueStore<Bytes, byte[]>>(supplier)
             {
                 KeySerdes = new KS(),
                 ValueSerdes = new VS()
@@ -389,14 +389,14 @@ namespace Streamiz.Kafka.Net.Table
     /// </summary>
     /// <typeparam name="K">Type of key</typeparam>
     /// <typeparam name="V">type of value</typeparam>
-    public class InMemory<K, V> : Materialized<K, V, KeyValueStore<Bytes, byte[]>>
+    public class InMemory<K, V> : Materialized<K, V, IKeyValueStore<Bytes, byte[]>>
     {
         /// <summary>
         /// Protected constructor with state store name and supplier
         /// </summary>
         /// <param name="name">State store name for query it</param>
         /// <param name="supplier">Supplier use to build the state store</param>
-        protected InMemory(string name, StoreSupplier<KeyValueStore<Bytes, byte[]>> supplier) 
+        protected InMemory(string name, StoreSupplier<IKeyValueStore<Bytes, byte[]>> supplier) 
             : base(name, supplier)
         {
 

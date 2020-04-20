@@ -18,7 +18,7 @@ namespace Streamiz.Kafka.Net.Table
     /// <summary>
     /// <see cref="IKTable{K, V}"/> is an abstraction of a changelog stream from a primary-keyed table.
     /// Each record in this changelog stream is an update on the primary-keyed table with the record key as the primary key.
-    /// A <see cref="IKTable{K, V}"/> is either <see cref="StreamBuilder.Table(string, StreamOptions)"/> defined from a single Kafka topic that is consumed message by message or the result of a <see cref="IKTable{K, V}"/> transformation.
+    /// A <see cref="IKTable{K, V}"/> is either <see cref="StreamBuilder.Table{K, V}(string)"/> defined from a single Kafka topic that is consumed message by message or the result of a <see cref="IKTable{K, V}"/> transformation.
     /// An aggregation of a <see cref="IKStream{K, V}"/> also yields a <see cref="IKTable{K, V}"/>.
     /// A <see cref="IKTable{K, V}"/> can be transformed record by record, joined with another <see cref="IKTable{K, V}"/> or <see cref="IKStream{K, V}"/>, or
     /// can be re-partitioned and aggregated into a new <see cref="IKTable{K, V}"/>.
@@ -68,7 +68,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="materialized">A <see cref="Materialized{K, V, S}"/> that describes how the <see cref="IStateStore"/> for the resulting <see cref="IKTable{K, V}"/> should be materialized.</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, V}"/> that contains only those records that satisfy the given predicate</returns>
-        IKTable<K, V> Filter(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<K, V> Filter(Func<K, V, bool> predicate, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
         /// Create a new <see cref="IKTable{K, V}"/> that consists of all records of this <see cref="IKTable{K, V}"/> which DO NOT satisfy the given
@@ -109,7 +109,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="materialized">A <see cref="Materialized{K, V, S}"/> that describes how the <see cref="IStateStore"/> for the resulting <see cref="IKTable{K, V}"/> should be materialized.</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, V}"/> that contains only those records that satisfy the given predicate</returns>
-        IKTable<K, V> FilterNot(Func<K, V, bool> predicate, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<K, V> FilterNot(Func<K, V, bool> predicate, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
         /// Convert this changelog stream to a <see cref="IKStream{K, V}"/>.
@@ -186,7 +186,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <summary>
         /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
         /// (with possibly a new type) in the new <see cref="IKTable{K, V}"/>, with the <see cref="ISerDes{K}"/> key serde, <see cref="ISerDes{V}"/> value serde},
-        /// and the underlying KeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
+        /// and the underlying IKeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
         /// instance.
         /// For each <see cref="IKTable{K, V}"/> update the provided mapper is applied to the value of the updated record and
         /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
@@ -203,12 +203,12 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="materialized">A materialized that describes how the <see cref="IStateStore"/> for the resulting <see cref="IKTable{K, VR}"/> should be materialized.</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
-        IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
         /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
         /// (with possibly a new type) in the new <see cref="IKTable{K, V}"/>, with the <see cref="ISerDes{K}"/> key serde, <see cref="ISerDes{V}"/> value serde},
-        /// and the underlying KeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
+        /// and the underlying IKeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
         /// instance.
         /// For each <see cref="IKTable{K, V}"/> update the provided mapper is applied to the value of the updated record and
         /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
@@ -229,7 +229,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <summary>
         /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
         /// (with possibly a new type) in the new <see cref="IKTable{K, V}"/>, with the <see cref="ISerDes{K}"/> key serde, <see cref="ISerDes{V}"/> value serde},
-        /// and the underlying KeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
+        /// and the underlying IKeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
         /// instance.
         /// For each <see cref="IKTable{K, V}"/> update the provided mapper is applied to the value of the updated record and
         /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
@@ -246,12 +246,12 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="materialized">A materialized that describes how the <see cref="IStateStore"/> for the resulting <see cref="IKTable{K, VR}"/> should be materialized.</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
-        IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
         /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
         /// (with possibly a new type) in the new <see cref="IKTable{K, V}"/>, with the <see cref="ISerDes{K}"/> key serde, <see cref="ISerDes{V}"/> value serde},
-        /// and the underlying KeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
+        /// and the underlying IKeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
         /// instance.
         /// For each <see cref="IKTable{K, V}"/> update the provided mapper is applied to the value of the updated record and
         /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
@@ -272,7 +272,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <summary>
         /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
         /// (with possibly a new type) in the new <see cref="IKTable{K, V}"/>, with the <see cref="ISerDes{K}"/> key serde, <see cref="ISerDes{V}"/> value serde},
-        /// and the underlying KeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
+        /// and the underlying IKeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
         /// instance.
         /// For each <see cref="IKTable{K, V}"/> update the provided mapper is applied to the value of the updated record and
         /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
@@ -289,12 +289,12 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="materialized">A materialized that describes how the <see cref="IStateStore"/> for the resulting <see cref="IKTable{K, VR}"/> should be materialized.</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
-        IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
         /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
         /// (with possibly a new type) in the new <see cref="IKTable{K, V}"/>, with the <see cref="ISerDes{K}"/> key serde, <see cref="ISerDes{V}"/> value serde},
-        /// and the underlying KeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
+        /// and the underlying IKeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
         /// instance.
         /// For each <see cref="IKTable{K, V}"/> update the provided mapper is applied to the value of the updated record and
         /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
@@ -315,7 +315,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <summary>
         /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
         /// (with possibly a new type) in the new <see cref="IKTable{K, V}"/>, with the <see cref="ISerDes{K}"/> key serde, <see cref="ISerDes{V}"/> value serde},
-        /// and the underlying KeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
+        /// and the underlying IKeyValueStore materialized state storage configured in the <see cref="Materialized{K, V, S}"/>
         /// instance.
         /// For each <see cref="IKTable{K, V}"/> update the provided mapper is applied to the value of the updated record and
         /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
@@ -332,7 +332,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="materialized">A materialized that describes how the <see cref="IStateStore"/> for the resulting <see cref="IKTable{K, VR}"/> should be materialized.</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
-        IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
         /// Re-groups the records of this <see cref="IKTable{K, V}"/> using the provided <see cref="IKeyValueMapper{K, V, VR}"/> and default serializers
