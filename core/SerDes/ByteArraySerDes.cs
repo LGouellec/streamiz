@@ -1,4 +1,4 @@
-﻿namespace Kafka.Streams.Net.SerDes
+﻿namespace Streamiz.Kafka.Net.SerDes
 {
     /// <summary>
     /// Basic ByteArraySerdes. 

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.SerDes
+namespace Streamiz.Kafka.Net.SerDes
 {
     /// <summary>
     /// The interface (NOT TYPED) for wrapping a serializer and deserializer for object.

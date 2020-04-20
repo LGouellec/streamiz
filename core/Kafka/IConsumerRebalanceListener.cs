@@ -1,7 +1,7 @@
 ﻿using Confluent.Kafka;
 using System.Collections.Generic;
 
-namespace Kafka.Streams.Net.Kafka
+namespace Streamiz.Kafka.Net.Kafka
 {
     /// <summary>
     /// A callback interface that the user can implement to trigger custom actions when the set of partitions assigned to the consumer changes.

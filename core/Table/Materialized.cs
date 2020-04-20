@@ -1,15 +1,15 @@
-﻿using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.SerDes;
-using Kafka.Streams.Net.State;
-using Kafka.Streams.Net.State.InMemory;
-using Kafka.Streams.Net.State.Supplier;
-using Kafka.Streams.Net.Stream;
-using Kafka.Streams.Net.Stream.Internal;
+﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.InMemory;
+using Streamiz.Kafka.Net.State.Supplier;
+using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
 
-namespace Kafka.Streams.Net.Table
+namespace Streamiz.Kafka.Net.Table
 {
     /// <summary>
     /// Used to describe how a <see cref="IStateStore"/> should be materialized.

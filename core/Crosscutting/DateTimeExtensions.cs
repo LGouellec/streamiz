@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Kafka.Streams.Net.Crosscutting
+namespace Streamiz.Kafka.Net.Crosscutting
 {
     /// <summary>
     /// Datetime extensions

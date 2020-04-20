@@ -1,4 +1,4 @@
-﻿namespace Kafka.Streams.Net.Table
+﻿namespace Streamiz.Kafka.Net.Table
 {
     /// <summary>
     /// TODO IMPLEMENT. <see cref="IKGroupedTable{K, V}"/> is an abstraction of a re-grouped changelog stream from a primary-keyed table,

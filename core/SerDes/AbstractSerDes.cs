@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Kafka.Streams.Net.SerDes
+namespace Streamiz.Kafka.Net.SerDes
 {
     /// <summary>
     /// Abstract SerDes class that implement <see cref="ISerDes{T}"/> and <see cref="ISerDes"/>.

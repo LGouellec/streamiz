@@ -1,14 +1,17 @@
-# Kafka Stream .NET
+# Streamiz Kafka .NET &middot; [![GitHub Licence](https://img.shields.io/github/license/LGouellec/streamiz-kafka-net)](https://github.com/LGouellec/streamiz-kafka-net/blob/master/LICENSE)
+<p></p>
 
 <img src="./resources/logo-kafka-stream-net.png" width="100">
-
 ----
 
-Kafka Stream .NET is an open source project for building .NET applications that transform input Kafka topics into output Kafka topics.
+Streamiz Kafka .NET is .NET stream processing library for Apache Kafka. 
+
+It's allowed to develop .NET applications that transform input Kafka topics into output Kafka topics. 
+It's supported .NET Standard 2.1.
 
 It's a rewriting inspired by [Kafka Streams](https://github.com/apache/kafka).
 
-Finally Kafka Stream .NET will provide the same functionality as [Kafka Streams](https://github.com/apache/kafka).
+Finally it will provide the same functionality as [Kafka Streams](https://github.com/apache/kafka).
 
 At moment, this project is being written. Thanks for you contribution !
 

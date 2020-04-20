@@ -1,6 +1,6 @@
-﻿using Kafka.Streams.Net.Processors.Internal;
+﻿using Streamiz.Kafka.Net.Processors.Internal;
 
-namespace Kafka.Streams.Net.Processors
+namespace Streamiz.Kafka.Net.Processors
 {
     internal delegate void ThreadStateListener(IThread thread, ThreadStateTransitionValidator old, ThreadStateTransitionValidator @new);
 

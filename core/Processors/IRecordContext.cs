@@ -1,6 +1,6 @@
 ﻿using Confluent.Kafka;
 
-namespace Kafka.Streams.Net.Processors
+namespace Streamiz.Kafka.Net.Processors
 {
     /// <summary>
     /// The context associated with the current record being processed by an <see cref="IProcessor"/>.

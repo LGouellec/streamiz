@@ -1,14 +1,14 @@
 ﻿using Confluent.Kafka;
-using Kafka.Streams.Net.Errors;
-using Kafka.Streams.Net.Kafka;
+using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Kafka;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using static Kafka.Streams.Net.Mock.Kafka.MockConsumerInformation;
+using static Streamiz.Kafka.Net.Mock.Kafka.MockConsumerInformation;
 
-namespace Kafka.Streams.Net.Mock.Kafka
+namespace Streamiz.Kafka.Net.Mock.Kafka
 {
     internal class MockConsumerInformation
     {

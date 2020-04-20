@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.State.InMemory;
-using Kafka.Streams.Net.State.Supplier;
-using Kafka.Streams.Net.Table;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.State.InMemory;
+using Streamiz.Kafka.Net.State.Supplier;
+using Streamiz.Kafka.Net.Table;
 
-namespace Kafka.Streams.Net.State.Internal
+namespace Streamiz.Kafka.Net.State.Internal
 {
     internal class TimestampedKeyValueStoreMaterializer<K, V>
     {

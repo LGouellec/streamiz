@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Kafka.Streams.Net.Processors
+namespace Streamiz.Kafka.Net.Processors
 {
     internal class PassThroughProcessor<K, V> : AbstractProcessor<K, V>
     {

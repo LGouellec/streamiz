@@ -1,8 +1,8 @@
-﻿using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.SerDes;
+﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.SerDes;
 using System.Collections.Generic;
 
-namespace Kafka.Streams.Net.State.Internal
+namespace Streamiz.Kafka.Net.State.Internal
 {
     internal class TimestampedKeyValueStoreImpl<K, V> :
         WrappedKeyValueStore<K, ValueAndTimestamp<V>>,

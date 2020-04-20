@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Stream
+namespace Streamiz.Kafka.Net.Stream
 {
     public interface IValueMapperWithKey<K, V, VR>
     {

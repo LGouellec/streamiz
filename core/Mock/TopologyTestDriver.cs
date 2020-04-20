@@ -1,20 +1,20 @@
 ﻿using Confluent.Kafka;
-using Kafka.Streams.Net.Errors;
-using Kafka.Streams.Net.Kafka;
-using Kafka.Streams.Net.Kafka.Internal;
-using Kafka.Streams.Net.Mock.Kafka;
-using Kafka.Streams.Net.Mock.Pipes;
-using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.Processors.Internal;
-using Kafka.Streams.Net.SerDes;
-using Kafka.Streams.Net.Stream;
-using Kafka.Streams.Net.Stream.Internal;
+using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Kafka;
+using Streamiz.Kafka.Net.Kafka.Internal;
+using Streamiz.Kafka.Net.Mock.Kafka;
+using Streamiz.Kafka.Net.Mock.Pipes;
+using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace Kafka.Streams.Net.Mock
+namespace Streamiz.Kafka.Net.Mock
 {
     public class TopologyTestDriver : IDisposable
     {

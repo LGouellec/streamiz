@@ -1,8 +1,8 @@
-﻿using Kafka.Streams.Net.Stream.Internal.Graph.Nodes;
+﻿using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
 
-namespace Kafka.Streams.Net.Processors
+namespace Streamiz.Kafka.Net.Processors
 {
     internal class KStreamFilterProcessor<K,V> : AbstractProcessor<K, V>
     {

@@ -1,6 +1,6 @@
-﻿using Kafka.Streams.Net.SerDes;
+﻿using Streamiz.Kafka.Net.SerDes;
 
-namespace Kafka.Streams.Net.State
+namespace Streamiz.Kafka.Net.State
 {
     public interface TimestampedKeyValueStore<K,V> : KeyValueStore<K, ValueAndTimestamp<V>>
     {

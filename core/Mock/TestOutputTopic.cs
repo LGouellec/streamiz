@@ -1,16 +1,16 @@
 ﻿using Confluent.Kafka;
-using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.Errors;
-using Kafka.Streams.Net.Mock.Kafka;
-using Kafka.Streams.Net.Mock.Pipes;
-using Kafka.Streams.Net.SerDes;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Mock.Kafka;
+using Streamiz.Kafka.Net.Mock.Pipes;
+using Streamiz.Kafka.Net.SerDes;
 using log4net;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Kafka.Streams.Net.Mock
+namespace Streamiz.Kafka.Net.Mock
 {
     /// <summary>
     /// Not thresafe

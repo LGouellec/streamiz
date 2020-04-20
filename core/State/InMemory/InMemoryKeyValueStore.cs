@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.Processors;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Processors;
 
-namespace Kafka.Streams.Net.State.InMemory
+namespace Streamiz.Kafka.Net.State.InMemory
 {
     /// <summary>
     /// <see cref="InMemoryKeyValueStore"/> implements <see cref="KeyValueStore{K, V}"/>. 

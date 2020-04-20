@@ -1,10 +1,10 @@
 ﻿using Confluent.Kafka;
-using Kafka.Streams.Net;
-using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.SerDes;
-using Kafka.Streams.Net.State;
-using Kafka.Streams.Net.Stream;
-using Kafka.Streams.Net.Table;
+using Streamiz.Kafka.Net;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections.Generic;
 using System.Threading;

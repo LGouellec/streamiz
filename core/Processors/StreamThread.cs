@@ -1,15 +1,15 @@
 ﻿using Confluent.Kafka;
-using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.Errors;
-using Kafka.Streams.Net.Kafka;
-using Kafka.Streams.Net.Kafka.Internal;
-using Kafka.Streams.Net.Processors.Internal;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Kafka;
+using Streamiz.Kafka.Net.Kafka.Internal;
+using Streamiz.Kafka.Net.Processors.Internal;
 using log4net;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace Kafka.Streams.Net.Processors
+namespace Streamiz.Kafka.Net.Processors
 {
     internal class StreamThread : IThread
     {

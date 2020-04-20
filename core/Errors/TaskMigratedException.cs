@@ -1,4 +1,4 @@
-﻿namespace Kafka.Streams.Net.Errors
+﻿namespace Streamiz.Kafka.Net.Errors
 {
     public class TaskMigratedException : StreamsException
     {

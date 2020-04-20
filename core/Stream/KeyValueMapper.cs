@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Kafka.Streams.Net.Stream
+namespace Streamiz.Kafka.Net.Stream
 {
     /// <summary>
     /// The <see cref="IKeyValueMapper{K, V, VR}"/> interface for mapping a keyvalue pair to a new value of arbitrary type.

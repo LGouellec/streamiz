@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Confluent.Kafka;
 
-namespace Kafka.Streams.Net.Mock.Kafka
+namespace Streamiz.Kafka.Net.Mock.Kafka
 {
     internal class MockTopic
     {

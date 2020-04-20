@@ -1,4 +1,4 @@
-﻿namespace Kafka.Streams.Net.Stream
+﻿namespace Streamiz.Kafka.Net.Stream
 {
     /// <summary>
     /// TODO IMPLEMENT. <see cref="IKGroupedStream{K, V}"/> is an abstraction of a grouped record stream of keyvalue pairs.

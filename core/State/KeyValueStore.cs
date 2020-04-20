@@ -1,9 +1,9 @@
-﻿using Kafka.Streams.Net.Processors;
+﻿using Streamiz.Kafka.Net.Processors;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.State
+namespace Streamiz.Kafka.Net.State
 {
     public interface KeyValueStore<K, V> : IStateStore, ReadOnlyKeyValueStore<K, V>
     {

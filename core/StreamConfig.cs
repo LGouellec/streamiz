@@ -1,13 +1,13 @@
 ﻿using Confluent.Kafka;
-using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.Processors.Internal;
-using Kafka.Streams.Net.SerDes;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Kafka.Streams.Net
+namespace Streamiz.Kafka.Net
 {
     /// <summary>
     /// Interface stream configuration for a <see cref="KafkaStream"/> instance.

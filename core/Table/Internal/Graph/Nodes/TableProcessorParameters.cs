@@ -1,7 +1,7 @@
-﻿using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.Stream.Internal.Graph.Nodes;
+﻿using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 
-namespace Kafka.Streams.Net.Table.Internal.Graph.Nodes
+namespace Streamiz.Kafka.Net.Table.Internal.Graph.Nodes
 {
     internal class TableProcessorParameters<K, V> : ProcessorParameters<K, Change<V>>
     {

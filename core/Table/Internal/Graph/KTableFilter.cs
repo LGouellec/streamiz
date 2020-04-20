@@ -1,8 +1,8 @@
 ﻿using System;
-using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.State;
+using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.State;
 
-namespace Kafka.Streams.Net.Table.Internal.Graph
+namespace Streamiz.Kafka.Net.Table.Internal.Graph
 {
     internal class KTableFilter<K, V> : IKTableProcessorSupplier<K, V, V>
     {

@@ -1,7 +1,7 @@
-﻿using Kafka.Streams.Net.Processors.Internal;
+﻿using Streamiz.Kafka.Net.Processors.Internal;
 using System;
 
-namespace Kafka.Streams.Net.Processors
+namespace Streamiz.Kafka.Net.Processors
 {
     /// <summary>
     /// An interface that allows to dynamically determine the name of the Kafka topic to send at the sink node of the topology.

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Kafka.Streams.Net.SerDes;
-using Kafka.Streams.Net.Stream.Internal.Graph.Nodes;
+using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 
-namespace Kafka.Streams.Net.Stream.Internal
+namespace Streamiz.Kafka.Net.Stream.Internal
 {
     internal class KGroupedStream<K, V> : AbstractStream<K, V>, IKGroupedStream<K, V>
     {

@@ -1,11 +1,11 @@
-﻿using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.State;
-using Kafka.Streams.Net.Stream;
+﻿using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Table.Internal.Graph
+namespace Streamiz.Kafka.Net.Table.Internal.Graph
 {
     internal class KTableMapValues<K, V, VR> : IKTableProcessorSupplier<K, V, VR>
     {

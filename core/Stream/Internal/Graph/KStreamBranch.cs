@@ -1,9 +1,9 @@
-﻿using Kafka.Streams.Net.Processors;
+﻿using Streamiz.Kafka.Net.Processors;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Stream.Internal.Graph
+namespace Streamiz.Kafka.Net.Stream.Internal.Graph
 {
     internal class KStreamBranch<K, V> : IProcessorSupplier<K, V>
     {

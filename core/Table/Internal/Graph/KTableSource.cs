@@ -1,6 +1,6 @@
-﻿using Kafka.Streams.Net.Processors;
+﻿using Streamiz.Kafka.Net.Processors;
 
-namespace Kafka.Streams.Net.Table.Internal.Graph
+namespace Streamiz.Kafka.Net.Table.Internal.Graph
 {
     internal class KTableSource<K, V> : IProcessorSupplier<K, V>
     {

@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace Kafka.Streams.Net.SerDes
+namespace Streamiz.Kafka.Net.SerDes
 {
     public class StringSerDes : AbstractSerDes<string>
     {

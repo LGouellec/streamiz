@@ -1,14 +1,14 @@
-﻿using Kafka.Streams.Net.Errors;
-using Kafka.Streams.Net.State;
-using Kafka.Streams.Net.Stream;
-using Kafka.Streams.Net.Stream.Internal;
-using Kafka.Streams.Net.Stream.Internal.Graph.Nodes;
-using Kafka.Streams.Net.Table.Internal.Graph.Nodes;
+﻿using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Stream.Internal;
+using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
+using Streamiz.Kafka.Net.Table.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Kafka.Streams.Net.Processors.Internal
+namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal class InternalTopologyBuilder
     {

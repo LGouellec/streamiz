@@ -1,6 +1,6 @@
 ﻿using Confluent.Kafka;
 
-namespace Kafka.Streams.Net.Processors.Internal
+namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal abstract class ExtractRecordMetadataTimestamp : ITimestampExtractor
     {

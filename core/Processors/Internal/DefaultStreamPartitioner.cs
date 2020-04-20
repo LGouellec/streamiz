@@ -1,7 +1,7 @@
 ﻿using Confluent.Kafka;
-using Kafka.Streams.Net.SerDes;
+using Streamiz.Kafka.Net.SerDes;
 
-namespace Kafka.Streams.Net.Processors.Internal
+namespace Streamiz.Kafka.Net.Processors.Internal
 {
     // TODO : Not used for moment
     // FOR MOMENT, impossible to set customer partitionner with Confluent.Kafka library

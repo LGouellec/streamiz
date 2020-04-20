@@ -1,7 +1,7 @@
 ﻿using Confluent.Kafka;
-using Kafka.Streams.Net.Table;
+using Streamiz.Kafka.Net.Table;
 
-namespace Kafka.Streams.Net.Processors
+namespace Streamiz.Kafka.Net.Processors
 {
     /// <summary>
     /// An interface that allows the Kafka Streams framework to extract a timestamp from an instance of <see cref="ConsumeResult{TKey, TValue}"/>.

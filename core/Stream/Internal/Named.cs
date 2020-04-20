@@ -1,6 +1,6 @@
-﻿using Kafka.Streams.Net.Errors;
+﻿using Streamiz.Kafka.Net.Errors;
 
-namespace Kafka.Streams.Net.Stream.Internal
+namespace Streamiz.Kafka.Net.Stream.Internal
 {
     internal class Named
     {

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Kafka
+namespace Streamiz.Kafka.Net.Kafka
 {
     /// <summary>
     /// <see cref="IKafkaSupplier"/> can be used to provide custom Kafka clients to a <see cref="KafkaStream"/> instance.

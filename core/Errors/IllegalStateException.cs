@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Errors
+namespace Streamiz.Kafka.Net.Errors
 {
     /// <summary>
     /// Signals that a method has been invoked at an illegal or inappropriate time.

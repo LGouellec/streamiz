@@ -1,11 +1,11 @@
 ﻿using Confluent.Kafka;
-using Kafka.Streams.Net.Processors.Internal;
-using Kafka.Streams.Net.Stream.Internal;
+using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Kafka.Streams.Net.Processors
+namespace Streamiz.Kafka.Net.Processors
 {
     internal interface ITask
     {

@@ -1,10 +1,10 @@
-﻿using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.SerDes;
+﻿using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Kafka.Streams.Net.Stream
+namespace Streamiz.Kafka.Net.Stream
 {
     /// <summary>
     /// <see cref="IKStream{K, V}"/> is an abstraction of a record stream of <see cref="KeyValuePair{K, V}"/> pairs, i.e., each record is an independent entity/event in the real world.

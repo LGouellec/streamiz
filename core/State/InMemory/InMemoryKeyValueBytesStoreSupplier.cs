@@ -1,8 +1,8 @@
-﻿using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.State.Supplier;
+﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.State.Supplier;
 
-namespace Kafka.Streams.Net.State.InMemory
+namespace Streamiz.Kafka.Net.State.InMemory
 {
     /// <summary>
     /// A store supplier that can be used to create one or more <see cref="InMemoryKeyValueStore"/> instances.

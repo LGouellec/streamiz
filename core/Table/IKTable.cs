@@ -1,13 +1,13 @@
-﻿using Kafka.Streams.Net.Crosscutting;
-using Kafka.Streams.Net.Processors;
-using Kafka.Streams.Net.SerDes;
-using Kafka.Streams.Net.State;
-using Kafka.Streams.Net.Stream;
-using Kafka.Streams.Net.Table.Internal;
+﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Table.Internal;
 using System;
 using System.Collections.Generic;
 
-namespace Kafka.Streams.Net.Table
+namespace Streamiz.Kafka.Net.Table
 {
     internal interface IKTableGetter<K, V>
     {
