@@ -1,6 +1,7 @@
 # .NET Stream Processing Library for Apache Kafka <sup>TM</sup> &middot; [![GitHub Licence](https://img.shields.io/github/license/LGouellec/streamiz-kafka-net)](https://github.com/LGouellec/streamiz-kafka-net/blob/master/LICENSE)
 
 <img src="./resources/logo-kafka-stream-net.png" width="100">
+
 ----
 
 Streamiz Kafka .NET is .NET stream processing library for Apache Kafka. 
