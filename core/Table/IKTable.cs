@@ -235,7 +235,7 @@ namespace Streamiz.Kafka.Net.Table
         /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
         /// Thus, an input record <code>&lt;K,V&gt;</code> can be transformed into an output record <code>&lt;K,VR&gt;</code>.
         /// This is a stateless record-by-record operation.
-        /// Note that <see cref="IKTable{K, V}.MapValues{VR}(IValueMapper{V, VR}, Materialized{K, VR, KeyValueStore{Bytes, byte[]}}, string)"/> for a changelog stream works differently than <see cref="IKStream{K, V}.MapValues{VR}(IValueMapper{V, VR}, string)"/>
+        /// Note that <see cref="IKTable{K, V}.MapValues{VR}(IValueMapper{V, VR}, Materialized{K, VR, IKeyValueStore{Bytes, byte[]}}, string)"/> for a changelog stream works differently than <see cref="IKStream{K, V}.MapValues{VR}(IValueMapper{V, VR}, string)"/>
         /// because keyvalue records with null values (so-called tombstone records)
         /// have delete semantics.
         /// Thus, for tombstones the provided value-mapper is not evaluated but the tombstone record is forwarded directly to
@@ -257,7 +257,7 @@ namespace Streamiz.Kafka.Net.Table
         /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
         /// Thus, an input record <code>&lt;K,V&gt;</code> can be transformed into an output record <code>&lt;K,VR&gt;</code>.
         /// This is a stateless record-by-record operation.
-        /// Note that <see cref="IKTable{K, V}.MapValues{VR}(IValueMapper{V, VR}, Materialized{K, VR, KeyValueStore{Bytes, byte[]}}, string)"/> for a changelog stream works differently than <see cref="IKStream{K, V}.MapValues{VR}(IValueMapper{V, VR}, string)"/>
+        /// Note that <see cref="IKTable{K, V}.MapValues{VR}(IValueMapper{V, VR}, Materialized{K, VR, IKeyValueStore{Bytes, byte[]}}, string)"/> for a changelog stream works differently than <see cref="IKStream{K, V}.MapValues{VR}(IValueMapper{V, VR}, string)"/>
         /// because keyvalue records with null values (so-called tombstone records)
         /// have delete semantics.
         /// Thus, for tombstones the provided value-mapper is not evaluated but the tombstone record is forwarded directly to
@@ -278,7 +278,7 @@ namespace Streamiz.Kafka.Net.Table
         /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
         /// Thus, an input record <code>&lt;K,V&gt;</code> can be transformed into an output record <code>&lt;K,VR&gt;</code>.
         /// This is a stateless record-by-record operation.
-        /// Note that <see cref="IKTable{K, V}.MapValues{VR}(IValueMapper{V, VR}, Materialized{K, VR, KeyValueStore{Bytes, byte[]}}, string)"/> for a changelog stream works differently than <see cref="IKStream{K, V}.MapValues{VR}(IValueMapper{V, VR}, string)"/>
+        /// Note that <see cref="IKTable{K, V}.MapValues{VR}(IValueMapper{V, VR}, Materialized{K, VR, IKeyValueStore{Bytes, byte[]}}, string)"/> for a changelog stream works differently than <see cref="IKStream{K, V}.MapValues{VR}(IValueMapper{V, VR}, string)"/>
         /// because keyvalue records with null values (so-called tombstone records)
         /// have delete semantics.
         /// Thus, for tombstones the provided value-mapper is not evaluated but the tombstone record is forwarded directly to
@@ -300,7 +300,7 @@ namespace Streamiz.Kafka.Net.Table
         /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
         /// Thus, an input record <code>&lt;K,V&gt;</code> can be transformed into an output record <code>&lt;K,VR&gt;</code>.
         /// This is a stateless record-by-record operation.
-        /// Note that <see cref="IKTable{K, V}.MapValues{VR}(IValueMapper{V, VR}, Materialized{K, VR, KeyValueStore{Bytes, byte[]}}, string)"/> for a changelog stream works differently than <see cref="IKStream{K, V}.MapValues{VR}(IValueMapper{V, VR}, string)"/>
+        /// Note that <see cref="IKTable{K, V}.MapValues{VR}(IValueMapper{V, VR}, Materialized{K, VR, IKeyValueStore{Bytes, byte[]}}, string)"/> for a changelog stream works differently than <see cref="IKStream{K, V}.MapValues{VR}(IValueMapper{V, VR}, string)"/>
         /// because keyvalue records with null values (so-called tombstone records)
         /// have delete semantics.
         /// Thus, for tombstones the provided value-mapper is not evaluated but the tombstone record is forwarded directly to
@@ -321,7 +321,7 @@ namespace Streamiz.Kafka.Net.Table
         /// computes a new value for it, resulting in an updated record for the result <see cref="IKTable{K, V}"/>.
         /// Thus, an input record <code>&lt;K,V&gt;</code> can be transformed into an output record <code>&lt;K,VR&gt;</code>.
         /// This is a stateless record-by-record operation.
-        /// Note that <see cref="IKTable{K, V}.MapValues{VR}(IValueMapper{V, VR}, Materialized{K, VR, KeyValueStore{Bytes, byte[]}}, string)"/> for a changelog stream works differently than <see cref="IKStream{K, V}.MapValues{VR}(IValueMapper{V, VR}, string)"/>
+        /// Note that <see cref="IKTable{K, V}.MapValues{VR}(IValueMapper{V, VR}, Materialized{K, VR, IKeyValueStore{Bytes, byte[]}}, string)"/> for a changelog stream works differently than <see cref="IKStream{K, V}.MapValues{VR}(IValueMapper{V, VR}, string)"/>
         /// because keyvalue records with null values (so-called tombstone records)
         /// have delete semantics.
         /// Thus, for tombstones the provided value-mapper is not evaluated but the tombstone record is forwarded directly to

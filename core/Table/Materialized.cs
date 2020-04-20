@@ -144,7 +144,7 @@ namespace Streamiz.Kafka.Net.Table
         }
 
         /// <summary>
-        /// Materialize a <see cref="KeyValueStore{K, V}"/> using the provided <see cref="KeyValueBytesStoreSupplier"/>
+        /// Materialize a <see cref="IKeyValueStore{K, V}"/> using the provided <see cref="KeyValueBytesStoreSupplier"/>
         /// </summary>
         /// <param name="supplier">the <see cref="KeyValueBytesStoreSupplier"/> used to materialize the store</param>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given supplier</returns>
@@ -227,7 +227,7 @@ namespace Streamiz.Kafka.Net.Table
         }
 
         /// <summary>
-        /// Materialize a <see cref="KeyValueStore{K, V}"/> using the provided <see cref="KeyValueBytesStoreSupplier"/>
+        /// Materialize a <see cref="IKeyValueStore{K, V}"/> using the provided <see cref="KeyValueBytesStoreSupplier"/>
         /// </summary>
         /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
         /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>

@@ -1755,7 +1755,7 @@ namespace Streamiz.Kafka.Net
         /// Get the configs to the <see cref="IProducer{TKey, TValue}"/> with specific <paramref name="clientId"/>
         /// </summary>
         /// <param name="clientId">Producer client ID</param>
-        /// <returns>Return <see cref="ProducerConfig"/> for building <see cref="IProducer{TKey, TValue}"/> instance.</returns
+        /// <returns>Return <see cref="ProducerConfig"/> for building <see cref="IProducer{TKey, TValue}"/> instance.</returns>
         public ProducerConfig ToProducerConfig(string clientId)
         {
             var c = _producerConfig.Union(_internalProducerConfig).ToDictionary();
@@ -1767,14 +1767,14 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Get the configs to the <see cref="IConsumer{TKey, TValue}"/>
         /// </summary>
-        /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns
+        /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
         public ConsumerConfig ToConsumerConfig() => ToConsumerConfig(this.ClientId);
 
         /// <summary>
-        /// Get the configs to the <see cref="IConsumer{TumerKey, TValue}"/> with specific <paramref name="clientid"/>
+        /// Get the configs to the <see cref="IConsumer{TumerKey, TValue}"/> with specific <paramref name="clientId"/>
         /// </summary>
-        /// <param name="clientid">Consumer client ID</param>
-        /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns
+        /// <param name="clientId">Consumer client ID</param>
+        /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
         public ConsumerConfig ToConsumerConfig(string clientId)
         {
             var c = _consumerConfig.Union(_internalConsumerConfig).ToDictionary();
@@ -1789,14 +1789,14 @@ namespace Streamiz.Kafka.Net
         /// Restore consumer is using to restore persistent state store.
         /// </summary>
         /// <param name="clientId">Consumer client ID</param>
-        /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns
+        /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
         public ConsumerConfig ToGlobalConsumerConfig(string clientId) => ToConsumerConfig(clientId);
 
         /// <summary>
         /// Get the configs to the <see cref="IAdminClient"/> with specific <paramref name="clientId"/>
         /// </summary>
         /// <param name="clientId">Admin client ID</param>
-        /// <returns>Return <see cref="AdminClientConfig"/> for building <see cref="IAdminClient"/> instance.</returns
+        /// <returns>Return <see cref="AdminClientConfig"/> for building <see cref="IAdminClient"/> instance.</returns>
         public AdminClientConfig ToAdminConfig(string clientId)
         {
             var c = _adminClientConfig.Union(_internalAdminConfig).ToDictionary();

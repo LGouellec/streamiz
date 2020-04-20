@@ -1,22 +1,32 @@
 ﻿using Confluent.Kafka;
+using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
-using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.Mock.Pipes;
 using Streamiz.Kafka.Net.SerDes;
-using log4net;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Mock
 {
     /// <summary>
-    /// Not thresafe
+    /// <see cref="TestOutputTopic{K, V}" /> is used to read records from a topic in <see cref="TopologyTestDriver"/> and it's NOT THREADSAFE.
+    /// To use <see cref="TestOutputTopic{K, V}" /> create a new instance via
+    /// <see cref="TopologyTestDriver.CreateOuputTopic{K, V}(string)"/>.
+    /// In actual test code, you can read record values, keys, keyvalue or list of keyvalue.
+    /// If you have multiple source topics, you need to create a <see cref="TestOutputTopic{K, V}" /> for each.
+    /// <example>
+    /// Processing records
+    /// <code>
+    /// var outputTopic = builder.CreateOuputTopic&lt;string, string&gt;("test-output", TimeSpan.FromSeconds(5));
+    /// var kv = outputTopic.ReadKeyValue();
+    /// DO ASSERT HERE
+    /// </code>
+    /// </example>
     /// </summary>
-    /// <typeparam name="K"></typeparam>
-    /// <typeparam name="V"></typeparam>
+    /// <typeparam name="K">key type</typeparam>
+    /// <typeparam name="V">value type</typeparam>
     public class TestOutputTopic<K, V>
     {
         private readonly IPipeOutput pipe;
