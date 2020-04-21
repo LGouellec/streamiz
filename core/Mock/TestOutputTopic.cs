@@ -48,8 +48,14 @@ namespace Streamiz.Kafka.Net.Mock
             this.valueSerdes = valueSerdes;
         }
 
+        /// <summary>
+        /// Verify if the topic queue is empty.
+        /// </summary>
         public bool IsEmpty => pipe.IsEmpty;
 
+        /// <summary>
+        /// Get size of unread record in the topic queue.
+        /// </summary>
         public int QueueSize => pipe.Size;
 
         private TestRecord<K, V> ReadRecord()
@@ -69,8 +75,16 @@ namespace Streamiz.Kafka.Net.Mock
 
         #region Read 
 
+        /// <summary>
+        /// Read one record from the output topic and return record's value.
+        /// </summary>
+        /// <returns>Next value for output topic.</returns>
         public V ReadValue() => this.ReadRecord().Value;
 
+        /// <summary>
+        /// Read one record from the output topic and return its key and value as pair.
+        /// </summary>
+        /// <returns>Next output as <see cref="ConsumeResult{TKey, TValue}"/></returns>
         public ConsumeResult<K, V> ReadKeyValue()
         {
             var r = this.ReadRecord();
@@ -86,6 +100,10 @@ namespace Streamiz.Kafka.Net.Mock
 
         #region Read List
 
+        /// <summary>
+        /// Read all records from topic to List.
+        /// </summary>
+        /// <returns>List of output records.</returns>
         public IEnumerable<ConsumeResult<K, V>> ReadKeyValueList()
         {
             List<ConsumeResult<K, V>> records = new List<ConsumeResult<K, V>>();
@@ -100,6 +118,10 @@ namespace Streamiz.Kafka.Net.Mock
             return records;
         }
 
+        /// <summary>
+        /// Read all values from topic to List.
+        /// </summary>
+        /// <returns>List of output values.</returns>
         public IEnumerable<V> ReadValueList()
             => ReadKeyValueList().Select(kv => kv.Message.Value).ToList();
 
