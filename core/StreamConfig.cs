@@ -113,7 +113,7 @@ namespace Streamiz.Kafka.Net
 
         /// <summary>
         /// The number of threads to execute stream processing.
-        /// /summary>
+        /// </summary>
         int NumStreamThreads { get; set;  }
 
         /// <summary>
@@ -155,58 +155,58 @@ namespace Streamiz.Kafka.Net
     {
         #region Not used for moment
 
-        //// private string applicationServerCst = "application.server";
-        //// private string topologyOptimizationCst = "topology.optimization";
-        //// private string cacheMaxBytesBufferingCst = "cache.max.bytes.buffering";
-        //// private string rocksdbConfigSetterCst = "rocksdb.config.setter";
-        //// private string stateCleanupDelayMsCst = "state.cleanup.delay.ms";
-        //// private string pollMsCst = "poll.ms";
-        //// private string processingGuaranteeCst = "processing.guarantee";
+        /// private string applicationServerCst = "application.server";
+        /// private string topologyOptimizationCst = "topology.optimization";
+        /// private string cacheMaxBytesBufferingCst = "cache.max.bytes.buffering";
+        /// private string rocksdbConfigSetterCst = "rocksdb.config.setter";
+        /// private string stateCleanupDelayMsCst = "state.cleanup.delay.ms";
+        /// private string pollMsCst = "poll.ms";
+        /// private string processingGuaranteeCst = "processing.guarantee";
 
-        //// public static readonly string AT_LEAST_ONCE = "at_least_once";
-        //// public static readonly string EXACTLY_ONCE = "exactly_once";
+        /// public static readonly string AT_LEAST_ONCE = "at_least_once";
+        /// public static readonly string EXACTLY_ONCE = "exactly_once";
 
-        //// private string Optimize
-        //// {
-        ////     get => this[topologyOptimizationCst];
-        ////     set => this.AddOrUpdate(topologyOptimizationCst, value);
-        //// }
+        /// private string Optimize
+        /// {
+        ///     get => this[topologyOptimizationCst];
+        ///     set => this.AddOrUpdate(topologyOptimizationCst, value);
+        /// }
 
-        //// private string ApplicationServer
-        //// {
-        ////     get => this[applicationServerCst];
-        ////     set => this.AddOrUpdate(applicationServerCst, value);
-        //// }
+        /// private string ApplicationServer
+        /// {
+        ///     get => this[applicationServerCst];
+        ///     set => this.AddOrUpdate(applicationServerCst, value);
+        /// }
 
-        //// private string ProcessingGuaranteeConfig
-        //// {
-        ////     get => this[processingGuaranteeCst];
-        ////     set
-        ////     {
-        ////         if (value.Equals(AT_LEAST_ONCE) || value.Equals(EXACTLY_ONCE))
-        ////             this.AddOrUpdate(processingGuaranteeCst, value);
-        ////         else
-        ////             throw new InvalidOperationException($"ProcessingGuaranteeConfig value must equal to {AT_LEAST_ONCE} or {EXACTLY_ONCE}");
-        ////     }
-        //// }
+        /// private string ProcessingGuaranteeConfig
+        /// {
+        ///     get => this[processingGuaranteeCst];
+        ///     set
+        ///     {
+        ///         if (value.Equals(AT_LEAST_ONCE) || value.Equals(EXACTLY_ONCE))
+        ///             this.AddOrUpdate(processingGuaranteeCst, value);
+        ///         else
+        ///             throw new InvalidOperationException($"ProcessingGuaranteeConfig value must equal to {AT_LEAST_ONCE} or {EXACTLY_ONCE}");
+        ///     }
+        /// }
 
-        //// private long PollMsConfig
-        //// {
-        ////     get => Convert.ToInt64(this[pollMsCst]);
-        ////     set => this.AddOrUpdate(pollMsCst, value.ToString());
-        //// }
+        /// private long PollMsConfig
+        /// {
+        ///     get => Convert.ToInt64(this[pollMsCst]);
+        ///     set => this.AddOrUpdate(pollMsCst, value.ToString());
+        /// }
 
-        //// private long StateCleanupDelayMs
-        //// {
-        ////     get => Convert.ToInt64(this[stateCleanupDelayMsCst]);
-        ////     set => this.AddOrUpdate(stateCleanupDelayMsCst, value.ToString());
-        //// }
+        /// private long StateCleanupDelayMs
+        /// {
+        ///     get => Convert.ToInt64(this[stateCleanupDelayMsCst]);
+        ///     set => this.AddOrUpdate(stateCleanupDelayMsCst, value.ToString());
+        /// }
 
-        //// private long CacheMaxBytesBuffering
-        //// {
-        ////     get => Convert.ToInt64(this[cacheMaxBytesBufferingCst]);
-        ////     set => this.AddOrUpdate(cacheMaxBytesBufferingCst, value.ToString());
-        //// }
+        /// private long CacheMaxBytesBuffering
+        /// {
+        ///     get => Convert.ToInt64(this[cacheMaxBytesBufferingCst]);
+        ///     set => this.AddOrUpdate(cacheMaxBytesBufferingCst, value.ToString());
+        /// }
 
         #endregion
 
@@ -233,6 +233,12 @@ namespace Streamiz.Kafka.Net
 
         #region ClientConfig
 
+        /// <summary>
+        /// Add keyvalue configuration for producer, consumer and admin client.
+        /// [WARNING] : Maybe will change
+        /// </summary>
+        /// <param name="key">New key</param>
+        /// <param name="value">New value</param>
         public void AddConfig(string key, string value)
         {
             AddConsumerConfig(key, value);
@@ -242,7 +248,7 @@ namespace Streamiz.Kafka.Net
 
         /// <summary>
         /// Timeout for broker API version requests. default: 10000 importance: low
-        //// </summary>
+        /// </summary>
         public int? ApiVersionRequestTimeoutMs 
         {
             get => _config.ApiVersionRequestTimeoutMs;
@@ -1265,173 +1271,185 @@ namespace Streamiz.Kafka.Net
 
         #region ConsumerConfig
 
+        /// <summary>
+        /// Add keyvalue configuration for consumer
+        /// [WARNING] : Maybe will change
+        /// </summary>
+        /// <param name="key">New key</param>
+        /// <param name="value">New value</param>
         public void AddConsumerConfig(string key, string value) => _internalConsumerConfig.AddOrUpdate(key, value);
 
-        //// <summary>
-        //// Controls how to read messages written transactionally: `read_committed` - only
-        //// return transactional messages which have been committed. `read_uncommitted` -
-        //// return all messages, even transactional messages which have been aborted. default:
-        //// read_committed importance: high
-        //// </summary>
+        /// <summary>
+        /// Controls how to read messages written transactionally: `read_committed` - only
+        /// return transactional messages which have been committed. `read_uncommitted` -
+        /// return all messages, even transactional messages which have been aborted. default:
+        /// read_committed importance: high
+        /// </summary>
         public IsolationLevel? IsolationLevel { get { return _consumerConfig.IsolationLevel; } set { _consumerConfig.IsolationLevel = value; } }
 
-        //// <summary>
-        //// How long to postpone the next fetch request for a topic+partition in case of
-        //// a fetch error. default: 500 importance: medium
-        //// </summary>
+        /// <summary>
+        /// How long to postpone the next fetch request for a topic+partition in case of
+        /// a fetch error. default: 500 importance: medium
+        /// </summary>
         public int? FetchErrorBackoffMs { get { return _consumerConfig.FetchErrorBackoffMs; } set { _consumerConfig.FetchErrorBackoffMs = value; } }
 
-        //// <summary>
-        //// Minimum number of bytes the broker responds with. If fetch.wait.max.ms expires
-        //// the accumulated data will be sent to the client regardless of this setting. default:
-        //// 1 importance: low
-        //// </summary>
+        /// <summary>
+        /// Minimum number of bytes the broker responds with. If fetch.wait.max.ms expires
+        /// the accumulated data will be sent to the client regardless of this setting. default:
+        /// 1 importance: low
+        /// </summary>
         public int? FetchMinBytes { get { return _consumerConfig.FetchMinBytes; } set { _consumerConfig.FetchMinBytes = value; } }
 
-        //// <summary>
-        //// Maximum amount of data the broker shall return for a Fetch request. Messages
-        //// are fetched in batches by the consumer and if the first message batch in the
-        //// first non-empty partition of the Fetch request is larger than this value, then
-        //// the message batch will still be returned to ensure the consumer can make progress.
-        //// The maximum message batch size accepted by the broker is defined via `message.max.bytes`
-        //// (broker config) or `max.message.bytes` (broker topic config). `fetch.max.bytes`
-        //// is automatically adjusted upwards to be at least `message.max.bytes` (consumer
-        //// config). default: 52428800 importance: medium
-        //// </summary>
+        /// <summary>
+        /// Maximum amount of data the broker shall return for a Fetch request. Messages
+        /// are fetched in batches by the consumer and if the first message batch in the
+        /// first non-empty partition of the Fetch request is larger than this value, then
+        /// the message batch will still be returned to ensure the consumer can make progress.
+        /// The maximum message batch size accepted by the broker is defined via `message.max.bytes`
+        /// (broker config) or `max.message.bytes` (broker topic config). `fetch.max.bytes`
+        /// is automatically adjusted upwards to be at least `message.max.bytes` (consumer
+        /// config). default: 52428800 importance: medium
+        /// </summary>
         public int? FetchMaxBytes { get { return _consumerConfig.FetchMaxBytes; } set { _consumerConfig.FetchMaxBytes = value; } }
 
-        //// <summary>
-        //// Initial maximum number of bytes per topic+partition to request when fetching
-        //// messages from the broker. If the client encounters a message larger than this
-        //// value it will gradually try to increase it until the entire message can be fetched.
-        //// default: 1048576 importance: medium
-        //// </summary>
+        /// <summary>
+        /// Initial maximum number of bytes per topic+partition to request when fetching
+        /// messages from the broker. If the client encounters a message larger than this
+        /// value it will gradually try to increase it until the entire message can be fetched.
+        /// default: 1048576 importance: medium
+        /// </summary>
         public int? MaxPartitionFetchBytes { get { return _consumerConfig.MaxPartitionFetchBytes; } set { _consumerConfig.MaxPartitionFetchBytes = value; } }
 
-        //// <summary>
-        //// Maximum time the broker may wait to fill the response with fetch.min.bytes. default:
-        //// 100 importance: low
-        //// </summary>
+        /// <summary>
+        /// Maximum time the broker may wait to fill the response with fetch.min.bytes. default:
+        /// 100 importance: low
+        /// </summary>
         public int? FetchWaitMaxMs { get { return _consumerConfig.FetchWaitMaxMs; } set { _consumerConfig.FetchWaitMaxMs = value; } }
 
-        //// <summary>
-        //// Maximum number of kilobytes per topic+partition in the local consumer queue.
-        //// This value may be overshot by fetch.message.max.bytes. This property has higher
-        //// priority than queued.min.messages. default: 1048576 importance: medium
-        //// </summary>
+        /// <summary>
+        /// Maximum number of kilobytes per topic+partition in the local consumer queue.
+        /// This value may be overshot by fetch.message.max.bytes. This property has higher
+        /// priority than queued.min.messages. default: 1048576 importance: medium
+        /// </summary>
         public int? QueuedMaxMessagesKbytes { get { return _consumerConfig.QueuedMaxMessagesKbytes; } set { _consumerConfig.QueuedMaxMessagesKbytes = value; } }
 
-        //// <summary>
-        //// Minimum number of messages per topic+partition librdkafka tries to maintain in
-        //// the local consumer queue. default: 100000 importance: medium
-        //// </summary>
+        /// <summary>
+        /// Minimum number of messages per topic+partition librdkafka tries to maintain in
+        /// the local consumer queue. default: 100000 importance: medium
+        /// </summary>
         public int? QueuedMinMessages { get { return _consumerConfig.QueuedMinMessages; } set { _consumerConfig.QueuedMinMessages = value; } }
 
-        //// <summary>
-        //// Automatically store offset of last message provided to application. The offset
-        //// store is an in-memory store of the next offset to (auto-)commit for each partition.
-        //// default: true importance: high
-        //// </summary>
+        /// <summary>
+        /// Automatically store offset of last message provided to application. The offset
+        /// store is an in-memory store of the next offset to (auto-)commit for each partition.
+        /// default: true importance: high
+        /// </summary>
         public bool? EnableAutoOffsetStore { get { return _consumerConfig.EnableAutoOffsetStore; } set { _consumerConfig.EnableAutoOffsetStore = value; } }
 
-        //// <summary>
-        //// The frequency in milliseconds that the consumer offsets are committed (written)
-        //// to offset storage. (0 = disable). This setting is used by the high-level consumer.
-        //// default: 5000 importance: medium
-        //// </summary>
+        /// <summary>
+        /// The frequency in milliseconds that the consumer offsets are committed (written)
+        /// to offset storage. (0 = disable). This setting is used by the high-level consumer.
+        /// default: 5000 importance: medium
+        /// </summary>
         public int? AutoCommitIntervalMs { get { return _consumerConfig.AutoCommitIntervalMs; } set { _consumerConfig.AutoCommitIntervalMs = value; } }
 
-        //// <summary>
-        //// Automatically and periodically commit offsets in the background. Note: setting
-        //// this to false does not prevent the consumer from fetching previously committed
-        //// start offsets. To circumvent this behaviour set specific start offsets per partition
-        //// in the call to assign(). default: true importance: high
-        //// </summary>
+        /// <summary>
+        /// Automatically and periodically commit offsets in the background. Note: setting
+        /// this to false does not prevent the consumer from fetching previously committed
+        /// start offsets. To circumvent this behaviour set specific start offsets per partition
+        /// in the call to assign(). default: true importance: high
+        /// </summary>
         public bool? EnableAutoCommit { get { return _consumerConfig.EnableAutoCommit; } private set { _consumerConfig.EnableAutoCommit = value; } }
 
-        //// <summary>
-        //// Maximum allowed time between calls to consume messages (e.g., rd_kafka_consumer_poll())
-        //// for high-level consumers. If this interval is exceeded the consumer is considered
-        //// failed and the group will rebalance in order to reassign the partitions to another
-        //// consumer group member. Warning: Offset commits may be not possible at this point.
-        //// Note: It is recommended to set `enable.auto.offset.store=false` for long-time
-        //// processing applications and then explicitly store offsets (using offsets_store())
-        //// *after* message processing, to make sure offsets are not auto-committed prior
-        //// to processing has finished. The interval is checked two times per second. See
-        //// KIP-62 for more information. default: 300000 importance: high
-        //// </summary>
+        /// <summary>
+        /// Maximum allowed time between calls to consume messages (e.g., rd_kafka_consumer_poll())
+        /// for high-level consumers. If this interval is exceeded the consumer is considered
+        /// failed and the group will rebalance in order to reassign the partitions to another
+        /// consumer group member. Warning: Offset commits may be not possible at this point.
+        /// Note: It is recommended to set `enable.auto.offset.store=false` for long-time
+        /// processing applications and then explicitly store offsets (using offsets_store())
+        /// *after* message processing, to make sure offsets are not auto-committed prior
+        /// to processing has finished. The interval is checked two times per second. See
+        /// KIP-62 for more information. default: 300000 importance: high
+        /// </summary>
         public int? MaxPollIntervalMs { get { return _consumerConfig.MaxPollIntervalMs; } set { _consumerConfig.MaxPollIntervalMs = value; } }
 
-        //// <summary>
-        //// How often to query for the current client group coordinator. If the currently
-        //// assigned coordinator is down the configured query interval will be divided by
-        //// ten to more quickly recover in case of coordinator reassignment. default: 600000
-        //// importance: low
-        //// </summary>
+        /// <summary>
+        /// How often to query for the current client group coordinator. If the currently
+        /// assigned coordinator is down the configured query interval will be divided by
+        /// ten to more quickly recover in case of coordinator reassignment. default: 600000
+        /// importance: low
+        /// </summary>
         public int? CoordinatorQueryIntervalMs { get { return _consumerConfig.CoordinatorQueryIntervalMs; } set { _consumerConfig.CoordinatorQueryIntervalMs = value; } }
 
-        //// <summary>
-        //// Group protocol type default: consumer importance: low
-        //// </summary>
+        /// <summary>
+        /// Group protocol type default: consumer importance: low
+        /// </summary>
         public string GroupProtocolType { get { return _consumerConfig.GroupProtocolType; } set { _consumerConfig.GroupProtocolType = value; } }
 
-        //// <summary>
-        //// Group session keepalive heartbeat interval. default: 3000 importance: low
-        //// </summary>
+        /// <summary>
+        /// Group session keepalive heartbeat interval. default: 3000 importance: low
+        /// </summary>
         public int? HeartbeatIntervalMs { get { return _consumerConfig.HeartbeatIntervalMs; } set { _consumerConfig.HeartbeatIntervalMs = value; } }
 
-        //// <summary>
-        //// Client group session and failure detection timeout. The consumer sends periodic
-        //// heartbeats (heartbeat.interval.ms) to indicate its liveness to the broker. If
-        //// no hearts are received by the broker for a group member within the session timeout,
-        //// the broker will remove the consumer from the group and trigger a rebalance. The
-        //// allowed range is configured with the **broker** configuration properties `group.min.session.timeout.ms`
-        //// and `group.max.session.timeout.ms`. Also see `max.poll.interval.ms`. default:
-        //// 10000 importance: high
-        //// </summary>
+        /// <summary>
+        /// Client group session and failure detection timeout. The consumer sends periodic
+        /// heartbeats (heartbeat.interval.ms) to indicate its liveness to the broker. If
+        /// no hearts are received by the broker for a group member within the session timeout,
+        /// the broker will remove the consumer from the group and trigger a rebalance. The
+        /// allowed range is configured with the **broker** configuration properties `group.min.session.timeout.ms`
+        /// and `group.max.session.timeout.ms`. Also see `max.poll.interval.ms`. default:
+        /// 10000 importance: high
+        /// </summary>
         public int? SessionTimeoutMs { get { return _consumerConfig.SessionTimeoutMs; } set { _consumerConfig.SessionTimeoutMs = value; } }
 
-        //// <summary>
-        //// Name of partition assignment strategy to use when elected group leader assigns
-        //// partitions to group members. default: range,roundrobin importance: medium
-        //// </summary>
+        /// <summary>
+        /// Name of partition assignment strategy to use when elected group leader assigns
+        /// partitions to group members. default: range,roundrobin importance: medium
+        /// </summary>
         public PartitionAssignmentStrategy? PartitionAssignmentStrategy { get { return _consumerConfig.PartitionAssignmentStrategy; } set { _consumerConfig.PartitionAssignmentStrategy = value; } }
 
-        //// <summary>
-        //// Action to take when there is no initial offset in offset store or the desired
-        //// offset is out of range: 'smallest','earliest' - automatically reset the offset
-        //// to the smallest offset, 'largest','latest' - automatically reset the offset to
-        //// the largest offset, 'error' - trigger an error which is retrieved by consuming
-        //// messages and checking 'message->err'. default: largest importance: high
-        //// </summary>
+        /// <summary>
+        /// Action to take when there is no initial offset in offset store or the desired
+        /// offset is out of range: 'smallest','earliest' - automatically reset the offset
+        /// to the smallest offset, 'largest','latest' - automatically reset the offset to
+        /// the largest offset, 'error' - trigger an error which is retrieved by consuming
+        /// messages and checking 'message->err'. default: largest importance: high
+        /// </summary>
         public AutoOffsetReset? AutoOffsetReset { get { return _consumerConfig.AutoOffsetReset; } set { _consumerConfig.AutoOffsetReset = value; } }
 
-        //// <summary>
-        //// A comma separated list of fields that may be optionally set in Confluent.Kafka.ConsumeResult`2
-        //// objects returned by the Confluent.Kafka.Consumer`2.Consume(System.TimeSpan) method.
-        //// Disabling fields that you do not require will improve throughput and reduce memory
-        //// consumption. Allowed values: headers, timestamp, topic, all, none default: all
-        //// importance: low
-        //// </summary>
+        /// <summary>
+        /// A comma separated list of fields that may be optionally set in Confluent.Kafka.ConsumeResult`2
+        /// objects returned by the Confluent.Kafka.Consumer`2.Consume(System.TimeSpan) method.
+        /// Disabling fields that you do not require will improve throughput and reduce memory
+        /// consumption. Allowed values: headers, timestamp, topic, all, none default: all
+        /// importance: low
+        /// </summary>
         public string ConsumeResultFields { set { _consumerConfig.ConsumeResultFields = value; } }
 
-        //// <summary>
-        //// Emit RD_KAFKA_RESP_ERR__PARTITION_EOF event whenever the consumer reaches the
-        //// end of a partition. default: false importance: low
-        //// </summary>
+        /// <summary>
+        /// Emit RD_KAFKA_RESP_ERR__PARTITION_EOF event whenever the consumer reaches the
+        /// end of a partition. default: false importance: low
+        /// </summary>
         public bool? EnablePartitionEof { get { return _consumerConfig.EnablePartitionEof; } set { _consumerConfig.EnablePartitionEof = value; } }
 
-        //// <summary>
-        //// Verify CRC32 of consumed messages, ensuring no on-the-wire or on-disk corruption
-        //// to the messages occurred. This check comes at slightly increased CPU usage. default:
-        //// false importance: medium
-        //// </summary>
+        /// <summary>
+        /// Verify CRC32 of consumed messages, ensuring no on-the-wire or on-disk corruption
+        /// to the messages occurred. This check comes at slightly increased CPU usage. default:
+        /// false importance: medium
+        /// </summary>
         public bool? CheckCrcs { get { return _consumerConfig.CheckCrcs; } set { _consumerConfig.CheckCrcs = value; } }
 
         #endregion
 
         #region ProducerConfig
 
+        /// <summary>
+        /// Add keyvalue configuration for producer
+        /// [WARNING] : Maybe will change
+        /// </summary>
+        /// <param name="key">New key</param>
+        /// <param name="value">New value</param>
         public void AddProducerConfig(string key, string value) => _internalProducerConfig.AddOrUpdate(key, value);
 
         /// <summary>
@@ -1599,18 +1617,37 @@ namespace Streamiz.Kafka.Net
 
         #region AdminConfig
 
+        /// <summary>
+        /// Add keyvalue configuration for admin client
+        /// [WARNING] : Maybe will change
+        /// </summary>
+        /// <param name="key">New key</param>
+        /// <param name="value">New value</param>
         public void AddAdminConfig(string key, string value) => _internalAdminConfig.AddOrUpdate(key, value);
 
         #endregion
 
         #region Ctor
 
+        /// <summary>
+        /// Constructor empty
+        /// </summary>
         public StreamConfig()
             : this(null)
         {
 
         }
 
+        /// <summary>
+        /// Constructor with a dictionary of properties.
+        /// This is stream properties. 
+        /// <para>
+        /// If you want to set specific properties for consumer, producer, admin client or global.
+        /// Please use <see cref="IStreamConfig.AddConsumerConfig(string, string)"/>, <see cref="IStreamConfig.AddProducerConfig(string, string)"/>, 
+        /// <see cref="IStreamConfig.AddAdminConfig(string, string)"/> or <see cref="IStreamConfig.AddConfig(string, string)"/>. WARNING : MAYBE WILL CHANGE
+        /// </para>
+        /// </summary>
+        /// <param name="properties">Dictionary of stream properties</param>
         public StreamConfig(IDictionary<string, dynamic> properties)
         {
             ClientId = null;
@@ -1651,6 +1688,10 @@ namespace Streamiz.Kafka.Net
             }
         }
 
+        /// <summary>
+        /// Constructor by copy
+        /// </summary>
+        /// <param name="config">Copy configuration</param>
         public StreamConfig(StreamConfig config)
         {
             foreach (var k in config)
@@ -1670,36 +1711,54 @@ namespace Streamiz.Kafka.Net
 
         #region IStreamConfig Impl
 
+        /// <summary>
+        /// The number of threads to execute stream processing.
+        /// </summary>
         public int NumStreamThreads
         {
             get => this[numStreamThreadsCst];
             set => this.AddOrUpdate(numStreamThreadsCst, value);
         }
 
+        /// <summary>
+        /// An ID prefix string used for the client IDs of internal consumer, producer and restore-consumer, with pattern '&lt;client.id&gt;-StreamThread-&lt;threadSequenceNumber&gt;-&lt;consumer|producer|restore-consumer&gt;'.
+        /// </summary>
         public string ClientId
         {
             get => this[clientIdCst];
             set => this.AddOrUpdate(clientIdCst, value);
         }
 
+        /// <summary>
+        /// An identifier for the stream processing application. Must be unique within the Kafka cluster. It is used as 1) the default client-id prefix, 2) the group-id for membership management, 3) the changelog topic prefix.
+        /// </summary>
         public string ApplicationId
         {
             get => this[applicatonIdCst];
             set => this.AddOrUpdate(applicatonIdCst, value);
         }
 
+        /// <summary>
+        /// Default key serdes for consumer and materialized state store
+        /// </summary>
         public ISerDes DefaultKeySerDes
         {
             get => this[defaultKeySerDesCst];
             set => this.AddOrUpdate(defaultKeySerDesCst, value);
         }
 
+        /// <summary>
+        /// Default value serdes for consumer and materialized state store
+        /// </summary>
         public ISerDes DefaultValueSerDes
         {
             get => this[defaultValueSerDesCst];
             set => this.AddOrUpdate(defaultValueSerDesCst, value);
         }
 
+        /// <summary>
+        /// Default timestamp extractor class that implements the <see cref="ITimestampExtractor"/> interface.
+        /// </summary>
         public ITimestampExtractor DefaultTimestampExtractor 
         {
             get => this[defaultTimestampExtractorCst];
@@ -1712,8 +1771,17 @@ namespace Streamiz.Kafka.Net
             set => this.AddOrUpdate(processingGuaranteeCst, value);
         }
 
+        /// <summary>
+        /// Get the configs to the <see cref="IProducer{TKey, TValue}"/>
+        /// </summary>
+        /// <returns>Return <see cref="ProducerConfig"/> for building <see cref="IProducer{TKey, TValue}"/> instance.</returns>
         public ProducerConfig ToProducerConfig() => ToProducerConfig(this.ClientId);
 
+        /// <summary>
+        /// Get the configs to the <see cref="IProducer{TKey, TValue}"/> with specific <paramref name="clientId"/>
+        /// </summary>
+        /// <param name="clientId">Producer client ID</param>
+        /// <returns>Return <see cref="ProducerConfig"/> for building <see cref="IProducer{TKey, TValue}"/> instance.</returns>
         public ProducerConfig ToProducerConfig(string clientId)
         {
             var c = _producerConfig.Union(_internalProducerConfig).ToDictionary();
@@ -1722,8 +1790,17 @@ namespace Streamiz.Kafka.Net
             return config;
         }
 
+        /// <summary>
+        /// Get the configs to the <see cref="IConsumer{TKey, TValue}"/>
+        /// </summary>
+        /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
         public ConsumerConfig ToConsumerConfig() => ToConsumerConfig(this.ClientId);
 
+        /// <summary>
+        /// Get the configs to the <see cref="IConsumer{TumerKey, TValue}"/> with specific <paramref name="clientId"/>
+        /// </summary>
+        /// <param name="clientId">Consumer client ID</param>
+        /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
         public ConsumerConfig ToConsumerConfig(string clientId)
         {
             var c = _consumerConfig.Union(_internalConsumerConfig).ToDictionary();
@@ -1733,8 +1810,19 @@ namespace Streamiz.Kafka.Net
             return config;
         }
 
+        /// <summary>
+        /// Get the configs to the restore <see cref="IConsumer{TKey, TValue}"/> with specific <paramref name="clientId"/>.
+        /// Restore consumer is using to restore persistent state store.
+        /// </summary>
+        /// <param name="clientId">Consumer client ID</param>
+        /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
         public ConsumerConfig ToGlobalConsumerConfig(string clientId) => ToConsumerConfig(clientId);
 
+        /// <summary>
+        /// Get the configs to the <see cref="IAdminClient"/> with specific <paramref name="clientId"/>
+        /// </summary>
+        /// <param name="clientId">Admin client ID</param>
+        /// <returns>Return <see cref="AdminClientConfig"/> for building <see cref="IAdminClient"/> instance.</returns>
         public AdminClientConfig ToAdminConfig(string clientId)
         {
             var c = _adminClientConfig.Union(_internalAdminConfig).ToDictionary();
@@ -1764,11 +1852,23 @@ namespace Streamiz.Kafka.Net
         where KS : ISerDes, new()
         where VS : ISerDes, new()
     {
+        /// <summary>
+        /// Constructor empty
+        /// </summary>
         public StreamConfig()
             : this(null)
         {
         }
 
+        /// <summary>
+        /// Constructor with properties. 
+        /// See <see cref="StreamConfig.StreamConfig(IDictionary{string, dynamic})"/>
+        /// <para>
+        /// <see cref="IStreamConfig.DefaultKeySerDes"/> is set to <code>new KS();</code>
+        /// <see cref="IStreamConfig.DefaultValueSerDes"/> is set to <code>new VS();</code>
+        /// </para>
+        /// </summary>
+        /// <param name="properties">Dictionary of stream properties</param>
         public StreamConfig(IDictionary<string, dynamic> properties)
             : base(properties)
         {

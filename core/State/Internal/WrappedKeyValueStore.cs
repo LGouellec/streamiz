@@ -8,12 +8,12 @@ using System.Text;
 namespace Streamiz.Kafka.Net.State.Internal
 {
     internal class WrappedKeyValueStore<K, V> :
-        WrappedStateStore<KeyValueStore<Bytes, byte[]>, K, V>
+        WrappedStateStore<IKeyValueStore<Bytes, byte[]>, K, V>
     {
         protected ISerDes<K> keySerdes;
         protected ISerDes<V> valueSerdes;
 
-        public WrappedKeyValueStore(KeyValueStore<Bytes, byte[]> wrapped, ISerDes<K> keySerdes, ISerDes<V> valueSerdes) 
+        public WrappedKeyValueStore(IKeyValueStore<Bytes, byte[]> wrapped, ISerDes<K> keySerdes, ISerDes<V> valueSerdes) 
             : base(wrapped)
         {
             this.keySerdes = keySerdes;

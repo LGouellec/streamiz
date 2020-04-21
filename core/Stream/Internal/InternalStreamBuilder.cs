@@ -66,7 +66,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             return $"{prefix}{KTable<byte, byte, byte>.STATE_STORE_NAME}{NextIndex.ToString("D10")}";
         }
 
-        internal IKTable<K, V> Table<K, V>(string topic, ConsumedInternal<K, V> consumed, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized)
+        internal IKTable<K, V> Table<K, V>(string topic, ConsumedInternal<K, V> consumed, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized)
         {
             var sourceName = new Named(consumed.Named).SuffixWithOrElseGet(TABLE_SOURCE_SUFFIX, this, KStream<byte, byte>.SOURCE_NAME);
             var tableSourceName = new Named(consumed.Named).OrElseGenerateWithPrefix(this, KTable<byte, byte, byte>.SOURCE_NAME);
@@ -74,7 +74,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             KTableSource<K, V> tableSource = new KTableSource<K,V>(materialized.StoreName , materialized.QueryableStoreName);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K,V>(tableSource, tableSourceName);
 
-            var tableSourceNode = new TableSourceNode<K, V, KeyValueStore<Bytes, byte[]>>(
+            var tableSourceNode = new TableSourceNode<K, V, IKeyValueStore<Bytes, byte[]>>(
                 topic, tableSourceName, sourceName, consumed,
                 materialized, processorParameters, false);
 

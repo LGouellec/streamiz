@@ -438,6 +438,8 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             r.Partition = i;
             r.Topic = topic;
             r.Timestamp = new Timestamp(DateTime.Now);
+            r.Error = new Error(ErrorCode.NoError);
+            r.Status = PersistenceStatus.Persisted;
             return r;
         }
 
@@ -461,6 +463,8 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             r.Partition = topicPartition.Partition;
             r.Topic = topicPartition.Topic;
             r.Timestamp = new Timestamp(DateTime.Now);
+            r.Error = new Error(ErrorCode.NoError);
+            r.Status = PersistenceStatus.Persisted;
             // TODO r.Offset
             return r;
         }

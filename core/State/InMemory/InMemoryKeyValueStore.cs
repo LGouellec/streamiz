@@ -10,7 +10,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
     /// <see cref="InMemoryKeyValueStore"/> implements <see cref="KeyValueStore{K, V}"/>. 
     /// This store can be used for development phase. It's not persistent, so be carefull.
     /// </summary>
-    public class InMemoryKeyValueStore : KeyValueStore<Bytes, byte[]>
+    public class InMemoryKeyValueStore : IKeyValueStore<Bytes, byte[]>
     {
         private int size = 0;
         private readonly IDictionary<Bytes, byte[]> map = new Dictionary<Bytes, byte[]>(new BytesComparer());

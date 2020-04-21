@@ -1,11 +1,13 @@
 ﻿using Streamiz.Kafka.Net.Processors;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.State
 {
-    public interface StoreBuilder
+    /// <summary>
+    /// Build a <see cref="IStateStore"/> wrapped with optional caching and logging.
+    /// </summary>
+    internal interface StoreBuilder
     {
         IDictionary<string, string> LogConfig { get; }
         bool LoggingEnabled { get; }
@@ -13,7 +15,11 @@ namespace Streamiz.Kafka.Net.State
         object build();
     }
 
-    public interface StoreBuilder<T>  : StoreBuilder
+    /// <summary>
+    /// Build a <see cref="IStateStore"/> wrapped with optional caching and logging.
+    /// </summary>
+    /// <typeparam name="T">the type of store to build</typeparam>
+    internal interface StoreBuilder<T>  : StoreBuilder
         where T : IStateStore
     {
         StoreBuilder<T> WithCachingEnabled();

@@ -9,12 +9,18 @@ using Streamiz.Kafka.Net.Table;
 
 namespace Streamiz.Kafka.Net
 {
+    /// <summary>
+    /// <see cref="StreamBuilder"/> provide the high-level Kafka Streams DSL to specify a Kafka Streams topology.
+    /// </summary>
     public class StreamBuilder
     {
         private readonly Topology topology = new Topology();
         private readonly InternalTopologyBuilder internalTopologyBuilder;
         private readonly InternalStreamBuilder internalStreamBuilder;
 
+        /// <summary>
+        /// Constructor without arguments
+        /// </summary>
         public StreamBuilder()
         {
             internalTopologyBuilder = topology.Builder;
@@ -23,59 +29,454 @@ namespace Streamiz.Kafka.Net
 
         #region KStream
 
-        public IKStream<byte[], byte[]> Stream(string topic, StreamOptions options = null) 
-            => Stream<byte[], byte[], ByteArraySerDes, ByteArraySerDes>(topic, options);
+        #region KStream<K, V>
 
-        public IKStream<K, V> Stream<K, V>(string topic, StreamOptions options = null)
-            => Stream<K, V>(topic, null, null, options);
+        /// <summary>
+        /// Create a <see cref="KStream{K, V}"/> from the specified topic.
+        /// The default "auto.offset.reset" strategy, default <see cref="ITimestampExtractor"/> and default key and value
+        /// deserializers as specified in the <see cref="IStreamConfig"/> are used.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case it is the user's responsibility to repartition the data before any key based operation
+        /// (like aggregation or join) is applied to the returned <see cref="IKStream{K, V}"/>.
+        /// </summary>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
+        public IKStream<K, V> Stream<K, V>(string topic)
+            => Stream<K, V>(topic, null, null);
 
-        public IKStream<K, V> Stream<K, V, KS, VS>(string topic, StreamOptions options = null)
-            where KS : ISerDes<K>, new()
-            where VS : ISerDes<V>, new()
-            => Stream(topic, new KS(), new VS(), options);
+        /// <summary>
+        /// Create a <see cref="KStream{K, V}"/> from the specified topic.
+        /// The default "auto.offset.reset" strategy and default <see cref="ITimestampExtractor"/> as specified in the <see cref="IStreamConfig"/> are used.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case it is the user's responsibility to repartition the data before any key based operation
+        /// (like aggregation or join) is applied to the returned <see cref="IKStream{K, V}"/>.
+        /// </summary>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <param name="keySerdes">Key deserializer</param>
+        /// <param name="valueSerdes">Value deserializer</param>
+        /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
+        public IKStream<K, V> Stream<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+            => this.Stream(topic, keySerdes, valueSerdes, null, null);
 
-        public IKStream<K, V> Stream<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, StreamOptions options = null)
+        /// <summary>
+        /// Create a <see cref="KStream{K, V}"/> from the specified topic.
+        /// The default "auto.offset.reset" strategy and default <see cref="ITimestampExtractor"/> as specified in the <see cref="IStreamConfig"/> are used.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case it is the user's responsibility to repartition the data before any key based operation
+        /// (like aggregation or join) is applied to the returned <see cref="IKStream{K, V}"/>.
+        /// </summary>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <param name="keySerdes">Key deserializer</param>
+        /// <param name="valueSerdes">Value deserializer</param>
+        /// <param name="named">Processor name</param>
+        /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
+        public IKStream<K, V> Stream<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named)
+            => this.Stream(topic, keySerdes, valueSerdes, named, null);
+
+        /// <summary>
+        /// Create a <see cref="KStream{K, V}"/> from the specified topic.
+        /// The default "auto.offset.reset" strategy as specified in the <see cref="IStreamConfig"/> are used.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case it is the user's responsibility to repartition the data before any key based operation
+        /// (like aggregation or join) is applied to the returned <see cref="IKStream{K, V}"/>.
+        /// </summary>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <param name="keySerdes">Key deserializer</param>
+        /// <param name="valueSerdes">Value deserializer</param>
+        /// <param name="extractor">the timestamp extractor to used. If null the default timestamp extractor from config will be used</param>
+        /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
+        public IKStream<K, V> Stream<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, ITimestampExtractor extractor)
+            => this.Stream(topic, keySerdes, valueSerdes, null, extractor);
+
+        /// <summary>
+        /// Create a <see cref="KStream{K, V}"/> from the specified topic.
+        /// The default "auto.offset.reset" strategy and default <see cref="ITimestampExtractor"/> as specified in the <see cref="IStreamConfig"/> are used.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case it is the user's responsibility to repartition the data before any key based operation
+        /// (like aggregation or join) is applied to the returned <see cref="IKStream{K, V}"/>.
+        /// </summary>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <param name="keySerdes">Key deserializer</param>
+        /// <param name="valueSerdes">Value deserializer</param>
+        /// <param name="named">Processor name</param>
+        /// <param name="extractor">the timestamp extractor to used. If null the default timestamp extractor from config will be used</param>
+        /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
+        public IKStream<K, V> Stream<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named, ITimestampExtractor extractor)
         {
-            var consumedInternal = new ConsumedInternal<K, V>(options?.Named, keySerdes, valueSerdes, options?.Extractor);
+            var consumedInternal = new ConsumedInternal<K, V>(named, keySerdes, valueSerdes, extractor);
             return internalStreamBuilder.Stream(topic, consumedInternal);
         }
 
         #endregion
 
-        #region KTable
+        #region KStream<K, V, KS, VS>
 
-        public IKTable<byte[], byte[]> Table(string topic, StreamOptions options = null)
-            => Table<byte[], byte[], ByteArraySerDes, ByteArraySerDes>(topic, options, Materialized<byte[], byte[], KeyValueStore<Bytes, byte[]>>.Create());
-
-        public IKTable<K,V> Table<K,V>(string topic, StreamOptions options = null, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized = null)
-        {
-            materialized = materialized == null ? Materialized<K, V, KeyValueStore<Bytes, byte[]>>.Create() : materialized;
-
-            var consumedInternal = new ConsumedInternal<K, V>(options?.Named, null, null, options?.Extractor);
-            materialized?.UseProvider(internalStreamBuilder, $"{topic}-")?.InitConsumed(consumedInternal);
-
-            return internalStreamBuilder.Table(topic, consumedInternal, materialized);
-        }
-
-        public IKTable<K, V> Table<K, V, KS, VS>(string topic, StreamOptions options = null, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized = null)
+        /// <summary>
+        /// Create a <see cref="KStream{K, V}"/> from the specified topic.
+        /// The default "auto.offset.reset" strategy, default <see cref="ITimestampExtractor"/> as specified in the <see cref="IStreamConfig"/> are used.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case it is the user's responsibility to repartition the data before any key based operation
+        /// (like aggregation or join) is applied to the returned <see cref="IKStream{K, V}"/>.
+        /// </summary>
+        /// <typeparam name="KS">Key deserializer type</typeparam>
+        /// <typeparam name="VS">Value deserializer type</typeparam>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
+        public IKStream<K, V> Stream<K, V, KS, VS>(string topic)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
-        {
-            materialized = materialized == null ? Materialized<K, V, KeyValueStore<Bytes, byte[]>>.Create<KS, VS>() : materialized;
+            => Stream<K, V, KS, VS>(topic, null, null);
 
-            var consumedInternal = new ConsumedInternal<K, V>(options?.Named, new KS(), new VS(), options?.Extractor);
-            materialized?.UseProvider(internalStreamBuilder, $"{topic}-")?.InitConsumed(consumedInternal);
+        /// <summary>
+        /// Create a <see cref="KStream{K, V}"/> from the specified topic.
+        /// The default "auto.offset.reset" strategy, default <see cref="ITimestampExtractor"/> as specified in the <see cref="IStreamConfig"/> are used.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case it is the user's responsibility to repartition the data before any key based operation
+        /// (like aggregation or join) is applied to the returned <see cref="IKStream{K, V}"/>.
+        /// </summary>
+        /// <typeparam name="KS">Key deserializer type</typeparam>
+        /// <typeparam name="VS">Value deserializer type</typeparam>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <param name="named">Processor name</param>
+        /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
+        public IKStream<K, V> Stream<K, V, KS, VS>(string topic, string named)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => Stream<K, V, KS, VS>(topic, named, null);
+
+        /// <summary>
+        /// Create a <see cref="KStream{K, V}"/> from the specified topic.
+        /// The default "auto.offset.reset" strategy, default <see cref="ITimestampExtractor"/> as specified in the <see cref="IStreamConfig"/> are used.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case it is the user's responsibility to repartition the data before any key based operation
+        /// (like aggregation or join) is applied to the returned <see cref="IKStream{K, V}"/>.
+        /// </summary>
+        /// <typeparam name="KS">Key deserializer type</typeparam>
+        /// <typeparam name="VS">Value deserializer type</typeparam>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <param name="extractor">the timestamp extractor to used. If null the default timestamp extractor from config will be used</param>
+        /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
+        public IKStream<K, V> Stream<K, V, KS, VS>(string topic, ITimestampExtractor extractor)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => Stream<K, V, KS, VS>(topic, null, extractor);
+
+        /// <summary>
+        /// Create a <see cref="KStream{K, V}"/> from the specified topic.
+        /// The default "auto.offset.reset" strategy, default <see cref="ITimestampExtractor"/> as specified in the <see cref="IStreamConfig"/> are used.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case it is the user's responsibility to repartition the data before any key based operation
+        /// (like aggregation or join) is applied to the returned <see cref="IKStream{K, V}"/>.
+        /// </summary>
+        /// <typeparam name="KS">Key deserializer type</typeparam>
+        /// <typeparam name="VS">Value deserializer type</typeparam>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <param name="named">Processor name</param>
+        /// <param name="extractor">the timestamp extractor to used. If null the default timestamp extractor from config will be used</param>
+        /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
+        public IKStream<K, V> Stream<K, V, KS, VS>(string topic, string named, ITimestampExtractor extractor)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => Stream(topic, new KS(), new VS(), named, extractor);
+
+        #endregion
+
+        #endregion
+
+        #region KTable
+
+        #region KTable<K, V>
+
+        /// <summary>
+        /// Create a <see cref="IKTable{K, V}"/> for the specified topic.
+        /// The default "auto.offset.reset" strategy, <see cref="ITimestampExtractor"/>, key and value deserializers
+        /// as specified in the <see cref="IStreamConfig"/> are used.
+        /// Input keyvalue records with null key will be dropped.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case the returned <see cref="IKTable{K, V}"/> will be corrupted.
+        /// 
+        /// The resulting <see cref="IKTable{K, V}"/> will be materialized in a local <see cref="IKeyValueStore{K, V}"/> using the given
+        /// <see cref="Materialized{K, V, S}"/> instance.
+        /// </summary>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        public IKTable<K, V> Table<K, V>(string topic)
+            => Table<K, V>(topic, null, null);
+
+        /// <summary>
+        /// Create a <see cref="IKTable{K, V}"/> for the specified topic.
+        /// The default "auto.offset.reset" strategy, <see cref="ITimestampExtractor"/> as specified in the <see cref="IStreamConfig"/> are used.
+        /// Input keyvalue records with null key will be dropped.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case the returned <see cref="IKTable{K, V}"/> will be corrupted.
+        /// 
+        /// The resulting <see cref="IKTable{K, V}"/> will be materialized in a local <see cref="IKeyValueStore{K, V}"/> using the given
+        /// <see cref="Materialized{K, V, S}"/> instance.
+        /// </summary>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <param name="keySerdes">Key deserializer</param>
+        /// <param name="valueSerdes">Value deserializer</param>
+        /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        public IKTable<K, V> Table<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+            => Table<K, V>(topic, keySerdes, valueSerdes, null);
+
+        /// <summary>
+        /// Create a <see cref="IKTable{K, V}"/> for the specified topic.
+        /// The default "auto.offset.reset" strategy, <see cref="ITimestampExtractor"/>, key and value deserializers
+        /// as specified in the <see cref="IStreamConfig"/> are used.
+        /// Input keyvalue records with null key will be dropped.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case the returned <see cref="IKTable{K, V}"/> will be corrupted.
+        /// 
+        /// The resulting <see cref="IKTable{K, V}"/> will be materialized in a local <see cref="IKeyValueStore{K, V}"/> using the given
+        /// <see cref="Materialized{K, V, S}"/> instance.
+        /// </summary>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <param name="materialized">the instance of <see cref="Materialized{K, V, S}"/> used to materialize a state store.</param>
+        /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        public IKTable<K, V> Table<K, V>(string topic, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized)
+            => Table<K, V>(topic, null, null, materialized);
+
+        /// <summary>
+        /// Create a <see cref="IKTable{K, V}"/> for the specified topic.
+        /// The default "auto.offset.reset" strategy, <see cref="ITimestampExtractor"/> as specified in the <see cref="IStreamConfig"/> are used.
+        /// Input keyvalue records with null key will be dropped.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case the returned <see cref="IKTable{K, V}"/> will be corrupted.
+        /// 
+        /// The resulting <see cref="IKTable{K, V}"/> will be materialized in a local <see cref="IKeyValueStore{K, V}"/> using the given
+        /// <see cref="Materialized{K, V, S}"/> instance.
+        /// </summary>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <param name="keySerdes">Key deserializer</param>
+        /// <param name="valueSerdes">Value deserializer</param>
+        /// <param name="materialized">the instance of <see cref="Materialized{K, V, S}"/> used to materialize a state store.</param>
+        /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        public IKTable<K, V> Table<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized)
+            => Table<K, V>(topic, keySerdes, valueSerdes, materialized, null, null);
+
+        /// <summary>
+        /// Create a <see cref="IKTable{K, V}"/> for the specified topic.
+        /// The default "auto.offset.reset" strategy, <see cref="ITimestampExtractor"/> as specified in the <see cref="IStreamConfig"/> are used.
+        /// Input keyvalue records with null key will be dropped.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case the returned <see cref="IKTable{K, V}"/> will be corrupted.
+        /// 
+        /// The resulting <see cref="IKTable{K, V}"/> will be materialized in a local <see cref="IKeyValueStore{K, V}"/> using the given
+        /// <see cref="Materialized{K, V, S}"/> instance.
+        /// </summary>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <param name="keySerdes">Key deserializer</param>
+        /// <param name="valueSerdes">Value deserializer</param>
+        /// <param name="materialized">the instance of <see cref="Materialized{K, V, S}"/> used to materialize a state store.</param>
+        /// <param name="named">Processor name</param>
+        /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        public IKTable<K, V> Table<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named)
+            => Table<K, V>(topic, keySerdes, valueSerdes, materialized, named, null);
+
+        /// <summary>
+        /// Create a <see cref="IKTable{K, V}"/> for the specified topic.
+        /// The default "auto.offset.reset" strategy, <see cref="ITimestampExtractor"/> as specified in the <see cref="IStreamConfig"/> are used.
+        /// Input keyvalue records with null key will be dropped.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case the returned <see cref="IKTable{K, V}"/> will be corrupted.
+        /// 
+        /// The resulting <see cref="IKTable{K, V}"/> will be materialized in a local <see cref="IKeyValueStore{K, V}"/> using the given
+        /// <see cref="Materialized{K, V, S}"/> instance.
+        /// </summary>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <param name="keySerdes">Key deserializer</param>
+        /// <param name="valueSerdes">Value deserializer</param>
+        /// <param name="materialized">the instance of <see cref="Materialized{K, V, S}"/> used to materialize a state store.</param>
+        /// <param name="named">Processor name</param>
+        /// <param name="extractor">the timestamp extractor to used. If null the default timestamp extractor from config will be used</param>
+        /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        public IKTable<K, V> Table<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named, ITimestampExtractor extractor)
+        {
+            materialized = materialized ?? Materialized<K, V, IKeyValueStore<Bytes, byte[]>>.Create();
+
+            var consumedInternal = new ConsumedInternal<K, V>(named, keySerdes, valueSerdes, extractor);
+            materialized.UseProvider(internalStreamBuilder, $"{topic}-")?.InitConsumed(consumedInternal);
 
             return internalStreamBuilder.Table(topic, consumedInternal, materialized);
-        }
-
-        public IKTable<K, V> Table<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, StreamOptions options = null, Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized = null)
-        {
-            return null;
         }
 
         #endregion
 
+        #region KTable<K, V, KS, VS>
+
+        /// <summary>
+        /// Create a <see cref="IKTable{K, V}"/> for the specified topic.
+        /// The default "auto.offset.reset" strategy, <see cref="ITimestampExtractor"/> as specified in the <see cref="IStreamConfig"/> are used.
+        /// Input keyvalue records with null key will be dropped.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case the returned <see cref="IKTable{K, V}"/> will be corrupted.
+        /// 
+        /// The resulting <see cref="IKTable{K, V}"/> will be materialized in a local <see cref="IKeyValueStore{K, V}"/> using the given
+        /// <see cref="Materialized{K, V, S}"/> instance.
+        /// </summary>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <typeparam name="KS">Key deserializer type</typeparam>
+        /// <typeparam name="VS">Value deserializer type</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        public IKTable<K, V> Table<K, V, KS, VS>(string topic)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => Table<K, V, KS, VS>(topic, null, null, null);
+
+        /// <summary>
+        /// Create a <see cref="IKTable{K, V}"/> for the specified topic.
+        /// The default "auto.offset.reset" strategy, <see cref="ITimestampExtractor"/> as specified in the <see cref="IStreamConfig"/> are used.
+        /// Input keyvalue records with null key will be dropped.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case the returned <see cref="IKTable{K, V}"/> will be corrupted.
+        /// 
+        /// The resulting <see cref="IKTable{K, V}"/> will be materialized in a local <see cref="IKeyValueStore{K, V}"/> using the given
+        /// <see cref="Materialized{K, V, S}"/> instance.
+        /// </summary>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <typeparam name="KS">Key deserializer type</typeparam>
+        /// <typeparam name="VS">Value deserializer type</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <param name="materialized">the instance of <see cref="Materialized{K, V, S}"/> used to materialize a state store.</param>
+        /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        public IKTable<K, V> Table<K, V, KS, VS>(string topic, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => Table<K, V, KS, VS>(topic, materialized, null, null);
+
+        /// <summary>
+        /// Create a <see cref="IKTable{K, V}"/> for the specified topic.
+        /// The default "auto.offset.reset" strategy, <see cref="ITimestampExtractor"/> as specified in the <see cref="IStreamConfig"/> are used.
+        /// Input keyvalue records with null key will be dropped.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case the returned <see cref="IKTable{K, V}"/> will be corrupted.
+        /// 
+        /// The resulting <see cref="IKTable{K, V}"/> will be materialized in a local <see cref="IKeyValueStore{K, V}"/> using the given
+        /// <see cref="Materialized{K, V, S}"/> instance.
+        /// </summary>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <typeparam name="KS">Key deserializer type</typeparam>
+        /// <typeparam name="VS">Value deserializer type</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <param name="materialized">the instance of <see cref="Materialized{K, V, S}"/> used to materialize a state store.</param>
+        /// <param name="named">Processor name</param>
+        /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        public IKTable<K, V> Table<K, V, KS, VS>(string topic, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => Table<K, V, KS, VS>(topic, materialized, named, null);
+
+        /// <summary>
+        /// Create a <see cref="IKTable{K, V}"/> for the specified topic.
+        /// The default "auto.offset.reset" strategy, <see cref="ITimestampExtractor"/> as specified in the <see cref="IStreamConfig"/> are used.
+        /// Input keyvalue records with null key will be dropped.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case the returned <see cref="IKTable{K, V}"/> will be corrupted.
+        /// 
+        /// The resulting <see cref="IKTable{K, V}"/> will be materialized in a local <see cref="IKeyValueStore{K, V}"/> using the given
+        /// <see cref="Materialized{K, V, S}"/> instance.
+        /// </summary>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <typeparam name="KS">Key deserializer type</typeparam>
+        /// <typeparam name="VS">Value deserializer type</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <param name="materialized">the instance of <see cref="Materialized{K, V, S}"/> used to materialize a state store.</param>
+        /// <param name="extractor">the timestamp extractor to used. If null the default timestamp extractor from config will be used</param>
+        /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        public IKTable<K, V> Table<K, V, KS, VS>(string topic, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, ITimestampExtractor extractor)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => Table<K, V, KS, VS>(topic, materialized, null, extractor);
+
+        /// <summary>
+        /// Create a <see cref="IKTable{K, V}"/> for the specified topic.
+        /// The default "auto.offset.reset" strategy, <see cref="ITimestampExtractor"/> as specified in the <see cref="IStreamConfig"/> are used.
+        /// Input keyvalue records with null key will be dropped.
+        /// 
+        /// Note that the specified input topic must be partitioned by key.
+        /// If this is not the case the returned <see cref="IKTable{K, V}"/> will be corrupted.
+        /// 
+        /// The resulting <see cref="IKTable{K, V}"/> will be materialized in a local <see cref="IKeyValueStore{K, V}"/> using the given
+        /// <see cref="Materialized{K, V, S}"/> instance.
+        /// </summary>
+        /// <typeparam name="K">Key type of record</typeparam>
+        /// <typeparam name="V">Value type of record</typeparam>
+        /// <typeparam name="KS">Key deserializer type</typeparam>
+        /// <typeparam name="VS">Value deserializer type</typeparam>
+        /// <param name="topic">the topic name, can't be null</param>
+        /// <param name="materialized">the instance of <see cref="Materialized{K, V, S}"/> used to materialize a state store.</param>
+        /// <param name="named">Processor name</param>
+        /// <param name="extractor">the timestamp extractor to used. If null the default timestamp extractor from config will be used</param>
+        /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        public IKTable<K, V> Table<K, V, KS, VS>(string topic, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named, ITimestampExtractor extractor)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => Table<K, V>(topic, new KS(), new VS(), materialized, named, extractor);
+
+        #endregion
+
+        #endregion
+
+        /// <summary>
+        /// Returns the <see cref="Topology"/> that represents the specified processing logic.
+        /// Note that using this method means no optimizations are performed.
+        /// </summary>
+        /// <returns>the <see cref="Topology"/> that represents the specified processing logic</returns>
         public Topology Build()
         {
             this.internalStreamBuilder.Build();

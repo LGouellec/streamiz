@@ -1,6 +1,4 @@
-﻿using Confluent.Kafka;
-using Streamiz.Kafka.Net;
-using Streamiz.Kafka.Net.Crosscutting;
+﻿using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
@@ -17,9 +15,7 @@ namespace sample_test_driver
             
             StreamBuilder builder = new StreamBuilder();
 
-            builder.Stream<string, string>("test")
-                .Filter((k, v) => v.Contains("test"))
-                .To("test-output");
+            builder.Stream<string, string>("test").Filter((k, v) => v.Contains("test")).To("test-output");
 
             Topology t = builder.Build();
 
@@ -29,6 +25,7 @@ namespace sample_test_driver
                 var outputTopic = driver.CreateOuputTopic<string, string>("test-output", TimeSpan.FromSeconds(5));
                 inputTopic.PipeInput("test", "test-1234");
                 var r = outputTopic.ReadKeyValue();
+                // YOU SOULD ASSERT HERE
             }
         }
     }
