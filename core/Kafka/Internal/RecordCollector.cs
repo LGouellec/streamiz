@@ -19,6 +19,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
         public RecordCollector(string logPrefix)
         {
             this.logPrefix = $"{logPrefix}";
+            offsets = new Dictionary<TopicPartition, long>();
         }
 
         public void Init(IProducer<byte[], byte[]> producer)
@@ -28,30 +29,32 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
         public void Close()
         {
-            // TODO :
+            log.Debug($"{logPrefix}Closing producer");
+            if(producer != null)
+            {
+                producer.Dispose();
+                producer = null;
+            }
         }
 
         public void Flush()
         {
-            // TODO :
+            log.Debug($"{logPrefix}Flusing producer");
+            producer.Flush();
         }
 
-        public void Offsets()
+        public void Send<K, V>(string topic, K key, V value, Headers headers, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer)
         {
-            // TODO :
-        }
-
-        public void Send<K, V>(string topic, K key, V value, Headers headers, int partition, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer)
-        {
-            // TODO :
-        }
-
-        public void Send<K, V>(string topic, K key, V value, Headers headers, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer, IStreamPartitioner<K, V> partitioner)
-        {
-            // TODO :
             var k = key != null ? keySerializer.Serialize(key) : null;
             var v = value != null ? valueSerializer.Serialize(value) : null;
-            producer.Produce(topic, new Message<byte[], byte[]> { Key = k, Value = v });
+
+            producer.Produce(
+                topic, 
+                new Message<byte[], byte[]> { Key = k, Value = v },
+                (report) => {
+                    if (report.Error.Code == ErrorCode.NoError && report.Status == PersistenceStatus.Persisted)
+                        offsets.Add(report.TopicPartition, report.Offset);
+                });
         }
     }
 }

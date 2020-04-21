@@ -82,7 +82,7 @@ namespace Streamiz.Kafka.Net.Processors
             }
         }
 
-        protected void FlushState()
+        protected virtual void FlushState()
         {
             try
             {

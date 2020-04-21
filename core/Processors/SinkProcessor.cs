@@ -48,9 +48,7 @@ namespace Streamiz.Kafka.Net.Processors
             }
 
             var topicName = this.topicNameExtractor.Extract(key, value, this.Context.RecordContext);
-            // TODO : TO FINISH
-            var partitioner = new DefaultStreamPartitioner<K, V>(KeySerDes, null);
-            this.Context.RecordCollector.Send<K, V>(topicName, key, value, null, timestamp, KeySerDes, ValueSerDes, partitioner);
+            this.Context.RecordCollector.Send(topicName, key, value, null, timestamp, KeySerDes, ValueSerDes);
         }
     }
 }

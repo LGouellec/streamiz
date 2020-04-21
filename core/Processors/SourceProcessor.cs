@@ -1,4 +1,5 @@
-﻿using Streamiz.Kafka.Net.SerDes;
+﻿
+using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Linq;

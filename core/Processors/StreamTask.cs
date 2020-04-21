@@ -1,10 +1,8 @@
 ﻿using Confluent.Kafka;
-using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.Stream.Internal;
-using log4net;
 using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Processors
@@ -46,6 +44,7 @@ namespace Streamiz.Kafka.Net.Processors
             log.Info($"{logPrefix}Closing");
             FlushState();
             processor.Close();
+            collector.Close();
             CloseStateManager();
             log.Info($"{logPrefix}Closed");
         }
@@ -75,7 +74,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public override IStateStore GetStore(string name)
         {
-            return null;
+            return Context.GetStateStore(name);
         }
 
         public override void InitializeTopology()
@@ -102,6 +101,12 @@ namespace Streamiz.Kafka.Net.Processors
             // NOTHING FOR MOMENT
         }
 
+        protected override void FlushState()
+        {
+            base.FlushState();
+            this.collector.Flush();
+        }
+        
         #endregion
 
         public bool Process()
@@ -115,7 +120,7 @@ namespace Streamiz.Kafka.Net.Processors
 
                     var recordInfo = $"Topic:{record.Topic}|Partition:{record.Partition.Value}|Offset:{record.Offset}|Timestamp:{record.Message.Timestamp.UnixTimestampMs}";
                     log.Debug($"{logPrefix}Start processing one record [{recordInfo}]");
-                    processor.Process(record.Message.Key, record.Message.Key);
+                    processor.Process(record.Message.Key, record.Message.Value);
                     log.Debug($"{logPrefix}Completed processing one record [{recordInfo}]");
 
                     queue.Commit();
