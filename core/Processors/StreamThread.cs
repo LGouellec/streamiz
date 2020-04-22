@@ -1,10 +1,10 @@
 ﻿using Confluent.Kafka;
+using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
-using log4net;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -70,7 +70,7 @@ namespace Streamiz.Kafka.Net.Processors
             var consumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig(customerID), listener);
             manager.Consumer = consumer;
 
-            var thread = new StreamThread(threadId, customerID, manager, consumer, builder, TimeSpan.FromMilliseconds(1000));
+            var thread = new StreamThread(threadId, customerID, manager, consumer, builder, TimeSpan.FromMilliseconds(configuration.PollMs), configuration.CommitIntervalMs);
             listener.Thread = thread;
 
             return thread;
@@ -89,24 +89,26 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly string threadId;
         private readonly string clientId;
         private readonly string logPrefix = "";
+        private readonly long commitTimeMs = 0;
         private CancellationToken token;
 
         private readonly object stateLock = new object();
 
         public event ThreadStateListener StateChanged;
 
-        private StreamThread(string threadId, string clientId, TaskManager manager, IConsumer<byte[], byte[]> consumer, InternalTopologyBuilder builder, TimeSpan timeSpan)
+        private StreamThread(string threadId, string clientId, TaskManager manager, IConsumer<byte[], byte[]> consumer, InternalTopologyBuilder builder, TimeSpan timeSpan, long commitInterval)
         {
             this.manager = manager;
             this.consumer = consumer;
             this.builder = builder;
-            this.consumeTimeout = timeSpan;
+            consumeTimeout = timeSpan;
             this.threadId = threadId;
             this.clientId = clientId;
             logPrefix = $"stream-thread[{threadId}] ";
+            commitTimeMs = commitInterval;
 
-            this.thread = new Thread(this.Run);
-            this.thread.Name = this.threadId;
+            thread = new Thread(Run);
+            thread.Name = this.threadId;
 
             State = ThreadState.CREATED;
         }
@@ -132,9 +134,9 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     try
                     {
-                        if(exception != null)
+                        if (exception != null)
                         {
-                            this.Close(true);
+                            Close(true);
                             throw exception;
                         }
 

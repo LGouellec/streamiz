@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
         public void PartitionsAssigned(IConsumer<byte[], byte[]> consumer, List<TopicPartition> partitions)
         {
-            manager.CreateTasks(partitions);
+            manager.CreateTasks(consumer, partitions);
             Thread.SetState(ThreadState.PARTITIONS_ASSIGNED);
         }
 

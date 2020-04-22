@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Kafka.Internal;
@@ -11,11 +12,13 @@ namespace Streamiz.Kafka.Net.Processors
     internal class StreamTask : AbstractTask
     {
         private readonly IKafkaSupplier kafkaSupplier;
-        private IProducer<byte[], byte[]> producer;
         private readonly IRecordCollector collector;
         private readonly IProcessor processor;
         private readonly RecordQueue<ConsumeResult<byte[], byte[]>> queue;
+        private readonly IDictionary<TopicPartition, long> consumedOffsets;
         private readonly bool eosEnabled = false;
+
+        private IProducer<byte[], byte[]> producer;
         private bool transactionInFlight = false;
         private string threadId;
 
@@ -24,6 +27,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             this.threadId = threadId;
             this.kafkaSupplier = kafkaSupplier;
+            this.consumedOffsets = new Dictionary<TopicPartition, long>();
 
             // eos enabled
             if (producer == null)
@@ -47,7 +51,15 @@ namespace Streamiz.Kafka.Net.Processors
                 sourceTimestampExtractor == null ? configuration.DefaultTimestampExtractor : sourceTimestampExtractor);
         }
 
+        internal IConsumerGroupMetadata GroupMetadata { get; set; }
+
         #region Private
+
+        private IEnumerable<TopicPartitionOffset> GetPartitionsWithOffset()
+        {
+            foreach (var kp in consumedOffsets)
+                yield return new TopicPartitionOffset(kp.Key, kp.Value);
+        }
 
         private void Commit(bool startNewTransaction)
         {
@@ -56,7 +68,7 @@ namespace Streamiz.Kafka.Net.Processors
             FlushState();
             if (eosEnabled)
             {
-                this.producer.SendOffsetsToTransaction(null, null, configuration.TransactionTimeout);
+                this.producer.SendOffsetsToTransaction(GetPartitionsWithOffset(), null, configuration.TransactionTimeout);
                 this.producer.CommitTransaction(configuration.TransactionTimeout);
                 transactionInFlight = false;
                 if (startNewTransaction)
@@ -64,12 +76,14 @@ namespace Streamiz.Kafka.Net.Processors
                     this.producer.BeginTransaction();
                     transactionInFlight = true;
                 }
+                consumedOffsets.Clear();
             }
             else
             {
                 try
                 {
-                    consumer.Commit();
+                    consumer.Commit(GetPartitionsWithOffset());
+                    consumedOffsets.Clear();
                 }
                 catch (TopicPartitionOffsetException e)
                 {
@@ -125,6 +139,7 @@ namespace Streamiz.Kafka.Net.Processors
         public override void Close()
         {
             log.Info($"{logPrefix}Closing");
+            Suspend();
             FlushState();
             processor.Close();
             collector.Close();
@@ -189,6 +204,9 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 if (eosEnabled)
                 {
+                    if (transactionInFlight)
+                        producer.AbortTransaction(configuration.TransactionTimeout);
+
                     collector.Close();
                     producer = null;
                 }
@@ -218,7 +236,10 @@ namespace Streamiz.Kafka.Net.Processors
                     log.Debug($"{logPrefix}Completed processing one record [{recordInfo}]");
 
                     queue.Commit();
+
+                    consumedOffsets.AddOrUpdate(record.TopicPartition, record.Offset);
                     commitNeeded = true;
+
                     return true;
                 }
                 return false;

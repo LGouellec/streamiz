@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             this.adminClient = adminClient;
         }
 
-        public void CreateTasks(ICollection<TopicPartition> assignment)
+        public void CreateTasks(IConsumer<byte[], byte[]> consumer, ICollection<TopicPartition> assignment)
         {
             ++idTask;
             foreach (var partition in assignment)
@@ -30,6 +30,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 {
                     var id = new TaskId { Id = idTask, Partition = partition.Partition.Value, Topic = partition.Topic };
                     var task = taskCreator.CreateTask(Consumer, id, partition);
+                    task.GroupMetadata = consumer.ConsumerGroupMetadata;
                     task.InitializeStateStores();
                     task.InitializeTopology();
                     activeTasks.Add(partition, task);

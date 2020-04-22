@@ -112,6 +112,17 @@ namespace Streamiz.Kafka.Net
         #region Stream Config Property
 
         /// <summary>
+        /// The amount of time in milliseconds to block waiting for input.
+        /// </summary>
+        long PollMs { get; set; }
+
+        /// <summary>
+        /// The frequency with which to save the position of the processor. (Note, if <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, the default value is <code>" + EOS_DEFAULT_COMMIT_INTERVAL_MS + "</code>,"
+        /// otherwise the default value is <code>" + DEFAULT_COMMIT_INTERVAL_MS + "</code>.
+        /// </summary>
+        long CommitIntervalMs { get; set; }
+
+        /// <summary>
         /// Timeout used for transaction related operations. (Default : 10 seconds).
         /// </summary>
         TimeSpan TransactionTimeout { get; set; }
@@ -164,9 +175,11 @@ namespace Streamiz.Kafka.Net
     /// By default, Kafka Streams does not allow users to overwrite the following properties (Streams setting shown in parentheses)
     ///    - EnableAutoCommit = (false) - Streams client will always disable/turn off auto committing
     /// If <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, Kafka Streams does not allow users to overwrite the following properties (Streams setting shown in parentheses):
-    ///    - <see cref="StreamConfig.IsolationLevel"/> (<see cref="IsolationLevel.ReadCommitted"/>) - Consumers will always read committed data only
-    ///    - <see cref="StreamConfig.EnableIdempotence"/> (true) - Producer will always have idempotency enabled
-    ///    - <see cref="StreamConfig.MaxInFlight"/> (5) - Producer will always have one in-flight request per connection
+    ///    - <see cref="IsolationLevel"/> (<see cref="IsolationLevel.ReadCommitted"/>) - Consumers will always read committed data only
+    ///    - <see cref="EnableIdempotence"/> (true) - Producer will always have idempotency enabled
+    ///    - <see cref="MaxInFlight"/> (5) - Producer will always have one in-flight request per connection
+    /// If <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, Kafka Streams initialize the following properties :
+    ///    - <see cref="CommitIntervalMs"/> (<see cref="EOS_DEFAULT_COMMIT_INTERVAL_MS"/>
     /// <exemple>
     /// <code>
     /// var config = new StreamConfig();
@@ -244,6 +257,18 @@ namespace Streamiz.Kafka.Net
         internal static string defaultTimestampExtractorCst = "default.timestamp.extractor";
         internal static string processingGuaranteeCst = "processing.guarantee";
         internal static string transactionTimeoutCst = "transaction.timeout";
+        internal static string commitIntervalMsCst = "commit.interval.ms";
+        internal static string pollMsCst = "poll.ms";
+
+        /// <summary>
+        /// Default commit interval in milliseconds when exactly once is not enabled
+        /// </summary>
+        public static long DEFAULT_COMMIT_INTERVAL_MS = 30000L;
+        
+        /// <summary>
+        /// Default commit interval in milliseconds when exactly once is enabled
+        /// </summary>
+        public static long EOS_DEFAULT_COMMIT_INTERVAL_MS = 100L;
 
         #endregion
 
@@ -1385,13 +1410,6 @@ namespace Streamiz.Kafka.Net
         public bool? EnableAutoOffsetStore { get { return _consumerConfig.EnableAutoOffsetStore; } set { _consumerConfig.EnableAutoOffsetStore = value; } }
 
         /// <summary>
-        /// The frequency in milliseconds that the consumer offsets are committed (written)
-        /// to offset storage. (0 = disable). This setting is used by the high-level consumer.
-        /// default: 5000 importance: medium
-        /// </summary>
-        public int? AutoCommitIntervalMs { get { return _consumerConfig.AutoCommitIntervalMs; } set { _consumerConfig.AutoCommitIntervalMs = value; } }
-
-        /// <summary>
         /// Automatically and periodically commit offsets in the background. Note: setting
         /// this to false does not prevent the consumer from fetching previously committed
         /// start offsets. To circumvent this behaviour set specific start offsets per partition
@@ -1703,7 +1721,9 @@ namespace Streamiz.Kafka.Net
             DefaultValueSerDes = new ByteArraySerDes();
             DefaultTimestampExtractor = new FailOnInvalidTimestamp();
             Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
+            CommitIntervalMs = DEFAULT_COMMIT_INTERVAL_MS;
             TransactionTimeout = TimeSpan.FromSeconds(10);
+            PollMs = 100;
 
             if (properties != null)
             {
@@ -1716,9 +1736,7 @@ namespace Streamiz.Kafka.Net
             _adminClientConfig = new AdminClientConfig();
             _config = new ClientConfig();
             
-            // property not choice by user !!!!
             EnableAutoCommit = false;
-            // property not choice by user !!!!
         }
 
         #endregion
@@ -1795,6 +1813,7 @@ namespace Streamiz.Kafka.Net
                     IsolationLevel = Confluent.Kafka.IsolationLevel.ReadCommitted;
                     EnableIdempotence = true;
                     MaxInFlight = 5;
+                    CommitIntervalMs = EOS_DEFAULT_COMMIT_INTERVAL_MS;
                 }
             }
         }
@@ -1806,6 +1825,25 @@ namespace Streamiz.Kafka.Net
         {
             get => this[transactionTimeoutCst];
             set => this.AddOrUpdate(transactionTimeoutCst, value);
+        }
+
+        /// <summary>
+        /// The frequency with which to save the position of the processor. (Note, if <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, the default value is <code>" + EOS_DEFAULT_COMMIT_INTERVAL_MS + "</code>,"
+        /// otherwise the default value is <code>" + DEFAULT_COMMIT_INTERVAL_MS + "</code>.
+        /// </summary>
+        public long CommitIntervalMs
+        {
+            get => this[commitIntervalMsCst];
+            set => this.AddOrUpdate(commitIntervalMsCst, value);
+        }
+
+        /// <summary>
+        /// The amount of time in milliseconds to block waiting for input. (Default : 100)
+        /// </summary>
+        public long PollMs
+        {
+            get => this[pollMsCst];
+            set => this.AddOrUpdate(pollMsCst, value);
         }
 
         /// <summary>
