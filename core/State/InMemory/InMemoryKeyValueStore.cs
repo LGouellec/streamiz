@@ -7,7 +7,7 @@ using Streamiz.Kafka.Net.Processors;
 namespace Streamiz.Kafka.Net.State.InMemory
 {
     /// <summary>
-    /// <see cref="InMemoryKeyValueStore"/> implements <see cref="KeyValueStore{K, V}"/>. 
+    /// <see cref="InMemoryKeyValueStore"/> implements <see cref="IKeyValueStore{K, V}"/>. 
     /// This store can be used for development phase. It's not persistent, so be carefull.
     /// </summary>
     public class InMemoryKeyValueStore : IKeyValueStore<Bytes, byte[]>

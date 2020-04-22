@@ -91,11 +91,12 @@ namespace Streamiz.Kafka.Net.Mock
             this.topologyBuilder = builder;
             this.configuration = config;
 
-            this.topicConfiguration = config is StreamConfig ? new StreamConfig((StreamConfig)config) : config;
-            this.topicConfiguration.ApplicationId = $"test-driver-{this.configuration.ApplicationId}";
-
             // ONLY 1 thread for test driver
             this.configuration.NumStreamThreads = 1;
+            this.configuration.Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
+
+            this.topicConfiguration = config.Clone();
+            this.topicConfiguration.ApplicationId = $"test-driver-{this.configuration.ApplicationId}";
 
             var processID = Guid.NewGuid();
             var clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{this.configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;

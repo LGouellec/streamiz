@@ -71,6 +71,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             foreach (var t in activeTasks)
                 t.Value.Close();
+
+            foreach (var t in revokedTasks)
+                t.Value.Close();
         }
     }
 }

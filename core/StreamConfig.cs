@@ -1,5 +1,6 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
@@ -9,9 +10,18 @@ using System.Linq;
 
 namespace Streamiz.Kafka.Net
 {
+    /// <summary>
+    /// Processing Guarantee enumeration used in <see cref="IStreamConfig.Guarantee"/>
+    /// </summary>
     public enum ProcessingGuarantee
     {
+        /// <summary>
+        /// Config value for parameter <see cref="IStreamConfig.Guarantee"/> for at-least-once processing guarantees.
+        /// </summary>
         AT_LEAST_ONCE,
+        /// <summary>
+        /// Config value for parameter <see cref="IStreamConfig.Guarantee"/> for exactly-once processing guarantees.
+        /// </summary>
         EXACTLY_ONCE
     }
 
@@ -20,7 +30,7 @@ namespace Streamiz.Kafka.Net
     /// See <see cref="StreamConfig"/> to obtain implementation about this interface.
     /// You could develop your own implementation and get it in your <see cref="KafkaStream"/> instance.
     /// </summary>
-    public interface IStreamConfig
+    public interface IStreamConfig : ICloneable<IStreamConfig>
     {
         /// <summary>
         /// Add keyvalue configuration for producer, consumer and admin client.
@@ -102,6 +112,16 @@ namespace Streamiz.Kafka.Net
         #region Stream Config Property
 
         /// <summary>
+        /// Timeout used for transaction related operations. (Default : 10 seconds).
+        /// </summary>
+        TimeSpan TransactionTimeout { get; set; }
+
+        /// <summary>
+        /// Enables the transactional producer. The transactional.id is used to identify the same transactional producer instance across process restarts.
+        /// </summary>
+        string TransactionalId { get; set; }
+
+        /// <summary>
         /// An identifier for the stream processing application. Must be unique within the Kafka cluster. It is used as 1) the default client-id prefix, 2) the group-id for membership management, 3) the changelog topic prefix.
         /// </summary>
         string ApplicationId { get; set; }
@@ -143,6 +163,10 @@ namespace Streamiz.Kafka.Net
     /// Implementation of <see cref="IStreamConfig"/>. Contains all configuration for your stream.
     /// By default, Kafka Streams does not allow users to overwrite the following properties (Streams setting shown in parentheses)
     ///    - EnableAutoCommit = (false) - Streams client will always disable/turn off auto committing
+    /// If <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, Kafka Streams does not allow users to overwrite the following properties (Streams setting shown in parentheses):
+    ///    - <see cref="StreamConfig.IsolationLevel"/> (<see cref="IsolationLevel.ReadCommitted"/>) - Consumers will always read committed data only
+    ///    - <see cref="StreamConfig.EnableIdempotence"/> (true) - Producer will always have idempotency enabled
+    ///    - <see cref="StreamConfig.MaxInFlight"/> (5) - Producer will always have one in-flight request per connection
     /// <exemple>
     /// <code>
     /// var config = new StreamConfig();
@@ -219,17 +243,18 @@ namespace Streamiz.Kafka.Net
         internal static string defaultValueSerDesCst = "default.value.serdes";
         internal static string defaultTimestampExtractorCst = "default.timestamp.extractor";
         internal static string processingGuaranteeCst = "processing.guarantee";
+        internal static string transactionTimeoutCst = "transaction.timeout";
 
         #endregion
 
-        private readonly ConsumerConfig _consumerConfig = null;
-        private readonly ProducerConfig _producerConfig = null;
-        private readonly AdminClientConfig _adminClientConfig = null;
-        private readonly ClientConfig _config = null;
+        private ConsumerConfig _consumerConfig = null;
+        private ProducerConfig _producerConfig = null;
+        private AdminClientConfig _adminClientConfig = null;
+        private ClientConfig _config = null;
 
-        private readonly IDictionary<string, string> _internalConsumerConfig = new Dictionary<string, string>();
-        private readonly IDictionary<string, string> _internalProducerConfig = new Dictionary<string, string>();
-        private readonly IDictionary<string, string> _internalAdminConfig = new Dictionary<string, string>();
+        private IDictionary<string, string> _internalConsumerConfig = new Dictionary<string, string>();
+        private IDictionary<string, string> _internalProducerConfig = new Dictionary<string, string>();
+        private IDictionary<string, string> _internalAdminConfig = new Dictionary<string, string>();
 
         #region ClientConfig
 
@@ -899,10 +924,15 @@ namespace Streamiz.Kafka.Net
             get => _config.MaxInFlight;
             set
             {
-                _config.MaxInFlight = value;
-                _consumerConfig.MaxInFlight = value;
-                _producerConfig.MaxInFlight = value;
-                _adminClientConfig.MaxInFlight = value;
+                if (Guarantee != ProcessingGuarantee.EXACTLY_ONCE)
+                {
+                    _config.MaxInFlight = value;
+                    _consumerConfig.MaxInFlight = value;
+                    _producerConfig.MaxInFlight = value;
+                    _adminClientConfig.MaxInFlight = value;
+                }
+                else
+                    throw new StreamsException($"You can't update MaxInFlight because your processing guarantee is exactly-once");
             }
         }
 
@@ -1285,7 +1315,15 @@ namespace Streamiz.Kafka.Net
         /// return all messages, even transactional messages which have been aborted. default:
         /// read_committed importance: high
         /// </summary>
-        public IsolationLevel? IsolationLevel { get { return _consumerConfig.IsolationLevel; } set { _consumerConfig.IsolationLevel = value; } }
+        public IsolationLevel? IsolationLevel { 
+            get { return _consumerConfig.IsolationLevel; } 
+            set {
+                if (Guarantee != ProcessingGuarantee.EXACTLY_ONCE)
+                    _consumerConfig.IsolationLevel = value;
+                else
+                    throw new StreamsException($"You can't update IsolationLevel because your processing guarantee is exactly-once");
+            } 
+        }
 
         /// <summary>
         /// How long to postpone the next fetch request for a topic+partition in case of
@@ -1515,7 +1553,16 @@ namespace Streamiz.Kafka.Net
         /// Producer instantation will fail if user-supplied configuration is incompatible.
         /// default: false importance: high
         /// </summary>
-        public bool? EnableIdempotence { get { return _producerConfig.EnableIdempotence; } set { _producerConfig.EnableIdempotence = value; } }
+        public bool? EnableIdempotence { 
+            get { return _producerConfig.EnableIdempotence; }
+            set
+            {
+                if (Guarantee != ProcessingGuarantee.EXACTLY_ONCE)
+                    _producerConfig.EnableIdempotence = value;
+                else
+                    throw new StreamsException($"You can't update EnableIdempotence because your processing guarantee is exactly-once");
+            }
+        }
 
         /// <summary>
         /// Enables the transactional producer. The transactional.id is used to identify
@@ -1656,55 +1703,22 @@ namespace Streamiz.Kafka.Net
             DefaultValueSerDes = new ByteArraySerDes();
             DefaultTimestampExtractor = new FailOnInvalidTimestamp();
             Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
+            TransactionTimeout = TimeSpan.FromSeconds(10);
 
             if (properties != null)
             {
                 foreach (var k in properties)
                     DictionaryExtensions.AddOrUpdate(this, k.Key, k.Value);
-
-                var config = properties.ToDictionary(k => k.Key, k => (string)Convert.ToString(k.Value));
-
-                _consumerConfig = new ConsumerConfig(config);
-                _producerConfig = new ProducerConfig(config);
-                _adminClientConfig = new AdminClientConfig(config);
-                _config = new ClientConfig(config);
-            }
-            else
-            {
-                _consumerConfig = new ConsumerConfig();
-                _producerConfig = new ProducerConfig();
-                _adminClientConfig = new AdminClientConfig();
-                _config = new ClientConfig();
             }
 
+            _consumerConfig = new ConsumerConfig();
+            _producerConfig = new ProducerConfig();
+            _adminClientConfig = new AdminClientConfig();
+            _config = new ClientConfig();
+            
             // property not choice by user !!!!
             EnableAutoCommit = false;
-
-            if(Guarantee == ProcessingGuarantee.EXACTLY_ONCE)
-            {
-                IsolationLevel = Confluent.Kafka.IsolationLevel.ReadCommitted;
-                EnableIdempotence = true;
-                MaxInFlight = 5;
-            }
-        }
-
-        /// <summary>
-        /// Constructor by copy
-        /// </summary>
-        /// <param name="config">Copy configuration</param>
-        public StreamConfig(StreamConfig config)
-        {
-            foreach (var k in config)
-                DictionaryExtensions.AddOrUpdate(this, k.Key, k.Value);
-
-            _internalConsumerConfig = new Dictionary<string, string>(config._internalConsumerConfig);
-            _internalAdminConfig = new Dictionary<string, string>(config._internalAdminConfig);
-            _internalProducerConfig = new Dictionary<string, string>(config._internalProducerConfig);
-
-            _consumerConfig = new ConsumerConfig(config._consumerConfig);
-            _producerConfig = new ProducerConfig(config._producerConfig);
-            _adminClientConfig = new AdminClientConfig(config._adminClientConfig);
-            _config = new ClientConfig(config._config);
+            // property not choice by user !!!!
         }
 
         #endregion
@@ -1765,10 +1779,33 @@ namespace Streamiz.Kafka.Net
             set => this.AddOrUpdate(defaultTimestampExtractorCst, value);
         }
         
+        /// <summary>
+        /// The processing guarantee that should be used. Possible values are <see cref="ProcessingGuarantee.AT_LEAST_ONCE"/> (default) and <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>
+        /// Note that exactly-once processing requires a cluster of at least three brokers by default what is the recommended setting for production; for development you can change this, by adjusting broker setting
+        /// <code>transaction.state.log.replication.factor</code> and <code>transaction.state.log.min.isr</code>.
+        /// </summary>
         public ProcessingGuarantee Guarantee
         {
             get => this[processingGuaranteeCst];
-            set => this.AddOrUpdate(processingGuaranteeCst, value);
+            set
+            {
+                this.AddOrUpdate(processingGuaranteeCst, value);
+                if (Guarantee == ProcessingGuarantee.EXACTLY_ONCE)
+                {
+                    IsolationLevel = Confluent.Kafka.IsolationLevel.ReadCommitted;
+                    EnableIdempotence = true;
+                    MaxInFlight = 5;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Timeout used for transaction related operations. (Default : 10 seconds).
+        /// </summary>
+        public TimeSpan TransactionTimeout
+        {
+            get => this[transactionTimeoutCst];
+            set => this.AddOrUpdate(transactionTimeoutCst, value);
         }
 
         /// <summary>
@@ -1828,6 +1865,25 @@ namespace Streamiz.Kafka.Net
             var c = _adminClientConfig.Union(_internalAdminConfig).ToDictionary();
             var config = new AdminClientConfig(c);
             config.ClientId = clientId;
+            return config;
+        }
+
+        /// <summary>
+        /// Return new instance of <see cref="StreamConfig"/>.
+        /// </summary>
+        /// <returns>Return new instance of <see cref="StreamConfig"/>.</returns>
+        public IStreamConfig Clone()
+        {
+            var config = new StreamConfig(this);
+            config._internalConsumerConfig = new Dictionary<string, string>(this._internalConsumerConfig);
+            config._internalAdminConfig = new Dictionary<string, string>(this._internalAdminConfig);
+            config._internalProducerConfig = new Dictionary<string, string>(this._internalProducerConfig);
+            
+            config._consumerConfig = new ConsumerConfig(this._consumerConfig);
+            config._producerConfig = new ProducerConfig(this._producerConfig);
+            config._adminClientConfig = new AdminClientConfig(this._adminClientConfig);
+            config._config = new ClientConfig(this._config);
+
             return config;
         }
 

@@ -12,7 +12,7 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal abstract class AbstractTask : ITask
     {
-        private readonly IStreamConfig configuration;
+        protected readonly IStreamConfig configuration;
         protected IConsumer<byte[], byte[]> consumer;
         protected bool taskInitialized;
         //protected bool taskClosed;

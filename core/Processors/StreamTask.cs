@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -9,15 +10,30 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal class StreamTask : AbstractTask
     {
-        private readonly IProducer<byte[], byte[]> producer;
+        private readonly IKafkaSupplier kafkaSupplier;
+        private IProducer<byte[], byte[]> producer;
         private readonly IRecordCollector collector;
         private readonly IProcessor processor;
         private readonly RecordQueue<ConsumeResult<byte[], byte[]>> queue;
+        private readonly bool eosEnabled = false;
+        private bool transactionInFlight = false;
+        private string threadId;
 
-        public StreamTask(string threadId, TaskId id, TopicPartition partition, ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration, IProducer<byte[], byte[]> producer)
+        public StreamTask(string threadId, TaskId id, TopicPartition partition, ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer)
             : base(id, partition, processorTopology, consumer, configuration)
         {
-            this.producer = producer;
+            this.threadId = threadId;
+            this.kafkaSupplier = kafkaSupplier;
+
+            // eos enabled
+            if (producer == null)
+            {
+                this.producer = CreateEOSProducer();
+                eosEnabled = true;
+            }
+            else
+                this.producer = producer;
+
             this.collector = new RecordCollector(logPrefix);
             collector.Init(producer);
 
@@ -32,6 +48,73 @@ namespace Streamiz.Kafka.Net.Processors
         }
 
         #region Private
+
+        private void Commit(bool startNewTransaction)
+        {
+            log.Debug($"{logPrefix}Comitting");
+
+            FlushState();
+            if (eosEnabled)
+            {
+                this.producer.SendOffsetsToTransaction(null, null, configuration.TransactionTimeout);
+                this.producer.CommitTransaction(configuration.TransactionTimeout);
+                transactionInFlight = false;
+                if (startNewTransaction)
+                {
+                    this.producer.BeginTransaction();
+                    transactionInFlight = true;
+                }
+            }
+            else
+            {
+                try
+                {
+                    consumer.Commit();
+                }
+                catch (TopicPartitionOffsetException e)
+                {
+                    log.Info($"{logPrefix}Committing failed with a non-fatal error: {e.Message}, we can ignore this since commit may succeed still");
+                }
+                catch (KafkaException e)
+                {
+                    // TODO : get info about offset committing
+                    log.Error($"{logPrefix}Error during committing offset ......", e);
+                }
+            }
+            commitNeeded = false;
+        }
+
+        private IProducer<byte[], byte[]> CreateEOSProducer()
+        {
+            IProducer<byte[], byte[]> tmpProducer = null;
+            var newConfig = configuration.Clone();
+            log.Info($"${logPrefix}Creating producer client for task {Id}");
+            newConfig.TransactionalId = $"{newConfig.ApplicationId}-{Id}";
+            tmpProducer = kafkaSupplier.GetProducer(newConfig.ToProducerConfig(StreamThread.GetTaskProducerClientId(threadId, Id)));
+            return tmpProducer;
+        }
+
+        private void InitializeTransaction()
+        {
+            bool initTransaction = false;
+            while (!initTransaction)
+            {
+                try
+                {
+                    this.producer.InitTransactions(configuration.TransactionTimeout);
+                    initTransaction = true;
+                }
+                catch (KafkaRetriableException)
+                {
+                    initTransaction = false;
+                }
+                catch (KafkaException e)
+                {
+                    throw new StreamsException($"{logPrefix}Failed to initialize task {Id} due to timeout ({configuration.TransactionTimeout}).", e);
+                }
+            }
+
+        }
 
         #endregion
 
@@ -49,28 +132,7 @@ namespace Streamiz.Kafka.Net.Processors
             log.Info($"{logPrefix}Closed");
         }
 
-        public override void Commit()
-        {
-            log.Debug($"{logPrefix}Comitting");
-
-            FlushState();
-            // TODO: producer eos
-            
-            try
-            {
-                consumer.Commit();
-            }
-            catch (TopicPartitionOffsetException e)
-            {
-                log.Info($"{logPrefix}Committing failed with a non-fatal error: {e.Message}, we can ignore this since commit may succeed still");
-            }
-            catch (KafkaException e)
-            {
-                // TODO : get info about offset committing
-                log.Error($"{logPrefix}Error during committing offset ......", e);
-            }
-            commitNeeded = false;
-        }
+        public override void Commit() => Commit(true);
 
         public override IStateStore GetStore(string name)
         {
@@ -81,6 +143,14 @@ namespace Streamiz.Kafka.Net.Processors
         {
             log.Debug($"{logPrefix}Initializing topology with processor source : {processor}.");
             processor.Init(Context);
+
+            if (eosEnabled)
+            {
+                InitializeTransaction();
+                this.producer.BeginTransaction();
+                transactionInFlight = true;
+            }
+
             taskInitialized = true;
         }
 
@@ -93,12 +163,36 @@ namespace Streamiz.Kafka.Net.Processors
 
         public override void Resume()
         {
-            // NOTHING FOR MOMENT
+            log.Debug($"{logPrefix}Resuming");
+            if (eosEnabled)
+            {
+                if (producer != null)
+                {
+                    throw new IllegalStateException("Task producer should be null.");
+                }
+
+                this.producer = CreateEOSProducer();
+                InitializeTransaction();
+                collector.Init(this.producer);
+            }
         }
 
         public override void Suspend()
         {
-            // NOTHING FOR MOMENT
+            log.Debug($"{logPrefix}Suspending");
+
+            try
+            {
+                Commit(false);
+            }
+            finally
+            {
+                if (eosEnabled)
+                {
+                    collector.Close();
+                    producer = null;
+                }
+            }
         }
 
         protected override void FlushState()

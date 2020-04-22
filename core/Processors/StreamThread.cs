@@ -15,22 +15,22 @@ namespace Streamiz.Kafka.Net.Processors
     {
         #region Static 
 
-        private static string GetTaskProducerClientId(string threadClientId, TaskId taskId)
+        public static string GetTaskProducerClientId(string threadClientId, TaskId taskId)
         {
             return threadClientId + "-" + taskId + "-producer";
         }
 
-        private static string GetThreadProducerClientId(string threadClientId)
+        public static string GetThreadProducerClientId(string threadClientId)
         {
             return threadClientId + "-producer";
         }
 
-        private static string GetConsumerClientId(string threadClientId)
+        public static string GetConsumerClientId(string threadClientId)
         {
             return threadClientId + "-consumer";
         }
 
-        private static string GetRestoreConsumerClientId(string threadClientId)
+        public static string GetRestoreConsumerClientId(string threadClientId)
         {
             return threadClientId + "-restore-consumer";
         }
@@ -43,13 +43,30 @@ namespace Streamiz.Kafka.Net.Processors
 
         internal static IThread Create(string threadId, string clientId, InternalTopologyBuilder builder, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IAdminClient adminClient, int threadInd)
         {
+            string logPrefix = $"stream-thread[{threadId}] ";
+            var log = Logger.GetLogger(typeof(StreamThread));
             var customerID = $"{clientId}-StreamThread-{threadInd}";
-            var producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig());
+            IProducer<byte[], byte[]> producer = null;
+
+            // Due to limitations outlined in KIP-447 (which KIP-447 overcomes), it is
+            // currently necessary to use a separate producer per input partition. The
+            // producerState dictionary is used to keep track of these, and the current
+            // consumed offset.
+            // https://cwiki.apache.org/confluence/display/KAFKA/KIP-447%3A+Producer+scalability+for+exactly+once+semantics
+            // IF Guarantee is AT_LEAST_ONCE, producer is the same of all StreamTasks in this thread, 
+            // ELSE one producer by StreamTask.
+            if (configuration.Guarantee == ProcessingGuarantee.AT_LEAST_ONCE)
+            {
+                log.Info($"{logPrefix}Creating shared producer client");
+                producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig());
+            }
 
             var taskCreator = new TaskCreator(builder, configuration, threadId, kafkaSupplier, producer);
             var manager = new TaskManager(taskCreator, adminClient);
 
             var listener = new StreamsRebalanceListener(manager);
+
+            log.Info($"{logPrefix}Creating consumer client");
             var consumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig(customerID), listener);
             manager.Consumer = consumer;
 
