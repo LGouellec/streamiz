@@ -1,10 +1,10 @@
 ﻿using Confluent.Kafka;
+using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
-using log4net;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -15,22 +15,22 @@ namespace Streamiz.Kafka.Net.Processors
     {
         #region Static 
 
-        private static string GetTaskProducerClientId(string threadClientId, TaskId taskId)
+        public static string GetTaskProducerClientId(string threadClientId, TaskId taskId)
         {
             return threadClientId + "-" + taskId + "-producer";
         }
 
-        private static string GetThreadProducerClientId(string threadClientId)
+        public static string GetThreadProducerClientId(string threadClientId)
         {
             return threadClientId + "-producer";
         }
 
-        private static string GetConsumerClientId(string threadClientId)
+        public static string GetConsumerClientId(string threadClientId)
         {
             return threadClientId + "-consumer";
         }
 
-        private static string GetRestoreConsumerClientId(string threadClientId)
+        public static string GetRestoreConsumerClientId(string threadClientId)
         {
             return threadClientId + "-restore-consumer";
         }
@@ -43,17 +43,34 @@ namespace Streamiz.Kafka.Net.Processors
 
         internal static IThread Create(string threadId, string clientId, InternalTopologyBuilder builder, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IAdminClient adminClient, int threadInd)
         {
+            string logPrefix = $"stream-thread[{threadId}] ";
+            var log = Logger.GetLogger(typeof(StreamThread));
             var customerID = $"{clientId}-StreamThread-{threadInd}";
-            var producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig());
+            IProducer<byte[], byte[]> producer = null;
+
+            // Due to limitations outlined in KIP-447 (which KIP-447 overcomes), it is
+            // currently necessary to use a separate producer per input partition. The
+            // producerState dictionary is used to keep track of these, and the current
+            // consumed offset.
+            // https://cwiki.apache.org/confluence/display/KAFKA/KIP-447%3A+Producer+scalability+for+exactly+once+semantics
+            // IF Guarantee is AT_LEAST_ONCE, producer is the same of all StreamTasks in this thread, 
+            // ELSE one producer by StreamTask.
+            if (configuration.Guarantee == ProcessingGuarantee.AT_LEAST_ONCE)
+            {
+                log.Info($"{logPrefix}Creating shared producer client");
+                producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig(GetThreadProducerClientId(threadId)));
+            }
 
             var taskCreator = new TaskCreator(builder, configuration, threadId, kafkaSupplier, producer);
             var manager = new TaskManager(taskCreator, adminClient);
 
             var listener = new StreamsRebalanceListener(manager);
+
+            log.Info($"{logPrefix}Creating consumer client");
             var consumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig(customerID), listener);
             manager.Consumer = consumer;
 
-            var thread = new StreamThread(threadId, customerID, manager, consumer, builder, TimeSpan.FromMilliseconds(1000));
+            var thread = new StreamThread(threadId, customerID, manager, consumer, builder, TimeSpan.FromMilliseconds(configuration.PollMs), configuration.CommitIntervalMs);
             listener.Thread = thread;
 
             return thread;
@@ -72,24 +89,27 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly string threadId;
         private readonly string clientId;
         private readonly string logPrefix = "";
+        private readonly long commitTimeMs = 0;
         private CancellationToken token;
+        private DateTime lastCommit = DateTime.Now;
 
         private readonly object stateLock = new object();
 
         public event ThreadStateListener StateChanged;
 
-        private StreamThread(string threadId, string clientId, TaskManager manager, IConsumer<byte[], byte[]> consumer, InternalTopologyBuilder builder, TimeSpan timeSpan)
+        private StreamThread(string threadId, string clientId, TaskManager manager, IConsumer<byte[], byte[]> consumer, InternalTopologyBuilder builder, TimeSpan timeSpan, long commitInterval)
         {
             this.manager = manager;
             this.consumer = consumer;
             this.builder = builder;
-            this.consumeTimeout = timeSpan;
+            consumeTimeout = timeSpan;
             this.threadId = threadId;
             this.clientId = clientId;
             logPrefix = $"stream-thread[{threadId}] ";
+            commitTimeMs = commitInterval;
 
-            this.thread = new Thread(this.Run);
-            this.thread.Name = this.threadId;
+            thread = new Thread(Run);
+            thread.Name = this.threadId;
 
             State = ThreadState.CREATED;
         }
@@ -115,9 +135,9 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     try
                     {
-                        if(exception != null)
+                        if (exception != null)
                         {
-                            this.Close(true);
+                            Close(true);
                             throw exception;
                         }
 
@@ -158,6 +178,8 @@ namespace Streamiz.Kafka.Net.Processors
                             }
                         }
 
+                        MaybeCommit();
+
                         if (State == ThreadState.PARTITIONS_ASSIGNED)
                         {
                             SetState(ThreadState.RUNNING);
@@ -173,6 +195,22 @@ namespace Streamiz.Kafka.Net.Processors
                         log.Error($"{logPrefix}Encountered the following error during processing:", e);
                         exception = e;
                     }
+                }
+
+                while (IsRunning)
+                {
+                    // Use for waiting end of disposing
+                    Thread.Sleep(100);
+                }
+                
+                // Dispose consumer
+                try
+                {
+                    consumer.Dispose();
+                }
+                catch (Exception e)
+                {
+                    log.Error($"{logPrefix}Failed to close consumer due to the following error:", e);
                 }
             }
         }
@@ -195,6 +233,29 @@ namespace Streamiz.Kafka.Net.Processors
 
         #endregion
 
+        private bool MaybeCommit()
+        {
+            int committed = 0;
+            if (DateTime.Now - lastCommit > TimeSpan.FromMilliseconds(commitTimeMs))
+            {
+                DateTime beginCommit = DateTime.Now;
+                log.Debug($"Committing all active tasks {string.Join(",", manager.ActiveTaskIds)} since {(DateTime.Now - lastCommit).TotalMilliseconds}ms has elapsed (commit interval is {commitTimeMs}ms)");
+                committed = manager.CommitAll();
+                if(committed > 0)
+                    log.Debug($"Committed all active tasks {string.Join(",", manager.ActiveTaskIds)} in {(DateTime.Now - beginCommit).TotalMilliseconds}ms");
+
+                if (committed == -1)
+                {
+                    log.Debug("Unable to commit as we are in the middle of a rebalance, will try again when it completes.");
+                }
+                else
+                {
+                    lastCommit = DateTime.Now;
+                }
+            }
+            return committed > 0;
+        }
+
         private void Close(bool cleanUp = true)
         {
             try
@@ -205,22 +266,14 @@ namespace Streamiz.Kafka.Net.Processors
 
                     SetState(ThreadState.PENDING_SHUTDOWN);
 
-                    IsRunning = false;
-                    consumer.Unsubscribe();
-                    if (cleanUp && thread.IsAlive && !thread.Join(TimeSpan.FromSeconds(30)))
-                        thread.Abort();
                     manager.Close();
-                    try
-                    {
-                        consumer.Dispose();
-                    }
-                    catch (Exception e)
-                    {
-                        log.Error($"{logPrefix}Failed to close consumer due to the following error:", e);
-                    }
-                    IsDisposable = true;
+                    consumer.Unsubscribe();
+                    IsRunning = false;
+                    thread.Join();
+                    
                     SetState(ThreadState.DEAD);
                     log.Info($"{logPrefix}Shutdown complete");
+                    IsDisposable = true;
                 }
             }
             catch (Exception e)

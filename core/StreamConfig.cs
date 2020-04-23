@@ -1,5 +1,6 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
@@ -10,11 +11,26 @@ using System.Linq;
 namespace Streamiz.Kafka.Net
 {
     /// <summary>
+    /// Processing Guarantee enumeration used in <see cref="IStreamConfig.Guarantee"/>
+    /// </summary>
+    public enum ProcessingGuarantee
+    {
+        /// <summary>
+        /// Config value for parameter <see cref="IStreamConfig.Guarantee"/> for at-least-once processing guarantees.
+        /// </summary>
+        AT_LEAST_ONCE,
+        /// <summary>
+        /// Config value for parameter <see cref="IStreamConfig.Guarantee"/> for exactly-once processing guarantees.
+        /// </summary>
+        EXACTLY_ONCE
+    }
+
+    /// <summary>
     /// Interface stream configuration for a <see cref="KafkaStream"/> instance.
     /// See <see cref="StreamConfig"/> to obtain implementation about this interface.
     /// You could develop your own implementation and get it in your <see cref="KafkaStream"/> instance.
     /// </summary>
-    public interface IStreamConfig
+    public interface IStreamConfig : ICloneable<IStreamConfig>
     {
         /// <summary>
         /// Add keyvalue configuration for producer, consumer and admin client.
@@ -96,6 +112,27 @@ namespace Streamiz.Kafka.Net
         #region Stream Config Property
 
         /// <summary>
+        /// The amount of time in milliseconds to block waiting for input.
+        /// </summary>
+        long PollMs { get; set; }
+
+        /// <summary>
+        /// The frequency with which to save the position of the processor. (Note, if <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, the default value is <code>" + EOS_DEFAULT_COMMIT_INTERVAL_MS + "</code>,"
+        /// otherwise the default value is <code>" + DEFAULT_COMMIT_INTERVAL_MS + "</code>.
+        /// </summary>
+        long CommitIntervalMs { get; set; }
+
+        /// <summary>
+        /// Timeout used for transaction related operations. (Default : 10 seconds).
+        /// </summary>
+        TimeSpan TransactionTimeout { get; set; }
+
+        /// <summary>
+        /// Enables the transactional producer. The transactional.id is used to identify the same transactional producer instance across process restarts.
+        /// </summary>
+        string TransactionalId { get; set; }
+
+        /// <summary>
         /// An identifier for the stream processing application. Must be unique within the Kafka cluster. It is used as 1) the default client-id prefix, 2) the group-id for membership management, 3) the changelog topic prefix.
         /// </summary>
         string ApplicationId { get; set; }
@@ -125,6 +162,11 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         ITimestampExtractor DefaultTimestampExtractor { get; set; }
 
+        /// <summary>
+        /// The processing guarantee that should be used. Possible values are <see cref="ProcessingGuarantee.AT_LEAST_ONCE"/> (default) and <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>. Note that exactly-once processing requires a cluster of at least three brokers by default what is the recommended setting for production; for development you can change this, by adjusting broker setting 'transaction.state.log.replication.factor' and 'transaction.state.log.min.isr'.
+        /// </summary>
+        ProcessingGuarantee Guarantee { get; set; }
+
         #endregion
     }
 
@@ -132,6 +174,12 @@ namespace Streamiz.Kafka.Net
     /// Implementation of <see cref="IStreamConfig"/>. Contains all configuration for your stream.
     /// By default, Kafka Streams does not allow users to overwrite the following properties (Streams setting shown in parentheses)
     ///    - EnableAutoCommit = (false) - Streams client will always disable/turn off auto committing
+    /// If <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, Kafka Streams does not allow users to overwrite the following properties (Streams setting shown in parentheses):
+    ///    - <see cref="IsolationLevel"/> (<see cref="IsolationLevel.ReadCommitted"/>) - Consumers will always read committed data only
+    ///    - <see cref="EnableIdempotence"/> (true) - Producer will always have idempotency enabled
+    ///    - <see cref="MaxInFlight"/> (5) - Producer will always have one in-flight request per connection
+    /// If <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, Kafka Streams initialize the following properties :
+    ///    - <see cref="CommitIntervalMs"/> (<see cref="EOS_DEFAULT_COMMIT_INTERVAL_MS"/>
     /// <exemple>
     /// <code>
     /// var config = new StreamConfig();
@@ -207,17 +255,31 @@ namespace Streamiz.Kafka.Net
         internal static string defaultKeySerDesCst = "default.key.serdes";
         internal static string defaultValueSerDesCst = "default.value.serdes";
         internal static string defaultTimestampExtractorCst = "default.timestamp.extractor";
+        internal static string processingGuaranteeCst = "processing.guarantee";
+        internal static string transactionTimeoutCst = "transaction.timeout";
+        internal static string commitIntervalMsCst = "commit.interval.ms";
+        internal static string pollMsCst = "poll.ms";
+
+        /// <summary>
+        /// Default commit interval in milliseconds when exactly once is not enabled
+        /// </summary>
+        public static long DEFAULT_COMMIT_INTERVAL_MS = 30000L;
+        
+        /// <summary>
+        /// Default commit interval in milliseconds when exactly once is enabled
+        /// </summary>
+        public static long EOS_DEFAULT_COMMIT_INTERVAL_MS = 100L;
 
         #endregion
 
-        private readonly ConsumerConfig _consumerConfig = null;
-        private readonly ProducerConfig _producerConfig = null;
-        private readonly AdminClientConfig _adminClientConfig = null;
-        private readonly ClientConfig _config = null;
+        private ConsumerConfig _consumerConfig = null;
+        private ProducerConfig _producerConfig = null;
+        private AdminClientConfig _adminClientConfig = null;
+        private ClientConfig _config = null;
 
-        private readonly IDictionary<string, string> _internalConsumerConfig = new Dictionary<string, string>();
-        private readonly IDictionary<string, string> _internalProducerConfig = new Dictionary<string, string>();
-        private readonly IDictionary<string, string> _internalAdminConfig = new Dictionary<string, string>();
+        private IDictionary<string, string> _internalConsumerConfig = new Dictionary<string, string>();
+        private IDictionary<string, string> _internalProducerConfig = new Dictionary<string, string>();
+        private IDictionary<string, string> _internalAdminConfig = new Dictionary<string, string>();
 
         #region ClientConfig
 
@@ -887,10 +949,15 @@ namespace Streamiz.Kafka.Net
             get => _config.MaxInFlight;
             set
             {
-                _config.MaxInFlight = value;
-                _consumerConfig.MaxInFlight = value;
-                _producerConfig.MaxInFlight = value;
-                _adminClientConfig.MaxInFlight = value;
+                if (Guarantee != ProcessingGuarantee.EXACTLY_ONCE)
+                {
+                    _config.MaxInFlight = value;
+                    _consumerConfig.MaxInFlight = value;
+                    _producerConfig.MaxInFlight = value;
+                    _adminClientConfig.MaxInFlight = value;
+                }
+                else
+                    throw new StreamsException($"You can't update MaxInFlight because your processing guarantee is exactly-once");
             }
         }
 
@@ -1273,7 +1340,15 @@ namespace Streamiz.Kafka.Net
         /// return all messages, even transactional messages which have been aborted. default:
         /// read_committed importance: high
         /// </summary>
-        public IsolationLevel? IsolationLevel { get { return _consumerConfig.IsolationLevel; } set { _consumerConfig.IsolationLevel = value; } }
+        public IsolationLevel? IsolationLevel { 
+            get { return _consumerConfig.IsolationLevel; } 
+            set {
+                if (Guarantee != ProcessingGuarantee.EXACTLY_ONCE)
+                    _consumerConfig.IsolationLevel = value;
+                else
+                    throw new StreamsException($"You can't update IsolationLevel because your processing guarantee is exactly-once");
+            } 
+        }
 
         /// <summary>
         /// How long to postpone the next fetch request for a topic+partition in case of
@@ -1333,13 +1408,6 @@ namespace Streamiz.Kafka.Net
         /// default: true importance: high
         /// </summary>
         public bool? EnableAutoOffsetStore { get { return _consumerConfig.EnableAutoOffsetStore; } set { _consumerConfig.EnableAutoOffsetStore = value; } }
-
-        /// <summary>
-        /// The frequency in milliseconds that the consumer offsets are committed (written)
-        /// to offset storage. (0 = disable). This setting is used by the high-level consumer.
-        /// default: 5000 importance: medium
-        /// </summary>
-        public int? AutoCommitIntervalMs { get { return _consumerConfig.AutoCommitIntervalMs; } set { _consumerConfig.AutoCommitIntervalMs = value; } }
 
         /// <summary>
         /// Automatically and periodically commit offsets in the background. Note: setting
@@ -1503,7 +1571,16 @@ namespace Streamiz.Kafka.Net
         /// Producer instantation will fail if user-supplied configuration is incompatible.
         /// default: false importance: high
         /// </summary>
-        public bool? EnableIdempotence { get { return _producerConfig.EnableIdempotence; } set { _producerConfig.EnableIdempotence = value; } }
+        public bool? EnableIdempotence { 
+            get { return _producerConfig.EnableIdempotence; }
+            set
+            {
+                if (Guarantee != ProcessingGuarantee.EXACTLY_ONCE)
+                    _producerConfig.EnableIdempotence = value;
+                else
+                    throw new StreamsException($"You can't update EnableIdempotence because your processing guarantee is exactly-once");
+            }
+        }
 
         /// <summary>
         /// Enables the transactional producer. The transactional.id is used to identify
@@ -1643,48 +1720,22 @@ namespace Streamiz.Kafka.Net
             DefaultKeySerDes = new ByteArraySerDes();
             DefaultValueSerDes = new ByteArraySerDes();
             DefaultTimestampExtractor = new FailOnInvalidTimestamp();
+            Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
+            TransactionTimeout = TimeSpan.FromSeconds(10);
+            PollMs = 100;
 
             if (properties != null)
             {
                 foreach (var k in properties)
                     DictionaryExtensions.AddOrUpdate(this, k.Key, k.Value);
-
-                var config = properties.ToDictionary(k => k.Key, k => (string)Convert.ToString(k.Value));
-
-                _consumerConfig = new ConsumerConfig(config);
-                _producerConfig = new ProducerConfig(config);
-                _adminClientConfig = new AdminClientConfig(config);
-                _config = new ClientConfig(config);
-            }
-            else
-            {
-                _consumerConfig = new ConsumerConfig();
-                _producerConfig = new ProducerConfig();
-                _adminClientConfig = new AdminClientConfig();
-                _config = new ClientConfig();
             }
 
-            // property not choice by user !!!!
+            _consumerConfig = new ConsumerConfig();
+            _producerConfig = new ProducerConfig();
+            _adminClientConfig = new AdminClientConfig();
+            _config = new ClientConfig();
+            
             EnableAutoCommit = false;
-        }
-
-        /// <summary>
-        /// Constructor by copy
-        /// </summary>
-        /// <param name="config">Copy configuration</param>
-        public StreamConfig(StreamConfig config)
-        {
-            foreach (var k in config)
-                DictionaryExtensions.AddOrUpdate(this, k.Key, k.Value);
-
-            _internalConsumerConfig = new Dictionary<string, string>(config._internalConsumerConfig);
-            _internalAdminConfig = new Dictionary<string, string>(config._internalAdminConfig);
-            _internalProducerConfig = new Dictionary<string, string>(config._internalProducerConfig);
-
-            _consumerConfig = new ConsumerConfig(config._consumerConfig);
-            _producerConfig = new ProducerConfig(config._producerConfig);
-            _adminClientConfig = new AdminClientConfig(config._adminClientConfig);
-            _config = new ClientConfig(config._config);
         }
 
         #endregion
@@ -1743,6 +1794,57 @@ namespace Streamiz.Kafka.Net
         {
             get => this[defaultTimestampExtractorCst];
             set => this.AddOrUpdate(defaultTimestampExtractorCst, value);
+        }
+        
+        /// <summary>
+        /// The processing guarantee that should be used. Possible values are <see cref="ProcessingGuarantee.AT_LEAST_ONCE"/> (default) and <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>
+        /// Note that exactly-once processing requires a cluster of at least three brokers by default what is the recommended setting for production; for development you can change this, by adjusting broker setting
+        /// <code>transaction.state.log.replication.factor</code> and <code>transaction.state.log.min.isr</code>.
+        /// </summary>
+        public ProcessingGuarantee Guarantee
+        {
+            get => this[processingGuaranteeCst];
+            set
+            {
+                this.AddOrUpdate(processingGuaranteeCst, value);
+                if (Guarantee == ProcessingGuarantee.EXACTLY_ONCE)
+                {
+                    IsolationLevel = Confluent.Kafka.IsolationLevel.ReadCommitted;
+                    EnableIdempotence = true;
+                    MaxInFlight = 5;
+                    CommitIntervalMs = EOS_DEFAULT_COMMIT_INTERVAL_MS;
+                }
+                else if (Guarantee == ProcessingGuarantee.AT_LEAST_ONCE)
+                    CommitIntervalMs = DEFAULT_COMMIT_INTERVAL_MS;
+            }
+        }
+
+        /// <summary>
+        /// Timeout used for transaction related operations. (Default : 10 seconds).
+        /// </summary>
+        public TimeSpan TransactionTimeout
+        {
+            get => this[transactionTimeoutCst];
+            set => this.AddOrUpdate(transactionTimeoutCst, value);
+        }
+
+        /// <summary>
+        /// The frequency with which to save the position of the processor. (Note, if <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, the default value is <code>" + EOS_DEFAULT_COMMIT_INTERVAL_MS + "</code>,"
+        /// otherwise the default value is <code>" + DEFAULT_COMMIT_INTERVAL_MS + "</code>.
+        /// </summary>
+        public long CommitIntervalMs
+        {
+            get => this[commitIntervalMsCst];
+            set => this.AddOrUpdate(commitIntervalMsCst, value);
+        }
+
+        /// <summary>
+        /// The amount of time in milliseconds to block waiting for input. (Default : 100)
+        /// </summary>
+        public long PollMs
+        {
+            get => this[pollMsCst];
+            set => this.AddOrUpdate(pollMsCst, value);
         }
 
         /// <summary>
@@ -1805,6 +1907,25 @@ namespace Streamiz.Kafka.Net
             return config;
         }
 
+        /// <summary>
+        /// Return new instance of <see cref="StreamConfig"/>.
+        /// </summary>
+        /// <returns>Return new instance of <see cref="StreamConfig"/>.</returns>
+        public IStreamConfig Clone()
+        {
+            var config = new StreamConfig(this);
+            config._internalConsumerConfig = new Dictionary<string, string>(this._internalConsumerConfig);
+            config._internalAdminConfig = new Dictionary<string, string>(this._internalAdminConfig);
+            config._internalProducerConfig = new Dictionary<string, string>(this._internalProducerConfig);
+            
+            config._consumerConfig = new ConsumerConfig(this._consumerConfig);
+            config._producerConfig = new ProducerConfig(this._producerConfig);
+            config._adminClientConfig = new AdminClientConfig(this._adminClientConfig);
+            config._config = new ClientConfig(this._config);
+
+            return config;
+        }
+
         #endregion
     }
 
@@ -1812,6 +1933,12 @@ namespace Streamiz.Kafka.Net
     /// Implementation of <see cref="IStreamConfig"/>. Contains all configuration for your stream.
     /// By default, Kafka Streams does not allow users to overwrite the following properties (Streams setting shown in parentheses)
     ///    - EnableAutoCommit = (false) - Streams client will always disable/turn off auto committing
+    /// If <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, Kafka Streams does not allow users to overwrite the following properties (Streams setting shown in parentheses):
+    ///    - <see cref="IsolationLevel"/> (<see cref="IsolationLevel.ReadCommitted"/>) - Consumers will always read committed data only
+    ///    - <see cref="StreamConfig.EnableIdempotence"/> (true) - Producer will always have idempotency enabled
+    ///    - <see cref="StreamConfig.MaxInFlight"/> (5) - Producer will always have one in-flight request per connection
+    /// If <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, Kafka Streams initialize the following properties :
+    ///    - <see cref="StreamConfig.CommitIntervalMs"/> (<see cref="StreamConfig.EOS_DEFAULT_COMMIT_INTERVAL_MS"/>
     /// <exemple>
     /// <code>
     /// var config = new StreamConfig&lt;StringSerDes, StringSerDes&gt;();

@@ -1,12 +1,8 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net;
-using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.SerDes;
-using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
-using Streamiz.Kafka.Net.Table;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 
 namespace sample_stream
@@ -32,8 +28,6 @@ namespace sample_stream
             builder.Stream<string, string>("test")
                 .FilterNot((k, v) => v.Contains("test"))
                 .To("test-output");
-
-            builder.Table<string, string>("topic");
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);

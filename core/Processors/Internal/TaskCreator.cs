@@ -39,6 +39,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 processorTopology,
                 consumer,
                 configuration,
+                kafkaSupplier,
                 producer);
         }
     }

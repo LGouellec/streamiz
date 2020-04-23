@@ -1,4 +1,6 @@
 ﻿using Confluent.Kafka;
+using log4net;
+using Streamiz.Kafka.Net.Crosscutting;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,11 +11,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
     {
         InternalTopologyBuilder builder;
         IStreamConfig config;
+        ILog log;
 
         public AbstractTaskCreator(InternalTopologyBuilder builder, IStreamConfig config)
         {
             this.builder = builder;
             this.config = config;
+            this.log = Logger.GetLogger(this.GetType());
         }
 
         public ICollection<T> CreateTasks(IConsumer<byte[], byte[]> consumer, IDictionary<TaskId, TopicPartition> tasksToBeCreated)
@@ -26,7 +30,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 T task = this.CreateTask(consumer, taskId, partition);
                 if (task != null)
                 {
-                    //log.trace("Created task {} with assigned partitions {}", taskId, partitions);
+                    log.Debug($"Created task {taskId} with assigned partition {partition}");
                     createdTasks.Add(task);
                 }
 

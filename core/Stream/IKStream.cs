@@ -9,7 +9,7 @@ namespace Streamiz.Kafka.Net.Stream
     /// <summary>
     /// <see cref="IKStream{K, V}"/> is an abstraction of a record stream of <see cref="KeyValuePair{K, V}"/> pairs, i.e., each record is an independent entity/event in the real world.
     /// For example a user X might buy two items I1 and I2, and thus there might be two records &lt;K:I1&gt;, &lt;K:I2&gt; in the stream.
-    /// A <see cref="IKStream{K, V}"/> is either <see cref="StreamBuilder.Stream(string, StreamOptions)"/> defined from one topic that
+    /// A <see cref="IKStream{K, V}"/> is either <see cref="StreamBuilder.Stream{K, V}(string)"/> defined from one topic that
     /// are consumed message by message or the result of a <see cref="IKStream{K, V}"/> transformation.
     /// A <see cref="Table.IKTable{K, V}"/> can also be <see cref="Table.IKTable{K, V}.ToStream(string)"/> converted into a <see cref="IKStream{K, V}"/>.
     /// </summary>
