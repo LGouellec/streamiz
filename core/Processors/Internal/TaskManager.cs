@@ -1,5 +1,7 @@
 ﻿using Confluent.Kafka;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -14,6 +16,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public IEnumerable<StreamTask> ActiveTasks => activeTasks.Values;
         public IConsumer<byte[], byte[]> Consumer { get; internal set; }
+        public IEnumerable<TaskId> ActiveTaskIds => ActiveTasks.Select(a => a.Id);
+        public bool ReblanceInProgress { get; internal set; }
 
         public TaskManager(TaskCreator taskCreator, IAdminClient adminClient)
         {
@@ -73,8 +77,31 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             foreach (var t in activeTasks)
                 t.Value.Close();
 
+            activeTasks.Clear();
+
             foreach (var t in revokedTasks)
                 t.Value.Close();
+
+            revokedTasks.Clear();
+        }
+
+        internal int CommitAll()
+        {
+            int committed = 0;
+            if (ReblanceInProgress)
+                return -1;
+            else
+            {
+                foreach (var t in this.ActiveTasks)
+                {
+                    if (t.CommitNeeded)
+                    {
+                        t.Commit();
+                        ++committed;
+                    }
+                }
+                return committed;
+            }
         }
     }
 }

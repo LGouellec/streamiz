@@ -6,6 +6,7 @@ using log4net.Layout;
 using log4net.Repository.Hierarchy;
 using System;
 using System.IO;
+using System.Reflection;
 using System.Xml;
 
 namespace Streamiz.Kafka.Net.Crosscutting
@@ -75,7 +76,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
                     XmlDocument log4netConfig = new XmlDocument();
                     log4netConfig.Load(File.OpenRead(configFile));
 
-                    var repo = LogManager.CreateRepository("setup");
+                    var repo = LogManager.CreateRepository(Assembly.GetEntryAssembly(), typeof(log4net.Repository.Hierarchy.Hierarchy));
 
                     log4net.Config.XmlConfigurator.Configure(repo, log4netConfig["log4net"]);
                     configure = true;

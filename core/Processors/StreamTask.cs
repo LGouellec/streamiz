@@ -33,13 +33,14 @@ namespace Streamiz.Kafka.Net.Processors
             if (producer == null)
             {
                 this.producer = CreateEOSProducer();
+                InitializeTransaction();
                 eosEnabled = true;
             }
             else
                 this.producer = producer;
 
             this.collector = new RecordCollector(logPrefix);
-            collector.Init(producer);
+            collector.Init(ref producer);
 
             var sourceTimestampExtractor = (processorTopology.GetSourceProcessor(id.Topic) as ISourceProcessor).Extractor;
             Context = new ProcessorContext(configuration, stateMgr).UseRecordCollector(collector);
@@ -58,7 +59,7 @@ namespace Streamiz.Kafka.Net.Processors
         private IEnumerable<TopicPartitionOffset> GetPartitionsWithOffset()
         {
             foreach (var kp in consumedOffsets)
-                yield return new TopicPartitionOffset(kp.Key, kp.Value);
+                yield return new TopicPartitionOffset(kp.Key, kp.Value + 1);
         }
 
         private void Commit(bool startNewTransaction)
@@ -140,7 +141,6 @@ namespace Streamiz.Kafka.Net.Processors
         {
             log.Info($"{logPrefix}Closing");
             Suspend();
-            FlushState();
             processor.Close();
             collector.Close();
             CloseStateManager();
@@ -161,7 +161,6 @@ namespace Streamiz.Kafka.Net.Processors
 
             if (eosEnabled)
             {
-                InitializeTransaction();
                 this.producer.BeginTransaction();
                 transactionInFlight = true;
             }
@@ -188,7 +187,7 @@ namespace Streamiz.Kafka.Net.Processors
 
                 this.producer = CreateEOSProducer();
                 InitializeTransaction();
-                collector.Init(this.producer);
+                collector.Init(ref this.producer);
             }
         }
 
@@ -216,7 +215,7 @@ namespace Streamiz.Kafka.Net.Processors
         protected override void FlushState()
         {
             base.FlushState();
-            this.collector.Flush();
+            this.collector?.Flush();
         }
         
         #endregion
