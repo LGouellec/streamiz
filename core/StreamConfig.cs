@@ -1721,7 +1721,6 @@ namespace Streamiz.Kafka.Net
             DefaultValueSerDes = new ByteArraySerDes();
             DefaultTimestampExtractor = new FailOnInvalidTimestamp();
             Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
-            CommitIntervalMs = DEFAULT_COMMIT_INTERVAL_MS;
             TransactionTimeout = TimeSpan.FromSeconds(10);
             PollMs = 100;
 
@@ -1815,6 +1814,8 @@ namespace Streamiz.Kafka.Net
                     MaxInFlight = 5;
                     CommitIntervalMs = EOS_DEFAULT_COMMIT_INTERVAL_MS;
                 }
+                else if (Guarantee == ProcessingGuarantee.AT_LEAST_ONCE)
+                    CommitIntervalMs = DEFAULT_COMMIT_INTERVAL_MS;
             }
         }
 
@@ -1932,6 +1933,12 @@ namespace Streamiz.Kafka.Net
     /// Implementation of <see cref="IStreamConfig"/>. Contains all configuration for your stream.
     /// By default, Kafka Streams does not allow users to overwrite the following properties (Streams setting shown in parentheses)
     ///    - EnableAutoCommit = (false) - Streams client will always disable/turn off auto committing
+    /// If <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, Kafka Streams does not allow users to overwrite the following properties (Streams setting shown in parentheses):
+    ///    - <see cref="IsolationLevel"/> (<see cref="IsolationLevel.ReadCommitted"/>) - Consumers will always read committed data only
+    ///    - <see cref="StreamConfig.EnableIdempotence"/> (true) - Producer will always have idempotency enabled
+    ///    - <see cref="StreamConfig.MaxInFlight"/> (5) - Producer will always have one in-flight request per connection
+    /// If <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, Kafka Streams initialize the following properties :
+    ///    - <see cref="StreamConfig.CommitIntervalMs"/> (<see cref="StreamConfig.EOS_DEFAULT_COMMIT_INTERVAL_MS"/>
     /// <exemple>
     /// <code>
     /// var config = new StreamConfig&lt;StringSerDes, StringSerDes&gt;();
