@@ -1,7 +1,8 @@
 # .NET Stream Processing Library for Apache Kafka <sup>TM</sup> &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/LGouellec/streamiz-kafka-net/blob/master/LICENSE) ![build](https://github.com/LGouellec/kafka-streams-dotnet/workflows/build/badge.svg?branch=master)
 
-![GitHub issues](https://img.shields.io/github/issues/LGouellec/kafka-streams-dotnet)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/LGouellec/kafka-streams-dotnet)
+<img alt="GitHub issues" src="https://img.shields.io/github/issues/LGouellec/kafka-streams-dotnet">
+<img alt="GitHub pull requests" src="https://img.shields.io/github/issues-pr/LGouellec/kafka-streams-dotnet">
+<br/><br/>
 
 <img src="./resources/logo-kafka-stream-net.png" width="100">
 
