@@ -10,7 +10,7 @@ using log4net;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-
+using Streamiz.Kafka.Net.State.Internal;
 
 namespace Streamiz.Kafka.Net
 {
@@ -225,6 +225,7 @@ namespace Streamiz.Kafka.Net
         private readonly ILog logger = Logger.GetLogger(typeof(KafkaStream));
         private readonly string logPrefix = "";
         private readonly object stateLock = new object();
+        private readonly QueryableStoreProvider queryableStoreProvider;
 
         internal State StreamState { get; private set; }
 
@@ -255,6 +256,7 @@ namespace Streamiz.Kafka.Net
             this.threads = new IThread[this.configuration.NumStreamThreads];
             var threadState = new Dictionary<long, Processors.ThreadState>();
 
+            List<IStateStoreProvider> stateStoreProviders = new List<IStateStoreProvider>();
             for (int i = 0; i < this.configuration.NumStreamThreads; ++i)
             {
                 var threadId = $"{this.configuration.ApplicationId.ToLower()}-stream-thread-{i}";
@@ -271,11 +273,15 @@ namespace Streamiz.Kafka.Net
                     i);
 
                 threadState.Add(this.threads[i].Id, this.threads[i].State);
+
+                stateStoreProviders.Add(new StreamThreadStateStoreProvider(this.threads[i]));
             }
             
             var manager = new StreamStateManager(this, threadState);
             foreach (var t in threads)
                 t.StateChanged += manager.OnChange;
+
+            this.queryableStoreProvider = new QueryableStoreProvider(stateStoreProviders);
 
             StreamState = State.CREATED;
         }
@@ -317,6 +323,23 @@ namespace Streamiz.Kafka.Net
                 SetState(State.NOT_RUNNING);
                 logger.Info($"{logPrefix}Streams client stopped completely");
             }
+        }
+
+        /// <summary>
+        /// Get a facade wrapping the local <see cref="IStateStore"/> instances with the provided <code>storeName</code> if the Store's
+        /// type is accepted by the provided <see cref="IQueryableStoreType{T}.Accepts(IStateStore)"/>.
+        /// The returned object can be used to query the {@link StateStore} instances.
+        /// </summary>
+        /// <typeparam name="T">return type</typeparam>
+        /// <param name="storeName">name of the store to find</param>
+        /// <param name="queryableStoreType">accept only stores that are accepted by <see cref="IQueryableStoreType{T}.Accepts(IStateStore)"</param>
+        /// <returns>A facade wrapping the local <see cref="IStateStore"/> instances</returns>
+        /// <exception cref="InvalidStateStoreException ">if Kafka Streams is (re-)initializing or a store with <code>storeName</code> } and
+        /// <code>queryableStoreType</code> doesn't exist </exception>
+        public T Store<T>(string storeName, IQueryableStoreType<T> queryableStoreType) where T : class//, IStateStore
+        {
+            this.ValidateIsRunning();
+            return this.queryableStoreProvider.GetStore(storeName, queryableStoreType);
         }
 
         #region Privates
@@ -393,6 +416,19 @@ namespace Streamiz.Kafka.Net
             StateChanged?.Invoke(oldState, newState);
 
             return true;
+        }
+
+        private void ValidateIsRunning()
+        {
+            bool isRunning;
+            lock (stateLock)
+            {
+                isRunning = StreamState.IsRunning();
+            }
+            if (!isRunning)
+            {
+                throw new IllegalStateException($"KafkaStreams is not running. State is {StreamState}.");
+            }
         }
         
         #endregion

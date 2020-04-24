@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Streamiz.Kafka.Net.SerDes
 {
-    internal class ValueAndTimestampSerDes<V> : AbstractSerDes<ValueAndTimestamp<V>>
+    public class ValueAndTimestampSerDes<V> : AbstractSerDes<ValueAndTimestamp<V>>
     {
         public ISerDes<V> InnerSerdes { get; internal set; }
 
