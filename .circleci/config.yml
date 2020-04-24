@@ -1,8 +1,8 @@
   version: 2.1
 
-  # orbs:
-  #   win: circleci/windows@2.2.0
-  #   sonarcloud: sonarsource/sonarcloud@1.0.1
+  orbs:
+    # win: circleci/windows@2.2.0
+    sonarcloud: sonarsource/sonarcloud@1.0.1
 
   jobs:
     build:
