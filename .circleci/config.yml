@@ -1,22 +1,19 @@
- version: 2.1
+  version: 2.1
 
- orbs:
-  win: circleci/windows@2.2.0
+  orbs:
+    win: circleci/windows@2.2.0
+    sonarcloud: sonarsource/sonarcloud@1.0.1
 
- jobs:
-   build:
-     executor: win/default     
-    
-     steps:
-       - checkout
-       - run: dotnet build
-       - sonarcloud/scan
+  jobs:
+    build:
+      executor: win/default
+      steps:
+        - checkout
+        - run: dotnet build
+        - sonarcloud/scan
 
-orbs:
-  sonarcloud: sonarsource/sonarcloud@1.0.1
-  
-workflows:
-  main:
-    jobs:
-      - build:
-          context: SonarCloud
+  workflows:
+    main:
+      jobs:
+        - build:
+            context: SonarCloud
