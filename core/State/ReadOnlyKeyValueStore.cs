@@ -1,4 +1,7 @@
-﻿namespace Streamiz.Kafka.Net.State
+﻿using Streamiz.Kafka.Net.Processors;
+using System.Collections.Generic;
+
+namespace Streamiz.Kafka.Net.State
 {
     /// <summary>
     /// A key-value store that only supports read operations.
@@ -11,7 +14,10 @@
     /// </summary>
     /// <typeparam name="K">the key type</typeparam>
     /// <typeparam name="V">the value type</typeparam>
-    public interface ReadOnlyKeyValueStore<K, V>
+
+    // NOTE: in Java implementation ReadOnlyKeyValueStore does not implement ReadOnlyKeyValueStore
+    // I guess it is a mistake. Without this 
+    public interface ReadOnlyKeyValueStore<K, V>//: IStateStore
     {
         /// <summary>
         /// Get the value corresponding to this key.
@@ -23,7 +29,7 @@
         // TODO : 
         //KeyValueIterator<K, V> range(K from, K to);
 
-        //KeyValueIterator<K, V> all();
+        IEnumerable<KeyValuePair<K, V>> All();
 
         /// <summary>
         /// Return an approximate count of key-value mappings in this store.

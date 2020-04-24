@@ -73,7 +73,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// <summary>
         /// Flush any cached data. Nothing for moment in <see cref="InMemoryKeyValueStore"/>
         /// </summary>
-        public void Flush(){ /* Nothing => IN MEMORY */ }
+        public void Flush() { /* Nothing => IN MEMORY */ }
 
         /// <summary>
         /// Get the value corresponding to this key.
@@ -81,6 +81,14 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// <param name="key">The key to fetch</param>
         /// <returns>The value or null if no value is found</returns>
         public byte[] Get(Bytes key) => map.ContainsKey(key) ? map[key] : null;
+
+        public IEnumerable<KeyValuePair<Bytes, byte[]>> All() {
+            var enumerator = map.GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+                yield return enumerator.Current;
+            }
+        }
 
         /// <summary>
         /// Initialize state store.
