@@ -11,7 +11,7 @@
       #executor: win/default
       steps:
         - checkout
-        - run: echo "deb http://ftp.us.debian.org/debian stre tch main contrib non-free" >> /etc/apt/sources.list
+        - run: echo "deb http://ftp.us.debian.org/debian stretch main contrib non-free" >> /etc/apt/sources.list
         - run: apt update
         - run: apt install -y unzip
         - run: dotnet build
