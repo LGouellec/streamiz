@@ -21,6 +21,45 @@ Finally it will provide the same functionality as [Kafka Streams](https://github
 
 At moment, this project is being written. Thanks for you contribution !
 
+# Usage
+
+Sample code
+``` csharp
+static void Main(string[] args)
+{
+    CancellationTokenSource source = new CancellationTokenSource();
+    
+    var config = new StreamConfig<StringSerDes, StringSerDes>();
+    config.ApplicationId = "test-app";
+    config.BootstrapServers = "192.168.56.1:9092";
+    config.SaslMechanism = SaslMechanism.Plain;
+    config.SaslUsername = "admin";
+    config.SaslPassword = "admin";
+    config.SecurityProtocol = SecurityProtocol.SaslPlaintext;
+    config.AutoOffsetReset = AutoOffsetReset.Earliest;
+    config.NumStreamThreads = 2;
+    
+    StreamBuilder builder = new StreamBuilder();
+
+    builder.Stream<string, string>("test")
+        .FilterNot((k, v) => v.Contains("test"))
+        .Peek((k,v) => Console.WriteLine($"Key : {k} | Value : {v}"))
+        .To("test-output");
+
+    builder.Table("topic", InMemory<string, string>.As("test-ktable-store"));
+
+    Topology t = builder.Build();
+    KafkaStream stream = new KafkaStream(t, config);
+
+    Console.CancelKeyPress += (o, e) => {
+        source.Cancel();
+        stream.Close();
+    };
+
+    stream.Start(source.Token);
+}
+```
+
 # Stateless processor implemention
 
 |Operator Name|Method|TODO|IMPLEMENTED|TESTED|DOCUMENTED|
@@ -69,53 +108,12 @@ At moment, this project is being written. Thanks for you contribution !
 |LeftJoin(windowed)|(KStream,GlobalKTable) → KStream|&#9745;|   |   |   |
 
 
-# Usage
-
-Sample code
-```
-static void Main(string[] args)
-{
-    CancellationTokenSource source = new CancellationTokenSource();
-    
-    var config = new StreamConfig<StringSerDes, StringSerDes>();
-    config.ApplicationId = "test-app";
-    config.BootstrapServers = "192.168.56.1:9092";
-    config.SaslMechanism = SaslMechanism.Plain;
-    config.SaslUsername = "admin";
-    config.SaslPassword = "admin";
-    config.SecurityProtocol = SecurityProtocol.SaslPlaintext;
-    config.AutoOffsetReset = AutoOffsetReset.Earliest;
-    config.NumStreamThreads = 2;
-    
-    StreamBuilder builder = new StreamBuilder();
-
-    builder.Stream<string, string>("test")
-        .FilterNot((k, v) => v.Contains("test"))
-        .Peek((k,v) => Console.WriteLine($"Key : {k} | Value : {v}"))
-        .To("test-output");
-
-    builder.Table(
-        "test-ktable",
-        StreamOptions.Create(),
-        InMemory<string, string>.As("test-ktable-store"));
-
-    Topology t = builder.Build();
-    KafkaStream stream = new KafkaStream(t, config);
-
-    Console.CancelKeyPress += (o, e) => {
-        source.Cancel();
-        stream.Close();
-    };
-
-    stream.Start(source.Token);
-}
-```
 
 # Test topology driver
 
 Must be used for testing your stream topology. Simulate a kafka cluster in memory.
 Usage: 
-```
+``` csharp
 static void Main(string[] args)
 {
     var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -139,10 +137,6 @@ static void Main(string[] args)
 }
 ```
 
-# Priority feature for stateless beta version
-
-- [EOS](https://github.com/LGouellec/kafka-stream-net/issues/2) [ ]
-
 # TODO implementation
 
 - Statefull processors impl [ ]
@@ -152,8 +146,7 @@ static void Main(string[] args)
 - Global state store [ ]
 - Processor API [ ] + Refactor topology node processor builder [ ]
 - Repartition impl [ ]
-- Unit test (TestTopologyDriver, ...) [ ]
-- [EOS](https://github.com/LGouellec/kafka-stream-net/issues/2) [ ]
+- Unit tests (TestTopologyDriver, ...) [ ]
 - Rocks DB state implementation [ ]
 - Optimizing Kafka Streams Topologies  [ ]
 - Interactive Queries [ ]
@@ -161,4 +154,5 @@ static void Main(string[] args)
 
 Some documentations for help during implementation :
 https://docs.confluent.io/current/streams/index.html
+
 https://kafka.apache.org/20/documentation/streams/developer-guide/dsl-api.html#stateless-transformations

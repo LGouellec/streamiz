@@ -178,7 +178,8 @@ namespace Streamiz.Kafka.Net.Processors
                             }
                         }
 
-                        MaybeCommit();
+                        if (State == ThreadState.RUNNING)
+                            MaybeCommit();
 
                         if (State == ThreadState.PARTITIONS_ASSIGNED)
                         {

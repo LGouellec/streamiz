@@ -40,7 +40,7 @@ namespace Streamiz.Kafka.Net.Processors
                 this.producer = producer;
 
             this.collector = new RecordCollector(logPrefix);
-            collector.Init(ref producer);
+            collector.Init(ref this.producer);
 
             var sourceTimestampExtractor = (processorTopology.GetSourceProcessor(id.Topic) as ISourceProcessor).Extractor;
             Context = new ProcessorContext(configuration, stateMgr).UseRecordCollector(collector);
@@ -69,7 +69,7 @@ namespace Streamiz.Kafka.Net.Processors
             FlushState();
             if (eosEnabled)
             {
-                this.producer.SendOffsetsToTransaction(GetPartitionsWithOffset(), null, configuration.TransactionTimeout);
+                this.producer.SendOffsetsToTransaction(GetPartitionsWithOffset(), this.GroupMetadata, configuration.TransactionTimeout);
                 this.producer.CommitTransaction(configuration.TransactionTimeout);
                 transactionInFlight = false;
                 if (startNewTransaction)

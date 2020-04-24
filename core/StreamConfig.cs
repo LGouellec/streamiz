@@ -281,6 +281,8 @@ namespace Streamiz.Kafka.Net
         private IDictionary<string, string> _internalProducerConfig = new Dictionary<string, string>();
         private IDictionary<string, string> _internalAdminConfig = new Dictionary<string, string>();
 
+        private bool changeGuarantee = false;
+
         #region ClientConfig
 
         /// <summary>
@@ -956,7 +958,7 @@ namespace Streamiz.Kafka.Net
                     _producerConfig.MaxInFlight = value;
                     _adminClientConfig.MaxInFlight = value;
                 }
-                else
+                else if (!changeGuarantee)
                     throw new StreamsException($"You can't update MaxInFlight because your processing guarantee is exactly-once");
             }
         }
@@ -1345,8 +1347,8 @@ namespace Streamiz.Kafka.Net
             set {
                 if (Guarantee != ProcessingGuarantee.EXACTLY_ONCE)
                     _consumerConfig.IsolationLevel = value;
-                else
-                    throw new StreamsException($"You can't update IsolationLevel because your processing guarantee is exactly-once");
+                else if(!changeGuarantee)
+                        throw new StreamsException($"You can't update IsolationLevel because your processing guarantee is exactly-once");
             } 
         }
 
@@ -1577,7 +1579,7 @@ namespace Streamiz.Kafka.Net
             {
                 if (Guarantee != ProcessingGuarantee.EXACTLY_ONCE)
                     _producerConfig.EnableIdempotence = value;
-                else
+                else if (!changeGuarantee)
                     throw new StreamsException($"You can't update EnableIdempotence because your processing guarantee is exactly-once");
             }
         }
@@ -1806,16 +1808,19 @@ namespace Streamiz.Kafka.Net
             get => this[processingGuaranteeCst];
             set
             {
-                this.AddOrUpdate(processingGuaranteeCst, value);
-                if (Guarantee == ProcessingGuarantee.EXACTLY_ONCE)
+                changeGuarantee = true;
+                if (value == ProcessingGuarantee.EXACTLY_ONCE)
                 {
                     IsolationLevel = Confluent.Kafka.IsolationLevel.ReadCommitted;
                     EnableIdempotence = true;
                     MaxInFlight = 5;
                     CommitIntervalMs = EOS_DEFAULT_COMMIT_INTERVAL_MS;
                 }
-                else if (Guarantee == ProcessingGuarantee.AT_LEAST_ONCE)
+                else if (value == ProcessingGuarantee.AT_LEAST_ONCE)
                     CommitIntervalMs = DEFAULT_COMMIT_INTERVAL_MS;
+
+                this.AddOrUpdate(processingGuaranteeCst, value);
+                changeGuarantee = false;
             }
         }
 
