@@ -1,17 +1,27 @@
 ﻿using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.State.Internal;
+using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Streamiz.Kafka.Net.State
 {
+    /// <summary>
+    /// Provides access to the <see cref="IQueryableStoreType{T}"/>s provided with <see cref="KafkaStream"/>.
+    /// These can be used with <see cref="KafkaStream.Store{T}(string, IQueryableStoreType{T})"/>
+    /// to access and query the <see cref="IStateStore"/>s that are part of a <see cref="Topology"/>.
+    /// </summary>
     public class QueryableStoreTypes
     {
-        public static IQueryableStoreType<ReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>> TimestampedKeyValueStore<K, V>()
-        {
-            return new TimestampedKeyValueStoreType<K, V>();
-        }
+        /// <summary>
+        /// A <see cref="IQueryableStoreType{T}"/> that accepts <see cref="ReadOnlyKeyValueStore{K, U}"/> as T where
+        /// U is <see cref="ValueAndTimestamp{V}"/>.
+        /// </summary>
+        /// <typeparam name="K">key type of the store</typeparam>
+        /// <typeparam name="V">value type of the store</typeparam>
+        /// <returns><see cref="QueryableStoreTypes.TimestampedKeyValueStore{K, V}"/></returns>
+        public static IQueryableStoreType<ReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>> TimestampedKeyValueStore<K, V>() => new TimestampedKeyValueStoreType<K, V>();
     }
 
     internal class TimestampedKeyValueStoreType<K, V>: QueryableStoreTypeMatcher<ReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>>
