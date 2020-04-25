@@ -82,6 +82,10 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// <returns>The value or null if no value is found</returns>
         public byte[] Get(Bytes key) => map.ContainsKey(key) ? map[key] : null;
 
+        /// <summary>
+        /// Return an iterator over all keys in this store. No ordering guarantees are provided.
+        /// </summary>
+        /// <returns>An iterator of all key/value pairs in the store.</returns>
         public IEnumerable<KeyValuePair<Bytes, byte[]>> All() {
             var enumerator = map.GetEnumerator();
             while (enumerator.MoveNext())

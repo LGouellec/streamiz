@@ -332,7 +332,7 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         /// <typeparam name="T">return type</typeparam>
         /// <param name="storeName">name of the store to find</param>
-        /// <param name="queryableStoreType">accept only stores that are accepted by <see cref="IQueryableStoreType{T}.Accepts(IStateStore)"</param>
+        /// <param name="queryableStoreType">accept only stores that are accepted by <see cref="IQueryableStoreType{T}.Accepts(IStateStore)"/></param>
         /// <returns>A facade wrapping the local <see cref="IStateStore"/> instances</returns>
         /// <exception cref="InvalidStateStoreException ">if Kafka Streams is (re-)initializing or a store with <code>storeName</code> } and
         /// <code>queryableStoreType</code> doesn't exist </exception>
