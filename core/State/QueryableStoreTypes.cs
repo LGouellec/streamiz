@@ -15,6 +15,14 @@ namespace Streamiz.Kafka.Net.State
     public class QueryableStoreTypes
     {
         /// <summary>
+        /// A <see cref="IQueryableStoreType{T}"/> that accepts <see cref="ReadOnlyKeyValueStore{K, V}"/> as T.
+        /// </summary>
+        /// <typeparam name="K">key type of the store</typeparam>
+        /// <typeparam name="V">value type of the store</typeparam>
+        /// <returns><see cref="QueryableStoreTypes.KeyValueStore{K, V}"/></returns>
+        public static IQueryableStoreType<ReadOnlyKeyValueStore<K, V>> KeyValueStore<K, V>() => new KeyValueStoreType<K, V>();
+
+        /// <summary>
         /// A <see cref="IQueryableStoreType{T}"/> that accepts <see cref="ReadOnlyKeyValueStore{K, U}"/> as T where
         /// U is <see cref="ValueAndTimestamp{V}"/>.
         /// </summary>
@@ -22,6 +30,18 @@ namespace Streamiz.Kafka.Net.State
         /// <typeparam name="V">value type of the store</typeparam>
         /// <returns><see cref="QueryableStoreTypes.TimestampedKeyValueStore{K, V}"/></returns>
         public static IQueryableStoreType<ReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>> TimestampedKeyValueStore<K, V>() => new TimestampedKeyValueStoreType<K, V>();
+    }
+
+    internal class KeyValueStoreType<K, V> : QueryableStoreTypeMatcher<ReadOnlyKeyValueStore<K, V>>
+    {
+        public KeyValueStoreType() : base(new[] { typeof(ReadOnlyKeyValueStore<K, V>) })
+        {
+        }
+
+        public override ReadOnlyKeyValueStore<K, V> Create(IStateStoreProvider storeProvider, string storeName)
+        {
+            return new CompositeReadOnlyKeyValueStore<K, V>(storeProvider, this, storeName);
+        }
     }
 
     internal class TimestampedKeyValueStoreType<K, V>: QueryableStoreTypeMatcher<ReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>>
