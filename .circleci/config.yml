@@ -8,9 +8,6 @@
     build:
       docker:
         - image: mcr.microsoft.com/dotnet/core/sdk:3.1
-      parameters:
-        project_key: kafka-streams-dotnet
-        organization: LGouellec
       steps:
         - checkout
         - run : sonarcloud-dotnet/setup-sonar
@@ -18,6 +15,8 @@
         - run: apt update
         - run: apt install -y unzip
         - run: sonarcloud-dotnet/run-scan
+            project_key: kafka-streams-dotnet
+            organization: LGouellec
         - run: dotnet build
         - run: sonarcloud-dotnet/end-scan
         #- sonarcloud/scan
