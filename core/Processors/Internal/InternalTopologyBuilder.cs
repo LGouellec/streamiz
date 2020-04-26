@@ -246,5 +246,16 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
 
         #endregion
+
+        #region Describe
+
+        internal ITopologyDescription Describe()
+        {
+            var topologyDes = new TopologyDescription();
+            // TODO : 
+            return topologyDes;
+        }
+
+        #endregion
     }
 }

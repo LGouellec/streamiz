@@ -23,5 +23,12 @@ namespace Streamiz.Kafka.Net.Stream
         internal Topology()
         {
         }
+
+        /// <summary>
+        /// Returns a description of the specified <see cref="Topology"/>.
+        /// Can using to create a schema about your topolgy.
+        /// </summary>
+        /// <returns>a description of the topology.</returns>
+        public ITopologyDescription Describe() => Builder.Describe();
     }
 }

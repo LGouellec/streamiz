@@ -4,7 +4,7 @@
     <id>Streamiz.Kafka.NET</id>
     <version>$version$</version>
     <title>Streamiz.Kafka.NET</title>
-    <authors>Sylvain Le Gouellec</authors>
+    <authors>@LGouellec</authors>
     <owners>Sylvain Le Gouellec</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type="expression">MIT</license>
