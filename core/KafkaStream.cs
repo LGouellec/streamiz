@@ -256,7 +256,7 @@ namespace Streamiz.Kafka.Net
             this.threads = new IThread[this.configuration.NumStreamThreads];
             var threadState = new Dictionary<long, Processors.ThreadState>();
 
-            List<IStateStoreProvider> stateStoreProviders = new List<IStateStoreProvider>();
+            List<StreamThreadStateStoreProvider> stateStoreProviders = new List<StreamThreadStateStoreProvider>();
             for (int i = 0; i < this.configuration.NumStreamThreads; ++i)
             {
                 var threadId = $"{this.configuration.ApplicationId.ToLower()}-stream-thread-{i}";
@@ -274,7 +274,7 @@ namespace Streamiz.Kafka.Net
 
                 threadState.Add(this.threads[i].Id, this.threads[i].State);
 
-                stateStoreProviders.Add(new StreamThreadStateStoreProvider(this.threads[i]));
+                stateStoreProviders.Add(new StreamThreadStateStoreProvider(this.threads[i], this.topology.Builder));
             }
             
             var manager = new StreamStateManager(this, threadState);
@@ -326,20 +326,18 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
-        /// Get a facade wrapping the local <see cref="IStateStore"/> instances with the provided <code>storeName</code> if the Store's
-        /// type is accepted by the provided <see cref="IQueryableStoreType{T}.Accepts(IStateStore)"/>.
+        /// Get a facade wrapping the local <see cref="IStateStore"/> instances with the provided <see cref="StoreQueryParameters{T}"/>
         /// The returned object can be used to query the {@link StateStore} instances.
         /// </summary>
         /// <typeparam name="T">return type</typeparam>
-        /// <param name="storeName">name of the store to find</param>
-        /// <param name="queryableStoreType">accept only stores that are accepted by <see cref="IQueryableStoreType{T}.Accepts(IStateStore)"/></param>
+        /// <param name="storeQueryParameters">the parameters used to fetch a queryable store</param>
         /// <returns>A facade wrapping the local <see cref="IStateStore"/> instances</returns>
         /// <exception cref="InvalidStateStoreException ">if Kafka Streams is (re-)initializing or a store with <code>storeName</code> } and
         /// <code>queryableStoreType</code> doesn't exist </exception>
-        public T Store<T>(string storeName, IQueryableStoreType<T> queryableStoreType) where T : class//, IStateStore
+        public T Store<T>(StoreQueryParameters<T> storeQueryParameters) where T : class
         {
             this.ValidateIsRunning();
-            return this.queryableStoreProvider.GetStore(storeName, queryableStoreType);
+            return this.queryableStoreProvider.GetStore(storeQueryParameters);
         }
 
         #region Privates

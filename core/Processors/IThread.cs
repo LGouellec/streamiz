@@ -11,10 +11,9 @@ namespace Streamiz.Kafka.Net.Processors
         bool IsDisposable { get; }
         string Name { get; }
         bool IsRunning { get; }
-        bool IsRunningAndNotRebalancing { get; }
         void Run();
         void Start(CancellationToken token);
-        IEnumerable<ITask> Tasks { get;  }
+        IEnumerable<ITask> ActiveTasks { get;  }
 
         event ThreadStateListener StateChanged;
     }

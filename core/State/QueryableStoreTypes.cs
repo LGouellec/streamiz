@@ -38,7 +38,7 @@ namespace Streamiz.Kafka.Net.State
         {
         }
 
-        public override ReadOnlyKeyValueStore<K, V> Create(IStateStoreProvider storeProvider, string storeName)
+        public override ReadOnlyKeyValueStore<K, V> Create(IStateStoreProvider<ReadOnlyKeyValueStore<K, V>> storeProvider, string storeName)
         {
             return new CompositeReadOnlyKeyValueStore<K, V>(storeProvider, this, storeName);
         }
@@ -50,13 +50,13 @@ namespace Streamiz.Kafka.Net.State
         {
         }
 
-        public override ReadOnlyKeyValueStore<K, ValueAndTimestamp<V>> Create(IStateStoreProvider storeProvider, string storeName)
+        public override ReadOnlyKeyValueStore<K, ValueAndTimestamp<V>> Create(IStateStoreProvider<ReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>> storeProvider, string storeName)
         {
             return new CompositeReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>(storeProvider, this, storeName);
         }
     }
 
-    internal abstract class QueryableStoreTypeMatcher<T> : IQueryableStoreType<T>
+    internal abstract class QueryableStoreTypeMatcher<T> : IQueryableStoreType<T> where T : class
     {
 
         private IEnumerable<Type> matchTo;
@@ -66,7 +66,7 @@ namespace Streamiz.Kafka.Net.State
             this.matchTo = matchTo;
         }
 
-        public abstract T Create(IStateStoreProvider storeProvider, string storeName);
+        public abstract T Create(IStateStoreProvider<T> storeProvider, string storeName);
 
         public bool Accepts(IStateStore stateStore)
         {
@@ -74,5 +74,4 @@ namespace Streamiz.Kafka.Net.State
         }
         
     }
-
 }

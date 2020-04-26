@@ -8,17 +8,17 @@ namespace Streamiz.Kafka.Net.State.Internal
     /// as part of the <see cref="Stream.Internal.ProcessorTopology"/>.
     /// To get access to custom stores developers should implement <see cref="IQueryableStoreType{T}"/>.
     /// </summary>
-    // /// <see cref="IQueryableStoreTypes"/>
-    public interface IStateStoreProvider
+    /// <see cref="QueryableStoreTypes"/>
+    /// <typeparam name="T">The type of the store to be provided</typeparam>
+    public interface IStateStoreProvider<T> where T : class
     {
         /// <summary>
         /// Find instances of <see cref="Processors.IStateStore"/> that are accepted by <see cref="IQueryableStoreType{T}.Accepts(Processors.IStateStore)"/> and
         /// have the provided storeName.
         /// </summary>
-        /// <typeparam name="T">The type of the Store</typeparam>
         /// <param name="storeName">name of the store</param>
         /// <param name="queryableStoreType">filter stores based on this queryableStoreType</param>
         /// <returns>List of the instances of the store in this topology. Empty List if not found</returns>
-        IEnumerable<T> Stores<T>(string storeName, IQueryableStoreType<T> queryableStoreType) where T : class;//, IStateStore;
+        IEnumerable<T> Stores(string storeName, IQueryableStoreType<T> queryableStoreType);
     }
 }
