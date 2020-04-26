@@ -12,6 +12,7 @@
         - checkout
         #- sonarcloud-dotnet/setup-sonar
         - run: dotnet tool install --global dotnet-sonarscanner --version 4.8.0
+        - run: export PATH="$PATH:/root/.dotnet/tools"
         - run: echo "deb http://ftp.us.debian.org/debian stretch main contrib non-free" >> /etc/apt/sources.list
         - run: apt update
         - run: apt install -y unzip
