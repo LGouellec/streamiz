@@ -2,7 +2,7 @@
 
   orbs:
     #sonarcloud: sonarsource/sonarcloud@1.0.1
-    sonarcloud-dotnet: ksmc/sonarcloud-dotnet@0.0.9
+    #sonarcloud-dotnet: ksmc/sonarcloud-dotnet@0.0.9
 
   jobs:
     build:
@@ -10,15 +10,20 @@
         - image: mcr.microsoft.com/dotnet/core/sdk:3.1
       steps:
         - checkout
-        - sonarcloud-dotnet/setup-sonar
+        #- sonarcloud-dotnet/setup-sonar
+        - run: dotnet tool install --global dotnet-sonarscanner --version 4.8.0
         - run: echo "deb http://ftp.us.debian.org/debian stretch main contrib non-free" >> /etc/apt/sources.list
         - run: apt update
         - run: apt install -y unzip
-        - sonarcloud-dotnet/run-scan
-            project_key: kafka-streams-dotnet
-            organization: LGouellec
+        - run: dotnet sonarscanner begin /k:kafka-streams-dotnet /o:LGouellec /d:sonar.login=${SONAR_TOKEN} /d:sonar.host.url=https://sonarcloud.io
+        #- sonarcloud-dotnet/run-scan
+        #    project_key: 
+        #    organization: 
         - run: dotnet build
-        - sonarcloud-dotnet/end-scan
+        - run: 
+            when: always
+            command: dotnet sonarscanner end /d:sonar.login=${SONAR_TOKEN}
+        #- sonarcloud-dotnet/end-scan
         #- sonarcloud/scan
 
   workflows:
