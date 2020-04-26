@@ -10,15 +10,15 @@
         - image: mcr.microsoft.com/dotnet/core/sdk:3.1
       steps:
         - checkout
-        - run : sonarcloud-dotnet/setup-sonar
+        - sonarcloud-dotnet/setup-sonar
         - run: echo "deb http://ftp.us.debian.org/debian stretch main contrib non-free" >> /etc/apt/sources.list
         - run: apt update
         - run: apt install -y unzip
-        - run: sonarcloud-dotnet/run-scan
+        - sonarcloud-dotnet/run-scan
             project_key: kafka-streams-dotnet
             organization: LGouellec
         - run: dotnet build
-        - run: sonarcloud-dotnet/end-scan
+        - sonarcloud-dotnet/end-scan
         #- sonarcloud/scan
 
   workflows:
