@@ -120,8 +120,6 @@ namespace Streamiz.Kafka.Net.Processors
 
         public bool IsRunning { get; private set; } = false;
 
-        public bool IsRunningAndNotRebalancing => State == ThreadState.RUNNING;
-
         public bool IsDisposable { get; private set; } = false;
 
         public int Id => thread.ManagedThreadId;
@@ -234,7 +232,7 @@ namespace Streamiz.Kafka.Net.Processors
             thread.Start();
         }
 
-        public IEnumerable<ITask> Tasks => this.manager.ActiveTasks;
+        public IEnumerable<ITask> ActiveTasks => this.manager.ActiveTasks;
 
         #endregion
 

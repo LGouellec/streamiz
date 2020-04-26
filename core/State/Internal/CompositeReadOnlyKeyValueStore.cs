@@ -9,11 +9,13 @@ namespace Streamiz.Kafka.Net.State.Internal
 {
     internal class CompositeReadOnlyKeyValueStore<K, V> : ReadOnlyKeyValueStore<K, V>
     {
-        private readonly IStateStoreProvider storeProvider;
+        private readonly IStateStoreProvider<ReadOnlyKeyValueStore<K, V>> storeProvider;
         private readonly IQueryableStoreType<ReadOnlyKeyValueStore<K, V>> storeType;
         private readonly string storeName;
 
-        public CompositeReadOnlyKeyValueStore(IStateStoreProvider storeProvider, IQueryableStoreType<ReadOnlyKeyValueStore<K, V>> storeType, string storeName)
+        public CompositeReadOnlyKeyValueStore(
+            IStateStoreProvider<ReadOnlyKeyValueStore<K, V>> storeProvider,
+            IQueryableStoreType<ReadOnlyKeyValueStore<K, V>> storeType, string storeName)
         {
             this.storeProvider = storeProvider;
             this.storeType = storeType;
@@ -34,7 +36,8 @@ namespace Streamiz.Kafka.Net.State.Internal
             catch (InvalidStateStoreException e)
             {
                 // TODO is there a point in doing this?
-                throw new InvalidStateStoreException("State store is not available anymore and may have been migrated to another instance; please re-discover its location from the state metadata.", e);
+                throw new InvalidStateStoreException("State store is not available anymore and may have " +
+                    "been migrated to another instance; please re-discover its location from the state metadata.", e);
             }
         }
 
@@ -63,7 +66,8 @@ namespace Streamiz.Kafka.Net.State.Internal
             catch(InvalidStateStoreException e)
             {
                 // TODO is there a point in doing this?
-                throw new InvalidStateStoreException("State store is not available anymore and may have been migrated to another instance; please re-discover its location from the state metadata.", e);
+                throw new InvalidStateStoreException("State store is not available anymore and may have " +
+                    "been migrated to another instance; please re-discover its location from the state metadata.", e);
             }
         }
 

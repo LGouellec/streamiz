@@ -6,28 +6,30 @@ using System.Linq;
 namespace Streamiz.Kafka.Net.State.Internal
 {
     /// <summary>
-    /// Provides a wrapper over multiple underlying <see cref="IStateStoreProvider"/>s
+    /// Provides a wrapper over multiple underlying <see cref="IStateStoreProvider{T}"/>s
     /// </summary>
-    internal class WrappingStoreProvider : IStateStoreProvider
+    /// <typeparam name="T">The type of the store to be provided</typeparam>
+    internal class WrappingStoreProvider<T> : IStateStoreProvider<T> where T : class
     {
-        private IEnumerable<IStateStoreProvider> storeProviders;
+        private IEnumerable<StreamThreadStateStoreProvider> storeProviders;
+        private readonly StoreQueryParameters<T> storeQueryParameters;
 
-        public WrappingStoreProvider(IEnumerable<IStateStoreProvider> storeProviders)
+        public WrappingStoreProvider(IEnumerable<StreamThreadStateStoreProvider> storeProviders, StoreQueryParameters<T> storeQueryParameters)
         {
             this.storeProviders = storeProviders;
+            this.storeQueryParameters = storeQueryParameters;
         }
 
         /// <summary>
         /// Provides access to <see cref="Processors.IStateStore"/>s accepted by <see cref="IQueryableStoreType{T}.Accepts(Processors.IStateStore)"/>
         /// </summary>
-        /// <typeparam name="T">The type of the Store</typeparam>
         /// <param name="storeName">Name of the store</param>
         /// <param name="type">The <see cref="IQueryableStoreType{T}"/></param>
         /// <returns>a List of all the stores with the storeName and accepted by<see cref="IQueryableStoreType{T}.Accepts(Processors.IStateStore)"/></returns>
-        public IEnumerable<T> Stores<T>(string storeName, IQueryableStoreType<T> type) where T : class//, IStateStore
+        public IEnumerable<T> Stores(string storeName, IQueryableStoreType<T> type)
         {
             var allStores = this.storeProviders
-                .SelectMany(store => store.Stores(storeName, type));
+                .SelectMany(store => store.Stores(storeQueryParameters));
 
             if (!allStores.Any())
             {
