@@ -139,15 +139,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             processor.StateStores.Add(stateStoreName);
         }
 
-        //public void connectSourceStoreAndTopic(String sourceStoreName,                                          String topic)
-        //{
-        //    if (storeToChangelogTopic.containsKey(sourceStoreName))
-        //    {
-        //        throw new TopologyException("Source store " + sourceStoreName + " is already added.");
-        //    }
-        //    storeToChangelogTopic.put(sourceStoreName, topic);
-        //}
-
         #region Add Processors / State Store
 
         internal void AddSourceOperator<K,V>(string topic, string nameNode, ConsumedInternal<K, V> consumed)

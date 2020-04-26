@@ -1,21 +1,26 @@
   version: 2.1
 
   orbs:
-    # win: circleci/windows@2.2.0
-    sonarcloud: sonarsource/sonarcloud@1.0.1
+    #sonarcloud: sonarsource/sonarcloud@1.0.1
+    sonarcloud-dotnet: ksmc/sonarcloud-dotnet@0.0.9
 
   jobs:
     build:
       docker:
         - image: mcr.microsoft.com/dotnet/core/sdk:3.1
-      #executor: win/default
+      parameters:
+        project_key: kafka-streams-dotnet
+        organization: LGouellec
       steps:
         - checkout
+        - run : sonarcloud-dotnet/setup-sonar
         - run: echo "deb http://ftp.us.debian.org/debian stretch main contrib non-free" >> /etc/apt/sources.list
         - run: apt update
         - run: apt install -y unzip
+        - run: sonarcloud-dotnet/run-scan
         - run: dotnet build
-        - sonarcloud/scan
+        - run: sonarcloud-dotnet/end-scan
+        #- sonarcloud/scan
 
   workflows:
     main:
