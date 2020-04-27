@@ -59,6 +59,6 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
 
         public abstract T Build();
 
-        object StoreBuilder.build() => this.Build();
+        object StoreBuilder.Build() => this.Build();
     }
 }

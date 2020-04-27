@@ -25,7 +25,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
 
         public override void WriteToTopology(InternalTopologyBuilder builder)
         {
-            builder.AddSinkOperator(topicNameExtractor, this.streamGraphNode, produced);
+            builder.AddSinkOperator(topicNameExtractor, this.streamGraphNode, produced, ParentNodeNames());
         }
     }
 }

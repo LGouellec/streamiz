@@ -13,13 +13,6 @@ namespace Streamiz.Kafka.Net.Processors
             this.mapper = mapper;
         }
 
-        public override object Clone()
-        {
-            var p = new KStreamFlatMapProcessor<K, V, K1, V1>(this.mapper);
-            p.StateStores = new List<string>(this.StateStores);
-            return p;
-        }
-
         public override void Process(K key, V value)
         {
             LogProcessingKeyValue(key, value);

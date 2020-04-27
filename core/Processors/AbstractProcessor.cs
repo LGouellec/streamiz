@@ -180,7 +180,6 @@ namespace Streamiz.Kafka.Net.Processors
         #region Abstract
 
         public abstract void Process(K key, V value);
-        public abstract object Clone();
 
         #endregion
 

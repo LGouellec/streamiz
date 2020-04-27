@@ -25,11 +25,6 @@ namespace Streamiz.Kafka.Net.Processors
                 this.Value = context.Configuration.DefaultValueSerDes;
         }
 
-        public override object Clone()
-        {
-            return new SinkProcessor<K, V>(this.Name, null, this.topicNameExtractor, this.KeySerDes, this.ValueSerDes);
-        }
-
         public override void Process(K key, V value)
         {
             LogProcessingKeyValue(key, value);

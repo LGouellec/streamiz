@@ -29,14 +29,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public override StreamTask CreateTask(IConsumer<byte[], byte[]> consumer, TaskId id, TopicPartition partition)
         {
-            var processorTopology = this.builder.BuildTopology();
             log.Debug($"Created task {id} with assigned partition {partition}");
-
             return new StreamTask(
                 threadId,
                 id,
                 partition,
-                processorTopology,
+                builder.BuildTopology(partition.Topic),
                 consumer,
                 configuration,
                 kafkaSupplier,

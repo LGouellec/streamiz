@@ -249,6 +249,9 @@ namespace Streamiz.Kafka.Net
             clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{this.configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;
             logPrefix = $"stream-application[{configuration.ApplicationId}] ";
 
+            // re-write the physical topology according to the config
+            topology.Builder.RewriteTopology(configuration);
+
             // sanity check
             this.processorTopology = topology.Builder.BuildTopology();
 

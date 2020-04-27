@@ -22,13 +22,6 @@ namespace Streamiz.Kafka.Net.Processors
             this.sendOldValues = sendOldValues;
         }
 
-        public override object Clone()
-        {
-            var p = new KTableSourceProcessor<K, V>(this.storeName, this.queryableName, this.sendOldValues);
-            p.StateStores = new List<string>(this.StateStores);
-            return p;
-        }
-
         public override void Init(ProcessorContext context)
         {
             base.Init(context);

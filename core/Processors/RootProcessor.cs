@@ -19,8 +19,6 @@ namespace Streamiz.Kafka.Net.Processors
 
         public IList<string> StateStores => new List<string>();
 
-        public object Clone() => null;
-
         public void Close()
         {
             

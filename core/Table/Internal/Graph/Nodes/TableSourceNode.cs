@@ -78,8 +78,8 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph.Nodes
             }
             else
             {
-                builder.AddSourceOperator<K, V>(this.topicName, sourceName, consumed);
-                builder.AddProcessor<K, V>(processorParameters.ProcessorName, processorParameters.Processor);
+                builder.AddSourceOperator(this.topicName, sourceName, consumed);
+                builder.AddProcessor(processorParameters.ProcessorName, processorParameters.Processor, sourceName);
 
                 //// only add state store if the source KTable should be materialized
                 KTableSource<K, V> ktableSource = (KTableSource<K, V>)processorParameters.Processor;

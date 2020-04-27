@@ -17,13 +17,6 @@ namespace Streamiz.Kafka.Net.Processors
             this.mapper = mapper;
         }
 
-        public override object Clone()
-        {
-            var p = new KTableMapValuesProcessor<K, V, VR>(this.mapper, this.sendOldValues, this.queryableStoreName);
-            p.StateStores = new List<string>(this.StateStores);
-            return p;
-        }
-
         public override void Process(K key, Change<V> change)
         {
             LogProcessingKeyValue(key, change);
