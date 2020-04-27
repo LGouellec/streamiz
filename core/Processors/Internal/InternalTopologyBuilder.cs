@@ -12,6 +12,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal class InternalTopologyBuilder
     {
+        private final Map<String, NodeFactory> nodeFactories = new LinkedHashMap<>();
+
         private IDictionary<string, IProcessor> sourceOperators = new Dictionary<string, IProcessor>();
         private IDictionary<string, IProcessor> sinkOperators = new Dictionary<string, IProcessor>();
         private IDictionary<string, IProcessor> processorOperators = new Dictionary<string, IProcessor>();
@@ -138,15 +140,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             var processor = processorOperators[processorName];
             processor.StateStores.Add(stateStoreName);
         }
-
-        //public void connectSourceStoreAndTopic(String sourceStoreName,                                          String topic)
-        //{
-        //    if (storeToChangelogTopic.containsKey(sourceStoreName))
-        //    {
-        //        throw new TopologyException("Source store " + sourceStoreName + " is already added.");
-        //    }
-        //    storeToChangelogTopic.put(sourceStoreName, topic);
-        //}
 
         #region Add Processors / State Store
 

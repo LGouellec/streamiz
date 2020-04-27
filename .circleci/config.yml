@@ -1,21 +1,27 @@
   version: 2.1
 
   orbs:
-    # win: circleci/windows@2.2.0
-    sonarcloud: sonarsource/sonarcloud@1.0.1
+    #sonarcloud-dotnet: ksmc/sonarcloud-dotnet@0.0.9
 
   jobs:
     build:
       docker:
         - image: mcr.microsoft.com/dotnet/core/sdk:3.1
-      #executor: win/default
       steps:
         - checkout
+        - run: dotnet tool install --global dotnet-sonarscanner --version 4.8.0
+        - run: echo 'export PATH="$PATH:/root/.dotnet/tools"' >> $BASH_ENV
         - run: echo "deb http://ftp.us.debian.org/debian stretch main contrib non-free" >> /etc/apt/sources.list
         - run: apt update
         - run: apt install -y unzip
+        - run: apt install -y openjdk-8-jdk
+        - run: set JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
+        - run: export JAVA_HOME
+        - run: dotnet sonarscanner begin /k:LGouellec_kafka-streams-dotnet /o:kafka-streams-dotnet /d:sonar.login=${SONAR_TOKEN} /d:sonar.host.url=https://sonarcloud.io
         - run: dotnet build
-        - sonarcloud/scan
+        - run: 
+            when: always
+            command: dotnet sonarscanner end /d:sonar.login=${SONAR_TOKEN}
 
   workflows:
     main:

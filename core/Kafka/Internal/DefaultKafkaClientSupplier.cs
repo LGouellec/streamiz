@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Confluent.Kafka;
+﻿using Confluent.Kafka;
 
 namespace Streamiz.Kafka.Net.Kafka.Internal
 {
