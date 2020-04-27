@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    internal interface IProcessor : ICloneable
+    internal interface IProcessor
     {
         string Name { get; }
         IList<string> StateStores {get;}

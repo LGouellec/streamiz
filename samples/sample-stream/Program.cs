@@ -2,6 +2,7 @@
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Table;
 using System;
 using System.Threading;
 
@@ -25,9 +26,11 @@ namespace sample_stream
             
             StreamBuilder builder = new StreamBuilder();
 
-            builder.Stream<string, string>("test")
-                .FilterNot((k, v) => v.Contains("test"))
-                .To("test-output");
+            //builder.Stream<string, string>("test")
+            //    .FilterNot((k, v) => v.Contains("test"))
+            //    .To("test-output");
+
+            builder.Table("test-ktable", InMemory<string, string>.As("test-store"));
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);

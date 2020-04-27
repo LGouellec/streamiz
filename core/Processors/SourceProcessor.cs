@@ -52,29 +52,5 @@ namespace Streamiz.Kafka.Net.Processors
                 if (n is IProcessor<K, V>)
                     ((IProcessor<K, V>)n).Process(key, value);
         }
-
-        public override object Clone()
-        {
-            SourceProcessor<K, V> source = new SourceProcessor<K, V>(this);
-            source.SetProcessorName(this.Name);
-            this.CloneRecursiveChild(source, this.Next);
-            return source;
-        }
-
-        private void CloneRecursiveChild(IProcessor root, IEnumerable<IProcessor> child)
-        {
-            if (child == null || child.Count() == 0)
-                return;
-            else
-            {
-                foreach(var c in child)
-                {
-                    var processor = c.Clone() as IProcessor;
-                    processor.SetProcessorName(c.Name);
-                    CloneRecursiveChild(processor, c.Next);
-                    root.SetNextProcessor(processor);
-                }
-            }
-        }
     }
 }

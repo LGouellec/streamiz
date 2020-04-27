@@ -19,9 +19,7 @@
         - run: export JAVA_HOME
         - run: dotnet sonarscanner begin /k:LGouellec_kafka-streams-dotnet /o:kafka-streams-dotnet /d:sonar.login=${SONAR_TOKEN} /d:sonar.host.url=https://sonarcloud.io
         - run: dotnet build
-        - run: 
-            when: always
-            command: dotnet sonarscanner end /d:sonar.login=${SONAR_TOKEN}
+        - run: dotnet sonarscanner end /d:sonar.login=${SONAR_TOKEN}
 
   workflows:
     main:

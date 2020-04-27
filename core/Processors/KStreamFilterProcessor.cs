@@ -16,13 +16,6 @@ namespace Streamiz.Kafka.Net.Processors
             this.not = not;
         }
 
-        public override object Clone()
-        {
-            var p = new KStreamFilterProcessor<K, V>(this.predicate, this.not);
-            p.StateStores = new List<string>(this.StateStores);
-            return p;
-        }
-
         public override void Process(K key, V value)
         {
             LogProcessingKeyValue(key, value);

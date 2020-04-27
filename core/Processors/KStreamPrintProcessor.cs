@@ -14,13 +14,6 @@ namespace Streamiz.Kafka.Net.Processors
             this.actionPrint = actionPrint;
         }
 
-        public override object Clone()
-        {
-            var p= new KStreamPrintProcessor<K, V>(this.actionPrint);
-            p.StateStores = new List<string>(this.StateStores);
-            return p;
-        }
-
         public override void Process(K key, V value)
         {
             LogProcessingKeyValue(key, value);

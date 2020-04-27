@@ -22,7 +22,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
 
         public override void WriteToTopology(InternalTopologyBuilder builder)
         {
-            builder.AddProcessor(ProcessorParameters.ProcessorName, ProcessorParameters.Processor);
+            builder.AddProcessor(ProcessorParameters.ProcessorName, ProcessorParameters.Processor, ParentNodeNames());
         }
     }
 }

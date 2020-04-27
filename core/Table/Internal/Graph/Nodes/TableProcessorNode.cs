@@ -37,12 +37,12 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph.Nodes
         public override void WriteToTopology(InternalTopologyBuilder builder)
         {
             // TODO : 
-            String processorName = processorParameters.ProcessorName;
-            builder.AddProcessor(processorName, processorParameters.Processor);
+            string processorName = processorParameters.ProcessorName;
+            builder.AddProcessor(processorName, processorParameters.Processor, ParentNodeNames());
 
             if (storeNames.Length > 0)
             {
-                //builder.connectProcessorAndStateStores(processorName, storeNames);
+                // builder.connectProcessorAndStateStores(processorName, storeNames);
             }
 
             // TODO: we are enforcing this as a keyvalue store, but it should go beyond any type of stores

@@ -1,12 +1,22 @@
 ﻿using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
     #region Node Factory
 
-    internal abstract class NodeFactory
+    internal interface INodeFactory
+    {
+        string Name { get; }
+        string[] Previous { get; }
+
+        IProcessor Build();
+        NodeDescription Describe();
+    }
+
+    internal abstract class NodeFactory : INodeFactory
     {
         public string Name { get; }
         public string[] Previous { get; }
@@ -25,7 +35,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
     #region SourceNode Factory
 
-    internal class SourceNodeFactory<K, V> : NodeFactory
+    internal interface ISourceNodeFactory : INodeFactory
+    {
+        string Topic { get; }
+        ITimestampExtractor Extractor { get; }
+    }
+
+    internal class SourceNodeFactory<K, V> : NodeFactory, ISourceNodeFactory
     {
         public string Topic { get; }
         public ITimestampExtractor Extractor { get; }
@@ -51,8 +67,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
     #endregion
 
     #region SinkNode Factory
+    
+    internal interface ISinkNodeFactory : INodeFactory
+    {
 
-    internal class SinkNodeFactory<K, V> : NodeFactory
+    }
+
+    internal class SinkNodeFactory<K, V> : NodeFactory, ISinkNodeFactory
     {
         public ITopicNameExtractor<K, V> Extractor { get; }
         public ISerDes<K> KeySerdes { get; }
@@ -79,11 +100,19 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
     #region ProcessorNode Factory
 
-    internal class ProcessorNodeFactory<K, V> : NodeFactory
+    internal interface IProcessorNodeFactory : INodeFactory
+    {
+        void AddStateStore(string name);
+        IReadOnlyList<string> StateStores { get; }
+    }
+
+    internal class ProcessorNodeFactory<K, V> : NodeFactory, IProcessorNodeFactory
     {
         private readonly IList<string> stateStores = new List<string>();
 
         public IProcessorSupplier<K, V> Supplier { get; }
+
+        public IReadOnlyList<string> StateStores => new ReadOnlyCollection<string>(stateStores);
 
         public ProcessorNodeFactory(string name, string[] previous, IProcessorSupplier<K, V> supplier)
             : base(name, previous)

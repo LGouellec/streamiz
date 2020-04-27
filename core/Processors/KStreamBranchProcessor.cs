@@ -15,13 +15,6 @@ namespace Streamiz.Kafka.Net.Processors
             this.childNodes = childNodes;
         }
 
-        public override object Clone()
-        {
-            var p = new KStreamBranchProcessor<K, V>(this.predicates, this.childNodes);
-            p.StateStores = new List<string>(this.StateStores);
-            return p;
-        }
-
         public override void Process(K key, V value)
         {
             LogProcessingKeyValue(key, value);

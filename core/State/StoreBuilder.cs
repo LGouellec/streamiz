@@ -12,7 +12,7 @@ namespace Streamiz.Kafka.Net.State
         IDictionary<string, string> LogConfig { get; }
         bool LoggingEnabled { get; }
         string Name { get; }
-        object build();
+        object Build();
     }
 
     /// <summary>
@@ -26,6 +26,6 @@ namespace Streamiz.Kafka.Net.State
         StoreBuilder<T> WithCachingDisabled();
         StoreBuilder<T> WithLoggingEnabled(IDictionary<String, String> config);
         StoreBuilder<T> WithLoggingDisabled();
-        T Build();
+        new T Build();
     }
 }
