@@ -12,6 +12,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal class InternalTopologyBuilder
     {
+        private final Map<String, NodeFactory> nodeFactories = new LinkedHashMap<>();
+
         private IDictionary<string, IProcessor> sourceOperators = new Dictionary<string, IProcessor>();
         private IDictionary<string, IProcessor> sinkOperators = new Dictionary<string, IProcessor>();
         private IDictionary<string, IProcessor> processorOperators = new Dictionary<string, IProcessor>();

@@ -88,16 +88,12 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         public Type TimestampExtractorType { get; }
 
         public SourceNodeDescription(string name, string topic) 
+            : this(name, topic, null){}
+
+        public SourceNodeDescription(string name, string topic, Type timestampExtractorType)
             : base(name)
         {
             Topics = new List<string> { topic };
-            TimestampExtractorType = null;
-        }
-
-        public SourceNodeDescription(string name, Type timestampExtractorType)
-            : base(name)
-        {
-            Topics = null;
             TimestampExtractorType = timestampExtractorType;
         }
     }
