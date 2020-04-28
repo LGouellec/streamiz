@@ -88,7 +88,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         }
 
         public override IProcessor Build()
-            => new SinkProcessor<K, V>(Name, null, Extractor, KeySerdes, ValueSerdes);
+            => new SinkProcessor<K, V>(Name, Extractor, KeySerdes, ValueSerdes);
 
         public override NodeDescription Describe()
             => Extractor is StaticTopicNameExtractor<K, V> ?
@@ -130,7 +130,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             var processor = Supplier.Get();
 
-            processor.SetProcessorName(this.Name);
+            processor.Name = this.Name;
             foreach(var s in stateStores)
                 processor.StateStores.Add(s);
 
