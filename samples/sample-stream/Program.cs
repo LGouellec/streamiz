@@ -33,6 +33,7 @@ namespace sample_stream
             builder.Table("test-ktable", InMemory<string, string>.As("test-store"));
 
             Topology t = builder.Build();
+
             KafkaStream stream = new KafkaStream(t, config);
 
             Console.CancelKeyPress += (o, e) => {
