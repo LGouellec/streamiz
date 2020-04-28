@@ -18,6 +18,8 @@
     <PackageTags>kafka kafka-streams kafka-streams-dotnet event-streaming</PackageTags>
     <PackageReleaseNotes>https://github.com/LGouellec/kafka-streams-dotnet/releases</PackageReleaseNotes>
     <PackageIconUrl>https://raw.githubusercontent.com/LGouellec/kafka-streams-dotnet/master/resources/logo-kafka-stream-net.png</PackageIconUrl>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>key.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
