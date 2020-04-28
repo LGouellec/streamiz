@@ -9,8 +9,8 @@ namespace Streamiz.Kafka.Net.Processors
     {
         private readonly Func<K, V, KeyValuePair<K1, V1>> transformer;
 
-        public TransformProcessor(string name, IProcessor previous, Func<K, V, KeyValuePair<K1, V1>> transformer) 
-            : base(name, previous)
+        public TransformProcessor(string name, Func<K, V, KeyValuePair<K1, V1>> transformer) 
+            : base(name)
         {
             this.transformer = transformer;
         }

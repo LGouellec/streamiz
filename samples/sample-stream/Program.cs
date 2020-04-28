@@ -26,9 +26,9 @@ namespace sample_stream
             
             StreamBuilder builder = new StreamBuilder();
 
-            //builder.Stream<string, string>("test")
-            //    .FilterNot((k, v) => v.Contains("test"))
-            //    .To("test-output");
+            builder.Stream<string, string>("test")
+                .FilterNot((k, v) => v.Contains("test"))
+                .To("test-output");
 
             builder.Table("test-ktable", InMemory<string, string>.As("test-store"));
 

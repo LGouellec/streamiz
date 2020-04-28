@@ -8,8 +8,8 @@ namespace Streamiz.Kafka.Net.Processors
     {
         private readonly ITopicNameExtractor<K, V> topicNameExtractor;
 
-        internal SinkProcessor(string name, IProcessor previous, ITopicNameExtractor<K, V> topicNameExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
-            : base(name, previous, keySerdes, valueSerdes)
+        internal SinkProcessor(string name, ITopicNameExtractor<K, V> topicNameExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+            : base(name, keySerdes, valueSerdes)
         {
             this.topicNameExtractor = topicNameExtractor;
         }

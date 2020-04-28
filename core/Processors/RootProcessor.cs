@@ -7,7 +7,11 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal class RootProcessor : IProcessor
     {
-        public string Name => "ROOT-OPERATOR";
+        public string Name
+        {
+            get => "ROOT-OPERATOR";
+            set { }
+        }
 
         public IList<IProcessor> Previous { get; } = new List<IProcessor>();
 
@@ -36,7 +40,7 @@ namespace Streamiz.Kafka.Net.Processors
                 n.Process(key, value);
         }
 
-        public void SetNextProcessor(IProcessor next)
+        public void AddNextProcessor(IProcessor next)
         {
             if (!Next.Contains(next) && next != null)
                 Next.Add(next);
@@ -47,7 +51,5 @@ namespace Streamiz.Kafka.Net.Processors
             if (!Previous.Contains(prev) && prev != null)
                 Previous.Add(prev);
         }
-
-        public void SetProcessorName(string name){}
     }
 }

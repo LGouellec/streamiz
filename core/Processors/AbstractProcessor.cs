@@ -15,7 +15,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public ProcessorContext Context { get; protected set; }
 
-        public string Name { get; private set; }
+        public string Name { get; set; }
         public IList<string> StateStores { get; protected set; }
 
         public ISerDes<K> KeySerDes => Key is ISerDes<K> ? (ISerDes<K>)Key : null;
@@ -26,37 +26,32 @@ namespace Streamiz.Kafka.Net.Processors
 
         public ISerDes Value { get; internal set; } = null;
 
-        public IList<IProcessor> Previous { get; private set; } = null;
-
-        public IList<IProcessor> Next { get; private set; } = null;
+        public IList<IProcessor> Next { get; private set; } = new List<IProcessor>();
 
         #region Ctor
 
         public AbstractProcessor()
-            : this(null, null)
+            : this(null)
         {
 
         }
 
-        public AbstractProcessor(string name, IProcessor previous)
-            : this(name, previous, null, null)
+        public AbstractProcessor(string name)
+            : this(name, null, null)
         {
         }
 
-        public AbstractProcessor(string name, IProcessor previous, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
-            : this(name, previous, keySerdes, valueSerdes, null)
+        public AbstractProcessor(string name, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+            : this(name, keySerdes, valueSerdes, null)
         {
         }
 
-        public AbstractProcessor(string name, IProcessor previous, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, List<string> stateStores)
+        public AbstractProcessor(string name, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, List<string> stateStores)
         {
             Name = name;
-            this.SetPreviousProcessor(previous);
-            this.SetNextProcessor(null);
             Key = keySerdes;
             Value = valueSerdes;
             StateStores = stateStores != null ? new List<string>(stateStores) : new List<string>();
-
             log = Logger.GetLogger(this.GetType());
         }
 
@@ -136,27 +131,10 @@ namespace Streamiz.Kafka.Net.Processors
             logPrefix = $"stream-task[{id.Topic}|{id.Partition}]|processor[{Name}]- ";
         }
 
-        public void SetPreviousProcessor(IProcessor prev)
+        public void AddNextProcessor(IProcessor next)
         {
-            if (Previous == null)
-                Previous = new List<IProcessor>();
-
-            if (prev != null && prev is IProcessor && !Previous.Contains(prev as IProcessor))
-                Previous.Add(prev as IProcessor);
-        }
-
-        public void SetNextProcessor(IProcessor next)
-        {
-            if (Next == null)
-                Next = new List<IProcessor>();
-
-            if (next != null && next is IProcessor && !Next.Contains(next as IProcessor))
-                Next.Add(next as IProcessor);
-        }
-
-        public void SetProcessorName(string name)
-        {
-            this.Name = name;
+            if (next != null && !Next.Contains(next as IProcessor))
+                Next.Add(next);
         }
 
         #endregion

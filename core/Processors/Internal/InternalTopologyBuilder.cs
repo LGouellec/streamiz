@@ -117,20 +117,20 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         #region Build
 
-        public ProcessorTopology BuildTopology() => BuildTopology(null);
+        public ProcessorTopology BuildTopology() => BuildTopology((string)null);
 
         public ProcessorTopology BuildTopology(string topic)
         {
             ISet<string> nodeGroup = null;
-            if (topic != null)
+            if (!string.IsNullOrEmpty(topic))
                 nodeGroup = NodeGroups()[topic];
             else
-                nodeGroup = NodeGroups().Values.SelectMany(i => i).ToHashSet<string>();
+                nodeGroup = NodeGroups().Values.SelectMany(i => i).ToHashSet();
 
-            return PrivateBuildTopology(nodeGroup);
+            return BuildTopology(nodeGroup);
         }
 
-        private ProcessorTopology PrivateBuildTopology(ISet<string> nodeGroup)
+        private ProcessorTopology BuildTopology(ISet<string> nodeGroup)
         {
             IProcessor rootProcessor = new RootProcessor();
             IDictionary<string, IProcessor> sources = new Dictionary<string, IProcessor>();
@@ -157,7 +157,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
 
             foreach (var sourceProcessor in sources.Values)
-                rootProcessor.SetNextProcessor(sourceProcessor);
+                rootProcessor.AddNextProcessor(sourceProcessor);
 
             return new ProcessorTopology(rootProcessor, sources, sinks, processors, stateStores);
         }
@@ -166,7 +166,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             foreach (var predecessor in factory.Previous)
             {
-                processors[predecessor].SetNextProcessor(processor);
+                processors[predecessor].AddNextProcessor(processor);
             }
 
             sinks.Add(factory.Name, processor);
@@ -182,7 +182,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             foreach (string predecessor in factory.Previous)
             {
                 IProcessor predecessorNode = processors[predecessor];
-                predecessorNode.SetNextProcessor(processor);
+                predecessorNode.AddNextProcessor(processor);
             }
 
             foreach (string stateStoreName in factory.StateStores)
@@ -216,61 +216,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 }
             }
         }
-
-        //private void ApplyChildNodes(IProcessor value, IProcessor previous, StreamGraphNode root)
-        //{
-        //    StreamGraphNode r = null;
-        //    while (r == null)
-        //    {
-        //        if ((root is ITableSourceNode && (((ITableSourceNode)root).SourceName.Equals(value.Name) ||
-        //                ((ITableSourceNode)root).NodeName.Equals(value.Name))) || value.Name.Equals(root.streamGraphNode))
-        //        {
-        //            r = root;
-        //            break;
-        //        }
-
-        //        foreach (var i in root.ChildNodes)
-        //        {
-        //            if ((i is ITableSourceNode && (((ITableSourceNode)i).SourceName.Equals(value.Name) ||
-        //                ((ITableSourceNode)i).NodeName.Equals(value.Name))) || value.Name.Equals(i.streamGraphNode))
-        //                r = i;
-        //        }
-        //    }
-
-        //    if (r != null)
-        //    {
-        //        value.SetPreviousProcessor(previous);
-        //        if (r is ITableSourceNode)
-        //        {
-        //            var tableSourceProcessor = processorOperators.FirstOrDefault(kp => kp.Key.Equals((r as ITableSourceNode).NodeName)).Value;
-        //            if (tableSourceProcessor != null)
-        //            {
-        //                value.SetNextProcessor(tableSourceProcessor);
-        //                value = tableSourceProcessor;
-        //            }
-        //        }
-
-        //        IList<StreamGraphNode> list = r.ChildNodes;
-        //        foreach (var n in list)
-        //        {
-        //            if (n is StreamSinkNode)
-        //            {
-        //                var f = sinkOperators.FirstOrDefault(kp => kp.Key.Equals(n.streamGraphNode)).Value;
-        //                if (f != null)
-        //                    value.SetNextProcessor(f);
-        //            }
-        //            else if (n is ProcessorGraphNode || n is TableProcessorNode)
-        //            {
-        //                var f = processorOperators.FirstOrDefault(kp => kp.Key.Equals(n.streamGraphNode)).Value;
-        //                if (f != null)
-        //                {
-        //                    value.SetNextProcessor(f);
-        //                    this.ApplyChildNodes(f, value, n);
-        //                }
-        //            }
-        //        }
-        //    }
-        //}
 
         #endregion
 

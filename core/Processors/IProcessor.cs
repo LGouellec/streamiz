@@ -6,17 +6,13 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal interface IProcessor
     {
-        string Name { get; }
+        string Name { get; set; }
         IList<string> StateStores {get;}
         ISerDes Key { get; }
         ISerDes Value { get; }
         void Init(ProcessorContext context);
-        // TODO : Maybe not needed !!!!!
-        IList<IProcessor> Previous { get; }
         IList<IProcessor> Next { get; }
-        void SetProcessorName(string name);
-        void SetPreviousProcessor(IProcessor prev);
-        void SetNextProcessor(IProcessor next);
+        void AddNextProcessor(IProcessor next);
         void Close();
         void Process(object key, object value);
     }

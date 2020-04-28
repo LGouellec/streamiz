@@ -17,16 +17,10 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly string topicName;
 
         internal SourceProcessor(string name, string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, ITimestampExtractor extractor)
-            : base(name, null, keySerdes, valueSerdes)
+            : base(name, keySerdes, valueSerdes)
         {
             this.topicName = topicName;
             this.Extractor = extractor;
-        }
-
-        private SourceProcessor(SourceProcessor<K,V> sourceProcessor)
-            : this(sourceProcessor.Name, sourceProcessor.TopicName, sourceProcessor.KeySerDes, sourceProcessor.ValueSerDes, sourceProcessor.Extractor)
-        {
-            this.StateStores = new List<string>(sourceProcessor.StateStores);
         }
 
         public string TopicName => topicName;
