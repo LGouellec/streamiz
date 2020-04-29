@@ -1,4 +1,8 @@
-﻿namespace Streamiz.Kafka.Net.State
+﻿using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Processors;
+using System.Collections.Generic;
+
+namespace Streamiz.Kafka.Net.State
 {
     /// <summary>
     /// A key-value store that only supports read operations.
@@ -23,7 +27,12 @@
         // TODO : 
         //KeyValueIterator<K, V> range(K from, K to);
 
-        //KeyValueIterator<K, V> all();
+        /// <summary>
+        /// Return an iterator over all keys in this store. No ordering guarantees are provided.
+        /// </summary>
+        /// <returns>An iterator of all key/value pairs in the store.</returns>
+        /// <exception cref="InvalidStateStoreException">if the store is not initialized</exception>
+        IEnumerable<KeyValuePair<K, V>> All();
 
         /// <summary>
         /// Return an approximate count of key-value mappings in this store.

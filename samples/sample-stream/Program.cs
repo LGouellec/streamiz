@@ -1,10 +1,13 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using System;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace sample_stream
 {
@@ -23,7 +26,7 @@ namespace sample_stream
             config.SecurityProtocol = SecurityProtocol.SaslPlaintext;
             config.AutoOffsetReset = AutoOffsetReset.Earliest;
             config.NumStreamThreads = 1;
-            
+
             StreamBuilder builder = new StreamBuilder();
 
             builder.Stream<string, string>("test")
@@ -36,7 +39,23 @@ namespace sample_stream
 
             KafkaStream stream = new KafkaStream(t, config);
 
-            Console.CancelKeyPress += (o, e) => {
+            stream.StateChanged += (old, @new) =>
+            {
+                if (@new == KafkaStream.State.RUNNING)
+                {
+                    Task.Factory.StartNew(() =>
+                    {
+                        while (!source.Token.IsCancellationRequested)
+                        {
+                            var store = stream.Store("test-store", QueryableStoreTypes.TimestampedKeyValueStore<string, string>());
+                            var items = store.All().ToList();
+                            Thread.Sleep(500);
+                        }
+                    }, source.Token);
+                }
+            };
+            Console.CancelKeyPress += (o, e) =>
+            {
                 source.Cancel();
                 stream.Close();
             };

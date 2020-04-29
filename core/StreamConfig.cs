@@ -1964,6 +1964,7 @@ namespace Streamiz.Kafka.Net
         public StreamConfig()
             : this(null)
         {
+
         }
 
         /// <summary>
