@@ -155,12 +155,13 @@ static void Main(string[] args)
 
 # TODO implementation
 
+- Topology description [X]
+- Refactor topology node processor builder [X]
+- Subtopology impl [X]
 - Statefull processors impl [ ]
-- Subtopology impl [ ]
 - Task restoring [ ]
-- Topology description [ ]
 - Global state store [ ]
-- Processor API [ ] + Refactor topology node processor builder [ ]
+- Processor API [ ]
 - Repartition impl [ ]
 - Unit tests (TestTopologyDriver, ...) [ ]
 - Rocks DB state implementation [ ]

@@ -4,7 +4,6 @@ using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
-using Streamiz.Kafka.Net.Table.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -265,8 +264,30 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         internal ITopologyDescription Describe()
         {
             var topologyDes = new TopologyDescription();
-            // TODO : 
+
+            foreach (var kp in NodeGroups())
+                DescribeSubTopology(topologyDes, kp.Key, kp.Value);
+
             return topologyDes;
+        }
+
+        private void DescribeSubTopology(TopologyDescription description, string key, ISet<string> values)
+        {
+            IDictionary<string, NodeDescription> nodesByName = new Dictionary<string, NodeDescription>();
+            foreach (var name in values)
+                nodesByName.Add(name, nodeFactories[name].Describe());
+
+            foreach (var node in nodesByName.Values)
+            {
+                foreach (var prev in nodeFactories[node.Name].Previous)
+                {
+                    var prevNode = nodesByName[prev];
+                    node.AddPredecessor(prevNode);
+                    prevNode.AddSuccessor(node);
+                }
+            }
+
+            description.AddSubtopology(new SubTopologyDescription(key, nodesByName.Values.ToList<INodeDescription>()));
         }
 
         #endregion

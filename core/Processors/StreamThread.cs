@@ -232,6 +232,8 @@ namespace Streamiz.Kafka.Net.Processors
             thread.Start();
         }
 
+        public IEnumerable<ITask> ActiveTasks => this.manager.ActiveTasks;
+
         #endregion
 
         private bool MaybeCommit()
