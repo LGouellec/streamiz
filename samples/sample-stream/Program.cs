@@ -49,6 +49,8 @@ namespace sample_stream
                         {
                             var store = stream.Store("test-store", QueryableStoreTypes.TimestampedKeyValueStore<string, string>());
                             var items = store.All().ToList();
+                            var store2 = stream.Store("test-store", QueryableStoreTypes.KeyValueStore<string, string>());
+                            var items2 = store2.All().ToList();
                             Thread.Sleep(500);
                         }
                     }, source.Token);
