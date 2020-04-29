@@ -330,14 +330,17 @@ namespace Streamiz.Kafka.Net
 
         /// <summary>
         /// Get a facade wrapping the local <see cref="IStateStore"/> instances with the provided <see cref="StoreQueryParameters{T}"/>
-        /// The returned object can be used to query the {@link StateStore} instances.
+        /// The returned object can be used to query the <see cref="IStateStore"/> instances.
         /// </summary>
         /// <typeparam name="T">return type</typeparam>
+        /// <typeparam name="K">Key type</typeparam>
+        /// <typeparam name="V">Value type</typeparam>
         /// <param name="storeQueryParameters">the parameters used to fetch a queryable store</param>
         /// <returns>A facade wrapping the local <see cref="IStateStore"/> instances</returns>
         /// <exception cref="InvalidStateStoreException ">if Kafka Streams is (re-)initializing or a store with <code>storeName</code> } and
         /// <code>queryableStoreType</code> doesn't exist </exception>
-        public T Store<T>(StoreQueryParameters<T> storeQueryParameters) where T : class
+        public T Store<T, K, V>(StoreQueryParameters<T, K, V> storeQueryParameters) 
+            where T : class
         {
             this.ValidateIsRunning();
             return this.queryableStoreProvider.GetStore(storeQueryParameters);

@@ -6,7 +6,7 @@ using System.Linq;
 namespace Streamiz.Kafka.Net.State.Internal
 {
     /// <summary>
-    /// A wrapper over all of the <see cref="IStateStoreProvider{T}"/>s in a Topology
+    /// A wrapper over all of the <see cref="IStateStoreProvider{T, K, V}"/>s in a Topology
     /// </summary>
     internal class QueryableStoreProvider
     {
@@ -24,12 +24,15 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         /// <summary>
         /// Get a composite object wrapping the instances of the <see cref="Processors.IStateStore"/> with the provided
-        /// storeName and <see cref="IQueryableStoreType{T}"/>
+        /// storeName and <see cref="IQueryableStoreType{T, K, V}"/>
         /// </summary>
         /// <typeparam name="T">The expected type of the returned store</typeparam>
+        /// <typeparam name="K">Key type</typeparam>
+        /// <typeparam name="V">Value type</typeparam>
         /// <param name="storeQueryParameters">parameters to be used when querying for store</param>
         /// <returns>A composite object that wraps the store instances.</returns>
-        public T GetStore<T>(StoreQueryParameters<T> storeQueryParameters) where T : class
+        public T GetStore<T, K, V>(StoreQueryParameters<T, K, V> storeQueryParameters) 
+            where T : class
         {
             //IEnumerable<T> globalStore = this.globalStateStoreProvider.stores(storeName, queryableStoreType);
             //if (globalStore.Any())
@@ -48,7 +51,7 @@ namespace Streamiz.Kafka.Net.State.Internal
             return storeQueryParameters
                 .QueryableStoreType
                 .Create(
-                    new WrappingStoreProvider<T>(this.storeProviders, storeQueryParameters),
+                    new WrappingStoreProvider<T, K, V>(this.storeProviders, storeQueryParameters),
                     storeQueryParameters.StoreName);
         }
     }

@@ -9,13 +9,13 @@ namespace Streamiz.Kafka.Net.State.Internal
 {
     internal class CompositeReadOnlyKeyValueStore<K, V> : ReadOnlyKeyValueStore<K, V>
     {
-        private readonly IStateStoreProvider<ReadOnlyKeyValueStore<K, V>> storeProvider;
-        private readonly IQueryableStoreType<ReadOnlyKeyValueStore<K, V>> storeType;
+        private readonly IStateStoreProvider<ReadOnlyKeyValueStore<K, V>, K, V> storeProvider;
+        private readonly IQueryableStoreType<ReadOnlyKeyValueStore<K, V>, K, V> storeType;
         private readonly string storeName;
 
         public CompositeReadOnlyKeyValueStore(
-            IStateStoreProvider<ReadOnlyKeyValueStore<K, V>> storeProvider,
-            IQueryableStoreType<ReadOnlyKeyValueStore<K, V>> storeType, string storeName)
+            IStateStoreProvider<ReadOnlyKeyValueStore<K, V>, K, V> storeProvider,
+            IQueryableStoreType<ReadOnlyKeyValueStore<K, V>, K, V> storeType, string storeName)
         {
             this.storeProvider = storeProvider;
             this.storeType = storeType;

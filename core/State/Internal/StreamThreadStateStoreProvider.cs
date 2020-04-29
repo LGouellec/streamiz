@@ -17,7 +17,8 @@ namespace Streamiz.Kafka.Net.State.Internal
             this.internalTopologyBuilder = internalTopologyBuilder;
         }
 
-        public IEnumerable<T> Stores<T>(StoreQueryParameters<T> storeQueryParameters) where T: class
+        public IEnumerable<T> Stores<T, K, V>(StoreQueryParameters<T, K, V> storeQueryParameters) 
+            where T : class
         {
             // TODO: handle 'staleStoresEnabled' and 'partition' when they are added to StoreQueryParameters
 
@@ -43,9 +44,18 @@ namespace Streamiz.Kafka.Net.State.Internal
                             $"store is not open. The state store may have migrated to another instances.");
                     }
 
+                    //if (store is TimestampedKeyValueStore && storeQueryParameters.QueryableStoreType is QueryableStoreTypes.KeyValueStoreType) {
+                    //    return (T)new ReadOnlyKeyValueStoreFacade<>((TimestampedKeyValueStore<Object, Object>)store);
+                    //} else if (store instanceof TimestampedWindowStore && queryableStoreType instanceof QueryableStoreTypes.WindowStoreType) {
+                    //    return (T)new ReadOnlyWindowStoreFacade<>((TimestampedWindowStore<Object, Object>)store);
+                    //} else
+                    //{
+                    //    return (T)store;
+                    //}
+
                     // TODO: handle TimestampedKeyValueStore and TimestampedWindowStore 
 
-                    stores.Add(store as T);
+                    stores.Add((T)store);
                 }
             }
             return stores;

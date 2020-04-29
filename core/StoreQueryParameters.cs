@@ -1,7 +1,5 @@
-﻿using Streamiz.Kafka.Net.State.Internal;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.State.Internal;
 
 namespace Streamiz.Kafka.Net
 {
@@ -9,7 +7,10 @@ namespace Streamiz.Kafka.Net
     /// Allows you to pass a variety of parameters when fetching a store for interactive query.
     /// </summary>
     /// <typeparam name="T">The type of the Store to be fetched</typeparam>
-    public class StoreQueryParameters<T> where T : class
+    /// <typeparam name="K">Key type</typeparam>
+    /// <typeparam name="V">Value type</typeparam>
+    public class StoreQueryParameters<T, K, V> 
+        where T : class
     {
         //public int? Partition { get; private set; }
 
@@ -21,11 +22,11 @@ namespace Streamiz.Kafka.Net
         public string StoreName { get; private set; }
 
         /// <summary>
-        /// The <see cref="IQueryableStoreType{T}"/> for which key is queried by the user.
+        /// The <see cref="IQueryableStoreType{T, K, V}"/> for which key is queried by the user.
         /// </summary>
-        public IQueryableStoreType<T> QueryableStoreType { get; private set; }
+        public IQueryableStoreType<T, K, V> QueryableStoreType { get; private set; }
 
-        private StoreQueryParameters(string storeName, IQueryableStoreType<T> queryableStoreType, int? partition, bool staleStores)
+        private StoreQueryParameters(string storeName, IQueryableStoreType<T, K, V> queryableStoreType, int? partition, bool staleStores)
         {
             StoreName = storeName;
             QueryableStoreType = queryableStoreType;
@@ -34,14 +35,14 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
-        /// Creates <see cref="StoreQueryParameters{T}"/> with specified storeName and queryableStoreType
+        /// Creates <see cref="StoreQueryParameters{T, K, V}"/> with specified storeName and queryableStoreType
         /// </summary>
         /// <param name="storeName">The name of the state store that should be queried.</param>
-        /// <param name="queryableStoreType">The <see cref="IQueryableStoreType{T}"/> for which key is queried by the user.</param>
+        /// <param name="queryableStoreType">The <see cref="IQueryableStoreType{T, K, V}"/> for which key is queried by the user.</param>
         /// <returns></returns>
-        public static StoreQueryParameters<T> FromNameAndType(string storeName, IQueryableStoreType<T> queryableStoreType)
+        public static StoreQueryParameters<T, K, V> FromNameAndType(string storeName, IQueryableStoreType<T, K, V> queryableStoreType)
         {
-            return new StoreQueryParameters<T>(storeName, queryableStoreType, null, false);
+            return new StoreQueryParameters<T, K, V>(storeName, queryableStoreType, null, false);
         }
 
         //public StoreQueryParameters<T> WithPartition(int partition)

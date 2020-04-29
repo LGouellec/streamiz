@@ -6,8 +6,11 @@ namespace Streamiz.Kafka.Net.State.Internal
     /// Used to enable querying of custom <see cref="IStateStore"/> types via the <see cref="KafkaStream"/> API.
     /// </summary>
     /// <typeparam name="T">The store type</typeparam>
+    /// <typeparam name="K">Key type</typeparam>
+    /// <typeparam name="V">Value type</typeparam>
     /// <seealso cref="QueryableStoreTypes"/>
-    public interface IQueryableStoreType<T> where T : class
+    public interface IQueryableStoreType<T, K, V>
+         where T : class
     {
         /// <summary>
         /// Called when searching for <see cref="IStateStore"/>s to see if they
@@ -24,6 +27,6 @@ namespace Streamiz.Kafka.Net.State.Internal
         /// <param name="storeProvider">provides access to all the underlying <see cref="IStateStore"/> instances</param>
         /// <param name="storeName">The name of the Store</param>
         /// <returns>a read-only interface over a <see cref="IStateStore"/></returns>
-        T Create(IStateStoreProvider<T> storeProvider, string storeName);
+        T Create(IStateStoreProvider<T, K, V> storeProvider, string storeName);
     }
 }
