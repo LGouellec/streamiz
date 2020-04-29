@@ -47,9 +47,9 @@ namespace sample_stream
                     {
                         while (!source.Token.IsCancellationRequested)
                         {
-                            var store = stream.Store("test-store", QueryableStoreTypes.TimestampedKeyValueStore<string, string>());
+                            var store = stream.Store(StoreQueryParameters.FromNameAndType("test-store", QueryableStoreTypes.TimestampedKeyValueStore<string, string>()));
                             var items = store.All().ToList();
-                            var store2 = stream.Store("test-store", QueryableStoreTypes.KeyValueStore<string, string>());
+                            var store2 = stream.Store(StoreQueryParameters.FromNameAndType("test-store", QueryableStoreTypes.KeyValueStore<string, string>()));
                             var items2 = store2.All().ToList();
                             Thread.Sleep(500);
                         }

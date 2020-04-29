@@ -346,19 +346,6 @@ namespace Streamiz.Kafka.Net
             return this.queryableStoreProvider.GetStore(storeQueryParameters);
         }
 
-        /// <summary>
-        /// Get a facade wrapping the local <see cref="IStateStore"/> instances with the provided <see cref="StoreQueryParameters{T, K, V}"/>
-        /// The returned object can be used to query the <see cref="IStateStore"/> instances.</summary>
-        /// <typeparam name="T">return type</typeparam>
-        /// <typeparam name="K">Key type</typeparam>
-        /// <typeparam name="V">Value type</typeparam>
-        /// <param name="name">The name of the state store that should be queried.</param>
-        /// <param name="queryableStoreType">The <see cref="IQueryableStoreType{T, K, V}"/> for which key is queried by the user.</param>
-        /// <returns>A facade wrapping the local <see cref="IStateStore"/> instances</returns>
-        public T Store<T, K, V>(string name, IQueryableStoreType<T, K, V> queryableStoreType)
-            where T : class
-            => Store(new StoreQueryParameters<T, K, V>(name, queryableStoreType, null, false));
-
         #region Privates
 
         private bool WaitOnState(State targetState, long waitMs)
