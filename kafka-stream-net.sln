@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29519.87
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kafka-stream-core", "core\kafka-stream-core.csproj", "{4812257D-B650-44DA-AD06-1E9EFC4E7992}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "core\Core.csproj", "{4812257D-B650-44DA-AD06-1E9EFC4E7992}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "sample-stream", "samples\sample-stream\sample-stream.csproj", "{57CA84AD-2E9F-4E4D-94B7-B8CF534B0B0E}"
 EndProject
@@ -21,7 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GenerateData", "GenerateDat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "sample-test-driver", "samples\sample-test-driver\sample-test-driver.csproj", "{5671E175-D880-4B49-A0ED-47F6531DDF32}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kafka-stream-core.test", "kafka-stream-core.test\kafka-stream-core.test.csproj", "{6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestProcessors", "test\TestProcessors\TestProcessors.csproj", "{6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

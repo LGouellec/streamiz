@@ -1,15 +1,12 @@
-using Confluent.Kafka;
-using Moq;
 using NUnit.Framework;
-using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.Mock;
-using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
-namespace kafka_stream_core.test.Stream.Internal.Graph
+namespace Streamiz.Kafka.Net.TestProcessors
 {
     public class KStreamPeekTests
     {
@@ -25,9 +22,10 @@ namespace kafka_stream_core.test.Stream.Internal.Graph
                 .Foreach((k, v) => streamObserved.Add(KeyValuePair.Create(k, v)));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test";
-            config.NumStreamThreads = 1;
+            config.ApplicationId = "test-peek";
+            
             Topology t = builder.Build();
+
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
@@ -39,9 +37,15 @@ namespace kafka_stream_core.test.Stream.Internal.Graph
                     inputTopic.PipeInput(key, value);
                     expected.Add(KeyValuePair.Create(key, value));
                 }
+                Thread.Sleep(1000);
 
-                Assert.AreEqual(expected, peekObserved);
-                Assert.AreEqual(expected, streamObserved);
+                Assert.AreEqual(expected.Count, peekObserved.Count);
+                Assert.AreEqual(expected.Count, streamObserved.Count);
+                foreach (var e in expected)
+                {
+                    Assert.IsTrue(peekObserved.Contains(e));
+                    Assert.IsTrue(streamObserved.Contains(e));
+                }
             }
         }
 
