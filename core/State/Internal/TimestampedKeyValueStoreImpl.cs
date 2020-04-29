@@ -19,6 +19,7 @@ namespace Streamiz.Kafka.Net.State.Internal
         private Bytes GetKeyBytes(K key) => new Bytes(this.keySerdes.Serialize(key));
         private byte[] GetValueBytes(ValueAndTimestamp<V> value) => this.valueSerdes.Serialize(value);
         private ValueAndTimestamp<V> FromValue(byte[] values) => values != null ? this.valueSerdes.Deserialize(values) : null;
+        private K FromKey(Bytes key) => this.keySerdes.Deserialize(key.Get);
 
         #region TimestampedKeyValueStore Impl
 
@@ -29,6 +30,13 @@ namespace Streamiz.Kafka.Net.State.Internal
         public ValueAndTimestamp<V> Get(K key) => FromValue(wrapped.Get(GetKeyBytes(key)));
 
         public void Put(K key, ValueAndTimestamp<V> value) => wrapped.Put(GetKeyBytes(key), GetValueBytes(value));
+
+        public IEnumerable<KeyValuePair<K, ValueAndTimestamp<V>>> All() {
+            foreach (var keyValuePair in wrapped.All())
+            {
+                yield return new KeyValuePair<K, ValueAndTimestamp<V>>(FromKey(keyValuePair.Key), FromValue(keyValuePair.Value));
+            }
+        }
 
         public void PutAll(IEnumerable<KeyValuePair<K, ValueAndTimestamp<V>>> entries)
         {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace Streamiz.Kafka.Net.Processors
@@ -12,6 +13,7 @@ namespace Streamiz.Kafka.Net.Processors
         bool IsRunning { get; }
         void Run();
         void Start(CancellationToken token);
+        IEnumerable<ITask> ActiveTasks { get;  }
 
         event ThreadStateListener StateChanged;
     }
