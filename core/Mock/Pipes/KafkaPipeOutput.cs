@@ -11,11 +11,11 @@ using System.Threading;
 
 namespace Streamiz.Kafka.Net.Mock.Pipes
 {
-    internal class PipeOutput : IPipeOutput
+    internal class KafkaPipeOutput : IPipeOutput
     {
         private readonly string topicName;
         private readonly TimeSpan timeout;
-        private readonly ILog logger = Logger.GetLogger(typeof(PipeOutput));
+        private readonly ILog logger = Logger.GetLogger(typeof(KafkaPipeOutput));
 
         private readonly CancellationToken token;
         private readonly Thread readThread;
@@ -44,7 +44,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
             }
         }
 
-        public PipeOutput(string topicName, TimeSpan timeout, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, CancellationToken token)
+        public KafkaPipeOutput(string topicName, TimeSpan timeout, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, CancellationToken token)
         {
             this.topicName = topicName;
             this.timeout = timeout;

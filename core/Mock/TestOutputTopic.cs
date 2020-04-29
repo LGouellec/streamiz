@@ -48,6 +48,8 @@ namespace Streamiz.Kafka.Net.Mock
             this.valueSerdes = valueSerdes;
         }
 
+        internal IPipeOutput Pipe => pipe;
+
         /// <summary>
         /// Verify if the topic queue is empty.
         /// </summary>

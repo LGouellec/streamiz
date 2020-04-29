@@ -1,17 +1,11 @@
-﻿using Confluent.Kafka;
-using Streamiz.Kafka.Net.Errors;
-using Streamiz.Kafka.Net.Kafka;
-using Streamiz.Kafka.Net.Kafka.Internal;
-using Streamiz.Kafka.Net.Mock.Kafka;
+﻿using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.Mock.Pipes;
-using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 
 namespace Streamiz.Kafka.Net.Mock
@@ -64,6 +58,24 @@ namespace Streamiz.Kafka.Net.Mock
     /// </summary>
     public class TopologyTestDriver : IDisposable
     {
+        /// <summary>
+        /// Test driver behavior mode
+        /// </summary>
+        public enum Mode
+        {
+            /// <summary>
+            /// Each record in send synchronous. 
+            /// This is the default mode use in <see cref="TopologyTestDriver"/>.
+            /// </summary>
+            SYNC_TASK,
+            /// <summary>
+            /// A Cluster Kafka is emulated in memory with topic, partitions, etc ...
+            /// Also, if you send 1:1, 2:2, 3:3 in a topic, you could have in destination topic this order : 1:1, 3:3, 2:2.
+            /// If your unit test use record order, please <see cref="Mode.SYNC_TASK"/>
+            /// </summary>
+            ASYNC_CLUSTER_IN_MEMORY
+        }
+
         private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
         private readonly InternalTopologyBuilder topologyBuilder;
         private readonly IStreamConfig configuration;
@@ -72,71 +84,54 @@ namespace Streamiz.Kafka.Net.Mock
 
         private readonly IDictionary<string, IPipeInput> inputs = new Dictionary<string, IPipeInput>();
         private readonly IDictionary<string, IPipeOutput> outputs = new Dictionary<string, IPipeOutput>();
-        private readonly PipeBuilder pipeBuilder = null;
 
-        private readonly IThread threadTopology = null;
-        private readonly IKafkaSupplier kafkaSupplier = null;
+        private readonly IBehaviorTopologyTestDriver behavior = null;
 
         /// <summary>
         /// Create a new test diver instance.
         /// </summary>
         /// <param name="topology">Topology to be tested</param>
         /// <param name="config">Configuration for topology. One property will be modified : <see cref="IStreamConfig.NumStreamThreads"/> will set to 1</param>
-        public TopologyTestDriver(Topology topology, IStreamConfig config)
-            :this(topology.Builder, config)
+        /// <param name="mode">Topology driver mode</param>
+        public TopologyTestDriver(Topology topology, IStreamConfig config, Mode mode = Mode.SYNC_TASK)
+            : this(topology.Builder, config, mode)
         { }
 
-        private TopologyTestDriver(InternalTopologyBuilder builder, IStreamConfig config)
+        private TopologyTestDriver(InternalTopologyBuilder builder, IStreamConfig config, Mode mode)
         {
-            this.topologyBuilder = builder;
-            this.configuration = config;
+            topologyBuilder = builder;
+            configuration = config;
 
-            // ONLY 1 thread for test driver
-            this.configuration.NumStreamThreads = 1;
-            this.configuration.Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
+            // ONLY 1 thread for test driver (use only for ASYNC_CLUSTER_IN_MEMORY)
+            configuration.NumStreamThreads = 1;
+            configuration.Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
 
-            this.topicConfiguration = config.Clone();
-            this.topicConfiguration.ApplicationId = $"test-driver-{this.configuration.ApplicationId}";
+            topicConfiguration = config.Clone();
+            topicConfiguration.ApplicationId = $"test-driver-{configuration.ApplicationId}";
 
-            var processID = Guid.NewGuid();
-            var clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{this.configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;
-            this.configuration.ClientId = clientId;
+            var clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{configuration.ApplicationId.ToLower()}-{Guid.NewGuid()}" : configuration.ClientId;
 
-            kafkaSupplier = new MockKafkaSupplier();
-            pipeBuilder = new PipeBuilder(kafkaSupplier);
-
-            this.processorTopology = this.topologyBuilder.BuildTopology();
-
-            this.threadTopology = StreamThread.Create(
-                $"{this.configuration.ApplicationId.ToLower()}-stream-thread-0",
-                clientId,
-                builder,
-                config,
-                kafkaSupplier,
-                kafkaSupplier.GetAdmin(configuration.ToAdminConfig($"{clientId}-admin")),
-                0);
-
-            RunDriver();
-        }
-
-        private void RunDriver()
-        {
-            bool isRunningState = false;
-            DateTime dt = DateTime.Now;
-            TimeSpan timeout = TimeSpan.FromSeconds(30);
-
-            threadTopology.StateChanged += (thread, old, @new) => {
-                if (@new is Processors.ThreadState && ((Processors.ThreadState)@new) == Processors.ThreadState.RUNNING)
-                    isRunningState = true;
-            };
-
-            threadTopology.Start(tokenSource.Token);
-            while (!isRunningState)
+            switch (mode)
             {
-                Thread.Sleep(250);
-                if (DateTime.Now > dt + timeout)
-                    throw new StreamsException($"Test topology driver can't initiliaze state after {timeout.TotalSeconds} seconds !");
+                case Mode.SYNC_TASK:
+                    behavior = new TaskSynchronousTopologyDriver(
+                        clientId,
+                        topologyBuilder,
+                        configuration,
+                        topicConfiguration,
+                        tokenSource.Token);
+                    break;
+                case Mode.ASYNC_CLUSTER_IN_MEMORY:
+                    behavior = new ClusterInMemoryTopologyDriver(
+                        clientId,
+                        topologyBuilder,
+                        configuration,
+                        topicConfiguration,
+                        tokenSource.Token);
+                    break;
             }
+
+            behavior.StartDriver();
         }
 
         /// <summary>
@@ -145,7 +140,7 @@ namespace Streamiz.Kafka.Net.Mock
         public void Dispose()
         {
             tokenSource.Cancel();
-            threadTopology.Dispose();
+            behavior.Dispose();
 
             foreach (var k in inputs)
                 k.Value.Dispose();
@@ -164,7 +159,7 @@ namespace Streamiz.Kafka.Net.Mock
         /// <typeparam name="V">value type</typeparam>
         /// <param name="topicName">the name of the topic</param>
         /// <returns><see cref="TestInputTopic{K, V}"/> instance</returns>
-        public TestInputTopic<K,V> CreateInputTopic<K, V>(string topicName)
+        public TestInputTopic<K, V> CreateInputTopic<K, V>(string topicName)
             => CreateInputTopic<K, V>(topicName, null, null);
 
         /// <summary>
@@ -176,11 +171,11 @@ namespace Streamiz.Kafka.Net.Mock
         /// <param name="valueSerdes">Value serializer</param>
         /// <param name="topicName">the name of the topic</param>
         /// <returns><see cref="TestInputTopic{K, V}"/> instance</returns>
-        public TestInputTopic<K,V> CreateInputTopic<K, V>(string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+        public TestInputTopic<K, V> CreateInputTopic<K, V>(string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
         {
-            var pipe = pipeBuilder.Input(topicName, this.topicConfiguration);
-            inputs.Add(topicName, pipe);
-            return new TestInputTopic<K, V>(pipe, this.topicConfiguration, keySerdes, valueSerdes);
+            var input = behavior.CreateInputTopic(topicName, keySerdes, valueSerdes);
+            inputs.Add(topicName, input.Pipe);
+            return input;
         }
 
         /// <summary>
@@ -225,9 +220,9 @@ namespace Streamiz.Kafka.Net.Mock
         /// <returns><see cref="TestOutputTopic{K, V}"/> instance</returns>
         public TestOutputTopic<K, V> CreateOuputTopic<K, V>(string topicName, TimeSpan consumeTimeout, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
         {
-            var pipe = pipeBuilder.Output(topicName, consumeTimeout, this.topicConfiguration, this.tokenSource.Token);
-            outputs.Add(topicName, pipe);
-            return new TestOutputTopic<K, V>(pipe, this.topicConfiguration, keySerdes, valueSerdes);
+            var output = behavior.CreateOutputTopic(topicName, consumeTimeout, keySerdes, valueSerdes);
+            outputs.Add(topicName, output.Pipe);
+            return output;
         }
 
         /// <summary>

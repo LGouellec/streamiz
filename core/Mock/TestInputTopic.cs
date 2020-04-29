@@ -42,6 +42,8 @@ namespace Streamiz.Kafka.Net.Mock
             this.valueSerdes = valueSerdes;
         }
 
+        internal IPipeInput Pipe => pipe;
+
         private (byte[], byte[]) GetBytes(K key, V value)
         {
             byte[] k = keySerdes != null ? keySerdes.Serialize(key) : configuration.DefaultKeySerDes.SerializeObject(key);

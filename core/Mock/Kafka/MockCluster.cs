@@ -54,6 +54,8 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
     internal class MockCluster
     {
+        internal static int DEFAULT_NUMBER_PARTITIONS = 4;
+
         #region Singleton
 
         private static object _lock = new object();
@@ -82,7 +84,9 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         #region Topic Gesture
 
-        private bool CreateTopic(string topic, int partitions = 4)
+        private bool CreateTopic(string topic) => CreateTopic(topic, DEFAULT_NUMBER_PARTITIONS);
+
+        private bool CreateTopic(string topic, int partitions)
         {
             if (!topics.Values.Any(t => t.Name.Equals(topic, StringComparison.InvariantCultureIgnoreCase)))
             {
@@ -297,7 +301,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                 c.RebalanceListener?.PartitionsRevoked(c.Consumer, pList);
 
                 // Rebalance on other consumer in the same group
-                var otherConsumers = consumerGroups[mockConsumer.MemberId].Select(i => consumers[i]).Where(i => !i.Name.Equals(mockConsumer.Name)).ToList();
+                var otherConsumers = consumerGroups[mockConsumer.MemberId].Where(i => consumers.ContainsKey(i)).Select(i => consumers[i]).Where(i => !i.Name.Equals(mockConsumer.Name)).ToList();
                 if (otherConsumers.Count > 0)
                 {
                     int partEach = (int)(c.Partitions.Count / otherConsumers.Count);

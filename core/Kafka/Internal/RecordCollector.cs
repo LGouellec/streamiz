@@ -77,7 +77,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 (report) => {
                     if (report.Error.Code == ErrorCode.NoError && report.Status == PersistenceStatus.Persisted)
                     {
-                        if (offsets.ContainsKey(report.TopicPartition) && offsets[report.TopicPartition] < report.Offset)
+                        if (offsets.ContainsKey(report.TopicPartition) && offsets[report.TopicPartition] <= report.Offset)
                             offsets[report.TopicPartition] = report.Offset;
                         else
                             offsets.Add(report.TopicPartition, report.Offset);
