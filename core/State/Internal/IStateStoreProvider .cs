@@ -6,7 +6,7 @@ namespace Streamiz.Kafka.Net.State.Internal
     /// <summary>
     /// Provides access to <see cref="Processors.IStateStore"/>s that have been created
     /// as part of the <see cref="Stream.Internal.ProcessorTopology"/>.
-    /// To get access to custom stores developers should implement <see cref="IQueryableStoreType{T}"/>.
+    /// To get access to custom stores developers should implement <see cref="IQueryableStoreType{T, K, V}"/>.
     /// </summary>
     /// <see cref="QueryableStoreTypes"/>
     /// <typeparam name="T">The type of the store to be provided</typeparam>

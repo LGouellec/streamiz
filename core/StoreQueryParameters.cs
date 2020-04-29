@@ -26,7 +26,7 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         public IQueryableStoreType<T, K, V> QueryableStoreType { get; private set; }
 
-        private StoreQueryParameters(string storeName, IQueryableStoreType<T, K, V> queryableStoreType, int? partition, bool staleStores)
+        internal StoreQueryParameters(string storeName, IQueryableStoreType<T, K, V> queryableStoreType, int? partition, bool staleStores)
         {
             StoreName = storeName;
             QueryableStoreType = queryableStoreType;

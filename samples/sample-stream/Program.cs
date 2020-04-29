@@ -7,6 +7,7 @@ using Streamiz.Kafka.Net.Table;
 using System;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace sample_stream
 {
@@ -37,12 +38,20 @@ namespace sample_stream
             Topology t = builder.Build();
 
             KafkaStream stream = new KafkaStream(t, config);
+
             stream.StateChanged += (old, @new) =>
             {
                 if (@new == KafkaStream.State.RUNNING)
                 {
-                    //var store = stream.Store(StoreQueryParameters<ReadOnlyKeyValueStore<string, string>>.FromNameAndType("test-store", QueryableStoreTypes.KeyValueStore<string, string>()));
-                    //var items = store.All().ToList();
+                    Task.Factory.StartNew(() =>
+                    {
+                        while (!source.Token.IsCancellationRequested)
+                        {
+                            var store = stream.Store("test-store", QueryableStoreTypes.TimestampedKeyValueStore<string, string>());
+                            var items = store.All().ToList();
+                            Thread.Sleep(500);
+                        }
+                    }, source.Token);
                 }
             };
             Console.CancelKeyPress += (o, e) =>

@@ -44,18 +44,17 @@ namespace Streamiz.Kafka.Net.State.Internal
                             $"store is not open. The state store may have migrated to another instances.");
                     }
 
-                    //if (store is TimestampedKeyValueStore && storeQueryParameters.QueryableStoreType is QueryableStoreTypes.KeyValueStoreType) {
-                    //    return (T)new ReadOnlyKeyValueStoreFacade<>((TimestampedKeyValueStore<Object, Object>)store);
-                    //} else if (store instanceof TimestampedWindowStore && queryableStoreType instanceof QueryableStoreTypes.WindowStoreType) {
+                    // TODO: handle TimestampedWindowStore 
+                    // else if (store instanceof TimestampedWindowStore && queryableStoreType instanceof QueryableStoreTypes.WindowStoreType) {
                     //    return (T)new ReadOnlyWindowStoreFacade<>((TimestampedWindowStore<Object, Object>)store);
-                    //} else
-                    //{
-                    //    return (T)store;
                     //}
-
-                    // TODO: handle TimestampedKeyValueStore and TimestampedWindowStore 
-
-                    stores.Add((T)store);
+                    if (store is TimestampedKeyValueStore<K, V> && storeQueryParameters.QueryableStoreType is KeyValueStoreType<K, V>)
+                    {
+                        T t = new ReadOnlyKeyValueStoreFacade<K, V>(store as TimestampedKeyValueStore<K, V>) as T;
+                        stores.Add(t);
+                    }
+                    else if (store is T)
+                        stores.Add(store as T);
                 }
             }
             return stores;
