@@ -2,8 +2,6 @@
 using Streamiz.Kafka.Net.Mock.Pipes;
 using Streamiz.Kafka.Net.Processors;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 
 namespace Streamiz.Kafka.Net.Mock.Sync

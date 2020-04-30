@@ -199,14 +199,14 @@ namespace Streamiz.Kafka.Net.Mock
         /// <summary>
         /// Create <see cref="TestOutputTopic{K, V}"/> to be used for reading records from topic.
         /// The key and value serializer as specified in the <see cref="IStreamConfig"/> are used.
-        /// By default, the consume timeout is set to 5 seconds.
+        /// By default, the consume timeout is set to 1 seconds.
         /// </summary>
         /// <typeparam name="K">Key type</typeparam>
         /// <typeparam name="V">Value type</typeparam>
         /// <param name="topicName">the name of the topic</param>
         /// <returns><see cref="TestOutputTopic{K, V}"/> instance</returns>
         public TestOutputTopic<K, V> CreateOuputTopic<K, V>(string topicName)
-            => CreateOuputTopic<K, V>(topicName, TimeSpan.FromSeconds(5), null, null);
+            => CreateOuputTopic<K, V>(topicName, TimeSpan.FromSeconds(1), null, null);
 
         /// <summary>
         /// Create <see cref="TestOutputTopic{K, V}"/> to be used for reading records from topic.

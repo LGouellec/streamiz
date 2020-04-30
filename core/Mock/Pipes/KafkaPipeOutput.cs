@@ -67,7 +67,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
                 {
                     lock (_lock)
                         queue.Enqueue((record.Message.Key, record.Message.Value));
-                    consumer.Commit();
+                    consumer.Commit(record);
                 }
             }
         }

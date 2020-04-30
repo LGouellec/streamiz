@@ -2,7 +2,6 @@
 using Confluent.Kafka.Admin;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Streamiz.Kafka.Net.Mock.Sync
