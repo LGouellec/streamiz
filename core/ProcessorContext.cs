@@ -10,16 +10,36 @@ namespace Streamiz.Kafka.Net
     /// </summary>
     public class ProcessorContext
     {
-        internal string ApplicationId => Configuration.ApplicationId;
         internal IStreamConfig Configuration { get; private set; }
         internal IRecordContext RecordContext { get; private set; }
         internal IRecordCollector RecordCollector { get; private set; }
         internal IStateManager States { get; private set; }
 
-        internal long Timestamp => RecordContext.Timestamp;
-        internal string Topic => RecordContext.Topic;
-        internal long Offset => RecordContext.Offset;
-        internal Partition Partition => RecordContext.Partition;
+        /// <summary>
+        /// Current application id
+        /// </summary>
+        public string ApplicationId => Configuration.ApplicationId;
+
+        /// <summary>
+        /// Current timestamp of record processing
+        /// </summary>
+        public long Timestamp => RecordContext.Timestamp;
+
+        /// <summary>
+        /// Current topic of record processing
+        /// </summary>
+        public string Topic => RecordContext.Topic;
+
+        /// <summary>
+        /// Current offset of record processing
+        /// </summary>
+        public long Offset => RecordContext.Offset;
+
+        /// <summary>
+        /// Current partition of record processing
+        /// </summary>
+        public Partition Partition => RecordContext.Partition;
+
 
         internal ProcessorContext(IStreamConfig configuration, IStateManager stateManager)
         {
