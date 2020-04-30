@@ -1,14 +1,12 @@
-﻿using Streamiz.Kafka.Net.Kafka;
-using Streamiz.Kafka.Net.Mock.Kafka;
-using Streamiz.Kafka.Net.Mock.Pipes;
+﻿using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
-using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using System.Threading;
 
 namespace Streamiz.Kafka.Net.Mock
@@ -21,6 +19,7 @@ namespace Streamiz.Kafka.Net.Mock
         private readonly CancellationToken token;
         private readonly IKafkaSupplier supplier;
         private readonly IDictionary<string, StreamTask> tasks = new Dictionary<string, StreamTask>();
+        private readonly SyncProducer producer = null;
         private int id = 0;
 
         public TaskSynchronousTopologyDriver(string clientId, InternalTopologyBuilder topologyBuilder, IStreamConfig configuration, IStreamConfig topicConfiguration, CancellationToken token)
@@ -32,6 +31,7 @@ namespace Streamiz.Kafka.Net.Mock
             this.token = token;
             builder = topologyBuilder;
             supplier = new SyncKafkaSupplier();
+            producer = supplier.GetProducer(configuration.ToProducerConfig()) as SyncProducer;
         }
 
         private StreamTask GetTask(string topicName)
@@ -45,10 +45,10 @@ namespace Streamiz.Kafka.Net.Mock
                     new TaskId { Id = id++, Partition = 0, Topic = topicName },
                     new Confluent.Kafka.TopicPartition(topicName, 0),
                     builder.BuildTopology(topicName),
-                    supplier.GetConsumer(this.configuration.ToConsumerConfig(), null),
-                    this.configuration,
+                    supplier.GetConsumer(configuration.ToConsumerConfig(), null),
+                    configuration,
                     supplier,
-                    supplier.GetProducer(this.configuration.ToProducerConfig()));
+                    producer);
                 task.InitializeStateStores();
                 task.InitializeTopology();
                 tasks.Add(topicName, task);
@@ -67,8 +67,8 @@ namespace Streamiz.Kafka.Net.Mock
 
         public TestOutputTopic<K, V> CreateOutputTopic<K, V>(string topicName, TimeSpan consumeTimeout, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
         {
-            var builder = new SyncPipeBuilder(null, supplier);
-            var pipeOutput = builder.Output(topicName, consumeTimeout, configuration, this.token);
+            var builder = new SyncPipeBuilder(null, supplier, producer);
+            var pipeOutput = builder.Output(topicName, consumeTimeout, configuration, token);
             return new TestOutputTopic<K, V>(pipeOutput, topicConfiguration, keySerdes, valueSerdes);
         }
 

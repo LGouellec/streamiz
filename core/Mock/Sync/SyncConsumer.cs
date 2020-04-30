@@ -9,15 +9,15 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 {
     internal class SyncConsumer : IConsumer<byte[], byte[]>
     {
-        private ConsumerConfig config;
-        private SyncKafkaSupplier ownSupplier;
+        private readonly ConsumerConfig config;
+        private readonly SyncProducer producer;
 
         private readonly IDictionary<string, long> offsets = new Dictionary<string, long>();
 
-        public SyncConsumer(ConsumerConfig config, SyncKafkaSupplier syncKafkaSupplier)
+        public SyncConsumer(ConsumerConfig config, SyncProducer producer)
         {
             this.config = config;
-            ownSupplier = syncKafkaSupplier;
+            this.producer = producer;
         }
 
         #region IConsumer Impl
@@ -76,7 +76,6 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         {
             foreach (var kp in offsets)
             {
-                var producer = ownSupplier.GetProducerInstance(kp.Key);
                 offsets[kp.Key] = producer.GetHistory(kp.Key).Count() + 1;
             }
             return offsets.Select(k => new TopicPartitionOffset(new TopicPartition(k.Key, 0), k.Value)).ToList();
@@ -88,7 +87,6 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             {
                 if (this.offsets.ContainsKey(offset.Topic))
                 {
-                    var producer = ownSupplier.GetProducerInstance(offset.Topic);
                     this.offsets[offset.Topic] = offset.Offset;
                 }
                 else
@@ -100,7 +98,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         }
 
         public void Commit(ConsumeResult<byte[], byte[]> result)
-            => this.Commit(new List<TopicPartitionOffset> { new TopicPartitionOffset(result.TopicPartition, result.Offset+1) });
+            => Commit(new List<TopicPartitionOffset> { new TopicPartitionOffset(result.TopicPartition, result.Offset + 1) });
 
         public List<TopicPartitionOffset> Committed(TimeSpan timeout)
         {
@@ -123,7 +121,6 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public WatermarkOffsets GetWatermarkOffsets(TopicPartition topicPartition)
         {
-            var producer = ownSupplier.GetProducerInstance(topicPartition.Topic);
             return new WatermarkOffsets(0L, producer.GetHistory(topicPartition.Topic).Count());
         }
 
@@ -204,7 +201,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public ConsumeResult<byte[], byte[]> Consume(CancellationToken cancellationToken)
         {
-            if (this.Subscription.Count == 0)
+            if (Subscription.Count == 0)
                 throw new StreamsException("No subscription have been done !");
 
             return ConsumeInternal(TimeSpan.FromSeconds(10));
@@ -212,7 +209,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public ConsumeResult<byte[], byte[]> Consume(TimeSpan timeout)
         {
-            if (this.Subscription.Count == 0)
+            if (Subscription.Count == 0)
                 throw new StreamsException("No subscription have been done !");
 
             return ConsumeInternal(timeout);
@@ -230,8 +227,8 @@ namespace Streamiz.Kafka.Net.Mock.Sync
                     if ((dt + timeout) < DateTime.Now)
                         break;
 
-                    var producer = ownSupplier.GetProducerInstance(kp.Key);
-                    if (producer != null) {
+                    if (producer != null)
+                    {
                         var messages = producer.GetHistory(kp.Key).ToArray();
                         if (messages.Length > kp.Value)
                         {

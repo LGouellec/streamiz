@@ -10,10 +10,18 @@ namespace Streamiz.Kafka.Net.Mock.Sync
     {
         private readonly StreamTask task;
         private IKafkaSupplier kafkaSupplier;
+        private SyncProducer mockProducer;
 
         public SyncPipeBuilder(StreamTask task, IKafkaSupplier kafkaSupplier)
         {
             this.kafkaSupplier = kafkaSupplier;
+            this.task = task;
+        }
+
+        public SyncPipeBuilder(StreamTask task, IKafkaSupplier kafkaSupplier, SyncProducer mockProducer)
+        {
+            this.kafkaSupplier = kafkaSupplier;
+            this.mockProducer = mockProducer;
             this.task = task;
         }
 
@@ -24,7 +32,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public IPipeOutput Output(string topic, TimeSpan consumeTimeout, IStreamConfig configuration, CancellationToken token = default)
         {
-            return new SyncPipeOutput(topic, consumeTimeout, configuration, kafkaSupplier, token);
+            return new SyncPipeOutput(topic, consumeTimeout, configuration, mockProducer, token);
         }
     }
 }
