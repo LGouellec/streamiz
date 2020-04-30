@@ -186,6 +186,11 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public IKStream<K, V> Peek(Action<K, V> action, string named = null)
         {
+            if (action == null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+
             String name = new Named(named).OrElseGenerateWithPrefix(this.builder, PEEK_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamPeek<K, V>(action, true), name);
             ProcessorGraphNode<K, V> peekNode = new ProcessorGraphNode<K, V>(name, processorParameters);

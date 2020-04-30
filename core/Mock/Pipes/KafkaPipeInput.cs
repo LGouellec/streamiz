@@ -6,14 +6,14 @@ using System.Text;
 
 namespace Streamiz.Kafka.Net.Mock.Pipes
 {
-    internal class PipeInput : IPipeInput
+    internal class KafkaPipeInput : IPipeInput
     {
         private readonly string topicName;
         private readonly IProducer<byte[], byte[]> producer;
         const int size = 10;
         private readonly Queue<(byte[], byte[], DateTime)> buffer = new Queue<(byte[], byte[], DateTime)>(size);
 
-        public PipeInput(string topicName, IStreamConfig configuration, IKafkaSupplier kafkaSupplier)
+        public KafkaPipeInput(string topicName, IStreamConfig configuration, IKafkaSupplier kafkaSupplier)
         {
             this.topicName = topicName;
             this.producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig($"pipe-input-{configuration.ApplicationId}-{topicName}"));

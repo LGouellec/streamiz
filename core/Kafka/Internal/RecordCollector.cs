@@ -12,6 +12,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
     {
         // IF EOS DISABLED, ONE PRODUCER BY TASK BUT ONE INSTANCE RECORD COLLECTOR BY TASK
         // WHEN CLOSING TASK, WE MUST DISPOSE PRODUCER WHEN NO MORE INSTANCE OF RECORD COLLECTOR IS PRESENT
+        // IT'S A GARBAGE COLLECTOR LIKE
         private static IDictionary<string, int> instanceProducer = new Dictionary<string, int>();
         private static object _lock = new object();
 
@@ -77,7 +78,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 (report) => {
                     if (report.Error.Code == ErrorCode.NoError && report.Status == PersistenceStatus.Persisted)
                     {
-                        if (offsets.ContainsKey(report.TopicPartition) && offsets[report.TopicPartition] < report.Offset)
+                        if (offsets.ContainsKey(report.TopicPartition) && offsets[report.TopicPartition] <= report.Offset)
                             offsets[report.TopicPartition] = report.Offset;
                         else
                             offsets.Add(report.TopicPartition, report.Offset);

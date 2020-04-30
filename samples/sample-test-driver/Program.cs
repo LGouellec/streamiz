@@ -19,7 +19,7 @@ namespace sample_test_driver
 
             Topology t = builder.Build();
 
-            using (var driver = new TopologyTestDriver(t, config))
+            using (var driver = new TopologyTestDriver(t, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("test");
                 var outputTopic = driver.CreateOuputTopic<string, string>("test-output", TimeSpan.FromSeconds(5));
