@@ -17,7 +17,6 @@ namespace Streamiz.Kafka.Net.Mock
     {
         private readonly IStreamConfig configuration;
         private readonly IStreamConfig topicConfiguration;
-        private readonly StreamTask taskTopology = null;
         private readonly InternalTopologyBuilder builder;
         private readonly CancellationToken token;
         private readonly IKafkaSupplier supplier;
@@ -26,8 +25,6 @@ namespace Streamiz.Kafka.Net.Mock
 
         public TaskSynchronousTopologyDriver(string clientId, InternalTopologyBuilder topologyBuilder, IStreamConfig configuration, IStreamConfig topicConfiguration, CancellationToken token)
         {
-            // SAME CONSUME ORDER LIKE PRODUCE ORDER
-            MockCluster.DEFAULT_NUMBER_PARTITIONS = 1;
             this.configuration = configuration;
             this.configuration.ClientId = clientId;
             this.topicConfiguration = topicConfiguration;
