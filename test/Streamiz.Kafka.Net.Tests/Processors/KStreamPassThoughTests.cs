@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Streamiz.Kafka.Net.TestProcessors
+namespace Streamiz.Kafka.Net.Tests.Processors
 {
     public class KStreamPassThoughTests
     {

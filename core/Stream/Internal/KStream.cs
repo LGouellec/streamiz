@@ -161,6 +161,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public IKStream<K, VR> FlatMapValues<VR>(IValueMapperWithKey<K, V, IEnumerable<VR>> mapper, string named = null)
         {
+            if (mapper == null)
+                throw new ArgumentNullException($"Mapper function can't be null");
+
             var name = new Named(named).OrElseGenerateWithPrefix(this.builder, FLATMAPVALUES_NAME);
 
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFlatMapValues<K, V, VR>(mapper), name);
@@ -185,6 +188,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public void Foreach(Action<K, V> action, string named = null)
         {
+            if (action == null)
+                throw new ArgumentNullException("Foreach() doesn't allow null action function ");
+
             String name = new Named(named).OrElseGenerateWithPrefix(this.builder, FOREACH_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamPeek<K, V>(action, false), name);
             ProcessorGraphNode<K, V> foreachNode = new ProcessorGraphNode<K, V>(name, processorParameters);
@@ -227,6 +233,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public IKStream<KR, VR> Map<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper, string named = null)
         {
+            if (mapper == null)
+                throw new ArgumentNullException($"Map() doesn't allow null mapper function");
+
             string name = new Named(named).OrElseGenerateWithPrefix(this.builder, MAP_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamMap<K, V, KR, VR>(mapper), name);
             ProcessorGraphNode<K, V> mapProcessorNode = new ProcessorGraphNode<K, V>(name, processorParameters);
@@ -257,10 +266,13 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             => this.MapValues(new WrapperValueMapperWithKey<K, V, VR>(mapper), named);
 
         public IKStream<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, string named = null)
-            => this.MapValues<VR>(WithKey(mapper), named);
+            => this.MapValues(WithKey(mapper), named);
 
         public IKStream<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapper, string named = null)
         {
+            if (mapper == null)
+                throw new ArgumentNullException($"Mapper function can't be null");
+
             String name = new Named(named).OrElseGenerateWithPrefix(this.builder, MAPVALUES_NAME);
 
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamMapValues<K, V, VR>(mapper), name);

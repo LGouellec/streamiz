@@ -173,3 +173,15 @@ Some documentations for help during implementation :
 https://docs.confluent.io/current/streams/index.html
 
 https://kafka.apache.org/20/documentation/streams/developer-guide/dsl-api.html#stateless-transformations
+
+# Contribute members
+
+Owners:
+
+- [lgouellec](https://github.com/LGouellec)  [![Twitter Follow](https://img.shields.io/twitter/follow/LGouellec?style=social)](https://twitter.com/LGouellec)
+
+Maintainers:
+
+- [lgouellec](https://github.com/LGouellec)
+- [mmoron](https://github.com/mmoron)
+

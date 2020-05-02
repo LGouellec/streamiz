@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\core\Core.csproj" />
+    <ProjectReference Include="..\..\core\Streamiz.Kafka.Net.csproj" />
   </ItemGroup>
 
 </Project>

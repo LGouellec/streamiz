@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>Streamiz.Kafka.Net.TestProcessors</RootNamespace>
+    <RootNamespace>Streamiz.Kafka.Net.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
-    <AssemblyName>Streamiz.Kafka.Net.TestProcessors</AssemblyName>
+    <AssemblyName>Streamiz.Kafka.Net.Tests</AssemblyName>
 	<SonarQubeTestProject>true</SonarQubeTestProject>
   </PropertyGroup>
 
@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\core\Core.csproj" />
+    <ProjectReference Include="..\..\core\Streamiz.Kafka.Net.csproj" />
   </ItemGroup>
 
 </Project>

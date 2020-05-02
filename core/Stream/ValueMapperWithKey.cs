@@ -30,7 +30,11 @@ namespace Streamiz.Kafka.Net.Stream
         private readonly Func<K, V, VR> mapper;
 
         public WrapperValueMapperWithKey(Func<K, V, VR> mapper)
-            => this.mapper = mapper;
+        {
+            if (mapper == null)
+                throw new ArgumentNullException($"Mapper function can't be null");
+            this.mapper = mapper;
+        }
 
         public VR Apply(K readOnlyKey, V value) => this.mapper(readOnlyKey, value);
     }

@@ -5,7 +5,7 @@ using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
 
-namespace Streamiz.Kafka.Net.TestProcessors
+namespace Streamiz.Kafka.Net.Tests.Processors
 {
     public class KStreamFilterNotTests
     {

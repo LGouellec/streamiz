@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Streamiz.Kafka.Net.TestProcessors
+namespace Streamiz.Kafka.Net.Tests.Processors
 {
     public class KStreamBranchTests
     {
