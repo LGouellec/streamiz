@@ -83,6 +83,12 @@ namespace Streamiz.Kafka.Net.Mock
             // NOTHING
         }
 
+        public IStateStore GetStateStore(string name)
+        {
+            var task = tasks.Values.FirstOrDefault(t => t.Context.GetStateStore(name) != null);
+            return task != null ? task.Context.GetStateStore(name) : null;
+        }
+
         #endregion
     }
 }

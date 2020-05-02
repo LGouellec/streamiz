@@ -23,4 +23,8 @@
     <ProjectReference Include="..\..\core\Streamiz.Kafka.Net.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="TestDriver\" />
+  </ItemGroup>
+
 </Project>

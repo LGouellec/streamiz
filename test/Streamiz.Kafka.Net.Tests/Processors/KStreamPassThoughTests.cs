@@ -12,6 +12,14 @@ namespace Streamiz.Kafka.Net.Tests.Processors
     public class KStreamPassThoughTests
     {
         [Test]
+        public void ShouldNotAllowNullOrEmptyTopic()
+        {
+            var builder = new StreamBuilder();
+            Assert.Throws<ArgumentException>(() => builder.Stream<string, string>(null));
+            Assert.Throws<ArgumentException>(() => builder.Stream<string, string>(""));
+        }
+
+        [Test]
         public void ShouldNotAllowNullTopicDest()
         {
             var builder = new StreamBuilder();

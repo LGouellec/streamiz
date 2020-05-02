@@ -64,6 +64,12 @@ namespace Streamiz.Kafka.Net.Mock
             threadTopology.Dispose();
         }
 
+        public IStateStore GetStateStore(string name)
+        {
+            // TODO
+            return null;
+        }
+
         public void StartDriver()
         {
             bool isRunningState = false;

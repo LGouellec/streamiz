@@ -207,6 +207,9 @@ namespace Streamiz.Kafka.Net.Table.Internal
             String queryableStoreName;
             StoreBuilder<TimestampedKeyValueStore<K, V>> storeBuilder;
 
+            if (predicate == null)
+                throw new ArgumentNullException($"Filter() doesn't allow null predicate function");
+
             if (materializedInternal != null)
             {
                 // we actually do not need to generate store names at all since if it is not specified, we will not
@@ -220,7 +223,8 @@ namespace Streamiz.Kafka.Net.Table.Internal
                 keySerde = materializedInternal.KeySerdes != null ? materializedInternal.KeySerdes : this.keySerdes;
                 // we preserve the value following the order of 1) materialized, 2) parent
                 valueSerde = materializedInternal.ValueSerdes != null ? materializedInternal.ValueSerdes : this.valueSerdes;
-
+                // ONLY FOR CALCULATE PROPERTY queriable
+                materializedInternal.UseProvider(null, null);
                 queryableStoreName = materializedInternal.QueryableStoreName;
                 // only materialize if materialized is specified and it has queryable name
                 storeBuilder = queryableStoreName != null ? (new TimestampedKeyValueStoreMaterializer<K, V>(materializedInternal)).Materialize() : null;
@@ -274,6 +278,8 @@ namespace Streamiz.Kafka.Net.Table.Internal
                 }
                 keySerde = materializedInternal.KeySerdes != null ? materializedInternal.KeySerdes : this.keySerdes;
                 valueSerde = materializedInternal.ValueSerdes != null ? materializedInternal.ValueSerdes : null;
+                // ONLY FOR CALCULATE PROPERTY queriable 
+                materializedInternal.UseProvider(null, null);
                 queryableStoreName = materializedInternal.QueryableStoreName;
                 // only materialize if materialized is specified and it has queryable name
                 storeBuilder = queryableStoreName != null ? new TimestampedKeyValueStoreMaterializer<K, VR>(materializedInternal).Materialize() : null;

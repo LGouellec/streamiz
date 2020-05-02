@@ -20,7 +20,6 @@ namespace Streamiz.Kafka.Net.Table
     /// <code>
     /// var builder = new StreamBuilder();
     /// builder.Table("topic",
-    ///         StreamOptions.Create(),
     ///         Materialized&lt;byte[], byte[], IKeyValueStore&lt;Bytes, byte[]&gt;&gt;.Create("test-store"));
     /// </code>
     /// </example>

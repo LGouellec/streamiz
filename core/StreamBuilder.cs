@@ -6,6 +6,7 @@ using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
 using Streamiz.Kafka.Net.Table;
+using System;
 
 namespace Streamiz.Kafka.Net
 {
@@ -44,6 +45,7 @@ namespace Streamiz.Kafka.Net
         /// <typeparam name="V">Value type of record</typeparam>
         /// <param name="topic">the topic name, can't be null</param>
         /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKStream<K, V> Stream<K, V>(string topic)
             => Stream<K, V>(topic, null, null);
 
@@ -61,6 +63,7 @@ namespace Streamiz.Kafka.Net
         /// <param name="keySerdes">Key deserializer</param>
         /// <param name="valueSerdes">Value deserializer</param>
         /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKStream<K, V> Stream<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
             => this.Stream(topic, keySerdes, valueSerdes, null, null);
 
@@ -79,6 +82,7 @@ namespace Streamiz.Kafka.Net
         /// <param name="valueSerdes">Value deserializer</param>
         /// <param name="named">Processor name</param>
         /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKStream<K, V> Stream<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named)
             => this.Stream(topic, keySerdes, valueSerdes, named, null);
 
@@ -97,6 +101,7 @@ namespace Streamiz.Kafka.Net
         /// <param name="valueSerdes">Value deserializer</param>
         /// <param name="extractor">the timestamp extractor to used. If null the default timestamp extractor from config will be used</param>
         /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKStream<K, V> Stream<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, ITimestampExtractor extractor)
             => this.Stream(topic, keySerdes, valueSerdes, null, extractor);
 
@@ -116,8 +121,12 @@ namespace Streamiz.Kafka.Net
         /// <param name="named">Processor name</param>
         /// <param name="extractor">the timestamp extractor to used. If null the default timestamp extractor from config will be used</param>
         /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKStream<K, V> Stream<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named, ITimestampExtractor extractor)
         {
+            if (string.IsNullOrEmpty(topic))
+                throw new ArgumentException("Topic of KStream must not be null or empty");
+
             var consumedInternal = new ConsumedInternal<K, V>(named, keySerdes, valueSerdes, extractor);
             return internalStreamBuilder.Stream(topic, consumedInternal);
         }
@@ -140,6 +149,7 @@ namespace Streamiz.Kafka.Net
         /// <typeparam name="V">Value type of record</typeparam>
         /// <param name="topic">the topic name, can't be null</param>
         /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKStream<K, V> Stream<K, V, KS, VS>(string topic)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
@@ -160,6 +170,7 @@ namespace Streamiz.Kafka.Net
         /// <param name="topic">the topic name, can't be null</param>
         /// <param name="named">Processor name</param>
         /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKStream<K, V> Stream<K, V, KS, VS>(string topic, string named)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
@@ -180,6 +191,7 @@ namespace Streamiz.Kafka.Net
         /// <param name="topic">the topic name, can't be null</param>
         /// <param name="extractor">the timestamp extractor to used. If null the default timestamp extractor from config will be used</param>
         /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKStream<K, V> Stream<K, V, KS, VS>(string topic, ITimestampExtractor extractor)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
@@ -201,6 +213,7 @@ namespace Streamiz.Kafka.Net
         /// <param name="named">Processor name</param>
         /// <param name="extractor">the timestamp extractor to used. If null the default timestamp extractor from config will be used</param>
         /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKStream<K, V> Stream<K, V, KS, VS>(string topic, string named, ITimestampExtractor extractor)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
@@ -230,6 +243,7 @@ namespace Streamiz.Kafka.Net
         /// <typeparam name="V">Value type of record</typeparam>
         /// <param name="topic">the topic name, can't be null</param>
         /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKTable<K, V> Table<K, V>(string topic)
             => Table<K, V>(topic, null, null);
 
@@ -250,6 +264,7 @@ namespace Streamiz.Kafka.Net
         /// <param name="keySerdes">Key deserializer</param>
         /// <param name="valueSerdes">Value deserializer</param>
         /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKTable<K, V> Table<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
             => Table<K, V>(topic, keySerdes, valueSerdes, null);
 
@@ -270,6 +285,7 @@ namespace Streamiz.Kafka.Net
         /// <param name="topic">the topic name, can't be null</param>
         /// <param name="materialized">the instance of <see cref="Materialized{K, V, S}"/> used to materialize a state store.</param>
         /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKTable<K, V> Table<K, V>(string topic, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized)
             => Table<K, V>(topic, null, null, materialized);
 
@@ -291,6 +307,7 @@ namespace Streamiz.Kafka.Net
         /// <param name="valueSerdes">Value deserializer</param>
         /// <param name="materialized">the instance of <see cref="Materialized{K, V, S}"/> used to materialize a state store.</param>
         /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKTable<K, V> Table<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized)
             => Table<K, V>(topic, keySerdes, valueSerdes, materialized, null, null);
 
@@ -313,6 +330,7 @@ namespace Streamiz.Kafka.Net
         /// <param name="materialized">the instance of <see cref="Materialized{K, V, S}"/> used to materialize a state store.</param>
         /// <param name="named">Processor name</param>
         /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKTable<K, V> Table<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named)
             => Table<K, V>(topic, keySerdes, valueSerdes, materialized, named, null);
 
@@ -336,8 +354,12 @@ namespace Streamiz.Kafka.Net
         /// <param name="named">Processor name</param>
         /// <param name="extractor">the timestamp extractor to used. If null the default timestamp extractor from config will be used</param>
         /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKTable<K, V> Table<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named, ITimestampExtractor extractor)
         {
+            if (string.IsNullOrEmpty(topic))
+                throw new ArgumentException("Topic of KTable must not be null or empty");
+
             materialized = materialized ?? Materialized<K, V, IKeyValueStore<Bytes, byte[]>>.Create();
 
             var consumedInternal = new ConsumedInternal<K, V>(named, keySerdes, valueSerdes, extractor);
@@ -367,6 +389,7 @@ namespace Streamiz.Kafka.Net
         /// <typeparam name="VS">Value deserializer type</typeparam>
         /// <param name="topic">the topic name, can't be null</param>
         /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKTable<K, V> Table<K, V, KS, VS>(string topic)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
@@ -390,6 +413,7 @@ namespace Streamiz.Kafka.Net
         /// <param name="topic">the topic name, can't be null</param>
         /// <param name="materialized">the instance of <see cref="Materialized{K, V, S}"/> used to materialize a state store.</param>
         /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKTable<K, V> Table<K, V, KS, VS>(string topic, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
@@ -414,6 +438,7 @@ namespace Streamiz.Kafka.Net
         /// <param name="materialized">the instance of <see cref="Materialized{K, V, S}"/> used to materialize a state store.</param>
         /// <param name="named">Processor name</param>
         /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKTable<K, V> Table<K, V, KS, VS>(string topic, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
@@ -438,6 +463,7 @@ namespace Streamiz.Kafka.Net
         /// <param name="materialized">the instance of <see cref="Materialized{K, V, S}"/> used to materialize a state store.</param>
         /// <param name="extractor">the timestamp extractor to used. If null the default timestamp extractor from config will be used</param>
         /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKTable<K, V> Table<K, V, KS, VS>(string topic, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, ITimestampExtractor extractor)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
@@ -463,6 +489,7 @@ namespace Streamiz.Kafka.Net
         /// <param name="named">Processor name</param>
         /// <param name="extractor">the timestamp extractor to used. If null the default timestamp extractor from config will be used</param>
         /// <returns>a <see cref="IKTable{K, V}"/> for the specified topic</returns>
+        /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKTable<K, V> Table<K, V, KS, VS>(string topic, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named, ITimestampExtractor extractor)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()

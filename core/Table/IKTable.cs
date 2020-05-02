@@ -47,6 +47,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="predicate">A filter that is applied to each record</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, V}"/> that contains only those records that satisfy the given predicate</returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when predicate function is null</exception>
         IKTable<K, V> Filter(Func<K, V, bool> predicate, string named = null);
 
         /// <summary>
@@ -68,6 +69,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="materialized">A <see cref="Materialized{K, V, S}"/> that describes how the <see cref="IStateStore"/> for the resulting <see cref="IKTable{K, V}"/> should be materialized.</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, V}"/> that contains only those records that satisfy the given predicate</returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when predicate function is null</exception>
         IKTable<K, V> Filter(Func<K, V, bool> predicate, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
@@ -88,6 +90,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="predicate">A filter that is applied to each record</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, V}"/> that contains only those records that satisfy the given predicate</returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when predicate function is null</exception>
         IKTable<K, V> FilterNot(Func<K, V, bool> predicate, string named = null);
 
         /// <summary>
@@ -109,6 +112,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="materialized">A <see cref="Materialized{K, V, S}"/> that describes how the <see cref="IStateStore"/> for the resulting <see cref="IKTable{K, V}"/> should be materialized.</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, V}"/> that contains only those records that satisfy the given predicate</returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when predicate function is null</exception>
         IKTable<K, V> FilterNot(Func<K, V, bool> predicate, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>

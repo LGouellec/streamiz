@@ -1,7 +1,10 @@
 ﻿using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.Mock.Pipes;
+using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;
@@ -253,6 +256,33 @@ namespace Streamiz.Kafka.Net.Mock
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
             => CreateOuputTopic<K, V>(topicName, consumeTimeout, new KS(), new VS());
+
+        #endregion
+
+        #region Store
+
+        /// <summary>
+        /// Get the <see cref="ReadOnlyKeyValueStore{K, V}"/> or <see cref="TimestampedKeyValueStore{K, V}"/> with the given name.
+        /// The store can be a "regular" or global store.
+        /// <p>
+        /// If the registered store is a <see cref="TimestampedKeyValueStore{K, V}"/> this method will return a value-only query
+        /// interface.
+        /// </p>
+        /// </summary>
+        /// <typeparam name="K"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="name">the name of the store</param>
+        /// <returns>the key value store, or null if no <see cref="ReadOnlyKeyValueStore{K, V}"/> or <see cref="TimestampedKeyValueStore{K, V}"/> has been registered with the given name</returns>
+        public ReadOnlyKeyValueStore<K, V> GetKeyValueStore<K, V>(string name)
+        {
+            var store = behavior.GetStateStore(name);
+            if (store is TimestampedKeyValueStore<K, V>)
+                return new ReadOnlyKeyValueStoreFacade<K, V>(store as TimestampedKeyValueStore<K, V>);
+            else if (store is ReadOnlyKeyValueStore<K, V>)
+                return (ReadOnlyKeyValueStore<K, V>)store;
+            else
+                return null;
+        }
 
         #endregion
     }

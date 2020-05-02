@@ -14,31 +14,41 @@ namespace Streamiz.Kafka.Net.SerDes
 
         public override ValueAndTimestamp<V> Deserialize(byte[] data)
         {
-            using (var stream = new MemoryStream(data))
-            using (var reader = new BinaryReader(stream))
+            if (data != null)
             {
-                long t = reader.ReadInt64();
-                int length = reader.ReadInt32();
-                byte[] d = reader.ReadBytes(length);
-                V v = InnerSerdes.Deserialize(d);
-                ValueAndTimestamp<V> obj = ValueAndTimestamp<V>.Make(v, t);
-                return obj;
+                using (var stream = new MemoryStream(data))
+                using (var reader = new BinaryReader(stream))
+                {
+                    long t = reader.ReadInt64();
+                    int length = reader.ReadInt32();
+                    byte[] d = reader.ReadBytes(length);
+                    V v = InnerSerdes.Deserialize(d);
+                    ValueAndTimestamp<V> obj = ValueAndTimestamp<V>.Make(v, t);
+                    return obj;
+                }
             }
+            else
+                return null;
         }
 
         public override byte[] Serialize(ValueAndTimestamp<V> data)
         {
-            using(var stream = new MemoryStream())
-            using (var writer = new BinaryWriter(stream))
+            if (data != null)
             {
-                byte[] innerobj = InnerSerdes.Serialize(data.Value);
+                using (var stream = new MemoryStream())
+                using (var writer = new BinaryWriter(stream))
+                {
+                    byte[] innerobj = InnerSerdes.Serialize(data.Value);
 
-                writer.Write(data.Timestamp);
-                writer.Write(innerobj.Length);
-                writer.Write(innerobj);
-                writer.Flush();
-                return stream.ToArray();
+                    writer.Write(data.Timestamp);
+                    writer.Write(innerobj.Length);
+                    writer.Write(innerobj);
+                    writer.Flush();
+                    return stream.ToArray();
+                }
             }
+            else
+                return null;
         }
     }
 }

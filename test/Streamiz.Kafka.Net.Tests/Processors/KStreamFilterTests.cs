@@ -25,7 +25,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var data = new List<KeyValuePair<string, string>>();
             data.Add(KeyValuePair.Create("key1", "test1234"));
             data.Add(KeyValuePair.Create("key2", "car"));
-            data.Add(KeyValuePair.Create("key3", "paper"));
+            data.Add(KeyValuePair.Create("key3", "test"));
 
             builder.Stream<string, string>("topic")
                 .Filter((k, v) => v.Contains("test", StringComparison.InvariantCultureIgnoreCase))
@@ -43,6 +43,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
                 var expected = new List<KeyValuePair<string, string>>();
                 expected.Add(KeyValuePair.Create("key1", "test1234"));
+                expected.Add(KeyValuePair.Create("key3", "test"));
 
                 Assert.AreEqual(expected, filterObserved);
             }
