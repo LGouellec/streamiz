@@ -262,7 +262,10 @@ namespace Streamiz.Kafka.Net.Table.Internal
         }
 
         private IKTable<K, VR> DoMapValues<VR>(IValueMapperWithKey<K, V, VR> mapper, string named, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materializedInternal)
-        {
+        { 
+            if(mapper == null)
+                throw new ArgumentNullException($"MapValues() doesn't allow null mapper function");
+
             ISerDes<K> keySerde;
             ISerDes<VR> valueSerde;
             String queryableStoreName;

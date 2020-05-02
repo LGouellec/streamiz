@@ -185,6 +185,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="mapper">a function mapper that computes a new output value</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>a <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
         IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, string named = null);
 
         /// <summary>
@@ -207,6 +208,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="materialized">A materialized that describes how the <see cref="IStateStore"/> for the resulting <see cref="IKTable{K, VR}"/> should be materialized.</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
         IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
@@ -228,6 +230,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="mapper">a <see cref="IValueMapper{V, VR}"/> mapper that computes a new output value</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
         IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, string named = null);
 
         /// <summary>
@@ -250,6 +253,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="materialized">A materialized that describes how the <see cref="IStateStore"/> for the resulting <see cref="IKTable{K, VR}"/> should be materialized.</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
         IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
@@ -271,6 +275,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="mapperWithKey">a function mapper that computes a new output value (key is for readonly usage)</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
         IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, string named = null);
 
         /// <summary>
@@ -293,6 +298,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="materialized">A materialized that describes how the <see cref="IStateStore"/> for the resulting <see cref="IKTable{K, VR}"/> should be materialized.</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
         IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
@@ -314,6 +320,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="mapperWithKey">a <see cref="IValueMapperWithKey{K, V, VR}"/> mapper that computes a new output value (key is for readonly usage)</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
         IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string named = null);
 
         /// <summary>
@@ -335,6 +342,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="mapperWithKey">a <see cref="IValueMapperWithKey{K, V, VR}"/> mapper that computes a new output value (key is for readonly usage)</param>
         /// <param name="materialized">A materialized that describes how the <see cref="IStateStore"/> for the resulting <see cref="IKTable{K, VR}"/> should be materialized.</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
         /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
         IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 

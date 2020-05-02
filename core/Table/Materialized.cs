@@ -354,7 +354,21 @@ namespace Streamiz.Kafka.Net.Table
             this.retention = retention;
             return this;
         }
-    
+
+        /// <summary>
+        /// Configure key and value serdes
+        /// </summary>
+        /// <typeparam name="KS">Key serdes type</typeparam>
+        /// <typeparam name="VS">Value serdes type</typeparam>
+        /// <returns>Itself</returns>
+        public Materialized<K, V, S> With<KS, VS>()
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+        {
+            KeySerdes = new KS();
+            ValueSerdes = new VS();
+            return this;
+        }
 
         internal Materialized<K, V, S> UseProvider(INameProvider provider, string generatedStorePrefix)
         {
@@ -427,6 +441,7 @@ namespace Streamiz.Kafka.Net.Table
             };
             return m;
         }
+    
     }
 
     #endregion

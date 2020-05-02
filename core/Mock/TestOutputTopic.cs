@@ -111,8 +111,8 @@ namespace Streamiz.Kafka.Net.Mock
             List<ConsumeResult<K, V>> records = new List<ConsumeResult<K, V>>();
             foreach(var record in pipe.ReadList())
             {
-                var key = keySerdes != null ? keySerdes.Deserialize(record.Key) : (K)configuration.DefaultKeySerDes.DeserializeObject(record.Key);
-                var value = valueSerdes != null ? valueSerdes.Deserialize(record.Value) : (V)configuration.DefaultValueSerDes.DeserializeObject(record.Value);
+                var key = record.Key != null ? (keySerdes != null ? keySerdes.Deserialize(record.Key) : (K)configuration.DefaultKeySerDes.DeserializeObject(record.Key)) : default;
+                var value = record.Value != null ? (valueSerdes != null ? valueSerdes.Deserialize(record.Value) : (V)configuration.DefaultValueSerDes.DeserializeObject(record.Value)): default;
                 records.Add(new ConsumeResult<K, V>{
                     Message = new Message<K, V> { Key = key, Value = value, Timestamp = new Timestamp(DateTime.Now) }
                 });

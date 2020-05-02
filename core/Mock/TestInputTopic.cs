@@ -46,8 +46,8 @@ namespace Streamiz.Kafka.Net.Mock
 
         private (byte[], byte[]) GetBytes(K key, V value)
         {
-            byte[] k = keySerdes != null ? keySerdes.Serialize(key) : configuration.DefaultKeySerDes.SerializeObject(key);
-            byte[] v = valueSerdes != null ? valueSerdes.Serialize(value) : configuration.DefaultValueSerDes.SerializeObject(value);
+            byte[] k = key != null ? (keySerdes != null ? keySerdes.Serialize(key) : configuration.DefaultKeySerDes.SerializeObject(key)) : null;
+            byte[] v = value != null ? (valueSerdes != null ? valueSerdes.Serialize(value) : configuration.DefaultValueSerDes.SerializeObject(value)) : null;
             return (k, v);
         }
 

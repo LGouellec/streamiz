@@ -3,6 +3,7 @@ using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Table.Internal;
 using log4net;
 using System.Collections.Generic;
+using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -13,7 +14,7 @@ namespace Streamiz.Kafka.Net.Processors
         private bool sendOldValues;
 
         private TimestampedKeyValueStore<K, V> store;
-
+        private TimestampedTupleForwarder<K, V> tupleForwarder;
 
         public KTableSourceProcessor(string storeName, string queryableName, bool sendOldValues)
         {
@@ -29,12 +30,7 @@ namespace Streamiz.Kafka.Net.Processors
             if (this.queryableName != null)
             {
                 store = (TimestampedKeyValueStore<K, V>)context.GetStateStore(queryableName);
-                // TODO : 
-                //tupleForwarder = new TimestampedTupleForwarder<>(
-                //    store,
-                //    context,
-                //    new TimestampedCacheFlushListener<>(context),
-                //    sendOldValues);
+                tupleForwarder = new TimestampedTupleForwarder<K, V>(this, sendOldValues);
             }
         }
 
@@ -64,7 +60,7 @@ namespace Streamiz.Kafka.Net.Processors
                     oldValue = default(V);
                 }
                 store.Put(key, ValueAndTimestamp<V>.Make(value, Context.Timestamp));
-                //tupleForwarder.maybeForward(key, value, oldValue);
+                tupleForwarder.MaybeForward(key, value, oldValue);
             }
             else
             {

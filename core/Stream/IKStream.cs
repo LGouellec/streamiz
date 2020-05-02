@@ -182,7 +182,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="mapper">A <see cref="IValueMapper{V, VR}"/> mapper that computes the new output records</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{K, VR}"/> that contains more or less records with new key and value (possibly of different type)</returns>
-        /// /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
         IKStream<K, VR> FlatMapValues<VR>(IValueMapper<V, IEnumerable<VR>> mapper, string named = null);
 
         /// <summary>

@@ -32,7 +32,7 @@ namespace Streamiz.Kafka.Net.Processors
             if (queryableStoreName != null)
             {
                 store.Put(key, ValueAndTimestamp<V>.Make(newValue, Context.Timestamp));
-                //TODO : tupleForwarder.maybeForward(key, newValue, oldValue);
+                tupleForwarder.MaybeForward(key, newValue, oldValue);
             }
             else
             {
