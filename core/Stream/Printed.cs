@@ -35,6 +35,13 @@ namespace Streamiz.Kafka.Net.Stream
         /// <returns>A new <see cref="Printed{K, V}"/> instance. </returns>
         public static Printed<K, V> ToOut() => new Printed<K, V>(Console.Out);
 
+        /// <summary>
+        /// Print the records of a <see cref="IKStream{K, V}"/> to <see cref="TextWriter"/> writer
+        /// </summary>
+        /// <param name="writer">A writer instance</param>
+        /// <returns>A new <see cref="Printed{K, V}"/> instance.</returns>
+        public static Printed<K, V> ToWriter(TextWriter writer) => new Printed<K, V>(writer);
+
         #endregion
 
         /// <summary>

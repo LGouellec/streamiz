@@ -297,6 +297,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public void Print(Printed<K, V> printed)
         {
+            if (printed == null)
+                throw new ArgumentNullException("Print() doesn't allow null printed instance");
+
             var name = new Named(printed.Name).OrElseGenerateWithPrefix(this.builder, PRINTING_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(printed.Build(this.nameNode), name);
             ProcessorGraphNode<K, V> printNode = new ProcessorGraphNode<K, V>(name, processorParameters);
@@ -313,6 +316,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public IKStream<KR, V> SelectKey<KR>(IKeyValueMapper<K, V, KR> mapper, string named = null)
         {
+            if (mapper == null)
+                throw new ArgumentNullException("SelectKey() doesn't allow null mapper function");
+
+
             ProcessorGraphNode<K, V> selectKeyProcessorNode = InternalSelectKey(mapper, named);
             selectKeyProcessorNode.KeyChangingOperation = true;
 

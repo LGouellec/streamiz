@@ -248,7 +248,8 @@ namespace Streamiz.Kafka.Net.Stream
         /// Note that this is mainly for debugging/testing purposes, and it will try to flush on each record print.
         /// It SHOULD NOT be used for production usage if performance requirements are concerned.
         /// </summary>
-        /// <param name="printed">Printed options for printing</param>          
+        /// <param name="printed">Printed options for printing</param>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when printed is null</exception>
         void Print(Printed<K, V> printed);
 
         /// <summary>
@@ -401,6 +402,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="mapper">A <see cref="IKeyValueMapper{K, V, VR}"/> mapper that computes a new key for each record</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{KR, V}"/> that contains records with new key (possibly of different type) and unmodified value</returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
         IKStream<KR, V> SelectKey<KR>(IKeyValueMapper<K, V, KR> mapper, string named = null);
 
         /// <summary>
@@ -424,6 +426,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="mapper">A function mapper that computes a new key for each record</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{KR, V}"/> that contains records with new key (possibly of different type) and unmodified value</returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
         IKStream<KR, V> SelectKey<KR>(Func<K, V, KR> mapper, string named = null);
 
         /// <summary>
