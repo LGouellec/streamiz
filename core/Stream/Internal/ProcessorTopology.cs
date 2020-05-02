@@ -17,19 +17,23 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         internal IDictionary<string, IProcessor> ProcessorOperators { get; } = new Dictionary<string, IProcessor>();
         internal IDictionary<string, IStateStore> StateStores { get; } = new Dictionary<string, IStateStore>();
 
+        internal IDictionary<string, IStateStore> GlobalStateStores { get; } = new Dictionary<string, IStateStore>();
+
 
         internal ProcessorTopology(
             IProcessor rootProcessor,
             IDictionary<string, IProcessor> sources,
             IDictionary<string, IProcessor> sinks,
             IDictionary<string, IProcessor> processors,
-            IDictionary<string, IStateStore> stateStores)
+            IDictionary<string, IStateStore> stateStores,
+            IDictionary<string, IStateStore> globalStateStores)
         {
             Root = rootProcessor;
             SourceOperators = sources;
             SinkOperators = sinks;
             ProcessorOperators = processors;
             StateStores = stateStores;
+            GlobalStateStores = globalStateStores;
         }
 
         internal IProcessor GetSourceProcessor(string name)

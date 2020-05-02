@@ -10,16 +10,14 @@ namespace Streamiz.Kafka.Net.State.Internal
     /// </summary>
     internal class QueryableStoreProvider
     {
-        // TODO: uncomment GlobalStateStoreProvider code when it is available
-
         private readonly IEnumerable<StreamThreadStateStoreProvider> storeProviders;
-        //private readonly GlobalStateStoreProvider globalStateStoreProvider;
+        private readonly GlobalStateStoreProvider globalStateStoreProvider;
 
-        public QueryableStoreProvider(IEnumerable<StreamThreadStateStoreProvider> storeProviders
-            /*GlobalStateStoreProvider globalStateStoreProvider*/)
+        public QueryableStoreProvider(IEnumerable<StreamThreadStateStoreProvider> storeProviders,
+            GlobalStateStoreProvider globalStateStoreProvider)
         {
             this.storeProviders = new List<StreamThreadStateStoreProvider>(storeProviders);
-            //this.globalStateStoreProvider = globalStateStoreProvider;
+            this.globalStateStoreProvider = globalStateStoreProvider;
         }
 
         /// <summary>
@@ -34,11 +32,11 @@ namespace Streamiz.Kafka.Net.State.Internal
         public T GetStore<T, K, V>(StoreQueryParameters<T, K, V> storeQueryParameters) 
             where T : class
         {
-            //IEnumerable<T> globalStore = this.globalStateStoreProvider.stores(storeName, queryableStoreType);
-            //if (globalStore.Any())
-            //{
-            //    return queryableStoreType.Create(new WrappingStoreProvider(new[] { this.globalStateStoreProvider })), storeName);
-            //}
+            IEnumerable<T> globalStore = this.globalStateStoreProvider.Stores(storeQueryParameters);
+            if (globalStore.Any())
+            {
+                return storeQueryParameters.QueryableStoreType.Create(new GlobalStateStoreProviderFacade<T, K, V>(this.globalStateStoreProvider), storeQueryParameters.StoreName);
+            }
 
             IEnumerable<T> allStores = this.storeProviders
                 .SelectMany(store => store.Stores(storeQueryParameters));

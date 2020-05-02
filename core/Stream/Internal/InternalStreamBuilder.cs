@@ -89,6 +89,32 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #endregion
 
+        #region Build GlobalTable
+
+        internal IGlobalKTable GlobalTable<K, V>(string topic, ConsumedInternal<K, V> consumed, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized)
+        {
+            // explicitly disable logging for global stores
+            materialized.WithLoggingDisabled();
+
+            string sourceName = new Named(consumed.Named).SuffixWithOrElseGet(TABLE_SOURCE_SUFFIX, this, KStream<byte, byte>.SOURCE_NAME);
+            string tableSourceName = new Named(consumed.Named).OrElseGenerateWithPrefix(this, KTable<byte, byte, byte>.SOURCE_NAME);
+            string storeName = materialized.StoreName;
+
+            // enforce store name as queryable name to always materialize global table stores
+            var tableSource = new KTableSource<K, V>(storeName, storeName);
+            var processorParameters = new ProcessorParameters<K, V>(tableSource, tableSourceName);
+
+            var tableSourceNode = new TableSourceNode<K, V, IKeyValueStore<Bytes, byte[]>>(
+                topic, tableSourceName, sourceName, consumed,
+                materialized, processorParameters, true);
+
+            this.AddGraphNode(root, tableSourceNode);
+
+            return new GlobalKTable<K, V>(new KTableSourceValueGetterSupplier<K, V>(storeName), materialized.QueryableStoreName);
+        }
+
+        #endregion
+
         #region Build Topology
 
         internal void Build()

@@ -12,7 +12,7 @@ namespace Streamiz.Kafka.Net.State
         IDictionary<string, string> LogConfig { get; }
         bool LoggingEnabled { get; }
         string Name { get; }
-        object Build();
+        IStateStore Build();
     }
 
     /// <summary>

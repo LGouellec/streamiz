@@ -311,7 +311,7 @@ namespace Streamiz.Kafka.Net.Table
         public Materialized<K, V, S> WithLoggingDisabled()
         {
             loggingEnabled = false;
-            this.TopicConfig.Clear();
+            this.TopicConfig?.Clear();
             return this;
         }
 

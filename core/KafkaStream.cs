@@ -320,7 +320,8 @@ namespace Streamiz.Kafka.Net
             foreach (var t in threads)
                 t.StateChanged += manager.OnChange;
 
-            queryableStoreProvider = new QueryableStoreProvider(stateStoreProviders);
+            var globalStateStoreProvider = new GlobalStateStoreProvider(topology.Builder.GlobalStateStores);
+            this.queryableStoreProvider = new QueryableStoreProvider(stateStoreProviders, globalStateStoreProvider);
 
             StreamState = State.CREATED;
         }

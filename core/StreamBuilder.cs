@@ -499,6 +499,36 @@ namespace Streamiz.Kafka.Net
 
         #endregion
 
+        #region GlobalKTable
+
+        // TODO: <K, V, KS, VS>?
+
+        public IGlobalKTable GlobalTable<K, V>(string topic) => GlobalTable<K, V>(topic, null, null);
+
+        public IGlobalKTable GlobalTable<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+            => GlobalTable(topic, keySerdes, valueSerdes, null);
+
+        public IGlobalKTable GlobalTable<K, V>(string topic, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized)
+            => GlobalTable(topic, null, null, materialized);
+
+        public IGlobalKTable GlobalTable<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized)
+            => GlobalTable(topic, keySerdes, valueSerdes, materialized, null, null);
+
+        public IGlobalKTable GlobalTable<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named)
+            => GlobalTable(topic, keySerdes, valueSerdes, materialized, named, null);
+
+        public IGlobalKTable GlobalTable<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named, ITimestampExtractor extractor)
+        {
+            materialized = materialized ?? Materialized<K, V, IKeyValueStore<Bytes, byte[]>>.Create();
+
+            var consumedInternal = new ConsumedInternal<K, V>(named, keySerdes, valueSerdes, extractor);
+            materialized.UseProvider(internalStreamBuilder, $"{topic}-")?.InitConsumed(consumedInternal);
+
+            return internalStreamBuilder.GlobalTable(topic, consumedInternal, materialized);
+        }
+
+        #endregion
+
         /// <summary>
         /// Returns the <see cref="Topology"/> that represents the specified processing logic.
         /// Note that using this method means no optimizations are performed.
