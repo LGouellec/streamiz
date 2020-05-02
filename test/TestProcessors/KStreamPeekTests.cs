@@ -50,7 +50,6 @@ namespace Streamiz.Kafka.Net.TestProcessors
             IKStream<string, string> stream = builder.Stream<string, string>("topic");
 
             Assert.Throws<ArgumentNullException>(() => stream.Peek(null));
-
         }
     }
 }

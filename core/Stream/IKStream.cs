@@ -47,7 +47,8 @@ namespace Streamiz.Kafka.Net.Stream
         /// </summary>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <param name="predicates">the ordered list of predicate instances</param>
-        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> if one (or multiple) predicate function is null</exception>
+        /// <returns>multiple distinct substreams of this <see cref="IKStream{K, V}"/></returns>
         IKStream<K, V>[] Branch(string named, params Func<K, V, bool>[] predicates);
 
         /// <summary>
@@ -59,6 +60,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="predicate">A filter predicate that is applied to each record</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{K, V}"/> that contains only those records that satisfy the given predicate</returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when predicate function is null</exception>
         IKStream<K, V> Filter(Func<K, V, bool> predicate, string named = null);
 
         /// <summary>
@@ -70,6 +72,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="predicate">A filter predicate that is applied to each record</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{K, V}"/> that contains only those records that DO NOT satisfy the given predicate</returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when predicate function is null</exception>
         IKStream<K, V> FilterNot(Func<K, V, bool> predicate, string named = null);
 
         /// <summary>
@@ -79,6 +82,8 @@ namespace Streamiz.Kafka.Net.Stream
         /// </summary>
         /// <param name="topicName">the topic name</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> if <paramref name="topicName"/> is null</exception>
+        /// /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if <paramref name="topicName"/> is incorrect</exception>
         void To(string topicName, string named = null);
 
         /// <summary>
@@ -143,6 +148,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="mapper">A <see cref="IKeyValueMapper{K, V, VR}"/> mapper that computes the new output records</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{KR, VR}"/> that contains more or less records with new key and value (possibly of different type)</returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
         IKStream<KR, VR> FlatMap<KR, VR>(IKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named = null);
 
         /// <summary>
@@ -160,6 +166,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="mapper">A function mapper that computes the new output records</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{KR, VR}"/> that contains more or less records with new key and value (possibly of different type)</returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
         IKStream<KR, VR> FlatMap<KR, VR>(Func<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named = null);
 
         /// <summary>
@@ -358,6 +365,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// </summary>
         /// <param name="action">An action to perform on each record</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> exception if <paramref name="action"/> is null</exception>
         /// <returns>Itself</returns>
         IKStream<K, V> Peek(Action<K, V> action, string named = null);
 

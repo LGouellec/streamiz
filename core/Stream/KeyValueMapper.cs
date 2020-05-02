@@ -30,6 +30,9 @@ namespace Streamiz.Kafka.Net.Stream
 
         public WrappedKeyValueMapper(Func<K, V, VR> function)
         {
+            if (function == null)
+                throw new ArgumentNullException($"Mapper function can't be null");
+
             this.wrappedFunction = function;
         }
         public VR Apply(K key, V value) => wrappedFunction.Invoke(key, value);

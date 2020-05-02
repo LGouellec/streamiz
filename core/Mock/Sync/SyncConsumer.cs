@@ -220,27 +220,24 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             DateTime dt = DateTime.Now;
             ConsumeResult<byte[], byte[]> result = null;
 
-            while ((dt + timeout) > DateTime.Now)
+            foreach (var kp in offsets)
             {
-                foreach (var kp in offsets)
-                {
-                    if ((dt + timeout) < DateTime.Now)
-                        break;
+                if ((dt + timeout) < DateTime.Now)
+                    break;
 
-                    if (producer != null)
+                if (producer != null)
+                {
+                    var messages = producer.GetHistory(kp.Key).ToArray();
+                    if (messages.Length > kp.Value)
                     {
-                        var messages = producer.GetHistory(kp.Key).ToArray();
-                        if (messages.Length > kp.Value)
+                        result = new ConsumeResult<byte[], byte[]>
                         {
-                            result = new ConsumeResult<byte[], byte[]>
-                            {
-                                Offset = kp.Value,
-                                Topic = kp.Key,
-                                Partition = 0,
-                                Message = messages[kp.Value]
-                            };
-                            return result;
-                        }
+                            Offset = kp.Value,
+                            Topic = kp.Key,
+                            Partition = 0,
+                            Message = messages[kp.Value]
+                        };
+                        return result;
                     }
                 }
             }

@@ -5,6 +5,7 @@ using Streamiz.Kafka.Net.Stream.Internal.Graph;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
@@ -93,7 +94,15 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region To
 
-        public void To(string topicName, string named = null) => To(new StaticTopicNameExtractor<K, V>(topicName), named);
+        public void To(string topicName, string named = null)
+        {
+            if (topicName == null)
+                throw new ArgumentNullException("topicName must not be null");
+            if (string.IsNullOrEmpty(topicName))
+                throw new ArgumentException("topicName must be empty");
+
+            To(new StaticTopicNameExtractor<K, V>(topicName), named);
+        }
 
         public void To(ITopicNameExtractor<K, V> topicExtractor, string named = null) => DoTo(topicExtractor, Produced<K, V>.Create(keySerdes, valueSerdes).WithName(named));
 
@@ -123,6 +132,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public IKStream<KR, VR> FlatMap<KR, VR>(IKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named = null)
         {
+            if(mapper == null)
+                throw new ArgumentNullException($"FlatMap() doesn't allow null mapper function");
+
             var name = new Named(named).OrElseGenerateWithPrefix(this.builder, FLATMAP_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFlatMap<K, V, KR, VR>(mapper), name);
             ProcessorGraphNode<K, V> flatMapNode = new ProcessorGraphNode<K, V>(name, processorParameters);
@@ -350,6 +362,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         private IKStream<K, V> DoFilter(Func<K, V, bool> predicate, string named, bool not)
         {
+            if (predicate == null)
+                throw new ArgumentNullException($"Filter() doesn't allow null predicate function");
+
             string name = new Named(named).OrElseGenerateWithPrefix(this.builder, FILTER_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFilter<K, V>(predicate, not), name);
             ProcessorGraphNode<K, V> filterProcessorNode = new ProcessorGraphNode<K, V>(name, processorParameters);
@@ -369,8 +384,11 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         private IKStream<K, V>[] DoBranch(string named = null, params Func<K, V, bool>[] predicates)
         {
             var namedInternal = new Named(named);
-            if (predicates.Length == 0)
-                throw new ArgumentException("branch() requires at least one predicate");
+            if (predicates != null && predicates.Length == 0)
+                throw new ArgumentException("Branch() requires at least one predicate");
+
+            if(predicates == null || predicates.Any(p => p == null))
+                throw new ArgumentNullException("Branch() doesn't allow null predicate function");
 
             String branchName = namedInternal.OrElseGenerateWithPrefix(this.builder, BRANCH_NAME);
             String[] childNames = new String[predicates.Length];

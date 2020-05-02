@@ -12,14 +12,32 @@ namespace Streamiz.Kafka.Net.TestProcessors
     public class KStreamPassThoughTests
     {
         [Test]
-        public void ShouldObserveStreamElements()
+        public void ShouldNotAllowNullTopicDest()
+        {
+            var builder = new StreamBuilder();
+            var stream = builder.Stream<string, string>("topic");
+            string topicDes = null;
+            Assert.Throws<ArgumentNullException>(() => stream.To(topicDes));
+        }
+
+        [Test]
+        public void ShouldNotAllowEmptyTopicDest()
+        {
+            var builder = new StreamBuilder();
+            var stream = builder.Stream<string, string>("topic");
+            string topicDes = "";
+            Assert.Throws<ArgumentException>(() => stream.To(topicDes));
+        }
+
+        [Test]
+        public void PassThoughElements()
         {
             var builder = new StreamBuilder();
 
             builder.Stream<string, string>("topic").To("topic2");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-peek";
+            config.ApplicationId = "test-passthrough";
 
             Topology t = builder.Build();
 

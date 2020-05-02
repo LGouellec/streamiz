@@ -14,7 +14,6 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         private readonly TimeSpan timeout;
         private readonly ILog logger = Crosscutting.Logger.GetLogger(typeof(KafkaPipeOutput));
         private readonly CancellationToken token;
-        private readonly SyncProducer syncProducer = null;
         private readonly IConsumer<byte[], byte[]> consumer;
 
 

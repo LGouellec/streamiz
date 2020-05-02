@@ -3,7 +3,7 @@
 namespace Streamiz.Kafka.Net.SerDes
 {
     /// <summary>
-    /// SerDes for string. Default this serdes using <see cref="Encoding.UTF8"/>
+    /// SerDes for <see cref="string"/>. Default this serdes using <see cref="Encoding.UTF8"/>
     /// </summary>
     public class StringSerDes : AbstractSerDes<string>
     {

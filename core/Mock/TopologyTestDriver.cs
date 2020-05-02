@@ -80,7 +80,6 @@ namespace Streamiz.Kafka.Net.Mock
         private readonly InternalTopologyBuilder topologyBuilder;
         private readonly IStreamConfig configuration;
         private readonly IStreamConfig topicConfiguration;
-        private readonly ProcessorTopology processorTopology;
 
         private readonly IDictionary<string, IPipeInput> inputs = new Dictionary<string, IPipeInput>();
         private readonly IDictionary<string, IPipeOutput> outputs = new Dictionary<string, IPipeOutput>();
