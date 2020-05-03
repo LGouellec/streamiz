@@ -8,6 +8,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
     {
         void Flush();
         void Register(IStateStore store, StateRestoreCallback callback);
+        void RegisterGlobalStateStores(IDictionary<string, IStateStore> globalStateStores);
         void Close();
         IStateStore GetStore(string name);
     }

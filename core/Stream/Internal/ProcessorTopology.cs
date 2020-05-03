@@ -19,7 +19,6 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         internal IDictionary<string, IStateStore> GlobalStateStores { get; } = new Dictionary<string, IStateStore>();
 
-
         internal ProcessorTopology(
             IProcessor rootProcessor,
             IDictionary<string, IProcessor> sources,

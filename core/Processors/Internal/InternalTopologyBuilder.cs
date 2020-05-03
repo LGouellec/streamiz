@@ -27,6 +27,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         internal IDictionary<string, IStateStore> GlobalStateStores { get; } = new Dictionary<string, IStateStore>();
 
+        internal bool HasNoNonGlobalTopology => !sourceTopics.Any();
+
         #region Private
 
         private void ConnectProcessorAndStateStore(string processorName, string stateStoreName)
@@ -232,6 +234,15 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             return BuildTopology(nodeGroup);
         }
 
+        public ProcessorTopology BuildGlobalStateTopology()
+        {
+            if (!GlobalNodeGroups.Any())
+            {
+                return null;
+            }
+            return BuildTopology(GlobalNodeGroups);
+        }
+
         private ISet<string> GlobalNodeGroups => nodeGroups
                 .Where(group => group.Value.Any(IsGlobalSource))
                 .SelectMany(group => group.Value)
@@ -357,7 +368,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             IDictionary<string, ISet<string>> groups = new Dictionary<string, ISet<string>>();
 
-            foreach(var topicSource in sourceTopics)
+            foreach(var topicSource in sourceTopics.Concat(globalTopics))
             {
                 groups.Add(topicSource, new HashSet<string>());
                 PutNodeGroupName(groups, topicSource);

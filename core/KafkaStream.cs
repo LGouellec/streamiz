@@ -244,6 +244,7 @@ namespace Streamiz.Kafka.Net
         private readonly string logPrefix = "";
         private readonly object stateLock = new object();
         private readonly QueryableStoreProvider queryableStoreProvider;
+        private readonly GlobalStreamThread globalStreamThread;
 
         internal State StreamState { get; private set; }
 
@@ -292,11 +293,29 @@ namespace Streamiz.Kafka.Net
             // sanity check
             var processorTopology = topology.Builder.BuildTopology();
 
-            threads = new IThread[configuration.NumStreamThreads];
+            int numStreamThreads = topology.Builder.HasNoNonGlobalTopology ? 0 : this.configuration.NumStreamThreads;
+
+            this.threads = new IThread[numStreamThreads];
             var threadState = new Dictionary<long, Processors.ThreadState>();
 
+            ProcessorTopology globalTaskTopology = topology.Builder.BuildGlobalStateTopology();
+            bool hasGlobalTopology = globalTaskTopology != null;
+            if (numStreamThreads == 0 && !hasGlobalTopology)
+            {
+                throw new TopologyException("Topology has no stream threads and no global threads, " +
+                    "must subscribe to at least one source topic or global table.");
+            }
+
+            GlobalThreadState globalThreadState = null;
+            if (hasGlobalTopology)
+            {
+                string globalThreadId = $"{clientId}-GlobalStreamThread";
+                globalStreamThread = new GlobalStreamThread(globalThreadId);
+                globalThreadState = globalStreamThread.State;
+            }
+
             List<StreamThreadStateStoreProvider> stateStoreProviders = new List<StreamThreadStateStoreProvider>();
-            for (int i = 0; i < configuration.NumStreamThreads; ++i)
+            for (int i = 0; i < numStreamThreads; ++i)
             {
                 var threadId = $"{configuration.ApplicationId.ToLower()}-stream-thread-{i}";
 
@@ -315,8 +334,12 @@ namespace Streamiz.Kafka.Net
 
                 stateStoreProviders.Add(new StreamThreadStateStoreProvider(threads[i], this.topology.Builder));
             }
-
-            var manager = new StreamStateManager(this, threadState);
+            
+            var manager = new StreamStateManager(this, threadState, globalThreadState);
+            if (hasGlobalTopology)
+            {
+                globalStreamThread.StateChanged += manager.OnGlobalThreadStateChange;
+            }
             foreach (var t in threads)
                 t.StateChanged += manager.OnChange;
 
@@ -337,6 +360,11 @@ namespace Streamiz.Kafka.Net
             if (SetState(State.REBALANCING))
             {
                 logger.Info($"{logPrefix}Starting Streams client with this topology : {topology.Describe()}");
+
+                if (this.globalStreamThread != null)
+                {
+                    this.globalStreamThread.Start(token);
+                }
 
                 foreach (var t in threads)
                     t.Start(token);
@@ -359,6 +387,11 @@ namespace Streamiz.Kafka.Net
             {
                 foreach (var t in threads)
                     t.Dispose();
+
+                if (this.globalStreamThread != null)
+                {
+                    this.globalStreamThread.Dispose();
+                }
 
                 SetState(State.NOT_RUNNING);
                 logger.Info($"{logPrefix}Streams client stopped completely");
