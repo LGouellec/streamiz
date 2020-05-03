@@ -275,7 +275,7 @@ namespace Streamiz.Kafka.Net.Mock
         /// <returns>the key value store, or null if no <see cref="ReadOnlyKeyValueStore{K, V}"/> or <see cref="TimestampedKeyValueStore{K, V}"/> has been registered with the given name</returns>
         public ReadOnlyKeyValueStore<K, V> GetKeyValueStore<K, V>(string name)
         {
-            var store = behavior.GetStateStore(name);
+            var store = behavior.GetStateStore<K, V>(name);
             if (store is TimestampedKeyValueStore<K, V>)
                 return new ReadOnlyKeyValueStoreFacade<K, V>(store as TimestampedKeyValueStore<K, V>);
             else if (store is ReadOnlyKeyValueStore<K, V>)

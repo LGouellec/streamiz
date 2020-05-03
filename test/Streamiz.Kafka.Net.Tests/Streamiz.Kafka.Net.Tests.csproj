@@ -26,9 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Private\" />
     <Folder Include="Public\" />
-    <Folder Include="TestDriver\" />
   </ItemGroup>
 
 </Project>

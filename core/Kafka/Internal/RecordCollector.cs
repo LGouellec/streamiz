@@ -1,9 +1,7 @@
 ﻿using Confluent.Kafka;
-using Streamiz.Kafka.Net.Crosscutting;
-using Streamiz.Kafka.Net.Processors;
-using Streamiz.Kafka.Net.SerDes;
 using log4net;
-using System;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.SerDes;
 using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Kafka.Internal

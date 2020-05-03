@@ -122,7 +122,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             ISet<string> nodeGroup = null;
             if (!string.IsNullOrEmpty(topic))
-                nodeGroup = NodeGroups()[topic];
+            {
+                var groups = NodeGroups();
+                if (groups.ContainsKey(topic))
+                    nodeGroup = NodeGroups()[topic];
+                else
+                    throw new TopologyException($"Topic {topic} doesn't exist in this topology");
+            }
             else
                 nodeGroup = NodeGroups().Values.SelectMany(i => i).ToHashSet();
 

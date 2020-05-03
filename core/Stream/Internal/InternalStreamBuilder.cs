@@ -1,14 +1,12 @@
-﻿using Streamiz.Kafka.Net.Crosscutting;
+﻿using log4net;
+using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.State;
-using Streamiz.Kafka.Net.Stream.Internal.Graph;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 using Streamiz.Kafka.Net.Table;
 using Streamiz.Kafka.Net.Table.Internal;
 using Streamiz.Kafka.Net.Table.Internal.Graph;
 using Streamiz.Kafka.Net.Table.Internal.Graph.Nodes;
-using log4net;
-using System;
 using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
@@ -24,7 +22,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         internal IList<StreamGraphNode> nodes = new List<StreamGraphNode>();
         internal readonly RootNode root = new RootNode();
 
-        private InternalTopologyBuilder internalTopologyBuilder;
+        private readonly InternalTopologyBuilder internalTopologyBuilder;
 
         internal InternalStreamBuilder(InternalTopologyBuilder internalTopologyBuilder)
         {
@@ -51,8 +49,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
   
         internal void AddGraphNode(StreamGraphNode root, StreamGraphNode node)
         {
-            if (logger.IsDebugEnabled)
-                logger.Debug($"Adding node {node} in root node {root}");
+            logger.Debug($"Adding node {node} in root node {root}");
             root.AppendChild(node);
             nodes.Add(node);
         }

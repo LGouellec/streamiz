@@ -1,5 +1,4 @@
-﻿using Streamiz.Kafka.Net.Errors;
-using Streamiz.Kafka.Net.Kafka;
+﻿using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -11,7 +10,7 @@ using System.Threading;
 
 namespace Streamiz.Kafka.Net.Mock
 {
-    internal class TaskSynchronousTopologyDriver : IBehaviorTopologyTestDriver
+    internal sealed class TaskSynchronousTopologyDriver : IBehaviorTopologyTestDriver
     {
         private readonly IStreamConfig configuration;
         private readonly IStreamConfig topicConfiguration;
@@ -34,7 +33,7 @@ namespace Streamiz.Kafka.Net.Mock
             producer = supplier.GetProducer(configuration.ToProducerConfig()) as SyncProducer;
         }
 
-        private StreamTask GetTask(string topicName)
+        internal StreamTask GetTask(string topicName)
         {
             StreamTask task;
             if (tasks.ContainsKey(topicName))
@@ -60,15 +59,15 @@ namespace Streamiz.Kafka.Net.Mock
 
         public TestInputTopic<K, V> CreateInputTopic<K, V>(string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
         {
-            var builder = new SyncPipeBuilder(GetTask(topicName), supplier);
-            var pipeInput = builder.Input(topicName, configuration);
+            var pipeBuilder = new SyncPipeBuilder(GetTask(topicName), supplier);
+            var pipeInput = pipeBuilder.Input(topicName, configuration);
             return new TestInputTopic<K, V>(pipeInput, configuration, keySerdes, valueSerdes);
         }
 
         public TestOutputTopic<K, V> CreateOutputTopic<K, V>(string topicName, TimeSpan consumeTimeout, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
         {
-            var builder = new SyncPipeBuilder(null, supplier, producer);
-            var pipeOutput = builder.Output(topicName, consumeTimeout, configuration, token);
+            var pipeBuilder = new SyncPipeBuilder(null, supplier, producer);
+            var pipeOutput = pipeBuilder.Output(topicName, consumeTimeout, configuration, token);
             return new TestOutputTopic<K, V>(pipeOutput, topicConfiguration, keySerdes, valueSerdes);
         }
 
@@ -83,7 +82,7 @@ namespace Streamiz.Kafka.Net.Mock
             // NOTHING
         }
 
-        public IStateStore GetStateStore(string name)
+        public IStateStore GetStateStore<K, V>(string name)
         {
             var task = tasks.Values.FirstOrDefault(t => t.Context.GetStateStore(name) != null);
             return task != null ? task.Context.GetStateStore(name) : null;

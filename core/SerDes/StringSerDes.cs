@@ -33,7 +33,7 @@ namespace Streamiz.Kafka.Net.SerDes
         /// <returns>deserialized string using encoding data; may be null</returns>
         public override string Deserialize(byte[] data)
         {
-            return encoding.GetString(data);
+            return data != null ? encoding.GetString(data) : null;
         }
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace Streamiz.Kafka.Net.SerDes
         /// <returns>serialized bytes</returns>
         public override byte[] Serialize(string data)
         {
-            return encoding.GetBytes(data);
+            return data != null ? encoding.GetBytes(data) : null;
         }
     }
 }

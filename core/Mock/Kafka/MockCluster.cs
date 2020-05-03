@@ -54,7 +54,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
     internal class MockCluster
     {
-        internal static int DEFAULT_NUMBER_PARTITIONS = 4;
+        internal static int DEFAULT_NUMBER_PARTITIONS = 1;
 
         #region Singleton
 
@@ -434,6 +434,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             DeliveryReport<byte[], byte[]> r = new DeliveryReport<byte[], byte[]>();
 
             CreateTopic(topic);
+            // TODO : //var part = Math.Abs(Encoding.UTF8.GetString(message.Key).GetHashCode()) % this.topics[topic].PartitionNumber;
             Random rd = new Random();
             var i = rd.Next(0, this.topics[topic].PartitionNumber);
             this.topics[topic].AddMessage(message.Key, message.Value, i);
