@@ -363,7 +363,7 @@ namespace Streamiz.Kafka.Net
             materialized = materialized ?? Materialized<K, V, IKeyValueStore<Bytes, byte[]>>.Create();
 
             var consumedInternal = new ConsumedInternal<K, V>(named, keySerdes, valueSerdes, extractor);
-            materialized.UseProvider(internalStreamBuilder, $"{topic}-")?.InitConsumed(consumedInternal);
+            materialized.UseProvider(internalStreamBuilder, $"{topic}-").InitConsumed(consumedInternal);
 
             return internalStreamBuilder.Table(topic, consumedInternal, materialized);
         }

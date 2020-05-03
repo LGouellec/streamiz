@@ -57,6 +57,10 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             if (nodeFactories.ContainsKey(nameNode))
                 throw new TopologyException($"Source processor {nameNode} is already added.");
 
+            if(sourcesTopics.Contains(topic)) {
+                throw new TopologyException($"Topic {topic} has already been registered by another source.");
+            }
+
             sourcesTopics.Add(topic);
             nodeFactories.Add(nameNode,
                 new SourceNodeFactory<K, V>(nameNode, topic, consumed.TimestampExtractor, consumed.KeySerdes, consumed.ValueSerdes));

@@ -137,7 +137,7 @@ namespace Streamiz.Kafka.Net.Processors
                     {
                         if (exception != null)
                         {
-                            Close(true);
+                            Close(false);
                             throw exception;
                         }
 
@@ -272,7 +272,7 @@ namespace Streamiz.Kafka.Net.Processors
                     manager.Close();
                     consumer.Unsubscribe();
                     IsRunning = false;
-                    if(thread.IsAlive)
+                    if(cleanUp)
                         thread.Join();
                     
                     SetState(ThreadState.DEAD);

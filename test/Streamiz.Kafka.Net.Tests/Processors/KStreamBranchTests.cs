@@ -19,6 +19,14 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
 
         [Test]
+        public void ShouldNotAllowEmptyBranchFunction()
+        {
+            var builder = new StreamBuilder();
+            var stream = builder.Stream<string, int>("topic");
+            Assert.Throws<ArgumentException>(() => stream.Branch());
+        }
+
+        [Test]
         public void OneBranchWithElements()
         {
             var builder = new StreamBuilder();

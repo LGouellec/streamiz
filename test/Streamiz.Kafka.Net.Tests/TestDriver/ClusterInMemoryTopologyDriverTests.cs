@@ -35,7 +35,8 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             driver.Dispose();
         }
 
-        // TODO FIX THIS [Test]
+        // TODO FIX THIS 
+        [Test]
         public void StartDriverKO()
         {
             var source = new CancellationTokenSource();

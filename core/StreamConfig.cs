@@ -188,6 +188,7 @@ namespace Streamiz.Kafka.Net
     /// </code>
     /// </exemple>
     /// </summary>
+    [Serializable]
     public class StreamConfig : Dictionary<string, dynamic>, IStreamConfig
     {
         #region Not used for moment
@@ -249,26 +250,26 @@ namespace Streamiz.Kafka.Net
 
         #region Stream config constants
 
-        internal static string applicatonIdCst = "application.id";
-        internal static string clientIdCst = "client.id";
-        internal static string numStreamThreadsCst = "num.stream.threads";
-        internal static string defaultKeySerDesCst = "default.key.serdes";
-        internal static string defaultValueSerDesCst = "default.value.serdes";
-        internal static string defaultTimestampExtractorCst = "default.timestamp.extractor";
-        internal static string processingGuaranteeCst = "processing.guarantee";
-        internal static string transactionTimeoutCst = "transaction.timeout";
-        internal static string commitIntervalMsCst = "commit.interval.ms";
-        internal static string pollMsCst = "poll.ms";
+        internal static readonly string applicatonIdCst = "application.id";
+        internal static readonly string clientIdCst = "client.id";
+        internal static readonly string numStreamThreadsCst = "num.stream.threads";
+        internal static readonly string defaultKeySerDesCst = "default.key.serdes";
+        internal static readonly string defaultValueSerDesCst = "default.value.serdes";
+        internal static readonly string defaultTimestampExtractorCst = "default.timestamp.extractor";
+        internal static readonly string processingGuaranteeCst = "processing.guarantee";
+        internal static readonly string transactionTimeoutCst = "transaction.timeout";
+        internal static readonly string commitIntervalMsCst = "commit.interval.ms";
+        internal static readonly string pollMsCst = "poll.ms";
 
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
         /// </summary>
-        public static long DEFAULT_COMMIT_INTERVAL_MS = 30000L;
+        public static readonly long DEFAULT_COMMIT_INTERVAL_MS = 30000L;
         
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is enabled
         /// </summary>
-        public static long EOS_DEFAULT_COMMIT_INTERVAL_MS = 100L;
+        public static readonly long EOS_DEFAULT_COMMIT_INTERVAL_MS = 100L;
 
         #endregion
 
