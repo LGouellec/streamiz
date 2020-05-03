@@ -88,9 +88,9 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Get the configs to the <see cref="IConsumer{TumerKey, TValue}"/> with specific <paramref name="clientid"/>
         /// </summary>
-        /// <param name="clientid">Consumer client ID</param>
+        /// <param name="clientId">Consumer client ID</param>
         /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
-        ConsumerConfig ToConsumerConfig(string clientid);
+        ConsumerConfig ToConsumerConfig(string clientId);
 
         /// <summary>
         /// Get the configs to the restore <see cref="IConsumer{TKey, TValue}"/> with specific <paramref name="clientId"/>.
@@ -1885,6 +1885,9 @@ namespace Streamiz.Kafka.Net
         /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
         public ConsumerConfig ToConsumerConfig(string clientId)
         {
+            if (!this.ContainsKey(applicatonIdCst))
+                throw new StreamConfigException($"Key {applicatonIdCst} was not found. She is mandatory for getting consumer config");
+
             var c = _consumerConfig.Union(_internalConsumerConfig).ToDictionary();
             var config = new ConsumerConfig(c);
             config.GroupId = this.ApplicationId;
@@ -1955,6 +1958,7 @@ namespace Streamiz.Kafka.Net
     /// </summary>
     /// <typeparam name="KS">Default key serdes</typeparam>
     /// <typeparam name="VS">Default value serdes</typeparam>
+    [Serializable]
     public class StreamConfig<KS, VS> : StreamConfig
         where KS : ISerDes, new()
         where VS : ISerDes, new()

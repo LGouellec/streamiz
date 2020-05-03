@@ -113,46 +113,57 @@ namespace Streamiz.Kafka.Net
             /// <summary>
             /// Static CREATED State of a <see cref="KafkaStream"/> instance.
             /// </summary>
-            public static State CREATED = new State(1, 3).Order(0).Name("CREATED");
+            public static readonly State CREATED = new State(1, 3).Order(0).Named("CREATED");
             /// <summary>
             /// Static REBALANCING State of a <see cref="KafkaStream"/> instance.
             /// </summary>
-            public static State REBALANCING = new State(2, 3, 5).Order(1).Name("REBALANCING");
+            public static readonly State REBALANCING = new State(2, 3, 5).Order(1).Named("REBALANCING");
             /// <summary>
             /// Static RUNNING State of a <see cref="KafkaStream"/> instance.
             /// </summary>
-            public static State RUNNING = new State(1, 2, 3, 5).Order(2).Name("RUNNING");
+            public static readonly State RUNNING = new State(1, 2, 3, 5).Order(2).Named("RUNNING");
             /// <summary>
             /// Static PENDING_SHUTDOWN State of a <see cref="KafkaStream"/> instance.
             /// </summary>
-            public static State PENDING_SHUTDOWN = new State(4).Order(3).Name("PENDING_SHUTDOWN");
+            public static readonly State PENDING_SHUTDOWN = new State(4).Order(3).Named("PENDING_SHUTDOWN");
             /// <summary>
             /// Static NOT_RUNNING State of a <see cref="KafkaStream"/> instance.
             /// </summary>
-            public static State NOT_RUNNING = new State().Order(4).Name("NOT_RUNNING");
+            public static readonly State NOT_RUNNING = new State().Order(4).Named("NOT_RUNNING");
             /// <summary>
             /// Static ERROR State of a <see cref="KafkaStream"/> instance.
             /// </summary>
-            public static State ERROR = new State(3).Order(5).Name("ERROR");
+            public static readonly State ERROR = new State(3).Order(5).Named("ERROR");
 
-            private ISet<int> validTransitions = new HashSet<int>();
-            private int ordinal = 0;
-            private string name;
+            /// <summary>
+            /// Name of the state
+            /// </summary>
+            public string Name { get; private set; }
+
+            /// <summary>
+            /// Order's state
+            /// </summary>
+            public int Ordinal { get; private set; }
+
+            /// <summary>
+            /// Valid transition of the current state
+            /// </summary>
+            public ISet<int> Transitions { get; } = new HashSet<int>();
 
             private State(params int[] validTransitions)
             {
-                this.validTransitions.AddRange(validTransitions);
+                this.Transitions.AddRange(validTransitions);
             }
 
             private State Order(int ordinal)
             {
-                this.ordinal = ordinal;
+                this.Ordinal = ordinal;
                 return this;
             }
 
-            private State Name(string name)
+            private State Named(string name)
             {
-                this.name = name;
+                this.Name = name;
                 return this;
             }
 
@@ -168,7 +179,7 @@ namespace Streamiz.Kafka.Net
 
             internal bool IsValidTransition(State newState)
             {
-                return validTransitions.Contains(((State)newState).ordinal);
+                return Transitions.Contains(newState.Ordinal);
             }
 
             /// <summary>
@@ -177,7 +188,7 @@ namespace Streamiz.Kafka.Net
             /// <param name="a"></param>
             /// <param name="b"></param>
             /// <returns></returns>
-            public static bool operator ==(State a, State b) => a?.ordinal == b?.ordinal;
+            public static bool operator ==(State a, State b) => a?.Ordinal == b?.Ordinal;
 
             /// <summary>
             /// != operator between two <see cref="State"/>
@@ -185,7 +196,7 @@ namespace Streamiz.Kafka.Net
             /// <param name="a"></param>
             /// <param name="b"></param>
             /// <returns></returns>
-            public static bool operator !=(State a, State b) => a?.ordinal != b?.ordinal;
+            public static bool operator !=(State a, State b) => a?.Ordinal != b?.Ordinal;
 
             /// <summary>
             /// Override Equals method
@@ -194,7 +205,7 @@ namespace Streamiz.Kafka.Net
             /// <returns></returns>
             public override bool Equals(object obj)
             {
-                return obj is State && ((State)obj).ordinal.Equals(this.ordinal);
+                return obj is State && ((State)obj).Ordinal.Equals(this.Ordinal);
             }
 
             /// <summary>
@@ -203,7 +214,7 @@ namespace Streamiz.Kafka.Net
             /// <returns></returns>
             public override int GetHashCode()
             {
-                return this.ordinal.GetHashCode();
+                return this.Ordinal.GetHashCode();
             }
 
             /// <summary>
@@ -212,7 +223,7 @@ namespace Streamiz.Kafka.Net
             /// <returns></returns>
             public override string ToString()
             {
-                return $"{this.name}";
+                return $"{this.Name}";
             }
         }
 
@@ -244,10 +255,23 @@ namespace Streamiz.Kafka.Net
         /// <param name="topology">the topology specifying the computational logic</param>
         /// <param name="configuration">configuration about this stream</param>
         public KafkaStream(Topology topology, IStreamConfig configuration)
+            : this(topology, configuration, new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(configuration)))
+        {
+
+        }
+
+        /// <summary>
+        /// Create a <see cref="KafkaStream"/> instance with your own <see cref="IKafkaSupplier" />
+        /// Please DO NOT FORGET to call Close to avoid resources leak !
+        /// </summary>
+        /// <param name="topology">the topology specifying the computational logic</param>
+        /// <param name="configuration">configuration about this stream</param>
+        /// <param name="kafkaSupplier">the Kafka clients supplier which provides underlying producer and consumer clients for the new <see cref="KafkaStream"/> instance</param>
+        public KafkaStream(Topology topology, IStreamConfig configuration, IKafkaSupplier kafkaSupplier)
         {
             this.topology = topology;
             this.configuration = configuration;
-            this.kafkaSupplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(configuration));
+            this.kafkaSupplier = kafkaSupplier;
 
             var processID = Guid.NewGuid();
             clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{this.configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;

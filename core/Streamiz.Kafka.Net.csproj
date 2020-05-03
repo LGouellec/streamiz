@@ -34,8 +34,4 @@
     <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Errors\" />
-  </ItemGroup>
-
 </Project>
