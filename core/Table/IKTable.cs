@@ -371,6 +371,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="keySelector">a <see cref="IKeyValueMapper{K, V, VR}"/> mapper that computes a new grouping key and value to be aggregated</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>a <see cref="IKGroupedTable{KR, VR}"/> that contains the re-grouped records of the original <see cref="IKTable{K, V}"/></returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
         IKGroupedTable<KR, VR> GroupBy<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> keySelector, string named = null);
 
         /// <summary>
@@ -398,6 +399,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="keySelector">a function mapper that computes a new grouping key and value to be aggregated</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>a <see cref="IKGroupedTable{KR, VR}"/> that contains the re-grouped records of the original <see cref="IKTable{K, V}"/></returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
         IKGroupedTable<KR, VR> GroupBy<KR, VR>(Func<K, V, KeyValuePair<KR, VR>> keySelector, string named = null);
 
         /// <summary>
@@ -427,6 +429,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="keySelector">a <see cref="IKeyValueMapper{K, V, VR}"/> mapper that computes a new grouping key and value to be aggregated</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>a <see cref="IKGroupedTable{KR, VR}"/> that contains the re-grouped records of the original <see cref="IKTable{K, V}"/></returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
         IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> keySelector, string named = null) where KRS : ISerDes<KR>, new() where VRS : ISerDes<VR>, new();
 
         /// <summary>
@@ -456,6 +459,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="keySelector">a function mapper that computes a new grouping key and value to be aggregated</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>a <see cref="IKGroupedTable{KR, VR}"/> that contains the re-grouped records of the original <see cref="IKTable{K, V}"/></returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
         IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(Func<K, V, KeyValuePair<KR, VR>> keySelector, string named = null) where KRS : ISerDes<KR>, new() where VRS : ISerDes<VR>, new();
     }
 }

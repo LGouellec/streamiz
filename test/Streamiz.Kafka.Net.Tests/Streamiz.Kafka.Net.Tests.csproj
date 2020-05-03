@@ -6,6 +6,8 @@
     <IsPackable>false</IsPackable>
     <AssemblyName>Streamiz.Kafka.Net.Tests</AssemblyName>
 	<SonarQubeTestProject>true</SonarQubeTestProject>
+	<SignAssembly>true</SignAssembly>
+	<AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,6 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Private\" />
+    <Folder Include="Public\" />
     <Folder Include="TestDriver\" />
   </ItemGroup>
 

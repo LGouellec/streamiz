@@ -434,6 +434,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         private IKGroupedStream<KR, V> DoGroup<KR>(IKeyValueMapper<K, V, KR> keySelector, Grouped<KR, V> grouped)
         {
+            if (keySelector == null)
+                throw new ArgumentNullException("GroupBy() doesn't allow null selector function");
+
             ProcessorGraphNode<K, V> selectKeyMapNode = InternalSelectKey(keySelector, grouped.Named);
             selectKeyMapNode.KeyChangingOperation = true;
 

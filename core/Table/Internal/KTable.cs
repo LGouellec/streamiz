@@ -325,6 +325,9 @@ namespace Streamiz.Kafka.Net.Table.Internal
 
         private IKGroupedTable<K1, V1> DoGroup<K1, V1>(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> keySelector, Grouped<K1, V1> grouped)
         {
+            if (keySelector == null)
+                throw new ArgumentNullException("GroupBy() doesn't allow null selector function");
+
             var selectName = new Named(grouped.Named).OrElseGenerateWithPrefix(this.builder, SELECT_NAME);
 
             IKTableProcessorSupplier<K, V, KeyValuePair< K1, V1 >> selectSupplier = new KTableRepartitionMap<K, V, K1, V1>(this, keySelector);

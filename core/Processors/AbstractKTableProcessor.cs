@@ -12,7 +12,7 @@ namespace Streamiz.Kafka.Net.Processors
         protected TimestampedKeyValueStore<KS, VS> store;
         protected TimestampedTupleForwarder<K, V> tupleForwarder;
 
-        public AbstractKTableProcessor(string queryableStoreName, bool sendOldValues)
+        protected AbstractKTableProcessor(string queryableStoreName, bool sendOldValues)
         {
             this.queryableStoreName = queryableStoreName;
             this.sendOldValues = sendOldValues;

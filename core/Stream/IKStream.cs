@@ -449,6 +449,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="keySelector">A <see cref="IKeyValueMapper{K, V, VR}"/> selector that computes a new key for grouping</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKGroupedStream{KR, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
         IKGroupedStream<KR, V> GroupBy<KR>(IKeyValueMapper<K, V, KR> keySelector, string named = null);
 
         /// <summary>
@@ -471,6 +472,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="keySelector">A function selector that computes a new key for grouping</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKGroupedStream{KR, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
         IKGroupedStream<KR, V> GroupBy<KR>(Func<K, V, KR> keySelector, string named = null);
 
         /// <summary>
@@ -494,6 +496,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="keySelector">A <see cref="IKeyValueMapper{K, V, VR}"/> selector that computes a new key for grouping</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKGroupedStream{KR, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
         IKGroupedStream<KR, V> GroupBy<KR, KRS>(IKeyValueMapper<K, V, KR> keySelector, string named = null) where KRS : ISerDes<KR>, new();
 
         /// <summary>
@@ -517,6 +520,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="keySelector">A function selector that computes a new key for grouping</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKGroupedStream{KR, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
         IKGroupedStream<KR, V> GroupBy<KR, KRS>(Func<K, V, KR> keySelector, string named = null) where KRS : ISerDes<KR>, new();
 
         /// <summary>
