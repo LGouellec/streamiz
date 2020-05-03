@@ -28,6 +28,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             // Same task, so task2 == task
             var task2 = driver.GetTask("test");
             Assert.IsTrue(task == task2);
+            driver.Dispose();
         }
 
         [Test]
@@ -43,6 +44,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             driver.CreateInputTopic("test", new StringSerDes(), new StringSerDes());
             var store = driver.GetStateStore<string, string>("store");
             Assert.IsNull(store);
+            driver.Dispose();
         }
 
         [Test]
@@ -63,6 +65,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
 
             Assert.AreEqual(1, ((ReadOnlyKeyValueStore<string, ValueAndTimestamp<string>>)store).All().Count());
             Assert.AreEqual("1", ((ReadOnlyKeyValueStore<string, ValueAndTimestamp<string>>)store).Get("coucou").Value);
+            driver.Dispose();
         }
 
         [Test]
@@ -88,6 +91,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
 
             Assert.AreEqual(1, ((ReadOnlyKeyValueStore<string, ValueAndTimestamp<string>>)store).All().Count());
             Assert.AreEqual("2", ((ReadOnlyKeyValueStore<string, ValueAndTimestamp<string>>)store).Get("coucou").Value);
+            driver.Dispose();
         }
 
         [Test]
@@ -113,6 +117,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
 
             Assert.AreEqual(0, ((ReadOnlyKeyValueStore<string, ValueAndTimestamp<string>>)store).All().Count());
             Assert.AreEqual(null, ((ReadOnlyKeyValueStore<string, ValueAndTimestamp<string>>)store).Get("coucou"));
+            driver.Dispose();
         }
     }
 }

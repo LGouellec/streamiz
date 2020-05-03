@@ -203,7 +203,7 @@ namespace Streamiz.Kafka.Net.Processors
                     // Use for waiting end of disposing
                     Thread.Sleep(100);
                 }
-                
+
                 // Dispose consumer
                 try
                 {
@@ -272,7 +272,8 @@ namespace Streamiz.Kafka.Net.Processors
                     manager.Close();
                     consumer.Unsubscribe();
                     IsRunning = false;
-                    thread.Join();
+                    if(thread.IsAlive)
+                        thread.Join();
                     
                     SetState(ThreadState.DEAD);
                     log.Info($"{logPrefix}Shutdown complete");

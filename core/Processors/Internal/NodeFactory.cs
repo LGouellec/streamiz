@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public string Name { get; }
         public string[] Previous { get; }
 
-        public NodeFactory(string name, string[] previous)
+        protected NodeFactory(string name, string[] previous)
         {
             Name = name;
             Previous = previous;

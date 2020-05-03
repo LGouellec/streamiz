@@ -1,17 +1,14 @@
-﻿using Streamiz.Kafka.Net.Crosscutting;
+﻿using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Table.Internal;
-using log4net;
-using System.Collections.Generic;
-using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
 {
     internal class KTableSourceProcessor<K, V> : AbstractProcessor<K, V>
     {
         private string storeName;
-        private string queryableName;
-        private bool sendOldValues;
+        private readonly string queryableName;
+        private readonly bool sendOldValues;
 
         private TimestampedKeyValueStore<K, V> store;
         private TimestampedTupleForwarder<K, V> tupleForwarder;

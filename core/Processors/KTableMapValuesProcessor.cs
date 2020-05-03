@@ -1,9 +1,6 @@
 ﻿using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table.Internal;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -17,11 +14,11 @@ namespace Streamiz.Kafka.Net.Processors
             this.mapper = mapper;
         }
 
-        public override void Process(K key, Change<V> change)
+        public override void Process(K key, Change<V> value)
         {
-            LogProcessingKeyValue(key, change);
-            VR newValue = ComputeValue(key, change.NewValue);
-            VR oldValue = this.sendOldValues ? ComputeValue(key, change.OldValue) : default(VR);
+            LogProcessingKeyValue(key, value);
+            VR newValue = ComputeValue(key, value.NewValue);
+            VR oldValue = this.sendOldValues ? ComputeValue(key, value.OldValue) : default(VR);
 
             if (this.queryableStoreName != null)
             {

@@ -1,8 +1,6 @@
-﻿using Streamiz.Kafka.Net.Crosscutting;
-using log4net;
-using System;
+﻿using log4net;
+using Streamiz.Kafka.Net.Crosscutting;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -31,7 +29,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public bool AddRecord(T record)
         {
-            if (maxSize >= queue.Count)
+            if (maxSize > queue.Count)
             {
                 log.Debug($"{logPrefix}Add record in queue {nameQueue}");
                 queue.Enqueue(record);

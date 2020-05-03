@@ -49,6 +49,29 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
 
         [Test]
+        public void KTableSourceKeyNull()
+        {
+            var builder = new StreamBuilder();
+
+            builder.Table("table-topic", InMemory<string, string>.As("table-topic-store"));
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-map";
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("table-topic");
+                inputTopic.PipeInput(null, "1");
+
+                var store = driver.GetKeyValueStore<string, string>("table-topic-store");
+                Assert.IsNotNull(store);
+                Assert.AreEqual(0, store.ApproximateNumEntries());
+            }
+        }
+
+        [Test]
         public void KTableSourceUpdateKey()
         {
             var builder = new StreamBuilder();

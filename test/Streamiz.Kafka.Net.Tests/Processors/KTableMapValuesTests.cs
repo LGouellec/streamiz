@@ -96,5 +96,41 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 Assert.AreEqual("p", r3);
             }
         }
+
+        [Test]
+        public void MapValuesNoStateStore()
+        {
+            var builder = new StreamBuilder();
+            var observed = new List<KeyValuePair<string, int>>();
+            var data = new List<KeyValuePair<string, string>>();
+            data.Add(KeyValuePair.Create("key1", "test1234"));
+            data.Add(KeyValuePair.Create("key2", "test"));
+            data.Add(KeyValuePair.Create("key3", "paper"));
+
+            builder.Table<string, string>("table-topic")
+                .MapValues((v) => v.Length)
+                .ToStream()
+                .Peek((k, v) => observed.Add(KeyValuePair.Create(k, v)));
+
+            var expected = new List<KeyValuePair<string, int>>();
+            expected.Add(KeyValuePair.Create("key1", 8));
+            expected.Add(KeyValuePair.Create("key2", 4));
+            expected.Add(KeyValuePair.Create("key3", 5));
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "table-test-mapvalues";
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("table-topic");
+                inputTopic.PipeInputs(data);
+
+                var store = driver.GetKeyValueStore<string, int>("test-store");
+                Assert.IsNull(store);
+                Assert.AreEqual(expected, observed);
+            }
+        }
     }
 }

@@ -8,6 +8,7 @@
 	<SonarQubeTestProject>true</SonarQubeTestProject>
 	<SignAssembly>true</SignAssembly>
 	<AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+	<StartupObject></StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,10 +24,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\core\Streamiz.Kafka.Net.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Public\" />
   </ItemGroup>
 
 </Project>

@@ -1,9 +1,8 @@
 ﻿using Confluent.Kafka;
-using Streamiz.Kafka.Net.Crosscutting;
 using log4net;
+using Streamiz.Kafka.Net.Crosscutting;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -21,6 +20,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             this.log = Logger.GetLogger(typeof(ProcessorStateManager));
             this.logPrefix = $"stream-task[{taskId.Topic}|{taskId.Partition}] ";
+            Partition = partition;
         }
 
         public static string StoreChangelogTopic(string applicationId, String storeName)

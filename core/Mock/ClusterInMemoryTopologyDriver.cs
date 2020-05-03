@@ -79,7 +79,7 @@ namespace Streamiz.Kafka.Net.Mock
                     stores.Add(store);
             }
 
-            return new MockReadOnlyKeyValueStore<K, V>(stores);
+            return stores.Count > 0 ? new MockReadOnlyKeyValueStore<K, V>(stores) : null;
         }
 
         public void StartDriver()

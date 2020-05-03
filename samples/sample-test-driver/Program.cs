@@ -12,7 +12,7 @@ namespace sample_test_driver
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-test-driver-app";
-            
+
             StreamBuilder builder = new StreamBuilder();
 
             builder.Stream<string, string>("test").Filter((k, v) => v.Contains("test")).To("test-output");

@@ -13,55 +13,55 @@ namespace Streamiz.Kafka.Net.Stream.Internal
     {
         #region Constants
 
-        internal static String JOINTHIS_NAME = "KSTREAM-JOINTHIS-";
+        internal static readonly String JOINTHIS_NAME = "KSTREAM-JOINTHIS-";
 
-        internal static String JOINOTHER_NAME = "KSTREAM-JOINOTHER-";
+        internal static readonly String JOINOTHER_NAME = "KSTREAM-JOINOTHER-";
 
-        internal static String JOIN_NAME = "KSTREAM-JOIN-";
+        internal static readonly String JOIN_NAME = "KSTREAM-JOIN-";
 
-        internal static String LEFTJOIN_NAME = "KSTREAM-LEFTJOIN-";
+        internal static readonly String LEFTJOIN_NAME = "KSTREAM-LEFTJOIN-";
 
-        internal static String MERGE_NAME = "KSTREAM-MERGE-";
+        internal static readonly String MERGE_NAME = "KSTREAM-MERGE-";
 
-        internal static String OUTERTHIS_NAME = "KSTREAM-OUTERTHIS-";
+        internal static readonly String OUTERTHIS_NAME = "KSTREAM-OUTERTHIS-";
 
-        internal static String OUTEROTHER_NAME = "KSTREAM-OUTEROTHER-";
+        internal static readonly String OUTEROTHER_NAME = "KSTREAM-OUTEROTHER-";
 
-        internal static String WINDOWED_NAME = "KSTREAM-WINDOWED-";
+        internal static readonly String WINDOWED_NAME = "KSTREAM-WINDOWED-";
 
-        internal static String SOURCE_NAME = "KSTREAM-SOURCE-";
+        internal static readonly String SOURCE_NAME = "KSTREAM-SOURCE-";
 
-        internal static String SINK_NAME = "KSTREAM-SINK-";
+        internal static readonly String SINK_NAME = "KSTREAM-SINK-";
 
-        internal static String REPARTITION_TOPIC_SUFFIX = "-repartition";
+        internal static readonly String REPARTITION_TOPIC_SUFFIX = "-repartition";
 
-        internal static String BRANCH_NAME = "KSTREAM-BRANCH-";
+        internal static readonly String BRANCH_NAME = "KSTREAM-BRANCH-";
 
-        internal static String BRANCHCHILD_NAME = "KSTREAM-BRANCHCHILD-";
+        internal static readonly String BRANCHCHILD_NAME = "KSTREAM-BRANCHCHILD-";
 
-        internal static String FILTER_NAME = "KSTREAM-FILTER-";
+        internal static readonly String FILTER_NAME = "KSTREAM-FILTER-";
 
-        internal static String PEEK_NAME = "KSTREAM-PEEK-";
+        internal static readonly String PEEK_NAME = "KSTREAM-PEEK-";
 
-        internal static String FLATMAP_NAME = "KSTREAM-FLATMAP-";
+        internal static readonly String FLATMAP_NAME = "KSTREAM-FLATMAP-";
 
-        internal static String FLATMAPVALUES_NAME = "KSTREAM-FLATMAPVALUES-";
+        internal static readonly String FLATMAPVALUES_NAME = "KSTREAM-FLATMAPVALUES-";
 
-        internal static String MAP_NAME = "KSTREAM-MAP-";
+        internal static readonly String MAP_NAME = "KSTREAM-MAP-";
 
-        internal static String MAPVALUES_NAME = "KSTREAM-MAPVALUES-";
+        internal static readonly String MAPVALUES_NAME = "KSTREAM-MAPVALUES-";
 
-        internal static String PROCESSOR_NAME = "KSTREAM-PROCESSOR-";
+        internal static readonly String PROCESSOR_NAME = "KSTREAM-PROCESSOR-";
 
-        internal static String PRINTING_NAME = "KSTREAM-PRINTER-";
+        internal static readonly String PRINTING_NAME = "KSTREAM-PRINTER-";
 
-        internal static String KEY_SELECT_NAME = "KSTREAM-KEY-SELECT-";
+        internal static readonly String KEY_SELECT_NAME = "KSTREAM-KEY-SELECT-";
 
-        internal static String TRANSFORM_NAME = "KSTREAM-TRANSFORM-";
+        internal static readonly String TRANSFORM_NAME = "KSTREAM-TRANSFORM-";
 
-        internal static String TRANSFORMVALUES_NAME = "KSTREAM-TRANSFORMVALUES-";
+        internal static readonly String TRANSFORMVALUES_NAME = "KSTREAM-TRANSFORMVALUES-";
 
-        internal static String FOREACH_NAME = "KSTREAM-FOREACH-";
+        internal static readonly String FOREACH_NAME = "KSTREAM-FOREACH-";
 
         #endregion
 
@@ -97,7 +97,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         public void To(string topicName, string named = null)
         {
             if (topicName == null)
-                throw new ArgumentNullException("topicName must not be null");
+                throw new ArgumentNullException(nameof(topicName));
             if (string.IsNullOrEmpty(topicName))
                 throw new ArgumentException("topicName must be empty");
 
