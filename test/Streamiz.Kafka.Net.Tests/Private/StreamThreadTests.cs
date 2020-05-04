@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
@@ -137,6 +138,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
         #endregion
 
+        #region StreamThread Workflow
 
         [Test]
         public void CreateStreamThread()
@@ -297,5 +299,85 @@ namespace Streamiz.Kafka.Net.Tests.Private
             supplier.Destroy();
         }
 
+        #endregion
+
+        #region StreamThread SetState
+
+        [Test]
+        public void CheckIncorrectStateTransition()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
+
+            var builder = new StreamBuilder();
+            builder.Stream<string, string>("topic").To("topic2");
+
+            var topo = builder.Build();
+
+            var supplier = new SyncKafkaSupplier();
+            var thread = StreamThread.Create(
+                "thread-0", "c0",
+                topo.Builder, config,
+                supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                0) as StreamThread;
+
+            // MUST BE IN CREATED STATE
+            Assert.AreEqual(ThreadState.CREATED, thread.State);
+            Assert.Throws<StreamsException>(() => thread.SetState(ThreadState.DEAD));
+        }
+
+        [Test]
+        public void CheckSetStateWithoutStateChangedHandler()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
+
+            var builder = new StreamBuilder();
+            builder.Stream<string, string>("topic").To("topic2");
+
+            var topo = builder.Build();
+
+            var supplier = new SyncKafkaSupplier();
+            var thread = StreamThread.Create(
+                "thread-0", "c0",
+                topo.Builder, config,
+                supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                0) as StreamThread;
+
+            // MUST BE IN CREATED STATE
+            Assert.AreEqual(ThreadState.CREATED, thread.State);
+            thread.SetState(ThreadState.STARTING);
+            Assert.AreEqual(ThreadState.STARTING, thread.State);
+        }
+
+
+        [Test]
+        public void CheckSetStateStartingWithDeadThread()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
+
+            var builder = new StreamBuilder();
+            builder.Stream<string, string>("topic").To("topic2");
+
+            var topo = builder.Build();
+
+            var supplier = new SyncKafkaSupplier();
+            var thread = StreamThread.Create(
+                "thread-0", "c0",
+                topo.Builder, config,
+                supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                0) as StreamThread;
+
+            // MUST BE IN CREATED STATE
+            Assert.AreEqual(ThreadState.CREATED, thread.State);
+            thread.SetState(ThreadState.STARTING);
+            thread.SetState(ThreadState.PENDING_SHUTDOWN);
+            thread.SetState(ThreadState.DEAD);
+            thread.Start(default);
+            Assert.IsFalse(thread.IsRunning);
+        }
+
+        #endregion
     }
 }
