@@ -78,15 +78,26 @@ namespace Streamiz.Kafka.Net.Processors
         public static readonly ThreadState PENDING_SHUTDOWN = new ThreadState(5, "PENDING_SHUTDOWN", 6);
         public static readonly ThreadState DEAD = new ThreadState(6, "DEAD");
 
-        private readonly ISet<int> validTransitions = new HashSet<int>();
-        private readonly int ordinal = 0;
-        private readonly string name;
+        /// <summary>
+        /// Name of the state
+        /// </summary>
+        public string Name { get; }
+
+        /// <summary>
+        /// Order's state
+        /// </summary>
+        public int Ordinal { get; }
+
+        /// <summary>
+        /// Valid transition of the current state
+        /// </summary>
+        public ISet<int> Transitions { get; } = new HashSet<int>();
 
         private ThreadState(int order, string name, params int[] validTransitions)
         {
-            ordinal = order;
-            this.name = name;
-            this.validTransitions.AddRange(validTransitions);
+            Ordinal = order;
+            this.Name = name;
+            this.Transitions.AddRange(validTransitions);
         }
 
         public bool IsRunning()
@@ -96,25 +107,25 @@ namespace Streamiz.Kafka.Net.Processors
 
         public bool IsValidTransition(ThreadStateTransitionValidator newState)
         {
-            return validTransitions.Contains(((ThreadState)newState).ordinal);
+            return Transitions.Contains(((ThreadState)newState).Ordinal);
         }
 
-        public static bool operator ==(ThreadState a, ThreadState b) => a?.ordinal == b?.ordinal;
-        public static bool operator !=(ThreadState a, ThreadState b) => a?.ordinal != b?.ordinal;
+        public static bool operator ==(ThreadState a, ThreadState b) => a?.Ordinal == b?.Ordinal;
+        public static bool operator !=(ThreadState a, ThreadState b) => a?.Ordinal != b?.Ordinal;
 
         public override bool Equals(object obj)
         {
-            return obj is ThreadState && ((ThreadState)obj).ordinal.Equals(ordinal);
+            return obj is ThreadState && ((ThreadState)obj).Ordinal.Equals(Ordinal);
         }
 
         public override int GetHashCode()
         {
-            return ordinal.GetHashCode();
+            return Ordinal.GetHashCode();
         }
 
         public override string ToString()
         {
-            return $"{name}";
+            return $"{Name}";
         }
     }
 }

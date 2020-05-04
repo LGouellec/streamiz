@@ -67,6 +67,7 @@ namespace Streamiz.Kafka.Net.Mock
         public void Dispose()
         {
             threadTopology.Dispose();
+            (kafkaSupplier as MockKafkaSupplier)?.Destroy();
         }
 
         public IStateStore GetStateStore<K, V>(string name)

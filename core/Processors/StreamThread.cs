@@ -11,7 +11,7 @@ using System.Threading;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    internal class StreamThread : IThread
+    internal class StreamThread : IThread, IDisposable
     {
         #region Static 
 
@@ -110,6 +110,7 @@ namespace Streamiz.Kafka.Net.Processors
 
             thread = new Thread(Run);
             thread.Name = this.threadId;
+            Name = this.threadId;
 
             State = ThreadState.CREATED;
         }
@@ -232,7 +233,7 @@ namespace Streamiz.Kafka.Net.Processors
             thread.Start();
         }
 
-        public IEnumerable<ITask> ActiveTasks => this.manager.ActiveTasks;
+        public IEnumerable<ITask> ActiveTasks => manager.ActiveTasks;
 
         #endregion
 
@@ -244,7 +245,7 @@ namespace Streamiz.Kafka.Net.Processors
                 DateTime beginCommit = DateTime.Now;
                 log.Debug($"Committing all active tasks {string.Join(",", manager.ActiveTaskIds)} since {(DateTime.Now - lastCommit).TotalMilliseconds}ms has elapsed (commit interval is {commitTimeMs}ms)");
                 committed = manager.CommitAll();
-                if(committed > 0)
+                if (committed > 0)
                     log.Debug($"Committed all active tasks {string.Join(",", manager.ActiveTaskIds)} in {(DateTime.Now - beginCommit).TotalMilliseconds}ms");
 
                 if (committed == -1)
@@ -272,9 +273,9 @@ namespace Streamiz.Kafka.Net.Processors
                     manager.Close();
                     consumer.Unsubscribe();
                     IsRunning = false;
-                    if(cleanUp)
+                    if (cleanUp)
                         thread.Join();
-                    
+
                     SetState(ThreadState.DEAD);
                     log.Info($"{logPrefix}Shutdown complete");
                     IsDisposable = true;

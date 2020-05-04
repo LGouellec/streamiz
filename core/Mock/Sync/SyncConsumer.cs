@@ -210,6 +210,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public void Unsubscribe()
         {
+            this.Unassign();
             Subscription.Clear();
         }
 

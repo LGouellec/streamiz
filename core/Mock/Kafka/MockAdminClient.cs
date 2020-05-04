@@ -9,6 +9,12 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 {
     internal class MockAdminClient : IAdminClient
     {
+        private MockCluster cluster;
+
+        public MockAdminClient(MockCluster cluster)
+        {
+            this.cluster = cluster;
+        }
         #region IAdminClient Impl
 
         public Handle Handle => throw new NotImplementedException();

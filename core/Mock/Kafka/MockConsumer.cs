@@ -12,9 +12,11 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
     {
         private readonly string groupId;
         private readonly string clientId;
+        private readonly MockCluster cluster;
 
-        public MockConsumer(string groupId, string clientId)
+        public MockConsumer(MockCluster cluster, string groupId, string clientId)
         {
+            this.cluster = cluster;
             this.groupId = groupId;
             this.clientId = clientId;
         }
@@ -39,7 +41,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void Assign(TopicPartition partition)
         {
-            MockCluster.Instance.Assign(this, new List<TopicPartition> { partition });
+            cluster.Assign(this, new List<TopicPartition> { partition });
         }
 
         public void Assign(TopicPartitionOffset partition)
@@ -54,24 +56,24 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void Assign(IEnumerable<TopicPartition> partitions)
         {
-            MockCluster.Instance.Assign(this, partitions);
+            cluster.Assign(this, partitions);
         }
 
         public void Close()
         {
-            MockCluster.Instance.CloseConsumer(this.Name);
+            cluster.CloseConsumer(this.Name);
             Assignment.Clear();
             Subscription.Clear();
         }
 
         public List<TopicPartitionOffset> Commit()
         {
-            return MockCluster.Instance.Commit(this);
+            return cluster.Commit(this);
         }
 
         public void Commit(IEnumerable<TopicPartitionOffset> offsets)
         {
-            MockCluster.Instance.Commit(this, offsets);
+            cluster.Commit(this, offsets);
         }
 
         public void Commit(ConsumeResult<byte[], byte[]> result)
@@ -79,7 +81,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public List<TopicPartitionOffset> Committed(TimeSpan timeout)
         {
-            return MockCluster.Instance.Comitted(this);        
+            return cluster.Comitted(this);        
         }
 
         public List<TopicPartitionOffset> Committed(IEnumerable<TopicPartition> partitions, TimeSpan timeout)
@@ -95,7 +97,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public WatermarkOffsets GetWatermarkOffsets(TopicPartition topicPartition)
         {
-            return MockCluster.Instance.GetWatermarkOffsets(topicPartition);
+            return cluster.GetWatermarkOffsets(topicPartition);
         }
 
         public List<TopicPartitionOffset> OffsetsForTimes(IEnumerable<TopicPartitionTimestamp> timestampsToSearch, TimeSpan timeout)
@@ -147,25 +149,25 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void Subscribe(IEnumerable<string> topics)
         {
-            MockCluster.Instance.SubscribeTopic(this, topics);
+            cluster.SubscribeTopic(this, topics);
             Subscription.AddRange(topics);
         }
 
         public void Subscribe(string topic)
         {
-            MockCluster.Instance.SubscribeTopic(this, new List<string> { topic });
+            cluster.SubscribeTopic(this, new List<string> { topic });
             Subscription.Add(topic);
         }
 
         public void Unassign()
         {
-            MockCluster.Instance.Unassign(this);
+            cluster.Unassign(this);
             Assignment.Clear();
         }
 
         public void Unsubscribe()
         {
-            MockCluster.Instance.Unsubscribe(this);
+            cluster.Unsubscribe(this);
             Subscription.Clear();
         }
 
@@ -177,7 +179,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             if (this.Subscription.Count == 0)
                 throw new StreamsException("No subscription have been done !");
 
-            return MockCluster.Instance.Consume(this, cancellationToken);
+            return cluster.Consume(this, cancellationToken);
         }
 
         public ConsumeResult<byte[], byte[]> Consume(TimeSpan timeout)
@@ -185,7 +187,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             if (this.Subscription.Count == 0)
                 throw new StreamsException("No subscription have been done !");
             
-            return MockCluster.Instance.Consume(this, timeout);
+            return cluster.Consume(this, timeout);
         }
 
         #endregion

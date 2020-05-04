@@ -9,8 +9,11 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 {
     internal class MockProducer : IProducer<byte[], byte[]>
     {
-        public MockProducer(string name)
+        private readonly MockCluster cluster;
+
+        public MockProducer(MockCluster cluster, string name)
         {
+            this.cluster = cluster;
             Name = name;
         }
 
@@ -63,25 +66,25 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void Produce(string topic, Message<byte[], byte[]> message, Action<DeliveryReport<byte[], byte[]>> deliveryHandler = null)
         {
-            var result = MockCluster.Instance.Produce(topic, message);
+            var result = cluster.Produce(topic, message);
             deliveryHandler?.Invoke(result);
         }
 
         public void Produce(TopicPartition topicPartition, Message<byte[], byte[]> message, Action<DeliveryReport<byte[], byte[]>> deliveryHandler = null)
         {
-            var result = MockCluster.Instance.Produce(topicPartition, message);
+            var result = cluster.Produce(topicPartition, message);
             deliveryHandler?.Invoke(result);
         }
 
         public Task<DeliveryResult<byte[], byte[]>> ProduceAsync(string topic, Message<byte[], byte[]> message, CancellationToken cancellationToken = default)
         {
-            var r = MockCluster.Instance.Produce(topic, message) as DeliveryResult<byte[], byte[]>;
+            var r = cluster.Produce(topic, message) as DeliveryResult<byte[], byte[]>;
             return Task.FromResult(r);
         }
 
         public Task<DeliveryResult<byte[], byte[]>> ProduceAsync(TopicPartition topicPartition, Message<byte[], byte[]> message, CancellationToken cancellationToken = default)
         {
-            var r = MockCluster.Instance.Produce(topicPartition, message) as DeliveryResult<byte[], byte[]>;
+            var r = cluster.Produce(topicPartition, message) as DeliveryResult<byte[], byte[]>;
             return Task.FromResult(r);
         }
 

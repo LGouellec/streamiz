@@ -1751,7 +1751,13 @@ namespace Streamiz.Kafka.Net
         public int NumStreamThreads
         {
             get => this[numStreamThreadsCst];
-            set => this.AddOrUpdate(numStreamThreadsCst, value);
+            set
+            {
+                if (value >= 1)
+                    this.AddOrUpdate(numStreamThreadsCst, value);
+                else
+                    throw new StreamConfigException($"NumStreamThreads value must always be greather than 1");
+            }
         }
 
         /// <summary>

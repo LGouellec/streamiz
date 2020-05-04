@@ -36,6 +36,14 @@ namespace Streamiz.Kafka.Net.Tests.Public
         }
 
         [Test]
+        public void StreamIncorrectNumberThreadProperty()
+        {
+            var stream = new StreamConfig();
+            stream.ApplicationId = "test";
+            Assert.Throws<StreamConfigException>(() => stream.NumStreamThreads = -1);
+        }
+
+        [Test]
         public void StreamCompleteConfigProperty()
         {
             var stream = new StreamConfig();
