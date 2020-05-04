@@ -87,209 +87,212 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
         #endregion
 
-    //    [Test]
-    //    public void StartKafkaStream()
-    //    {
-    //        var source = new CancellationTokenSource();
-    //        var config = new StreamConfig<StringSerDes, StringSerDes>();
-    //        config.ApplicationId = "test";
+        [Test]
+        public void StartKafkaStream()
+        {
+            var source = new CancellationTokenSource();
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
 
-    //        var builder = new StreamBuilder();
-    //        builder.Stream<string, string>("topic").To("topic2");
+            var builder = new StreamBuilder();
+            builder.Stream<string, string>("topic").To("topic2");
 
-    //        var t = builder.Build();
-    //        var stream = new KafkaStream(t, config, new MockKafkaSupplier());
-    //        stream.Start(source.Token);
-    //        Thread.Sleep(1500);
-    //        source.Cancel();
-    //        stream.Close();
-    //    }
+            var t = builder.Build();
+            var stream = new KafkaStream(t, config, new SyncKafkaSupplier());
+            stream.Start(source.Token);
+            Thread.Sleep(1500);
+            source.Cancel();
+            stream.Close();
+        }
 
-    //    [Test]
-    //    public void StartKafkaStreamWaitRunningState()
-    //    {
-    //        var timeout = TimeSpan.FromSeconds(10);
-    //        var source = new CancellationTokenSource();
-    //        bool isRunningState = false;
-    //        DateTime dt = DateTime.Now;
+        [Test]
+        public void StartKafkaStreamWaitRunningState()
+        {
+            var timeout = TimeSpan.FromSeconds(10);
+            var source = new CancellationTokenSource();
+            bool isRunningState = false;
+            DateTime dt = DateTime.Now;
 
-    //        var config = new StreamConfig<StringSerDes, StringSerDes>();
-    //        config.ApplicationId = "test";
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
 
-    //        var builder = new StreamBuilder();
-    //        builder.Stream<string, string>("topic").To("topic2");
+            var builder = new StreamBuilder();
+            builder.Stream<string, string>("topic").To("topic2");
 
-    //        var t = builder.Build();
-    //        var stream = new KafkaStream(t, config, new MockKafkaSupplier());
+            var t = builder.Build();
+            var stream = new KafkaStream(t, config, new SyncKafkaSupplier());
 
-    //        stream.StateChanged += (old, @new) =>
-    //        {
-    //            if (@new.Equals(KafkaStream.State.RUNNING))
-    //                isRunningState = true;
-    //        };
-    //        stream.Start(source.Token);
-    //        while (!isRunningState)
-    //        {
-    //            Thread.Sleep(250);
-    //            if (DateTime.Now > dt + timeout)
-    //                break;
-    //        }
-    //        source.Cancel();
-    //        stream.Close();
-    //        Assert.IsTrue(isRunningState);
-    //    }
+            stream.StateChanged += (old, @new) =>
+            {
+                if (@new.Equals(KafkaStream.State.RUNNING))
+                    isRunningState = true;
+            };
+            stream.Start(source.Token);
+            while (!isRunningState)
+            {
+                Thread.Sleep(250);
+                if (DateTime.Now > dt + timeout)
+                    break;
+            }
+            source.Cancel();
+            stream.Close();
+            Assert.IsTrue(isRunningState);
+        }
 
-    //    [Test]
-    //    public void GetStateStore()
-    //    {
-    //        var timeout = TimeSpan.FromSeconds(10);
-    //        var source = new CancellationTokenSource();
-    //        bool isRunningState = false;
-    //        DateTime dt = DateTime.Now;
+        [Test]
+        public void GetStateStore()
+        {
+            var timeout = TimeSpan.FromSeconds(10);
+            var source = new CancellationTokenSource();
+            bool isRunningState = false;
+            DateTime dt = DateTime.Now;
 
-    //        var config = new StreamConfig<StringSerDes, StringSerDes>();
-    //        config.ApplicationId = "test";
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
 
-    //        var builder = new StreamBuilder();
-    //        builder.Table("topic", InMemory<string, string>.As("store"));
+            var builder = new StreamBuilder();
+            builder.Table("topic", InMemory<string, string>.As("store"));
 
-    //        var t = builder.Build();
-    //        var stream = new KafkaStream(t, config, new MockKafkaSupplier());
+            var t = builder.Build();
+            var stream = new KafkaStream(t, config, new SyncKafkaSupplier());
 
-    //        stream.StateChanged += (old, @new) =>
-    //        {
-    //            if (@new.Equals(KafkaStream.State.RUNNING))
-    //                isRunningState = true;
-    //        };
-    //        stream.Start(source.Token);
-    //        while (!isRunningState)
-    //        {
-    //            Thread.Sleep(250);
-    //            if (DateTime.Now > dt + timeout)
-    //                break;
-    //        }
-    //        Assert.IsTrue(isRunningState);
+            stream.StateChanged += (old, @new) =>
+            {
+                if (@new.Equals(KafkaStream.State.RUNNING))
+                    isRunningState = true;
+            };
+            stream.Start(source.Token);
+            while (!isRunningState)
+            {
+                Thread.Sleep(250);
+                if (DateTime.Now > dt + timeout)
+                    break;
+            }
+            Assert.IsTrue(isRunningState);
 
-    //        if (isRunningState)
-    //        {
-    //            var store = stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.KeyValueStore<string, string>())); ;
-    //            Assert.IsNotNull(store);
-    //        }
+            if (isRunningState)
+            {
+                var store = stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.KeyValueStore<string, string>())); ;
+                Assert.IsNotNull(store);
+            }
 
-    //        source.Cancel();
-    //        stream.Close();
-    //    }
+            source.Cancel();
+            stream.Close();
+        }
 
-    //    [Test]
-    //    public void GetStateStoreDoesntExists()
-    //    {
-    //        var timeout = TimeSpan.FromSeconds(10);
-    //        var source = new CancellationTokenSource();
-    //        bool isRunningState = false;
-    //        DateTime dt = DateTime.Now;
+        [Test]
+        public void GetStateStoreDoesntExists()
+        {
+            var timeout = TimeSpan.FromSeconds(10);
+            var source = new CancellationTokenSource();
+            bool isRunningState = false;
+            DateTime dt = DateTime.Now;
+            var supplier = new SyncKafkaSupplier();
 
-    //        var config = new StreamConfig<StringSerDes, StringSerDes>();
-    //        config.ApplicationId = "test";
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
 
-    //        var builder = new StreamBuilder();
-    //        builder.Table("topic", InMemory<string, string>.As("store"));
+            var builder = new StreamBuilder();
+            builder.Table("topic", InMemory<string, string>.As("store"));
 
-    //        var t = builder.Build();
-    //        var stream = new KafkaStream(t, config, new MockKafkaSupplier());
+            var t = builder.Build();
+            var stream = new KafkaStream(t, config, supplier);
 
-    //        stream.StateChanged += (old, @new) =>
-    //        {
-    //            if (@new.Equals(KafkaStream.State.RUNNING))
-    //                isRunningState = true;
-    //        };
-    //        stream.Start(source.Token);
-    //        while (!isRunningState)
-    //        {
-    //            Thread.Sleep(250);
-    //            if (DateTime.Now > dt + timeout)
-    //                break;
-    //        }
-    //        Assert.IsTrue(isRunningState);
+            stream.StateChanged += (old, @new) =>
+            {
+                if (@new.Equals(KafkaStream.State.RUNNING))
+                    isRunningState = true;
+            };
+            stream.Start(source.Token);
+            while (!isRunningState)
+            {
+                Thread.Sleep(250);
+                if (DateTime.Now > dt + timeout)
+                    break;
+            }
+            Assert.IsTrue(isRunningState);
 
-    //        if (isRunningState)
-    //        {
-    //            Assert.Throws<InvalidStateStoreException>(() => stream.Store(StoreQueryParameters.FromNameAndType("stodfdsfdsfre", QueryableStoreTypes.KeyValueStore<string, string>())));
-    //        }
+            if (isRunningState)
+            {
+                Assert.Throws<InvalidStateStoreException>(() => stream.Store(StoreQueryParameters.FromNameAndType("stodfdsfdsfre", QueryableStoreTypes.KeyValueStore<string, string>())));
+            }
 
-    //        source.Cancel();
-    //        stream.Close();
-    //    }
+            source.Cancel();
+            stream.Close();
+        }
 
-    //    // FIX IT
-    //    //[Test]
-    //    //public void GetElementInStateStore()
-    //    //{
-    //    //    var timeout = TimeSpan.FromSeconds(10);
-    //    //    var source = new CancellationTokenSource();
-    //    //    bool isRunningState = false;
-    //    //    DateTime dt = DateTime.Now;
+        [Test]
+        public void GetElementInStateStore()
+        {
+            var timeout = TimeSpan.FromSeconds(10);
+            var source = new CancellationTokenSource();
+            bool isRunningState = false;
+            DateTime dt = DateTime.Now;
 
-    //    //    var config = new StreamConfig<StringSerDes, StringSerDes>();
-    //    //    config.ApplicationId = "test";
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
+            config.PollMs = 10;
+            var supplier = new SyncKafkaSupplier();
+            var producer = supplier.GetProducer(config.ToProducerConfig());
 
-    //    //    var builder = new StreamBuilder();
-    //    //    builder.Table("topic", InMemory<string, string>.As("store"));
+            var builder = new StreamBuilder();
+            builder.Table("topic", InMemory<string, string>.As("store"));
 
-    //    //    var t = builder.Build();
-    //    //    var stream = new KafkaStream(t, config, new MockKafkaSupplier());
+            var t = builder.Build();
+            var stream = new KafkaStream(t, config, supplier);
 
-    //    //    stream.StateChanged += (old, @new) =>
-    //    //    {
-    //    //        if (@new.Equals(KafkaStream.State.RUNNING))
-    //    //            isRunningState = true;
-    //    //    };
-    //    //    stream.Start(source.Token);
-    //    //    while (!isRunningState)
-    //    //    {
-    //    //        Thread.Sleep(250);
-    //    //        if (DateTime.Now > dt + timeout)
-    //    //            break;
-    //    //    }
-    //    //    Assert.IsTrue(isRunningState);
+            stream.StateChanged += (old, @new) =>
+            {
+                if (@new.Equals(KafkaStream.State.RUNNING))
+                    isRunningState = true;
+            };
+            stream.Start(source.Token);
+            while (!isRunningState)
+            {
+                Thread.Sleep(250);
+                if (DateTime.Now > dt + timeout)
+                    break;
+            }
+            Assert.IsTrue(isRunningState);
 
-    //    //    if (isRunningState)
-    //    //    {
-    //    //        var serdes = new StringSerDes();
-                
-    //    //        producer.Produce("topic",
-    //    //            new Confluent.Kafka.Message<byte[], byte[]>
-    //    //            {
-    //    //                Key = serdes.Serialize("key1"),
-    //    //                Value = serdes.Serialize("coucou")
-    //    //            });
-    //    //        var store = stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.KeyValueStore<string, string>()));
-    //    //        Assert.IsNotNull(store);
-    //    //        Assert.AreEqual(1, store.ApproximateNumEntries());
-    //    //        var item = store.Get("key1");
-    //    //        Assert.IsNotNull(item);
-    //    //        Assert.AreEqual("coucou", item);
-    //    //    }
+            if (isRunningState)
+            {
+                var serdes = new StringSerDes();
+                producer.Produce("topic",
+                    new Confluent.Kafka.Message<byte[], byte[]>
+                    {
+                        Key = serdes.Serialize("key1"),
+                        Value = serdes.Serialize("coucou")
+                    });
+                Thread.Sleep(50);
+                var store = stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.KeyValueStore<string, string>()));
+                Assert.IsNotNull(store);
+                Assert.AreEqual(1, store.ApproximateNumEntries());
+                var item = store.Get("key1");
+                Assert.IsNotNull(item);
+                Assert.AreEqual("coucou", item);
+            }
 
-    //    //    source.Cancel();
-    //    //    stream.Close();
-    //    //}
+            source.Cancel();
+            stream.Close();
+        }
 
-    //    [Test]
-    //    public void GetStateStoreBeforeRunningState()
-    //    {
-    //        var source = new CancellationTokenSource();
+        [Test]
+        public void GetStateStoreBeforeRunningState()
+        {
+            var source = new CancellationTokenSource();
 
-    //        var config = new StreamConfig<StringSerDes, StringSerDes>();
-    //        config.ApplicationId = "test";
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
 
-    //        var builder = new StreamBuilder();
-    //        builder.Table("topic", InMemory<string, string>.As("store"));
+            var builder = new StreamBuilder();
+            builder.Table("topic", InMemory<string, string>.As("store"));
 
-    //        var t = builder.Build();
-    //        var stream = new KafkaStream(t, config, new MockKafkaSupplier());
-    //        Assert.Throws<IllegalStateException>(() => stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.KeyValueStore<string, string>())));
-    //        source.Cancel();
-    //        stream.Close();
-    //    }
+            var t = builder.Build();
+            var stream = new KafkaStream(t, config, new SyncKafkaSupplier());
+            Assert.Throws<IllegalStateException>(() => stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.KeyValueStore<string, string>())));
+            source.Cancel();
+            stream.Close();
+        }
     }
 }

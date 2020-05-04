@@ -1,5 +1,6 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Kafka;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,8 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         private readonly SyncProducer producer;
 
         private readonly IDictionary<string, long> offsets = new Dictionary<string, long>();
+
+        public IConsumerRebalanceListener Listener { get; private set; }
 
         public SyncConsumer(ConsumerConfig config, SyncProducer producer)
         {
@@ -38,30 +41,32 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public void Assign(TopicPartition partition)
         {
-            // TODO
             if (!offsets.ContainsKey(partition.Topic))
+            {
                 offsets.Add(partition.Topic, 0L);
+                Assignment.Add(partition);
+            }
         }
 
         public void Assign(TopicPartitionOffset partition)
         {
-            // TODO
             if (!offsets.ContainsKey(partition.Topic))
+            {
                 offsets.Add(partition.Topic, partition.Offset);
+                Assignment.Add(partition.TopicPartition);
+            }
             else
                 offsets[partition.Topic] = partition.Offset;
         }
 
         public void Assign(IEnumerable<TopicPartitionOffset> partitions)
         {
-            // TODO
             foreach (var p in partitions)
                 Assign(p);
         }
 
         public void Assign(IEnumerable<TopicPartition> partitions)
         {
-            // TODO
             foreach (var p in partitions)
                 Assign(p);
         }
@@ -175,20 +180,32 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         {
             Subscription.AddRange(topics);
             foreach (var t in topics)
+            {
                 if (!offsets.ContainsKey(t))
+                {
                     offsets.Add(t, 0L);
+                    Assignment.Add(new TopicPartition(t, 0));
+                }
+            }
+            Listener?.PartitionsAssigned(this, Assignment);
         }
 
         public void Subscribe(string topic)
         {
             Subscription.Add(topic);
             if (!offsets.ContainsKey(topic))
+            {
                 offsets.Add(topic, 0L);
+                Assignment.Add(new TopicPartition(topic, 0));
+            }
+            Listener?.PartitionsAssigned(this, Assignment);
         }
 
         public void Unassign()
         {
+            var offsets = this.Committed(TimeSpan.FromSeconds(1));
             Assignment.Clear();
+            Listener?.PartitionsRevoked(this, offsets);
         }
 
         public void Unsubscribe()
@@ -245,5 +262,10 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         }
 
         #endregion
+
+        internal void SetRebalanceListener(IConsumerRebalanceListener rebalanceListener)
+        {
+            Listener = rebalanceListener;
+        }
     }
 }

@@ -12,11 +12,16 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         public IAdminClient GetAdmin(AdminClientConfig config) => new SyncAdminClient();
 
         public IConsumer<byte[], byte[]> GetConsumer(ConsumerConfig config, IConsumerRebalanceListener rebalanceListener)
-            => new SyncConsumer(config, producer);
+        {
+            var consumer = new SyncConsumer(config, producer);
+            consumer.SetRebalanceListener(rebalanceListener);
+            return consumer;
+        }
 
         public IProducer<byte[], byte[]> GetProducer(ProducerConfig config)
         {
-            producer = new SyncProducer(config);
+            if(producer == null)
+                producer = new SyncProducer(config);
             return producer;
         }
 
