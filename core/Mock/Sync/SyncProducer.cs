@@ -1,6 +1,7 @@
 ﻿using Confluent.Kafka;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -38,7 +39,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public Handle Handle => null;
 
-        public string Name => $"{config.ClientId}#{new Random(DateTime.Now.Millisecond).Next(0, Int16.MaxValue)}";
+        public string Name => $"{config.ClientId}#{RandomNumberGenerator.GetInt32(0, Int16.MaxValue)}";
 
         public void AbortTransaction(TimeSpan timeout)
         {

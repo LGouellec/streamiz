@@ -4,6 +4,7 @@ using Streamiz.Kafka.Net.Kafka;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using static Streamiz.Kafka.Net.Mock.Kafka.MockConsumerInformation;
@@ -434,9 +435,10 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             DeliveryReport<byte[], byte[]> r = new DeliveryReport<byte[], byte[]>();
 
             CreateTopic(topic);
-            // TODO : //var part = Math.Abs(Encoding.UTF8.GetString(message.Key).GetHashCode()) % this.topics[topic].PartitionNumber;
-            Random rd = new Random();
-            var i = rd.Next(0, this.topics[topic].PartitionNumber);
+
+            // TODO : implement hashpartitionumber
+            //var part = Math.Abs(Encoding.UTF8.GetString(message.Key).GetHashCode()) % this.topics[topic].PartitionNumber;
+            var i = RandomNumberGenerator.GetInt32(0, this.topics[topic].PartitionNumber);
             this.topics[topic].AddMessage(message.Key, message.Value, i);
 
             r.Message = message;

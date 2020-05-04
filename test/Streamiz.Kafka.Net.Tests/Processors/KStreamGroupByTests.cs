@@ -1,7 +1,9 @@
 ﻿using NUnit.Framework;
+using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 using System;
+using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -29,6 +31,52 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             stream.GroupByKey();
             stream.GroupByKey<StringSerDes, StringSerDes>();
+        }
+
+        [Test]
+        public void TestGroupOK()
+        {
+            var builder = new StreamBuilder();
+            var data = new List<KeyValuePair<string, string>>();
+            data.Add(KeyValuePair.Create("key1", "test1234"));
+            data.Add(KeyValuePair.Create("key2", "test"));
+            data.Add(KeyValuePair.Create("key3", "paper"));
+
+            var stream = builder.Stream<string, string>("topic");
+            stream.GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()));
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-group";
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("topic");
+                inputTopic.PipeInputs(data);
+            }
+        }
+
+        [Test]
+        public void TestGroupByKeyOK()
+        {
+            var builder = new StreamBuilder();
+            var data = new List<KeyValuePair<string, string>>();
+            data.Add(KeyValuePair.Create("key1", "test1234"));
+            data.Add(KeyValuePair.Create("key2", "test"));
+            data.Add(KeyValuePair.Create("key3", "paper"));
+
+            var stream = builder.Stream<string, string>("topic");
+            stream.GroupByKey();
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-group";
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("topic");
+                inputTopic.PipeInputs(data);
+            }
         }
     }
 }

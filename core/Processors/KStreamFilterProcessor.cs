@@ -1,6 +1,4 @@
-﻿using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
-using System;
-using System.Collections.Generic;
+﻿using System;
 
 namespace Streamiz.Kafka.Net.Processors
 {

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Streamiz.Kafka.Net.Stream.Internal.Graph;
+﻿using Streamiz.Kafka.Net.Stream.Internal.Graph;
 
 namespace Streamiz.Kafka.Net.Processors
 {
