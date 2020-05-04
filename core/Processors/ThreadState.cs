@@ -70,38 +70,28 @@ namespace Streamiz.Kafka.Net.Processors
     /// </summary>
     internal class ThreadState : ThreadStateTransitionValidator
     {
-        public static ThreadState CREATED = new ThreadState(1, 5).Order(0).Name("CREATED");
-        public static ThreadState STARTING = new ThreadState(2, 3, 5).Order(1).Name("STARTING");
-        public static ThreadState PARTITIONS_REVOKED = new ThreadState(2, 3, 5).Order(2).Name("PARTITIONS_REVOKED");
-        public static ThreadState PARTITIONS_ASSIGNED = new ThreadState(2, 3, 4, 5).Order(3).Name("PARTITIONS_ASSIGNED");
-        public static ThreadState RUNNING = new ThreadState(2, 3, 5).Order(4).Name("RUNNING");
-        public static ThreadState PENDING_SHUTDOWN = new ThreadState(6).Order(5).Name("PENDING_SHUTDOWN");
-        public static ThreadState DEAD = new ThreadState().Order(6).Name("DEAD");
+        public static readonly ThreadState CREATED = new ThreadState(0, "CREATED", 1, 5);
+        public static readonly ThreadState STARTING = new ThreadState(1, "STARTING", 2, 3, 5);
+        public static readonly ThreadState PARTITIONS_REVOKED = new ThreadState(2, "PARTITIONS_REVOKED", 2, 3, 5);
+        public static readonly ThreadState PARTITIONS_ASSIGNED = new ThreadState(3, "PARTITIONS_ASSIGNED", 2, 3, 4, 5);
+        public static readonly ThreadState RUNNING = new ThreadState(4, "RUNNING", 2, 3, 5);
+        public static readonly ThreadState PENDING_SHUTDOWN = new ThreadState(5, "PENDING_SHUTDOWN", 6);
+        public static readonly ThreadState DEAD = new ThreadState(6, "DEAD");
 
-        private ISet<int> validTransitions = new HashSet<int>();
-        private int ordinal = 0;
-        private string name;
+        private readonly ISet<int> validTransitions = new HashSet<int>();
+        private readonly int ordinal = 0;
+        private readonly string name;
 
-        private ThreadState(params int[] validTransitions)
+        private ThreadState(int order, string name, params int[] validTransitions)
         {
-            this.validTransitions.AddRange(validTransitions);
-        }
-
-        private ThreadState Order(int ordinal)
-        {
-            this.ordinal = ordinal;
-            return this;
-        }
-
-        private ThreadState Name(string name)
-        {
+            ordinal = order;
             this.name = name;
-            return this;
+            this.validTransitions.AddRange(validTransitions);
         }
 
         public bool IsRunning()
         {
-            return this.Equals(RUNNING) || this.Equals(STARTING) || this.Equals(PARTITIONS_REVOKED) || this.Equals(PARTITIONS_ASSIGNED);
+            return Equals(RUNNING) || Equals(STARTING) || Equals(PARTITIONS_REVOKED) || Equals(PARTITIONS_ASSIGNED);
         }
 
         public bool IsValidTransition(ThreadStateTransitionValidator newState)
@@ -114,17 +104,17 @@ namespace Streamiz.Kafka.Net.Processors
 
         public override bool Equals(object obj)
         {
-            return obj is ThreadState && ((ThreadState)obj).ordinal.Equals(this.ordinal);
+            return obj is ThreadState && ((ThreadState)obj).ordinal.Equals(ordinal);
         }
 
         public override int GetHashCode()
         {
-            return this.ordinal.GetHashCode();
+            return ordinal.GetHashCode();
         }
 
         public override string ToString()
         {
-            return $"{this.name}";
+            return $"{name}";
         }
     }
 }

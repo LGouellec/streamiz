@@ -3,7 +3,6 @@ using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Table.Internal.Graph
 {
@@ -11,8 +10,8 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
     {
         internal class KTableMapValueGetter : IKTableValueGetter<K, KeyValuePair<K1, V1>>
         {
-            private IKeyValueMapper<K, V, KeyValuePair<K1, V1>> mapper;
-            private IKTableValueGetter<K, V> parentTableGetter;
+            private readonly IKeyValueMapper<K, V, KeyValuePair<K1, V1>> mapper;
+            private readonly IKTableValueGetter<K, V> parentTableGetter;
             private ProcessorContext context;
 
             public KTableMapValueGetter(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> mapper, IKTableValueGetter<K, V> parentTableGetter)
@@ -26,7 +25,7 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
             public ValueAndTimestamp<KeyValuePair<K1, V1>> Get(K key)
             {
                 ValueAndTimestamp<V> valueAndTimestamp = parentTableGetter.Get(key);
-                var v = mapper.Apply(key, valueAndTimestamp != null ? default : valueAndTimestamp.Value);
+                var v = mapper.Apply(key, valueAndTimestamp != null ? valueAndTimestamp.Value : default);
                 return ValueAndTimestamp<KeyValuePair<K1, V1>>.Make(v, valueAndTimestamp == null ? context.Timestamp : valueAndTimestamp.Timestamp);
             }
 

@@ -37,18 +37,33 @@ namespace Streamiz.Kafka.Net.Crosscutting
             this.Get = bytes;
         }
 
-#pragma warning disable CS1591 // Commentaire XML manquant pour le type ou le membre visible publiquement
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
-#pragma warning restore CS1591 // Commentaire XML manquant pour le type ou le membre visible publiquement
         {
             return new BigInteger(this.Get).GetHashCode();
         }
 
-#pragma warning disable CS1591 // Commentaire XML manquant pour le type ou le membre visible publiquement
-        public bool Equals(Bytes other)
-#pragma warning restore CS1591 // Commentaire XML manquant pour le type ou le membre visible publiquement
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public override bool Equals(object other)
         {
-            return this.Get.SequenceEqual(other.Get);
+            return other is Bytes && Equals((Bytes)other);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public bool Equals(Bytes other)
+        {
+            return this.Get.SequenceEqual(((Bytes)other).Get);
         }
     }
 }
