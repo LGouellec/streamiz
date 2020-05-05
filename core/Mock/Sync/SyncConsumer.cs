@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace Streamiz.Kafka.Net.Mock.Sync
 {
-    internal class SyncConsumer : IConsumer<byte[], byte[]>
+    internal class SyncConsumer : IConsumer<byte[], byte[]>, IConsumerGroupMetadata
     {
         private readonly ConsumerConfig config;
         private readonly SyncProducer producer;
@@ -31,7 +31,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public List<string> Subscription { get; private set; } = new List<string>();
 
-        public IConsumerGroupMetadata ConsumerGroupMetadata => null;
+        public IConsumerGroupMetadata ConsumerGroupMetadata => this;
 
         public Handle Handle => null;
 

@@ -246,7 +246,7 @@ namespace Streamiz.Kafka.Net.Processors
             return false;
         }
 
-        public void AddRecords(TopicPartition partition, IEnumerable<ConsumeResult<byte[], byte[]>> records)
+        public void AddRecords(IEnumerable<ConsumeResult<byte[], byte[]>> records)
         {
             foreach (var r in records)
                 queue.AddRecord(r);
@@ -256,7 +256,7 @@ namespace Streamiz.Kafka.Net.Processors
             //    consumer.Pause(new List<TopicPartition> { partition });
 
             int newQueueSize = queue.Size;
-            log.Debug($"{logPrefix}Added records into the buffered queue of partition {partition}, new queue size is {newQueueSize}");
+            log.Debug($"{logPrefix}Added records into the buffered queue of partition {Partition}, new queue size is {newQueueSize}");
 
             //// if after adding these records, its partition queue's buffered size has been
             //// increased beyond the threshold, we can then pause the consumption for this partition

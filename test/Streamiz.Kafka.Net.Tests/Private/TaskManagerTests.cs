@@ -153,7 +153,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                         TopicPartitionOffset = new TopicPartitionOffset(part, offset++)
                     });
 
-            task.AddRecords(part, messages);
+            task.AddRecords(messages);
 
             Assert.IsTrue(task.CanProcess);
 
@@ -286,7 +286,5 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.AreEqual(0, taskManager.RevokedTasks.Count());
             taskManager.Close();
         }
-
-
     }
 }

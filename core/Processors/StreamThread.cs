@@ -166,7 +166,7 @@ namespace Streamiz.Kafka.Net.Processors
                         {
                             var task = manager.ActiveTaskFor(record.TopicPartition);
                             if (task != null)
-                                task.AddRecords(record.TopicPartition, new List<ConsumeResult<byte[], byte[]>> { record });
+                                task.AddRecords(new List<ConsumeResult<byte[], byte[]>> { record });
                         }
 
                         foreach (var t in manager.ActiveTasks)

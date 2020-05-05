@@ -1,11 +1,14 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net.Kafka;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Mock.Kafka
 {
+    /// <summary>
+    /// This supplier provides a asynchronous kafka cluster in memory.
+    /// Used for asynchronous unit test.
+    /// Warning the cluster is encapsulated by <see cref="MockKafkaSupplier" /> instance.
+    /// For moment, he doesn't support EOS Feature. If you need that, please look to <see cref="Sync.SyncKafkaSupplier"/>
+    /// </summary>
     internal class MockKafkaSupplier : IKafkaSupplier
     {
         private readonly MockCluster cluster = null;

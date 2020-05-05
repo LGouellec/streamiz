@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 
 namespace Streamiz.Kafka.Net.Mock.Sync
 {
@@ -11,9 +12,27 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
     internal class SyncProducer : IProducer<byte[], byte[]>
     {
+        private class SyncTransaction
+        {
+            private IEnumerable<TopicPartitionOffset> offsets;
+            private IConsumerGroupMetadata metadata;
+
+            public void SetData(IEnumerable<TopicPartitionOffset> offsets, IConsumerGroupMetadata metadata)
+            {
+                this.offsets = offsets;
+                this.metadata = metadata;
+            }
+
+            public void Commit()
+            {
+                if (metadata is SyncConsumer)
+                    (metadata as SyncConsumer).Commit(offsets);
+            }
+        }
+
         private readonly static object _lock = new object();
         private readonly Dictionary<string, List<Message<byte[], byte[]>>> topics = new Dictionary<string, List<Message<byte[], byte[]>>>();
-
+        private SyncTransaction transaction = null;
         private ProducerConfig config;
 
         public SyncProducer(ProducerConfig config)
@@ -43,19 +62,19 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public void AbortTransaction(TimeSpan timeout)
         {
-            // TODO : 
+            transaction = null;
         }
 
         public int AddBrokers(string brokers) => 0;
 
         public void BeginTransaction()
         {
-            // TODO
+            transaction = new SyncTransaction();
         }
 
         public void CommitTransaction(TimeSpan timeout)
         {
-            // TODO
+            transaction.Commit();
         }
 
         public void Dispose()
@@ -76,7 +95,6 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public void InitTransactions(TimeSpan timeout)
         {
-            // TODO : 
         }
 
         public int Poll(TimeSpan timeout) => 0;
@@ -116,7 +134,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public void SendOffsetsToTransaction(IEnumerable<TopicPartitionOffset> offsets, IConsumerGroupMetadata groupMetadata, TimeSpan timeout)
         {
-            // TODO
+            transaction.SetData(offsets, groupMetadata);
         }
 
         #endregion

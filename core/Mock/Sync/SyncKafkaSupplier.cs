@@ -5,6 +5,11 @@ using System.Linq;
 
 namespace Streamiz.Kafka.Net.Mock.Sync
 {
+    /// <summary>
+    /// This supplier provides a synchronous kafka cluster in memory.
+    /// Used for synchronous unit test.
+    /// He support EOS Feature.
+    /// </summary>
     internal class SyncKafkaSupplier : IKafkaSupplier
     {
         private SyncProducer producer = null;
