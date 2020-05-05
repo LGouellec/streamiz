@@ -127,7 +127,7 @@ static void Main(string[] args)
 
 # Test topology driver
 
-Must be used for testing your stream topology. Simulate a kafka cluster in memory.
+Must be used for testing your stream topology.
 Usage: 
 ``` csharp
 static void Main(string[] args)
@@ -158,12 +158,12 @@ static void Main(string[] args)
 - Topology description [X]
 - Refactor topology node processor builder [X]
 - Subtopology impl [X]
+- Unit tests (TestTopologyDriver, ...) [X]
 - Statefull processors impl [ ]
 - Task restoring [ ]
 - Global state store [WIP]
 - Processor API [ ]
 - Repartition impl [ ]
-- Unit tests (TestTopologyDriver, ...) [WIP]
 - Rocks DB state implementation [ ]
 - Optimizing Kafka Streams Topologies  [ ]
 - Interactive Queries [ ]
