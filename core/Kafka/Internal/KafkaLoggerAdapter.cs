@@ -11,10 +11,14 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
         private readonly ILog log = null;
 
         public KafkaLoggerAdapter(IStreamConfig configuration)
+            : this(configuration, Logger.GetLogger(typeof(KafkaLoggerAdapter)))
+        {}
+
+        public KafkaLoggerAdapter(IStreamConfig configuration, ILog log)
         {
-            log = Logger.GetLogger(typeof(KafkaLoggerAdapter));
+            this.log = log;
         }
-        
+
         #region Log Consumer
 
         internal void LogConsume(IConsumer<byte[], byte[]> consumer, LogMessage message)

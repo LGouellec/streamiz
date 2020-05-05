@@ -1,5 +1,4 @@
 ﻿using Streamiz.Kafka.Net.Errors;
-using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 
 namespace Streamiz.Kafka.Net.Processors
@@ -18,11 +17,11 @@ namespace Streamiz.Kafka.Net.Processors
         {
             base.Init(context);
 
-            if (this.Key == null)
-                this.Key = context.Configuration.DefaultKeySerDes;
+            if (Key == null)
+                Key = context.Configuration.DefaultKeySerDes;
 
-            if (this.Value == null)
-                this.Value = context.Configuration.DefaultValueSerDes;
+            if (Value == null)
+                Value = context.Configuration.DefaultValueSerDes;
         }
 
         public override void Process(K key, V value)
@@ -35,15 +34,15 @@ namespace Streamiz.Kafka.Net.Processors
                 throw new StreamsException($"Invalid (negative) timestamp of {timestamp } for output record <{key}:{value}>.");
             }
 
-            if(KeySerDes == null || ValueSerDes == null)
+            if (KeySerDes == null || ValueSerDes == null)
             {
                 log.Error($"{logPrefix}Impossible to send sink data because keySerdes and/or valueSerdes is not setted ! KeySerdes : {(KeySerDes != null ? KeySerDes.GetType().Name : "NULL")} | ValueSerdes : {(ValueSerDes != null ? ValueSerDes.GetType().Name : "NULL")}.");
                 var s = KeySerDes == null ? "key" : "value";
                 throw new StreamsException($"{logPrefix}Invalid {s} serdes for this processor. Default {s} serdes is not the same type. Please set a explicit {s} serdes.");
             }
 
-            var topicName = this.topicNameExtractor.Extract(key, value, this.Context.RecordContext);
-            this.Context.RecordCollector.Send(topicName, key, value, null, timestamp, KeySerDes, ValueSerDes);
+            var topicName = topicNameExtractor.Extract(key, value, Context.RecordContext);
+            Context.RecordCollector.Send(topicName, key, value, null, timestamp, KeySerDes, ValueSerDes);
         }
     }
 }

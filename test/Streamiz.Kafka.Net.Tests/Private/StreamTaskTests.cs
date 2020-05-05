@@ -5,7 +5,6 @@ using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {

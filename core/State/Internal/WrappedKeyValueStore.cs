@@ -1,9 +1,6 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
@@ -13,7 +10,7 @@ namespace Streamiz.Kafka.Net.State.Internal
         protected ISerDes<K> keySerdes;
         protected ISerDes<V> valueSerdes;
 
-        public WrappedKeyValueStore(IKeyValueStore<Bytes, byte[]> wrapped, ISerDes<K> keySerdes, ISerDes<V> valueSerdes) 
+        public WrappedKeyValueStore(IKeyValueStore<Bytes, byte[]> wrapped, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
             : base(wrapped)
         {
             this.keySerdes = keySerdes;

@@ -1,12 +1,11 @@
 ﻿using Confluent.Kafka;
+using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka;
-using log4net;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 
 namespace Streamiz.Kafka.Net.Mock.Pipes
@@ -36,7 +35,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         {
             get
             {
-                var infos = this.GetInfos();
+                var infos = GetInfos();
                 foreach (var i in infos)
                     if (i.Offset < i.High)
                         return false;
@@ -49,16 +48,16 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
             this.topicName = topicName;
             this.timeout = timeout;
 
-            this.consumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig($"pipe-output-{configuration.ApplicationId}-{topicName}"), null);
-            
+            consumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig($"pipe-output-{configuration.ApplicationId}-{topicName}"), null);
+
             this.token = token;
-            this.readThread = new Thread(ReadThread);
-            this.readThread.Start();
+            readThread = new Thread(ReadThread);
+            readThread.Start();
         }
 
         private void ReadThread()
         {
-            this.consumer.Subscribe(this.topicName);
+            consumer.Subscribe(topicName);
 
             while (!token.IsCancellationRequested)
             {
@@ -75,7 +74,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         public void Dispose()
         {
             if (queue.Count > 0)
-                logger.Warn($"Dispose pipe queue for topic {this.topicName} whereas it's not empty (Size : {queue.Count})");
+                logger.Warn($"Dispose pipe queue for topic {topicName} whereas it's not empty (Size : {queue.Count})");
 
             consumer.Unsubscribe();
             readThread.Join();
@@ -109,9 +108,9 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         public List<PipeOutputInfo> GetInfos()
         {
             List<PipeOutputInfo> l = new List<PipeOutputInfo>();
-            var watermark = this.consumer.GetWatermarkOffsets();
-            var offsets = this.consumer.Committed(TimeSpan.FromSeconds(1));
-            foreach(var o in offsets)
+            var watermark = consumer.GetWatermarkOffsets();
+            var offsets = consumer.Committed(TimeSpan.FromSeconds(1));
+            foreach (var o in offsets)
             {
                 var w = watermark.FirstOrDefault(f => f.Topic.Equals(o.Topic) && f.Partition.Equals(o.Partition));
                 l.Add(new PipeOutputInfo

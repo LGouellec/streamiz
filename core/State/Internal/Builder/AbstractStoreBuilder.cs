@@ -2,7 +2,6 @@
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.State.Internal.Builder
 {
@@ -13,8 +12,8 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
         protected readonly string name;
         protected readonly ISerDes<K> keySerdes;
         protected readonly ISerDes<V> valueSerdes;
-        bool enableCaching;
-        bool enableLogging = true;
+        private bool enableCaching;
+        private bool enableLogging = true;
 
         public string Name => name;
         public IDictionary<string, string> LogConfig => logConfig;
@@ -23,8 +22,8 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
         public AbstractStoreBuilder(String name, ISerDes<K> keySerde, ISerDes<V> valueSerde)
         {
             this.name = name;
-            this.keySerdes = keySerde;
-            this.valueSerdes = valueSerde;
+            keySerdes = keySerde;
+            valueSerdes = valueSerde;
         }
 
 
@@ -59,6 +58,6 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
 
         public abstract T Build();
 
-        object StoreBuilder.Build() => this.Build();
+        object StoreBuilder.Build() => Build();
     }
 }

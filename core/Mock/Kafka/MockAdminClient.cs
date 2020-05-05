@@ -11,15 +11,17 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
     {
         private MockCluster cluster;
 
-        public MockAdminClient(MockCluster cluster)
+        public MockAdminClient(MockCluster cluster, string name)
         {
             this.cluster = cluster;
+            Name = name;
         }
+
         #region IAdminClient Impl
 
         public Handle Handle => throw new NotImplementedException();
 
-        public string Name => throw new NotImplementedException();
+        public string Name { get; }
 
         public int AddBrokers(string brokers)
         {

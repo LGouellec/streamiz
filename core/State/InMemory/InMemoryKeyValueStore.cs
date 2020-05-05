@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Streamiz.Kafka.Net.Crosscutting;
+﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors;
+using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.State.InMemory
 {
@@ -21,7 +19,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// <param name="name">Store name</param>
         public InMemoryKeyValueStore(string name)
         {
-            this.Name = name;
+            Name = name;
         }
 
         /// <summary>
@@ -52,7 +50,8 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// Users only need to implement this function but should NEVER need to call this api explicitly
         /// as it will be called by the library automatically when necessary
         /// </summary>
-        public void Close() {
+        public void Close()
+        {
             map.Clear();
             size = 0;
             IsOpen = false;
@@ -86,7 +85,8 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// Return an iterator over all keys in this store. No ordering guarantees are provided.
         /// </summary>
         /// <returns>An iterator of all key/value pairs in the store.</returns>
-        public IEnumerable<KeyValuePair<Bytes, byte[]>> All() {
+        public IEnumerable<KeyValuePair<Bytes, byte[]>> All()
+        {
             var enumerator = map.GetEnumerator();
             while (enumerator.MoveNext())
             {
@@ -131,7 +131,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         public void PutAll(IEnumerable<KeyValuePair<Bytes, byte[]>> entries)
         {
             foreach (var kp in entries)
-                this.Put(kp.Key, kp.Value);
+                Put(kp.Key, kp.Value);
         }
 
         /// <summary>
@@ -142,9 +142,9 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// <returns>The old value or null if there is no such key.</returns>
         public byte[] PutIfAbsent(Bytes key, byte[] value)
         {
-            if(!map.ContainsKey(key))
+            if (!map.ContainsKey(key))
             {
-                this.Put(key, value);
+                Put(key, value);
             }
             // TODO : 
             return null;

@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using System;
 
 namespace Streamiz.Kafka.Net.Kafka.Internal
 {
@@ -8,6 +9,9 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
         public DefaultKafkaClientSupplier(KafkaLoggerAdapter loggerAdapter)
         {
+            if (loggerAdapter == null)
+                throw new ArgumentNullException(nameof(loggerAdapter));
+
             this.loggerAdapter = loggerAdapter;
         }
 

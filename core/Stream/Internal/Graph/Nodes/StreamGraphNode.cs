@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
         public bool HasWrittenToTopology { get; internal set; } = false;
 
 
-        internal StreamGraphNode(string streamGraphNode)
+        protected StreamGraphNode(string streamGraphNode)
         {
             this.streamGraphNode = streamGraphNode;
         }

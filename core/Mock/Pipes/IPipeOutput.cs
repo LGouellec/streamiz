@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Mock.Pipes
 {
@@ -13,7 +12,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         public long High { get; set; }
     }
 
-    interface IPipeOutput : IDisposable
+    internal interface IPipeOutput : IDisposable
     {
         KeyValuePair<byte[], byte[]> Read();
         IEnumerable<KeyValuePair<byte[], byte[]>> ReadList();

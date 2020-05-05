@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public IAdminClient GetAdmin(AdminClientConfig config)
         {
-            return new MockAdminClient(cluster);
+            return new MockAdminClient(cluster, config.ClientId);
         }
 
         public IConsumer<byte[], byte[]> GetConsumer(ConsumerConfig config, IConsumerRebalanceListener rebalanceListener)
