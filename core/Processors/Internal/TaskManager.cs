@@ -1,5 +1,4 @@
 ﻿using Confluent.Kafka;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,17 +6,19 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal class TaskManager
     {
-        private TaskCreator taskCreator;
-        private IAdminClient adminClient;
+        private readonly TaskCreator taskCreator;
+        private readonly IAdminClient adminClient;
         private int idTask = 0;
 
         private readonly IDictionary<TopicPartition, StreamTask> activeTasks = new Dictionary<TopicPartition, StreamTask>();
         private readonly IDictionary<TopicPartition, StreamTask> revokedTasks = new Dictionary<TopicPartition, StreamTask>();
 
         public IEnumerable<StreamTask> ActiveTasks => activeTasks.Values;
+        public IEnumerable<StreamTask> RevokedTasks => revokedTasks.Values;
+
         public IConsumer<byte[], byte[]> Consumer { get; internal set; }
         public IEnumerable<TaskId> ActiveTaskIds => ActiveTasks.Select(a => a.Id);
-        public bool ReblanceInProgress { get; internal set; }
+        public bool RebalanceInProgress { get; internal set; }
 
         public TaskManager(TaskCreator taskCreator, IAdminClient adminClient)
         {
@@ -25,26 +26,33 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             this.adminClient = adminClient;
         }
 
-        public void CreateTasks(IConsumer<byte[], byte[]> consumer, ICollection<TopicPartition> assignment)
+        public TaskManager(TaskCreator taskCreator, IAdminClient adminClient, IConsumer<byte[], byte[]> consumer)
+        {
+            this.taskCreator = taskCreator;
+            this.adminClient = adminClient;
+            Consumer = consumer;
+        }
+
+        public void CreateTasks(ICollection<TopicPartition> assignment)
         {
             ++idTask;
             foreach (var partition in assignment)
             {
-                if (!activeTasks.ContainsKey(partition))
-                {
-                    var id = new TaskId { Id = idTask, Partition = partition.Partition.Value, Topic = partition.Topic };
-                    var task = taskCreator.CreateTask(Consumer, id, partition);
-                    task.GroupMetadata = consumer.ConsumerGroupMetadata;
-                    task.InitializeStateStores();
-                    task.InitializeTopology();
-                    activeTasks.Add(partition, task);
-                }
-                else if(revokedTasks.ContainsKey(partition))
+                if (revokedTasks.ContainsKey(partition))
                 {
                     var t = revokedTasks[partition];
                     t.Resume();
                     activeTasks.Add(partition, t);
                     revokedTasks.Remove(partition);
+                }
+                else if (!activeTasks.ContainsKey(partition))
+                {
+                    var id = new TaskId { Id = idTask, Partition = partition.Partition.Value, Topic = partition.Topic };
+                    var task = taskCreator.CreateTask(Consumer, id, partition);
+                    task.GroupMetadata = Consumer.ConsumerGroupMetadata;
+                    task.InitializeStateStores();
+                    task.InitializeTopology();
+                    activeTasks.Add(partition, task);
                 }
             }
         }
@@ -57,7 +65,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 {
                     var task = activeTasks[p];
                     task.Suspend();
-                    if(!revokedTasks.ContainsKey(p))
+                    if (!revokedTasks.ContainsKey(p))
                         revokedTasks.Add(p, task);
                     activeTasks.Remove(p);
                 }
@@ -71,7 +79,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             else
                 return null;
         }
-    
+
         public void Close()
         {
             foreach (var t in activeTasks)
@@ -88,11 +96,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         internal int CommitAll()
         {
             int committed = 0;
-            if (ReblanceInProgress)
+            if (RebalanceInProgress)
                 return -1;
             else
             {
-                foreach (var t in this.ActiveTasks)
+                foreach (var t in ActiveTasks)
                 {
                     if (t.CommitNeeded)
                     {

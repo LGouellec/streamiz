@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         private IProducer<byte[], byte[]> producer;
         private bool transactionInFlight = false;
-        private string threadId;
+        private readonly string threadId;
 
         public StreamTask(string threadId, TaskId id, TopicPartition partition, ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer)
             : base(id, partition, processorTopology, consumer, configuration)
@@ -256,12 +256,8 @@ namespace Streamiz.Kafka.Net.Processors
             //    consumer.Pause(new List<TopicPartition> { partition });
 
             int newQueueSize = queue.Size;
+            log.Debug($"{logPrefix}Added records into the buffered queue of partition {partition}, new queue size is {newQueueSize}");
 
-            if (log.IsDebugEnabled)
-            {
-                log.Debug($"{logPrefix}Added records into the buffered queue of partition {partition}, new queue size is {newQueueSize}");
-            }
-            
             //// if after adding these records, its partition queue's buffered size has been
             //// increased beyond the threshold, we can then pause the consumption for this partition
             //if (newQueueSize > maxBufferedSize)

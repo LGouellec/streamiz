@@ -1,19 +1,17 @@
 ﻿using Confluent.Kafka;
 using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal abstract class AbstractTaskCreator<T> where T : ITask
     {
-        InternalTopologyBuilder builder;
-        IStreamConfig config;
-        ILog log;
+        readonly InternalTopologyBuilder builder;
+        readonly IStreamConfig config;
+        readonly ILog log;
 
-        public AbstractTaskCreator(InternalTopologyBuilder builder, IStreamConfig config)
+        protected AbstractTaskCreator(InternalTopologyBuilder builder, IStreamConfig config)
         {
             this.builder = builder;
             this.config = config;

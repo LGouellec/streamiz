@@ -20,18 +20,18 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
         public void PartitionsAssigned(IConsumer<byte[], byte[]> consumer, List<TopicPartition> partitions)
         {
-            this.manager.ReblanceInProgress = true;
-            manager.CreateTasks(consumer, partitions);
+            this.manager.RebalanceInProgress = true;
+            manager.CreateTasks(partitions);
             Thread.SetState(ThreadState.PARTITIONS_ASSIGNED);
-            this.manager.ReblanceInProgress = false;
+            this.manager.RebalanceInProgress = false;
         }
 
         public void PartitionsRevoked(IConsumer<byte[], byte[]> consumer, List<TopicPartitionOffset> partitions)
         {
-            this.manager.ReblanceInProgress = true;
+            this.manager.RebalanceInProgress = true;
             manager.RevokeTasks(new List<TopicPartition>(partitions.Select(p => p.TopicPartition)));
             Thread.SetState(ThreadState.PARTITIONS_REVOKED);
-            this.manager.ReblanceInProgress = false;
+            this.manager.RebalanceInProgress = false;
         }
     }
 }

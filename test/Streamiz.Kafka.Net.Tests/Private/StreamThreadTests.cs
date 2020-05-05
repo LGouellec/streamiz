@@ -6,6 +6,7 @@ using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -209,8 +210,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 Key = serdes.Serialize("key1"),
                 Value = serdes.Serialize("coucou")
             });
+            //WAIT STREAMTHREAD PROCESS MESSAGE
             System.Threading.Thread.Sleep(100);
-            var message = consumer.Consume(1000);
+            var message = consumer.Consume(100);
 
             source.Cancel();
             thread.Dispose();
@@ -270,6 +272,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             };
 
             thread.Start(source.Token);
+            // WAIT PARTITONS ASSIGNED
             System.Threading.Thread.Sleep(50);
 
             var thread2 = StreamThread.Create(
@@ -278,6 +281,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 1) as StreamThread;
             thread2.Start(source.Token);
+            // WAIT PARTITONS REBALANCING
             System.Threading.Thread.Sleep(50);
 
             producer.Produce("topic", new Confluent.Kafka.Message<byte[], byte[]>
@@ -285,8 +289,13 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 Key = serdes.Serialize("key1"),
                 Value = serdes.Serialize("coucou")
             });
+            //WAIT STREAMTHREAD PROCESS MESSAGE
             System.Threading.Thread.Sleep(100);
-            var message = consumer.Consume(1000);
+            var message = consumer.Consume(100);
+
+            // 2 CONSUMER FOR THE SAME GROUP ID => TOPIC WITH 4 PARTITIONS
+            Assert.AreEqual(2, thread.ActiveTasks.Count());
+            Assert.AreEqual(2, thread2.ActiveTasks.Count());
 
             source.Cancel();
             thread.Dispose();

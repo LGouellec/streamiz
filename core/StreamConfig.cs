@@ -86,7 +86,7 @@ namespace Streamiz.Kafka.Net
         ConsumerConfig ToConsumerConfig();
 
         /// <summary>
-        /// Get the configs to the <see cref="IConsumer{TumerKey, TValue}"/> with specific <paramref name="clientid"/>
+        /// Get the configs to the <see cref="IConsumer{TumerKey, TValue}"/> with specific <paramref name="clientId"/>
         /// </summary>
         /// <param name="clientId">Consumer client ID</param>
         /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
