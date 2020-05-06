@@ -13,23 +13,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
         integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <link rel="stylesheet" href="../assets/custom.css">
+    <link rel="stylesheet" href="/assets/custom.css">
 </head>
 
 <body class="bg-light">
-    # <nav class="navbar navbar-expand-md navbar-dark fixed-left" style="background-color: #303030;">
-    #     <a class="navbar-brand" href="https://github.com/LGouellec/kafka-streams-dotnet">Streamiz.Kafka.Net</a>
-    #     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
-    #         aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-    #         <span class="navbar-toggler-icon bg-dark"></span>
-    #     </button>
-    #     <a href="https://github.com/LGouellec/kafka-streams-dotnet">
-    #         <img src="https://raw.githubusercontent.com/LGouellec/kafka-streams-dotnet/master/resources/logo-kafka-stream-net.png" width="35"/>
-    #     </a>
         <div class="collapse navbar-collapse" id="navbarsExampleDefault">
             {% include summary.html %}
         </div>
-    # </nav>
 
     <div class="container">
         <!-- Page content holder -->
