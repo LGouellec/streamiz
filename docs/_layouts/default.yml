@@ -17,21 +17,19 @@
 </head>
 
 <body class="bg-light">
-    <nav class="navbar navbar-expand-md navbar-dark fixed-left" style="background-color: #303030;">
-        <a class="navbar-brand" href="https://github.com/LGouellec/kafka-streams-dotnet">Streamiz.Kafka.Net</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
-            aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon bg-dark"></span>
-        </button>
-        <a href="https://github.com/LGouellec/kafka-streams-dotnet">
-            <img src="https://raw.githubusercontent.com/LGouellec/kafka-streams-dotnet/master/resources/logo-kafka-stream-net.png" width="35"/>
-        </a>
+    # <nav class="navbar navbar-expand-md navbar-dark fixed-left" style="background-color: #303030;">
+    #     <a class="navbar-brand" href="https://github.com/LGouellec/kafka-streams-dotnet">Streamiz.Kafka.Net</a>
+    #     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
+    #         aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+    #         <span class="navbar-toggler-icon bg-dark"></span>
+    #     </button>
+    #     <a href="https://github.com/LGouellec/kafka-streams-dotnet">
+    #         <img src="https://raw.githubusercontent.com/LGouellec/kafka-streams-dotnet/master/resources/logo-kafka-stream-net.png" width="35"/>
+    #     </a>
         <div class="collapse navbar-collapse" id="navbarsExampleDefault">
             {% include summary.html %}
         </div>
-    </nav>
-
-
+    # </nav>
 
     <div class="container">
         <!-- Page content holder -->
@@ -53,6 +51,13 @@
     </footer>
     {% if site.google_analytics %}
     <script>
+        $(function() {
+            // Sidebar toggle behavior
+            $('#sidebarCollapse').on('click', function() {
+                $('#sidebar, #content').toggleClass('active');
+            });
+        });
+
         (function (i, s, o, g, r, a, m) {
             i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
                 (i[r].q = i[r].q || []).push(arguments)
