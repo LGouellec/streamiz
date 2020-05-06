@@ -13,11 +13,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
         integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-
-    <link rel="shortcut icon" type="image/png" href="{{ '/assets/favicon.ico'  | absolute_url }}">
-    <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
-
-    {% seo %}
+    <link rel="stylesheet" href="../assets/custom.css">
 </head>
 
 <body class="bg-light">
@@ -28,15 +24,24 @@
             <span class="navbar-toggler-icon bg-dark"></span>
         </button>
         <a href="https://github.com/LGouellec/kafka-streams-dotnet">
-            <img src="https://raw.githubusercontent.com/LGouellec/kafka-streams-dotnet/master/resources/logo-kafka-stream-net.png" width="50"/>
+            <img src="https://raw.githubusercontent.com/LGouellec/kafka-streams-dotnet/master/resources/logo-kafka-stream-net.png" width="35"/>
         </a>
         <div class="collapse navbar-collapse" id="navbarsExampleDefault">
             {% include summary.html %}
         </div>
     </nav>
 
+
+
     <div class="container">
-        {{ content }}
+        <!-- Page content holder -->
+        <div class="page-content p-5" id="content">
+            <!-- Toggle button -->
+            <button id="sidebarCollapse" type="button" class="btn btn-light bg-white rounded-pill shadow-sm px-4 mb-4"><i
+                    class="fa fa-bars mr-2"></i><small class="text-uppercase font-weight-bold">Toggle</small></button>
+            
+            {{ content }}
+        </div>
     </div>
 
     <footer>
