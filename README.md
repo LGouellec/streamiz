@@ -155,19 +155,19 @@ static void Main(string[] args)
 
 # TODO implementation
 
-- Topology description [X]
-- Refactor topology node processor builder [X]
-- Subtopology impl [X]
-- Unit tests (TestTopologyDriver, ...) [X]
-- Statefull processors impl [ ]
-- Task restoring [ ]
-- Global state store [WIP]
-- Processor API [ ]
-- Repartition impl [ ]
-- Rocks DB state implementation [ ]
-- Optimizing Kafka Streams Topologies  [ ]
-- Interactive Queries [ ]
-- Metrics [ ]
+- [x] Topology description
+- [x] Refactor topology node processor builder
+- [x] Subtopology impl
+- [x] Unit tests (TestTopologyDriver, ...)
+- [ ] Statefull processors impl
+- [ ] Task restoring
+- [WIP] Global state store
+- [ ] Processor API
+- [ ] Repartition impl
+- [ ] Rocks DB state implementation
+- [ ] Optimizing Kafka Streams Topologies
+- [ ] Interactive Queries
+- [ ] Metrics
 
 Some documentations for help during implementation :
 https://docs.confluent.io/current/streams/index.html
