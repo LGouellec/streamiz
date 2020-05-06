@@ -1,6 +1,8 @@
 Welcome to <span style='color: #00A1F1'>Streamiz.Kafka.Net</span>
 =============================================
 
+// https://talk.jekyllrb.com/t/solved-github-page-build-failed-symlink-does-not-exist/1623
+
 <img src="./assets/logo-kafka-stream-net.png" width="100">
 
 **Streamiz.Kafka.Net** is .NET stream processing library for Apache Kafka (TM).
