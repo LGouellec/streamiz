@@ -1,3 +1,0 @@
-# Stateless processors
-
-IN CONSTRUCTION

@@ -11,8 +11,8 @@ Welcome to Streamiz.Kafka.Net
 .. note::
    The source code is available on `Github <https://github.com/LGouellec/kafka-streams-dotnet>`_. 
 
-   It's allowed to develop .NET applications that transform input Kafka topics into output Kafka topics. 
-   It's a rewriting inspired by `Kafka Streams <https://github.com/apache/kafka>`_. 
+It's allowed to develop .NET applications that transform input Kafka topics into output Kafka topics. 
+It's a rewriting inspired by `Kafka Streams <https://github.com/apache/kafka>`_. 
 
 .. warning::
    This framework is still in beta.
@@ -80,5 +80,7 @@ Feel free to ping me: `@LGouellec <https://twitter.com/LGouellec>`_
    :hidden:
    :caption: Streamiz.Kafka.Net
 
-   stateless-processors
    stream-configuration
+   stateless-processors
+   statefull-processors
+   tology-test-driver

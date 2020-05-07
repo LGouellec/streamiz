@@ -402,7 +402,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                 {
                     foreach (var p in c.Partitions)
                     {
-                        if ((dt += timeout) < DateTime.Now)
+                        if ((dt + timeout) < DateTime.Now)
                             break;
                         var topic = topics[p.Topic];
                         var offset = c.TopicPartitionsOffset.FirstOrDefault(t => t.Topic.Equals(p.Topic) && t.Partition.Equals(p.Partition));

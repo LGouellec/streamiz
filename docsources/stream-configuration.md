@@ -1,3 +1,3 @@
 # Stream configuration
 
-IN CONSTRUCTION
+WORK IN PROGRESS

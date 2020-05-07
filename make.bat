@@ -7,10 +7,12 @@ REM Command file for Sphinx documentation
 if "%SPHINXBUILD%" == "" (
 	set SPHINXBUILD=sphinx-build
 )
-set SOURCEDIR=.
-set BUILDDIR=_build
+set SOURCEDIR=docsources
+set BUILDDIR=docs\_build
+set BUILDDEST=docs
 
 if "%1" == "" goto help
+if "%1" == "github" goto github
 
 %SPHINXBUILD% >NUL 2>NUL
 if errorlevel 9009 (
@@ -30,6 +32,12 @@ goto end
 
 :help
 %SPHINXBUILD% -M help %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
+
+:github
+RMDIR /Q/S %BUILDDIR%
+%SPHINXBUILD% -M html %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
+xcopy  %BUILDDIR%\html %BUILDDEST% /E /Q /Y
+RMDIR /Q/S %BUILDDIR%
 
 :end
 popd

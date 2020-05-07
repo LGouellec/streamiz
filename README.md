@@ -29,7 +29,21 @@ It's a rewriting inspired by [Kafka Streams](https://github.com/apache/kafka).
 
 Finally it will provide the same functionality as [Kafka Streams](https://github.com/apache/kafka).
 
-At moment, this project is being written. Thanks for you contribution !
+This project is being written. Thanks for you contribution !
+
+# Timeline
+
+- End May 2020 - Beta 0.0.1 - All stateless processors, Exactly Once Semantic, InMemory store
+- End October 2020 - Beta 0.0.2 - All statefull processors, Global Store, RocksDB Store
+- End 2020 / Begin 2021 - 1.0.0 RC1 - Processor API, Metrics, Interactive Queries
+
+# Documentation
+
+Read the full documentation on https://lgouellec.github.io/kafka-streams-dotnet/
+
+# Installation
+
+NUGET PACKAGE LISTED SOON
 
 # Usage
 
@@ -53,7 +67,6 @@ static void Main(string[] args)
 
     builder.Stream<string, string>("test")
         .FilterNot((k, v) => v.Contains("test"))
-        .Peek((k,v) => Console.WriteLine($"Key : {k} | Value : {v}"))
         .To("test-output");
 
     builder.Table("topic", InMemory<string, string>.As("test-ktable-store"));
@@ -70,88 +83,6 @@ static void Main(string[] args)
 }
 ```
 
-# Timeline
-
-- End May 2020 - Beta 0.0.1 - All stateless processors, Exactly Once Semantic, InMemory store
-- End October 2020 - Beta 0.0.2 - All statefull processors, Global Store, RocksDB Store
-- End 2020 / Begin 2021 - 1.0.0 RC1 - Processor API, Metrics, Interactive Queries
-
-# Stateless processor implemention
-
-|Operator Name|Method|TODO|IMPLEMENTED|TESTED|DOCUMENTED|
-|---|---|---|---|---|---|
-|Branch|KStream -> KStream[]|   |   |   |&#9745;|
-|Filter|KStream -> KStream|   |   |   |&#9745;|
-|Filter|KTable -> KTable|   |   |   |&#9745;|
-|InverseFilter|KStream -> KStream|   |   |   |&#9745;|
-|InverseFilter|KTable -> KTable|   |   |   |&#9745;|
-|FlatMap|KStream → KStream|   |   |   |&#9745;|
-|FlatMapValues|KStream → KStream|   |   |   |&#9745;|
-|Foreach|KStream → void|   |   |   |&#9745;|
-|GroupByKey|KStream → KGroupedStream|   |   |   |&#9745;|
-|GroupBy|KStream → KGroupedStream|   |   |   |&#9745;|
-|GroupBy|KTable → KGroupedTable|   |   |   |&#9745;|
-|Map|KStream → KStream|   |   |   |&#9745;|
-|MapValues|KStream → KStream|   |   |   |&#9745;|
-|MapValues|KTable → KTable|   |   |   |&#9745;|
-|Peek|KStream → KStream|   |   |   |&#9745;|
-|Print|KStream → void|   |   |   |&#9745;|
-|SelectKey|KStream → KStream|   |   |   |&#9745;|
-|Table to Steam|KTable → KStream|   |   |   |&#9745;|
-
-# Statefull processor implementation
-
-|Operator Name|Method|TODO|IMPLEMENTED|TESTED|DOCUMENTED|
-|---|---|---|---|---|---|
-|Aggregate|KGroupedStream -> KTable|&#9745;|   |   |   |
-|Aggregate|KGroupedTable -> KTable|&#9745;|   |   |   |
-|Aggregate(windowed)|KGroupedStream -> KTable|&#9745;|   |   |   |
-|Count|KGroupedStream -> KTable|&#9745;|   |   |   |
-|Count|KGroupedTable -> KTable|&#9745;|   |   |   |
-|Count(windowed)|KGroupedStream → KStream|&#9745;|   |   |   |
-|Reduce|KGroupedStream → KTable|&#9745;|   |   |   |
-|Reduce|KGroupedTable → KTable|&#9745;|   |   |   |
-|Reduce(windowed)|KGroupedStream → KTable|&#9745;|   |   |   |
-|InnerJoin(windowed)|(KStream,KStream) → KStream|&#9745;|   |   |   |
-|LeftJoin(windowed)|(KStream,KStream) → KStream|&#9745;|   |   |   |
-|OuterJoin(windowed)|(KStream,KStream) → KStream|&#9745;|   |   |   |
-|InnerJoin(windowed)|(KTable,KTable) → KTable|&#9745;|   |   |   |
-|LeftJoin(windowed)|(KTable,KTable) → KTable|&#9745;|   |   |   |
-|OuterJoin(windowed)|(KTable,KTable) → KTable|&#9745;|   |   |   |
-|InnerJoin(windowed)|(KStream,KTable) → KStream|&#9745;|   |   |   |
-|LeftJoin(windowed)|(KStream,KTable) → KStream|&#9745;|   |   |   |
-|InnerJoin(windowed)|(KStream,GlobalKTable) → KStream|&#9745;|   |   |   |
-|LeftJoin(windowed)|(KStream,GlobalKTable) → KStream|&#9745;|   |   |   |
-
-
-
-# Test topology driver
-
-Must be used for testing your stream topology.
-Usage: 
-``` csharp
-static void Main(string[] args)
-{
-    var config = new StreamConfig<StringSerDes, StringSerDes>();
-    config.ApplicationId = "test-test-driver-app";
-    
-    StreamBuilder builder = new StreamBuilder();
-
-    builder.Stream<string, string>("test")
-        .Filter((k, v) => v.Contains("test"))
-        .To("test-output");
-
-    Topology t = builder.Build();
-
-    using (var driver = new TopologyTestDriver(t, config))
-    {
-        var inputTopic = driver.CreateInputTopic<string, string>("test");
-        var outputTopic = driver.CreateOuputTopic<string, string>("test-output", TimeSpan.FromSeconds(5));
-        inputTopic.PipeInput("test", "test-1234");
-        var r = outputTopic.ReadKeyValue();
-    }
-}
-```
 
 # TODO implementation
 
@@ -174,7 +105,7 @@ https://docs.confluent.io/current/streams/index.html
 
 https://kafka.apache.org/20/documentation/streams/developer-guide/dsl-api.html#stateless-transformations
 
-# Contribute members
+# Contributing
 
 Owners:
 
@@ -185,3 +116,6 @@ Maintainers:
 - [lgouellec](https://github.com/LGouellec)
 - [mmoron](https://github.com/mmoron)
 
+**Streamiz Kafka .Net** is a community project. We invite your participation through issues and pull requests! You can peruse the [contributing guidelines](CONTRIBUTING.md).
+
+When adding or changing a service please add tests.
