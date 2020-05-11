@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Stream configuration &mdash; Streamiz.Kafka.Net  documentation</title>
+  <title>Configuring a Stream Application &mdash; Streamiz.Kafka.Net  documentation</title>
   
 
   
@@ -38,7 +38,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Stateless processors" href="stateless-processors.html" />
-    <link rel="prev" title="Welcome to Streamiz.Kafka.Net" href="index.html" /> 
+    <link rel="prev" title="Overview" href="overview.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -84,7 +84,30 @@
             
               <p class="caption"><span class="caption-text">Streamiz.Kafka.Net</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Stream configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuring a Stream Application</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#required-configuration-parameters">Required configuration parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#applicationid">ApplicationId</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bootstrapservers">BootstrapServers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#optional-configuration-parameters">Optional configuration parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#guarantee">Guarantee</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#defaulttimestampextractor">DefaultTimestampExtractor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#defaultkeyserdes">DefaultKeySerDes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#defaultvalueserdes">DefaultValueSerDes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#numstreamthreads">NumStreamThreads</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#clientid">ClientId</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#transactionalid">TransactionalId</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#transactiontimeout">TransactionTimeout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#commitintervalms">CommitIntervalMs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pollms">PollMs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#kafka-consumers-and-producer-configuration-parameters">Kafka consumers and producer configuration parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sample-configuration-implementation">Sample configuration implementation</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="stateless-processors.html">Stateless processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="statefull-processors.html">Statefull processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tology-test-driver.html">Test topology driver</a></li>
@@ -133,7 +156,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Stream configuration</li>
+      <li>Configuring a Stream Application</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -152,9 +175,202 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="stream-configuration">
-<h1>Stream configuration<a class="headerlink" href="#stream-configuration" title="Permalink to this headline">¶</a></h1>
-<p>WORK IN PROGRESS</p>
+  <div class="section" id="configuring-a-stream-application">
+<h1>Configuring a Stream Application<a class="headerlink" href="#configuring-a-stream-application" title="Permalink to this headline">¶</a></h1>
+<p>Stream configuration options must be configured before using Streams. You can configure KafkaStream by specifying parameters in a <code class="docutils literal notranslate"> <span class="pre">IStreamConfig</span></code> instance.</p>
+<p><code class="docutils literal notranslate"> <span class="pre">IStreamConfig</span></code> is an interface which defines all the parameters necessary for the proper functioning of a stream. You can therefore create your own implementation of your configuration.</p>
+<p>You have a default implementation in Streamiz Kafka .Net package (aka <code class="docutils literal notranslate"> <span class="pre">StreamConfig</span></code>)</p>
+<div class="section" id="required-configuration-parameters">
+<h2>Required configuration parameters<a class="headerlink" href="#required-configuration-parameters" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="applicationid">
+<h3>ApplicationId<a class="headerlink" href="#applicationid" title="Permalink to this headline">¶</a></h3>
+<p>(Required) The application ID. Each stream processing application must have a unique ID. The same ID must be given to all instances of the application. It is recommended to use only alphanumeric characters, . (dot), - (hyphen), and _ (underscore). Examples: “hello_world”, “hello_world-v1.0.0”</p>
+<p>This ID is used in the following places to isolate resources used by the application from others:</p>
+<p>As the default Kafka consumer and producer client.id prefix
+As the Kafka consumer group.id for coordination
+As the name of the subdirectory in the state directory (cf. state.dir)
+As the prefix of internal Kafka topic names
+Tip:
+When an application is updated, the application.id should be changed unless you want to reuse the existing data in internal topics and state stores. For example, you could embed the version information within application.id, as my-app-v1.0.0 and my-app-v1.0.2.</p>
+</div>
+<div class="section" id="bootstrapservers">
+<h3>BootstrapServers<a class="headerlink" href="#bootstrapservers" title="Permalink to this headline">¶</a></h3>
+<p>(Required) The Kafka bootstrap servers. This is the same setting that is used by the underlying producer and consumer clients to connect to the Kafka cluster. Example: “kafka-broker1:9092,kafka-broker2:9092”.</p>
+<p>Tip:
+Kafka Streams applications can only communicate with a single Kafka cluster specified by this config value. Future versions of Kafka Streams will support connecting to different Kafka clusters for reading input streams and writing output stream</p>
+</div>
+</div>
+<div class="section" id="optional-configuration-parameters">
+<h2>Optional configuration parameters<a class="headerlink" href="#optional-configuration-parameters" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="guarantee">
+<h3>Guarantee<a class="headerlink" href="#guarantee" title="Permalink to this headline">¶</a></h3>
+<p>The processing guarantee that should be used. Possible values are <code class="docutils literal notranslate"><span class="pre">ProcessingGuarantee.AT_LEAST_ONCE</span></code> (default) and <code class="docutils literal notranslate"><span class="pre">ProcessingGuarantee.EXACTLY_ONCE</span></code>. Note that if exactly-once processing is enabled, the default for parameter commit.interval.ms changes to 100ms. Additionally, consumers are configured with isolation.level=”read_committed” and producers are configured with retries=Int32.MAX_VALUE, enable.idempotence=true, and max.in.flight.requests.per.connection=5 per default. Note that by default exactly-once processing requires a cluster of at least three brokers what is the recommended setting for production. For development you can change this, by adjusting broker setting transaction.state.log.replication.factor and transaction.state.log.min.isr to the number of broker you want to use.</p>
+</div>
+<div class="section" id="defaulttimestampextractor">
+<h3>DefaultTimestampExtractor<a class="headerlink" href="#defaulttimestampextractor" title="Permalink to this headline">¶</a></h3>
+<p>A timestamp extractor pulls a timestamp from an instance of ConsumeResult. Timestamps are used to control the progress of streams.</p>
+<p>The default extractor is FailOnInvalidTimestamp. This extractor retrieves built-in timestamps that are automatically embedded into Kafka messages by the Kafka producer client since Kafka version 0.10. Depending on the setting of Kafka’s server-side log.message.timestamp.type broker and message.timestamp.type topic parameters, this extractor provides you with:</p>
+<p>event-time processing semantics if log.message.timestamp.type is set to CreateTime aka “producer time” (which is the default). This represents the time when a Kafka producer sent the original message. If you use Kafka’s official producer client, the timestamp represents milliseconds since the epoch.
+ingestion-time processing semantics if log.message.timestamp.type is set to LogAppendTime aka “broker time”. This represents the time when the Kafka broker received the original message, in milliseconds since the epoch.
+The FailOnInvalidTimestamp extractor throws an exception if a record contains an invalid (i.e. negative) built-in timestamp, because Kafka Streams would not process this record but silently drop it. Invalid built-in timestamps can occur for various reasons: if for example, you consume a topic that is written to by pre-0.10 Kafka producer clients or by third-party producer clients that don’t support the new Kafka 0.10 message format yet; another situation where this may happen is after upgrading your Kafka cluster from 0.9 to 0.10, where all the data that was generated with 0.9 does not include the 0.10 message timestamps.</p>
+<p>You can provide your own timestamp extractors, for instance to retrieve timestamps embedded in the payload of messages. If you cannot extract a valid timestamp, you can either throw an exception, return a negative timestamp, or estimate a timestamp.</p>
+<p>Returning a negative timestamp will result in data loss – the corresponding record will not be processed but silently dropped. If you want to estimate a new timestamp, you can use the value provided via previousTimestamp (i.e., a Kafka Streams timestamp estimation). Here is an example of a custom TimestampExtractor implementation:</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">Confluent.Kafka</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">Streamiz.Kafka.Net.Crosscutting</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">Streamiz.Kafka.Net.Processors</span><span class="p">;</span>
+
+<span class="k">public</span> <span class="k">class</span> <span class="nc">Foo</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="n">DateTime</span> <span class="n">dateCreated</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+    <span class="k">public</span> <span class="kt">int</span> <span class="n">Id</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+
+    <span class="k">public</span> <span class="kt">long</span> <span class="nf">GetTimestampInMillis</span><span class="p">()</span> <span class="p">=&gt;</span> <span class="n">dateCreated</span><span class="p">.</span><span class="n">GetMilliseconds</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="k">public</span> <span class="k">class</span> <span class="nc">MyExtractor</span> <span class="p">:</span> <span class="n">ITimestampExtractor</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">long</span> <span class="nf">Extract</span><span class="p">(</span><span class="n">ConsumeResult</span><span class="p">&lt;</span><span class="kt">object</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;</span> <span class="n">record</span><span class="p">,</span> <span class="kt">long</span> <span class="n">partitionTime</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">// `Foo` is your own custom class, which we assume has a method that returns</span>
+        <span class="c1">// the embedded timestamp (milliseconds since midnight, January 1, 1970 UTC).</span>
+        <span class="kt">long</span> <span class="n">timestamp</span> <span class="p">=</span> <span class="p">-</span><span class="m">1</span><span class="p">;</span>
+        <span class="n">Foo</span> <span class="n">myPojo</span> <span class="p">=</span> <span class="p">(</span><span class="n">Foo</span><span class="p">)</span><span class="n">record</span><span class="p">.</span><span class="n">Message</span><span class="p">.</span><span class="n">Value</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">myPojo</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">timestamp</span> <span class="p">=</span> <span class="n">myPojo</span><span class="p">.</span><span class="n">GetTimestampInMillis</span><span class="p">();</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">timestamp</span> <span class="p">&lt;</span> <span class="m">0</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">// Invalid timestamp!  Attempt to estimate a new timestamp,</span>
+            <span class="c1">// otherwise fall back to wall-clock time (processing-time).</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">partitionTime</span> <span class="p">&gt;=</span> <span class="m">0</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="k">return</span> <span class="n">partitionTime</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="k">else</span>
+            <span class="p">{</span>
+                <span class="k">return</span> <span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">.</span><span class="n">GetMilliseconds</span><span class="p">();</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">else</span>
+            <span class="k">return</span> <span class="n">timestamp</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>You would then define the custom timestamp extractor in your Streams configuration as follows:</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>    <span class="k">using</span> <span class="nn">Streamiz.Kafka.Net</span><span class="p">;</span>
+
+    <span class="kt">var</span> <span class="n">config</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StreamConfig</span><span class="p">();</span>
+    <span class="n">config</span><span class="p">.</span><span class="n">DefaultTimestampExtractor</span> <span class="p">=</span> <span class="k">new</span> <span class="n">MyExtractor</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="defaultkeyserdes">
+<h3>DefaultKeySerDes<a class="headerlink" href="#defaultkeyserdes" title="Permalink to this headline">¶</a></h3>
+<p>The default Serializer/Deserializer class for record keys. Serialization and deserialization in Kafka Streams happens whenever data needs to be materialized, for example:</p>
+<p>Whenever data is read from or written to a Kafka topic (e.g., via the StreamsBuilder#Stream&lt;K, V&gt;() and IKStream&lt;K, V&gt;#To() methods).
+Whenever data is read from or written to a state store.</p>
+<p>Example :</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>    <span class="kt">var</span> <span class="n">config</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StreamConfig</span><span class="p">();</span>
+    <span class="n">config</span><span class="p">.</span><span class="n">DefaultKeySerDes</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StringSerDes</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Note : In Streamiz Kafka Net package, you have a stream configuration class with generic types parameters to set default (key and value) serdes</p>
+<p>Example :</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>    <span class="c1">// Set defaultkeyserdes to StringSerDes, and defaultvalueserdes to StringSerDes</span>
+    <span class="kt">var</span> <span class="n">config</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StreamConfig</span><span class="p">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span> <span class="n">StringSerDes</span><span class="p">&gt;();</span>
+</pre></div>
+</div>
+<p><strong>TODO : Make documentation about Data types and serdes</strong></p>
+</div>
+<div class="section" id="defaultvalueserdes">
+<h3>DefaultValueSerDes<a class="headerlink" href="#defaultvalueserdes" title="Permalink to this headline">¶</a></h3>
+<p>The default Serializer/Deserializer class for record values. Serialization and deserialization in Kafka Streams happens whenever data needs to be materialized, for example:</p>
+<p>Whenever data is read from or written to a Kafka topic (e.g., via the StreamsBuilder#Stream&lt;K, V&gt;() and IKStream&lt;K, V&gt;#To() methods).
+Whenever data is read from or written to a state store.</p>
+<p>Example :</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>    <span class="kt">var</span> <span class="n">config</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StreamConfig</span><span class="p">();</span>
+    <span class="n">config</span><span class="p">.</span><span class="n">DefaultValueSerDes</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StringSerDes</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Note : In Streamiz Kafka Net package, you have a stream configuration class with generic types parameters to set default (key and value) serdes</p>
+<p>Example :</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>    <span class="c1">// Set defaultkeyserdes to StringSerDes, and defaultvalueserdes to StringSerDes</span>
+    <span class="kt">var</span> <span class="n">config</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StreamConfig</span><span class="p">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span> <span class="n">StringSerDes</span><span class="p">&gt;();</span>
+</pre></div>
+</div>
+<p><strong>TODO : Make documentation about Data types and serdes</strong></p>
+</div>
+<div class="section" id="numstreamthreads">
+<h3>NumStreamThreads<a class="headerlink" href="#numstreamthreads" title="Permalink to this headline">¶</a></h3>
+<p>This specifies the number of stream threads in an instance of the Kafka Streams application. The stream processing code runs in these thread.</p>
+</div>
+<div class="section" id="clientid">
+<h3>ClientId<a class="headerlink" href="#clientid" title="Permalink to this headline">¶</a></h3>
+<p>An ID prefix string used for the client IDs of internal consumer, producer and restore-consumer, with pattern ‘<ClientId>-StreamThread-<threadSequenceNumber>-&lt;consumer|producer|restore-consumer&gt;’ with</p>
+<ul class="simple">
+<li><p>ClientId : property setted, if null or empty, CliendId is randomly generated wih ‘ApplicationId-{GUID}’</p></li>
+<li><p>threadSequenceNumber : Thread number</p></li>
+</ul>
+</div>
+<div class="section" id="transactionalid">
+<h3>TransactionalId<a class="headerlink" href="#transactionalid" title="Permalink to this headline">¶</a></h3>
+<p>Enables the transactional producer. The TransactionalId is used to identify the same transactional producer instance across process restarts.
+Only use if Guarantee is setted to <code class="docutils literal notranslate"><span class="pre">ProcessingGuarantee.EXACTLY_ONCE</span></code>.</p>
+</div>
+<div class="section" id="transactiontimeout">
+<h3>TransactionTimeout<a class="headerlink" href="#transactiontimeout" title="Permalink to this headline">¶</a></h3>
+<p>Timeout used for transaction related operations. (Default : 10 seconds).
+Only use if Guarantee is set to <code class="docutils literal notranslate"><span class="pre">ProcessingGuarantee.EXACTLY_ONCE</span></code>.</p>
+</div>
+<div class="section" id="commitintervalms">
+<h3>CommitIntervalMs<a class="headerlink" href="#commitintervalms" title="Permalink to this headline">¶</a></h3>
+<p>The frequency with which to save the position of the processor. (Note, if Guarantee is set to <code class="docutils literal notranslate"><span class="pre">ProcessingGuarantee.EXACTLY_ONCE</span></code>, the default value is <code class="docutils literal notranslate"><span class="pre">StreamConfig.EOS_DEFAULT_COMMIT_INTERVAL_MS</span></code>,
+otherwise the default value is <code class="docutils literal notranslate"><span class="pre">StreamConfig.DEFAULT_COMMIT_INTERVAL_MS</span></code>.</p>
+</div>
+<div class="section" id="pollms">
+<h3>PollMs<a class="headerlink" href="#pollms" title="Permalink to this headline">¶</a></h3>
+<p>The amount of time in milliseconds to block waiting for input. (Default : 100)</p>
+</div>
+</div>
+<div class="section" id="kafka-consumers-and-producer-configuration-parameters">
+<h2>Kafka consumers and producer configuration parameters<a class="headerlink" href="#kafka-consumers-and-producer-configuration-parameters" title="Permalink to this headline">¶</a></h2>
+<p>You can specify parameters for the Kafka consumers, producers, and admin client that are used internally. The consumer, producer and admin client settings are defined by wrapper properties on ConsumerConfig, ProducerConfig and AdminConfig.</p>
+<p>So, all consumer, producer and admin client settings are accessible directly from StreamConfig instance.</p>
+<p>In this example, the Kafka consumer session timeout is configured to be 60000 milliseconds in the StreamConfig instance.</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>    <span class="kt">var</span> <span class="n">config</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StreamConfig</span><span class="p">();</span>
+    <span class="n">config</span><span class="p">.</span><span class="n">SessionTimeoutMs</span> <span class="p">=</span> <span class="m">60000</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>In case of the configuration is not wrapped in StreamConfig yet, you can directly add your configuration via the following methods.</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>    <span class="kt">var</span> <span class="n">config</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StreamConfig</span><span class="p">();</span>
+    <span class="c1">// add key/value config for consumer</span>
+    <span class="n">config</span><span class="p">.</span><span class="n">AddConsumerConfig</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">,</span> <span class="s">&quot;value&quot;</span><span class="p">);</span>
+    <span class="c1">// add key/value config for admin client</span>
+    <span class="n">config</span><span class="p">.</span><span class="n">AddAdminConfig</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">,</span> <span class="s">&quot;value&quot;</span><span class="p">);</span>
+    <span class="c1">// add key/value config for producer</span>
+    <span class="n">config</span><span class="p">.</span><span class="n">AddProducerConfig</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">,</span> <span class="s">&quot;value&quot;</span><span class="p">);</span>
+    <span class="c1">// add key/value config for consumer, producer and admin client</span>
+    <span class="n">config</span><span class="p">.</span><span class="n">AddConfig</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">,</span> <span class="s">&quot;value&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sample-configuration-implementation">
+<h2>Sample configuration implementation<a class="headerlink" href="#sample-configuration-implementation" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>    <span class="kt">var</span> <span class="n">config</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StreamConfig</span><span class="p">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span> <span class="n">StringSerDes</span><span class="p">&gt;();</span>
+    <span class="n">config</span><span class="p">.</span><span class="n">ApplicationId</span> <span class="p">=</span> <span class="s">&quot;test-app&quot;</span><span class="p">;</span>
+    <span class="n">config</span><span class="p">.</span><span class="n">BootstrapServers</span> <span class="p">=</span> <span class="s">&quot;192.168.56.1:9092&quot;</span><span class="p">;</span>
+    <span class="n">config</span><span class="p">.</span><span class="n">SaslMechanism</span> <span class="p">=</span> <span class="n">SaslMechanism</span><span class="p">.</span><span class="n">Plain</span><span class="p">;</span>
+    <span class="n">config</span><span class="p">.</span><span class="n">SaslUsername</span> <span class="p">=</span> <span class="s">&quot;admin&quot;</span><span class="p">;</span>
+    <span class="n">config</span><span class="p">.</span><span class="n">SaslPassword</span> <span class="p">=</span> <span class="s">&quot;admin&quot;</span><span class="p">;</span>
+    <span class="n">config</span><span class="p">.</span><span class="n">SecurityProtocol</span> <span class="p">=</span> <span class="n">SecurityProtocol</span><span class="p">.</span><span class="n">SaslPlaintext</span><span class="p">;</span>
+    <span class="n">config</span><span class="p">.</span><span class="n">AutoOffsetReset</span> <span class="p">=</span> <span class="n">AutoOffsetReset</span><span class="p">.</span><span class="n">Earliest</span><span class="p">;</span>
+    <span class="n">config</span><span class="p">.</span><span class="n">NumStreamThreads</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -168,7 +384,7 @@
         <a href="stateless-processors.html" class="btn btn-neutral float-right" title="Stateless processors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to Streamiz.Kafka.Net" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="overview.html" class="btn btn-neutral float-left" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -83,10 +83,14 @@
             
               <p class="caption"><span class="caption-text">Streamiz.Kafka.Net</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="stream-configuration.html">Stream configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stream-configuration.html">Configuring a Stream Application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stateless-processors.html">Stateless processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="statefull-processors.html">Statefull processors</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Test topology driver</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Test topology driver</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -153,30 +157,75 @@
             
   <div class="section" id="test-topology-driver">
 <h1>Test topology driver<a class="headerlink" href="#test-topology-driver" title="Permalink to this headline">¶</a></h1>
-<p>Must be used for testing your stream topology.
-Usage:</p>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="k">void</span> <span class="nf">Main</span><span class="p">(</span><span class="kt">string</span><span class="p">[]</span> <span class="n">args</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="kt">var</span> <span class="n">config</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StreamConfig</span><span class="p">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span> <span class="n">StringSerDes</span><span class="p">&gt;();</span>
-    <span class="n">config</span><span class="p">.</span><span class="n">ApplicationId</span> <span class="p">=</span> <span class="s">&quot;test-test-driver-app&quot;</span><span class="p">;</span>
+<p>Streamiz Kafka .Net provides a test-utils for testing your stream topology.</p>
+<p>TopologyTestDriver that can be used pipe data through a Topology that is either assembled manually using the DSL using StreamsBuilder. The test driver simulates the library runtime that continuously fetches records from input topics and processes them by traversing the topology.</p>
+<p>You can use the test driver to verify that your specified processor topology computes the correct result with the manually piped in data records. The test driver captures the results records and allows to query its embedded state stores.</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span> <span class="n">config</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StreamConfig</span><span class="p">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span> <span class="n">StringSerDes</span><span class="p">&gt;();</span>
+<span class="n">config</span><span class="p">.</span><span class="n">ApplicationId</span> <span class="p">=</span> <span class="s">&quot;test-test-driver-app&quot;</span><span class="p">;</span>
     
-    <span class="n">StreamBuilder</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StreamBuilder</span><span class="p">();</span>
+<span class="n">StreamBuilder</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StreamBuilder</span><span class="p">();</span>
 
-    <span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test&quot;</span><span class="p">)</span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test&quot;</span><span class="p">)</span>
         <span class="p">.</span><span class="n">Filter</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span>
         <span class="p">.</span><span class="n">To</span><span class="p">(</span><span class="s">&quot;test-output&quot;</span><span class="p">);</span>
 
-    <span class="n">Topology</span> <span class="n">t</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+<span class="n">Topology</span> <span class="n">t</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+<span class="kt">var</span> <span class="n">driver</span> <span class="p">=</span> <span class="k">new</span> <span class="n">TopologyTestDriver</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">config</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>With the test driver you can create TestInputTopic&lt;K, V&gt; giving topic name and the corresponding serializers. TestInputTopic provides various methods to pipe new message values, keys and values, or list of KeyValue objects.</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>    <span class="kt">var</span> <span class="n">inputTopic</span> <span class="p">=</span> <span class="n">driver</span><span class="p">.</span><span class="n">CreateInputTopic</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test&quot;</span><span class="p">);</span>
+    <span class="n">inputTopic</span><span class="p">.</span><span class="n">PipeInput</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">,</span> <span class="s">&quot;test-1234&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>To verify the output, you can use TestOutputTopic&lt;K, V&gt; where you configure the topic and the corresponding deserializers during initialization. It offers helper methods to read only certain parts of the result records or the collection of records. For example, you can validate returned KeyValue with standard assertions if you only care about the key and value, but not the timestamp of the result record.</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>    <span class="kt">var</span> <span class="n">outputTopic</span> <span class="p">=</span> <span class="n">driver</span><span class="p">.</span><span class="n">CreateOuputTopic</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test-output&quot;</span><span class="p">,</span> <span class="n">TimeSpan</span><span class="p">.</span><span class="n">FromSeconds</span><span class="p">(</span><span class="m">5</span><span class="p">));</span>
+    <span class="kt">var</span> <span class="n">r</span> <span class="p">=</span> <span class="n">outputTopic</span><span class="p">.</span><span class="n">ReadKeyValue</span><span class="p">();</span>
+    <span class="n">Assert</span><span class="p">.</span><span class="n">IsNotNull</span><span class="p">(</span><span class="n">r</span><span class="p">);</span>
+    <span class="n">Assert</span><span class="p">.</span><span class="n">AreEqual</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">,</span> <span class="n">r</span><span class="p">.</span><span class="n">Message</span><span class="p">.</span><span class="n">Key</span><span class="p">);</span>  
+    <span class="n">Assert</span><span class="p">.</span><span class="n">AreEqual</span><span class="p">(</span><span class="s">&quot;test-1234&quot;</span><span class="p">,</span> <span class="n">r</span><span class="p">.</span><span class="n">Message</span><span class="p">.</span><span class="n">Value</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Additionally, you can access state stores via the test driver before or after a test. Accessing stores before a test is useful to pre-populate a store with some initial values. After data was processed, expected updates to the store can be verified.</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span> <span class="n">store</span> <span class="p">=</span> <span class="n">driver</span><span class="p">.</span><span class="n">GetKeyValueStore</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;store-name&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Note, that you should always dispose the test driver at the end to make sure all resources are release properly.
+TopologyTestDriver is disposable so you should ‘using’ keyword in your unit test.</p>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<p>Sample code :</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span> <span class="n">config</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StreamConfig</span><span class="p">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span> <span class="n">StringSerDes</span><span class="p">&gt;();</span>
+<span class="n">config</span><span class="p">.</span><span class="n">ApplicationId</span> <span class="p">=</span> <span class="s">&quot;test-test-driver-app&quot;</span><span class="p">;</span>
+    
+<span class="n">StreamBuilder</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StreamBuilder</span><span class="p">();</span>
 
-    <span class="k">using</span> <span class="p">(</span><span class="kt">var</span> <span class="n">driver</span> <span class="p">=</span> <span class="k">new</span> <span class="n">TopologyTestDriver</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">config</span><span class="p">))</span>
-    <span class="p">{</span>
-        <span class="kt">var</span> <span class="n">inputTopic</span> <span class="p">=</span> <span class="n">driver</span><span class="p">.</span><span class="n">CreateInputTopic</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test&quot;</span><span class="p">);</span>
-        <span class="kt">var</span> <span class="n">outputTopic</span> <span class="p">=</span> <span class="n">driver</span><span class="p">.</span><span class="n">CreateOuputTopic</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test-output&quot;</span><span class="p">,</span> <span class="n">TimeSpan</span><span class="p">.</span><span class="n">FromSeconds</span><span class="p">(</span><span class="m">5</span><span class="p">));</span>
-        <span class="n">inputTopic</span><span class="p">.</span><span class="n">PipeInput</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">,</span> <span class="s">&quot;test-1234&quot;</span><span class="p">);</span>
-        <span class="kt">var</span> <span class="n">r</span> <span class="p">=</span> <span class="n">outputTopic</span><span class="p">.</span><span class="n">ReadKeyValue</span><span class="p">();</span>
-    <span class="p">}</span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test&quot;</span><span class="p">)</span>
+        <span class="p">.</span><span class="n">Filter</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span>
+        <span class="p">.</span><span class="n">To</span><span class="p">(</span><span class="s">&quot;test-output&quot;</span><span class="p">);</span>
+
+<span class="n">builder</span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">&quot;test-ktable&quot;</span><span class="p">,</span> <span class="n">InMemory</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;.</span><span class="n">As</span><span class="p">(</span><span class="s">&quot;test-store&quot;</span><span class="p">));</span>
+
+<span class="n">Topology</span> <span class="n">t</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+
+<span class="k">using</span> <span class="p">(</span><span class="kt">var</span> <span class="n">driver</span> <span class="p">=</span> <span class="k">new</span> <span class="n">TopologyTestDriver</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">config</span><span class="p">))</span>
+<span class="p">{</span>
+    <span class="kt">var</span> <span class="n">inputTopic</span> <span class="p">=</span> <span class="n">driver</span><span class="p">.</span><span class="n">CreateInputTopic</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test&quot;</span><span class="p">);</span>
+    <span class="kt">var</span> <span class="n">inputTable</span> <span class="p">=</span> <span class="n">driver</span><span class="p">.</span><span class="n">CreateInputTopic</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test-ktable&quot;</span><span class="p">);</span>
+    <span class="kt">var</span> <span class="n">outputTopic</span> <span class="p">=</span> <span class="n">driver</span><span class="p">.</span><span class="n">CreateOuputTopic</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test-output&quot;</span><span class="p">,</span> <span class="n">TimeSpan</span><span class="p">.</span><span class="n">FromSeconds</span><span class="p">(</span><span class="m">5</span><span class="p">));</span>
+    <span class="n">inputTopic</span><span class="p">.</span><span class="n">PipeInput</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">,</span> <span class="s">&quot;test-1234&quot;</span><span class="p">);</span>
+    <span class="n">inputTable</span><span class="p">.</span><span class="n">PipeInput</span><span class="p">(</span><span class="s">&quot;key1&quot;</span><span class="p">,</span> <span class="s">&quot;value1&quot;</span><span class="p">);</span>
+    <span class="kt">var</span> <span class="n">r</span> <span class="p">=</span> <span class="n">outputTopic</span><span class="p">.</span><span class="n">ReadKeyValue</span><span class="p">();</span>
+    <span class="kt">var</span> <span class="n">store</span> <span class="p">=</span> <span class="n">driver</span><span class="p">.</span><span class="n">GetKeyValueStore</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test-store&quot;</span><span class="p">);</span>
+    <span class="kt">var</span> <span class="n">rbis</span> <span class="p">=</span> <span class="n">store</span><span class="p">.</span><span class="n">Get</span><span class="p">(</span><span class="s">&quot;key1&quot;</span><span class="p">);</span>
+    <span class="n">Assert</span><span class="p">.</span><span class="n">IsNotNull</span><span class="p">(</span><span class="n">r</span><span class="p">);</span>
+    <span class="n">Assert</span><span class="p">.</span><span class="n">AreEqual</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">,</span> <span class="n">r</span><span class="p">.</span><span class="n">Message</span><span class="p">.</span><span class="n">Key</span><span class="p">);</span>  
+    <span class="n">Assert</span><span class="p">.</span><span class="n">AreEqual</span><span class="p">(</span><span class="s">&quot;test-1234&quot;</span><span class="p">,</span> <span class="n">r</span><span class="p">.</span><span class="n">Message</span><span class="p">.</span><span class="n">Value</span><span class="p">);</span>
+    <span class="n">Assert</span><span class="p">.</span><span class="n">IsNotNull</span><span class="p">(</span><span class="n">rbis</span><span class="p">);</span>
+    <span class="n">Assert</span><span class="p">.</span><span class="n">AreEqual</span><span class="p">(</span><span class="s">&quot;value1&quot;</span><span class="p">,</span> <span class="n">rbis</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
+</div>
 </div>
 </div>
 

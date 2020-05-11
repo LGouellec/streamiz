@@ -38,7 +38,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Statefull processors" href="statefull-processors.html" />
-    <link rel="prev" title="Stream configuration" href="stream-configuration.html" /> 
+    <link rel="prev" title="Configuring a Stream Application" href="stream-configuration.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -84,8 +84,25 @@
             
               <p class="caption"><span class="caption-text">Streamiz.Kafka.Net</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="stream-configuration.html">Stream configuration</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Stateless processors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stream-configuration.html">Configuring a Stream Application</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Stateless processors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#branch">Branch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#filter">Filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inversefilter">InverseFilter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#flatmap">FlatMap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#flatmapvalues">FlatMapValues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#foreach">Foreach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#groupbykey">GroupByKey</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#groupby">GroupBy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#map">Map</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mapvalues">MapValues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#peek">Peek</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#print">Print</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#selectkey">SelectKey</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#table-to-steam">Table to Steam</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="statefull-processors.html">Statefull processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tology-test-driver.html">Test topology driver</a></li>
 </ul>
@@ -154,165 +171,220 @@
             
   <div class="section" id="stateless-processors">
 <h1>Stateless processors<a class="headerlink" href="#stateless-processors" title="Permalink to this headline">¶</a></h1>
-<p>DOCUMENTATION WORK IN PROGRESS</p>
-<table border="1" class="docutils">
-<thead>
-<tr>
-<th>Operator Name</th>
-<th>Method</th>
-<th>TODO</th>
-<th>IMPLEMENTED</th>
-<th>TESTED</th>
-<th>DOCUMENTED</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Branch</td>
-<td>KStream -&gt; KStream[]</td>
-<td></td>
-<td></td>
-<td></td>
-<td>&#9745;</td>
-</tr>
-<tr>
-<td>Filter</td>
-<td>KStream -&gt; KStream</td>
-<td></td>
-<td></td>
-<td></td>
-<td>&#9745;</td>
-</tr>
-<tr>
-<td>Filter</td>
-<td>KTable -&gt; KTable</td>
-<td></td>
-<td></td>
-<td></td>
-<td>&#9745;</td>
-</tr>
-<tr>
-<td>InverseFilter</td>
-<td>KStream -&gt; KStream</td>
-<td></td>
-<td></td>
-<td></td>
-<td>&#9745;</td>
-</tr>
-<tr>
-<td>InverseFilter</td>
-<td>KTable -&gt; KTable</td>
-<td></td>
-<td></td>
-<td></td>
-<td>&#9745;</td>
-</tr>
-<tr>
-<td>FlatMap</td>
-<td>KStream → KStream</td>
-<td></td>
-<td></td>
-<td></td>
-<td>&#9745;</td>
-</tr>
-<tr>
-<td>FlatMapValues</td>
-<td>KStream → KStream</td>
-<td></td>
-<td></td>
-<td></td>
-<td>&#9745;</td>
-</tr>
-<tr>
-<td>Foreach</td>
-<td>KStream → void</td>
-<td></td>
-<td></td>
-<td></td>
-<td>&#9745;</td>
-</tr>
-<tr>
-<td>GroupByKey</td>
-<td>KStream → KGroupedStream</td>
-<td></td>
-<td></td>
-<td></td>
-<td>&#9745;</td>
-</tr>
-<tr>
-<td>GroupBy</td>
-<td>KStream → KGroupedStream</td>
-<td></td>
-<td></td>
-<td></td>
-<td>&#9745;</td>
-</tr>
-<tr>
-<td>GroupBy</td>
-<td>KTable → KGroupedTable</td>
-<td></td>
-<td></td>
-<td></td>
-<td>&#9745;</td>
-</tr>
-<tr>
-<td>Map</td>
-<td>KStream → KStream</td>
-<td></td>
-<td></td>
-<td></td>
-<td>&#9745;</td>
-</tr>
-<tr>
-<td>MapValues</td>
-<td>KStream → KStream</td>
-<td></td>
-<td></td>
-<td></td>
-<td>&#9745;</td>
-</tr>
-<tr>
-<td>MapValues</td>
-<td>KTable → KTable</td>
-<td></td>
-<td></td>
-<td></td>
-<td>&#9745;</td>
-</tr>
-<tr>
-<td>Peek</td>
-<td>KStream → KStream</td>
-<td></td>
-<td></td>
-<td></td>
-<td>&#9745;</td>
-</tr>
-<tr>
-<td>Print</td>
-<td>KStream → void</td>
-<td></td>
-<td></td>
-<td></td>
-<td>&#9745;</td>
-</tr>
-<tr>
-<td>SelectKey</td>
-<td>KStream → KStream</td>
-<td></td>
-<td></td>
-<td></td>
-<td>&#9745;</td>
-</tr>
-<tr>
-<td>Table to Steam</td>
-<td>KTable → KStream</td>
-<td></td>
-<td></td>
-<td></td>
-<td>&#9745;</td>
-</tr>
-</tbody>
-</table></div>
+<p>Stateless transformations do not require state for processing and they do not require a state store associated with the stream processor. Kafka 0.11.0 and later allows you to materialize the result from a stateless IKTable transformation. This allows the result to be queried through interactive queries. To materialize a IKTable, each of the below stateless operations can be augmented with an optional queryableStoreName argument.</p>
+<div class="section" id="branch">
+<h2>Branch<a class="headerlink" href="#branch" title="Permalink to this headline">¶</a></h2>
+<p>Branch (or split) a IKStream based on the supplied predicates into one or more IKStream instances. (details)</p>
+<p>Predicates are evaluated in order. A record is placed to one and only one output stream on the first match: if the n-th predicate evaluates to true, the record is placed to n-th stream. If no predicate matches, the the record is dropped.</p>
+<p>Branching is useful, for example, to route records to different downstream topics.</p>
+<ul class="simple">
+<li><p>IKStream -&gt; IKStream[]</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="n">stream</span> <span class="p">=</span> <span class="p">....</span>
+<span class="kt">var</span> <span class="n">branches</span> <span class="p">=</span> <span class="n">stream</span><span class="p">.</span><span class="n">Branch</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">),</span>
+                <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">),</span>
+                <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">));</span>
+<span class="c1">// branches[0] contains all records whose keys start with &quot;A&quot;</span>
+<span class="c1">// branches[1] contains all records whose keys start with &quot;B&quot;</span>
+<span class="c1">// branches[2] contains all records whose keys start with &quot;C&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="filter">
+<h2>Filter<a class="headerlink" href="#filter" title="Permalink to this headline">¶</a></h2>
+<p>Evaluates a boolean function for each element and retains those for which the function returns true.</p>
+<ul class="simple">
+<li><p>IKStream -&gt; IKStream</p></li>
+<li><p>IKTable -&gt; IKTable</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="n">stream</span> <span class="p">=</span> <span class="p">....</span>
+<span class="n">IKTable</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="n">table</span> <span class="p">=</span>  <span class="p">...</span>
+
+<span class="c1">// A filter that selects  only value which contains &#39;test&#39; string constant</span>
+<span class="n">stream</span><span class="p">.</span><span class="n">Filter</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span>
+<span class="n">table</span><span class="p">.</span><span class="n">Filter</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="inversefilter">
+<h2>InverseFilter<a class="headerlink" href="#inversefilter" title="Permalink to this headline">¶</a></h2>
+<p>Evaluates a boolean function for each element and drops those for which the function returns true.</p>
+<ul class="simple">
+<li><p>IKStream -&gt; IKStream</p></li>
+<li><p>IKTable -&gt; IKTable</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="n">stream</span> <span class="p">=</span> <span class="p">....</span>
+<span class="n">IKTable</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="n">table</span> <span class="p">=</span>  <span class="p">...</span>
+
+<span class="c1">// A inverse filter that selects value which contains not &#39;test&#39; string constant</span>
+<span class="n">stream</span><span class="p">.</span><span class="n">FilterNot</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span>
+<span class="n">table</span><span class="p">.</span><span class="n">FilterNot</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="flatmap">
+<h2>FlatMap<a class="headerlink" href="#flatmap" title="Permalink to this headline">¶</a></h2>
+<p>Takes one record and produces zero, one, or more records. You can modify the record keys and values, including their types.</p>
+<ul class="simple">
+<li><p>IKStream → IKStream</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="n">stream</span> <span class="p">=</span> <span class="p">....</span>
+
+<span class="c1">// Here, we generate two output records for each input record.</span>
+<span class="c1">// We also change the key and value types.</span>
+<span class="c1">// Example: (&quot;KEY1&quot;, &quot;Hello&quot;) -&gt; (&quot;HELLO&quot;, 100), (&quot;HELLO&quot;, 900)</span>
+<span class="n">stream</span>
+    <span class="p">.</span><span class="n">FlatMap</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span>
+    <span class="p">{</span>
+        <span class="n">List</span><span class="p">&lt;</span><span class="n">KeyValuePair</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">long</span><span class="p">&gt;&gt;</span> <span class="n">results</span> <span class="p">=</span> <span class="k">new</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">KeyValuePair</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">long</span><span class="p">&gt;&gt;();</span>
+        <span class="n">results</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">KeyValuePair</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span> <span class="m">100L</span><span class="p">));</span>
+        <span class="n">results</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">KeyValuePair</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span> <span class="m">900L</span><span class="p">));</span>
+        <span class="k">return</span> <span class="n">results</span><span class="p">;</span>
+    <span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="flatmapvalues">
+<h2>FlatMapValues<a class="headerlink" href="#flatmapvalues" title="Permalink to this headline">¶</a></h2>
+<p>Takes one record and produces zero, one, or more records, while retaining the key of the original record. You can modify the record values and the value type.</p>
+<p>flatMapValues is preferable to flatMap because it will not cause data re-partitioning. However, you cannot modify the key or key type like flatMap does.</p>
+<ul class="simple">
+<li><p>IKStream → IKStream</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="n">stream</span> <span class="p">=</span> <span class="p">....</span>
+
+<span class="c1">// Split a word into characters.</span>
+<span class="n">stream</span><span class="p">.</span><span class="n">FlatMapValues</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">v</span><span class="p">.</span><span class="n">ToCharArray</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="foreach">
+<h2>Foreach<a class="headerlink" href="#foreach" title="Permalink to this headline">¶</a></h2>
+<p>Terminal operation. Performs a stateless action on each record.</p>
+<p>You would use foreach to cause side effects based on the input data (similar to peek) and then stop further processing of the input data (unlike peek, which is not a terminal operation).</p>
+<p>Note on processing guarantees: Any side effects of an action (such as writing to external systems) are not trackable by Kafka, which means they will typically not benefit from Kafka’s processing guarantees.</p>
+<ul class="simple">
+<li><p>IKStream → void</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>IKStream&lt;string, string&gt; stream = ....
+
+// Print the contents of the IKStream to the local console
+stream.Foreach((k,v) =&gt; Console.WriteLine($&quot;{k} {v}&quot;))
+</pre></div>
+</div>
+</div>
+<div class="section" id="groupbykey">
+<h2>GroupByKey<a class="headerlink" href="#groupbykey" title="Permalink to this headline">¶</a></h2>
+<p>Groups the records by the existing key.</p>
+<p>Grouping is a prerequisite for aggregating a stream or a table and ensures that data is properly partitioned (“keyed”) for subsequent operations.</p>
+<p>When to set explicit SerDes: Variants of GroupByKey exist to override the configured default SerDes of your application, which you must do if the key and/or value types of the resulting IKGroupedStream do not match the configured default SerDes.</p>
+<p><strong>Note : Not used for moment, waiting statefull implementation</strong></p>
+<ul class="simple">
+<li><p>IKStream → IKGroupedStream</p></li>
+</ul>
+</div>
+<div class="section" id="groupby">
+<h2>GroupBy<a class="headerlink" href="#groupby" title="Permalink to this headline">¶</a></h2>
+<p>Groups the records by a new key, which may be of a different key type. When grouping a table, you may also specify a new value and value type. groupBy is a shorthand for SelectKey(…).GroupByKey().</p>
+<p>Grouping is a prerequisite for aggregating a stream or a table and ensures that data is properly partitioned (“keyed”) for subsequent operations.</p>
+<p>When to set explicit SerDes: Variants of GroupBy exist to override the configured default SerDes of your application, which you must do if the key and/or value types of the resulting IKGroupedStream or IKGroupedTable do not match the configured default SerDes.</p>
+<p><strong>Note : Not used for moment, waiting statefull implementation</strong></p>
+<ul class="simple">
+<li><p>IKStream → IKGroupedStream</p></li>
+<li><p>IKTable → IKGroupedTable</p></li>
+</ul>
+</div>
+<div class="section" id="map">
+<h2>Map<a class="headerlink" href="#map" title="Permalink to this headline">¶</a></h2>
+<p>Takes one record and produces one record. You can modify the record key and value, including their types.</p>
+<ul class="simple">
+<li><p>IKStream → IKStream</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="n">stream</span> <span class="p">=</span> <span class="p">....</span>
+
+<span class="c1">// We create a new record keyvalue, with the value to key and key to value</span>
+<span class="n">stream</span><span class="p">.</span><span class="n">Map</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">KeyValuePair</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span> <span class="n">k</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">()))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="mapvalues">
+<h2>MapValues<a class="headerlink" href="#mapvalues" title="Permalink to this headline">¶</a></h2>
+<p>Takes one record and produces one record, while retaining the key of the original record. You can modify the record value and the value type.</p>
+<p>MapValues is preferable to map because it will not cause data re-partitioning. However, it does not allow you to modify the key or key type like map does.</p>
+<ul class="simple">
+<li><p>IKStream → IKStream</p></li>
+<li><p>IKTable → IKTable</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="n">stream</span> <span class="p">=</span> <span class="p">....</span>
+<span class="n">IKTable</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="n">table</span> <span class="p">=</span> <span class="p">...</span>
+
+<span class="c1">// New value type =&gt; Int32 which is the length of string value</span>
+<span class="n">stream</span><span class="p">.</span><span class="n">MapValues</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span>
+<span class="n">table</span><span class="p">.</span><span class="n">MapValues</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="peek">
+<h2>Peek<a class="headerlink" href="#peek" title="Permalink to this headline">¶</a></h2>
+<p>Performs a stateless action on each record, and returns an unchanged stream.</p>
+<p>You would use peek to cause side effects based on the input data (similar to foreach) and continue processing the input data (unlike foreach, which is a terminal operation). peek returns the input stream as-is; if you need to modify the input stream, use map or mapValues instead.</p>
+<p>Peek is helpful for use cases such as logging or tracking metrics or for debugging and troubleshooting.</p>
+<p>Note on processing guarantees: Any side effects of an action (such as writing to external systems) are not trackable by Kafka, which means they will typically not benefit from Kafka’s processing guarantees.</p>
+<ul class="simple">
+<li><p>IKStream → IKStream</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>IKStream&lt;string, string&gt; stream = ....
+
+stream.Peek((k,v) =&gt; Console.WriteLine($&quot;{k} {v}&quot;))
+</pre></div>
+</div>
+</div>
+<div class="section" id="print">
+<h2>Print<a class="headerlink" href="#print" title="Permalink to this headline">¶</a></h2>
+<p>Terminal operation. Prints the records to Sys Out.</p>
+<p>Calling Print() is the same as calling Foreach((key, value) =&gt; Console.WriteLine($”{k} {v}”))</p>
+<p>Print is mainly for debugging/testing purposes, and it will try to flush on each record print. Hence it should not be used for production usage if performance requirements are concerned.</p>
+<ul class="simple">
+<li><p>IKStream → void</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="n">stream</span> <span class="p">=</span> <span class="p">....</span>
+
+<span class="c1">// New value type =&gt; Int32 which is the lenght of string value</span>
+<span class="n">stream</span><span class="p">.</span><span class="n">Print</span><span class="p">(</span><span class="n">Printed</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;.</span><span class="n">ToOut</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="selectkey">
+<h2>SelectKey<a class="headerlink" href="#selectkey" title="Permalink to this headline">¶</a></h2>
+<p>Assigns a new key – possibly of a new key type – to each record.</p>
+<p>Calling SelectKey(…) is the same as calling Map((key, value) =&gt; …)</p>
+<p>Marks the stream for data re-partitioning: Applying a grouping or a join after selectKey will result in re-partitioning of the records.</p>
+<ul class="simple">
+<li><p>IKStream → IKStream</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="n">stream</span> <span class="p">=</span> <span class="p">....</span>
+
+<span class="c1">// Derive a new record key from the record&#39;s value.</span>
+<span class="n">stream</span><span class="p">.</span><span class="n">SelectKey</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="table-to-steam">
+<h2>Table to Steam<a class="headerlink" href="#table-to-steam" title="Permalink to this headline">¶</a></h2>
+<p>Get the changelog stream of this table.</p>
+<ul class="simple">
+<li><p>IKTable → IKStream</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKTable</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="n">table</span> <span class="p">=</span> <span class="p">....</span>
+
+<span class="c1">// Also, a variant of `ToStream` exists that allows you</span>
+<span class="c1">// to select a new key for the resulting stream.</span>
+<span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="p">=</span> <span class="n">table</span><span class="p">.</span><span class="n">ToStream</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+</div>
 
 
            </div>
@@ -325,7 +397,7 @@
         <a href="statefull-processors.html" class="btn btn-neutral float-right" title="Statefull processors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="stream-configuration.html" class="btn btn-neutral float-left" title="Stream configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="stream-configuration.html" class="btn btn-neutral float-left" title="Configuring a Stream Application" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

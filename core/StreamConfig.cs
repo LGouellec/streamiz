@@ -32,6 +32,8 @@ namespace Streamiz.Kafka.Net
     /// </summary>
     public interface IStreamConfig : ICloneable<IStreamConfig>
     {
+        #region AddConfig
+
         /// <summary>
         /// Add keyvalue configuration for producer, consumer and admin client.
         /// [WARNING] : Maybe will change
@@ -63,6 +65,8 @@ namespace Streamiz.Kafka.Net
         /// <param name="key">New key</param>
         /// <param name="value">New value</param>
         void AddProducerConfig(string key, string value);
+
+        #endregion
 
         #region Methods 
 
@@ -167,6 +171,11 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         ProcessingGuarantee Guarantee { get; set; }
 
+        /// <summary>
+        /// Initial list of brokers as a CSV list of broker host or host:port.
+        /// </summary>
+        string BootstrapServers {get; set;}
+
         #endregion
     }
 
@@ -249,7 +258,6 @@ namespace Streamiz.Kafka.Net
         #endregion
 
         #region Stream config constants
-
         internal static readonly string applicatonIdCst = "application.id";
         internal static readonly string clientIdCst = "client.id";
         internal static readonly string numStreamThreadsCst = "num.stream.threads";
@@ -570,8 +578,7 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
-        /// Enable OpenSSL's builtin broker (server) certificate verification. This verification
-        /// can be extended by the application by implementing a certificate_verify_cb. default:
+        /// Enable OpenSSL's builtin broker (server) certificate verification. default:
         /// true importance: low
         /// </summary>
         public bool? EnableSslCertificateVerification
@@ -865,23 +872,6 @@ namespace Streamiz.Kafka.Net
                 _consumerConfig.Acks = value;
                 _producerConfig.Acks = value;
                 _adminClientConfig.Acks = value;
-            }
-        }
-
-        /// <summary>
-        /// Initial list of brokers as a CSV list of broker host or host:port. The application
-        /// may also use `rd_kafka_brokers_add()` to add brokers during runtime. default:
-        /// '' importance: high
-        /// </summary>
-        public string BootstrapServers
-        {
-            get => _config.BootstrapServers;
-            set
-            {
-                _config.BootstrapServers = value;
-                _consumerConfig.BootstrapServers = value;
-                _producerConfig.BootstrapServers = value;
-                _adminClientConfig.BootstrapServers = value;
             }
         }
 
@@ -1255,8 +1245,7 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
-        /// librdkafka statistics emit interval. The application also needs to register a
-        /// stats callback using `rd_kafka_conf_set_stats_cb()`. The granularity is 1000ms.
+        /// librdkafka statistics emit interval. The granularity is 1000ms.
         /// A value of 0 disables statistics. default: 0 importance: high
         /// </summary>
         public int? StatisticsIntervalMs
@@ -1806,6 +1795,22 @@ namespace Streamiz.Kafka.Net
         }
         
         /// <summary>
+        /// Initial list of brokers as a CSV list of broker host or host:port. default:
+        /// '' importance: high
+        /// </summary>
+        public string BootstrapServers
+        {
+            get => _config.BootstrapServers;
+            set
+            {
+                _config.BootstrapServers = value;
+                _consumerConfig.BootstrapServers = value;
+                _producerConfig.BootstrapServers = value;
+                _adminClientConfig.BootstrapServers = value;
+            }
+        }
+
+        /// <summary>
         /// The processing guarantee that should be used. Possible values are <see cref="ProcessingGuarantee.AT_LEAST_ONCE"/> (default) and <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>
         /// Note that exactly-once processing requires a cluster of at least three brokers by default what is the recommended setting for production; for development you can change this, by adjusting broker setting
         /// <code>transaction.state.log.replication.factor</code> and <code>transaction.state.log.min.isr</code>.
@@ -1821,6 +1826,7 @@ namespace Streamiz.Kafka.Net
                     IsolationLevel = Confluent.Kafka.IsolationLevel.ReadCommitted;
                     EnableIdempotence = true;
                     MaxInFlight = 5;
+                    MessageSendMaxRetries = Int32.MaxValue;
                     CommitIntervalMs = EOS_DEFAULT_COMMIT_INTERVAL_MS;
                 }
                 else if (value == ProcessingGuarantee.AT_LEAST_ONCE)

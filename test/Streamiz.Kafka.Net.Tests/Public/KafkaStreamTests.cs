@@ -93,6 +93,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var source = new CancellationTokenSource();
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test";
+            config.BootstrapServers = "127.0.0.1";
 
             var builder = new StreamBuilder();
             builder.Stream<string, string>("topic").To("topic2");
@@ -115,6 +116,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test";
+            config.BootstrapServers = "127.0.0.1";
 
             var builder = new StreamBuilder();
             builder.Stream<string, string>("topic").To("topic2");
@@ -149,6 +151,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test";
+config.BootstrapServers = "127.0.0.1";
 
             var builder = new StreamBuilder();
             builder.Table("topic", InMemory<string, string>.As("store"));
@@ -191,6 +194,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test";
+            config.BootstrapServers = "127.0.0.1";
 
             var builder = new StreamBuilder();
             builder.Table("topic", InMemory<string, string>.As("store"));
@@ -231,7 +235,9 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test";
+            config.BootstrapServers = "127.0.0.1";
             config.PollMs = 10;
+            
             var supplier = new SyncKafkaSupplier();
             var producer = supplier.GetProducer(config.ToProducerConfig());
 
@@ -284,6 +290,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test";
+config.BootstrapServers = "127.0.0.1";
 
             var builder = new StreamBuilder();
             builder.Table("topic", InMemory<string, string>.As("store"));

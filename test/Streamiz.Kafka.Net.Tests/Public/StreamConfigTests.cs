@@ -17,6 +17,13 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.Throws<StreamConfigException>(() => stream.ToConsumerConfig());
         }
 
+        public void StreamConfigurationIsNotCorrect()
+        {
+            var config = new StreamConfig();
+            var builder = new StreamBuilder();
+            Assert.Throws<StreamConfigException>(() => new KafkaStream(builder.Build(), config));
+        }
+
         [Test]
         public void StreamAddCorrectConfig()
         {

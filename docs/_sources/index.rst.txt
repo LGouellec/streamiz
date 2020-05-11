@@ -1,4 +1,4 @@
-Welcome to Streamiz.Kafka.Net
+Welcome to Streamiz.Kafka.Net 🚀
 =============================================
 
 .. image:: assets/logo-kafka-stream-net.png
@@ -6,7 +6,7 @@ Welcome to Streamiz.Kafka.Net
    :align: center
 
 
-**Streamiz.Kafka.Net** is .NET stream processing library for Apache Kafka (TM).
+**Streamiz.Kafka.Net** is a .NET stream processing library for Apache Kafka (TM).
 
 .. note::
    The source code is available on `Github <https://github.com/LGouellec/kafka-streams-dotnet>`_. 
@@ -22,6 +22,8 @@ So you can found documentation here :
 
 * `Confluent Kafka Streams <https://docs.confluent.io/current/streams/index.html>`_
 * `Apache Kafka Streams <https://kafka.apache.org/documentation/streams>`_
+
+Streamiz Kafka .Net use `Confluent Kafka .Net libary <https://github.com/confluentinc/confluent-kafka-dotnet>`_ to interact with Kafka Cluster.
 
 Starting from scratch
 =============================================
@@ -80,6 +82,7 @@ Feel free to ping me: `@LGouellec <https://twitter.com/LGouellec>`_
    :hidden:
    :caption: Streamiz.Kafka.Net
 
+   overview
    stream-configuration
    stateless-processors
    statefull-processors

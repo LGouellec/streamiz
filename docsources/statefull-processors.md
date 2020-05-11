@@ -1,6 +1,9 @@
 # Statefull processors
 
+
 IMPLEMENTATION WORK IN PROGRESS
+
+**To follow the progress, you can star [the Github project](https://github.com/LGouellec/kafka-streams-dotnet) and watch it !** 
 
 |Operator Name|Method|TODO|IMPLEMENTED|TESTED|DOCUMENTED|
 |---|---|---|---|---|---|

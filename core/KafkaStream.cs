@@ -273,6 +273,10 @@ namespace Streamiz.Kafka.Net
             this.configuration = configuration;
             this.kafkaSupplier = kafkaSupplier;
 
+            // check if ApplicationId & BootstrapServers has been set
+            if(string.IsNullOrEmpty(configuration.ApplicationId) || string.IsNullOrEmpty(configuration.BootstrapServers))
+                throw new StreamConfigException($"Stream configuration is not correct. Please set ApplicationId and BootstrapServers as minimal.");
+
             var processID = Guid.NewGuid();
             clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{this.configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;
             logPrefix = $"stream-application[{configuration.ApplicationId}] ";
