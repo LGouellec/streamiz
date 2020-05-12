@@ -2,18 +2,14 @@
 using Confluent.Kafka.Admin;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Streamiz.Kafka.Net.Mock.Kafka
 {
-    internal class MockAdminClient : IAdminClient
+    internal sealed class MockAdminClient : IAdminClient
     {
-        private MockCluster cluster;
-
         public MockAdminClient(MockCluster cluster, string name)
         {
-            this.cluster = cluster;
             Name = name;
         }
 

@@ -20,8 +20,6 @@ namespace Streamiz.Kafka.Net.Crosscutting
         private static bool configure = false;
         private static readonly string LOG_CONFIG_FILE = @"log4net.config";
 
-        private static readonly log4net.ILog _log = GetLogger(typeof(Logger));
-
         /// <summary>
         /// Get logger from type class.
         /// By default, he search configuration file in root folder and filename 'log4net.config'.
@@ -69,18 +67,15 @@ namespace Streamiz.Kafka.Net.Crosscutting
 
         private static void SetLog4NetConfiguration(string configFile)
         {
-            if (!configure)
+            if (!configure && File.Exists(configFile))
             {
-                if (File.Exists(configFile))
-                {
-                    XmlDocument log4netConfig = new XmlDocument();
-                    log4netConfig.Load(File.OpenRead(configFile));
+                XmlDocument log4netConfig = new XmlDocument();
+                log4netConfig.Load(File.OpenRead(configFile));
 
-                    var repo = LogManager.CreateRepository(Assembly.GetEntryAssembly(), typeof(log4net.Repository.Hierarchy.Hierarchy));
+                var repo = LogManager.CreateRepository(Assembly.GetEntryAssembly(), typeof(log4net.Repository.Hierarchy.Hierarchy));
 
-                    log4net.Config.XmlConfigurator.Configure(repo, log4netConfig["log4net"]);
-                    configure = true;
-                }
+                log4net.Config.XmlConfigurator.Configure(repo, log4netConfig["log4net"]);
+                configure = true;
             }
         }
     }

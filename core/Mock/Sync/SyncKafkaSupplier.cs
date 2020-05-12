@@ -1,7 +1,5 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net.Kafka;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Streamiz.Kafka.Net.Mock.Sync
 {
@@ -25,7 +23,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public IProducer<byte[], byte[]> GetProducer(ProducerConfig config)
         {
-            if(producer == null)
+            if (producer == null)
                 producer = new SyncProducer(config);
             return producer;
         }

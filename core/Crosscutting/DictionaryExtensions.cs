@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Crosscutting
 {
@@ -18,7 +16,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
         /// <param name="key">New or updated key</param>
         /// <param name="value">Value</param>
         /// <returns>Return true if the key|value was added, false if updated</returns>
-        public static bool AddOrUpdate<K,V>(this IDictionary<K,V> map, K key, V value)
+        public static bool AddOrUpdate<K, V>(this IDictionary<K, V> map, K key, V value)
         {
             if (map.ContainsKey(key))
             {

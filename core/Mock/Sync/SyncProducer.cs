@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Transactions;
 
 namespace Streamiz.Kafka.Net.Mock.Sync
 {
@@ -33,7 +32,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         private readonly static object _lock = new object();
         private readonly Dictionary<string, List<Message<byte[], byte[]>>> topics = new Dictionary<string, List<Message<byte[], byte[]>>>();
         private SyncTransaction transaction = null;
-        private ProducerConfig config;
+        private readonly ProducerConfig config;
 
         public SyncProducer(ProducerConfig config)
         {
@@ -104,7 +103,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         {
             CreateTopic(topic);
 
-            this.topics[topic].Add(message);
+            topics[topic].Add(message);
 
             DeliveryReport<byte[], byte[]> r = new DeliveryReport<byte[], byte[]>();
 
@@ -122,13 +121,13 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public Task<DeliveryResult<byte[], byte[]>> ProduceAsync(string topic, Message<byte[], byte[]> message, CancellationToken cancellationToken = default)
         {
-            this.Produce(topic, message);
+            Produce(topic, message);
             return Task.FromResult(new DeliveryResult<byte[], byte[]>() { Message = message, Status = PersistenceStatus.Persisted });
         }
 
         public Task<DeliveryResult<byte[], byte[]>> ProduceAsync(TopicPartition topicPartition, Message<byte[], byte[]> message, CancellationToken cancellationToken = default)
         {
-            this.Produce(topicPartition.Topic, message);
+            Produce(topicPartition.Topic, message);
             return Task.FromResult(new DeliveryResult<byte[], byte[]>() { Message = message, Status = PersistenceStatus.Persisted });
         }
 

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Errors
 {
@@ -13,7 +11,7 @@ namespace Streamiz.Kafka.Net.Errors
         /// Constructor with exception message
         /// </summary>
         /// <param name="message">Message</param>
-        public StreamConfigException(string message) 
+        public StreamConfigException(string message)
             : base(message)
         {
         }

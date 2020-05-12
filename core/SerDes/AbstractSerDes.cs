@@ -14,7 +14,7 @@ namespace Streamiz.Kafka.Net.SerDes
         /// </summary>
         /// <param name="data">serialized bytes; may be null; implementations are recommended to handle null by returning a value or null rather than throwing an exception.</param>
         /// <returns>deserialized object data; may be null</returns>
-        public object DeserializeObject(byte[] data) => this.Deserialize(data);
+        public object DeserializeObject(byte[] data) => Deserialize(data);
 
         /// <summary>
         /// Convert <code>data</code> into a byte array.
@@ -24,9 +24,9 @@ namespace Streamiz.Kafka.Net.SerDes
         public byte[] SerializeObject(object data)
         {
             if (data is T)
-                return this.Serialize((T)data);
+                return Serialize((T)data);
             else
-                throw new InvalidOperationException($"Impossible to serialize data type {data.GetType().Name} with {this.GetType().Name}<{typeof(T).Name}>");
+                throw new InvalidOperationException($"Impossible to serialize data type {data.GetType().Name} with {GetType().Name}<{typeof(T).Name}>");
         }
 
         /// <summary>

@@ -1,17 +1,17 @@
 ﻿using Confluent.Kafka;
+using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
-using log4net;
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using Streamiz.Kafka.Net.State.Internal;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 [assembly: InternalsVisibleTo("Streamiz.Kafka.Net.Tests, PublicKey=00240000048000009400000006020000002400005253413100040000010001000d9d4a8e90a3b987f68f047ec499e5a3405b46fcad30f52abadefca93b5ebce094d05976950b38cc7f0855f600047db0a351ede5e0b24b9d5f1de6c59ab55dee145da5d13bb86f7521b918c35c71ca5642fc46ba9b04d4900725a2d4813639ff47898e1b762ba4ccd5838e2dd1e1664bd72bf677d872c87749948b1174bd91ad")]
 
@@ -108,7 +108,7 @@ namespace Streamiz.Kafka.Net
         /// - Of special importance: If the global stream thread dies, or all stream threads die (or both) then
         ///   the instance will be in the ERROR state. The user will need to close it.
         /// </summary>
-        public class State
+        public class State : IEquatable<State>
         {
             /// <summary>
             /// Static CREATED State of a <see cref="KafkaStream"/> instance.
@@ -152,18 +152,18 @@ namespace Streamiz.Kafka.Net
 
             private State(params int[] validTransitions)
             {
-                this.Transitions.AddRange(validTransitions);
+                Transitions.AddRange(validTransitions);
             }
 
             private State Order(int ordinal)
             {
-                this.Ordinal = ordinal;
+                Ordinal = ordinal;
                 return this;
             }
 
             private State Named(string name)
             {
-                this.Name = name;
+                Name = name;
                 return this;
             }
 
@@ -174,7 +174,7 @@ namespace Streamiz.Kafka.Net
             public bool IsRunning()
 
             {
-                return this.Equals(RUNNING) || this.Equals(REBALANCING);
+                return Equals(RUNNING) || Equals(REBALANCING);
             }
 
             internal bool IsValidTransition(State newState)
@@ -205,7 +205,7 @@ namespace Streamiz.Kafka.Net
             /// <returns></returns>
             public override bool Equals(object obj)
             {
-                return obj is State && ((State)obj).Ordinal.Equals(this.Ordinal);
+                return obj is State && Equals((State)obj);
             }
 
             /// <summary>
@@ -214,7 +214,7 @@ namespace Streamiz.Kafka.Net
             /// <returns></returns>
             public override int GetHashCode()
             {
-                return this.Ordinal.GetHashCode();
+                return Ordinal.GetHashCode();
             }
 
             /// <summary>
@@ -223,18 +223,22 @@ namespace Streamiz.Kafka.Net
             /// <returns></returns>
             public override string ToString()
             {
-                return $"{this.Name}";
+                return $"{Name}";
             }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="other"></param>
+            /// <returns></returns>
+            public bool Equals(State other) => other.Ordinal.Equals(Ordinal);
         }
 
         #endregion
 
         private readonly Topology topology;
-        private readonly IStreamConfig configuration;
         private readonly IKafkaSupplier kafkaSupplier;
         private readonly IThread[] threads;
-        private readonly ProcessorTopology processorTopology;
-        private readonly IAdminClient adminClient;
         private readonly string clientId;
         private readonly ILog logger = Logger.GetLogger(typeof(KafkaStream));
         private readonly string logPrefix = "";
@@ -270,15 +274,14 @@ namespace Streamiz.Kafka.Net
         public KafkaStream(Topology topology, IStreamConfig configuration, IKafkaSupplier kafkaSupplier)
         {
             this.topology = topology;
-            this.configuration = configuration;
             this.kafkaSupplier = kafkaSupplier;
 
             // check if ApplicationId & BootstrapServers has been set
-            if(string.IsNullOrEmpty(configuration.ApplicationId) || string.IsNullOrEmpty(configuration.BootstrapServers))
+            if (string.IsNullOrEmpty(configuration.ApplicationId) || string.IsNullOrEmpty(configuration.BootstrapServers))
                 throw new StreamConfigException($"Stream configuration is not correct. Please set ApplicationId and BootstrapServers as minimal.");
 
             var processID = Guid.NewGuid();
-            clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{this.configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;
+            clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;
             logPrefix = $"stream-application[{configuration.ApplicationId}] ";
 
             logger.Info($"{logPrefix} Start creation of the stream application with this configuration: {configuration}");
@@ -287,37 +290,37 @@ namespace Streamiz.Kafka.Net
             topology.Builder.RewriteTopology(configuration);
 
             // sanity check
-            this.processorTopology = topology.Builder.BuildTopology();
+            var processorTopology = topology.Builder.BuildTopology();
 
-            this.threads = new IThread[this.configuration.NumStreamThreads];
+            threads = new IThread[configuration.NumStreamThreads];
             var threadState = new Dictionary<long, Processors.ThreadState>();
 
             List<StreamThreadStateStoreProvider> stateStoreProviders = new List<StreamThreadStateStoreProvider>();
-            for (int i = 0; i < this.configuration.NumStreamThreads; ++i)
+            for (int i = 0; i < configuration.NumStreamThreads; ++i)
             {
-                var threadId = $"{this.configuration.ApplicationId.ToLower()}-stream-thread-{i}";
+                var threadId = $"{configuration.ApplicationId.ToLower()}-stream-thread-{i}";
 
-                adminClient = this.kafkaSupplier.GetAdmin(configuration.ToAdminConfig(StreamThread.GetSharedAdminClientId(clientId)));
+                var adminClient = this.kafkaSupplier.GetAdmin(configuration.ToAdminConfig(StreamThread.GetSharedAdminClientId(clientId)));
 
-                this.threads[i] = StreamThread.Create(
+                threads[i] = StreamThread.Create(
                     threadId,
                     clientId,
                     this.topology.Builder,
                     configuration,
                     this.kafkaSupplier,
-                    adminClient, 
+                    adminClient,
                     i);
 
-                threadState.Add(this.threads[i].Id, this.threads[i].State);
+                threadState.Add(threads[i].Id, threads[i].State);
 
-                stateStoreProviders.Add(new StreamThreadStateStoreProvider(this.threads[i], this.topology.Builder));
+                stateStoreProviders.Add(new StreamThreadStateStoreProvider(threads[i], this.topology.Builder));
             }
-            
+
             var manager = new StreamStateManager(this, threadState);
             foreach (var t in threads)
                 t.StateChanged += manager.OnChange;
 
-            this.queryableStoreProvider = new QueryableStoreProvider(stateStoreProviders);
+            queryableStoreProvider = new QueryableStoreProvider(stateStoreProviders);
 
             StreamState = State.CREATED;
         }
@@ -372,11 +375,11 @@ namespace Streamiz.Kafka.Net
         /// <returns>A facade wrapping the local <see cref="IStateStore"/> instances</returns>
         /// <exception cref="InvalidStateStoreException ">if Kafka Streams is (re-)initializing or a store with <code>storeName</code> } and
         /// <code>queryableStoreType</code> doesn't exist </exception>
-        public T Store<T, K, V>(StoreQueryParameters<T, K, V> storeQueryParameters) 
+        public T Store<T, K, V>(StoreQueryParameters<T, K, V> storeQueryParameters)
             where T : class
         {
-            this.ValidateIsRunning();
-            return this.queryableStoreProvider.GetStore(storeQueryParameters);
+            ValidateIsRunning();
+            return queryableStoreProvider.GetStore(storeQueryParameters);
         }
 
         #region Privates
@@ -390,7 +393,8 @@ namespace Streamiz.Kafka.Net
         {
             State oldState;
 
-            lock(stateLock) {
+            lock (stateLock)
+            {
                 oldState = StreamState;
 
                 if (StreamState == State.PENDING_SHUTDOWN && newState != State.NOT_RUNNING)
@@ -443,7 +447,7 @@ namespace Streamiz.Kafka.Net
                 throw new IllegalStateException($"KafkaStreams is not running. State is {StreamState}.");
             }
         }
-        
+
         #endregion
     }
 }

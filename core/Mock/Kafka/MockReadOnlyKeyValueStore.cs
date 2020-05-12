@@ -1,10 +1,8 @@
 ﻿using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.Internal;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Mock.Kafka
 {
@@ -26,13 +24,13 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         private IEnumerable<ReadOnlyKeyValueStore<K, V>> GetAllStores()
         {
             var readonlystores = stores
-                .Where(s => s is ReadOnlyKeyValueStore<K, V>)
-                .Select(s => s as ReadOnlyKeyValueStore<K, V>).ToList();
+                .OfType<ReadOnlyKeyValueStore<K, V>>()
+                .ToList();
 
             var timestamp = stores
-                .Where(s => s is TimestampedKeyValueStore<K, V>)
-                .Select(s => new ReadOnlyKeyValueStoreFacade<K, V>(s as TimestampedKeyValueStore<K, V>));
-           
+                .OfType<TimestampedKeyValueStore<K, V>>()
+                .Select(s => new ReadOnlyKeyValueStoreFacade<K, V>(s));
+
             readonlystores.AddRange(timestamp);
             return readonlystores;
         }
@@ -43,24 +41,24 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public V Get(K key)
         {
-            IEnumerable<ReadOnlyKeyValueStore<K, V>> stores = this.GetAllStores();
-            var item = stores.FirstOrDefault(x => x.Get(key) != null);
+            IEnumerable<ReadOnlyKeyValueStore<K, V>> allStores = GetAllStores();
+            var item = allStores.FirstOrDefault(x => x.Get(key) != null);
             return item != null ? item.Get(key) : default;
         }
 
         public void Init(ProcessorContext context, IStateStore root)
         {
-            
+            context.Register(root, null);
         }
 
         public void Flush()
         {
-            
+            // NOTHING
         }
 
         public void Close()
         {
-            
+            // NOTHING
         }
     }
 }

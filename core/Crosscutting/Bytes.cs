@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
     /// <summary>
     /// Utility class that handles immutable byte arrays.
     /// </summary>
-    public class Bytes : IEquatable<Bytes>
+    public sealed class Bytes : IEquatable<Bytes>
     {
         /// <summary>
         /// Get the data from the Bytes.
@@ -49,11 +49,11 @@ namespace Streamiz.Kafka.Net.Crosscutting
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="other"></param>
+        /// <param name="obj"></param>
         /// <returns></returns>
-        public override bool Equals(object other)
+        public override bool Equals(object obj)
         {
-            return other is Bytes && Equals((Bytes)other);
+            return obj is Bytes && Equals((Bytes)obj);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
         /// <returns></returns>
         public bool Equals(Bytes other)
         {
-            return this.Get.SequenceEqual(((Bytes)other).Get);
+            return this.Get.SequenceEqual(other.Get);
         }
     }
 }

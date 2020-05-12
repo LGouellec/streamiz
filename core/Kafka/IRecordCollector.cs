@@ -1,9 +1,5 @@
 ﻿using Confluent.Kafka;
-using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Kafka
 {

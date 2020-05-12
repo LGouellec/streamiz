@@ -3,7 +3,6 @@ using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 
 namespace Streamiz.Kafka.Net.Mock.Kafka
@@ -61,7 +60,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void Close()
         {
-            cluster.CloseConsumer(this.Name);
+            cluster.CloseConsumer(Name);
             Assignment.Clear();
             Subscription.Clear();
         }
@@ -77,11 +76,11 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         }
 
         public void Commit(ConsumeResult<byte[], byte[]> result)
-            => this.Commit(new List<TopicPartitionOffset> { new TopicPartitionOffset(result.TopicPartition, result.Offset) });
+            => Commit(new List<TopicPartitionOffset> { new TopicPartitionOffset(result.TopicPartition, result.Offset) });
 
         public List<TopicPartitionOffset> Committed(TimeSpan timeout)
         {
-            return cluster.Comitted(this);        
+            return cluster.Comitted(this);
         }
 
         public List<TopicPartitionOffset> Committed(IEnumerable<TopicPartition> partitions, TimeSpan timeout)
@@ -136,7 +135,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         }
 
         public void StoreOffset(TopicPartitionOffset offset)
-        { 
+        {
             // TODO
             throw new NotImplementedException();
         }
@@ -176,7 +175,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public ConsumeResult<byte[], byte[]> Consume(CancellationToken cancellationToken)
         {
-            if (this.Subscription.Count == 0)
+            if (Subscription.Count == 0)
                 throw new StreamsException("No subscription have been done !");
 
             return cluster.Consume(this, cancellationToken);
@@ -184,9 +183,9 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public ConsumeResult<byte[], byte[]> Consume(TimeSpan timeout)
         {
-            if (this.Subscription.Count == 0)
+            if (Subscription.Count == 0)
                 throw new StreamsException("No subscription have been done !");
-            
+
             return cluster.Consume(this, timeout);
         }
 
@@ -194,7 +193,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         internal void SetRebalanceListener(IConsumerRebalanceListener rebalanceListener)
         {
-            Listener = new MockWrappedConsumerRebalanceListener(rebalanceListener, this);   
+            Listener = new MockWrappedConsumerRebalanceListener(rebalanceListener, this);
         }
 
         public void PartitionsAssigned(List<TopicPartition> partitions)

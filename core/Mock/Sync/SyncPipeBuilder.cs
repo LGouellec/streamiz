@@ -9,8 +9,8 @@ namespace Streamiz.Kafka.Net.Mock.Sync
     internal class SyncPipeBuilder : IPipeBuilder
     {
         private readonly StreamTask task;
-        private IKafkaSupplier kafkaSupplier;
-        private SyncProducer mockProducer;
+        private readonly IKafkaSupplier kafkaSupplier;
+        private readonly SyncProducer mockProducer;
 
         public SyncPipeBuilder(StreamTask task, IKafkaSupplier kafkaSupplier)
         {

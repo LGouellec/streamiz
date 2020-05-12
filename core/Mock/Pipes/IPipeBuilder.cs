@@ -1,8 +1,4 @@
-﻿using Confluent.Kafka;
-using Streamiz.Kafka.Net.Kafka;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 using System.Threading;
 
 namespace Streamiz.Kafka.Net.Mock.Pipes

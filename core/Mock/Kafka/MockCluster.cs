@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using static Streamiz.Kafka.Net.Mock.Kafka.MockConsumerInformation;
 
@@ -23,13 +22,13 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             public override bool Equals(object obj)
             {
                 return obj is MockTopicPartitionOffset &&
-                    ((MockTopicPartitionOffset)obj).Topic.Equals(this.Topic) &&
-                    ((MockTopicPartitionOffset)obj).Partition.Equals(this.Partition);
+                    ((MockTopicPartitionOffset)obj).Topic.Equals(Topic) &&
+                    ((MockTopicPartitionOffset)obj).Partition.Equals(Partition);
             }
 
             public override int GetHashCode()
             {
-                return this.Topic.GetHashCode() & this.Partition.GetHashCode() ^ 33333;
+                return Topic.GetHashCode() & Partition.GetHashCode() ^ 33333;
             }
         }
 
@@ -44,23 +43,23 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public override int GetHashCode()
         {
-            return this.Name.GetHashCode();
+            return Name.GetHashCode();
         }
 
         public override bool Equals(object obj)
         {
-            return obj is MockConsumerInformation && ((MockConsumerInformation)obj).Name.Equals(this.Name);
+            return obj is MockConsumerInformation && ((MockConsumerInformation)obj).Name.Equals(Name);
         }
     }
 
     internal class MockCluster
     {
         private readonly object rebalanceLock = new object();
-        private int DEFAULT_NUMBER_PARTITIONS;
+        private readonly int DEFAULT_NUMBER_PARTITIONS;
 
         #region Ctor
 
-        public MockCluster(int defaultNumberPartitions = 1) 
+        public MockCluster(int defaultNumberPartitions = 1)
         {
             DEFAULT_NUMBER_PARTITIONS = defaultNumberPartitions;
         }
@@ -80,7 +79,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         #region Topic Gesture
 
-        private bool CreateTopic(string topic) => CreateTopic(topic, DEFAULT_NUMBER_PARTITIONS);
+        private void CreateTopic(string topic) => CreateTopic(topic, DEFAULT_NUMBER_PARTITIONS);
 
         private bool CreateTopic(string topic, int partitions)
         {
@@ -95,14 +94,14 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         internal void CloseConsumer(string name)
         {
-            this.Unsubscribe(this.consumers[name].Consumer);
+            Unsubscribe(consumers[name].Consumer);
             consumers.Remove(name);
         }
 
         internal void SubscribeTopic(MockConsumer consumer, IEnumerable<string> topics)
         {
             foreach (var t in topics)
-                this.CreateTopic(t);
+                CreateTopic(t);
 
             if (!consumers.ContainsKey(consumer.Name))
             {
@@ -132,7 +131,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             if (consumers.ContainsKey(mockConsumer.Name))
             {
                 var c = consumers[mockConsumer.Name];
-                this.Unassign(mockConsumer);
+                Unassign(mockConsumer);
                 c.Topics.Clear();
             }
         }
@@ -145,7 +144,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         {
             var c = consumers[mockConsumer.Name];
             List<TopicPartitionOffset> list = new List<TopicPartitionOffset>();
-            foreach(var p in c.Partitions)
+            foreach (var p in c.Partitions)
             {
                 var offset = c.TopicPartitionsOffset.FirstOrDefault(t => t.Topic.Equals(p.Topic) && t.Partition.Equals(p.Partition));
                 if (offset != null)
@@ -172,8 +171,8 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             foreach (var group in consumerGroups.Keys)
             {
                 var map = new Dictionary<string, List<MockConsumerInformation>>();
-                var consumers = consumerGroups[group];
-                foreach (var c in consumers)
+                var cons = consumerGroups[group];
+                foreach (var c in cons)
                 {
                     var consumer = this.consumers[c];
                     consumer.Topics.ForEach((t) =>
@@ -189,7 +188,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                 {
                     if (kv.Value.Any(c => !c.Assigned))
                     {
-                        var topicPartitionNumber = this.topics[kv.Key].PartitionNumber;
+                        var topicPartitionNumber = topics[kv.Key].PartitionNumber;
                         int numbPartEach = topicPartitionNumber / kv.Value.Count;
                         int modulo = topicPartitionNumber % kv.Value.Count;
 
@@ -236,7 +235,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         internal void Assign(MockConsumer mockConsumer, IEnumerable<TopicPartition> topicPartitions)
         {
             foreach (var t in topicPartitions)
-                this.CreateTopic(t.Topic);
+                CreateTopic(t.Topic);
 
             if (consumers.ContainsKey(mockConsumer.Name))
             {
@@ -305,7 +304,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                     var otherConsumers = consumerGroups[mockConsumer.MemberId].Where(i => consumers.ContainsKey(i)).Select(i => consumers[i]).Where(i => !i.Name.Equals(mockConsumer.Name)).ToList();
                     if (otherConsumers.Count > 0)
                     {
-                        int partEach = (int)(c.Partitions.Count / otherConsumers.Count);
+                        int partEach = c.Partitions.Count / otherConsumers.Count;
                         int modulo = c.Partitions.Count % otherConsumers.Count;
 
                         int j = 0;
@@ -387,7 +386,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         internal ConsumeResult<byte[], byte[]> Consume(MockConsumer mockConsumer, TimeSpan timeout)
         {
             foreach (var t in mockConsumer.Subscription)
-                this.CreateTopic(t);
+                CreateTopic(t);
 
             DateTime dt = DateTime.Now;
             ConsumeResult<byte[], byte[]> result = null;
@@ -395,7 +394,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             {
                 var c = consumers[mockConsumer.Name];
                 if (!c.Assigned)
-                    lock(rebalanceLock)
+                    lock (rebalanceLock)
                         NeedRebalance();
 
                 lock (rebalanceLock)
@@ -442,9 +441,8 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             CreateTopic(topic);
 
             // TODO : implement hashpartitionumber
-            //var part = Math.Abs(Encoding.UTF8.GetString(message.Key).GetHashCode()) % this.topics[topic].PartitionNumber;
-            var i = RandomNumberGenerator.GetInt32(0, this.topics[topic].PartitionNumber);
-            this.topics[topic].AddMessage(message.Key, message.Value, i);
+            var i = RandomNumberGenerator.GetInt32(0, topics[topic].PartitionNumber);
+            topics[topic].AddMessage(message.Key, message.Value, i);
 
             r.Message = message;
             r.Partition = i;
@@ -460,15 +458,15 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             DeliveryReport<byte[], byte[]> r = new DeliveryReport<byte[], byte[]>();
             r.Status = PersistenceStatus.NotPersisted;
             CreateTopic(topicPartition.Topic);
-            if (this.topics[topicPartition.Topic].PartitionNumber > topicPartition.Partition)
+            if (topics[topicPartition.Topic].PartitionNumber > topicPartition.Partition)
             {
-                this.topics[topicPartition.Topic].AddMessage(message.Key, message.Value, topicPartition.Partition);
+                topics[topicPartition.Topic].AddMessage(message.Key, message.Value, topicPartition.Partition);
                 r.Status = PersistenceStatus.Persisted;
             }
             else
             {
-                this.topics[topicPartition.Topic].CreateNewPartitions(topicPartition.Partition);
-                this.topics[topicPartition.Topic].AddMessage(message.Key, message.Value, topicPartition.Partition);
+                topics[topicPartition.Topic].CreateNewPartitions(topicPartition.Partition);
+                topics[topicPartition.Topic].AddMessage(message.Key, message.Value, topicPartition.Partition);
                 r.Status = PersistenceStatus.Persisted;
             }
             r.Message = message;

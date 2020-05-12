@@ -7,7 +7,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 {
     internal class KafkaPipeBuilder : IPipeBuilder
     {
-        private IKafkaSupplier kafkaSupplier;
+        private readonly IKafkaSupplier kafkaSupplier;
 
         public KafkaPipeBuilder(IKafkaSupplier kafkaSupplier)
         {
