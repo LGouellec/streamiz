@@ -18,6 +18,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public IConsumer<byte[], byte[]> Consumer { get; internal set; }
         public IEnumerable<TaskId> ActiveTaskIds => ActiveTasks.Select(a => a.Id);
+        public IEnumerable<TaskId> RevokeTaskIds => RevokedTasks.Select(a => a.Id);
         public bool RebalanceInProgress { get; internal set; }
 
         public TaskManager(TaskCreator taskCreator, IAdminClient adminClient)

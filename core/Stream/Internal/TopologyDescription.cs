@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
@@ -21,6 +22,16 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             if (!SubTopologies.Any(s => s.Id.Equals(sub.Id)))
                 subtopologies.Add(sub);
         }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine();
+            sb.AppendLine("Topologies:");
+            foreach (var sub in subtopologies)
+                sb.Append($"\t{sub}");
+            return sb.ToString();
+        }
     }
 
     #endregion
@@ -37,6 +48,15 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         {
             Id = id;
             Nodes = nodes;
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"Sub-topology: {Id}");
+            foreach (var n in Nodes)
+                sb.AppendLine($"\t\t{n}");
+            return sb.ToString();
         }
     }
 
@@ -60,6 +80,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             Name = name;
         }
 
+        protected static string NodeNames(IEnumerable<INodeDescription> nodes)
+            => nodes.Any() ? string.Join(", ", nodes.Select(n => n.Name)) : "none";
+
         public void AddPredecessor(INodeDescription node)
         {
             if (!previous.Contains(node))
@@ -72,9 +95,11 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 next.Add(node);
         }
 
-        public override bool Equals(object obj) => obj is INodeDescription && ((INodeDescription)obj).Equals(this.Name);
+        public override bool Equals(object obj) 
+            => obj is INodeDescription && ((INodeDescription)obj).Equals(this.Name);
 
-        public override int GetHashCode() => Name.GetHashCode();
+        public override int GetHashCode() 
+            => Name.GetHashCode();
     }
 
     #endregion
@@ -96,6 +121,14 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             Topics = new List<string> { topic };
             TimestampExtractorType = timestampExtractorType;
         }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"Source: {Name} (topics: {string.Join(",", Topics)})");
+            sb.AppendLine($"\t\t   --> {NodeNames(Next)}");
+            return sb.ToString();
+        }
     }
 
     #endregion
@@ -110,6 +143,15 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             : base(name)
         {
             Stores = stores;
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"Processor: {Name} (stores: {string.Join(",", Stores)})");
+            sb.AppendLine($"\t\t   --> {NodeNames(Next)}");
+            sb.AppendLine($"\t\t   <-- {NodeNames(Previous)}");
+            return sb.ToString();
         }
     }
 
@@ -135,6 +177,19 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         {
             Topic = null;
             TopicNameExtractorType = topicNameExtractorType;
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            if (!string.IsNullOrEmpty(Topic))
+                sb.AppendLine($"Sink: {Name} (topic: {Topic})");
+            else
+                sb.AppendLine($"Sink: {Name} (extractor class: {TopicNameExtractorType.FullName})");
+
+            sb.AppendLine($"\t\t   <-- {NodeNames(Previous)}");
+            return sb.ToString();
         }
     }
 

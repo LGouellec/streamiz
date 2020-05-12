@@ -281,6 +281,8 @@ namespace Streamiz.Kafka.Net
             clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{this.configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;
             logPrefix = $"stream-application[{configuration.ApplicationId}] ";
 
+            logger.Info($"{logPrefix} Start creation of the stream application with this configuration: {configuration}");
+
             // re-write the physical topology according to the config
             topology.Builder.RewriteTopology(configuration);
 
@@ -330,7 +332,7 @@ namespace Streamiz.Kafka.Net
         {
             if (SetState(State.REBALANCING))
             {
-                logger.Debug($"{logPrefix}Starting Streams client");
+                logger.Info($"{logPrefix}Starting Streams client with this topology : {topology.Describe()}");
 
                 foreach (var t in threads)
                     t.Start(token);
@@ -378,30 +380,6 @@ namespace Streamiz.Kafka.Net
         }
 
         #region Privates
-
-        private bool WaitOnState(State targetState, long waitMs)
-        {
-            long begin = DateTime.Now.Millisecond;
-            lock (stateLock)
-            {
-                long elapsedMs = 0L;
-                while (this.StreamState != targetState)
-                {
-                    if (waitMs > elapsedMs)
-                    {
-                        long remainingMs = waitMs - elapsedMs;
-                        Thread.Sleep((int)remainingMs);
-                    }
-                    else
-                    {
-                        logger.Debug($"{logPrefix}Cannot transit to {targetState} within {waitMs}ms");
-                        return false;
-                    }
-                    elapsedMs = DateTime.Now.Millisecond - begin;
-                }
-                return true;
-            }
-        }
 
         /// <summary>
         /// Set internal state. This method is thread safe.

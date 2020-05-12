@@ -166,7 +166,21 @@ namespace Streamiz.Kafka.Net.Processors
                         {
                             var task = manager.ActiveTaskFor(record.TopicPartition);
                             if (task != null)
-                                task.AddRecords(new List<ConsumeResult<byte[], byte[]>> { record });
+                            {
+                                if(task.IsClosed)
+                                {
+                                    log.Info($"Stream task {task.Id} is already closed, probably because it got unexpectedly migrated to another thread already. Notifying the thread to trigger a new rebalance immediately.");
+                                    // TODO gesture this behaviour
+                                    //throw new TaskMigratedException(task);
+                                }
+                                else
+                                    task.AddRecords(new List<ConsumeResult<byte[], byte[]>> { record });
+                            }
+                            else
+                            {
+                                log.Error($"Unable to locate active task for received-record partition {record.TopicPartition}. Current tasks: {string.Join(",", manager.ActiveTaskIds)}");
+                                throw new NullReferenceException($"Task was unexpectedly missing for partition {record.TopicPartition}");
+                            }
                         }
 
                         foreach (var t in manager.ActiveTasks)

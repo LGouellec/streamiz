@@ -7,6 +7,7 @@ using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Streamiz.Kafka.Net
 {
@@ -149,7 +150,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// The number of threads to execute stream processing.
         /// </summary>
-        int NumStreamThreads { get; set;  }
+        int NumStreamThreads { get; set; }
 
         /// <summary>
         /// Default key serdes for consumer and materialized state store
@@ -174,7 +175,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Initial list of brokers as a CSV list of broker host or host:port.
         /// </summary>
-        string BootstrapServers {get; set;}
+        string BootstrapServers { get; set; }
 
         #endregion
     }
@@ -197,7 +198,6 @@ namespace Streamiz.Kafka.Net
     /// </code>
     /// </exemple>
     /// </summary>
-    [Serializable]
     public class StreamConfig : Dictionary<string, dynamic>, IStreamConfig
     {
         #region Not used for moment
@@ -273,7 +273,7 @@ namespace Streamiz.Kafka.Net
         /// Default commit interval in milliseconds when exactly once is not enabled
         /// </summary>
         public static readonly long DEFAULT_COMMIT_INTERVAL_MS = 30000L;
-        
+
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is enabled
         /// </summary>
@@ -310,7 +310,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Timeout for broker API version requests. default: 10000 importance: low
         /// </summary>
-        public int? ApiVersionRequestTimeoutMs 
+        public int? ApiVersionRequestTimeoutMs
         {
             get => _config.ApiVersionRequestTimeoutMs;
             set
@@ -1332,14 +1332,16 @@ namespace Streamiz.Kafka.Net
         /// return all messages, even transactional messages which have been aborted. default:
         /// read_committed importance: high
         /// </summary>
-        public IsolationLevel? IsolationLevel { 
-            get { return _consumerConfig.IsolationLevel; } 
-            set {
+        public IsolationLevel? IsolationLevel
+        {
+            get { return _consumerConfig.IsolationLevel; }
+            set
+            {
                 if (Guarantee != ProcessingGuarantee.EXACTLY_ONCE)
                     _consumerConfig.IsolationLevel = value;
-                else if(!changeGuarantee)
-                        throw new StreamsException($"You can't update IsolationLevel because your processing guarantee is exactly-once");
-            } 
+                else if (!changeGuarantee)
+                    throw new StreamsException($"You can't update IsolationLevel because your processing guarantee is exactly-once");
+            }
         }
 
         /// <summary>
@@ -1563,7 +1565,8 @@ namespace Streamiz.Kafka.Net
         /// Producer instantation will fail if user-supplied configuration is incompatible.
         /// default: false importance: high
         /// </summary>
-        public bool? EnableIdempotence { 
+        public bool? EnableIdempotence
+        {
             get { return _producerConfig.EnableIdempotence; }
             set
             {
@@ -1726,7 +1729,7 @@ namespace Streamiz.Kafka.Net
             _producerConfig = new ProducerConfig();
             _adminClientConfig = new AdminClientConfig();
             _config = new ClientConfig();
-            
+
             EnableAutoCommit = false;
         }
 
@@ -1788,12 +1791,12 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Default timestamp extractor class that implements the <see cref="ITimestampExtractor"/> interface.
         /// </summary>
-        public ITimestampExtractor DefaultTimestampExtractor 
+        public ITimestampExtractor DefaultTimestampExtractor
         {
             get => this[defaultTimestampExtractorCst];
             set => this.AddOrUpdate(defaultTimestampExtractorCst, value);
         }
-        
+
         /// <summary>
         /// Initial list of brokers as a CSV list of broker host or host:port. default:
         /// '' importance: high
@@ -1869,7 +1872,7 @@ namespace Streamiz.Kafka.Net
         /// Get the configs to the <see cref="IProducer{TKey, TValue}"/>
         /// </summary>
         /// <returns>Return <see cref="ProducerConfig"/> for building <see cref="IProducer{TKey, TValue}"/> instance.</returns>
-        public ProducerConfig ToProducerConfig() => ToProducerConfig(this.ClientId);
+        public ProducerConfig ToProducerConfig() => ToProducerConfig(ClientId);
 
         /// <summary>
         /// Get the configs to the <see cref="IProducer{TKey, TValue}"/> with specific <paramref name="clientId"/>
@@ -1888,7 +1891,7 @@ namespace Streamiz.Kafka.Net
         /// Get the configs to the <see cref="IConsumer{TKey, TValue}"/>
         /// </summary>
         /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
-        public ConsumerConfig ToConsumerConfig() => ToConsumerConfig(this.ClientId);
+        public ConsumerConfig ToConsumerConfig() => ToConsumerConfig(ClientId);
 
         /// <summary>
         /// Get the configs to the <see cref="IConsumer{TumerKey, TValue}"/> with specific <paramref name="clientId"/>
@@ -1897,12 +1900,12 @@ namespace Streamiz.Kafka.Net
         /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
         public ConsumerConfig ToConsumerConfig(string clientId)
         {
-            if (!this.ContainsKey(applicatonIdCst))
+            if (!ContainsKey(applicatonIdCst))
                 throw new StreamConfigException($"Key {applicatonIdCst} was not found. She is mandatory for getting consumer config");
 
             var c = _consumerConfig.Union(_internalConsumerConfig).ToDictionary();
             var config = new ConsumerConfig(c);
-            config.GroupId = this.ApplicationId;
+            config.GroupId = ApplicationId;
             config.ClientId = clientId;
             return config;
         }
@@ -1935,16 +1938,97 @@ namespace Streamiz.Kafka.Net
         public IStreamConfig Clone()
         {
             var config = new StreamConfig(this);
-            config._internalConsumerConfig = new Dictionary<string, string>(this._internalConsumerConfig);
-            config._internalAdminConfig = new Dictionary<string, string>(this._internalAdminConfig);
-            config._internalProducerConfig = new Dictionary<string, string>(this._internalProducerConfig);
-            
-            config._consumerConfig = new ConsumerConfig(this._consumerConfig);
-            config._producerConfig = new ProducerConfig(this._producerConfig);
-            config._adminClientConfig = new AdminClientConfig(this._adminClientConfig);
-            config._config = new ClientConfig(this._config);
+            config._internalConsumerConfig = new Dictionary<string, string>(_internalConsumerConfig);
+            config._internalAdminConfig = new Dictionary<string, string>(_internalAdminConfig);
+            config._internalProducerConfig = new Dictionary<string, string>(_internalProducerConfig);
+
+            config._consumerConfig = new ConsumerConfig(_consumerConfig);
+            config._producerConfig = new ProducerConfig(_producerConfig);
+            config._adminClientConfig = new AdminClientConfig(_adminClientConfig);
+            config._config = new ClientConfig(_config);
 
             return config;
+        }
+
+        #endregion
+
+        #region ToString()
+
+        /// <summary>
+        /// Override ToString method
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            string replaceValue = "********";
+            // todo
+            List<string> keysToNotDisplay = new List<string> {
+                "sasl.password"
+            };
+
+            List<string> keysAlreadyPrint = new List<string>();
+
+            StringBuilder sb = new StringBuilder();
+
+            // stream config property
+            sb.AppendLine();
+            sb.AppendLine("\tStream property:");
+            foreach (var kp in this)
+                sb.AppendLine($"\t\t{kp.Key}: \t{kp.Value}");
+
+            // client config property
+            sb.AppendLine("\tClient property:");
+            var configs = _config.Intercept((kp) => keysToNotDisplay.Contains(kp.Key), replaceValue);
+            foreach (var kp in configs)
+            {
+                sb.AppendLine($"\t\t{kp.Key}: \t{kp.Value}");
+                keysAlreadyPrint.Add(kp.Key);
+            }
+
+            // consumer config property
+            sb.AppendLine("\tConsumer property:");
+            var consumersConfig = _consumerConfig
+                                    .Union(_internalConsumerConfig)
+                                    .Except((i) => keysAlreadyPrint.Contains(i.Key))
+                                    .Intercept((kp) => keysToNotDisplay.Contains(kp.Key), replaceValue);
+            if (consumersConfig.Any())
+            {
+                foreach (var kp in consumersConfig)
+                    sb.AppendLine($"\t\t{kp.Key}: \t{kp.Value}");
+            }
+            else
+                sb.AppendLine($"\t\tNone");
+
+            // producer config property
+            sb.AppendLine("\tProducer property:");
+            var producersConfig = _producerConfig
+                                    .Union(_internalProducerConfig)
+                                    .Except((i) => keysAlreadyPrint.Contains(i.Key))
+                                    .Intercept((kp) => keysToNotDisplay.Contains(kp.Key), replaceValue);
+            if (producersConfig.Any())
+            {
+                foreach (var kp in producersConfig)
+                    sb.AppendLine($"\t\t{kp.Key}: \t{kp.Value}");
+            }
+            else
+                sb.AppendLine($"\t\tNone");
+
+
+            // admin config property
+            sb.AppendLine("\tAdmin client property:");
+            var adminsConfig = _adminClientConfig
+                                    .Union(_internalAdminConfig)
+                                    .Except((i) => keysAlreadyPrint.Contains(i.Key))
+                                    .Intercept((kp) => keysToNotDisplay.Contains(kp.Key), replaceValue);
+            if (adminsConfig.Any())
+            {
+                foreach (var kp in adminsConfig)
+                    sb.AppendLine($"\t\t{kp.Key}: \t{kp.Value}");
+            }
+            else
+                sb.AppendLine($"\t\tNone");
+
+            return sb.ToString();
         }
 
         #endregion
@@ -1970,7 +2054,6 @@ namespace Streamiz.Kafka.Net
     /// </summary>
     /// <typeparam name="KS">Default key serdes</typeparam>
     /// <typeparam name="VS">Default value serdes</typeparam>
-    [Serializable]
     public class StreamConfig<KS, VS> : StreamConfig
         where KS : ISerDes, new()
         where VS : ISerDes, new()

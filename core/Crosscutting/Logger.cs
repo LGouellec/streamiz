@@ -52,7 +52,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
                 Hierarchy hierarchy = (Hierarchy)logger.Logger.Repository;
 
                 PatternLayout patternLayout = new PatternLayout();
-                patternLayout.ConversionPattern = PatternLayout.DetailConversionPattern;
+                patternLayout.ConversionPattern = "%timestamp [%thread] %level %c - %message%newline";
                 patternLayout.ActivateOptions();
 
                 ConsoleAppender console = new ConsoleAppender();

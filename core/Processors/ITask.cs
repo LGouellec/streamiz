@@ -3,12 +3,13 @@ using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Processors
 {
     internal interface ITask
     {
+        bool IsClosed { get; }
+
         bool CanProcess { get; }
 
         bool CommitNeeded { get; }
@@ -37,9 +38,9 @@ namespace Streamiz.Kafka.Net.Processors
 
         TopicPartition Partition { get; }
 
-        /**
-         * @return any changelog partitions associated with this task
-         */
+        /// <summary>
+        /// Any changelog partitions associated with this task
+        /// </summary>        
         ICollection<TopicPartition> ChangelogPartitions { get; }
 
         bool HasStateStores { get; }

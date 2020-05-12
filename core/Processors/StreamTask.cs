@@ -139,6 +139,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public override void Close()
         {
+            IsClosed = true;
             log.Info($"{logPrefix}Closing");
             Suspend();
             processor.Close();

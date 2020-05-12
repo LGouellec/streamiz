@@ -52,6 +52,8 @@ namespace Streamiz.Kafka.Net.Processors
 
         public bool CommitNeeded => commitNeeded;
 
+        public bool IsClosed { get; protected set; }
+
         #region Abstract
 
         public abstract bool CanProcess { get; }
