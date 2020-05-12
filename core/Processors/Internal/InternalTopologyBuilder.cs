@@ -19,6 +19,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly QuickUnion<string> nodeGrouper = new QuickUnion<string>();
         private IDictionary<string, ISet<string>> nodeGroups = new Dictionary<string, ISet<string>>();
 
+        // map from state store names to this state store's corresponding changelog topic if possible
+        private readonly IDictionary<string, string> storesToTopics = new Dictionary<string, string>();
+        // map from changelog topic name to its corresponding state store.
+        private readonly IDictionary<string, string> topicsToStores = new Dictionary<string, string>();
+
         internal InternalTopologyBuilder()
         {
         }
@@ -55,9 +60,14 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 throw new TopologyException($"Cannot connect a state store {stateStoreName} to a source node or a sink node.");
         }
 
-        private void ConnectSourceStoreAndTopic(string processorName, string stateStoreName)
+        private void ConnectSourceStoreAndTopic(string sourceStoreName, string topic)
         {
-            // TODO
+            if (storesToTopics.ContainsKey(sourceStoreName))
+            {
+                throw new TopologyException($"Source store {sourceStoreName} is already added.");
+            }
+            storesToTopics[sourceStoreName] = topic;
+            topicsToStores[topic] = sourceStoreName;
         }
 
         #endregion
@@ -287,7 +297,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             foreach (var sourceProcessor in sources.Values)
                 rootProcessor.AddNextProcessor(sourceProcessor);
 
-            return new ProcessorTopology(rootProcessor, sources, sinks, processors, stateStores, GlobalStateStores);
+            return new ProcessorTopology(rootProcessor, sources, sinks, processors, stateStores, GlobalStateStores, storesToTopics);
         }
 
         private void BuildSinkNode(IDictionary<string, IProcessor> processors, IDictionary<string, IProcessor> sinks, ISinkNodeFactory factory, IProcessor processor)

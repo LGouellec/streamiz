@@ -30,6 +30,9 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             return consumer;
         }
 
+        public IConsumer<byte[], byte[]> GetGlobalConsumer(ConsumerConfig config)
+            => GetConsumer(config, null);
+
         public IProducer<byte[], byte[]> GetProducer(ProducerConfig config)
         {
             return new MockProducer(cluster, config.ClientId);

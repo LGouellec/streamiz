@@ -50,8 +50,6 @@ namespace Streamiz.Kafka.Net.Processors
                 logPrefix,
                 $"record-queue-{id.Topic}-{id.Partition}",
                 sourceTimestampExtractor == null ? configuration.DefaultTimestampExtractor : sourceTimestampExtractor);
-
-            stateMgr.RegisterGlobalStateStores(processorTopology.GlobalStateStores);
         }
 
         internal IConsumerGroupMetadata GroupMetadata { get; set; }

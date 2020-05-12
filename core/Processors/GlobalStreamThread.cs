@@ -1,6 +1,9 @@
-﻿using log4net;
+﻿using Confluent.Kafka;
+using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,19 +15,79 @@ namespace Streamiz.Kafka.Net.Processors
     {
         private class StateConsumer
         {
+            private readonly IConsumer<byte[], byte[]> globalConsumer;
+            private readonly ILog log = Logger.GetLogger(typeof(StateConsumer));
+            private readonly IGlobalStateMaintainer globalStateMaintainer;
+            private readonly TimeSpan pollTime;
+            private readonly TimeSpan flushInterval;
+            private DateTime lastFlush;
+
+            public StateConsumer(
+                IConsumer<byte[], byte[]> globalConsumer,
+                IGlobalStateMaintainer globalStateMaintainer,
+                TimeSpan pollTime,
+                TimeSpan flushInterval)
+            {
+                this.globalConsumer = globalConsumer;
+                this.globalStateMaintainer = globalStateMaintainer;
+                this.pollTime = pollTime;
+                this.flushInterval = flushInterval;
+            }
+
             public void Initialize()
             {
+                IDictionary<TopicPartition, long> partitionOffsets = this.globalStateMaintainer.Initialize();
+                this.globalConsumer.Assign(partitionOffsets.Keys);
 
+                // TODO: if we don't wait seek will throw. Why is that? How to solve it?
+                Thread.Sleep(5000);
+                foreach (var entry in partitionOffsets)
+                {
+                    this.globalConsumer.Seek(new TopicPartitionOffset(entry.Key, entry.Value));
+                }
+                this.lastFlush = DateTime.Now;
             }
 
             public void PollAndUpdate()
             {
+                try
+                {
+                    var received = this.globalConsumer.ConsumeRecords(this.pollTime);
+                    foreach (var record in received)
+                    {
+                        this.globalStateMaintainer.Update(record);
+                    }
 
+                    // TODO: we might want to provide a wrapper around DateTime so that we can unit test this
+                    DateTime dt = DateTime.Now;
+                    if (dt >= this.lastFlush.Add(this.flushInterval))
+                    {
+                        this.globalStateMaintainer.FlushState();
+                        this.lastFlush = DateTime.Now;
+                    }
+                }
+                // TODO: should we catch all exceptions?
+                catch (Exception e)
+                {
+                    log.Error("Updating global state failed.", e);
+                    throw new StreamsException("Updating global state failed.", e);
+                }
             }
 
             public void Close()
             {
+                try
+                {
+                    this.globalConsumer.Close();
+                }
+                catch (Exception e)
+                {
+                    // just log an error if the consumer throws an exception during close
+                    // so we can always attempt to close the state stores.
+                    log.Error("Failed to close global consumer due to the following error:", e);
+                }
 
+                this.globalStateMaintainer.Close();
             }
         }
 
@@ -35,13 +98,26 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly ILog log = Logger.GetLogger(typeof(GlobalStreamThread));
         private readonly Thread thread;
         private readonly string logPrefix;
+        private readonly IConsumer<byte[], byte[]> globalConsumer;
         private CancellationToken token;
         private readonly object stateLock = new object();
+        private IAdminClient adminClient;
+        private readonly IStreamConfig configuration;
         private StateConsumer stateConsumer;
+        private ProcessorTopology topology;
 
-        public GlobalStreamThread(string threadClientId)
+        public GlobalStreamThread(ProcessorTopology topology,
+            string threadClientId,
+            IConsumer<byte[], byte[]> globalConsumer,
+            IStreamConfig configuration,
+            IAdminClient adminClient)
         {
             logPrefix = $"global-stream-thread {threadClientId} ";
+
+            this.globalConsumer = globalConsumer;
+            this.configuration = configuration;
+            this.topology = topology;
+            this.adminClient = adminClient;
 
             thread = new Thread(Run);
             State = GlobalThreadState.CREATED;
@@ -88,7 +164,18 @@ namespace Streamiz.Kafka.Net.Processors
         {
             try
             {
-                return new StateConsumer();
+                var stateManager = new GlobalStateManager(this.topology, this.adminClient);
+                var context = new ProcessorContext(this.configuration, stateManager);
+                stateManager.SetGlobalProcessorContext(context);
+                var globalStateUpdateTask = new GlobalStateUpdateTask(stateManager, this.topology, context);
+                var stateConsumer = new StateConsumer(
+                    this.globalConsumer,
+                    globalStateUpdateTask,
+                    // if poll time is bigger than int allows something is probably wrong anyway
+                    new TimeSpan(0, 0, 0, 0, (int)this.configuration.PollMs),
+                    new TimeSpan(0, 0, 0, 0, (int)this.configuration.CommitIntervalMs));
+                stateConsumer.Initialize();
+                return stateConsumer;
             }
             catch(StreamsException)
             {
@@ -160,7 +247,7 @@ namespace Streamiz.Kafka.Net.Processors
                     thread.Join();
                 }
 
-                //TODO: can this throw? should wy try/catch?
+                //TODO: can this throw? should we try/catch?
                 this.stateConsumer.Close();
 
                 SetState(GlobalThreadState.DEAD);

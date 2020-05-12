@@ -310,7 +310,13 @@ namespace Streamiz.Kafka.Net
             if (hasGlobalTopology)
             {
                 string globalThreadId = $"{clientId}-GlobalStreamThread";
-                globalStreamThread = new GlobalStreamThread(globalThreadId);
+                globalStreamThread = new GlobalStreamThread(
+                    globalTaskTopology,
+                    globalThreadId,
+                    kafkaSupplier.GetGlobalConsumer(configuration.ToGlobalConsumerConfig(globalThreadId)),
+                    configuration,
+                    kafkaSupplier.GetAdmin(configuration.ToAdminConfig(clientId))
+                    );
                 globalThreadState = globalStreamThread.State;
             }
 
