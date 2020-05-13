@@ -5,7 +5,7 @@
     <RootNamespace>Streamiz.Kafka.Net</RootNamespace>
     <AssemblyName>Streamiz.Kafka.Net</AssemblyName>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>0.1.0</Version>
+    <Version>0.1.0-beta1</Version>
     <Authors>@LGouellec</Authors>
     <PackageId>Streamiz.Kafka.Net</PackageId>
     <Product>Streamiz.Kafka.NET</Product>
