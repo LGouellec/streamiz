@@ -16,7 +16,7 @@ Checklist
 Please provide the following information:
  - [ ] A complete (i.e. we can run it), minimal program demonstrating the problem. No need to supply a project file.
  - [ ] A code snippet with your topology builder (ex: builder.Stream<string, string>("topic").to("an-another-topic");)
- - [ ] Confluent.Kafka nuget version.
+ - [ ] Streamiz.Kafka.Net nuget version.
  - [ ] Apache Kafka version.
  - [ ] Client configuration.
  - [ ] Operating system.
