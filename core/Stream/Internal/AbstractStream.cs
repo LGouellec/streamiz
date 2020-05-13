@@ -1,9 +1,7 @@
-﻿using Streamiz.Kafka.Net.Processors.Internal;
-using Streamiz.Kafka.Net.SerDes;
+﻿using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
@@ -17,17 +15,17 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         protected readonly InternalStreamBuilder builder;
 
 
-        public AbstractStream(AbstractStream<K, V> stream)
+        protected AbstractStream(AbstractStream<K, V> stream)
         {
-            this.nameNode = stream.nameNode;
-            this.builder = stream.builder;
-            this.keySerdes = stream.keySerdes;
-            this.valueSerdes = stream.valueSerdes;
-            this.setSourceNodes = stream.setSourceNodes;
-            this.node = stream.node;
+            nameNode = stream.nameNode;
+            builder = stream.builder;
+            keySerdes = stream.keySerdes;
+            valueSerdes = stream.valueSerdes;
+            setSourceNodes = stream.setSourceNodes;
+            node = stream.node;
         }
 
-        internal AbstractStream(String name,
+        protected AbstractStream(String name,
                ISerDes<K> keySerde,
                ISerDes<V> valSerde,
                List<String> sourceNodes,
@@ -39,12 +37,12 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 throw new ArgumentException("parameter <sourceNodes> must not be null or empty");
             }
 
-            this.nameNode = name;
+            nameNode = name;
             this.builder = builder;
-            this.keySerdes = keySerde;
-            this.valueSerdes = valSerde;
-            this.setSourceNodes = sourceNodes;
-            this.node = streamsGraphNode;
+            keySerdes = keySerde;
+            valueSerdes = valSerde;
+            setSourceNodes = sourceNodes;
+            node = streamsGraphNode;
         }
 
 

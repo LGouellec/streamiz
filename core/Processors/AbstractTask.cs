@@ -15,13 +15,12 @@ namespace Streamiz.Kafka.Net.Processors
         protected readonly IStreamConfig configuration;
         protected IConsumer<byte[], byte[]> consumer;
         protected bool taskInitialized;
-        //protected bool taskClosed;
         protected bool commitNeeded;
         protected IStateManager stateMgr;
         protected ILog log;
         protected readonly string logPrefix = "";
 
-        internal AbstractTask(TaskId id, TopicPartition partition, ProcessorTopology topology, IConsumer<byte[], byte[]> consumer, IStreamConfig config)
+        protected AbstractTask(TaskId id, TopicPartition partition, ProcessorTopology topology, IConsumer<byte[], byte[]> consumer, IStreamConfig config)
         {
             this.log = Logger.GetLogger(this.GetType());
             logPrefix = $"stream-task[{id.Topic}|{id.Partition}] ";
@@ -93,7 +92,7 @@ namespace Streamiz.Kafka.Net.Processors
             catch (Exception e)
             {
                 log.Error($"{logPrefix}Error during flush state store with exception :", e);
-                throw e;
+                throw;
             }
         }
 
@@ -107,7 +106,7 @@ namespace Streamiz.Kafka.Net.Processors
             catch (Exception e)
             {
                 log.Error($"{logPrefix}Error during closing state store with exception :", e);
-                throw e;
+                throw;
             }
         }
     }

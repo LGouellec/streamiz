@@ -1,5 +1,6 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors.Internal;
+using System;
 using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Processors
@@ -68,7 +69,7 @@ namespace Streamiz.Kafka.Net.Processors
     ///           </ul>
     /// 
     /// </summary>
-    internal class ThreadState : ThreadStateTransitionValidator
+    internal sealed class ThreadState : ThreadStateTransitionValidator, IEquatable<ThreadState>
     {
         public static readonly ThreadState CREATED = new ThreadState(0, "CREATED", 1, 5);
         public static readonly ThreadState STARTING = new ThreadState(1, "STARTING", 2, 3, 5);
@@ -127,5 +128,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             return $"{Name}";
         }
+
+        public bool Equals(ThreadState other) => this.Ordinal.Equals(other.Ordinal);
     }
 }

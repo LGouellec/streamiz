@@ -4,8 +4,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
 {
     internal abstract class ProcessorGraphNode : StreamGraphNode
     {
-        internal ProcessorGraphNode(string streamGraphNode) :
-        base(streamGraphNode)
+        protected ProcessorGraphNode(string streamGraphNode)
+            : base(streamGraphNode)
         {
         }
     }
@@ -17,7 +17,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
         public ProcessorGraphNode(string streamGraphNode, ProcessorParameters<K, V> @parameters) :
             base(streamGraphNode)
         {
-            this.ProcessorParameters = @parameters;
+            ProcessorParameters = @parameters;
         }
 
         public override void WriteToTopology(InternalTopologyBuilder builder)

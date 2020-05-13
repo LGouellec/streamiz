@@ -14,6 +14,35 @@ using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Table.Internal
 {
+    internal static class KTable
+    {
+        #region Constants
+
+        internal static readonly string FOREACH_NAME = "KTABLE-FOREACH-";
+        internal static readonly string SOURCE_NAME = "KTABLE-SOURCE-";
+        internal static readonly string STATE_STORE_NAME = "STATE-STORE-";
+        internal static readonly string FILTER_NAME = "KTABLE-FILTER-";
+        internal static readonly string JOINTHIS_NAME = "KTABLE-JOINTHIS-";
+        internal static readonly string JOINOTHER_NAME = "KTABLE-JOINOTHER-";
+        internal static readonly string MAPVALUES_NAME = "KTABLE-MAPVALUES-";
+        internal static readonly string MERGE_NAME = "KTABLE-MERGE-";
+        internal static readonly string SELECT_NAME = "KTABLE-SELECT-";
+        internal static readonly string SUPPRESS_NAME = "KTABLE-SUPPRESS-";
+        internal static readonly string TOSTREAM_NAME = "KTABLE-TOSTREAM-";
+        internal static readonly string TRANSFORMVALUES_NAME = "KTABLE-TRANSFORMVALUES-";
+        internal static readonly string SINK_NAME = "KTABLE-SINK-";
+        internal static readonly string FK_JOIN = "KTABLE-FK-JOIN-";
+        internal static readonly string FK_JOIN_STATE_STORE_NAME = FK_JOIN + "SUBSCRIPTION-STATE-STORE-";
+        internal static readonly string SUBSCRIPTION_REGISTRATION = FK_JOIN + "SUBSCRIPTION-REGISTRATION-";
+        internal static readonly string SUBSCRIPTION_RESPONSE = FK_JOIN + "SUBSCRIPTION-RESPONSE-";
+        internal static readonly string SUBSCRIPTION_PROCESSOR = FK_JOIN + "SUBSCRIPTION-PROCESSOR-";
+        internal static readonly string SUBSCRIPTION_RESPONSE_RESOLVER_PROCESSOR = FK_JOIN + "SUBSCRIPTION-RESPONSE-RESOLVER-PROCESSOR-";
+        internal static readonly string FK_JOIN_OUTPUT_NAME = FK_JOIN + "OUTPUT-";
+        internal static readonly string TOPIC_SUFFIX = "-topic";
+
+        #endregion
+    }
+
     internal class KTable<K, S, V> : AbstractStream<K, V>, IKTable<K, V>, IKTableGetter<K, V>
     {
         private readonly IProcessorSupplier<K, S> processorSupplier = null;
@@ -45,46 +74,6 @@ namespace Streamiz.Kafka.Net.Table.Internal
                     return null;
             }
         }
-
-        #region Constants
-
-        internal static String FOREACH_NAME = "KTABLE-FOREACH-";
-
-        internal static String SOURCE_NAME = "KTABLE-SOURCE-";
-
-        internal static String STATE_STORE_NAME = "STATE-STORE-";
-
-        internal static String FILTER_NAME = "KTABLE-FILTER-";
-
-        internal static String JOINTHIS_NAME = "KTABLE-JOINTHIS-";
-
-        internal static String JOINOTHER_NAME = "KTABLE-JOINOTHER-";
-
-        internal static String MAPVALUES_NAME = "KTABLE-MAPVALUES-";
-
-        internal static String MERGE_NAME = "KTABLE-MERGE-";
-
-        internal static String SELECT_NAME = "KTABLE-SELECT-";
-
-        internal static String SUPPRESS_NAME = "KTABLE-SUPPRESS-";
-
-        internal static String TOSTREAM_NAME = "KTABLE-TOSTREAM-";
-
-        internal static String TRANSFORMVALUES_NAME = "KTABLE-TRANSFORMVALUES-";
-
-        internal static String SINK_NAME = "KTABLE-SINK-";
-
-        internal static String FK_JOIN = "KTABLE-FK-JOIN-";
-        internal static String FK_JOIN_STATE_STORE_NAME = FK_JOIN + "SUBSCRIPTION-STATE-STORE-";
-        internal static String SUBSCRIPTION_REGISTRATION = FK_JOIN + "SUBSCRIPTION-REGISTRATION-";
-        internal static String SUBSCRIPTION_RESPONSE = FK_JOIN + "SUBSCRIPTION-RESPONSE-";
-        internal static String SUBSCRIPTION_PROCESSOR = FK_JOIN + "SUBSCRIPTION-PROCESSOR-";
-        internal static String SUBSCRIPTION_RESPONSE_RESOLVER_PROCESSOR = FK_JOIN + "SUBSCRIPTION-RESPONSE-RESOLVER-PROCESSOR-";
-        internal static String FK_JOIN_OUTPUT_NAME = FK_JOIN + "OUTPUT-";
-
-        internal static String TOPIC_SUFFIX = "-topic";
-
-        #endregion
 
         internal KTable(string name, ISerDes<K> keySerde, ISerDes<V> valSerde, List<string> sourceNodes, String queryableStoreName, IProcessorSupplier<K, Change<S>> processorSupplier, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder)
             : base(name, keySerde, valSerde, sourceNodes, streamsGraphNode, builder)
@@ -128,7 +117,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
 
         public IKStream<K, V> ToStream(string named = null)
         {
-            string name = new Named(named).OrElseGenerateWithPrefix(this.builder, TOSTREAM_NAME);
+            string name = new Named(named).OrElseGenerateWithPrefix(this.builder, KTable.TOSTREAM_NAME);
 
             var p = new WrapperValueMapperWithKey<K, Change<V>, V>((k, v) => v.NewValue);
             IProcessorSupplier<K, Change<V>> processorMapValues = new KStreamMapValues<K, Change<V>, V>(p);
@@ -216,7 +205,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
                 // materialize the store; but we still need to burn one index BEFORE generating the processor to keep compatibility.
                 if (materializedInternal.StoreName == null)
                 {
-                    builder.NewStoreName(FILTER_NAME);
+                    builder.NewStoreName(KTable.FILTER_NAME);
                 }
                 // we can inherit parent key and value serde if user do not provide specific overrides, more specifically:
                 // we preserve the key following the order of 1) materialized, 2) parent
@@ -237,7 +226,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
                 storeBuilder = null;
             }
 
-            var name = new Named(named).OrElseGenerateWithPrefix(this.builder, FILTER_NAME);
+            var name = new Named(named).OrElseGenerateWithPrefix(this.builder, KTable.FILTER_NAME);
 
             IProcessorSupplier<K, Change<V>> processorSupplier = new KTableFilter<K, V>(this, predicate, filterNot, queryableStoreName);
 
@@ -277,7 +266,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
                 // materialize the store; but we still need to burn one index BEFORE generating the processor to keep compatibility.
                 if (materializedInternal.StoreName == null)
                 {
-                    builder.NewStoreName(MAPVALUES_NAME);
+                    builder.NewStoreName(KTable.MAPVALUES_NAME);
                 }
                 keySerde = materializedInternal.KeySerdes != null ? materializedInternal.KeySerdes : this.keySerdes;
                 valueSerde = materializedInternal.ValueSerdes != null ? materializedInternal.ValueSerdes : null;
@@ -295,7 +284,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
                 storeBuilder = null;
             }
 
-            var name = new Named(named).OrElseGenerateWithPrefix(this.builder, MAPVALUES_NAME);
+            var name = new Named(named).OrElseGenerateWithPrefix(this.builder, KTable.MAPVALUES_NAME);
 
             var processorSupplier = new KTableMapValues<K, V, VR>(this, mapper, queryableStoreName);
             var processorParameters = new TableProcessorParameters<K, V>(processorSupplier, name);
@@ -328,7 +317,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
             if (keySelector == null)
                 throw new ArgumentNullException("GroupBy() doesn't allow null selector function");
 
-            var selectName = new Named(grouped.Named).OrElseGenerateWithPrefix(this.builder, SELECT_NAME);
+            var selectName = new Named(grouped.Named).OrElseGenerateWithPrefix(this.builder, KTable.SELECT_NAME);
 
             IKTableProcessorSupplier<K, V, KeyValuePair< K1, V1 >> selectSupplier = new KTableRepartitionMap<K, V, K1, V1>(this, keySelector);
             var processorParameters = new TableProcessorParameters<K, V>(selectSupplier, selectName);

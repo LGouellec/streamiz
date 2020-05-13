@@ -5,7 +5,7 @@ using Streamiz.Kafka.Net.SerDes;
 namespace Streamiz.Kafka.Net.State.Internal
 {
     internal class WrappedKeyValueStore<K, V> :
-        WrappedStateStore<IKeyValueStore<Bytes, byte[]>, K, V>
+        WrappedStateStore<IKeyValueStore<Bytes, byte[]>>
     {
         protected ISerDes<K> keySerdes;
         protected ISerDes<V> valueSerdes;

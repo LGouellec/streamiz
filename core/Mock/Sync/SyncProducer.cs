@@ -94,6 +94,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public void InitTransactions(TimeSpan timeout)
         {
+            transaction = new SyncTransaction();
         }
 
         public int Poll(TimeSpan timeout) => 0;

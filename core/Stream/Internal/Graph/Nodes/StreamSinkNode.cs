@@ -5,7 +5,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
 {
     internal abstract class StreamSinkNode : StreamGraphNode
     {
-        internal StreamSinkNode(string streamGraphNode)
+        protected StreamSinkNode(string streamGraphNode)
             : base(streamGraphNode)
         {
         }
@@ -13,8 +13,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
 
     internal class StreamSinkNode<K, V> : StreamSinkNode
     {
-        private ITopicNameExtractor<K, V> topicNameExtractor;
-        private Produced<K, V> produced;
+        private readonly ITopicNameExtractor<K, V> topicNameExtractor;
+        private readonly Produced<K, V> produced;
 
         public StreamSinkNode(ITopicNameExtractor<K, V> topicNameExtractor, string streamGraphNode, Produced<K, V> produced)
             : base(streamGraphNode)

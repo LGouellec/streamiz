@@ -60,9 +60,9 @@ namespace Streamiz.Kafka.Net.State
     internal abstract class QueryableStoreTypeMatcher<T, K, V> : IQueryableStoreType<T, K, V> where T : class
     {
 
-        private IEnumerable<Type> matchTo;
+        private readonly IEnumerable<Type> matchTo;
 
-        public QueryableStoreTypeMatcher(IEnumerable<Type> matchTo)
+        protected QueryableStoreTypeMatcher(IEnumerable<Type> matchTo)
         {
             this.matchTo = matchTo;
         }

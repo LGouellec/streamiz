@@ -4,7 +4,6 @@ using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -57,7 +56,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             if (nodeFactories.ContainsKey(nameNode))
                 throw new TopologyException($"Source processor {nameNode} is already added.");
 
-            if(sourcesTopics.Contains(topic)) {
+            if (sourcesTopics.Contains(topic))
+            {
                 throw new TopologyException($"Topic {topic} has already been registered by another source.");
             }
 
@@ -94,7 +94,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         internal void AddStateStore<S>(StoreBuilder<S> storeBuilder, params string[] processorNames)
             where S : IStateStore
         {
-            this.AddStateStore<S>(storeBuilder, false, processorNames);
+            AddStateStore<S>(storeBuilder, false, processorNames);
         }
 
         internal void AddStateStore<S>(StoreBuilder<S> storeBuilder, bool allowOverride, params string[] processorNames)
@@ -149,7 +149,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             foreach (var nodeFactory in nodeFactories.Values)
             {
-                if(nodeGroup == null || nodeGroup.Contains(nodeFactory.Name))
+                if (nodeGroup == null || nodeGroup.Contains(nodeFactory.Name))
                 {
                     var processor = nodeFactory.Build();
                     processors.Add(nodeFactory.Name, processor);
@@ -196,15 +196,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             foreach (string stateStoreName in factory.StateStores)
             {
-                if (!stateStores.ContainsKey(stateStoreName))
+                if (!stateStores.ContainsKey(stateStoreName) && stateFactories.ContainsKey(stateStoreName))
                 {
-                    if (stateFactories.ContainsKey(stateStoreName))
-                    {
-                        StateStoreFactory stateStoreFactory = stateFactories[stateStoreName];
+                    StateStoreFactory stateStoreFactory = stateFactories[stateStoreName];
 
-                        // TODO : changelog topic (remember the changelog topic if this state store is change-logging enabled)
-                        stateStores.Add(stateStoreName, stateStoreFactory.Build());
-                    }
+                    // TODO : changelog topic (remember the changelog topic if this state store is change-logging enabled)
+                    stateStores.Add(stateStoreName, stateStoreFactory.Build());
                 }
             }
         }
@@ -232,9 +229,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         internal IDictionary<string, ISet<string>> NodeGroups()
         {
-            if (this.nodeGroups == null)
+            if (nodeGroups == null)
             {
-                this.nodeGroups = MakeNodeGroups();
+                nodeGroups = MakeNodeGroups();
             }
 
             return nodeGroups;
@@ -242,15 +239,15 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         private IDictionary<string, ISet<string>> MakeNodeGroups()
         {
-            IDictionary<string, ISet<string>> nodeGroups = new Dictionary<string, ISet<string>>();
+            IDictionary<string, ISet<string>> groups = new Dictionary<string, ISet<string>>();
 
-            foreach(var topicSource in sourcesTopics)
+            foreach (var topicSource in sourcesTopics)
             {
-                nodeGroups.Add(topicSource, new HashSet<string>());
-                PutNodeGroupName(nodeGroups, topicSource);
+                groups.Add(topicSource, new HashSet<string>());
+                PutNodeGroupName(groups, topicSource);
             }
 
-            return nodeGroups;
+            return groups;
         }
 
         private void PutNodeGroupName(IDictionary<string, ISet<string>> rootToNodeGroup, string topicSource)

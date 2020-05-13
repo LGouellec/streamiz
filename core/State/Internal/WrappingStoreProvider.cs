@@ -14,7 +14,7 @@ namespace Streamiz.Kafka.Net.State.Internal
     internal class WrappingStoreProvider<T, K, V> : IStateStoreProvider<T, K, V> 
         where T : class
     {
-        private IEnumerable<StreamThreadStateStoreProvider> storeProviders;
+        private readonly IEnumerable<StreamThreadStateStoreProvider> storeProviders;
         private readonly StoreQueryParameters<T, K, V> storeQueryParameters;
 
         public WrappingStoreProvider(IEnumerable<StreamThreadStateStoreProvider> storeProviders, StoreQueryParameters<T, K, V> storeQueryParameters)
@@ -27,9 +27,9 @@ namespace Streamiz.Kafka.Net.State.Internal
         /// Provides access to <see cref="Processors.IStateStore"/>s accepted by <see cref="IQueryableStoreType{T, K, V}.Accepts(IStateStore)"/>
         /// </summary>
         /// <param name="storeName">Name of the store</param>
-        /// <param name="type">The <see cref="IQueryableStoreType{T, K, V}"/></param>
+        /// <param name="queryableStoreType">The <see cref="IQueryableStoreType{T, K, V}"/></param>
         /// <returns>a List of all the stores with the storeName and accepted by<see cref="IQueryableStoreType{T, K, V}.Accepts(IStateStore)"/></returns>
-        public IEnumerable<T> Stores(string storeName, IQueryableStoreType<T, K, V> type)
+        public IEnumerable<T> Stores(string storeName, IQueryableStoreType<T, K, V> queryableStoreType)
         {
             var allStores = this.storeProviders
                 .SelectMany(store => store.Stores(storeQueryParameters));

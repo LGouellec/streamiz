@@ -4,8 +4,8 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal class KStreamFilterProcessor<K,V> : AbstractProcessor<K, V>
     {
-        private Func<K, V, bool> predicate;
-        private bool not;
+        private readonly Func<K, V, bool> predicate;
+        private readonly bool not;
 
 
         public KStreamFilterProcessor(Func<K, V, bool> predicate, bool not)

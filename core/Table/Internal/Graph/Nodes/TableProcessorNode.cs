@@ -9,7 +9,7 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph.Nodes
 {
     internal abstract class TableProcessorNode : StreamGraphNode
     {
-        internal TableProcessorNode(string streamGraphNode) 
+        protected TableProcessorNode(string streamGraphNode) 
             : base(streamGraphNode)
         {
         }
@@ -17,9 +17,9 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph.Nodes
 
     internal class TableProcessorNode<K, V, KS, VS> : TableProcessorNode
     {
-        private ProcessorParameters<K, Change<V>> processorParameters;
-        private StoreBuilder<TimestampedKeyValueStore<KS, VS>> storeBuilder;
-        private String[] storeNames;
+        private readonly ProcessorParameters<K, Change<V>> processorParameters;
+        private readonly StoreBuilder<TimestampedKeyValueStore<KS, VS>> storeBuilder;
+        private readonly String[] storeNames;
 
         public TableProcessorNode(string name, ProcessorParameters<K, Change<V>> processorParameters, StoreBuilder<TimestampedKeyValueStore<KS, VS>> storeBuilder)
             : this(name, processorParameters, storeBuilder, null)

@@ -59,14 +59,14 @@ namespace Streamiz.Kafka.Net.Mock
 
         public TestInputTopic<K, V> CreateInputTopic<K, V>(string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
         {
-            var pipeBuilder = new SyncPipeBuilder(GetTask(topicName), supplier);
+            var pipeBuilder = new SyncPipeBuilder(GetTask(topicName));
             var pipeInput = pipeBuilder.Input(topicName, configuration);
             return new TestInputTopic<K, V>(pipeInput, configuration, keySerdes, valueSerdes);
         }
 
         public TestOutputTopic<K, V> CreateOutputTopic<K, V>(string topicName, TimeSpan consumeTimeout, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
         {
-            var pipeBuilder = new SyncPipeBuilder(null, supplier, producer);
+            var pipeBuilder = new SyncPipeBuilder(null, producer);
             var pipeOutput = pipeBuilder.Output(topicName, consumeTimeout, configuration, token);
             return new TestOutputTopic<K, V>(pipeOutput, topicConfiguration, keySerdes, valueSerdes);
         }

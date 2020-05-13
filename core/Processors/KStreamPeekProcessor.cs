@@ -4,8 +4,8 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal class KStreamPeekProcessor<K, V> : AbstractProcessor<K, V>
     {
-        private Action<K, V> action;
-        private bool forwardDownStream;
+        private readonly Action<K, V> action;
+        private readonly bool forwardDownStream;
 
         public KStreamPeekProcessor(Action<K, V> action, bool forwardDownStream)
         {

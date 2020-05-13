@@ -10,15 +10,14 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal class TaskCreator : AbstractTaskCreator<StreamTask>
     {
-        private InternalTopologyBuilder builder;
-        private IStreamConfig configuration;
-        private string threadId;
-        private IKafkaSupplier kafkaSupplier;
-        private IProducer<byte[], byte[]> producer;
-        private readonly ILog log = Logger.GetLogger(typeof(TaskCreator));
+        private readonly InternalTopologyBuilder builder;
+        private readonly IStreamConfig configuration;
+        private readonly string threadId;
+        private readonly IKafkaSupplier kafkaSupplier;
+        private readonly IProducer<byte[], byte[]> producer;
 
         public TaskCreator(InternalTopologyBuilder builder, IStreamConfig configuration, string threadId, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer)
-            : base(builder, configuration)
+            : base()
         {
             this.builder = builder;
             this.configuration = configuration;

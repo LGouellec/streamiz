@@ -8,8 +8,8 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal class KTableFilterProcessor<K, V> : AbstractKTableProcessor<K, V, K, V>
     {
-        private Func<K, V, bool> predicate;
-        private bool filterNot;
+        private readonly Func<K, V, bool> predicate;
+        private readonly bool filterNot;
 
         public KTableFilterProcessor(Func<K, V, bool> predicate, bool filterNot, string queryableStoreName, bool sendOldValues)
             : base(queryableStoreName, sendOldValues)
@@ -18,11 +18,11 @@ namespace Streamiz.Kafka.Net.Processors
             this.filterNot = filterNot;
         }
 
-        public override void Process(K key, Change<V> change)
+        public override void Process(K key, Change<V> value)
         {
-            LogProcessingKeyValue(key, change);
-            V newValue = ComputeValue(key, change.NewValue);
-            V oldValue = sendOldValues ? ComputeValue(key, change.OldValue) : default(V);
+            LogProcessingKeyValue(key, value);
+            V newValue = ComputeValue(key, value.NewValue);
+            V oldValue = sendOldValues ? ComputeValue(key, value.OldValue) : default(V);
 
             if (sendOldValues && oldValue == null && newValue == null)
             {

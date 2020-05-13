@@ -4,8 +4,8 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal class KStreamBranchProcessor<K, V> : AbstractProcessor<K, V>
     {
-        private Func<K, V, bool>[] predicates;
-        private string[] childNodes;
+        private readonly Func<K, V, bool>[] predicates;
+        private readonly string[] childNodes;
 
         public KStreamBranchProcessor(Func<K, V, bool>[] predicates, string[] childNodes)
         {

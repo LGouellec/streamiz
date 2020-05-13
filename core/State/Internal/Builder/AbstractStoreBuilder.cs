@@ -19,7 +19,7 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
         public IDictionary<string, string> LogConfig => logConfig;
         public bool LoggingEnabled => enableLogging;
 
-        public AbstractStoreBuilder(String name, ISerDes<K> keySerde, ISerDes<V> valueSerde)
+        protected AbstractStoreBuilder(String name, ISerDes<K> keySerde, ISerDes<V> valueSerde)
         {
             this.name = name;
             keySerdes = keySerde;

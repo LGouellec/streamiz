@@ -4,7 +4,7 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal class KStreamPrintProcessor<K, V> : AbstractProcessor<K, V>
     {
-        private PrintForeachAction<K, V> actionPrint;
+        private readonly PrintForeachAction<K, V> actionPrint;
 
         public KStreamPrintProcessor(PrintForeachAction<K, V> actionPrint)
         {

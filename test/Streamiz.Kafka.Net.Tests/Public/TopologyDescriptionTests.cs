@@ -135,13 +135,13 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var sourceNode1 = description.SubTopologies.ToArray()[0].Nodes.FirstOrDefault(n => n is ISourceNodeDescription) as ISourceNodeDescription;
             var sourceNode2 = description.SubTopologies.ToArray()[1].Nodes.FirstOrDefault(n => n is ISourceNodeDescription) as ISourceNodeDescription;
 
-            Assert.IsTrue(sourceNode1.Name.StartsWith(KStream<int, int>.SOURCE_NAME));
+            Assert.IsTrue(sourceNode1.Name.StartsWith(KStream.SOURCE_NAME));
             Assert.AreEqual(null, sourceNode1.TimestampExtractorType);
             Assert.AreEqual(new List<string> { "topic" }, sourceNode1.Topics);
             Assert.AreEqual(0, sourceNode1.Next.Count());
             Assert.AreEqual(0, sourceNode1.Previous.Count());
 
-            Assert.IsTrue(sourceNode2.Name.StartsWith(KStream<int, int>.SOURCE_NAME));
+            Assert.IsTrue(sourceNode2.Name.StartsWith(KStream.SOURCE_NAME));
             Assert.AreEqual(null, sourceNode2.TimestampExtractorType);
             Assert.AreEqual(new List<string> { "topic2" }, sourceNode2.Topics);
             Assert.AreEqual(0, sourceNode2.Next.Count());

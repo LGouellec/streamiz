@@ -30,23 +30,23 @@ namespace Streamiz.Kafka.Net.Processors
 
         #region Ctor
 
-        public AbstractProcessor()
+        protected AbstractProcessor()
             : this(null)
         {
 
         }
 
-        public AbstractProcessor(string name)
+        protected AbstractProcessor(string name)
             : this(name, null, null)
         {
         }
 
-        public AbstractProcessor(string name, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+        protected AbstractProcessor(string name, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
             : this(name, keySerdes, valueSerdes, null)
         {
         }
 
-        public AbstractProcessor(string name, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, List<string> stateStores)
+        protected AbstractProcessor(string name, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, List<string> stateStores)
         {
             Name = name;
             Key = keySerdes;

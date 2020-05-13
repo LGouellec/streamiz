@@ -173,7 +173,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         public ConsumeResult<byte[], byte[]> Consume(int millisecondsTimeout)
             => Consume(TimeSpan.FromMilliseconds(millisecondsTimeout));
 
-        public ConsumeResult<byte[], byte[]> Consume(CancellationToken cancellationToken)
+        public ConsumeResult<byte[], byte[]> Consume(CancellationToken cancellationToken = default)
         {
             if (Subscription.Count == 0)
                 throw new StreamsException("No subscription have been done !");

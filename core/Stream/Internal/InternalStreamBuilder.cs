@@ -35,7 +35,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         internal KStream<K, V> Stream<K, V>(string topic, ConsumedInternal<K, V> consumed)
         {
-            var name = new Named(consumed.Named).OrElseGenerateWithPrefix(this, KStream<byte, byte>.SOURCE_NAME);
+            var name = new Named(consumed.Named).OrElseGenerateWithPrefix(this, KStream.SOURCE_NAME);
             var node = new StreamSourceNode<K,V>(topic, name, consumed);
             this.AddGraphNode(root, node);
             KStream<K, V> stream = new KStream<K, V>(name, consumed.KeySerdes, consumed.ValueSerdes, new List<string> { name }, node, this);
@@ -60,13 +60,13 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public string NewStoreName(string prefix)
         {
-            return $"{prefix}{KTable<byte, byte, byte>.STATE_STORE_NAME}{NextIndex.ToString("D10")}";
+            return $"{prefix}{KTable.STATE_STORE_NAME}{NextIndex.ToString("D10")}";
         }
 
         internal IKTable<K, V> Table<K, V>(string topic, ConsumedInternal<K, V> consumed, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized)
         {
-            var sourceName = new Named(consumed.Named).SuffixWithOrElseGet(TABLE_SOURCE_SUFFIX, this, KStream<byte, byte>.SOURCE_NAME);
-            var tableSourceName = new Named(consumed.Named).OrElseGenerateWithPrefix(this, KTable<byte, byte, byte>.SOURCE_NAME);
+            var sourceName = new Named(consumed.Named).SuffixWithOrElseGet(TABLE_SOURCE_SUFFIX, this, KStream.SOURCE_NAME);
+            var tableSourceName = new Named(consumed.Named).OrElseGenerateWithPrefix(this, KTable.SOURCE_NAME);
 
             KTableSource<K, V> tableSource = new KTableSource<K,V>(materialized.StoreName , materialized.QueryableStoreName);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K,V>(tableSource, tableSourceName);

@@ -7,14 +7,10 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal abstract class AbstractTaskCreator<T> where T : ITask
     {
-        readonly InternalTopologyBuilder builder;
-        readonly IStreamConfig config;
-        readonly ILog log;
+        protected readonly ILog log;
 
-        protected AbstractTaskCreator(InternalTopologyBuilder builder, IStreamConfig config)
+        protected AbstractTaskCreator()
         {
-            this.builder = builder;
-            this.config = config;
             this.log = Logger.GetLogger(this.GetType());
         }
 
@@ -36,6 +32,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             return createdTasks;
         }
 
-        public abstract T CreateTask(IConsumer<byte[], byte[]> consumer, TaskId id, TopicPartition partitions);
+        public abstract T CreateTask(IConsumer<byte[], byte[]> consumer, TaskId id, TopicPartition partition);
     }
 }

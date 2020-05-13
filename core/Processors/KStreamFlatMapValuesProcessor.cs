@@ -5,7 +5,7 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal class KStreamFlatMapValuesProcessor<K, V, VR> : AbstractProcessor<K, V>
     {
-        private IValueMapperWithKey<K, V, IEnumerable<VR>> mapper;
+        private readonly IValueMapperWithKey<K, V, IEnumerable<VR>> mapper;
 
         public KStreamFlatMapValuesProcessor(IValueMapperWithKey<K, V, IEnumerable<VR>> mapper)
         {

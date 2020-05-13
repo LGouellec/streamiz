@@ -12,7 +12,7 @@ namespace Streamiz.Kafka.Net.Stream
     /// </summary>
     /// <typeparam name="V">value type</typeparam>
     /// <typeparam name="VR">mapped value type</typeparam>
-    public interface IValueMapper<V, VR>
+    public interface IValueMapper<in V, out VR>
     {
         /// <summary>
         /// Map the given value to a new value.

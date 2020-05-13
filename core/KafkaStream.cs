@@ -64,7 +64,7 @@ namespace Streamiz.Kafka.Net
     /// </code>
     /// </example>
     /// </summary>
-    public class KafkaStream
+    public sealed class KafkaStream
     {
         #region State Stream
 
@@ -108,7 +108,7 @@ namespace Streamiz.Kafka.Net
         /// - Of special importance: If the global stream thread dies, or all stream threads die (or both) then
         ///   the instance will be in the ERROR state. The user will need to close it.
         /// </summary>
-        public class State : IEquatable<State>
+        public sealed class State : IEquatable<State>
         {
             /// <summary>
             /// Static CREATED State of a <see cref="KafkaStream"/> instance.

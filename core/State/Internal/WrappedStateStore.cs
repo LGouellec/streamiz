@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
-    internal class WrappedStateStore<S, K, V> : IStateStore
+    internal class WrappedStateStore<S> : IStateStore
         where S : IStateStore
     {
 

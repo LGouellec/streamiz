@@ -5,7 +5,7 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal class KStreamMapProcessor<K, V, K1, V1> : AbstractProcessor<K, V>
     {
-        private IKeyValueMapper<K, V, KeyValuePair<K1, V1>> mapper;
+        private readonly IKeyValueMapper<K, V, KeyValuePair<K1, V1>> mapper;
 
         public KStreamMapProcessor(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> mapper)
         {

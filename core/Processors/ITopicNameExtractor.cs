@@ -7,7 +7,7 @@ namespace Streamiz.Kafka.Net.Processors
     /// </summary>
     /// <typeparam name="K">Key type</typeparam>
     /// <typeparam name="V">Value type</typeparam>
-    public interface ITopicNameExtractor<K, V>
+    public interface ITopicNameExtractor<in K, in V>
     {
         /// <summary>
         /// Extracts the topic name to send to. The topic name must already exist, since the Kafka Streams library will not

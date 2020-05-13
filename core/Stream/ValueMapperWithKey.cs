@@ -14,7 +14,7 @@ namespace Streamiz.Kafka.Net.Stream
     /// <typeparam name="K">key type</typeparam>
     /// <typeparam name="V">value type</typeparam>
     /// <typeparam name="VR">mapped value type</typeparam>
-    public interface IValueMapperWithKey<K, V, VR>
+    public interface IValueMapperWithKey<in K, in V, out VR>
     {
         /// <summary>
         /// Map the given [key and ]value to a new value.

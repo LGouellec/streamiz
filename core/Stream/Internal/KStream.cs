@@ -9,61 +9,41 @@ using System.Linq;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
-    internal class KStream<K, V> : AbstractStream<K, V>, IKStream<K, V>
+    internal static class KStream
     {
         #region Constants
 
-        internal static readonly String JOINTHIS_NAME = "KSTREAM-JOINTHIS-";
-
-        internal static readonly String JOINOTHER_NAME = "KSTREAM-JOINOTHER-";
-
-        internal static readonly String JOIN_NAME = "KSTREAM-JOIN-";
-
-        internal static readonly String LEFTJOIN_NAME = "KSTREAM-LEFTJOIN-";
-
-        internal static readonly String MERGE_NAME = "KSTREAM-MERGE-";
-
-        internal static readonly String OUTERTHIS_NAME = "KSTREAM-OUTERTHIS-";
-
-        internal static readonly String OUTEROTHER_NAME = "KSTREAM-OUTEROTHER-";
-
-        internal static readonly String WINDOWED_NAME = "KSTREAM-WINDOWED-";
-
-        internal static readonly String SOURCE_NAME = "KSTREAM-SOURCE-";
-
-        internal static readonly String SINK_NAME = "KSTREAM-SINK-";
-
-        internal static readonly String REPARTITION_TOPIC_SUFFIX = "-repartition";
-
-        internal static readonly String BRANCH_NAME = "KSTREAM-BRANCH-";
-
-        internal static readonly String BRANCHCHILD_NAME = "KSTREAM-BRANCHCHILD-";
-
-        internal static readonly String FILTER_NAME = "KSTREAM-FILTER-";
-
-        internal static readonly String PEEK_NAME = "KSTREAM-PEEK-";
-
-        internal static readonly String FLATMAP_NAME = "KSTREAM-FLATMAP-";
-
-        internal static readonly String FLATMAPVALUES_NAME = "KSTREAM-FLATMAPVALUES-";
-
-        internal static readonly String MAP_NAME = "KSTREAM-MAP-";
-
-        internal static readonly String MAPVALUES_NAME = "KSTREAM-MAPVALUES-";
-
-        internal static readonly String PROCESSOR_NAME = "KSTREAM-PROCESSOR-";
-
-        internal static readonly String PRINTING_NAME = "KSTREAM-PRINTER-";
-
-        internal static readonly String KEY_SELECT_NAME = "KSTREAM-KEY-SELECT-";
-
-        internal static readonly String TRANSFORM_NAME = "KSTREAM-TRANSFORM-";
-
-        internal static readonly String TRANSFORMVALUES_NAME = "KSTREAM-TRANSFORMVALUES-";
-
-        internal static readonly String FOREACH_NAME = "KSTREAM-FOREACH-";
+        internal static readonly string JOINTHIS_NAME = "KSTREAM-JOINTHIS-";           
+        internal static readonly string JOINOTHER_NAME = "KSTREAM-JOINOTHER-";                   
+        internal static readonly string JOIN_NAME = "KSTREAM-JOIN-";                    
+        internal static readonly string LEFTJOIN_NAME = "KSTREAM-LEFTJOIN-";               
+        internal static readonly string MERGE_NAME = "KSTREAM-MERGE-";                  
+        internal static readonly string OUTERTHIS_NAME = "KSTREAM-OUTERTHIS-";              
+        internal static readonly string OUTEROTHER_NAME = "KSTREAM-OUTEROTHER-";                
+        internal static readonly string WINDOWED_NAME = "KSTREAM-WINDOWED-";           
+        internal static readonly string SOURCE_NAME = "KSTREAM-SOURCE-";         
+        internal static readonly string SINK_NAME = "KSTREAM-SINK-";     
+        internal static readonly string REPARTITION_TOPIC_SUFFIX = "-repartition";        
+        internal static readonly string BRANCH_NAME = "KSTREAM-BRANCH-";      
+        internal static readonly string BRANCHCHILD_NAME = "KSTREAM-BRANCHCHILD-";
+        internal static readonly string FILTER_NAME = "KSTREAM-FILTER-";      
+        internal static readonly string PEEK_NAME = "KSTREAM-PEEK-";           
+        internal static readonly string FLATMAP_NAME = "KSTREAM-FLATMAP-";      
+        internal static readonly string FLATMAPVALUES_NAME = "KSTREAM-FLATMAPVALUES-";         
+        internal static readonly string MAP_NAME = "KSTREAM-MAP-";    
+        internal static readonly string MAPVALUES_NAME = "KSTREAM-MAPVALUES-";       
+        internal static readonly string PROCESSOR_NAME = "KSTREAM-PROCESSOR-";     
+        internal static readonly string PRINTING_NAME = "KSTREAM-PRINTER-";     
+        internal static readonly string KEY_SELECT_NAME = "KSTREAM-KEY-SELECT-";    
+        internal static readonly string TRANSFORM_NAME = "KSTREAM-TRANSFORM-";       
+        internal static readonly string TRANSFORMVALUES_NAME = "KSTREAM-TRANSFORMVALUES-";
+        internal static readonly string FOREACH_NAME = "KSTREAM-FOREACH-";
 
         #endregion
+    }
+
+    internal class KStream<K, V> : AbstractStream<K, V>, IKStream<K, V>
+    {
 
         internal KStream(string name, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, List<string> setSourceNodes, StreamGraphNode node, InternalStreamBuilder builder)
             : base(name, keySerdes, valueSerdes, setSourceNodes, node, builder)
@@ -135,7 +115,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             if(mapper == null)
                 throw new ArgumentNullException($"FlatMap() doesn't allow null mapper function");
 
-            var name = new Named(named).OrElseGenerateWithPrefix(this.builder, FLATMAP_NAME);
+            var name = new Named(named).OrElseGenerateWithPrefix(this.builder, KStream.FLATMAP_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFlatMap<K, V, KR, VR>(mapper), name);
             ProcessorGraphNode<K, V> flatMapNode = new ProcessorGraphNode<K, V>(name, processorParameters);
             flatMapNode.KeyChangingOperation = true;
@@ -164,7 +144,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             if (mapper == null)
                 throw new ArgumentNullException($"Mapper function can't be null");
 
-            var name = new Named(named).OrElseGenerateWithPrefix(this.builder, FLATMAPVALUES_NAME);
+            var name = new Named(named).OrElseGenerateWithPrefix(this.builder, KStream.FLATMAPVALUES_NAME);
 
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFlatMapValues<K, V, VR>(mapper), name);
             ProcessorGraphNode<K, V> flatMapValuesNode = new ProcessorGraphNode<K, V>(name, processorParameters);
@@ -191,7 +171,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             if (action == null)
                 throw new ArgumentNullException("Foreach() doesn't allow null action function ");
 
-            String name = new Named(named).OrElseGenerateWithPrefix(this.builder, FOREACH_NAME);
+            String name = new Named(named).OrElseGenerateWithPrefix(this.builder, KStream.FOREACH_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamPeek<K, V>(action, false), name);
             ProcessorGraphNode<K, V> foreachNode = new ProcessorGraphNode<K, V>(name, processorParameters);
 
@@ -209,7 +189,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 throw new ArgumentNullException(nameof(action));
             }
 
-            String name = new Named(named).OrElseGenerateWithPrefix(this.builder, PEEK_NAME);
+            String name = new Named(named).OrElseGenerateWithPrefix(this.builder, KStream.PEEK_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamPeek<K, V>(action, true), name);
             ProcessorGraphNode<K, V> peekNode = new ProcessorGraphNode<K, V>(name, processorParameters);
 
@@ -236,7 +216,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             if (mapper == null)
                 throw new ArgumentNullException($"Map() doesn't allow null mapper function");
 
-            string name = new Named(named).OrElseGenerateWithPrefix(this.builder, MAP_NAME);
+            string name = new Named(named).OrElseGenerateWithPrefix(this.builder, KStream.MAP_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamMap<K, V, KR, VR>(mapper), name);
             ProcessorGraphNode<K, V> mapProcessorNode = new ProcessorGraphNode<K, V>(name, processorParameters);
             mapProcessorNode.KeyChangingOperation = true;
@@ -273,7 +253,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             if (mapper == null)
                 throw new ArgumentNullException($"Mapper function can't be null");
 
-            String name = new Named(named).OrElseGenerateWithPrefix(this.builder, MAPVALUES_NAME);
+            String name = new Named(named).OrElseGenerateWithPrefix(this.builder, KStream.MAPVALUES_NAME);
 
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamMapValues<K, V, VR>(mapper), name);
             ProcessorGraphNode<K, V> mapValuesProcessorNode = new ProcessorGraphNode<K, V>(name, processorParameters);
@@ -300,7 +280,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             if (printed == null)
                 throw new ArgumentNullException("Print() doesn't allow null printed instance");
 
-            var name = new Named(printed.Name).OrElseGenerateWithPrefix(this.builder, PRINTING_NAME);
+            var name = new Named(printed.Name).OrElseGenerateWithPrefix(this.builder, KStream.PRINTING_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(printed.Build(this.nameNode), name);
             ProcessorGraphNode<K, V> printNode = new ProcessorGraphNode<K, V>(name, processorParameters);
 
@@ -384,7 +364,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             if (predicate == null)
                 throw new ArgumentNullException($"Filter() doesn't allow null predicate function");
 
-            string name = new Named(named).OrElseGenerateWithPrefix(this.builder, FILTER_NAME);
+            string name = new Named(named).OrElseGenerateWithPrefix(this.builder, KStream.FILTER_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamFilter<K, V>(predicate, not), name);
             ProcessorGraphNode<K, V> filterProcessorNode = new ProcessorGraphNode<K, V>(name, processorParameters);
 
@@ -394,7 +374,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         private void DoTo(ITopicNameExtractor<K, V> topicExtractor, Produced<K, V> produced)
         {
-            string name = new Named(produced.Named).OrElseGenerateWithPrefix(this.builder, SINK_NAME);
+            string name = new Named(produced.Named).OrElseGenerateWithPrefix(this.builder, KStream.SINK_NAME);
 
             StreamSinkNode<K, V> sinkNode = new StreamSinkNode<K, V>(topicExtractor, name, produced);
             this.builder.AddGraphNode(node, sinkNode);
@@ -409,10 +389,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             if(predicates == null || predicates.Any(p => p == null))
                 throw new ArgumentNullException("Branch() doesn't allow null predicate function");
 
-            String branchName = namedInternal.OrElseGenerateWithPrefix(this.builder, BRANCH_NAME);
+            String branchName = namedInternal.OrElseGenerateWithPrefix(this.builder, KStream.BRANCH_NAME);
             String[] childNames = new String[predicates.Length];
             for (int i = 0; i < predicates.Length; i++)
-                childNames[i] = namedInternal.SuffixWithOrElseGet($"predicate-{i}", this.builder, BRANCHCHILD_NAME);
+                childNames[i] = namedInternal.SuffixWithOrElseGet($"predicate-{i}", this.builder, KStream.BRANCHCHILD_NAME);
 
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new KStreamBranch<K, V>(predicates, childNames), branchName);
             ProcessorGraphNode<K, V> branchNode = new ProcessorGraphNode<K, V>(branchName, processorParameters);
@@ -452,7 +432,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         private ProcessorGraphNode<K, V> InternalSelectKey<KR>(IKeyValueMapper<K, V, KR> mapper, string named = null)
         {
-            var name = new Named(named).OrElseGenerateWithPrefix(this.builder, KEY_SELECT_NAME);
+            var name = new Named(named).OrElseGenerateWithPrefix(this.builder, KStream.KEY_SELECT_NAME);
 
             WrappedKeyValueMapper<K, V, KeyValuePair<KR, V>> internalMapper =
                 new WrappedKeyValueMapper<K, V, KeyValuePair<KR, V>>(

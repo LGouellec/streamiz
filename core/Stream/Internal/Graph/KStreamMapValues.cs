@@ -7,7 +7,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph
 {
     internal class KStreamMapValues<K, V, V1> : IProcessorSupplier<K, V>
     {
-        private IValueMapperWithKey<K, V, V1> mapper;
+        private readonly IValueMapperWithKey<K, V, V1> mapper;
 
         public KStreamMapValues(IValueMapperWithKey<K, V, V1> mapper)
         {
