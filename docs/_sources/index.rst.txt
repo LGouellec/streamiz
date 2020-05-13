@@ -31,7 +31,7 @@ Starting from scratch
 Here is the easiest way to create a first sync, from scratch : 
  
 * Create a **.Net Standard 2.1** compatible project, like a **.Net Core > = 3.0** console application. For more information, please find help here `net-standard <https://docs.microsoft.com/fr-fr/dotnet/standard/net-standard#net-implementation-support>`_
-* Add the nuget package Streamiz.Kafka.Net (not available for moment, soon)
+* Add the nuget package Streamiz.Kafka.Net
 * Please retrieve your kafka cluster connection information
 
 Add this code ::

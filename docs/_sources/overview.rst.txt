@@ -10,10 +10,12 @@ Overview
 
 Just few lines of code, with the settings kafka cluster and DSL builder, you may to create your first .NET streamiz application.
 
-Nuget packages
+Nuget package
 ----------------------
 
-NUGET PACKAGE LISTED SOON
+.. code-block:: shell
+
+    dotnet add package Streamiz.Kafka.Net --version 0.1.0-beta2
 
 
 Tutorial: First streamiz application

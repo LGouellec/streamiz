@@ -43,11 +43,17 @@ Read the full documentation on https://lgouellec.github.io/kafka-streams-dotnet/
 
 # Installation
 
-NUGET PACKAGE LISTED SOON
+Nuget packages are list to [nuget.org](https://www.nuget.org/packages/Streamiz.Kafka.Net/)
+
+Install the last version with :
+```shell
+dotnet add package Streamiz.Kafka.Net --version 0.1.0-beta2
+```
 
 # Usage
 
-Sample code
+There, a sample streamiz application :
+
 ``` csharp
 static void Main(string[] args)
 {
