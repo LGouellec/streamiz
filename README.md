@@ -100,11 +100,6 @@ static void Main(string[] args)
 - [ ] Interactive Queries
 - [ ] Metrics
 
-Some documentations for help during implementation :
-https://docs.confluent.io/current/streams/index.html
-
-https://kafka.apache.org/20/documentation/streams/developer-guide/dsl-api.html#stateless-transformations
-
 # Contributing
 
 Owners:
@@ -119,3 +114,7 @@ Maintainers:
 **Streamiz Kafka .Net** is a community project. We invite your participation through issues and pull requests! You can peruse the [contributing guidelines](CONTRIBUTING.md).
 
 When adding or changing a service please add tests.
+
+# Support
+
+You can found support [here](https://discord.gg/J7Jtxum)

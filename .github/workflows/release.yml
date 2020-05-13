@@ -1,0 +1,28 @@
+name: release-build
+
+on:
+  release:
+    types: [created] 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.101
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    - name: Test
+      run: dotnet test --no-restore --verbosity normal
+    - name: Pack
+      run: dotnet pack core/Streamiz.Kafka.Net.csproj  --configuration Release --include-source --include-symbols --no-build --no-restore
+    - name: Publish in nuget.org
+      run: dotnet nuget push core/**/*symbols.nupkg -k ${{ secrets.NUGET_PACKAGE_TOKEN }} -s https://api.nuget.org/v3/index.json
+    - name: Publish in github repository
+      run: dotnet nuget push core/**/*symbols.nupkg -k ${{ secrets.PACKAGE_TOKEN }} -s https://nuget.pkg.github.com/lgouellec/index.json
