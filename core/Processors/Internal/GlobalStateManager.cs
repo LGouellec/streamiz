@@ -2,7 +2,6 @@
 using Streamiz.Kafka.Net.Crosscutting;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
 using Streamiz.Kafka.Net.Stream.Internal;
 using Confluent.Kafka;
@@ -27,12 +26,22 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public void Close()
         {
-            throw new NotImplementedException();
+            this.log.Debug("Closing global state manager");
+            foreach (var entry in this.globalStores)
+            {
+                log.Debug($"Closing store {entry.Key}");
+                entry.Value.Close();
+            }
         }
 
         public void Flush()
         {
-            // TODO
+            this.log.Debug("Flushing all global globalStores registered in the state manager");
+            foreach (var entry in this.globalStores)
+            {
+                log.Debug($"Flushing store {entry.Key}");
+                entry.Value.Flush();
+            }
         }
 
         public IStateStore GetStore(string name)
@@ -65,8 +74,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             var topicPartitions = this.TopicPartitionsForStore(store);
             foreach (var partition in topicPartitions)
             {
-                // TODO: restore state? see java GlobalStateManagerImpl.registerStore
-                // get offset from kafka?
                 this.ChangelogOffsets[partition] = 0;
             }
 

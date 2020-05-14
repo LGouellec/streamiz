@@ -82,7 +82,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             if (nodeFactories.ContainsKey(nameNode))
                 throw new TopologyException($"Source processor {nameNode} is already added.");
 
-            if (sourcesTopics.Contains(topic))
+            if (sourceTopics.Contains(topic))
             {
                 throw new TopologyException($"Topic {topic} has already been registered by another source.");
             }
@@ -326,16 +326,15 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             foreach (string stateStoreName in factory.StateStores)
             {
                 if (!stateStores.ContainsKey(stateStoreName) && stateFactories.ContainsKey(stateStoreName))
-                {
+                { 
                     StateStoreFactory stateStoreFactory = stateFactories[stateStoreName];
 
-                        // TODO : changelog topic (remember the changelog topic if this state store is change-logging enabled)
-                        stateStores.Add(stateStoreName, stateStoreFactory.Build());
-                    } 
-                    else
-                    {
-                        stateStores.Add(stateStoreName, GlobalStateStores[stateStoreName]);
-                    }
+                    // TODO : changelog topic (remember the changelog topic if this state store is change-logging enabled)
+                    stateStores.Add(stateStoreName, stateStoreFactory.Build());
+                } 
+                else
+                {
+                    stateStores.Add(stateStoreName, GlobalStateStores[stateStoreName]);
                 }
             }
         }

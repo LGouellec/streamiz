@@ -32,7 +32,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public void FlushState()
         {
-            // TODO
             this.globalStateManager.Flush();
             //this.globalStateManager.Checkpoint(this.offsets);
         }
@@ -65,8 +64,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             // TODO: java implementation uses record.Offset + 1
             // why the difference? (StreamTask.Process does same thing as below)
             offsets[record.TopicPartition] = record.Offset;
-
-            // TODO: Commit? Or maybe GlobalStreamThread calling FlushState() does it already?
         }
 
         private void InitTopology()

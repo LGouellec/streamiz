@@ -1,4 +1,4 @@
-﻿using Confluent.Kafka;
+using Confluent.Kafka;
 using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
@@ -293,7 +293,7 @@ namespace Streamiz.Kafka.Net
             // sanity check
             var processorTopology = topology.Builder.BuildTopology();
 
-            int numStreamThreads = topology.Builder.HasNoNonGlobalTopology ? 0 : this.configuration.NumStreamThreads;
+            int numStreamThreads = topology.Builder.HasNoNonGlobalTopology ? 0 : configuration.NumStreamThreads;
 
             this.threads = new IThread[numStreamThreads];
             var threadState = new Dictionary<long, Processors.ThreadState>();

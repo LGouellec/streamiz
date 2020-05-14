@@ -6,7 +6,6 @@ using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 
 namespace Streamiz.Kafka.Net.Processors

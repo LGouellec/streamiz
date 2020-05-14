@@ -96,8 +96,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             // explicitly disable logging for global stores
             materialized.WithLoggingDisabled();
 
-            string sourceName = new Named(consumed.Named).SuffixWithOrElseGet(TABLE_SOURCE_SUFFIX, this, KStream<byte, byte>.SOURCE_NAME);
-            string tableSourceName = new Named(consumed.Named).OrElseGenerateWithPrefix(this, KTable<byte, byte, byte>.SOURCE_NAME);
+            string sourceName = new Named(consumed.Named).SuffixWithOrElseGet(TABLE_SOURCE_SUFFIX, this, KStream.SOURCE_NAME);
+            string tableSourceName = new Named(consumed.Named).OrElseGenerateWithPrefix(this, KTable.SOURCE_NAME);
             string storeName = materialized.StoreName;
 
             // enforce store name as queryable name to always materialize global table stores
