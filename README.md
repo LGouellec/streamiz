@@ -1,4 +1,4 @@
-# .NET Stream Processing Library for Apache Kafka <sup>TM</sup> &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/LGouellec/streamiz-kafka-net/blob/master/LICENSE) ![build](https://github.com/LGouellec/kafka-streams-dotnet/workflows/build/badge.svg?branch=master)
+# .NET Stream Processing Library for Apache Kafka <sup>TM</sup> &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/LGouellec/streamiz-kafka-net/blob/master/LICENSE) ![build](https://github.com/LGouellec/kafka-streams-dotnet/workflows/build/badge.svg?branch=master) ![Nuget](https://img.shields.io/nuget/dt/Streamiz.Kafka.Net) ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Streamiz.Kafka.Net)
 
 ## Quality Statistics
 
@@ -43,7 +43,7 @@ Read the full documentation on https://lgouellec.github.io/kafka-streams-dotnet/
 
 # Installation
 
-Nuget packages are list to [nuget.org](https://www.nuget.org/packages/Streamiz.Kafka.Net/)
+Nuget packages are listed to [nuget.org](https://www.nuget.org/packages/Streamiz.Kafka.Net/)
 
 Install the last version with :
 ```shell
@@ -119,7 +119,7 @@ Maintainers:
 
 **Streamiz Kafka .Net** is a community project. We invite your participation through issues and pull requests! You can peruse the [contributing guidelines](CONTRIBUTING.md).
 
-When adding or changing a service please add tests.
+When adding or changing a service please add tests and documentations.
 
 # Support
 
