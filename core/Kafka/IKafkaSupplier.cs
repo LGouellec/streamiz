@@ -37,7 +37,7 @@ namespace Streamiz.Kafka.Net.Kafka
         IAdminClient GetAdmin(AdminClientConfig config);
 
         /// <summary>
-        /// Build a kafka global consumer with <see cref="ConsumerConfig"/> which is used to consume records for <see cref="IGlobalKTable"/>.
+        /// Build a kafka global consumer with <see cref="ConsumerConfig"/> which is used to consume records for <see cref="Table.IGlobalKTable"/>.
         /// </summary>
         /// <param name="config">Global consumer configuration can't be null</param>
         /// <returns>Return a kafka global consumer built</returns>

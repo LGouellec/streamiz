@@ -7,6 +7,7 @@ using Streamiz.Kafka.Net.Table;
 using Streamiz.Kafka.Net.Table.Internal;
 using Streamiz.Kafka.Net.Table.Internal.Graph;
 using Streamiz.Kafka.Net.Table.Internal.Graph.Nodes;
+using System;
 using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
@@ -93,6 +94,11 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         internal IGlobalKTable GlobalTable<K, V>(string topic, ConsumedInternal<K, V> consumed, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized)
         {
+            if (string.IsNullOrEmpty(topic))
+            {
+                throw new ArgumentException("topic can't be null or empty", nameof(topic));
+            }
+
             // explicitly disable logging for global stores
             materialized.WithLoggingDisabled();
 
