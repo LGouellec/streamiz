@@ -17,7 +17,7 @@ namespace Streamiz.Kafka.Net.SerDes
         public override int Deserialize(byte[] data) => BitConverter.ToInt32(data);
 
         /// <summary>
-        /// Convert string <code>data</code> into a byte array.
+        /// Convert int32 <code>data</code> into a byte array.
         /// </summary>
         /// <param name="data"><see cref="Int32"/> data</param>
         /// <returns>serialized bytes</returns>
