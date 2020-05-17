@@ -1,7 +1,10 @@
 ﻿using Streamiz.Kafka.Net;
+using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Table;
 using System;
 
 namespace sample_test_driver
@@ -15,7 +18,15 @@ namespace sample_test_driver
 
             StreamBuilder builder = new StreamBuilder();
 
-            builder.Stream<string, string>("test").Filter((k, v) => v.Contains("test")).To("test-output");
+            //builder
+            //    .Stream<string, string>("test")
+            //    .Filter((k, v) => v.Contains("test"))
+            //    .To("test-output");
+
+            builder
+                .Stream<string, string>("test")
+                .GroupByKey()
+                .Count(Materialized<string, long, IKeyValueStore<Bytes, byte[]>>.Create("count-store"));
 
             Topology t = builder.Build();
 
@@ -23,9 +34,9 @@ namespace sample_test_driver
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("test");
                 var outputTopic = driver.CreateOuputTopic<string, string>("test-output", TimeSpan.FromSeconds(5));
-                inputTopic.PipeInput("test", "test-1234");
-                var r = outputTopic.ReadKeyValue();
-                // YOU SOULD ASSERT HERE
+                inputTopic.PipeInput("test", "test");
+                inputTopic.PipeInput("test", "test2");
+                var e = driver.GetKeyValueStore<string, string>("count-store");
             }
         }
     }

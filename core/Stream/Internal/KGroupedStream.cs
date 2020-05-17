@@ -1,6 +1,7 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 using Streamiz.Kafka.Net.Table;
 using System.Collections.Generic;
@@ -40,6 +41,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public IKTable<K, long> Count(Materialized<K, long, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
         {
+            materialized = materialized ?? Materialized<K, long, IKeyValueStore<Bytes, byte[]>>.Create();
+
             if (materialized.StoreName == null)
             {
                 builder.NewStoreName(KGroupedStream.AGGREGATE_NAME);
@@ -63,25 +66,26 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 materialized.WithValueSerdes(new Int64SerDes());
 
             string name = new Named(named).OrElseGenerateWithPrefix(builder, KGroupedStream.AGGREGATE_NAME);
+            materialized.UseProvider(builder, KGroupedStream.AGGREGATE_NAME);
+
             return DoAggregate(
-                new KStreamAggregate<K, V, long>(
-                    materialized.StoreName,
-                    () => 0L,
-                    (aggKey, value, aggregate) => aggregate + 1),
-                name,
-                materialized);
+                    new KStreamAggregate<K, V, long>(
+                        materialized.StoreName,
+                        () => 0L,
+                        (aggKey, value, aggregate) => aggregate + 1),
+                    name,
+                    materialized);
         }
 
         private IKTable<K, T> DoAggregate<T>(IKStreamAggProcessorSupplier<K, K, V, T> aggregateSupplier, string functionName, Materialized<K, T, IKeyValueStore<Bytes, byte[]>> materializedInternal)
         {
-            return null;
-        //    return aggregateBuilder.build(
-        //        new NamedInternal(functionName),
-        //        new TimestampedKeyValueStoreMaterializer<>(materializedInternal).materialize(),
-        //        aggregateSupplier,
-        //        materializedInternal.queryableStoreName(),
-        //        materializedInternal.keySerde(),
-        //        materializedInternal.valueSerde());
+            return aggregateBuilder.Build(
+                functionName,
+                new TimestampedKeyValueStoreMaterializer<K, T>(materializedInternal).Materialize(),
+                aggregateSupplier,
+                materializedInternal.QueryableStoreName,
+                materializedInternal.KeySerdes,
+                materializedInternal.ValueSerdes);
         }
 
         #endregion

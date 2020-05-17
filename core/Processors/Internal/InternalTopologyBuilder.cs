@@ -23,25 +23,28 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         internal IEnumerable<string> GetSourceTopics() => sourcesTopics;
 
-        #region Private
+        #region Connect
 
-        private void ConnectProcessorAndStateStore(string processorName, string stateStoreName)
+        internal void ConnectProcessorAndStateStore(string processorName, params string[] stateStoreNames)
         {
-            if (!stateFactories.ContainsKey(stateStoreName))
+            foreach (var stateStoreName in stateStoreNames)
             {
-                throw new TopologyException("StateStore " + stateStoreName + " is not added yet.");
-            }
-            if (!nodeFactories.ContainsKey(processorName))
-            {
-                throw new TopologyException("Processor " + processorName + " is not added yet.");
-            }
+                if (!stateFactories.ContainsKey(stateStoreName))
+                {
+                    throw new TopologyException("StateStore " + stateStoreName + " is not added yet.");
+                }
+                if (!nodeFactories.ContainsKey(processorName))
+                {
+                    throw new TopologyException("Processor " + processorName + " is not added yet.");
+                }
 
-            var nodeFactory = nodeFactories[processorName];
+                var nodeFactory = nodeFactories[processorName];
 
-            if (nodeFactory is IProcessorNodeFactory)
-                ((IProcessorNodeFactory)nodeFactory).AddStateStore(stateStoreName);
-            else
-                throw new TopologyException($"Cannot connect a state store {stateStoreName} to a source node or a sink node.");
+                if (nodeFactory is IProcessorNodeFactory)
+                    ((IProcessorNodeFactory)nodeFactory).AddStateStore(stateStoreName);
+                else
+                    throw new TopologyException($"Cannot connect a state store {stateStoreName} to a source node or a sink node.");
+            }
         }
 
         #endregion
