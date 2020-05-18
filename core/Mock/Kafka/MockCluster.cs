@@ -94,8 +94,11 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         internal void CloseConsumer(string name)
         {
-            Unsubscribe(consumers[name].Consumer);
-            consumers.Remove(name);
+            if (consumers.ContainsKey(name))
+            {
+                Unsubscribe(consumers[name].Consumer);
+                consumers.Remove(name);
+            }
         }
 
         internal void SubscribeTopic(MockConsumer consumer, IEnumerable<string> topics)

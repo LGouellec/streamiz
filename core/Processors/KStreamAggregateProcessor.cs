@@ -39,12 +39,10 @@ namespace Streamiz.Kafka.Net.Processors
             }
 
             ValueAndTimestamp<T> oldAggAndTimestamp = store.Get(key);
-            T oldAgg = oldAggAndTimestamp == null ? default : oldAggAndTimestamp.Value;
+            T oldAgg, newAgg;
+            long newTimestamp;
 
-             T newAgg;
-             long newTimestamp;
-
-            if (oldAgg == null)
+            if (oldAggAndTimestamp == null)
             {
                 oldAgg = initializer.Apply();
                 newTimestamp = Context.Timestamp;
