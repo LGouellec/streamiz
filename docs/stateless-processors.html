@@ -266,7 +266,7 @@
 <p>You would use foreach to cause side effects based on the input data (similar to peek) and then stop further processing of the input data (unlike peek, which is not a terminal operation).</p>
 <p>Note on processing guarantees: Any side effects of an action (such as writing to external systems) are not trackable by Kafka, which means they will typically not benefit from Kafka’s processing guarantees.</p>
 <ul class="simple">
-<li><p>IKStream → void</p></li>
+<li><p>IKGroupedStream  → IKTable</p></li>
 </ul>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>IKStream&lt;string, string&gt; stream = ....
 

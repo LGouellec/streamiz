@@ -87,7 +87,10 @@
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stream-configuration.html">Configuring a Stream Application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stateless-processors.html">Stateless processors</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Statefull processors</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Statefull processors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#count">Count</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="stores.html">State stores</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tology-test-driver.html">Test topology driver</a></li>
 </ul>
@@ -156,6 +159,7 @@
             
   <div class="section" id="statefull-processors">
 <h1>Statefull processors<a class="headerlink" href="#statefull-processors" title="Permalink to this headline">¶</a></h1>
+<p>Stateful transformations depend on state for processing inputs and producing outputs and require a state store associated with the stream processor. For example, in aggregating operations, a windowing state store is used to collect the latest aggregation results per window. In join operations, a windowing state store is used to collect all of the records received so far within the defined window boundary.</p>
 <p>IMPLEMENTATION WORK IN PROGRESS</p>
 <p><strong>To follow the progress, you can star <a class="reference external" href="https://github.com/LGouellec/kafka-streams-dotnet">the Github project</a> and watch it !</strong></p>
 <table border="1" class="docutils">
@@ -198,9 +202,9 @@
 <td>Count</td>
 <td>KGroupedStream -&gt; KTable</td>
 <td></td>
+<td></td>
+<td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>Count</td>
@@ -323,7 +327,28 @@
 <td></td>
 </tr>
 </tbody>
-</table></div>
+</table><div class="section" id="count">
+<h2>Count<a class="headerlink" href="#count" title="Permalink to this headline">¶</a></h2>
+<p><strong>Rolling aggregation.</strong> Counts the number of records by the grouped key. (see IKGroupedStream for details)</p>
+<p>Several variants of count exist.</p>
+<ul class="simple">
+<li><p>IKGroupedStream  → IKTable</p></li>
+<li><p>IKGroupedTable  -&gt; IKTable (soon)</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span> <span class="n">groupedStream</span> <span class="p">=</span> <span class="n">builder</span>
+                        <span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test&quot;</span><span class="p">)</span>
+                        <span class="p">.</span><span class="n">GroupBy</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">k</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">());</span>
+
+<span class="c1">// Counting a IKGroupedStream</span>
+<span class="kt">var</span> <span class="n">table</span> <span class="p">=</span> <span class="n">groupedStream</span><span class="p">.</span><span class="n">Count</span><span class="p">(</span><span class="n">InMemory</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">long</span><span class="p">&gt;.</span><span class="n">As</span><span class="p">(</span><span class="s">&quot;count-store&quot;</span><span class="p">));</span>
+</pre></div>
+</div>
+<p>Detailed behavior for IKGroupedStream:</p>
+<ul class="simple">
+<li><p>Input records with null keys or values are ignored.</p></li>
+</ul>
+</div>
+</div>
 
 
            </div>
