@@ -61,7 +61,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         {
             if (materialized.KeySerdes == null)
                 materialized.WithKeySerdes(keySerdes);
-            
+
             if (materialized.ValueSerdes == null)
                 materialized.WithValueSerdes(new Int64SerDes());
 

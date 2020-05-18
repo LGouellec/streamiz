@@ -16,8 +16,23 @@ namespace Streamiz.Kafka.Net.Stream
     /// <typeparam name="V">Type of value</typeparam>
     public interface IKGroupedStream<K, V>
     {
+        /// <summary>
+        /// Count the number of records in this stream by the grouped key.
+        /// Records with null key or value are ignored.
+        /// The result is written into a local <see cref="IKeyValueStore{K, V}"/> (which is basically an ever-updating materialized view).
+        /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}" /> changelog stream.
+        /// </summary>
+        /// <returns>a <see cref="IKTable{K, V}" /> that contains "update" records with unmodified keys and <see cref="long" /> values that represent the latest (rolling) count (i.e., number of records) for each key</returns>
         IKTable<K, long> Count();
 
+        /// <summary>
+        /// Count the number of records in this stream by the grouped key.
+        /// Records with null key or value are ignored.
+        /// The result is written into a local <see cref="IKeyValueStore{K, V}"/> (which is basically an ever-updating materialized view).
+        /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}" /> changelog stream.
+        /// </summary>
+        /// <param name="named">a config used to name the processor in the topology</param>
+        /// <returns>a <see cref="IKTable{K, V}" /> that contains "update" records with unmodified keys and <see cref="long" /> values that represent the latest (rolling) count (i.e., number of records) for each key</returns>
         IKTable<K, long> Count(string named);
 
         /// <summary>

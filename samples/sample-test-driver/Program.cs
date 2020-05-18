@@ -1,17 +1,15 @@
 ﻿using Streamiz.Kafka.Net;
-using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.SerDes;
-using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using System;
 
 namespace sample_test_driver
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-test-driver-app";
@@ -20,7 +18,7 @@ namespace sample_test_driver
 
             builder
                 .Stream<string, string>("test")
-                .GroupBy((k,v) => k.ToUpper())
+                .GroupBy((k, v) => k.ToUpper())
                 .Count(InMemory<string, long>.As("count-store"));
 
             Topology t = builder.Build();

@@ -38,7 +38,7 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 log.Error($"{logPrefix}Impossible to send sink data because keySerdes and/or valueSerdes is not setted ! KeySerdes : {(KeySerDes != null ? KeySerDes.GetType().Name : "NULL")} | ValueSerdes : {(ValueSerDes != null ? ValueSerDes.GetType().Name : "NULL")}.");
                 var s = KeySerDes == null ? "key" : "value";
-                throw new StreamsException($"{logPrefix}Invalid {s} serdes for this processor. Default {s} serdes is not the same type. Please set a explicit {s} serdes.");
+                throw new StreamsException($"{logPrefix}The {s} serdes is not compatible to the actual {s} for this processor. Change the default {s} serdes in StreamConfig or provide correct Serdes via method parameters(using the DSL)");
             }
 
             var topicName = topicNameExtractor.Extract(key, value, Context.RecordContext);

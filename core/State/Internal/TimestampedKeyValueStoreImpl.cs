@@ -1,4 +1,5 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.SerDes;
 using System.Collections.Generic;
 
@@ -16,14 +17,41 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         }
 
-        private Bytes GetKeyBytes(K key) => new Bytes(this.keySerdes.Serialize(key));
-        private byte[] GetValueBytes(ValueAndTimestamp<V> value) => this.valueSerdes.Serialize(value);
-        private ValueAndTimestamp<V> FromValue(byte[] values) => values != null ? this.valueSerdes.Deserialize(values) : null;
-        private K FromKey(Bytes key) => this.keySerdes.Deserialize(key.Get);
+        private Bytes GetKeyBytes(K key)
+        {
+            if (keySerdes != null)
+                return new Bytes(keySerdes.Serialize(key));
+            else
+                throw new StreamsException($"The serializer is not compatible to the actual key (Key type: {typeof(K).FullName}). Change the default Serdes in StreamConfig or provide correct Serdes via method parameters(using the DSL)");
+        }
+
+        private byte[] GetValueBytes(ValueAndTimestamp<V> value)
+        {
+            if(valueSerdes != null)
+                return valueSerdes.Serialize(value);
+            else
+                throw new StreamsException($"The serializer is not compatible to the actual value (Value type: {typeof(V).FullName}). Change the default Serdes in StreamConfig or provide correct Serdes via method parameters(using the DSL)");
+        }
+
+        private ValueAndTimestamp<V> FromValue(byte[] values)
+        {
+            if(valueSerdes != null)
+                return values != null ? valueSerdes.Deserialize(values) : null;
+            else
+                throw new StreamsException($"The serializer is not compatible to the actual value (Value type: {typeof(V).FullName}). Change the default Serdes in StreamConfig or provide correct Serdes via method parameters(using the DSL)");
+        }
+
+        private K FromKey(Bytes key)
+        {
+            if(keySerdes != null)
+                return keySerdes.Deserialize(key.Get);
+            else
+                throw new StreamsException($"The serializer is not compatible to the actual key (Key type: {typeof(K).FullName}). Change the default Serdes in StreamConfig or provide correct Serdes via method parameters(using the DSL)");
+        }
 
         #region TimestampedKeyValueStore Impl
 
-        public long ApproximateNumEntries() => this.wrapped.ApproximateNumEntries();
+        public long ApproximateNumEntries() => wrapped.ApproximateNumEntries();
 
         public ValueAndTimestamp<V> Delete(K key) => FromValue(wrapped.Delete(GetKeyBytes(key)));
 
@@ -31,7 +59,8 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public void Put(K key, ValueAndTimestamp<V> value) => wrapped.Put(GetKeyBytes(key), GetValueBytes(value));
 
-        public IEnumerable<KeyValuePair<K, ValueAndTimestamp<V>>> All() {
+        public IEnumerable<KeyValuePair<K, ValueAndTimestamp<V>>> All()
+        {
             foreach (var keyValuePair in wrapped.All())
             {
                 yield return new KeyValuePair<K, ValueAndTimestamp<V>>(FromKey(keyValuePair.Key), FromValue(keyValuePair.Value));
