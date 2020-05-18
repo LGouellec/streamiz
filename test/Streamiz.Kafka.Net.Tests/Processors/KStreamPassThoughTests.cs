@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Streamiz.Kafka.Net.Errors;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -21,6 +22,29 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 return DateTime.Now.GetMilliseconds();
             }
+        }
+
+        [Test]
+        public void NoSerdesCompatible()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-passto";
+            var builder = new StreamBuilder();
+
+            builder
+                .Stream<string, string>("topic")
+                .MapValues((k, v) => k.ToCharArray()[0])
+                .To("output");
+
+            var topology = builder.Build();
+            Assert.Throws<StreamsException>(() =>
+            {
+                using (var driver = new TopologyTestDriver(topology, config))
+                {
+                    var input = driver.CreateInputTopic<string, string>("topic");
+                    input.PipeInput("test", "1");
+                }
+            });
         }
 
         [Test]
@@ -244,6 +268,5 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 Assert.AreEqual(expected, list);
             }
         }
-
     }
 }

@@ -237,10 +237,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region MapValues
 
-
         public IKStream<K, VR> MapValues<VR>(Func<V, VR> mapper, string named = null)
             => this.MapValues(new WrappedValueMapper<V, VR>(mapper), named);
-
 
         public IKStream<K, VR> MapValues<VR>(Func<K, V, VR> mapper, string named = null)
             => this.MapValues(new WrapperValueMapperWithKey<K, V, VR>(mapper), named);

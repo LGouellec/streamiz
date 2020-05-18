@@ -86,4 +86,5 @@ Feel free to ping me: `@LGouellec <https://twitter.com/LGouellec>`_
    stream-configuration
    stateless-processors
    statefull-processors
+   stores
    tology-test-driver

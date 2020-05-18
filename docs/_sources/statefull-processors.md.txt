@@ -10,7 +10,7 @@ IMPLEMENTATION WORK IN PROGRESS
 |Aggregate|KGroupedStream -> KTable|&#9745;|   |   |   |
 |Aggregate|KGroupedTable -> KTable|&#9745;|   |   |   |
 |Aggregate(windowed)|KGroupedStream -> KTable|&#9745;|   |   |   |
-|Count|KGroupedStream -> KTable|&#9745;|   |   |   |
+|Count|KGroupedStream -> KTable|   |&#9745;|   |   |
 |Count|KGroupedTable -> KTable|&#9745;|   |   |   |
 |Count(windowed)|KGroupedStream → KStream|&#9745;|   |   |   |
 |Reduce|KGroupedStream → KTable|&#9745;|   |   |   |

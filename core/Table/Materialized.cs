@@ -370,6 +370,41 @@ namespace Streamiz.Kafka.Net.Table
             return this;
         }
 
+        /// <summary>
+        /// Configure key and value serdes
+        /// </summary>
+        /// <param name="keySerdes">Key serdes</param>
+        /// <param name="valueSerdes">Value serdes</param>
+        /// <returns>Itself</returns>
+        public Materialized<K, V, S> With(ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+        {
+            KeySerdes = keySerdes;
+            ValueSerdes = valueSerdes;
+            return this;
+        }
+
+        /// <summary>
+        /// Configure key serdes
+        /// </summary>
+        /// <param name="keySerdes">Key serdes</param>
+        /// <returns>Itself</returns>
+        public Materialized<K, V, S> WithKeySerdes(ISerDes<K> keySerdes)
+        {
+            KeySerdes = keySerdes;
+            return this;
+        }
+
+        /// <summary>
+        /// Configure value serdes
+        /// </summary>
+        /// <param name="valueSerdes">Value serdes</param>
+        /// <returns>Itself</returns>
+        public Materialized<K, V, S> WithValueSerdes(ISerDes<V> valueSerdes)
+        {
+            ValueSerdes = valueSerdes;
+            return this;
+        }
+
         internal Materialized<K, V, S> UseProvider(INameProvider provider, string generatedStorePrefix)
         {
             queriable = !string.IsNullOrEmpty(StoreName);

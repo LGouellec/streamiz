@@ -16,6 +16,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public TopicPartition Partition { get; private set; }
 
+        public IEnumerable<string> StateStoreNames => registeredStores.Keys;
+
         public ProcessorStateManager(TaskId taskId, TopicPartition partition)
         {
             this.log = Logger.GetLogger(typeof(ProcessorStateManager));
