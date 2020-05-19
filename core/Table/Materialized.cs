@@ -405,6 +405,32 @@ namespace Streamiz.Kafka.Net.Table
             return this;
         }
 
+        /// <summary>
+        /// Configure key serdes
+        /// </summary>
+        /// <typeparam name="KRS">New key serdes type</typeparam>
+        /// <returns>Itself</returns>
+        public Materialized<K, V, S> WithKeySerdes<KRS>()
+            where KRS : ISerDes<K>, new()
+        {
+            KeySerdes = new KRS();
+            return this;
+        }
+
+        /// <summary>
+        /// Configure value serdes
+        /// </summary>
+        /// <typeparam name="VRS">New value serdes type</typeparam>
+        /// <returns>Itself</returns>
+        public Materialized<K, V, S> WithValueSerdes<VRS>()
+            where VRS : ISerDes<V>, new()
+        {
+            ValueSerdes = new VRS();
+            return this;
+        }
+
+        #region Internal
+
         internal Materialized<K, V, S> UseProvider(INameProvider provider, string generatedStorePrefix)
         {
             queriable = !string.IsNullOrEmpty(StoreName);
@@ -425,7 +451,9 @@ namespace Streamiz.Kafka.Net.Table
 
             return this;
         }
-        
+
+        #endregion
+
         #endregion
     }
 

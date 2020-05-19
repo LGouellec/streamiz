@@ -120,7 +120,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                         }
                         return old;
                     },
-                    InMemory<string, Dictionary<char, int>>.As("agg-store").WithValueSerdes(new DictionarySerDes())
+                    InMemory<string, Dictionary<char, int>>.As("agg-store").WithValueSerdes<DictionarySerDes>()
                 );
 
             var topology = builder.Build();

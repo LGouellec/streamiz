@@ -89,6 +89,7 @@
 <li class="toctree-l1"><a class="reference internal" href="stateless-processors.html">Stateless processors</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Statefull processors</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#count">Count</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#aggregate">Aggregate</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="stores.html">State stores</a></li>
@@ -177,10 +178,10 @@
 <tr>
 <td>Aggregate</td>
 <td>KGroupedStream -&gt; KTable</td>
+<td></td>
+<td></td>
+<td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>Aggregate</td>
@@ -347,6 +348,23 @@
 <ul class="simple">
 <li><p>Input records with null keys or values are ignored.</p></li>
 </ul>
+</div>
+<div class="section" id="aggregate">
+<h2>Aggregate<a class="headerlink" href="#aggregate" title="Permalink to this headline">¶</a></h2>
+<p><strong>Rolling aggregation.</strong> Aggregates the values of (non-windowed) records by the grouped key. Aggregating is a generalization of reduce and allows, for example, the aggregate value to have a different type than the input values. (see IKGroupedStream for details)</p>
+<p>When aggregating a grouped stream, you must provide an initializer (e.g., aggValue = 0) and an “adder” aggregator (e.g., aggValue + curValue).</p>
+<p>Several variants of aggregate exist.</p>
+<ul class="simple">
+<li><p>KGroupedStream → KTable</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span> <span class="n">groupedStream</span> <span class="p">=</span> <span class="n">builder</span>
+                        <span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test&quot;</span><span class="p">)</span>
+                        <span class="p">.</span><span class="n">GroupBy</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">k</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">());</span>
+
+<span class="c1">// Counting a IKGroupedStream</span>
+<span class="kt">var</span> <span class="n">table</span> <span class="p">=</span> <span class="n">groupedStream</span><span class="p">.</span><span class="n">Aggregate</span><span class="p">(()</span> <span class="p">=&gt;</span> <span class="m">0L</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">agg</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">agg</span><span class="p">+</span> <span class="m">1</span><span class="p">,</span> <span class="n">InMemory</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">long</span><span class="p">&gt;.</span><span class="n">As</span><span class="p">(</span><span class="s">&quot;agg-store&quot;</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="p">&lt;</span><span class="n">Int64SerDes</span><span class="p">&gt;());</span>
+</pre></div>
+</div>
 </div>
 </div>
 

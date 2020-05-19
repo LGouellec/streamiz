@@ -8,7 +8,7 @@ IMPLEMENTATION WORK IN PROGRESS
 
 |Operator Name|Method|TODO|IMPLEMENTED|TESTED|DOCUMENTED|
 |---|---|---|---|---|---|
-|Aggregate|KGroupedStream -> KTable|&#9745;|   |   |   |
+|Aggregate|KGroupedStream -> KTable|   |   |   |&#9745;|
 |Aggregate|KGroupedTable -> KTable|&#9745;|   |   |   |
 |Aggregate(windowed)|KGroupedStream -> KTable|&#9745;|   |   |   |
 |Count|KGroupedStream -> KTable|   |   |   |&#9745;|
@@ -48,3 +48,22 @@ var table = groupedStream.Count(InMemory<string, long>.As("count-store"));
 
 Detailed behavior for IKGroupedStream:
 - Input records with null keys or values are ignored.
+
+## Aggregate
+
+**Rolling aggregation.** Aggregates the values of (non-windowed) records by the grouped key. Aggregating is a generalization of reduce and allows, for example, the aggregate value to have a different type than the input values. (see IKGroupedStream for details)
+
+When aggregating a grouped stream, you must provide an initializer (e.g., aggValue = 0) and an “adder” aggregator (e.g., aggValue + curValue).
+
+Several variants of aggregate exist.
+
+- KGroupedStream → KTable
+
+``` csharp
+var groupedStream = builder
+                        .Stream<string, string>("test")
+                        .GroupBy((k, v) => k.ToUpper());
+
+// Counting a IKGroupedStream
+var table = groupedStream.Aggregate(() => 0L, (k,v,agg) => agg+ 1, InMemory<string, long>.As("agg-store").WithValueSerdes<Int64SerDes>());
+```
