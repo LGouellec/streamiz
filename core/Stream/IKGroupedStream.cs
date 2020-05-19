@@ -2,6 +2,7 @@
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Table;
+using System;
 
 namespace Streamiz.Kafka.Net.Stream
 {
@@ -52,5 +53,173 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">a named config used to name the processor in the topology</param>
         /// <returns>a <see cref="IKTable{K, V}"/> that contains "update" records with unmodified keys and <see cref="long"/> values that represent the latest (rolling) count (i.e., number of records) for each key</returns>
         IKTable<K, long> Count(Materialized<K, long, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+
+        /// <summary>
+        /// Aggregate the values of records in this stream by the grouped key.
+        /// Records with null key or value are ignored.
+        /// Aggregating is a generalization of Reducer combining via reduce(...)} as it, for example,
+        /// allows the result to have a different type than the input values.
+        /// The result is written into a local <see cref="IKeyValueStore{K, VR}"/> (which is basically an ever-updating materialized view)
+        /// that can be queried by the given store name in {@code materialized}.
+        /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, VR}" /> changelog stream.
+        /// <p>
+        /// The specified <see cref="Func{VR}"/> initializer is applied once directly before the first input record is processed to
+        /// provide an initial intermediate aggregation result that is used to process the first record.
+        /// The specified <see cref="Func{K, V, VR, VR}"/> aggregator is applied for each input record and computes a new aggregate using the current
+        /// aggregate (or for the very first record using the intermediate aggregation result provided via the
+        /// initialize) and the record's value.
+        /// Thus, <see cref="Aggregate{VR, VRS}(Func{VR}, Func{K, V, VR, VR})"/> can be used to compute aggregate functions like
+        /// count (c.f. <see cref="Count(Materialized{K, long, IKeyValueStore{Bytes, byte[]}}, string)"/>).
+        /// </p>
+        /// </summary>
+        /// <typeparam name="VR">the value type of the resulting <see cref="IKTable{K, VR}"/></typeparam>
+        /// <param name="initializer">an <see cref="Func{VR}"/> initializer that computes an initial intermediate aggregation result</param>
+        /// <param name="aggregator">an <see cref="Func{K, V, VR, VR}"/> aggregator that computes a new aggregate result</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains "update" records with unmodified keys, and values that represent the
+        /// latest (rolling) aggregate for each key. If the aggregate function returns {@code null}, it is then interpreted as
+        /// deletion for the key, and future messages of the same key coming from upstream operators
+        /// will be handled as newly initialized value.</returns>
+        IKTable<K, VR> Aggregate<VR>(Func<VR> initializer, Func<K, V, VR, VR> aggregator);
+
+        /// <summary>
+        /// Aggregate the values of records in this stream by the grouped key.
+        /// Records with null key or value are ignored.
+        /// Aggregating is a generalization of Reducer combining via reduce(...)} as it, for example,
+        /// allows the result to have a different type than the input values.
+        /// The result is written into a local <see cref="IKeyValueStore{K, VR}"/> (which is basically an ever-updating materialized view)
+        /// that can be queried by the given store name in {@code materialized}.
+        /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, VR}" /> changelog stream.
+        /// <p>
+        /// The specified <see cref="Initializer{VR}"/> is applied once directly before the first input record is processed to
+        /// provide an initial intermediate aggregation result that is used to process the first record.
+        /// The specified <see cref="Aggregator{K, V, VR}"/> is applied for each input record and computes a new aggregate using the current
+        /// aggregate (or for the very first record using the intermediate aggregation result provided via the
+        /// <see cref="Initializer{VR}"/>) and the record's value.
+        /// Thus, <see cref="Aggregate{VR}(Initializer{VR}, Aggregator{K, V, VR})"/> can be used to compute aggregate functions like
+        /// count (c.f. <see cref="Count(Materialized{K, long, IKeyValueStore{Bytes, byte[]}}, string)"/>).
+        /// </p>
+        /// </summary>
+        /// <typeparam name="VR">the value type of the resulting <see cref="IKTable{K, VR}"/></typeparam>
+        /// <param name="initializer">an <see cref="Initializer{VR}"/>  that computes an initial intermediate aggregation result</param>
+        /// <param name="aggregator">an <see cref="Aggregator{K, V, VR}"/> that computes a new aggregate result</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains "update" records with unmodified keys, and values that represent the
+        /// latest (rolling) aggregate for each key. If the aggregate function returns {@code null}, it is then interpreted as
+        /// deletion for the key, and future messages of the same key coming from upstream operators
+        /// will be handled as newly initialized value.</returns>
+        IKTable<K, VR> Aggregate<VR>(Initializer<VR> initializer, Aggregator<K, V, VR> aggregator);
+
+        /// <summary>
+        /// Aggregate the values of records in this stream by the grouped key.
+        /// Records with null key or value are ignored.
+        /// Aggregating is a generalization of Reducer combining via reduce(...)} as it, for example,
+        /// allows the result to have a different type than the input values.
+        /// The result is written into a local <see cref="IKeyValueStore{K, VR}"/> (which is basically an ever-updating materialized view)
+        /// that can be queried by the given store name in {@code materialized}.
+        /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, VR}" /> changelog stream.
+        /// <p>
+        /// The specified <see cref="Func{VR}"/> initializer is applied once directly before the first input record is processed to
+        /// provide an initial intermediate aggregation result that is used to process the first record.
+        /// The specified <see cref="Func{K, V, VR, VR}"/> aggregator is applied for each input record and computes a new aggregate using the current
+        /// aggregate (or for the very first record using the intermediate aggregation result provided via the
+        /// initialize) and the record's value.
+        /// Thus, <see cref="Aggregate{VR, VRS}(Func{VR}, Func{K, V, VR, VR})"/> can be used to compute aggregate functions like
+        /// count (c.f. <see cref="Count(Materialized{K, long, IKeyValueStore{Bytes, byte[]}}, string)"/>).
+        /// </p>
+        /// </summary>
+        /// <typeparam name="VR">the value type of the resulting <see cref="IKTable{K, VR}"/></typeparam>
+        /// <typeparam name="VRS">New value serdes type</typeparam>
+        /// <param name="initializer">an <see cref="Func{VR}"/> initializer that computes an initial intermediate aggregation result</param>
+        /// <param name="aggregator">an <see cref="Func{K, V, VR, VR}"/> aggregator that computes a new aggregate result</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains "update" records with unmodified keys, and values that represent the
+        /// latest (rolling) aggregate for each key. If the aggregate function returns {@code null}, it is then interpreted as
+        /// deletion for the key, and future messages of the same key coming from upstream operators
+        /// will be handled as newly initialized value.</returns>
+        IKTable<K, VR> Aggregate<VR, VRS>(Func<VR> initializer, Func<K, V, VR, VR> aggregator) where VRS : ISerDes<VR>, new();
+
+        /// <summary>
+        /// Aggregate the values of records in this stream by the grouped key.
+        /// Records with null key or value are ignored.
+        /// Aggregating is a generalization of Reducer combining via reduce(...)} as it, for example,
+        /// allows the result to have a different type than the input values.
+        /// The result is written into a local <see cref="IKeyValueStore{K, VR}"/> (which is basically an ever-updating materialized view)
+        /// that can be queried by the given store name in {@code materialized}.
+        /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, VR}" /> changelog stream.
+        /// <p>
+        /// The specified <see cref="Initializer{VR}"/> is applied once directly before the first input record is processed to
+        /// provide an initial intermediate aggregation result that is used to process the first record.
+        /// The specified <see cref="Aggregator{K, V, VR}"/> is applied for each input record and computes a new aggregate using the current
+        /// aggregate (or for the very first record using the intermediate aggregation result provided via the
+        /// <see cref="Initializer{VR}"/>) and the record's value.
+        /// Thus, <see cref="Aggregate{VR, VRS}(Initializer{VR}, Aggregator{K, V, VR})"/> can be used to compute aggregate functions like
+        /// count (c.f. <see cref="Count(Materialized{K, long, IKeyValueStore{Bytes, byte[]}}, string)"/>).
+        /// </p>
+        /// </summary>
+        /// <typeparam name="VR">the value type of the resulting <see cref="IKTable{K, VR}"/></typeparam>
+        /// <typeparam name="VRS">New value serdes type</typeparam>
+        /// <param name="initializer">an <see cref="Initializer{VR}"/>  that computes an initial intermediate aggregation result</param>
+        /// <param name="aggregator">an <see cref="Aggregator{K, V, VR}"/> that computes a new aggregate result</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains "update" records with unmodified keys, and values that represent the
+        /// latest (rolling) aggregate for each key. If the aggregate function returns {@code null}, it is then interpreted as
+        /// deletion for the key, and future messages of the same key coming from upstream operators
+        /// will be handled as newly initialized value.</returns>
+        IKTable<K, VR> Aggregate<VR, VRS>(Initializer<VR> initializer, Aggregator<K, V, VR> aggregator) where VRS : ISerDes<VR>, new();
+
+        /// <summary>
+        /// Aggregate the values of records in this stream by the grouped key.
+        /// Records with null key or value are ignored.
+        /// Aggregating is a generalization of Reducer combining via reduce(...)} as it, for example,
+        /// allows the result to have a different type than the input values.
+        /// The result is written into a local <see cref="IKeyValueStore{K, VR}"/> (which is basically an ever-updating materialized view)
+        /// that can be queried by the given store name in {@code materialized}.
+        /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, VR}" /> changelog stream.
+        /// <p>
+        /// The specified <see cref="Func{VR}"/> initializer is applied once directly before the first input record is processed to
+        /// provide an initial intermediate aggregation result that is used to process the first record.
+        /// The specified <see cref="Func{K, V, VR, VR}"/> aggregator is applied for each input record and computes a new aggregate using the current
+        /// aggregate (or for the very first record using the intermediate aggregation result provided via the
+        /// initialize) and the record's value.
+        /// Thus, <see cref="Aggregate{VR}(Func{VR}, Func{K, V, VR, VR}, Materialized{K, VR, IKeyValueStore{Bytes, byte[]}}, string)"/> can be used to compute aggregate functions like
+        /// count (c.f. <see cref="Count(Materialized{K, long, IKeyValueStore{Bytes, byte[]}}, string)"/>).
+        /// </p>
+        /// </summary>
+        /// <typeparam name="VR">the value type of the resulting <see cref="IKTable{K, VR}"/></typeparam>
+        /// <param name="initializer">an <see cref="Func{VR}"/> initializer that computes an initial intermediate aggregation result</param>
+        /// <param name="aggregator">an <see cref="Func{K, V, VR, VR}"/> aggregator that computes a new aggregate result</param>
+        /// <param name="materialized">an instance of Materialized used to materialize a state store.</param>
+        /// <param name="named">a name config used to name the processor in the topology</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains "update" records with unmodified keys, and values that represent the
+        /// latest (rolling) aggregate for each key. If the aggregate function returns {@code null}, it is then interpreted as
+        /// deletion for the key, and future messages of the same key coming from upstream operators
+        /// will be handled as newly initialized value.</returns>
+        IKTable<K, VR> Aggregate<VR>(Func<VR> initializer, Func<K, V, VR, VR> aggregator, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+
+        /// <summary>
+        /// Aggregate the values of records in this stream by the grouped key.
+        /// Records with null key or value are ignored.
+        /// Aggregating is a generalization of Reducer combining via reduce(...)} as it, for example,
+        /// allows the result to have a different type than the input values.
+        /// The result is written into a local <see cref="IKeyValueStore{K, VR}"/> (which is basically an ever-updating materialized view)
+        /// that can be queried by the given store name in {@code materialized}.
+        /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, VR}" /> changelog stream.
+        /// <p>
+        /// The specified <see cref="Initializer{VR}"/> is applied once directly before the first input record is processed to
+        /// provide an initial intermediate aggregation result that is used to process the first record.
+        /// The specified <see cref="Aggregator{K, V, VR}"/> is applied for each input record and computes a new aggregate using the current
+        /// aggregate (or for the very first record using the intermediate aggregation result provided via the
+        /// <see cref="Initializer{VR}"/>) and the record's value.
+        /// Thus, <see cref="Aggregate{VR}(Initializer{VR}, Aggregator{K, V, VR}, Materialized{K, VR, IKeyValueStore{Bytes, byte[]}}, string)"/> can be used to compute aggregate functions like
+        /// count (c.f. <see cref="Count(Materialized{K, long, IKeyValueStore{Bytes, byte[]}}, string)"/>).
+        /// </p>
+        /// </summary>
+        /// <typeparam name="VR">the value type of the resulting <see cref="IKTable{K, VR}"/></typeparam>
+        /// <param name="initializer">an <see cref="Initializer{VR}"/>  that computes an initial intermediate aggregation result</param>
+        /// <param name="aggregator">an <see cref="Aggregator{K, V, VR}"/> that computes a new aggregate result</param>
+        /// <param name="materialized">an instance of Materialized used to materialize a state store.</param>
+        /// <param name="named">a name config used to name the processor in the topology</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains "update" records with unmodified keys, and values that represent the
+        /// latest (rolling) aggregate for each key. If the aggregate function returns {@code null}, it is then interpreted as
+        /// deletion for the key, and future messages of the same key coming from upstream operators
+        /// will be handled as newly initialized value.</returns>
+        IKTable<K, VR> Aggregate<VR>(Initializer<VR> initializer, Aggregator<K, V, VR> aggregator, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
     }
 }

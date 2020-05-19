@@ -38,16 +38,6 @@ namespace Streamiz.Kafka.Net.Table
         protected string storeName;
 
         /// <summary>
-        /// State store is logging enabled
-        /// </summary>
-        protected bool loggingEnabled = true;
-
-        /// <summary>
-        /// State store is caching enabled
-        /// </summary>
-        protected bool cachingEnabled = true;
-
-        /// <summary>
         /// Retention time
         /// </summary>
         protected TimeSpan retention;
@@ -93,8 +83,8 @@ namespace Streamiz.Kafka.Net.Table
             this.storeName = materialized.storeName;
             this.KeySerdes = materialized.KeySerdes;
             this.ValueSerdes = materialized.ValueSerdes;
-            this.loggingEnabled = materialized.loggingEnabled;
-            this.cachingEnabled = materialized.cachingEnabled;
+            this.LoggingEnabled = materialized.LoggingEnabled;
+            this.CachingEnabled = materialized.CachingEnabled;
             this.TopicConfig = materialized.TopicConfig;
             this.retention = materialized.retention;
         }
@@ -288,6 +278,11 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         public string QueryableStoreName => queriable ? StoreName : null;
 
+        /// <summary>
+        /// Retention configuration
+        /// </summary>
+        public TimeSpan Retention => retention;
+
         #endregion
 
         #region Methods
@@ -299,7 +294,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <returns>Itself</returns>
         public Materialized<K, V, S> WithLoggingEnabled(IDictionary<string, string> config)
         {
-            loggingEnabled = true;
+            LoggingEnabled = true;
             this.TopicConfig = config;
             return this;
         }
@@ -310,8 +305,8 @@ namespace Streamiz.Kafka.Net.Table
         /// <returns>Itself</returns>
         public Materialized<K, V, S> WithLoggingDisabled()
         {
-            loggingEnabled = false;
-            this.TopicConfig.Clear();
+            LoggingEnabled = false;
+            this.TopicConfig?.Clear();
             return this;
         }
 
@@ -321,7 +316,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <returns>Itself</returns>
         public Materialized<K, V, S> WithCachingEnabled()
         {
-            cachingEnabled = true;
+            CachingEnabled = true;
             return this;
         }
 
@@ -331,7 +326,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <returns>Itself</returns>
         public Materialized<K, V, S> WithCachingDisabled()
         {
-            cachingEnabled = false;
+            CachingEnabled = false;
             return this;
         }
 
@@ -405,6 +400,32 @@ namespace Streamiz.Kafka.Net.Table
             return this;
         }
 
+        /// <summary>
+        /// Configure key serdes
+        /// </summary>
+        /// <typeparam name="KRS">New key serdes type</typeparam>
+        /// <returns>Itself</returns>
+        public Materialized<K, V, S> WithKeySerdes<KRS>()
+            where KRS : ISerDes<K>, new()
+        {
+            KeySerdes = new KRS();
+            return this;
+        }
+
+        /// <summary>
+        /// Configure value serdes
+        /// </summary>
+        /// <typeparam name="VRS">New value serdes type</typeparam>
+        /// <returns>Itself</returns>
+        public Materialized<K, V, S> WithValueSerdes<VRS>()
+            where VRS : ISerDes<V>, new()
+        {
+            ValueSerdes = new VRS();
+            return this;
+        }
+
+        #region Internal
+
         internal Materialized<K, V, S> UseProvider(INameProvider provider, string generatedStorePrefix)
         {
             queriable = !string.IsNullOrEmpty(StoreName);
@@ -425,7 +446,9 @@ namespace Streamiz.Kafka.Net.Table
 
             return this;
         }
-        
+
+        #endregion
+
         #endregion
     }
 

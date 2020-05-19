@@ -11,13 +11,13 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
         public TimestampedKeyValueStoreBuilder(KeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde) :
             base(supplier.Name, keySerde, valueSerde != null ? new ValueAndTimestampSerDes<V>(valueSerde) : null)
         {
-            this.storeSupplier = supplier;
+            storeSupplier = supplier;
         }
 
         public override TimestampedKeyValueStore<K, V> Build()
         {
             var store = storeSupplier.Get();
-            return new TimestampedKeyValueStoreImpl<K, V>(store, this.keySerdes, this.valueSerdes);
+            return new TimestampedKeyValueStoreImpl<K, V>(store, keySerdes, valueSerdes);
         }
     }
 }

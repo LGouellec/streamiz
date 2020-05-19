@@ -1,4 +1,5 @@
-﻿using Streamiz.Kafka.Net.State;
+﻿using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.State;
 using System.IO;
 
 namespace Streamiz.Kafka.Net.SerDes
@@ -9,7 +10,7 @@ namespace Streamiz.Kafka.Net.SerDes
 
         public ValueAndTimestampSerDes(ISerDes<V> innerSerdes)
         {
-            this.InnerSerdes = innerSerdes;
+            InnerSerdes = innerSerdes ?? throw new StreamsException($"The inner serdes is not compatible to the actual value type {typeof(V).FullName}. Provide correct Serdes via method parameters(using the DSL)");
         }
 
         public override ValueAndTimestamp<V> Deserialize(byte[] data)
