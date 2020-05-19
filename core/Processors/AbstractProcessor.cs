@@ -160,7 +160,7 @@ namespace Streamiz.Kafka.Net.Processors
                     throwException = true;
             }
 
-            if(throwException)
+            if (throwException)
             {
                 var s = KeySerDes == null ? "key" : "value";
                 log.Error($"{logPrefix}Impossible to receive source data because keySerdes and/or valueSerdes is not setted ! KeySerdes : {(KeySerDes != null ? KeySerDes.GetType().Name : "NULL")} | ValueSerdes : {(ValueSerDes != null ? ValueSerDes.GetType().Name : "NULL")}.");

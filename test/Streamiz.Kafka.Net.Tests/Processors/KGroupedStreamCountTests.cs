@@ -133,6 +133,60 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
 
         [Test]
+        public void CountEmpty()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-count";
+
+            var builder = new StreamBuilder();
+
+            builder
+                .Stream<string, string>("topic")
+                .GroupByKey()
+                .Count()
+                .ToStream()
+                .To("output");
+
+            var topology = builder.Build();
+            using (var driver = new TopologyTestDriver(topology, config))
+            {
+                var input = driver.CreateInputTopic<string, string>("topic");
+                var output = driver.CreateOuputTopic<string, long, StringSerDes, Int64SerDes>("output");
+                input.PipeInput("test", "1");
+                var r = output.ReadKeyValue();
+                Assert.AreEqual("test", r.Message.Key);
+                Assert.AreEqual(1, r.Message.Value);
+            }
+        }
+
+        [Test]
+        public void CountWithName()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-count";
+
+            var builder = new StreamBuilder();
+
+            builder
+                .Stream<string, string>("topic")
+                .GroupByKey()
+                .Count("count-01")
+                .ToStream()
+                .To("output");
+
+            var topology = builder.Build();
+            using (var driver = new TopologyTestDriver(topology, config))
+            {
+                var input = driver.CreateInputTopic<string, string>("topic");
+                var output = driver.CreateOuputTopic<string, long, StringSerDes, Int64SerDes>("output");
+                input.PipeInput("test", "1");
+                var r = output.ReadKeyValue();
+                Assert.AreEqual("test", r.Message.Key);
+                Assert.AreEqual(1, r.Message.Value);
+            }
+        }
+
+        [Test]
         public void KeySerdesUnknow()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();

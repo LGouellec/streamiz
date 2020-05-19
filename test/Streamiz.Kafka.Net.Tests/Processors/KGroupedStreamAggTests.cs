@@ -1,25 +1,40 @@
-﻿using Confluent.Kafka;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock;
-using Streamiz.Kafka.Net.Mock.Sync;
-using Streamiz.Kafka.Net.Processors;
-using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
     public class KGroupedStreamAggTests
     {
+        internal class MyInitializer : Initializer<Dictionary<char, int>>
+        {
+            public Dictionary<char, int> Apply() => new Dictionary<char, int>();
+        }
+
+        internal class MyAggregator : Aggregator<string, string, Dictionary<char, int>>
+        {
+            public Dictionary<char, int> Apply(string key, string value, Dictionary<char, int> aggregate)
+            {
+                var caracs = value.ToCharArray();
+                foreach (var c in caracs)
+                {
+                    if (aggregate.ContainsKey(c))
+                        ++aggregate[c];
+                    else
+                        aggregate.Add(c, 1);
+                }
+                return aggregate;
+            }
+        }
+
         internal class DictionarySerDes : AbstractSerDes<Dictionary<char, int>>
         {
             public override Dictionary<char, int> Deserialize(byte[] data)
@@ -152,6 +167,93 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 var e = storeCount.Get("TEST");
                 Assert.IsNotNull(e);
                 Assert.AreEqual(3, e);
+            }
+        }
+
+        [Test]
+        public void Agg2()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-count";
+
+            var builder = new StreamBuilder();
+
+            builder
+               .Stream<string, string>("topic")
+               .GroupBy((k, v) => k.ToUpper())
+               .Aggregate<Dictionary<char, int>, DictionarySerDes>(
+                    () => new Dictionary<char, int>(),
+                    (k, v, old) =>
+                    {
+                        var caracs = v.ToCharArray();
+                        foreach (var c in caracs)
+                        {
+                            if (old.ContainsKey(c))
+                                ++old[c];
+                            else
+                                old.Add(c, 1);
+                        }
+                        return old;
+                    }
+                );
+
+            var topology = builder.Build();
+            using (var driver = new TopologyTestDriver(topology, config))
+            {
+                Dictionary<char, int> testExpected = new Dictionary<char, int>
+                {
+                    {'1', 2 },
+                    {'2', 1 }
+                };
+                var input = driver.CreateInputTopic<string, string>("topic");
+                var output = driver.CreateOuputTopic<Dictionary<char, int>, DictionarySerDes>("output");
+                input.PipeInput("test", "1");
+                input.PipeInput("test", "12");
+
+                var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("KSTREAM-AGGREGATE-STATE-STORE-0000000004");
+                Assert.IsNotNull(store);
+                Assert.AreEqual(1, store.ApproximateNumEntries());
+                var el = store.Get("TEST");
+                Assert.IsNotNull(el);
+                Assert.AreEqual(testExpected, el);
+            }
+        }
+
+        [Test]
+        public void Agg3()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-count";
+
+            var builder = new StreamBuilder();
+
+            builder
+               .Stream<string, string>("topic")
+               .GroupBy((k, v) => k.ToUpper())
+               .Aggregate<Dictionary<char, int>, DictionarySerDes>(
+                    new MyInitializer(),
+                    new MyAggregator()
+                );
+
+            var topology = builder.Build();
+            using (var driver = new TopologyTestDriver(topology, config))
+            {
+                Dictionary<char, int> testExpected = new Dictionary<char, int>
+                {
+                    {'1', 2 },
+                    {'2', 1 }
+                };
+                var input = driver.CreateInputTopic<string, string>("topic");
+                var output = driver.CreateOuputTopic<Dictionary<char, int>, DictionarySerDes>("output");
+                input.PipeInput("test", "1");
+                input.PipeInput("test", "12");
+
+                var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("KSTREAM-AGGREGATE-STATE-STORE-0000000004");
+                Assert.IsNotNull(store);
+                Assert.AreEqual(1, store.ApproximateNumEntries());
+                var el = store.Get("TEST");
+                Assert.IsNotNull(el);
+                Assert.AreEqual(testExpected, el);
             }
         }
 
