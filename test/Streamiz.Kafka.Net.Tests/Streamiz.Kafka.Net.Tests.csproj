@@ -5,10 +5,10 @@
     <RootNamespace>Streamiz.Kafka.Net.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
     <AssemblyName>Streamiz.Kafka.Net.Tests</AssemblyName>
-	<SonarQubeTestProject>true</SonarQubeTestProject>
-	<SignAssembly>true</SignAssembly>
-	<AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
-	<StartupObject></StartupObject>
+    <SonarQubeTestProject>true</SonarQubeTestProject>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+    <StartupObject></StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
