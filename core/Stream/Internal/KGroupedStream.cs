@@ -53,6 +53,45 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #endregion
 
+        #region Aggregate
+
+        public IKTable<K, VR> Aggregate<VR>(System.Func<VR> initializer, System.Func<K, V, VR, VR> aggregator)
+            => Aggregate(new InitializerWrapper<VR>(initializer), new AggregatorWrapper<K, V, VR>(aggregator));
+
+        public IKTable<K, VR> Aggregate<VR, VRS>(System.Func<VR> initializer, System.Func<K, V, VR, VR> aggregator)
+            where VRS : ISerDes<VR>, new()
+            => Aggregate(
+                new InitializerWrapper<VR>(initializer),
+                new AggregatorWrapper<K, V, VR>(aggregator),
+                Materialized<K, VR, IKeyValueStore<Bytes, byte[]>>.Create().WithValueSerdes(new VRS()));
+
+        public IKTable<K, VR> Aggregate<VR>(System.Func<VR> initializer, System.Func<K, V, VR, VR> aggregator, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+            => Aggregate(new InitializerWrapper<VR>(initializer), new AggregatorWrapper<K, V, VR>(aggregator), materialized, named);
+
+        public IKTable<K, VR> Aggregate<VR, VRS>(Initializer<VR> initializer, Aggregator<K, V, VR> aggregator)
+            where VRS : ISerDes<VR>, new()
+            => Aggregate(initializer, aggregator, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>>.Create().WithValueSerdes(new VRS()));
+
+        public IKTable<K, VR> Aggregate<VR>(Initializer<VR> initializer, Aggregator<K, V, VR> aggregator)
+            => Aggregate(initializer, aggregator, null);
+
+        public IKTable<K, VR> Aggregate<VR>(Initializer<VR> initializer, Aggregator<K, V, VR> aggregator, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        {
+            materialized = materialized ?? Materialized<K, VR, IKeyValueStore<Bytes, byte[]>>.Create();
+
+            if (materialized.KeySerdes == null)
+                materialized.WithKeySerdes(keySerdes);
+
+            string name = new Named(named).OrElseGenerateWithPrefix(builder, KGroupedStream.AGGREGATE_NAME);
+            materialized.UseProvider(builder, KGroupedStream.AGGREGATE_NAME);
+            return DoAggregate(
+                    new KStreamAggregate<K, V, VR>(materialized.StoreName, initializer, aggregator),
+                    name,
+                    materialized);
+        }
+
+        #endregion
+
         #endregion
 
         #region Private

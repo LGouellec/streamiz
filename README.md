@@ -33,8 +33,9 @@ This project is being written. Thanks for you contribution !
 
 # Timeline
 
-- End May 2020 - Beta 0.0.1 - All stateless processors, Exactly Once Semantic, InMemory store
-- End October 2020 - Beta 0.0.2 - All statefull processors, Global Store, RocksDB Store
+- End May 2020 - Beta 0.1.0 - All stateless processors, Exactly Once Semantic, InMemory store
+- End August 2020 - Beta 0.2.0 - All statefull processors, Global Store
+- End October 2020 - Beta 0.3.0 - Persistent state store (eg: RocksDB Store)
 - End 2020 / Begin 2021 - 1.0.0 RC1 - Processor API, Metrics, Interactive Queries
 
 # Documentation
@@ -96,9 +97,9 @@ static void Main(string[] args)
 - [x] Refactor topology node processor builder
 - [x] Subtopology impl
 - [x] Unit tests (TestTopologyDriver, ...)
-- [ ] Statefull processors impl
-- [ ] Task restoring
+- [WIP] Statefull processors impl
 - [WIP] Global state store
+- [ ] Task restoring
 - [ ] Processor API
 - [ ] Repartition impl
 - [ ] Rocks DB state implementation
