@@ -14,7 +14,7 @@ IMPLEMENTATION WORK IN PROGRESS
 |Count|KGroupedStream -> KTable|   |   |   |&#9745;|
 |Count|KGroupedTable -> KTable|&#9745;|   |   |   |
 |Count(windowed)|KGroupedStream → KStream|&#9745;|   |   |   |
-|Reduce|KGroupedStream → KTable|&#9745;|   |   |   |
+|Reduce|KGroupedStream → KTable|   |   |   |&#9745;|
 |Reduce|KGroupedTable → KTable|&#9745;|   |   |   |
 |Reduce(windowed)|KGroupedStream → KTable|&#9745;|   |   |   |
 |InnerJoin(windowed)|(KStream,KStream) → KStream|&#9745;|   |   |   |
@@ -58,12 +58,42 @@ When aggregating a grouped stream, you must provide an initializer (e.g., aggVal
 Several variants of aggregate exist.
 
 - KGroupedStream → KTable
+- IKGroupedTable  -> IKTable (soon)
 
 ``` csharp
 var groupedStream = builder
                         .Stream<string, string>("test")
                         .GroupBy((k, v) => k.ToUpper());
 
-// Counting a IKGroupedStream
 var table = groupedStream.Aggregate(() => 0L, (k,v,agg) => agg+ 1, InMemory<string, long>.As("agg-store").WithValueSerdes<Int64SerDes>());
 ```
+Detailed behavior of IKGroupedStream:
+- Input records with null keys are ignored.
+- When a record key is received for the first time, the initializer is called (and called before the adder).
+- Whenever a record with a non-null value is received, the adder is called.
+
+## Reduce
+
+**Rolling aggregation.** Combines the values of (non-windowed) records by the grouped key. The current record value is combined with the last reduced value, and a new reduced value is returned. The result value type cannot be changed, unlike aggregate. (see IKGroupedStream for details)
+
+When reducing a grouped stream, you must provide an “adder” reducer (e.g., aggValue + curValue).
+
+Several variants of reduce exist.
+
+- IKGroupedStream  → IKTable
+- IKGroupedTable  -> IKTable (soon)
+
+``` csharp
+var groupedStream = builder
+                        .Stream<string, string>("test")
+                        .MapValues(v => v.Length)
+                        .GroupBy((k, v) => k.ToUpper());
+
+// Reduce a IKGroupedStream
+var table = groupedStream.Reduce((agg, new) => agg + new, InMemory<string, int>.As("reduce-store").WithValueSerdes<Int32SerDes>());
+```
+
+Detailed behavior for IKGroupedStream:
+- Input records with null keys are ignored in general.
+- When a record key is received for the first time, then the value of that record is used as the initial aggregate value.
+- Whenever a record with a non-null value is received, the adder is called.

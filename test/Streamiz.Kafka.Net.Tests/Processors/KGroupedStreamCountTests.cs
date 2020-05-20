@@ -8,9 +8,7 @@ using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
-using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -131,6 +129,35 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 Assert.AreEqual(1, store.Get('c'));
             }
         }
+
+        [Test]
+        public void CountWithNullValue()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-count";
+
+            var builder = new StreamBuilder();
+
+            builder
+                .Stream<string, string>("topic")
+                .GroupBy((k, v) => k.ToCharArray()[0])
+                .Count(InMemory<char, long>.As("count-store").WithKeySerdes(new CharSerDes()));
+
+            var topology = builder.Build();
+            using (var driver = new TopologyTestDriver(topology, config))
+            {
+                var input = driver.CreateInputTopic<string, string>("topic");
+                input.PipeInput("test", "1");
+                input.PipeInput("test", null);
+                input.PipeInput("coucou", "120");
+                var store = driver.GetKeyValueStore<char, long>("count-store");
+                Assert.IsNotNull(store);
+                Assert.AreEqual(2, store.ApproximateNumEntries());
+                Assert.AreEqual(1, store.Get('t'));
+                Assert.AreEqual(1, store.Get('c'));
+            }
+        }
+
 
         [Test]
         public void CountEmpty()

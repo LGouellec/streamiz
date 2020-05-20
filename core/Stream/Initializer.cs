@@ -16,13 +16,13 @@ namespace Streamiz.Kafka.Net.Stream
         VA Apply();
     }
 
-    internal class InitializerWrapper<T> : Initializer<T>
+    internal class WrappedInitializer<T> : Initializer<T>
     {
         private readonly Func<T> function;
 
-        public InitializerWrapper(Func<T> function)
+        public WrappedInitializer(Func<T> function)
         {
-            this.function = function;
+            this.function = function ?? throw new ArgumentNullException($"Initializer function can't be null");
         }
 
         public T Apply() => function.Invoke();

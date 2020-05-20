@@ -222,9 +222,120 @@ namespace Streamiz.Kafka.Net.Stream
         /// will be handled as newly initialized value.</returns>
         IKTable<K, VR> Aggregate<VR>(Initializer<VR> initializer, Aggregator<K, V, VR> aggregator, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
+        /// <summary>
+        /// Combine the value of records in this stream by the grouped key.
+        /// Records with null key or value are ignored.
+        /// Combining implies that the type of the aggregate result is the same as the type of the input value
+        /// The result is written into a local <see cref="IKeyValueStore{K, V}" /> (which is basically an ever-updating materialized view)
+        /// provided by the given store name in materialized.
+        /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}" /> changelog stream.
+        /// <p>
+        /// The specified <see cref="Reducer{V}"/> is applied for each input record and computes a new aggregate using the current
+        /// aggregate (first argument) and the record's value (second argument):
+        /// <example>
+        /// <code>
+        /// (long v1, long v2) => return v1 + v2;
+        /// </code>
+        /// </example>
+        /// </p>
+        /// If there is no current aggregate the <see cref="Reducer{V}"/> is not applied and the new aggregate will be the record's
+        /// value as-is.
+        /// Thus, <see cref="Reduce(Reducer{V})" /> can be used to compute aggregate functions like sum, min, or
+        /// max.
+        /// </summary>
+        /// <param name="reducer">a <see cref="Reducer{V}"/> that computes a new aggregate result. Cannot be null.</param>
+        /// <returns> @return a <see cref="IKTable{K, V}"/> that contains "update" records with unmodified keys, and values that represent the
+        /// latest (rolling) aggregate for each key. If the reduce function returns null, it is then interpreted as
+        /// deletion for the key, and future messages of the same key coming from upstream operators
+        /// will be handled as newly initialized value.</returns>
         IKTable<K, V> Reduce(Reducer<V> reducer);
+
+        /// <summary>
+        /// Combine the value of records in this stream by the grouped key.
+        /// Records with null key or value are ignored.
+        /// Combining implies that the type of the aggregate result is the same as the type of the input value
+        /// The result is written into a local <see cref="IKeyValueStore{K, V}" /> (which is basically an ever-updating materialized view)
+        /// provided by the given store name in materialized.
+        /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}" /> changelog stream.
+        /// <p>
+        /// The specified reducer function <see cref="Func{V, V, V}"/> is applied for each input record and computes a new aggregate using the current
+        /// aggregate (first argument) and the record's value (second argument):
+        /// <example>
+        /// <code>
+        /// (long v1, long v2) => return v1 + v2;
+        /// </code>
+        /// </example>
+        /// </p>
+        /// If there is no current aggregate the <see cref="Reducer{V}"/> is not applied and the new aggregate will be the record's
+        /// value as-is.
+        /// Thus, <see cref="Reduce(Func{V, V, V})" /> can be used to compute aggregate functions like sum, min, or
+        /// max.
+        /// </summary>
+        /// <param name="reducer">a <see cref="Func{V, V, V}"/> reducer  that computes a new aggregate result. Cannot be null.</param>
+        /// <returns> @return a <see cref="IKTable{K, V}"/> that contains "update" records with unmodified keys, and values that represent the
+        /// latest (rolling) aggregate for each key. If the reduce function returns null, it is then interpreted as
+        /// deletion for the key, and future messages of the same key coming from upstream operators
+        /// will be handled as newly initialized value.</returns>
         IKTable<K, V> Reduce(Func<V, V, V> reducer);
+
+        /// <summary>
+        /// Combine the value of records in this stream by the grouped key.
+        /// Records with null key or value are ignored.
+        /// Combining implies that the type of the aggregate result is the same as the type of the input value
+        /// The result is written into a local <see cref="IKeyValueStore{K, V}" /> (which is basically an ever-updating materialized view)
+        /// provided by the given store name in materialized.
+        /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}" /> changelog stream.
+        /// <p>
+        /// The specified <see cref="Reducer{V}"/> is applied for each input record and computes a new aggregate using the current
+        /// aggregate (first argument) and the record's value (second argument):
+        /// <example>
+        /// <code>
+        /// (long v1, long v2) => return v1 + v2;
+        /// </code>
+        /// </example>
+        /// </p>
+        /// If there is no current aggregate the <see cref="Reducer{V}"/> is not applied and the new aggregate will be the record's
+        /// value as-is.
+        /// Thus, <see cref="Reduce(Reducer{V}, Materialized{K, V, IKeyValueStore{Bytes, byte[]}}, string)" /> can be used to compute aggregate functions like sum, min, or
+        /// max.
+        /// </summary>
+        /// <param name="reducer">a <see cref="Reducer{V}"/> that computes a new aggregate result. Cannot be null.</param>
+        /// <param name="materialized">an instance of <see cref="Materialized{K, V, S}"/> used to materialize a state store.</param>
+        /// <param name="named">a name config used to name the processor in the topology.</param>
+        /// <returns> @return a <see cref="IKTable{K, V}"/> that contains "update" records with unmodified keys, and values that represent the
+        /// latest (rolling) aggregate for each key. If the reduce function returns null, it is then interpreted as
+        /// deletion for the key, and future messages of the same key coming from upstream operators
+        /// will be handled as newly initialized value.</returns>
         IKTable<K, V> Reduce(Reducer<V> reducer, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+
+        /// <summary>
+        /// Combine the value of records in this stream by the grouped key.
+        /// Records with null key or value are ignored.
+        /// Combining implies that the type of the aggregate result is the same as the type of the input value
+        /// The result is written into a local <see cref="IKeyValueStore{K, V}" /> (which is basically an ever-updating materialized view)
+        /// provided by the given store name in materialized.
+        /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}" /> changelog stream.
+        /// <p>
+        /// The specified reducer function <see cref="Func{V, V, V}"/> is applied for each input record and computes a new aggregate using the current
+        /// aggregate (first argument) and the record's value (second argument):
+        /// <example>
+        /// <code>
+        /// (long v1, long v2) => return v1 + v2;
+        /// </code>
+        /// </example>
+        /// </p>
+        /// If there is no current aggregate the <see cref="Reducer{V}"/> is not applied and the new aggregate will be the record's
+        /// value as-is.
+        /// Thus, <see cref="Reduce(Func{V, V, V}, Materialized{K, V, IKeyValueStore{Bytes, byte[]}}, string)" /> can be used to compute aggregate functions like sum, min, or
+        /// max.
+        /// </summary>
+        /// <param name="reducer">a <see cref="Func{V, V, V}"/> reducer  that computes a new aggregate result. Cannot be null.</param>
+        /// <param name="materialized">an instance of <see cref="Materialized{K, V, S}"/> used to materialize a state store.</param>
+        /// <param name="named">a name config used to name the processor in the topology.</param>
+        /// <returns> @return a <see cref="IKTable{K, V}"/> that contains "update" records with unmodified keys, and values that represent the
+        /// latest (rolling) aggregate for each key. If the reduce function returns null, it is then interpreted as
+        /// deletion for the key, and future messages of the same key coming from upstream operators
+        /// will be handled as newly initialized value.</returns>
         IKTable<K, V> Reduce(Func<V, V, V> reducer, Materialized<K ,V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
     }
 }

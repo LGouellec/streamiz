@@ -25,15 +25,13 @@ namespace Streamiz.Kafka.Net.Stream
         VR Apply(K keyReadonly, V value);
     }
 
-    internal class WrapperValueMapperWithKey<K, V, VR> : IValueMapperWithKey<K, V, VR>
+    internal class WrappedValueMapperWithKey<K, V, VR> : IValueMapperWithKey<K, V, VR>
     {
         private readonly Func<K, V, VR> mapper;
 
-        public WrapperValueMapperWithKey(Func<K, V, VR> mapper)
+        public WrappedValueMapperWithKey(Func<K, V, VR> mapper)
         {
-            if (mapper == null)
-                throw new ArgumentNullException($"Mapper function can't be null");
-            this.mapper = mapper;
+            this.mapper = mapper ?? throw new ArgumentNullException($"Mapper function can't be null");
         }
 
         public VR Apply(K readOnlyKey, V value) => this.mapper(readOnlyKey, value);

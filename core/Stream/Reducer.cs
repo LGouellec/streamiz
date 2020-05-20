@@ -25,12 +25,12 @@ namespace Streamiz.Kafka.Net.Stream
         V Apply(V value1, V value2);
     }
 
-    internal class ReducerWrapper<V> : Reducer<V>
+    internal class WrappedReducer<V> : Reducer<V>
     {
         private readonly Func<V, V, V> function;
-        public ReducerWrapper(Func<V, V, V> function)
+        public WrappedReducer(Func<V, V, V> function)
         {
-            this.function = function;
+            this.function = function ?? throw new ArgumentNullException($"Reducer function can't be null");
         }
         public V Apply(V value1, V value2) => function.Invoke(value1, value2);
     }
