@@ -90,6 +90,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Statefull processors</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#count">Count</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#aggregate">Aggregate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reduce">Reduce</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="stores.html">State stores</a></li>
@@ -226,10 +227,10 @@
 <tr>
 <td>Reduce</td>
 <td>KGroupedStream → KTable</td>
+<td></td>
+<td></td>
+<td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>Reduce</td>
@@ -356,15 +357,46 @@
 <p>Several variants of aggregate exist.</p>
 <ul class="simple">
 <li><p>KGroupedStream → KTable</p></li>
+<li><p>IKGroupedTable  -&gt; IKTable (soon)</p></li>
 </ul>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span> <span class="n">groupedStream</span> <span class="p">=</span> <span class="n">builder</span>
                         <span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test&quot;</span><span class="p">)</span>
                         <span class="p">.</span><span class="n">GroupBy</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">k</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">());</span>
 
-<span class="c1">// Counting a IKGroupedStream</span>
 <span class="kt">var</span> <span class="n">table</span> <span class="p">=</span> <span class="n">groupedStream</span><span class="p">.</span><span class="n">Aggregate</span><span class="p">(()</span> <span class="p">=&gt;</span> <span class="m">0L</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">agg</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">agg</span><span class="p">+</span> <span class="m">1</span><span class="p">,</span> <span class="n">InMemory</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">long</span><span class="p">&gt;.</span><span class="n">As</span><span class="p">(</span><span class="s">&quot;agg-store&quot;</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="p">&lt;</span><span class="n">Int64SerDes</span><span class="p">&gt;());</span>
 </pre></div>
 </div>
+<p>Detailed behavior of IKGroupedStream:</p>
+<ul class="simple">
+<li><p>Input records with null keys are ignored.</p></li>
+<li><p>When a record key is received for the first time, the initializer is called (and called before the adder).</p></li>
+<li><p>Whenever a record with a non-null value is received, the adder is called.</p></li>
+</ul>
+</div>
+<div class="section" id="reduce">
+<h2>Reduce<a class="headerlink" href="#reduce" title="Permalink to this headline">¶</a></h2>
+<p><strong>Rolling aggregation.</strong> Combines the values of (non-windowed) records by the grouped key. The current record value is combined with the last reduced value, and a new reduced value is returned. The result value type cannot be changed, unlike aggregate. (see IKGroupedStream for details)</p>
+<p>When reducing a grouped stream, you must provide an “adder” reducer (e.g., aggValue + curValue).</p>
+<p>Several variants of reduce exist.</p>
+<ul class="simple">
+<li><p>IKGroupedStream  → IKTable</p></li>
+<li><p>IKGroupedTable  -&gt; IKTable (soon)</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span> <span class="n">groupedStream</span> <span class="p">=</span> <span class="n">builder</span>
+                        <span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test&quot;</span><span class="p">)</span>
+                        <span class="p">.</span><span class="n">MapValues</span><span class="p">(</span><span class="n">v</span> <span class="p">=&gt;</span> <span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span>
+                        <span class="p">.</span><span class="n">GroupBy</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">k</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">());</span>
+
+<span class="c1">// Reduce a IKGroupedStream</span>
+<span class="kt">var</span> <span class="n">table</span> <span class="p">=</span> <span class="n">groupedStream</span><span class="p">.</span><span class="n">Reduce</span><span class="p">((</span><span class="n">agg</span><span class="p">,</span> <span class="k">new</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">agg</span> <span class="p">+</span> <span class="k">new</span><span class="p">,</span> <span class="n">InMemory</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">int</span><span class="p">&gt;.</span><span class="n">As</span><span class="p">(</span><span class="s">&quot;reduce-store&quot;</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="p">&lt;</span><span class="n">Int32SerDes</span><span class="p">&gt;());</span>
+</pre></div>
+</div>
+<p>Detailed behavior for IKGroupedStream:</p>
+<ul class="simple">
+<li><p>Input records with null keys are ignored in general.</p></li>
+<li><p>When a record key is received for the first time, then the value of that record is used as the initial aggregate value.</p></li>
+<li><p>Whenever a record with a non-null value is received, the adder is called.</p></li>
+</ul>
 </div>
 </div>
 

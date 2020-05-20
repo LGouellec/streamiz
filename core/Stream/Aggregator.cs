@@ -26,13 +26,13 @@ namespace Streamiz.Kafka.Net.Stream
         VA Apply(K key, V value, VA aggregate);
     }
     
-    internal class AggregatorWrapper<K, V, VA> : Aggregator<K, V, VA>
+    internal class WrappedAggregator<K, V, VA> : Aggregator<K, V, VA>
     {
         private readonly Func<K, V, VA, VA> function;
 
-        public AggregatorWrapper(Func<K, V, VA, VA> function)
+        public WrappedAggregator(Func<K, V, VA, VA> function)
         {
-            this.function = function;
+            this.function = function ?? throw new ArgumentNullException($"Aggregator function can't be null");
         }
 
         public VA Apply(K key, V value, VA aggregate) => function.Invoke(key, value, aggregate);

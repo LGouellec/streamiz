@@ -134,7 +134,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             => this.FlatMapValues(new WrappedValueMapper<V, IEnumerable<VR>>(mapper), named);
 
         public IKStream<K, VR> FlatMapValues<VR>(Func<K, V, IEnumerable<VR>> mapper, string named = null)
-            => this.FlatMapValues(new WrapperValueMapperWithKey<K, V, IEnumerable<VR>>(mapper), named);
+            => this.FlatMapValues(new WrappedValueMapperWithKey<K, V, IEnumerable<VR>>(mapper), named);
 
         public IKStream<K, VR> FlatMapValues<VR>(IValueMapper<V, IEnumerable<VR>> mapper, string named = null)
             => this.FlatMapValues(WithKey(mapper), named);
@@ -241,7 +241,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             => this.MapValues(new WrappedValueMapper<V, VR>(mapper), named);
 
         public IKStream<K, VR> MapValues<VR>(Func<K, V, VR> mapper, string named = null)
-            => this.MapValues(new WrapperValueMapperWithKey<K, V, VR>(mapper), named);
+            => this.MapValues(new WrappedValueMapperWithKey<K, V, VR>(mapper), named);
 
         public IKStream<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, string named = null)
             => this.MapValues(WithKey(mapper), named);

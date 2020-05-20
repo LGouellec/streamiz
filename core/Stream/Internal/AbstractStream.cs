@@ -46,18 +46,18 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         }
 
 
-        protected static WrapperValueMapperWithKey<K, V, VR> WithKey<VR>(Func<V, VR> valueMapper)
+        protected static WrappedValueMapperWithKey<K, V, VR> WithKey<VR>(Func<V, VR> valueMapper)
         {
             valueMapper = valueMapper ?? throw new ArgumentNullException(nameof(valueMapper));
 
-            return new WrapperValueMapperWithKey<K, V, VR>((readOnlyKey, value) => valueMapper(value));
+            return new WrappedValueMapperWithKey<K, V, VR>((readOnlyKey, value) => valueMapper(value));
         }
 
-        protected static WrapperValueMapperWithKey<K, V, VR> WithKey<VR>(IValueMapper<V, VR> valueMapper)
+        protected static WrappedValueMapperWithKey<K, V, VR> WithKey<VR>(IValueMapper<V, VR> valueMapper)
         {
             valueMapper = valueMapper ?? throw new ArgumentNullException(nameof(valueMapper));
 
-            return new WrapperValueMapperWithKey<K, V, VR>((readOnlyKey, value) => valueMapper.Apply(value));
+            return new WrappedValueMapperWithKey<K, V, VR>((readOnlyKey, value) => valueMapper.Apply(value));
         }
     }
 }

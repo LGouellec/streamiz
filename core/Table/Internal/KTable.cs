@@ -119,7 +119,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
         {
             string name = new Named(named).OrElseGenerateWithPrefix(this.builder, KTable.TOSTREAM_NAME);
 
-            var p = new WrapperValueMapperWithKey<K, Change<V>, V>((k, v) => v.NewValue);
+            var p = new WrappedValueMapperWithKey<K, Change<V>, V>((k, v) => v.NewValue);
             IProcessorSupplier<K, Change<V>> processorMapValues = new KStreamMapValues<K, Change<V>, V>(p);
             ProcessorParameters<K, Change<V>> processorParameters = new ProcessorParameters<K, Change<V>>(processorMapValues, name);
 
@@ -155,7 +155,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
             => this.MapValues(mapperWithKey, null, named);
 
         public IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
-            => this.MapValues(new WrapperValueMapperWithKey<K, V, VR>(mapperWithKey), materialized, named);
+            => this.MapValues(new WrappedValueMapperWithKey<K, V, VR>(mapperWithKey), materialized, named);
 
         public IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string named = null)
             => this.MapValues(mapperWithKey, null, named);
