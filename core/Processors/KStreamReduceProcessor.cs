@@ -1,50 +1,46 @@
-﻿using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using System;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    internal class KStreamAggregateProcessor<K, V, T> : StatefullProcessor<K, V, K, T>
+    internal class KStreamReduceProcessor<K, V> : StatefullProcessor<K, V, K, V>
     {
-        private readonly Initializer<T> initializer;
-        private readonly Aggregator<K, V, T> aggregator;
+        private readonly Reducer<V> reducer;
 
-
-        public KStreamAggregateProcessor(string storeName, bool enableSendOldValues, Initializer<T> initializer, Aggregator<K, V, T> aggregator)
-            : base(storeName, enableSendOldValues)
+        public KStreamReduceProcessor(Reducer<V> reducer, string storeName, bool sendOldValues)
+            : base(storeName, sendOldValues)
         {
-            this.initializer = initializer;
-            this.aggregator = aggregator;
+            this.reducer = reducer;
         }
-
 
         public override void Process(K key, V value)
         {
+            // If the key or value is null we don't need to proceed
             if (key == null || value == null)
             {
                 log.Warn($"Skipping record due to null key or value. key=[{key}] value=[{value}] topic=[{Context.Topic}] partition=[{Context.Partition}] offset=[{Context.Offset}]");
                 return;
             }
 
-            ValueAndTimestamp<T> oldAggAndTimestamp = store.Get(key);
-            T oldAgg, newAgg;
+            ValueAndTimestamp<V> oldAggAndTimestamp = store.Get(key);
+            V oldAgg, newAgg;
             long newTimestamp;
 
             if (oldAggAndTimestamp == null)
             {
-                oldAgg = initializer.Apply();
+                oldAgg = default;
+                newAgg = value;
                 newTimestamp = Context.Timestamp;
             }
             else
             {
                 oldAgg = oldAggAndTimestamp.Value;
+                newAgg = reducer.Apply(oldAgg, value);
                 newTimestamp = Math.Max(Context.Timestamp, oldAggAndTimestamp.Timestamp);
             }
 
-            newAgg = aggregator.Apply(key, value, oldAgg);
-
-            store.Put(key, ValueAndTimestamp<T>.Make(newAgg, newTimestamp));
+            store.Put(key, ValueAndTimestamp<V>.Make(newAgg, newTimestamp));
             tupleForwarder.MaybeForward(key, newAgg, sendOldValues ? oldAgg : default, newTimestamp);
         }
     }

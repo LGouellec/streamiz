@@ -1,4 +1,6 @@
-﻿namespace Streamiz.Kafka.Net.Stream
+﻿using System;
+
+namespace Streamiz.Kafka.Net.Stream
 {
     /// <summary>
     /// The <see cref="Reducer{V}"/> interface for combining two values of the same type into a new value.
@@ -21,5 +23,15 @@
         /// <param name="value2">the second value for the aggregation</param>
         /// <returns>the aggregated value</returns>
         V Apply(V value1, V value2);
+    }
+
+    internal class ReducerWrapper<V> : Reducer<V>
+    {
+        private readonly Func<V, V, V> function;
+        public ReducerWrapper(Func<V, V, V> function)
+        {
+            this.function = function;
+        }
+        public V Apply(V value1, V value2) => function.Invoke(value1, value2);
     }
 }

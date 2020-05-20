@@ -2,7 +2,7 @@
 using Streamiz.Kafka.Net.Table.Internal;
 using System;
 
-namespace Streamiz.Kafka.Net.Stream.Internal
+namespace Streamiz.Kafka.Net.Stream.Internal.Graph
 {
     internal class KStreamAggregate<K, V, T> : IKStreamAggProcessorSupplier<K, K, V, T>
     {

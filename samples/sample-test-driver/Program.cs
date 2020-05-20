@@ -38,6 +38,7 @@ namespace sample_test_driver
                     },
                     InMemory<string, Dictionary<char, int>>.As("agg-store").WithValueSerdes(new DictionarySerDes())
                 );
+            stream.Reduce((v1, v2) => v2.Length > v1.Length ? v2 : v1, InMemory<string, string>.As("reduce-store"));
 
             Topology t = builder.Build();
 
@@ -47,10 +48,12 @@ namespace sample_test_driver
                 var outputTopic = driver.CreateOuputTopic<string, string>("test-output", TimeSpan.FromSeconds(5));
                 inputTopic.PipeInput("test", "test");
                 inputTopic.PipeInput("test", "test2");
-                var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("agg-store");
-                var el = store.Get("TEST");
-                var storeCount = driver.GetKeyValueStore<string, long>("count-store");
-                var e = storeCount.Get("TEST");
+                var store = driver.GetKeyValueStore<string, string>("reduce-store");
+                var e = store.Get("TEST");
+                //var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("agg-store");
+                //var el = store.Get("TEST");
+                //var storeCount = driver.GetKeyValueStore<string, long>("count-store");
+                //var e = storeCount.Get("TEST");
             }
         }
     }

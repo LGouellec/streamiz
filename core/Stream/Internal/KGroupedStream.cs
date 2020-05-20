@@ -1,9 +1,12 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.Internal;
+using Streamiz.Kafka.Net.Stream.Internal.Graph;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 using Streamiz.Kafka.Net.Table;
+using System;
 using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
@@ -88,6 +91,40 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                     new KStreamAggregate<K, V, VR>(materialized.StoreName, initializer, aggregator),
                     name,
                     materialized);
+        }
+
+        #endregion
+
+        #region Reduce
+
+        public IKTable<K, V> Reduce(Reducer<V> reducer)
+            => Reduce(reducer, null);
+
+        public IKTable<K, V> Reduce(Func<V, V, V> reducer)
+            => Reduce(reducer, null);
+
+
+        public IKTable<K, V> Reduce(Func<V, V, V> reducer, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+            => Reduce(new ReducerWrapper<V>(reducer), materialized, named);
+
+        public IKTable<K, V> Reduce(Reducer<V> reducer, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        {
+            materialized = materialized ?? Materialized<K, V, IKeyValueStore<Bytes, byte[]>>.Create();
+
+            if (materialized.KeySerdes == null)
+                materialized.WithKeySerdes(keySerdes);
+            
+            if (materialized.ValueSerdes == null)
+                materialized.WithValueSerdes(valueSerdes);
+
+            string name = new Named(named).OrElseGenerateWithPrefix(builder, KGroupedStream.AGGREGATE_NAME);
+            materialized.UseProvider(builder, KGroupedStream.AGGREGATE_NAME);
+            
+            return DoAggregate(
+                    new KStreamReduce<K, V>(materialized.StoreName, reducer),
+                    name,
+                    materialized
+            );
         }
 
         #endregion

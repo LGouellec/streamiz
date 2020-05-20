@@ -221,5 +221,10 @@ namespace Streamiz.Kafka.Net.Stream
         /// deletion for the key, and future messages of the same key coming from upstream operators
         /// will be handled as newly initialized value.</returns>
         IKTable<K, VR> Aggregate<VR>(Initializer<VR> initializer, Aggregator<K, V, VR> aggregator, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+
+        IKTable<K, V> Reduce(Reducer<V> reducer);
+        IKTable<K, V> Reduce(Func<V, V, V> reducer);
+        IKTable<K, V> Reduce(Reducer<V> reducer, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<K, V> Reduce(Func<V, V, V> reducer, Materialized<K ,V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
     }
 }

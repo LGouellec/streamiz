@@ -1,4 +1,5 @@
-﻿using Streamiz.Kafka.Net.SerDes;
+﻿using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 using Streamiz.Kafka.Net.Table;
