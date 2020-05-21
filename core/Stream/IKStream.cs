@@ -1,4 +1,4 @@
-﻿using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections;
@@ -562,5 +562,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKGroupedStream{K, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>
         IKGroupedStream<K, V> GroupByKey<KS, VS>(string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new();
+    
+        IKStream<K, VR> Join<VO, VR, VOS, VRS>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner) where VOS : ISerDes<V>, new() where VRS : ISerDes<VR>, new();
     }
 }
