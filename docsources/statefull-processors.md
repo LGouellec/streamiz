@@ -23,10 +23,10 @@ IMPLEMENTATION WORK IN PROGRESS
 |InnerJoin(windowed)|(KTable,KTable) → KTable|&#9745;|   |   |   |
 |LeftJoin(windowed)|(KTable,KTable) → KTable|&#9745;|   |   |   |
 |OuterJoin(windowed)|(KTable,KTable) → KTable|&#9745;|   |   |   |
-|InnerJoin(windowed)|(KStream,KTable) → KStream|&#9745;|   |   |   |
-|LeftJoin(windowed)|(KStream,KTable) → KStream|&#9745;|   |   |   |
-|InnerJoin(windowed)|(KStream,GlobalKTable) → KStream|&#9745;|   |   |   |
-|LeftJoin(windowed)|(KStream,GlobalKTable) → KStream|&#9745;|   |   |   |
+|InnerJoin|(KStream,KTable) → KStream|&#9745;|   |   |   |
+|LeftJoin|(KStream,KTable) → KStream|&#9745;|   |   |   |
+|InnerJoin|(KStream,GlobalKTable) → KStream|&#9745;|   |   |   |
+|LeftJoin|(KStream,GlobalKTable) → KStream|&#9745;|   |   |   |
 
 ## Count
 
