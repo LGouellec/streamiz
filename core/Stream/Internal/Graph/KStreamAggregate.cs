@@ -1,4 +1,5 @@
 ﻿using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Table.Internal;
 using System;
 
@@ -30,7 +31,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph
 
         public IProcessor<K, V> Get() => new KStreamAggregateProcessor<K, V, T>(storeName, sendOldValues, initializer, aggregator);
 
-        // TODO COUNT
-        public IKTableValueGetterSupplier<K, T> View() => null;
+        public IKTableValueGetterSupplier<K, T> View()
+            => new GenericKTableValueGetterSupplier<K, T>(
+                new string[] { storeName },
+                new TimestampedKeyValueStoreGetter<K, T>(storeName));
     }
 }

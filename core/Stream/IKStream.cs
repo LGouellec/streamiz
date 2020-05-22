@@ -1,5 +1,6 @@
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -563,6 +564,10 @@ namespace Streamiz.Kafka.Net.Stream
         /// <returns>A <see cref="IKGroupedStream{K, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>
         IKGroupedStream<K, V> GroupByKey<KS, VS>(string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new();
     
-        IKStream<K, VR> Join<VO, VR, VOS, VRS>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner) where VOS : ISerDes<V>, new() where VRS : ISerDes<VR>, new();
+        IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner, string named = null) 
+            where V0S : ISerDes<V0>, new()
+            where VRS : ISerDes<VR>, new()
+            where V0 : class
+            where VR : class;
     }
 }

@@ -33,7 +33,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 threadId,
                 id,
                 partition,
-                builder.BuildTopology(partition.Topic),
+                builder.BuildTopology(partition),
                 consumer,
                 configuration,
                 kafkaSupplier,

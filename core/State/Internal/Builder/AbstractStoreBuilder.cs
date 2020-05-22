@@ -26,13 +26,11 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
             valueSerdes = valueSerde;
         }
 
-
         public StoreBuilder<T> WithCachingEnabled()
         {
             enableCaching = true;
             return this;
         }
-
 
         public StoreBuilder<T> WithCachingDisabled()
         {
@@ -40,14 +38,12 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
             return this;
         }
 
-
         public StoreBuilder<T> WithLoggingEnabled(IDictionary<String, String> config)
         {
             enableLogging = true;
             logConfig = config;
             return this;
         }
-
 
         public StoreBuilder<T> WithLoggingDisabled()
         {

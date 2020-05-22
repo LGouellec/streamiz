@@ -12,48 +12,30 @@ namespace sample_test_driver
     {
         private static void Main(string[] args)
         {
-            var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-test-driver-app";
+            var config = new StreamConfig<StringSerDes, StringSerDes>
+            {
+                ApplicationId = "test-test-driver-app"
+            };
 
             StreamBuilder builder = new StreamBuilder();
 
-            var stream = builder
-               .Stream<string, string>("test")
-               .GroupBy((k, v) => k.ToUpper());
+            var table = builder
+                            .Stream<string, string>("test")
+                            .GroupByKey()
+                            .Reduce((v1, v2) => v2.Length > v1.Length ? v2 : v1);
 
-            stream.Count(InMemory<string, long>.As("count-store"));
-            stream.Aggregate(
-                    () => new Dictionary<char, int>(),
-                    (k, v, old) =>
-                    {
-                        var caracs = v.ToCharArray();
-                        foreach(var c in caracs)
-                        {
-                            if (old.ContainsKey(c))
-                                ++old[c];
-                            else
-                                old.Add(c, 1);
-                        }
-                        return old;
-                    },
-                    InMemory<string, Dictionary<char, int>>.As("agg-store").WithValueSerdes(new DictionarySerDes())
-                );
-            stream.Reduce((v1, v2) => v2.Length > v1.Length ? v2 : v1, InMemory<string, string>.As("reduce-store"));
+            var stream = builder
+                            .Stream<string, string>("stream")
+                            .Join<string, string, StringSerDes, StringSerDes>(table, (s, v) => $"{s}-{v}");
 
             Topology t = builder.Build();
 
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("test");
-                var outputTopic = driver.CreateOuputTopic<string, string>("test-output", TimeSpan.FromSeconds(5));
+                var inputTopic2 = driver.CreateInputTopic<string, string>("stream");
                 inputTopic.PipeInput("test", "test");
-                inputTopic.PipeInput("test", "test2");
-                var store = driver.GetKeyValueStore<string, string>("reduce-store");
-                var e = store.Get("TEST");
-                //var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("agg-store");
-                //var el = store.Get("TEST");
-                //var storeCount = driver.GetKeyValueStore<string, long>("count-store");
-                //var e = storeCount.Get("TEST");
+                inputTopic2.PipeInput("test", "coucou");
             }
         }
     }

@@ -40,10 +40,11 @@ namespace Streamiz.Kafka.Net.Mock
                 task = tasks[topicName];
             else
             {
+                var topicPartition = new Confluent.Kafka.TopicPartition(topicName, 0);
                 task = new StreamTask("thread-0",
                     new TaskId { Id = id++, Partition = 0, Topic = topicName },
-                    new Confluent.Kafka.TopicPartition(topicName, 0),
-                    builder.BuildTopology(topicName),
+                    topicPartition,
+                    builder.BuildTopology(topicPartition),
                     supplier.GetConsumer(configuration.ToConsumerConfig(), null),
                     configuration,
                     supplier,

@@ -29,7 +29,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 grouped,
                 sourceNodes,
                 name,
-                node);
+                Node);
         }
 
         #region IKGroupedStream Impl
@@ -40,7 +40,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             => Count(null);
 
         public IKTable<K, long> Count(string named)
-            => Count(Materialized<K, long, IKeyValueStore<Bytes, byte[]>>.Create().With(keySerdes, new Int64SerDes()));
+            => Count(Materialized<K, long, IKeyValueStore<Bytes, byte[]>>.Create().With(KeySerdes, new Int64SerDes()));
 
         public IKTable<K, long> Count(Materialized<K, long, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
         {
@@ -83,7 +83,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             materialized = materialized ?? Materialized<K, VR, IKeyValueStore<Bytes, byte[]>>.Create();
 
             if (materialized.KeySerdes == null)
-                materialized.WithKeySerdes(keySerdes);
+                materialized.WithKeySerdes(KeySerdes);
 
             string name = new Named(named).OrElseGenerateWithPrefix(builder, KGroupedStream.AGGREGATE_NAME);
             materialized.UseProvider(builder, KGroupedStream.AGGREGATE_NAME);
@@ -112,10 +112,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             materialized = materialized ?? Materialized<K, V, IKeyValueStore<Bytes, byte[]>>.Create();
 
             if (materialized.KeySerdes == null)
-                materialized.WithKeySerdes(keySerdes);
+                materialized.WithKeySerdes(KeySerdes);
             
             if (materialized.ValueSerdes == null)
-                materialized.WithValueSerdes(valueSerdes);
+                materialized.WithValueSerdes(ValueSerdes);
 
             string name = new Named(named).OrElseGenerateWithPrefix(builder, KGroupedStream.AGGREGATE_NAME);
             materialized.UseProvider(builder, KGroupedStream.AGGREGATE_NAME);
@@ -136,7 +136,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         private IKTable<K, long> DoCount(Materialized<K, long, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
         {
             if (materialized.KeySerdes == null)
-                materialized.WithKeySerdes(keySerdes);
+                materialized.WithKeySerdes(KeySerdes);
 
             if (materialized.ValueSerdes == null)
                 materialized.WithValueSerdes(new Int64SerDes());
