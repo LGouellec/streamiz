@@ -20,22 +20,20 @@ namespace sample_test_driver
             StreamBuilder builder = new StreamBuilder();
 
             var table = builder
-                            .Stream<string, string>("test")
-                            .GroupByKey()
-                            .Reduce((v1, v2) => v2.Length > v1.Length ? v2 : v1);
-
-            var stream = builder
-                            .Stream<string, string>("stream")
-                            .Join<string, string, StringSerDes, StringSerDes>(table, (s, v) => $"{s}-{v}");
+                            .Table<string, string>("test")
+                            .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                            .Count(InMemory<string, long>.As("count-store"));
 
             Topology t = builder.Build();
 
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("test");
-                var inputTopic2 = driver.CreateInputTopic<string, string>("stream");
-                inputTopic.PipeInput("test", "test");
-                inputTopic2.PipeInput("test", "coucou");
+                inputTopic.PipeInput("renault", "clio");
+                inputTopic.PipeInput("renault", "megane");
+                inputTopic.PipeInput("ferrari", "red");
+                var store = driver.GetKeyValueStore<string, long>("count-store");
+                var elements = store.All();
             }
         }
     }
