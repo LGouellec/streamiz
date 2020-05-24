@@ -85,33 +85,33 @@ namespace Streamiz.Kafka.Net.Table.Internal
         #region Aggregate
 
         public IKTable<K, VR> Aggregate<VR>(Func<VR> initializer, Func<K, V, VR, VR> adder, Func<K, V, VR, VR> subtractor)
-        {
-            throw new NotImplementedException();
-        }
+            => Aggregate(initializer, adder, subtractor, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>>.Create());
 
         public IKTable<K, VR> Aggregate<VR>(Initializer<VR> initializer, Aggregator<K, V, VR> adder, Aggregator<K, V, VR> subtractor)
-        {
-            throw new NotImplementedException();
-        }
+            => Aggregate(initializer, adder, subtractor, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>>.Create());
 
         public IKTable<K, VR> Aggregate<VR, VRS>(Func<VR> initializer, Func<K, V, VR, VR> adder, Func<K, V, VR, VR> subtractor) where VRS : ISerDes<VR>, new()
-        {
-            throw new NotImplementedException();
-        }
+            => Aggregate(initializer, adder, subtractor, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>>.Create().WithValueSerdes(new VRS()));
 
         public IKTable<K, VR> Aggregate<VR, VRS>(Initializer<VR> initializer, Aggregator<K, V, VR> adder, Aggregator<K, V, VR> subtractor) where VRS : ISerDes<VR>, new()
-        {
-            throw new NotImplementedException();
-        }
+            => Aggregate(initializer, adder, subtractor, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>>.Create().WithValueSerdes(new VRS()));
 
         public IKTable<K, VR> Aggregate<VR>(Func<VR> initializer, Func<K, V, VR, VR> adder, Func<K, V, VR, VR> subtractor, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
-        {
-            throw new NotImplementedException();
-        }
+            => Aggregate(new WrappedInitializer<VR>(initializer), new WrappedAggregator<K, V, VR>(adder), new WrappedAggregator<K, V, VR>(subtractor), materialized, named);
 
         public IKTable<K, VR> Aggregate<VR>(Initializer<VR> initializer, Aggregator<K, V, VR> adder, Aggregator<K, V, VR> subtractor, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
         {
-            throw new NotImplementedException();
+            materialized = materialized ?? Materialized<K, VR, IKeyValueStore<Bytes, byte[]>>.Create();
+
+            if (materialized.KeySerdes == null)
+                materialized.WithKeySerdes(KeySerdes);
+
+            var aggregateSupplier = new KTableAggregate<K, V, VR>(
+                                        materialized.StoreName,
+                                        initializer,
+                                        adder,
+                                        subtractor);
+            return DoAggregate(aggregateSupplier, new Named(named), KGroupedTable.AGGREGATE_NAME, materialized);
         }
 
 
