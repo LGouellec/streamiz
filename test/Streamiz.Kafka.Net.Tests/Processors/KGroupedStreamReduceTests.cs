@@ -80,6 +80,29 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
 
         [Test]
+        public void WithNullReducer()
+        {
+            // WITH NULL SERDES, in running KeySerdes must be StringSerdes, and ValueSerdes Int64SerDes
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-reduce";
+
+            var builder = new StreamBuilder();
+            Materialized<string, int, IKeyValueStore<Bytes, byte[]>> m =
+                Materialized<string, int, IKeyValueStore<Bytes, byte[]>>
+                    .Create("reduce-store")
+                    .With(null, null);
+
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                builder
+                    .Stream<string, string>("topic")
+                    .MapValues(v => v.Length)
+                    .GroupByKey()
+                    .Reduce((Reducer<int>)null, m);
+            });
+        }
+
+        [Test]
         public void ReduceAndQueryInStateStore()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();

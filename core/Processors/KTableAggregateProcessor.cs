@@ -14,7 +14,7 @@ namespace Streamiz.Kafka.Net.Processors
 
 
         public KTableAggregateProcessor(string storeName, bool sendOldValues, Initializer<T> initializer, Aggregator<K, V, T> add, Aggregator<K, V, T> remove)
-            : base(storeName, sendOldValues)
+            : base(storeName, sendOldValues, true)
         {
             this.initializer = initializer;
             this.add = add;
@@ -34,7 +34,7 @@ namespace Streamiz.Kafka.Net.Processors
             long newTimestamp = Context.Timestamp;
 
             // first try to remove the old value
-            if (value.OldValue != null && oldAgg != null)
+            if (oldAggAndTimestamp != null && value.OldValue != null && oldAgg != null)
             {
                 intermediateAgg = remove.Apply(key, value.OldValue, oldAgg);
                 newTimestamp = Math.Max(Context.Timestamp, oldAggAndTimestamp.Timestamp);
@@ -60,9 +60,7 @@ namespace Streamiz.Kafka.Net.Processors
 
                 newAgg = add.Apply(key, value.NewValue, initializedAgg);
                 if (oldAggAndTimestamp != null)
-                {
                     newTimestamp = Math.Max(Context.Timestamp, oldAggAndTimestamp.Timestamp);
-                }
             }
             else
             {

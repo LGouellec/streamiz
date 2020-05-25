@@ -13,7 +13,7 @@ namespace Streamiz.Kafka.Net.Processors
 
 
         public KTableReduceProcessor(string storeName, bool sendOldValues, Reducer<V> adder, Reducer<V> substractor)
-            : base(storeName, sendOldValues)
+            : base(storeName, sendOldValues, true)
         {
             this.adder = adder;
             this.substractor = substractor;
@@ -30,10 +30,10 @@ namespace Streamiz.Kafka.Net.Processors
             ValueAndTimestamp<V> oldAggAndTimestamp = store.Get(key);
             V oldAgg = oldAggAndTimestamp != null ? oldAggAndTimestamp.Value : default;
             V intermediateAgg;
-            long newTimestamp;
+            long newTimestamp = Context.Timestamp;
 
             // first try to remove the old value
-            if (value.OldValue != null && oldAgg != null)
+            if (oldAggAndTimestamp != null && value.OldValue != null && oldAgg != null)
             {
                 intermediateAgg = substractor.Apply(oldAgg, value.OldValue);
                 newTimestamp = Math.Max(Context.Timestamp, oldAggAndTimestamp.Timestamp);
@@ -41,7 +41,6 @@ namespace Streamiz.Kafka.Net.Processors
             else
             {
                 intermediateAgg = oldAgg;
-                newTimestamp = Context.Timestamp;
             }
 
             // then try to add the new value
@@ -55,8 +54,10 @@ namespace Streamiz.Kafka.Net.Processors
                 else
                 {
                     newAgg = adder.Apply(intermediateAgg, value.NewValue);
-                    newTimestamp = Math.Max(Context.Timestamp, oldAggAndTimestamp.Timestamp);
                 }
+
+                if (oldAggAndTimestamp != null)
+                    newTimestamp = Math.Max(Context.Timestamp, oldAggAndTimestamp.Timestamp);
             }
             else
             {

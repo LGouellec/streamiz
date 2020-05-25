@@ -432,6 +432,7 @@ namespace Streamiz.Kafka.Net.Table
             if (!queriable && provider != null)
             {
                 storeName = provider.NewStoreName(generatedStorePrefix);
+                queriable = true;
             }
 
             return this;

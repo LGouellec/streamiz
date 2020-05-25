@@ -187,7 +187,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             Assert.IsNotNull(m);
             Assert.AreEqual("store-pref", m.StoreName);
-            Assert.IsNull(m.QueryableStoreName);
+            Assert.AreEqual("store-pref", m.QueryableStoreName);
         }
 
         [Test]

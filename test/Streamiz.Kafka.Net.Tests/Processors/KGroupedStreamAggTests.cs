@@ -7,6 +7,7 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -105,6 +106,29 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     var input = driver.CreateInputTopic<string, string>("topic");
                     input.PipeInput("test", "1");
                 }
+            });
+        }
+
+        [Test]
+        public void WithNullAggregator()
+        {
+            // WITH NULL SERDES, in running KeySerdes must be StringSerdes, and ValueSerdes Int64SerDes
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-reduce";
+
+            var builder = new StreamBuilder();
+            Materialized<string, int, IKeyValueStore<Bytes, byte[]>> m =
+                Materialized<string, int, IKeyValueStore<Bytes, byte[]>>
+                    .Create("reduce-store")
+                    .With(null, null);
+
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                builder
+                    .Stream<string, string>("topic")
+                    .MapValues((v) => v.Length)
+                    .GroupByKey()
+                    .Aggregate((Initializer<int>)null, (Aggregator<string, int, int>)null, m);
             });
         }
 

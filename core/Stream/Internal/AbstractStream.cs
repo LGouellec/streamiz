@@ -3,6 +3,7 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
@@ -56,6 +57,12 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             builder.internalTopologyBuilder.CopartitionSources(allSourceNodes);
 
             return allSourceNodes;
+        }
+
+        protected void CheckIfParamNull(object o, string paramName)
+        {
+            if (o == null)
+                throw new ArgumentNullException(paramName);
         }
 
         protected static WrappedValueMapperWithKey<K, V, VR> WithKey<VR>(Func<V, VR> valueMapper)

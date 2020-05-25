@@ -46,11 +46,6 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         {
             materialized = materialized ?? Materialized<K, long, IKeyValueStore<Bytes, byte[]>>.Create();
 
-            if (materialized.StoreName == null)
-            {
-                builder.NewStoreName(KGroupedStream.AGGREGATE_NAME);
-            }
-
             return DoCount(materialized, named);
         }
 
@@ -80,6 +75,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public IKTable<K, VR> Aggregate<VR>(Initializer<VR> initializer, Aggregator<K, V, VR> aggregator, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
         {
+            CheckIfParamNull(initializer, "initializer");
+            CheckIfParamNull(aggregator, "aggregator");
+
             materialized = materialized ?? Materialized<K, VR, IKeyValueStore<Bytes, byte[]>>.Create();
 
             if (materialized.KeySerdes == null)
@@ -109,6 +107,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public IKTable<K, V> Reduce(Reducer<V> reducer, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
         {
+            CheckIfParamNull(reducer, "reducer");
             materialized = materialized ?? Materialized<K, V, IKeyValueStore<Bytes, byte[]>>.Create();
 
             if (materialized.KeySerdes == null)
