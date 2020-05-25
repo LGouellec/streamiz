@@ -15,7 +15,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly ProcessorTopology topology;
         private readonly ILog log = Logger.GetLogger(typeof(GlobalStateUpdateTask));
         private readonly ProcessorContext context;
-        private readonly IDictionary<TopicPartition, long> offsets = new Dictionary<TopicPartition, long>();
         private IDictionary<string, IProcessor> topicToProcessor = new Dictionary<string, IProcessor>();
 
         public GlobalStateUpdateTask(IGlobalStateManager globalStateManager, ProcessorTopology topology, ProcessorContext context)
@@ -33,7 +32,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public void FlushState()
         {
             this.globalStateManager.Flush();
-            //this.globalStateManager.Checkpoint(this.offsets);
         }
 
         public IDictionary<TopicPartition, long> Initialize()
@@ -60,10 +58,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             log.Debug($"Start processing one record [{recordInfo}]");
             processor.Process(record.Message.Key, record.Message.Value);
             log.Debug($"Completed processing one record [{recordInfo}]");
-
-            // TODO: java implementation uses record.Offset + 1
-            // why the difference? (StreamTask.Process does same thing as below)
-            offsets[record.TopicPartition] = record.Offset;
         }
 
         private void InitTopology()

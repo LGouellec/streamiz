@@ -40,7 +40,6 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         public Partition Partition => RecordContext.Partition;
 
-
         internal ProcessorContext(IStreamConfig configuration, IStateManager stateManager)
         {
             Configuration = configuration;

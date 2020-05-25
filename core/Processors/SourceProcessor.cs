@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    internal interface ISourceProcessor 
+    internal interface ISourceProcessor : IProcessor
     {
         string TopicName { get; }
         ITimestampExtractor Extractor { get; }

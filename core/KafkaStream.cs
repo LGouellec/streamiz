@@ -305,18 +305,17 @@ namespace Streamiz.Kafka.Net
                 throw new TopologyException("Topology has no stream threads and no global threads, " +
                     "must subscribe to at least one source topic or global table.");
             }
-
+            
             GlobalThreadState globalThreadState = null;
             if (hasGlobalTopology)
             {
                 string globalThreadId = $"{clientId}-GlobalStreamThread";
-                globalStreamThread = new GlobalStreamThread(
-                    globalTaskTopology,
+                GlobalStreamThreadFactory globalStreamThreadFactory = new GlobalStreamThreadFactory(globalTaskTopology,
                     globalThreadId,
                     kafkaSupplier.GetGlobalConsumer(configuration.ToGlobalConsumerConfig(globalThreadId)),
                     configuration,
-                    kafkaSupplier.GetAdmin(configuration.ToAdminConfig(clientId))
-                    );
+                    kafkaSupplier.GetAdmin(configuration.ToAdminConfig(clientId)));
+                globalStreamThread = globalStreamThreadFactory.GetGlobalStreamThread();
                 globalThreadState = globalStreamThread.State;
             }
 

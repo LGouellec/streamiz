@@ -3,7 +3,6 @@ using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
-using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -38,7 +37,7 @@ namespace Streamiz.Kafka.Net.Processors
                 IDictionary<TopicPartition, long> partitionOffsets = this.globalStateMaintainer.Initialize();
                 this.globalConsumer.Assign(partitionOffsets.Keys);
 
-                // TODO: if we don't wait seek will throw. Why is that? How to solve it?
+                // TODO: if we don't wait, seek will throw. Why is that? How to solve it?
                 Thread.Sleep(5000);
                 foreach (var entry in partitionOffsets)
                 {
@@ -57,7 +56,6 @@ namespace Streamiz.Kafka.Net.Processors
                         this.globalStateMaintainer.Update(record);
                     }
 
-                    // TODO: we might want to provide a wrapper around DateTime so that we can unit test this
                     DateTime dt = DateTime.Now;
                     if (dt >= this.lastFlush.Add(this.flushInterval))
                     {
@@ -65,7 +63,6 @@ namespace Streamiz.Kafka.Net.Processors
                         this.lastFlush = DateTime.Now;
                     }
                 }
-                // TODO: should we catch all exceptions?
                 catch (Exception e)
                 {
                     log.Error("Updating global state failed.", e);
@@ -100,23 +97,20 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly IConsumer<byte[], byte[]> globalConsumer;
         private CancellationToken token;
         private readonly object stateLock = new object();
-        private IAdminClient adminClient;
         private readonly IStreamConfig configuration;
         private StateConsumer stateConsumer;
-        private ProcessorTopology topology;
+        private readonly IGlobalStateMaintainer globalStateMaintainer;
 
-        public GlobalStreamThread(ProcessorTopology topology,
-            string threadClientId,
+        public GlobalStreamThread(string threadClientId,
             IConsumer<byte[], byte[]> globalConsumer,
             IStreamConfig configuration,
-            IAdminClient adminClient)
+            IGlobalStateMaintainer globalStateMaintainer)
         {
             logPrefix = $"global-stream-thread {threadClientId} ";
 
             this.globalConsumer = globalConsumer;
             this.configuration = configuration;
-            this.topology = topology;
-            this.adminClient = adminClient;
+            this.globalStateMaintainer = globalStateMaintainer;
 
             thread = new Thread(Run);
             State = GlobalThreadState.CREATED;
@@ -124,6 +118,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         private void Run()
         {
+            SetState(GlobalThreadState.RUNNING);
             try
             {
                 while (!token.IsCancellationRequested && this.State.IsRunning())
@@ -141,19 +136,20 @@ namespace Streamiz.Kafka.Net.Processors
         {
             log.Info($"{logPrefix}Starting");
 
-            this.stateConsumer = InitializeStateConsumer();
-            if (this.stateConsumer == null)
+            try
+            {
+                this.stateConsumer = InitializeStateConsumer();
+            }
+            catch
             {
                 SetState(GlobalThreadState.PENDING_SHUTDOWN);
                 SetState(GlobalThreadState.DEAD);
 
                 log.Warn($"{logPrefix}Error happened during initialization of the global state store; this thread has shutdown");
 
-                // TODO: should we throw something here?
-                return;
+                throw;
             }
 
-            SetState(GlobalThreadState.RUNNING);
             this.token = token;
 
             thread.Start();
@@ -163,13 +159,9 @@ namespace Streamiz.Kafka.Net.Processors
         {
             try
             {
-                var stateManager = new GlobalStateManager(this.topology, this.adminClient);
-                var context = new ProcessorContext(this.configuration, stateManager);
-                stateManager.SetGlobalProcessorContext(context);
-                var globalStateUpdateTask = new GlobalStateUpdateTask(stateManager, this.topology, context);
                 var stateConsumer = new StateConsumer(
                     this.globalConsumer,
-                    globalStateUpdateTask,
+                    this.globalStateMaintainer,
                     // if poll time is bigger than int allows something is probably wrong anyway
                     new TimeSpan(0, 0, 0, 0, (int)this.configuration.PollMs),
                     new TimeSpan(0, 0, 0, 0, (int)this.configuration.CommitIntervalMs));
@@ -246,9 +238,17 @@ namespace Streamiz.Kafka.Net.Processors
                     thread.Join();
                 }
 
-                //TODO: can this throw? should we try/catch?
-                this.stateConsumer.Close();
-
+                try
+                {
+                    this.stateConsumer.Close();
+                }
+                catch (Exception e)
+                {
+                    log.Error($"{logPrefix}exception caught during disposing of GlobalStreamThread.", e);
+                    // ignore exception
+                    // https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1065
+                }
+                
                 SetState(GlobalThreadState.DEAD);
                 log.Info($"{logPrefix}Shutdown complete");
 

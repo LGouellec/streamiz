@@ -11,8 +11,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         void SetGlobalProcessorContext(ProcessorContext processorContext);
 
-        // TODO: java implementation has this method in IStateManager
-        // do we need it there?
         IDictionary<TopicPartition, long> ChangelogOffsets { get; }
     }
 }

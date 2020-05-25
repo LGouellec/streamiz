@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Streamiz.Kafka.Net.Stream.Internal;
 using Confluent.Kafka;
+using Streamiz.Kafka.Net.Errors;
+using System.Text;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -27,10 +29,23 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public void Close()
         {
             this.log.Debug("Closing global state manager");
+            var closeFailed = new StringBuilder();
             foreach (var entry in this.globalStores)
             {
-                log.Debug($"Closing store {entry.Key}");
-                entry.Value.Close();
+                try
+                {
+                    log.Debug($"Closing store {entry.Key}");
+                    entry.Value.Close();
+                }
+                catch (Exception e)
+                {
+                    log.Error($"Failed to close global state store {entry.Key}", e);
+                    closeFailed.AppendLine($"Failed to close global state store {entry.Key}. Reason: {e}");
+                }
+            }
+            if (closeFailed.Length > 0)
+            {
+                throw new ProcessorStateException($"Exceptions caught during closing of 1 or more global state globalStores\n{closeFailed}");
             }
         }
 
@@ -56,28 +71,28 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             foreach (var store in this.topology.GlobalStateStores.Values)
             {
                 store.Init(this.context, store);
+                string storeName = store.Name;
+
+                if (this.globalStores.ContainsKey(store.Name))
+                {
+                    throw new ArgumentException($" Store {storeName} has already been registered.");
+                }
+
+                var topicPartitions = this.TopicPartitionsForStore(store);
+                foreach (var partition in topicPartitions)
+                {
+                    this.ChangelogOffsets[partition] = 0;
+                }
+
+                this.globalStores[storeName] = store;
             }
 
-            return this.globalStores.Keys.ToSet();
+            return this.topology.GlobalStateStores.Values.Select(x => x.Name).ToSet();
         }
 
         public void Register(IStateStore store, StateRestoreCallback callback)
         {
-            string storeName = store.Name;
-            log.Debug($"Registering state store {storeName} to its state manager");
-
-            if (this.globalStores.ContainsKey(store.Name))
-            {
-                throw new ArgumentException($" Store {storeName} has already been registered.");
-            }
-
-            var topicPartitions = this.TopicPartitionsForStore(store);
-            foreach (var partition in topicPartitions)
-            {
-                this.ChangelogOffsets[partition] = 0;
-            }
-
-            this.globalStores[storeName] = store;
+            // nothing to do here for now. Everything is handled in Initialize method.
         }
 
         public void SetGlobalProcessorContext(ProcessorContext processorContext)
@@ -90,6 +105,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             var topic = this.topology.StoresToTopics[store.Name];
             // TODO: how long should we wait here?
             var metadata = this.adminClient.GetMetadata(topic, TimeSpan.FromSeconds(5));
+
+            if (metadata == null || metadata.Topics.Count == 0)
+            {
+                throw new StreamsException($"There are no partitions available for topic {topic} when initializing global store {store.Name}");
+            }
 
             var result = metadata.Topics.Single().Partitions.Select(partition => new TopicPartition(topic, partition.PartitionId));
             return result;
