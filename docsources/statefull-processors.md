@@ -9,20 +9,20 @@ IMPLEMENTATION WORK IN PROGRESS
 |Operator Name|Method|TODO|IMPLEMENTED|TESTED|DOCUMENTED|
 |---|---|---|---|---|---|
 |Aggregate|KGroupedStream -> KTable|   |   |   |&#9745;|
-|Aggregate|KGroupedTable -> KTable|&#9745;|   |   |   |
+|Aggregate|KGroupedTable -> KTable|   |   |   |&#9745;|
 |Aggregate(windowed)|KGroupedStream -> KTable|&#9745;|   |   |   |
 |Count|KGroupedStream -> KTable|   |   |   |&#9745;|
-|Count|KGroupedTable -> KTable|&#9745;|   |   |   |
+|Count|KGroupedTable -> KTable|   |   |   |&#9745;|
 |Count(windowed)|KGroupedStream → KStream|&#9745;|   |   |   |
 |Reduce|KGroupedStream → KTable|   |   |   |&#9745;|
-|Reduce|KGroupedTable → KTable|&#9745;|   |   |   |
+|Reduce|KGroupedTable → KTable|   |   |   |&#9745;|
 |Reduce(windowed)|KGroupedStream → KTable|&#9745;|   |   |   |
 |InnerJoin(windowed)|(KStream,KStream) → KStream|&#9745;|   |   |   |
 |LeftJoin(windowed)|(KStream,KStream) → KStream|&#9745;|   |   |   |
 |OuterJoin(windowed)|(KStream,KStream) → KStream|&#9745;|   |   |   |
-|InnerJoin(windowed)|(KTable,KTable) → KTable|&#9745;|   |   |   |
-|LeftJoin(windowed)|(KTable,KTable) → KTable|&#9745;|   |   |   |
-|OuterJoin(windowed)|(KTable,KTable) → KTable|&#9745;|   |   |   |
+|InnerJoin|(KTable,KTable) → KTable|&#9745;|   |   |   |
+|LeftJoin|(KTable,KTable) → KTable|&#9745;|   |   |   |
+|OuterJoin|(KTable,KTable) → KTable|&#9745;|   |   |   |
 |InnerJoin|(KStream,KTable) → KStream|&#9745;|   |   |   |
 |LeftJoin|(KStream,KTable) → KStream|&#9745;|   |   |   |
 |InnerJoin|(KStream,GlobalKTable) → KStream|&#9745;|   |   |   |
@@ -35,7 +35,7 @@ IMPLEMENTATION WORK IN PROGRESS
 Several variants of count exist.
 
 - IKGroupedStream  → IKTable
-- IKGroupedTable  -> IKTable (soon)
+- IKGroupedTable  -> IKTable
 
 ``` csharp
 var groupedStream = builder
@@ -44,6 +44,11 @@ var groupedStream = builder
 
 // Counting a IKGroupedStream
 var table = groupedStream.Count(InMemory<string, long>.As("count-store"));
+
+var table2 = builder
+                .Table<string, string>("topic")
+                .GroupBy((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
+                .Count(InMemory<char, long>.As("count-store2").WithKeySerdes(new CharSerDes()));
 ```
 
 Detailed behavior for IKGroupedStream:
@@ -58,7 +63,7 @@ When aggregating a grouped stream, you must provide an initializer (e.g., aggVal
 Several variants of aggregate exist.
 
 - KGroupedStream → KTable
-- IKGroupedTable  -> IKTable (soon)
+- IKGroupedTable  -> IKTable
 
 ``` csharp
 var groupedStream = builder
@@ -66,6 +71,27 @@ var groupedStream = builder
                         .GroupBy((k, v) => k.ToUpper());
 
 var table = groupedStream.Aggregate(() => 0L, (k,v,agg) => agg+ 1, InMemory<string, long>.As("agg-store").WithValueSerdes<Int64SerDes>());
+
+var table2 = builder
+                .Table<string, string>("topic")
+                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .Aggregate(
+                    () => new Dictionary<char, int>(),
+                    (k, v, old) =>
+                    {
+                        var caracs = v.ToCharArray();
+                        foreach (var c in caracs)
+                        {
+                            if (old.ContainsKey(c))
+                                ++old[c];
+                            else
+                                old.Add(c, 1);
+                        }
+                        return old;
+                    },
+                    (k, v, old) => old,
+                    InMemory<string, Dictionary<char, int>>.As("agg-store2").WithValueSerdes<DictionarySerDes>()
+                );
 ```
 Detailed behavior of IKGroupedStream:
 - Input records with null keys are ignored.
@@ -81,7 +107,7 @@ When reducing a grouped stream, you must provide an “adder” reducer (e.g., a
 Several variants of reduce exist.
 
 - IKGroupedStream  → IKTable
-- IKGroupedTable  -> IKTable (soon)
+- IKGroupedTable  -> IKTable
 
 ``` csharp
 var groupedStream = builder
@@ -91,6 +117,15 @@ var groupedStream = builder
 
 // Reduce a IKGroupedStream
 var table = groupedStream.Reduce((agg, new) => agg + new, InMemory<string, int>.As("reduce-store").WithValueSerdes<Int32SerDes>());
+
+var table2 = builder
+                .Table<string, string>("topic")
+                .MapValues(v => v.Length)
+                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .Reduce(
+                    (v1, v2) => Math.Max(v1, v2),
+                    (v1, v2) => Math.Max(v1, v2),
+                    InMemory<string, int>.As("reduce-store2").WithValueSerdes<Int32SerDes>());
 ```
 
 Detailed behavior for IKGroupedStream:
