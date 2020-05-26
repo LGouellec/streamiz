@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock;
@@ -9,45 +8,21 @@ using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
-    public class KGroupedStreamAggTests
+    public class KGroupedTableReduceTests
     {
-        internal class MyInitializer : Initializer<Dictionary<char, int>>
+        public class MyAddReducer : Reducer<string>
         {
-            public Dictionary<char, int> Apply() => new Dictionary<char, int>();
+            public string Apply(string value1, string value2)
+                =>
+                (!string.IsNullOrEmpty(value2) && !string.IsNullOrEmpty(value1)) ? (value2.Length > value1.Length ? value2 : value1) : "";
         }
 
-        internal class MyAggregator : Aggregator<string, string, Dictionary<char, int>>
+        public class MySubReducer : Reducer<string>
         {
-            public Dictionary<char, int> Apply(string key, string value, Dictionary<char, int> aggregate)
-            {
-                var caracs = value.ToCharArray();
-                foreach (var c in caracs)
-                {
-                    if (aggregate.ContainsKey(c))
-                        ++aggregate[c];
-                    else
-                        aggregate.Add(c, 1);
-                }
-                return aggregate;
-            }
-        }
-
-        internal class DictionarySerDes : AbstractSerDes<Dictionary<char, int>>
-        {
-            public override Dictionary<char, int> Deserialize(byte[] data)
-            {
-                var s = Encoding.UTF8.GetString(data);
-                return JsonConvert.DeserializeObject<Dictionary<char, int>>(s);
-            }
-
-            public override byte[] Serialize(Dictionary<char, int> data)
-            {
-                return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(data, Formatting.Indented));
-            }
+            public string Apply(string value1, string value2) => value2;
         }
 
         [Test]
@@ -57,15 +32,16 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             var serdes = new StringSerDes();
 
-            config.ApplicationId = "test-agg";
+            config.ApplicationId = "test-reduce";
 
             var builder = new StreamBuilder();
-            Materialized<string, long, IKeyValueStore<Bytes, byte[]>> m = null;
+            Materialized<string, int, IKeyValueStore<Bytes, byte[]>> m = null;
 
             builder
-                .Stream<string, string>("topic")
-                .GroupByKey()
-                .Aggregate(() => 0L, (k, v, agg) => agg + 1, m);
+                .Table<string, string>("topic")
+                .MapValues((v) => v.Length)
+                .GroupBy((k,v) => KeyValuePair.Create(k.ToUpper(),v))
+                .Reduce((v1, v2) => Math.Max(v1, v2), (v1, v2) => v2, m);
 
             var topology = builder.Build();
             Assert.Throws<StreamsException>(() =>
@@ -83,18 +59,19 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             // WITH NULL SERDES, in running KeySerdes must be StringSerdes, and ValueSerdes Int64SerDes
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-agg";
+            config.ApplicationId = "test-reduce";
 
             var builder = new StreamBuilder();
-            Materialized<string, long, IKeyValueStore<Bytes, byte[]>> m =
-                Materialized<string, long, IKeyValueStore<Bytes, byte[]>>
-                    .Create("agg-store")
+            Materialized<string, int, IKeyValueStore<Bytes, byte[]>> m =
+                Materialized<string, int, IKeyValueStore<Bytes, byte[]>>
+                    .Create("reduce-store")
                     .With(null, null);
 
             builder
-                .Stream<string, string>("topic")
-                .GroupByKey()
-                .Aggregate(() => 0, (k, v, agg) => agg + 1, m)
+                .Table<string, string>("topic")
+                .MapValues((v) => v.Length)
+                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .Reduce((v1, v2) => Math.Max(v1, v2), (v1,v2) => v2, m)
                 .ToStream()
                 .To("output-topic");
 
@@ -110,7 +87,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
 
         [Test]
-        public void WithNullAggregator()
+        public void WithNullReducer()
         {
             // WITH NULL SERDES, in running KeySerdes must be StringSerdes, and ValueSerdes Int64SerDes
             var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -125,177 +102,133 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             Assert.Throws<ArgumentNullException>(() =>
             {
                 builder
-                    .Stream<string, string>("topic")
+                    .Table<string, string>("topic")
                     .MapValues((v) => v.Length)
-                    .GroupByKey()
-                    .Aggregate((Initializer<int>)null, (Aggregator<string, int, int>)null, m);
+                    .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                    .Reduce((Reducer<int>)null, (Reducer<int>)null, m);
             });
         }
 
         [Test]
-        public void AggAndQueryInStateStore()
+        public void ReduceAndQueryInStateStore()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-agg";
+            config.ApplicationId = "test-reduce";
 
             var builder = new StreamBuilder();
 
-            var stream = builder
-               .Stream<string, string>("topic")
-               .GroupBy((k, v) => k.ToUpper());
+            var table = builder
+                .Table<string, string>("topic")
+                .MapValues(v => v.Length)
+                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v));
 
-            stream.Count(InMemory<string, long>.As("count-store"));
-            stream.Aggregate(
-                    () => new Dictionary<char, int>(),
-                    (k, v, old) =>
-                    {
-                        var caracs = v.ToCharArray();
-                        foreach (var c in caracs)
-                        {
-                            if (old.ContainsKey(c))
-                                ++old[c];
-                            else
-                                old.Add(c, 1);
-                        }
-                        return old;
-                    },
-                    InMemory<string, Dictionary<char, int>>.As("agg-store").WithValueSerdes<DictionarySerDes>()
-                );
+            table.Count(InMemory<string, long>.As("count-store"));
+            table.Reduce(
+                    (v1, v2) => Math.Max(v1, v2),
+                    (v1, v2) => Math.Max(v1, v2),
+                    InMemory<string, int>.As("reduce-store").WithValueSerdes<Int32SerDes>());
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
             {
-                Dictionary<char, int> testExpected = new Dictionary<char, int>
-                {
-                    {'1', 2 },
-                    {'2', 1 },
-                    {'3', 1 },
-                    {'0', 1 },
-                };
                 var input = driver.CreateInputTopic<string, string>("topic");
                 input.PipeInput("test", "1");
-                input.PipeInput("test", "12");
+                input.PipeInput("test", "120");
                 input.PipeInput("test", "30");
                 input.PipeInput("coucou", "120");
 
-                var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("agg-store");
+                var store = driver.GetKeyValueStore<string, int>("reduce-store");
                 Assert.IsNotNull(store);
                 Assert.AreEqual(2, store.ApproximateNumEntries());
                 var el = store.Get("TEST");
                 Assert.IsNotNull(el);
-                Assert.AreEqual(testExpected, el);
+                Assert.AreEqual(3, el);
 
                 var storeCount = driver.GetKeyValueStore<string, long>("count-store");
                 Assert.IsNotNull(storeCount);
                 Assert.AreEqual(2, store.ApproximateNumEntries());
                 var e = storeCount.Get("TEST");
                 Assert.IsNotNull(e);
-                Assert.AreEqual(3, e);
+                Assert.AreEqual(1, e);
             }
         }
 
         [Test]
-        public void Agg2()
+        public void Reduce2()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-agg";
+            config.ApplicationId = "test-reduce";
 
             var builder = new StreamBuilder();
 
             builder
-               .Stream<string, string>("topic")
-               .GroupBy((k, v) => k.ToUpper())
-               .Aggregate<Dictionary<char, int>, DictionarySerDes>(
-                    () => new Dictionary<char, int>(),
-                    (k, v, old) =>
-                    {
-                        var caracs = v.ToCharArray();
-                        foreach (var c in caracs)
-                        {
-                            if (old.ContainsKey(c))
-                                ++old[c];
-                            else
-                                old.Add(c, 1);
-                        }
-                        return old;
-                    }
-                );
+                .Table<string, string>("topic")
+                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                   .Reduce(
+                        (v1, v2) => v2.Length > v1.Length ? v2 : v1,
+                        (v1, v2) => v2,
+                        InMemory<string, string>.As("reduce-store"));
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
             {
-                Dictionary<char, int> testExpected = new Dictionary<char, int>
-                {
-                    {'1', 2 },
-                    {'2', 1 }
-                };
                 var input = driver.CreateInputTopic<string, string>("topic");
-                var output = driver.CreateOuputTopic<Dictionary<char, int>, DictionarySerDes>("output");
                 input.PipeInput("test", "1");
                 input.PipeInput("test", "12");
 
-                var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("KSTREAM-AGGREGATE-STATE-STORE-0000000004");
+                var store = driver.GetKeyValueStore<string, string>("reduce-store");
                 Assert.IsNotNull(store);
                 Assert.AreEqual(1, store.ApproximateNumEntries());
                 var el = store.Get("TEST");
                 Assert.IsNotNull(el);
-                Assert.AreEqual(testExpected, el);
+                Assert.AreEqual("12", el);
             }
         }
 
         [Test]
-        public void Agg3()
+        public void Reduce3()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-agg";
+            config.ApplicationId = "test-reduce";
 
             var builder = new StreamBuilder();
 
             builder
-               .Stream<string, string>("topic")
-               .GroupBy((k, v) => k.ToUpper())
-               .Aggregate<Dictionary<char, int>, DictionarySerDes>(
-                    new MyInitializer(),
-                    new MyAggregator()
-                );
+                .Table<string, string>("topic")
+                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+               .Reduce(new MyAddReducer(), new MySubReducer(), InMemory<string, string>.As("reduce-store"));
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
             {
-                Dictionary<char, int> testExpected = new Dictionary<char, int>
-                {
-                    {'1', 2 },
-                    {'2', 1 }
-                };
                 var input = driver.CreateInputTopic<string, string>("topic");
-                var output = driver.CreateOuputTopic<Dictionary<char, int>, DictionarySerDes>("output");
-                input.PipeInput("test", "1");
-                input.PipeInput("test", "12");
+                input.PipeInput("test", "15151500");
+                input.PipeInput("test", "1200");
 
-                var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("KSTREAM-AGGREGATE-STATE-STORE-0000000004");
+                var store = driver.GetKeyValueStore<string, string>("reduce-store");
                 Assert.IsNotNull(store);
                 Assert.AreEqual(1, store.ApproximateNumEntries());
                 var el = store.Get("TEST");
                 Assert.IsNotNull(el);
-                Assert.AreEqual(testExpected, el);
+                Assert.AreEqual("15151500", el);
             }
         }
 
         [Test]
-        public void Agg4()
+        public void Reduce4()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-agg";
+            config.ApplicationId = "test-count";
 
             var builder = new StreamBuilder();
 
             builder
-               .Stream<string, string>("topic")
-               .GroupBy((k, v) => k.ToUpper())
-               .Aggregate(
-                    () => 0L,
-                    (k, v, agg) => agg + 1,
-                    InMemory<string, long>.As("agg-store").WithValueSerdes<Int64SerDes>());
+                .Table<string, string>("topic")
+                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+               .Reduce(
+                    new MyAddReducer(), new MySubReducer(),
+                    InMemory<string, string>.As("reduce-store"),
+                    "reduce-processor");
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
@@ -305,13 +238,49 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 input.PipeInput("test", null);
                 input.PipeInput("test", "12");
 
-                var store = driver.GetKeyValueStore<string, long>("agg-store");
+                var store = driver.GetKeyValueStore<string, string>("reduce-store");
                 Assert.IsNotNull(store);
                 // null doesn't matter
                 Assert.AreEqual(1, store.ApproximateNumEntries());
                 var el = store.Get("TEST");
                 Assert.IsNotNull(el);
-                Assert.AreEqual(2, el);
+                Assert.AreEqual("12", el);
+            }
+        }
+
+        [Test]
+        public void Reduce5()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-count";
+
+            var builder = new StreamBuilder();
+
+            builder
+                .Table<string, string>("topic")
+                .GroupBy((k, v) => KeyValuePair.Create(k?.ToUpper(), v))
+               .Reduce(
+                    new MyAddReducer(), new MySubReducer(),
+                    InMemory<string, string>.As("reduce-store"),
+                    "reduce-processor");
+
+            var topology = builder.Build();
+            using (var driver = new TopologyTestDriver(topology, config))
+            {
+                var input = driver.CreateInputTopic<string, string>("topic");
+                input.PipeInput("test", "1");
+                input.PipeInput("test", null);
+                input.PipeInput(null, "34");
+                input.PipeInput(null, null);
+                input.PipeInput("test", "12");
+
+                var store = driver.GetKeyValueStore<string, string>("reduce-store");
+                Assert.IsNotNull(store);
+                // null doesn't matter
+                Assert.AreEqual(1, store.ApproximateNumEntries());
+                var el = store.Get("TEST");
+                Assert.IsNotNull(el);
+                Assert.AreEqual("12", el);
             }
         }
 
@@ -320,14 +289,14 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         public void KeySerdesUnknow()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-agg";
+            config.ApplicationId = "test-reduce";
 
             var builder = new StreamBuilder();
 
             builder
-                .Stream<string, string>("topic")
-                .GroupBy((k, v) => k.ToCharArray()[0])
-                .Aggregate(() => 0L, (k, v, agg) => agg + 1);
+                .Table<string, string>("topic")
+                .GroupBy((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
+                .Reduce((v1, v2) => v2, (v1, v2) => v2);
 
             var topology = builder.Build();
             Assert.Throws<StreamsException>(() =>
@@ -339,6 +308,5 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 }
             });
         }
-
     }
 }

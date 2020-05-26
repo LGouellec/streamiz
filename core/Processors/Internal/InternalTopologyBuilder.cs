@@ -1,9 +1,11 @@
-﻿using Streamiz.Kafka.Net.Crosscutting;
+﻿using Confluent.Kafka;
+using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,6 +18,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly IList<string> sourcesTopics = new List<string>();
         private readonly QuickUnion<string> nodeGrouper = new QuickUnion<string>();
         private IDictionary<string, ISet<string>> nodeGroups = new Dictionary<string, ISet<string>>();
+        private IList<ISet<string>> copartitionSourceGroups = new List<ISet<string>>();
 
         internal InternalTopologyBuilder()
         {
@@ -24,6 +27,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         internal IEnumerable<string> GetSourceTopics() => sourcesTopics;
 
         #region Connect
+
+        internal void CopartitionSources(ISet<string> allSourceNodes)
+        {
+            copartitionSourceGroups.Add(allSourceNodes);
+        }
 
         internal void ConnectProcessorAndStateStore(string processorName, params string[] stateStoreNames)
         {
@@ -139,10 +147,27 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             else
                 nodeGroup = NodeGroups().Values.SelectMany(i => i).ToHashSet();
 
-            return BuildTopology(nodeGroup);
+            return BuildTopology(nodeGroup, null);
         }
 
-        private ProcessorTopology BuildTopology(ISet<string> nodeGroup)
+        public ProcessorTopology BuildTopology(TopicPartition sourceTopicPartition)
+        {
+            ISet<string> nodeGroup = null;
+            if (sourceTopicPartition != null)
+            {
+                var groups = NodeGroups();
+                if (groups.ContainsKey(sourceTopicPartition.Topic))
+                    nodeGroup = NodeGroups()[sourceTopicPartition.Topic];
+                else
+                    throw new TopologyException($"Topic {sourceTopicPartition.Topic} doesn't exist in this topology");
+            }
+            else
+                nodeGroup = NodeGroups().Values.SelectMany(i => i).ToHashSet();
+
+            return BuildTopology(nodeGroup, sourceTopicPartition);
+        }
+
+        private ProcessorTopology BuildTopology(ISet<string> nodeGroup, TopicPartition sourceTopicPartition)
         {
             IProcessor rootProcessor = new RootProcessor();
             IDictionary<string, IProcessor> sources = new Dictionary<string, IProcessor>();
@@ -158,7 +183,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     processors.Add(nodeFactory.Name, processor);
 
                     if (nodeFactory is IProcessorNodeFactory)
-                        BuildProcessorNode(processors, stateStores, nodeFactory as IProcessorNodeFactory, processor);
+                        BuildProcessorNode(processors, stateStores, nodeFactory as IProcessorNodeFactory, processor, sourceTopicPartition);
                     else if (nodeFactory is ISourceNodeFactory)
                         BuildSourceNode(sources, nodeFactory as ISourceNodeFactory, processor);
                     else if (nodeFactory is ISinkNodeFactory)
@@ -189,7 +214,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             sources.Add(factory.Name, processor);
         }
 
-        private void BuildProcessorNode(IDictionary<string, IProcessor> processors, IDictionary<string, IStateStore> stateStores, IProcessorNodeFactory factory, IProcessor processor)
+        private void BuildProcessorNode(IDictionary<string, IProcessor> processors, IDictionary<string, IStateStore> stateStores, IProcessorNodeFactory factory, IProcessor processor, TopicPartition partition)
         {
             foreach (string predecessor in factory.Previous)
             {
@@ -204,7 +229,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     StateStoreFactory stateStoreFactory = stateFactories[stateStoreName];
 
                     // TODO : changelog topic (remember the changelog topic if this state store is change-logging enabled)
-                    stateStores.Add(stateStoreName, stateStoreFactory.Build());
+                    stateStores.Add(stateStoreName, stateStoreFactory.Build(partition));
                 }
             }
         }

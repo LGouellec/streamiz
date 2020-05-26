@@ -13,14 +13,14 @@ using System.Text;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
-    public class KGroupedStreamAggTests
+    public class KGroupedTableAggTests
     {
         internal class MyInitializer : Initializer<Dictionary<char, int>>
         {
             public Dictionary<char, int> Apply() => new Dictionary<char, int>();
         }
 
-        internal class MyAggregator : Aggregator<string, string, Dictionary<char, int>>
+        internal class MyAdderAggregator : Aggregator<string, string, Dictionary<char, int>>
         {
             public Dictionary<char, int> Apply(string key, string value, Dictionary<char, int> aggregate)
             {
@@ -32,6 +32,14 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     else
                         aggregate.Add(c, 1);
                 }
+                return aggregate;
+            }
+        }
+
+        internal class MySubAggregator : Aggregator<string, string, Dictionary<char, int>>
+        {
+            public Dictionary<char, int> Apply(string key, string value, Dictionary<char, int> aggregate)
+            {
                 return aggregate;
             }
         }
@@ -63,9 +71,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             Materialized<string, long, IKeyValueStore<Bytes, byte[]>> m = null;
 
             builder
-                .Stream<string, string>("topic")
-                .GroupByKey()
-                .Aggregate(() => 0L, (k, v, agg) => agg + 1, m);
+                .Table<string, string>("topic")
+                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .Aggregate(() => 0L, (k, v, agg) => agg + 1, (k, v, agg) => agg, m);
 
             var topology = builder.Build();
             Assert.Throws<StreamsException>(() =>
@@ -92,9 +100,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     .With(null, null);
 
             builder
-                .Stream<string, string>("topic")
-                .GroupByKey()
-                .Aggregate(() => 0, (k, v, agg) => agg + 1, m)
+                .Table<string, string>("topic")
+                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .Aggregate(() => 0, (k, v, agg) => agg + 1, (k, v, agg) => agg, m)
                 .ToStream()
                 .To("output-topic");
 
@@ -125,10 +133,10 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             Assert.Throws<ArgumentNullException>(() =>
             {
                 builder
-                    .Stream<string, string>("topic")
+                    .Table<string, string>("topic")
                     .MapValues((v) => v.Length)
-                    .GroupByKey()
-                    .Aggregate((Initializer<int>)null, (Aggregator<string, int, int>)null, m);
+                    .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                    .Aggregate((Initializer<int>)null, (Aggregator<string, int, int>)null, (Aggregator<string,int,int>)null, m);
             });
         }
 
@@ -140,12 +148,12 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var builder = new StreamBuilder();
 
-            var stream = builder
-               .Stream<string, string>("topic")
-               .GroupBy((k, v) => k.ToUpper());
+            var table = builder
+                .Table<string, string>("topic")
+                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v));
 
-            stream.Count(InMemory<string, long>.As("count-store"));
-            stream.Aggregate(
+            table.Count(InMemory<string, long>.As("count-store"));
+            table.Aggregate(
                     () => new Dictionary<char, int>(),
                     (k, v, old) =>
                     {
@@ -159,6 +167,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                         }
                         return old;
                     },
+                    (k, v, old) => old,
                     InMemory<string, Dictionary<char, int>>.As("agg-store").WithValueSerdes<DictionarySerDes>()
                 );
 
@@ -190,7 +199,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 Assert.AreEqual(2, store.ApproximateNumEntries());
                 var e = storeCount.Get("TEST");
                 Assert.IsNotNull(e);
-                Assert.AreEqual(3, e);
+                Assert.AreEqual(1, e);
             }
         }
 
@@ -203,9 +212,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder
-               .Stream<string, string>("topic")
-               .GroupBy((k, v) => k.ToUpper())
-               .Aggregate<Dictionary<char, int>, DictionarySerDes>(
+                .Table<string, string>("topic")
+                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .Aggregate<Dictionary<char, int>, DictionarySerDes>(
                     () => new Dictionary<char, int>(),
                     (k, v, old) =>
                     {
@@ -218,7 +227,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                                 old.Add(c, 1);
                         }
                         return old;
-                    }
+                    },
+                    (k, v, old) => old
                 );
 
             var topology = builder.Build();
@@ -234,7 +244,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 input.PipeInput("test", "1");
                 input.PipeInput("test", "12");
 
-                var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("KSTREAM-AGGREGATE-STATE-STORE-0000000004");
+                var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("KTABLE-AGGREGATE-STATE-STORE-0000000006");
                 Assert.IsNotNull(store);
                 Assert.AreEqual(1, store.ApproximateNumEntries());
                 var el = store.Get("TEST");
@@ -252,11 +262,12 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder
-               .Stream<string, string>("topic")
-               .GroupBy((k, v) => k.ToUpper())
-               .Aggregate<Dictionary<char, int>, DictionarySerDes>(
+                .Table<string, string>("topic")
+                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .Aggregate<Dictionary<char, int>, DictionarySerDes>(
                     new MyInitializer(),
-                    new MyAggregator()
+                    new MyAdderAggregator(),
+                    new MySubAggregator()
                 );
 
             var topology = builder.Build();
@@ -272,7 +283,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 input.PipeInput("test", "1");
                 input.PipeInput("test", "12");
 
-                var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("KSTREAM-AGGREGATE-STATE-STORE-0000000004");
+                var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("KTABLE-AGGREGATE-STATE-STORE-0000000006");
                 Assert.IsNotNull(store);
                 Assert.AreEqual(1, store.ApproximateNumEntries());
                 var el = store.Get("TEST");
@@ -290,11 +301,12 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder
-               .Stream<string, string>("topic")
-               .GroupBy((k, v) => k.ToUpper())
-               .Aggregate(
+                .Table<string, string>("topic")
+                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .Aggregate(
                     () => 0L,
                     (k, v, agg) => agg + 1,
+                    (k, v, agg) => agg,
                     InMemory<string, long>.As("agg-store").WithValueSerdes<Int64SerDes>());
 
             var topology = builder.Build();
@@ -325,9 +337,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder
-                .Stream<string, string>("topic")
-                .GroupBy((k, v) => k.ToCharArray()[0])
-                .Aggregate(() => 0L, (k, v, agg) => agg + 1);
+                .Table<string, string>("topic")
+                .GroupBy((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
+                .Aggregate(() => 0L, (k, v, agg) => agg + 1, (k, v, agg) => agg);
 
             var topology = builder.Build();
             Assert.Throws<StreamsException>(() =>
@@ -339,6 +351,5 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 }
             });
         }
-
     }
 }

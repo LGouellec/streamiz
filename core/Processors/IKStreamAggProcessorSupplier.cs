@@ -3,10 +3,14 @@ using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    internal interface IKStreamAggProcessorSupplier<K, RK, V, T> : IProcessorSupplier<K, V>
+    internal interface IKStreamAggProcessorSupplier<K, V>
     {
-        IKTableValueGetterSupplier<RK, T> View();
+        IKTableValueGetterSupplier<K, V> View();
+    }
 
+    internal interface IKStreamAggProcessorSupplier<K, RK, V, T> : 
+        IProcessorSupplier<K, V>, IKStreamAggProcessorSupplier<RK, T>
+    {
         void EnableSendingOldValues();
     }
 }

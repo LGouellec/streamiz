@@ -1,28 +1,31 @@
-﻿using Streamiz.Kafka.Net.SerDes;
+﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
     internal abstract class AbstractStream<K, V>
     {
-        protected string nameNode;
-        protected ISerDes<K> keySerdes;
-        protected ISerDes<V> valueSerdes;
-        protected List<String> setSourceNodes;
-        protected StreamGraphNode node;
+        public string NameNode { get; protected set; }
+        public ISerDes<K> KeySerdes { get; protected set; }
+        public ISerDes<V> ValueSerdes { get; protected set; }
+        public List<string> SetSourceNodes { get; protected set; }
+        public StreamGraphNode Node { get; protected set; }
+
         protected readonly InternalStreamBuilder builder;
 
 
         protected AbstractStream(AbstractStream<K, V> stream)
         {
-            nameNode = stream.nameNode;
+            NameNode = stream.NameNode;
             builder = stream.builder;
-            keySerdes = stream.keySerdes;
-            valueSerdes = stream.valueSerdes;
-            setSourceNodes = stream.setSourceNodes;
-            node = stream.node;
+            KeySerdes = stream.KeySerdes;
+            ValueSerdes = stream.ValueSerdes;
+            SetSourceNodes = stream.SetSourceNodes;
+            Node = stream.Node;
         }
 
         protected AbstractStream(String name,
@@ -37,14 +40,30 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 throw new ArgumentException("parameter <sourceNodes> must not be null or empty");
             }
 
-            nameNode = name;
+            NameNode = name;
             this.builder = builder;
-            keySerdes = keySerde;
-            valueSerdes = valSerde;
-            setSourceNodes = sourceNodes;
-            node = streamsGraphNode;
+            KeySerdes = keySerde;
+            ValueSerdes = valSerde;
+            SetSourceNodes = sourceNodes;
+            Node = streamsGraphNode;
         }
 
+        protected ISet<string> EnsureJoinableWith<K1, V1>(AbstractStream<K1, V1> other)
+        {
+            ISet<string> allSourceNodes = new HashSet<string>();
+            allSourceNodes.AddRange(SetSourceNodes);
+            allSourceNodes.AddRange(other.SetSourceNodes);
+
+            builder.internalTopologyBuilder.CopartitionSources(allSourceNodes);
+
+            return allSourceNodes;
+        }
+
+        protected void CheckIfParamNull(object o, string paramName)
+        {
+            if (o == null)
+                throw new ArgumentNullException(paramName);
+        }
 
         protected static WrappedValueMapperWithKey<K, V, VR> WithKey<VR>(Func<V, VR> valueMapper)
         {

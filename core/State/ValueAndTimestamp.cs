@@ -1,5 +1,14 @@
 ﻿namespace Streamiz.Kafka.Net.State
 {
+    internal class ValueAndTimestamp
+    {
+        public static V GetValueOrNull<V>(ValueAndTimestamp<V> valueAndTimestamp)
+            where V : class
+        {
+            return valueAndTimestamp == null ? null : valueAndTimestamp.Value;
+        }
+    }
+
     /// <summary>
     /// Combines a value from a keyvalue with a timestamp.
     /// </summary>

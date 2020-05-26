@@ -25,7 +25,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph
         public IProcessor<K, V> Get() 
             => new KStreamReduceProcessor<K, V>(reducer, storeName, sendOldValues);
 
-        // TODO
-        public IKTableValueGetterSupplier<K, V> View() => null;
+        public IKTableValueGetterSupplier<K, V> View()
+            => new GenericKTableValueGetterSupplier<K, V>(
+                new string[] { storeName },
+                new TimestampedKeyValueStoreGetter<K, V>(storeName));
     }
 }

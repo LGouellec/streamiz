@@ -100,9 +100,9 @@ static void Main(string[] args)
 - [WIP] Statefull processors impl
 - [WIP] Global state store
 - [ ] Task restoring
-- [ ] Processor API
-- [ ] Repartition impl
+- [ ] Repartition topic
 - [ ] Rocks DB state implementation
+- [ ] Processor API
 - [ ] Optimizing Kafka Streams Topologies
 - [ ] Interactive Queries
 - [ ] Metrics
