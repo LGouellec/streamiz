@@ -54,6 +54,9 @@ var table2 = builder
 Detailed behavior for IKGroupedStream:
 - Input records with null keys or values are ignored.
 
+Detailed behavior for IKGroupedTable:
+- Input records with null keys are ignored. Records with null values are not ignored but interpreted as “tombstones” for the corresponding key, which indicate the deletion of the key from the table.
+
 ## Aggregate
 
 **Rolling aggregation.** Aggregates the values of (non-windowed) records by the grouped key. Aggregating is a generalization of reduce and allows, for example, the aggregate value to have a different type than the input values. (see IKGroupedStream for details)
@@ -93,10 +96,18 @@ var table2 = builder
                     InMemory<string, Dictionary<char, int>>.As("agg-store2").WithValueSerdes<DictionarySerDes>()
                 );
 ```
+
 Detailed behavior of IKGroupedStream:
 - Input records with null keys are ignored.
 - When a record key is received for the first time, the initializer is called (and called before the adder).
 - Whenever a record with a non-null value is received, the adder is called.
+
+Detailed behavior of IKGroupedTable:
+- Input records with null keys are ignored.
+- When a record key is received for the first time, the initializer is called (and called before the adder and subtractor). Note that, in contrast to IKGroupedStream, over time the initializer may be called more than once for a key as a result of having received input tombstone records for that key (see below).
+- When the first non-null value is received for a key (e.g., INSERT), then only the adder is called.
+- When subsequent non-null values are received for a key (e.g., UPDATE), then (1) the subtractor is called with the old value as stored in the table and (2) the adder is called with the new value of the input record that was just received. The order of execution for the subtractor and adder is not defined.
+- When a tombstone record – i.e. a record with a null value – is received for a key (e.g., DELETE), then only the subtractor is called. Note that, whenever the subtractor returns a null value itself, then the corresponding key is removed from the resulting IKTable. If that happens, any next input record for that key will trigger the initializer again.
 
 ## Reduce
 
@@ -132,3 +143,10 @@ Detailed behavior for IKGroupedStream:
 - Input records with null keys are ignored in general.
 - When a record key is received for the first time, then the value of that record is used as the initial aggregate value.
 - Whenever a record with a non-null value is received, the adder is called.
+
+Detailed behavior for IKGroupedTable:
+- Input records with null keys are ignored in general.
+- When a record key is received for the first time, then the value of that record is used as the initial aggregate value. Note that, in contrast to IKGroupedStream, over time this initialization step may happen more than once for a key as a result of having received input tombstone records for that key (see below).
+- When the first non-null value is received for a key (e.g., INSERT), then only the adder is called.
+- When subsequent non-null values are received for a key (e.g., UPDATE), then (1) the subtractor is called with the old value as stored in the table and (2) the adder is called with the new value of the input record that was just received. The order of execution for the subtractor and adder is not defined.
+- When a tombstone record – i.e. a record with a null value – is received for a key (e.g., DELETE), then only the subtractor is called. Note that, whenever the subtractor returns a null value itself, then the corresponding key is removed from the resulting IKTable. If that happens, any next input record for that key will re-initialize its aggregate value.
