@@ -100,7 +100,7 @@ You would use foreach to cause side effects based on the input data (similar to 
 
 Note on processing guarantees: Any side effects of an action (such as writing to external systems) are not trackable by Kafka, which means they will typically not benefit from Kafka’s processing guarantees.
 
-- IKStream → void
+- IKGroupedStream  → IKTable
 
 ``` csharp
 IKStream<string, string> stream = ....

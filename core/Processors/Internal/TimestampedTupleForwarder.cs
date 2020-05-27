@@ -2,6 +2,7 @@
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
+    // TODO REFACTOR
     internal class TimestampedTupleForwarder<K, V>
     {
         private readonly IProcessor<K, V> processor;
@@ -47,8 +48,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
         }
 
-
-        public void MaybeForward( K key,
+        public void MaybeForward(K key,
                                   V newValue,
                                   V oldValue,
                                   long timestamp)
@@ -57,6 +57,20 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 processor.Forward(key, new Change<V>(sendOldValues ? oldValue : default, newValue));
             else if (changeProcessor != null)
                 changeProcessor.Forward(key, new Change<V>(sendOldValues ? oldValue : default, newValue));
+        }
+
+        public void MaybeForward<VR>(K key,
+                          VR newValue,
+                          VR oldValue,
+                          long timestamp)
+        {
+            if (!cachingEnabled)
+            {
+                if (processor != null)
+                    processor.Forward(key, new Change<VR>(sendOldValues ? oldValue : default, newValue));
+                else if (changeProcessor != null)
+                    changeProcessor.Forward(key, new Change<VR>(sendOldValues ? oldValue : default, newValue));
+            }
         }
     }
 }

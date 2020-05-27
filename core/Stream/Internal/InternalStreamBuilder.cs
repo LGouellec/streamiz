@@ -23,7 +23,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         internal IList<StreamGraphNode> nodes = new List<StreamGraphNode>();
         internal readonly RootNode root = new RootNode();
 
-        private readonly InternalTopologyBuilder internalTopologyBuilder;
+        internal readonly InternalTopologyBuilder internalTopologyBuilder;
 
         internal InternalStreamBuilder(InternalTopologyBuilder internalTopologyBuilder)
         {

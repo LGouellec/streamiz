@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using System;
@@ -7,6 +8,13 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 {
     public class ValueAndTimestampSerdesTests
     {
+        [Test]
+        public void InnerSerdesNull()
+        {
+            Assert.Throws<StreamsException>(() => new ValueAndTimestampSerDes<string>(null));
+        }
+
+
         [Test]
         public void SerializeNullData()
         {
@@ -32,7 +40,6 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             Assert.AreEqual(s, r2.Value);
             Assert.AreEqual(millie, r2.Timestamp);
         }
-
 
         [Test]
         public void DeserializeNullData()

@@ -1,4 +1,4 @@
-# .NET Stream Processing Library for Apache Kafka <sup>TM</sup> &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/LGouellec/streamiz-kafka-net/blob/master/LICENSE) ![build](https://github.com/LGouellec/kafka-streams-dotnet/workflows/build/badge.svg?branch=master)
+# .NET Stream Processing Library for Apache Kafka <sup>TM</sup> &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/LGouellec/streamiz-kafka-net/blob/master/LICENSE) ![build](https://github.com/LGouellec/kafka-streams-dotnet/workflows/build/badge.svg?branch=master) ![Nuget](https://img.shields.io/nuget/dt/Streamiz.Kafka.Net) ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Streamiz.Kafka.Net)
 
 ## Quality Statistics
 
@@ -33,8 +33,9 @@ This project is being written. Thanks for you contribution !
 
 # Timeline
 
-- End May 2020 - Beta 0.0.1 - All stateless processors, Exactly Once Semantic, InMemory store
-- End October 2020 - Beta 0.0.2 - All statefull processors, Global Store, RocksDB Store
+- End May 2020 - Beta 0.1.0 - All stateless processors, Exactly Once Semantic, InMemory store
+- End August 2020 - Beta 0.2.0 - All statefull processors, Global Store
+- End October 2020 - Beta 0.3.0 - Persistent state store (eg: RocksDB Store)
 - End 2020 / Begin 2021 - 1.0.0 RC1 - Processor API, Metrics, Interactive Queries
 
 # Documentation
@@ -43,7 +44,7 @@ Read the full documentation on https://lgouellec.github.io/kafka-streams-dotnet/
 
 # Installation
 
-Nuget packages are list to [nuget.org](https://www.nuget.org/packages/Streamiz.Kafka.Net/)
+Nuget packages are listed to [nuget.org](https://www.nuget.org/packages/Streamiz.Kafka.Net/)
 
 Install the last version with :
 ```shell
@@ -96,12 +97,12 @@ static void Main(string[] args)
 - [x] Refactor topology node processor builder
 - [x] Subtopology impl
 - [x] Unit tests (TestTopologyDriver, ...)
-- [ ] Statefull processors impl
-- [ ] Task restoring
+- [WIP] Statefull processors impl
 - [WIP] Global state store
-- [ ] Processor API
-- [ ] Repartition impl
+- [ ] Task restoring
+- [ ] Repartition topic
 - [ ] Rocks DB state implementation
+- [ ] Processor API
 - [ ] Optimizing Kafka Streams Topologies
 - [ ] Interactive Queries
 - [ ] Metrics
@@ -119,7 +120,7 @@ Maintainers:
 
 **Streamiz Kafka .Net** is a community project. We invite your participation through issues and pull requests! You can peruse the [contributing guidelines](CONTRIBUTING.md).
 
-When adding or changing a service please add tests.
+When adding or changing a service please add tests and documentations.
 
 # Support
 

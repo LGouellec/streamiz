@@ -17,7 +17,7 @@
         - run: apt install -y openjdk-8-jdk
         - run: set JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
         - run: export JAVA_HOME
-        - run: dotnet sonarscanner begin /k:LGouellec_kafka-streams-dotnet /o:kafka-streams-dotnet /d:sonar.login=${SONAR_TOKEN} /d:sonar.host.url=https://sonarcloud.io /d:sonar.cs.opencover.reportsPaths="**\coverage.opencover.xml" /d:sonar.coverage.exclusions="**Tests*.cs"
+        - run: dotnet sonarscanner begin /k:LGouellec_kafka-streams-dotnet /o:kafka-streams-dotnet /d:sonar.login=${SONAR_TOKEN} /d:sonar.host.url=https://sonarcloud.io /d:sonar.cs.opencover.reportsPaths="**\coverage.opencover.xml" /d:sonar.coverage.exclusions="**test*/*.cs,**Tests*.cs"
         - run: dotnet build
         - run: dotnet test --no-restore --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
         - run: dotnet sonarscanner end /d:sonar.login=${SONAR_TOKEN}

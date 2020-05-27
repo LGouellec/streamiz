@@ -37,7 +37,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Test topology driver" href="tology-test-driver.html" />
+    <link rel="next" title="State stores" href="stores.html" />
     <link rel="prev" title="Stateless processors" href="stateless-processors.html" /> 
 </head>
 
@@ -87,7 +87,13 @@
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stream-configuration.html">Configuring a Stream Application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stateless-processors.html">Stateless processors</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Statefull processors</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Statefull processors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#count">Count</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#aggregate">Aggregate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reduce">Reduce</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="stores.html">State stores</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tology-test-driver.html">Test topology driver</a></li>
 </ul>
 
@@ -155,6 +161,7 @@
             
   <div class="section" id="statefull-processors">
 <h1>Statefull processors<a class="headerlink" href="#statefull-processors" title="Permalink to this headline">¶</a></h1>
+<p>Stateful transformations depend on state for processing inputs and producing outputs and require a state store associated with the stream processor. For example, in aggregating operations, a windowing state store is used to collect the latest aggregation results per window. In join operations, a windowing state store is used to collect all of the records received so far within the defined window boundary.</p>
 <p>IMPLEMENTATION WORK IN PROGRESS</p>
 <p><strong>To follow the progress, you can star <a class="reference external" href="https://github.com/LGouellec/kafka-streams-dotnet">the Github project</a> and watch it !</strong></p>
 <table border="1" class="docutils">
@@ -172,18 +179,18 @@
 <tr>
 <td>Aggregate</td>
 <td>KGroupedStream -&gt; KTable</td>
+<td></td>
+<td></td>
+<td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>Aggregate</td>
 <td>KGroupedTable -&gt; KTable</td>
+<td></td>
+<td></td>
+<td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>Aggregate(windowed)</td>
@@ -196,18 +203,18 @@
 <tr>
 <td>Count</td>
 <td>KGroupedStream -&gt; KTable</td>
+<td></td>
+<td></td>
+<td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>Count</td>
 <td>KGroupedTable -&gt; KTable</td>
+<td></td>
+<td></td>
+<td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>Count(windowed)</td>
@@ -220,18 +227,18 @@
 <tr>
 <td>Reduce</td>
 <td>KGroupedStream → KTable</td>
+<td></td>
+<td></td>
+<td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>Reduce</td>
 <td>KGroupedTable → KTable</td>
+<td></td>
+<td></td>
+<td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>Reduce(windowed)</td>
@@ -266,7 +273,7 @@
 <td></td>
 </tr>
 <tr>
-<td>InnerJoin(windowed)</td>
+<td>InnerJoin</td>
 <td>(KTable,KTable) → KTable</td>
 <td>&#9745;</td>
 <td></td>
@@ -274,7 +281,7 @@
 <td></td>
 </tr>
 <tr>
-<td>LeftJoin(windowed)</td>
+<td>LeftJoin</td>
 <td>(KTable,KTable) → KTable</td>
 <td>&#9745;</td>
 <td></td>
@@ -282,7 +289,7 @@
 <td></td>
 </tr>
 <tr>
-<td>OuterJoin(windowed)</td>
+<td>OuterJoin</td>
 <td>(KTable,KTable) → KTable</td>
 <td>&#9745;</td>
 <td></td>
@@ -290,7 +297,7 @@
 <td></td>
 </tr>
 <tr>
-<td>InnerJoin(windowed)</td>
+<td>InnerJoin</td>
 <td>(KStream,KTable) → KStream</td>
 <td>&#9745;</td>
 <td></td>
@@ -298,7 +305,7 @@
 <td></td>
 </tr>
 <tr>
-<td>LeftJoin(windowed)</td>
+<td>LeftJoin</td>
 <td>(KStream,KTable) → KStream</td>
 <td>&#9745;</td>
 <td></td>
@@ -306,7 +313,7 @@
 <td></td>
 </tr>
 <tr>
-<td>InnerJoin(windowed)</td>
+<td>InnerJoin</td>
 <td>(KStream,GlobalKTable) → KStream</td>
 <td>&#9745;</td>
 <td></td>
@@ -314,7 +321,7 @@
 <td></td>
 </tr>
 <tr>
-<td>LeftJoin(windowed)</td>
+<td>LeftJoin</td>
 <td>(KStream,GlobalKTable) → KStream</td>
 <td>&#9745;</td>
 <td></td>
@@ -322,7 +329,131 @@
 <td></td>
 </tr>
 </tbody>
-</table></div>
+</table><div class="section" id="count">
+<h2>Count<a class="headerlink" href="#count" title="Permalink to this headline">¶</a></h2>
+<p><strong>Rolling aggregation.</strong> Counts the number of records by the grouped key. (see IKGroupedStream for details)</p>
+<p>Several variants of count exist.</p>
+<ul class="simple">
+<li><p>IKGroupedStream  → IKTable</p></li>
+<li><p>IKGroupedTable  -&gt; IKTable</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span> <span class="n">groupedStream</span> <span class="p">=</span> <span class="n">builder</span>
+                        <span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test&quot;</span><span class="p">)</span>
+                        <span class="p">.</span><span class="n">GroupBy</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">k</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">());</span>
+
+<span class="c1">// Counting a IKGroupedStream</span>
+<span class="kt">var</span> <span class="n">table</span> <span class="p">=</span> <span class="n">groupedStream</span><span class="p">.</span><span class="n">Count</span><span class="p">(</span><span class="n">InMemory</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">long</span><span class="p">&gt;.</span><span class="n">As</span><span class="p">(</span><span class="s">&quot;count-store&quot;</span><span class="p">));</span>
+
+<span class="kt">var</span> <span class="n">table2</span> <span class="p">=</span> <span class="n">builder</span>
+                <span class="p">.</span><span class="n">Table</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
+                <span class="p">.</span><span class="n">GroupBy</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">KeyValuePair</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">k</span><span class="p">.</span><span class="n">ToCharArray</span><span class="p">()[</span><span class="m">0</span><span class="p">],</span> <span class="n">v</span><span class="p">))</span>
+                <span class="p">.</span><span class="n">Count</span><span class="p">(</span><span class="n">InMemory</span><span class="p">&lt;</span><span class="kt">char</span><span class="p">,</span> <span class="kt">long</span><span class="p">&gt;.</span><span class="n">As</span><span class="p">(</span><span class="s">&quot;count-store2&quot;</span><span class="p">).</span><span class="n">WithKeySerdes</span><span class="p">(</span><span class="k">new</span> <span class="n">CharSerDes</span><span class="p">()));</span>
+</pre></div>
+</div>
+<p>Detailed behavior for IKGroupedStream:</p>
+<ul class="simple">
+<li><p>Input records with null keys or values are ignored.</p></li>
+</ul>
+<p>Detailed behavior for IKGroupedTable:</p>
+<ul class="simple">
+<li><p>Input records with null keys are ignored. Records with null values are not ignored but interpreted as “tombstones” for the corresponding key, which indicate the deletion of the key from the table.</p></li>
+</ul>
+</div>
+<div class="section" id="aggregate">
+<h2>Aggregate<a class="headerlink" href="#aggregate" title="Permalink to this headline">¶</a></h2>
+<p><strong>Rolling aggregation.</strong> Aggregates the values of (non-windowed) records by the grouped key. Aggregating is a generalization of reduce and allows, for example, the aggregate value to have a different type than the input values. (see IKGroupedStream for details)</p>
+<p>When aggregating a grouped stream, you must provide an initializer (e.g., aggValue = 0) and an “adder” aggregator (e.g., aggValue + curValue).</p>
+<p>Several variants of aggregate exist.</p>
+<ul class="simple">
+<li><p>KGroupedStream → KTable</p></li>
+<li><p>IKGroupedTable  -&gt; IKTable</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span> <span class="n">groupedStream</span> <span class="p">=</span> <span class="n">builder</span>
+                        <span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test&quot;</span><span class="p">)</span>
+                        <span class="p">.</span><span class="n">GroupBy</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">k</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">());</span>
+
+<span class="kt">var</span> <span class="n">table</span> <span class="p">=</span> <span class="n">groupedStream</span><span class="p">.</span><span class="n">Aggregate</span><span class="p">(()</span> <span class="p">=&gt;</span> <span class="m">0L</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">agg</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">agg</span><span class="p">+</span> <span class="m">1</span><span class="p">,</span> <span class="n">InMemory</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">long</span><span class="p">&gt;.</span><span class="n">As</span><span class="p">(</span><span class="s">&quot;agg-store&quot;</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="p">&lt;</span><span class="n">Int64SerDes</span><span class="p">&gt;());</span>
+
+<span class="kt">var</span> <span class="n">table2</span> <span class="p">=</span> <span class="n">builder</span>
+                <span class="p">.</span><span class="n">Table</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
+                <span class="p">.</span><span class="n">GroupBy</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">KeyValuePair</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">k</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span> <span class="n">v</span><span class="p">))</span>
+                <span class="p">.</span><span class="n">Aggregate</span><span class="p">(</span>
+                    <span class="p">()</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">Dictionary</span><span class="p">&lt;</span><span class="kt">char</span><span class="p">,</span> <span class="kt">int</span><span class="p">&gt;(),</span>
+                    <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">old</span><span class="p">)</span> <span class="p">=&gt;</span>
+                    <span class="p">{</span>
+                        <span class="kt">var</span> <span class="n">caracs</span> <span class="p">=</span> <span class="n">v</span><span class="p">.</span><span class="n">ToCharArray</span><span class="p">();</span>
+                        <span class="k">foreach</span> <span class="p">(</span><span class="kt">var</span> <span class="n">c</span> <span class="k">in</span> <span class="n">caracs</span><span class="p">)</span>
+                        <span class="p">{</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="n">old</span><span class="p">.</span><span class="n">ContainsKey</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+                                <span class="p">++</span><span class="n">old</span><span class="p">[</span><span class="n">c</span><span class="p">];</span>
+                            <span class="k">else</span>
+                                <span class="n">old</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="m">1</span><span class="p">);</span>
+                        <span class="p">}</span>
+                        <span class="k">return</span> <span class="n">old</span><span class="p">;</span>
+                    <span class="p">},</span>
+                    <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">old</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">old</span><span class="p">,</span>
+                    <span class="n">InMemory</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="n">Dictionary</span><span class="p">&lt;</span><span class="kt">char</span><span class="p">,</span> <span class="kt">int</span><span class="p">&gt;&gt;.</span><span class="n">As</span><span class="p">(</span><span class="s">&quot;agg-store2&quot;</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="p">&lt;</span><span class="n">DictionarySerDes</span><span class="p">&gt;()</span>
+                <span class="p">);</span>
+</pre></div>
+</div>
+<p>Detailed behavior of IKGroupedStream:</p>
+<ul class="simple">
+<li><p>Input records with null keys are ignored.</p></li>
+<li><p>When a record key is received for the first time, the initializer is called (and called before the adder).</p></li>
+<li><p>Whenever a record with a non-null value is received, the adder is called.</p></li>
+</ul>
+<p>Detailed behavior of IKGroupedTable:</p>
+<ul class="simple">
+<li><p>Input records with null keys are ignored.</p></li>
+<li><p>When a record key is received for the first time, the initializer is called (and called before the adder and subtractor). Note that, in contrast to IKGroupedStream, over time the initializer may be called more than once for a key as a result of having received input tombstone records for that key (see below).</p></li>
+<li><p>When the first non-null value is received for a key (e.g., INSERT), then only the adder is called.</p></li>
+<li><p>When subsequent non-null values are received for a key (e.g., UPDATE), then (1) the subtractor is called with the old value as stored in the table and (2) the adder is called with the new value of the input record that was just received. The order of execution for the subtractor and adder is not defined.</p></li>
+<li><p>When a tombstone record – i.e. a record with a null value – is received for a key (e.g., DELETE), then only the subtractor is called. Note that, whenever the subtractor returns a null value itself, then the corresponding key is removed from the resulting IKTable. If that happens, any next input record for that key will trigger the initializer again.</p></li>
+</ul>
+</div>
+<div class="section" id="reduce">
+<h2>Reduce<a class="headerlink" href="#reduce" title="Permalink to this headline">¶</a></h2>
+<p><strong>Rolling aggregation.</strong> Combines the values of (non-windowed) records by the grouped key. The current record value is combined with the last reduced value, and a new reduced value is returned. The result value type cannot be changed, unlike aggregate. (see IKGroupedStream for details)</p>
+<p>When reducing a grouped stream, you must provide an “adder” reducer (e.g., aggValue + curValue).</p>
+<p>Several variants of reduce exist.</p>
+<ul class="simple">
+<li><p>IKGroupedStream  → IKTable</p></li>
+<li><p>IKGroupedTable  -&gt; IKTable</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span> <span class="n">groupedStream</span> <span class="p">=</span> <span class="n">builder</span>
+                        <span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test&quot;</span><span class="p">)</span>
+                        <span class="p">.</span><span class="n">MapValues</span><span class="p">(</span><span class="n">v</span> <span class="p">=&gt;</span> <span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span>
+                        <span class="p">.</span><span class="n">GroupBy</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">k</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">());</span>
+
+<span class="c1">// Reduce a IKGroupedStream</span>
+<span class="kt">var</span> <span class="n">table</span> <span class="p">=</span> <span class="n">groupedStream</span><span class="p">.</span><span class="n">Reduce</span><span class="p">((</span><span class="n">agg</span><span class="p">,</span> <span class="k">new</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">agg</span> <span class="p">+</span> <span class="k">new</span><span class="p">,</span> <span class="n">InMemory</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">int</span><span class="p">&gt;.</span><span class="n">As</span><span class="p">(</span><span class="s">&quot;reduce-store&quot;</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="p">&lt;</span><span class="n">Int32SerDes</span><span class="p">&gt;());</span>
+
+<span class="kt">var</span> <span class="n">table2</span> <span class="p">=</span> <span class="n">builder</span>
+                <span class="p">.</span><span class="n">Table</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
+                <span class="p">.</span><span class="n">MapValues</span><span class="p">(</span><span class="n">v</span> <span class="p">=&gt;</span> <span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span>
+                <span class="p">.</span><span class="n">GroupBy</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">KeyValuePair</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">k</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span> <span class="n">v</span><span class="p">))</span>
+                <span class="p">.</span><span class="n">Reduce</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">Math</span><span class="p">.</span><span class="n">Max</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">),</span>
+                    <span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">Math</span><span class="p">.</span><span class="n">Max</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">),</span>
+                    <span class="n">InMemory</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">int</span><span class="p">&gt;.</span><span class="n">As</span><span class="p">(</span><span class="s">&quot;reduce-store2&quot;</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="p">&lt;</span><span class="n">Int32SerDes</span><span class="p">&gt;());</span>
+</pre></div>
+</div>
+<p>Detailed behavior for IKGroupedStream:</p>
+<ul class="simple">
+<li><p>Input records with null keys are ignored in general.</p></li>
+<li><p>When a record key is received for the first time, then the value of that record is used as the initial aggregate value.</p></li>
+<li><p>Whenever a record with a non-null value is received, the adder is called.</p></li>
+</ul>
+<p>Detailed behavior for IKGroupedTable:</p>
+<ul class="simple">
+<li><p>Input records with null keys are ignored in general.</p></li>
+<li><p>When a record key is received for the first time, then the value of that record is used as the initial aggregate value. Note that, in contrast to IKGroupedStream, over time this initialization step may happen more than once for a key as a result of having received input tombstone records for that key (see below).</p></li>
+<li><p>When the first non-null value is received for a key (e.g., INSERT), then only the adder is called.</p></li>
+<li><p>When subsequent non-null values are received for a key (e.g., UPDATE), then (1) the subtractor is called with the old value as stored in the table and (2) the adder is called with the new value of the input record that was just received. The order of execution for the subtractor and adder is not defined.</p></li>
+<li><p>When a tombstone record – i.e. a record with a null value – is received for a key (e.g., DELETE), then only the subtractor is called. Note that, whenever the subtractor returns a null value itself, then the corresponding key is removed from the resulting IKTable. If that happens, any next input record for that key will re-initialize its aggregate value.</p></li>
+</ul>
+</div>
+</div>
 
 
            </div>
@@ -332,7 +463,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="tology-test-driver.html" class="btn btn-neutral float-right" title="Test topology driver" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="stores.html" class="btn btn-neutral float-right" title="State stores" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="stateless-processors.html" class="btn btn-neutral float-left" title="Stateless processors" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

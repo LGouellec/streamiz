@@ -26,6 +26,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public IDictionary<TopicPartition, long> ChangelogOffsets { get; } = new Dictionary<TopicPartition, long>();
 
+        public IEnumerable<string> StateStoreNames => globalStores.Keys;
+
         public void Close()
         {
             this.log.Debug("Closing global state manager");
