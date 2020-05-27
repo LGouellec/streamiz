@@ -18,18 +18,21 @@ namespace Streamiz.Kafka.Net.Processors
             private readonly IGlobalStateMaintainer globalStateMaintainer;
             private readonly TimeSpan pollTime;
             private readonly TimeSpan flushInterval;
+            private readonly IStreamConfig configuration;
             private DateTime lastFlush;
 
             public StateConsumer(
                 IConsumer<byte[], byte[]> globalConsumer,
                 IGlobalStateMaintainer globalStateMaintainer,
                 TimeSpan pollTime,
-                TimeSpan flushInterval)
+                TimeSpan flushInterval,
+                IStreamConfig configuration)
             {
                 this.globalConsumer = globalConsumer;
                 this.globalStateMaintainer = globalStateMaintainer;
                 this.pollTime = pollTime;
                 this.flushInterval = flushInterval;
+                this.configuration = configuration;
             }
 
             public void Initialize()
@@ -37,8 +40,7 @@ namespace Streamiz.Kafka.Net.Processors
                 IDictionary<TopicPartition, long> partitionOffsets = this.globalStateMaintainer.Initialize();
                 this.globalConsumer.Assign(partitionOffsets.Keys);
 
-                // TODO: if we don't wait, seek will throw. Why is that? How to solve it?
-                Thread.Sleep(5000);
+                Thread.Sleep(this.configuration.MetadataRequestTimeoutMs);
                 foreach (var entry in partitionOffsets)
                 {
                     this.globalConsumer.Seek(new TopicPartitionOffset(entry.Key, entry.Value));
@@ -164,7 +166,8 @@ namespace Streamiz.Kafka.Net.Processors
                     this.globalStateMaintainer,
                     // if poll time is bigger than int allows something is probably wrong anyway
                     new TimeSpan(0, 0, 0, 0, (int)this.configuration.PollMs),
-                    new TimeSpan(0, 0, 0, 0, (int)this.configuration.CommitIntervalMs));
+                    new TimeSpan(0, 0, 0, 0, (int)this.configuration.CommitIntervalMs),
+                    this.configuration);
                 stateConsumer.Initialize();
                 return stateConsumer;
             }

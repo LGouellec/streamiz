@@ -16,12 +16,14 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly ILog log = Logger.GetLogger(typeof(GlobalStateManager));
         private readonly ProcessorTopology topology;
         private readonly IAdminClient adminClient;
+        private readonly IStreamConfig config;
         private ProcessorContext context;
 
-        public GlobalStateManager(ProcessorTopology topology, IAdminClient adminClient)
+        public GlobalStateManager(ProcessorTopology topology, IAdminClient adminClient, IStreamConfig config)
         {
             this.topology = topology;
             this.adminClient = adminClient;
+            this.config = config;
         }
 
         public IDictionary<TopicPartition, long> ChangelogOffsets { get; } = new Dictionary<TopicPartition, long>();
@@ -105,8 +107,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private IEnumerable<TopicPartition> TopicPartitionsForStore(IStateStore store)
         {
             var topic = this.topology.StoresToTopics[store.Name];
-            // TODO: how long should we wait here?
-            var metadata = this.adminClient.GetMetadata(topic, TimeSpan.FromSeconds(5));
+            var metadata = this.adminClient.GetMetadata(topic, TimeSpan.FromMilliseconds(this.config.MetadataRequestTimeoutMs));
 
             if (metadata == null || metadata.Topics.Count == 0)
             {

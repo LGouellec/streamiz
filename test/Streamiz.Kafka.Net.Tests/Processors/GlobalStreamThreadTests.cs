@@ -28,6 +28,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             streamConfigMock = new Mock<IStreamConfig>();
             streamConfigMock.Setup(x => x.PollMs).Returns(1);
             streamConfigMock.Setup(x => x.CommitIntervalMs).Returns(1);
+            streamConfigMock.Setup(x => x.MetadataRequestTimeoutMs).Returns(1);
             globalStateMaintainerMock.Setup(x => x.Initialize()).Returns(new Dictionary<TopicPartition, long>());
 
             cancellationTokenSource = new CancellationTokenSource();

@@ -20,6 +20,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors.Internal
         private Mock<IKeyValueStore<object, object>> otherStoreMock;
         private Mock<IAdminClient> adminClientMock;
         private ProcessorTopology topology;
+        private Mock<IStreamConfig> streamConfigMock;
 
         private string kvStoreName = "kv-store";
         private string kvStoreTopic = "kv-store-topic";
@@ -29,6 +30,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors.Internal
         [SetUp]
         public void SetUp()
         {
+            streamConfigMock = new Mock<IStreamConfig>();
+            streamConfigMock.Setup(x => x.MetadataRequestTimeoutMs).Returns(1);
+
             kvStoreMock = CreateMockStore<IKeyValueStore<object, object>>(kvStoreName);
             otherStoreMock = CreateMockStore<IKeyValueStore<object, object>>(otherStoreName);
             var globalStateStores = new Dictionary<string, IStateStore>() { 
@@ -55,7 +59,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors.Internal
 
             stateManager = new GlobalStateManager(
                     topology,
-                    adminClientMock.Object
+                    adminClientMock.Object,
+                    streamConfigMock.Object
                 );
         }
 
