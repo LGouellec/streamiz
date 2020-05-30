@@ -6,6 +6,7 @@ using Streamiz.Kafka.Net.Processors.Internal;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -18,33 +19,25 @@ namespace Streamiz.Kafka.Net.Processors
             private readonly IGlobalStateMaintainer globalStateMaintainer;
             private readonly TimeSpan pollTime;
             private readonly TimeSpan flushInterval;
-            private readonly IStreamConfig configuration;
             private DateTime lastFlush;
 
             public StateConsumer(
                 IConsumer<byte[], byte[]> globalConsumer,
                 IGlobalStateMaintainer globalStateMaintainer,
                 TimeSpan pollTime,
-                TimeSpan flushInterval,
-                IStreamConfig configuration)
+                TimeSpan flushInterval)
             {
                 this.globalConsumer = globalConsumer;
                 this.globalStateMaintainer = globalStateMaintainer;
                 this.pollTime = pollTime;
                 this.flushInterval = flushInterval;
-                this.configuration = configuration;
             }
 
             public void Initialize()
             {
                 IDictionary<TopicPartition, long> partitionOffsets = this.globalStateMaintainer.Initialize();
-                this.globalConsumer.Assign(partitionOffsets.Keys);
+                this.globalConsumer.Assign(partitionOffsets.Keys.Select(x => new TopicPartitionOffset(x, Offset.Beginning)));
 
-                Thread.Sleep(this.configuration.MetadataRequestTimeoutMs);
-                foreach (var entry in partitionOffsets)
-                {
-                    this.globalConsumer.Seek(new TopicPartitionOffset(entry.Key, entry.Value));
-                }
                 this.lastFlush = DateTime.Now;
             }
 
@@ -166,8 +159,7 @@ namespace Streamiz.Kafka.Net.Processors
                     this.globalStateMaintainer,
                     // if poll time is bigger than int allows something is probably wrong anyway
                     new TimeSpan(0, 0, 0, 0, (int)this.configuration.PollMs),
-                    new TimeSpan(0, 0, 0, 0, (int)this.configuration.CommitIntervalMs),
-                    this.configuration);
+                    new TimeSpan(0, 0, 0, 0, (int)this.configuration.CommitIntervalMs));
                 stateConsumer.Initialize();
                 return stateConsumer;
             }
