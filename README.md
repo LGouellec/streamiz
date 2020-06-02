@@ -97,8 +97,8 @@ static void Main(string[] args)
 - [x] Refactor topology node processor builder
 - [x] Subtopology impl
 - [x] Unit tests (TestTopologyDriver, ...)
+- [X] Global state store
 - [WIP] Statefull processors impl
-- [WIP] Global state store
 - [ ] Task restoring
 - [ ] Repartition topic
 - [ ] Rocks DB state implementation

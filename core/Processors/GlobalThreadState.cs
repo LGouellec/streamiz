@@ -38,58 +38,69 @@ namespace Streamiz.Kafka.Net.Processors
     /// </summary>
     internal class GlobalThreadState : ThreadStateTransitionValidator
     {
-        public static GlobalThreadState CREATED = new GlobalThreadState(1, 2).Order(0).Name("CREATED");
-        public static GlobalThreadState RUNNING = new GlobalThreadState(2).Order(1).Name("RUNNING");
-        public static GlobalThreadState PENDING_SHUTDOWN = new GlobalThreadState(3).Order(2).Name("PENDING_SHUTDOWN");
-        public static GlobalThreadState DEAD = new GlobalThreadState().Order(3).Name("DEAD");
+        public static GlobalThreadState CREATED = new GlobalThreadState(1, 2).Order(0).Named("CREATED");
+        public static GlobalThreadState RUNNING = new GlobalThreadState(2).Order(1).Named("RUNNING");
+        public static GlobalThreadState PENDING_SHUTDOWN = new GlobalThreadState(3).Order(2).Named("PENDING_SHUTDOWN");
+        public static GlobalThreadState DEAD = new GlobalThreadState().Order(3).Named("DEAD");
 
-        private ISet<int> validTransitions = new HashSet<int>();
-        private int ordinal = 0;
-        private string name;
+        /// <summary>
+        /// Name of the state
+        /// </summary>
+        public string Name { get; private set; }
+
+        /// <summary>
+        /// Order's state
+        /// </summary>
+        public int Ordinal { get; private set; }
+
+        /// <summary>
+        /// Valid transition of the current state
+        /// </summary>
+        public ISet<int> Transitions { get; } = new HashSet<int>();
 
         private GlobalThreadState(params int[] validTransitions)
         {
-            this.validTransitions.AddRange(validTransitions);
+            Transitions.AddRange(validTransitions);
         }
 
         private GlobalThreadState Order(int ordinal)
         {
-            this.ordinal = ordinal;
+            Ordinal = ordinal;
             return this;
         }
 
-        private GlobalThreadState Name(string name)
+        private GlobalThreadState Named(string name)
         {
-            this.name = name;
+            this.Name = name;
             return this;
         }
 
         public bool IsRunning()
         {
-            return this.Equals(RUNNING);
+            return Equals(RUNNING);
         }
 
         public bool IsValidTransition(ThreadStateTransitionValidator newState)
         {
-            return validTransitions.Contains(((GlobalThreadState)newState).ordinal);
+            return Transitions.Contains(((GlobalThreadState)newState).Ordinal);
         }
 
-        public static bool operator ==(GlobalThreadState a, GlobalThreadState b) => a?.ordinal == b?.ordinal;
-        public static bool operator !=(GlobalThreadState a, GlobalThreadState b) => a?.ordinal != b?.ordinal;
+        public static bool operator ==(GlobalThreadState a, GlobalThreadState b) => a?.Ordinal == b?.Ordinal;
+        public static bool operator !=(GlobalThreadState a, GlobalThreadState b) => a?.Ordinal != b?.Ordinal;
 
         public override bool Equals(object obj)
         {
-            return obj is GlobalThreadState && ((GlobalThreadState)obj).ordinal.Equals(this.ordinal);
+            return obj is GlobalThreadState && ((GlobalThreadState)obj).Ordinal.Equals(Ordinal);
         }
 
         public override int GetHashCode()
         {
-            return this.ordinal.GetHashCode();
+            return Ordinal.GetHashCode();
         }
 
         public override string ToString()
         {
-            return $"{this.name}";
+            return $"{Name}";
         }
     }
 }

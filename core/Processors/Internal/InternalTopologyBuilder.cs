@@ -5,7 +5,6 @@ using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -20,7 +19,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly ISet<string> globalTopics = new HashSet<string>();
         private readonly QuickUnion<string> nodeGrouper = new QuickUnion<string>();
         private IDictionary<string, ISet<string>> nodeGroups = new Dictionary<string, ISet<string>>();
-        private IList<ISet<string>> copartitionSourceGroups = new List<ISet<string>>();
+        private readonly IList<ISet<string>> copartitionSourceGroups = new List<ISet<string>>();
 
         // map from state store names to this state store's corresponding changelog topic if possible
         private readonly IDictionary<string, string> storesToTopics = new Dictionary<string, string>();
@@ -153,16 +152,16 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
         }
 
-        internal void AddGlobalStore<K, V, S>(string topicName, 
-            StoreBuilder<S> storeBuilder, 
-            string sourceName, 
-            ConsumedInternal<K, V> consumed, 
+        internal void AddGlobalStore<K, V, S>(string topicName,
+            StoreBuilder<S> storeBuilder,
+            string sourceName,
+            ConsumedInternal<K, V> consumed,
             ProcessorParameters<K, V> processorParameters) where S : IStateStore
         {
             string processorName = processorParameters.ProcessorName;
 
-            this.ValidateGlobalStoreArguments(sourceName, topicName, processorName, processorParameters.Processor, storeBuilder.Name, storeBuilder.LoggingEnabled);
-            this.ValidateTopicNotAlreadyRegistered(topicName);
+            ValidateGlobalStoreArguments(sourceName, topicName, processorName, processorParameters.Processor, storeBuilder.Name, storeBuilder.LoggingEnabled);
+            ValidateTopicNotAlreadyRegistered(topicName);
 
             var predecessors = new[] { sourceName };
 
@@ -274,7 +273,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             var factory = nodeFactories[node];
             if (factory is ISourceNodeFactory)
             {
-                return globalTopics.Contains(((ISourceNodeFactory)factory).Topic);                
+                return globalTopics.Contains(((ISourceNodeFactory)factory).Topic);
             }
             return false;
         }
@@ -408,7 +407,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             IDictionary<string, ISet<string>> groups = new Dictionary<string, ISet<string>>();
 
-            foreach(var topicSource in sourceTopics.Concat(globalTopics))
+            foreach (var topicSource in sourceTopics.Concat(globalTopics))
             {
                 groups.Add(topicSource, new HashSet<string>());
                 PutNodeGroupName(groups, topicSource);
