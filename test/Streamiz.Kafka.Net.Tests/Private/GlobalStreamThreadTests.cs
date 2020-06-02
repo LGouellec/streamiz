@@ -6,10 +6,10 @@ using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Linq;
+using System.Threading;
 
-namespace Streamiz.Kafka.Net.Tests.Processors
+namespace Streamiz.Kafka.Net.Tests.Private
 {
     public class GlobalStreamThreadTests
     {
@@ -122,24 +122,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             globalStreamThread.Start(cancellationTokenSource.Token);
 
-            globalConsumerMock.Verify(x => x.Assign(partitionOffsetDictionary.Keys));
-        }
-
-        [Test]
-        public void ShouldSeekTopicsInConsumer()
-        {
-            var partitionOffsetDictionary = new Dictionary<TopicPartition, long>() {
-                { new TopicPartition("topic", 0), 5L },
-                { new TopicPartition("otherTopic", 0), 10L }
-            };
-            globalStateMaintainerMock.Setup(x => x.Initialize()).Returns(partitionOffsetDictionary);
-
-            globalStreamThread.Start(cancellationTokenSource.Token);
-
-            foreach (var item in partitionOffsetDictionary)
-            {
-                globalConsumerMock.Verify(x => x.Seek(new TopicPartitionOffset(item.Key, item.Value)));
-            }
+            var parts = partitionOffsetDictionary.Keys.Select(o => new TopicPartitionOffset(o, Offset.Beginning));
+            globalConsumerMock.Verify(x => x.Assign(parts));
         }
 
         [Test]

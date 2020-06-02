@@ -353,16 +353,19 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             foreach (string stateStoreName in factory.StateStores)
             {
-                if (!stateStores.ContainsKey(stateStoreName) && stateFactories.ContainsKey(stateStoreName))
-                { 
-                    StateStoreFactory stateStoreFactory = stateFactories[stateStoreName];
-
-                    // TODO : changelog topic (remember the changelog topic if this state store is change-logging enabled)
-                    stateStores.Add(stateStoreName, stateStoreFactory.Build(partition));
-                } 
-                else
+                if (!stateStores.ContainsKey(stateStoreName))
                 {
-                    stateStores.Add(stateStoreName, GlobalStateStores[stateStoreName]);
+                    if (stateFactories.ContainsKey(stateStoreName))
+                    {
+                        StateStoreFactory stateStoreFactory = stateFactories[stateStoreName];
+
+                        // TODO : changelog topic (remember the changelog topic if this state store is change-logging enabled)
+                        stateStores.Add(stateStoreName, stateStoreFactory.Build(partition));
+                    }
+                    else
+                    {
+                        stateStores.Add(stateStoreName, GlobalStateStores[stateStoreName]);
+                    }
                 }
             }
         }

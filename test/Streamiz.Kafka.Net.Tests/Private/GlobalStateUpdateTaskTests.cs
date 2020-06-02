@@ -1,15 +1,13 @@
-﻿using Moq;
+﻿using Confluent.Kafka;
+using Moq;
 using NUnit.Framework;
+using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.Stream.Internal;
-using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Linq;
-using Streamiz.Kafka.Net.Processors;
-using Confluent.Kafka;
 
-namespace Streamiz.Kafka.Net.Tests.Processors.Internal
+namespace Streamiz.Kafka.Net.Tests.Private
 {
     public class GlobalStateUpdateTaskTests
     {
@@ -82,14 +80,14 @@ namespace Streamiz.Kafka.Net.Tests.Processors.Internal
             var value = Encoding.ASCII.GetBytes("value");
             globalStateUpdateTask.Initialize();
 
-            globalStateUpdateTask.Update(new ConsumeResult<byte[], byte[]>() 
-            { 
-                Topic = sourceProcessorMock.Object.TopicName, 
-                Message = new Message<byte[], byte[]>() 
-                { 
-                    Key = key, 
+            globalStateUpdateTask.Update(new ConsumeResult<byte[], byte[]>()
+            {
+                Topic = sourceProcessorMock.Object.TopicName,
+                Message = new Message<byte[], byte[]>()
+                {
+                    Key = key,
                     Value = value
-                } 
+                }
             });
 
             sourceProcessorMock.Verify(x => x.Process(key, value), Times.Once);
@@ -102,7 +100,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors.Internal
             var key = Encoding.ASCII.GetBytes("key");
             var value = Encoding.ASCII.GetBytes("value");
             globalStateUpdateTask.Initialize();
-            
+
             globalStateUpdateTask.Update(new ConsumeResult<byte[], byte[]>()
             {
                 Topic = otherSourceProcessorMock.Object.TopicName,

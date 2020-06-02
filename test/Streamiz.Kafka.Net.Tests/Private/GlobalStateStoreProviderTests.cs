@@ -7,7 +7,7 @@ using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.Internal;
 
-namespace Streamiz.Kafka.Net.Tests.Stream.Internal
+namespace Streamiz.Kafka.Net.Tests.Private
 {
     public class GlobalStateStoreProviderTests
     {
@@ -85,10 +85,10 @@ namespace Streamiz.Kafka.Net.Tests.Stream.Internal
 
         private T CreateMockStore<T>(bool isOpen = true) where T : class, IStateStore
         {
-            var kvStore = new Mock<T>();
-            kvStore.Setup(kvStore => kvStore.IsOpen).Returns(isOpen);
+            var store = new Mock<T>();
+            store.Setup(kvStore => kvStore.IsOpen).Returns(isOpen);
 
-            return kvStore.Object;
+            return store.Object;
         }
     }
 }

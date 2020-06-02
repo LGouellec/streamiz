@@ -5,8 +5,8 @@ using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Linq;
+using System.Threading;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -35,27 +35,27 @@ namespace Streamiz.Kafka.Net.Processors
 
             public void Initialize()
             {
-                IDictionary<TopicPartition, long> partitionOffsets = this.globalStateMaintainer.Initialize();
-                this.globalConsumer.Assign(partitionOffsets.Keys.Select(x => new TopicPartitionOffset(x, Offset.Beginning)));
+                IDictionary<TopicPartition, long> partitionOffsets = globalStateMaintainer.Initialize();
+                globalConsumer.Assign(partitionOffsets.Keys.Select(x => new TopicPartitionOffset(x, Offset.Beginning)));
 
-                this.lastFlush = DateTime.Now;
+                lastFlush = DateTime.Now;
             }
 
             public void PollAndUpdate()
             {
                 try
                 {
-                    var received = this.globalConsumer.ConsumeRecords(this.pollTime);
+                    var received = globalConsumer.ConsumeRecords(pollTime);
                     foreach (var record in received)
                     {
-                        this.globalStateMaintainer.Update(record);
+                        globalStateMaintainer.Update(record);
                     }
 
                     DateTime dt = DateTime.Now;
-                    if (dt >= this.lastFlush.Add(this.flushInterval))
+                    if (dt >= lastFlush.Add(flushInterval))
                     {
-                        this.globalStateMaintainer.FlushState();
-                        this.lastFlush = DateTime.Now;
+                        globalStateMaintainer.FlushState();
+                        lastFlush = DateTime.Now;
                     }
                 }
                 catch (Exception e)
@@ -69,7 +69,7 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 try
                 {
-                    this.globalConsumer.Close();
+                    globalConsumer.Close();
                 }
                 catch (Exception e)
                 {
@@ -78,7 +78,7 @@ namespace Streamiz.Kafka.Net.Processors
                     log.Error("Failed to close global consumer due to the following error:", e);
                 }
 
-                this.globalStateMaintainer.Close();
+                globalStateMaintainer.Close();
             }
         }
 
@@ -116,9 +116,9 @@ namespace Streamiz.Kafka.Net.Processors
             SetState(GlobalThreadState.RUNNING);
             try
             {
-                while (!token.IsCancellationRequested && this.State.IsRunning())
+                while (!token.IsCancellationRequested && State.IsRunning())
                 {
-                    this.stateConsumer.PollAndUpdate();
+                    stateConsumer.PollAndUpdate();
                 }
             }
             finally
@@ -133,7 +133,7 @@ namespace Streamiz.Kafka.Net.Processors
 
             try
             {
-                this.stateConsumer = InitializeStateConsumer();
+                stateConsumer = InitializeStateConsumer();
             }
             catch
             {
@@ -155,19 +155,19 @@ namespace Streamiz.Kafka.Net.Processors
             try
             {
                 var stateConsumer = new StateConsumer(
-                    this.globalConsumer,
-                    this.globalStateMaintainer,
+                    globalConsumer,
+                    globalStateMaintainer,
                     // if poll time is bigger than int allows something is probably wrong anyway
-                    new TimeSpan(0, 0, 0, 0, (int)this.configuration.PollMs),
-                    new TimeSpan(0, 0, 0, 0, (int)this.configuration.CommitIntervalMs));
+                    new TimeSpan(0, 0, 0, 0, (int)configuration.PollMs),
+                    new TimeSpan(0, 0, 0, 0, (int)configuration.CommitIntervalMs));
                 stateConsumer.Initialize();
                 return stateConsumer;
             }
-            catch(StreamsException)
+            catch (StreamsException)
             {
                 throw;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 throw new StreamsException("Exception caught during initialization of GlobalStreamThread", e);
             }
@@ -179,7 +179,7 @@ namespace Streamiz.Kafka.Net.Processors
 
             lock (stateLock)
             {
-                oldState = this.State;
+                oldState = State;
 
                 if (oldState == GlobalThreadState.PENDING_SHUTDOWN && newState == GlobalThreadState.PENDING_SHUTDOWN)
                 {
@@ -221,7 +221,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         protected virtual void Dispose(bool disposing, bool waitForThread)
         {
-            if (!this.disposed)
+            if (!disposed)
             {
                 // we don't have any unmanaged resources to dispose of so we can ignore value of `disposing`
 
@@ -235,7 +235,7 @@ namespace Streamiz.Kafka.Net.Processors
 
                 try
                 {
-                    this.stateConsumer.Close();
+                    stateConsumer.Close();
                 }
                 catch (Exception e)
                 {
@@ -243,11 +243,11 @@ namespace Streamiz.Kafka.Net.Processors
                     // ignore exception
                     // https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1065
                 }
-                
+
                 SetState(GlobalThreadState.DEAD);
                 log.Info($"{logPrefix}Shutdown complete");
 
-                this.disposed = true;
+                disposed = true;
             }
         }
 

@@ -8,10 +8,9 @@ using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
 
-namespace Streamiz.Kafka.Net.Tests.Processors.Internal
+namespace Streamiz.Kafka.Net.Tests.Private
 {
     public class GlobalStateManagerTests
     {
@@ -22,10 +21,10 @@ namespace Streamiz.Kafka.Net.Tests.Processors.Internal
         private ProcessorTopology topology;
         private Mock<IStreamConfig> streamConfigMock;
 
-        private string kvStoreName = "kv-store";
-        private string kvStoreTopic = "kv-store-topic";
-        private string otherStoreName = "other-store";
-        private string otherStoreTopic = "other-store-topic";
+        private readonly string kvStoreName = "kv-store";
+        private readonly string kvStoreTopic = "kv-store-topic";
+        private readonly string otherStoreName = "other-store";
+        private readonly string otherStoreTopic = "other-store-topic";
 
         [SetUp]
         public void SetUp()
@@ -35,16 +34,16 @@ namespace Streamiz.Kafka.Net.Tests.Processors.Internal
 
             kvStoreMock = CreateMockStore<IKeyValueStore<object, object>>(kvStoreName);
             otherStoreMock = CreateMockStore<IKeyValueStore<object, object>>(otherStoreName);
-            var globalStateStores = new Dictionary<string, IStateStore>() { 
+            var globalStateStores = new Dictionary<string, IStateStore>() {
                 { kvStoreMock.Object.Name, kvStoreMock.Object },
                 { otherStoreMock.Object.Name, otherStoreMock.Object }
             };
-            var storesToTopics = new Dictionary<string, string>() { 
+            var storesToTopics = new Dictionary<string, string>() {
                 { kvStoreMock.Object.Name, kvStoreTopic },
                 { otherStoreMock.Object.Name, otherStoreTopic }
             };
 
-            this.topology = new ProcessorTopology(
+            topology = new ProcessorTopology(
                     null,
                     new Dictionary<string, IProcessor>(),
                     new Dictionary<string, IProcessor>(),
@@ -79,7 +78,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors.Internal
             stateManager.SetGlobalProcessorContext(processorContext);
 
             stateManager.Initialize();
-            
+
             kvStoreMock.Verify(store => store.Init(processorContext, It.IsAny<IStateStore>()), Times.Once);
         }
 
@@ -95,7 +94,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors.Internal
         public void ShouldThrowIfSameStoreTwiceTwiceInTopology()
         {
             // this was already registered once
-            this.topology.GlobalStateStores.Add($"kvStoreMock.Object.Name{1}", kvStoreMock.Object);
+            topology.GlobalStateStores.Add($"kvStoreMock.Object.Name{1}", kvStoreMock.Object);
 
             Assert.Throws<ArgumentException>(() => stateManager.Initialize());
         }
@@ -197,11 +196,11 @@ namespace Streamiz.Kafka.Net.Tests.Processors.Internal
 
         private Mock<T> CreateMockStore<T>(string name, bool isOpen = true) where T : class, IStateStore
         {
-            var kvStore = new Mock<T>();
-            kvStore.Setup(kvStore => kvStore.Name).Returns(name);
-            kvStore.Setup(kvStore => kvStore.IsOpen).Returns(isOpen);
+            var store = new Mock<T>();
+            store.Setup(kvStore => kvStore.Name).Returns(name);
+            store.Setup(kvStore => kvStore.IsOpen).Returns(isOpen);
 
-            return kvStore;
+            return store;
         }
 
         private void RegisterPartitionInAdminClient(string topic)

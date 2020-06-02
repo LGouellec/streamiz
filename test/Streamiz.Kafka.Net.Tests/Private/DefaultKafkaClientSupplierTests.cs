@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Streamiz.Kafka.Net.Kafka.Internal;
+using System;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -15,16 +13,16 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var config = new StreamConfig();
             config.ApplicationId = "test-DefaultKafkaClientSupplierTest";
             return config;
-		}
+        }
 
-		[Test]
-		public void ShouldArgumentNullException()
+        [Test]
+        public void ShouldArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new DefaultKafkaClientSupplier(null));
         }
 
-		[Test]
-		public void CreateAdminClient()
+        [Test]
+        public void CreateAdminClient()
         {
             var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config));
             var adminClient = supplier.GetAdmin(config.ToAdminConfig("admin"));
