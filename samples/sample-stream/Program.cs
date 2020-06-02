@@ -29,33 +29,33 @@ namespace sample_stream
 
             StreamBuilder builder = new StreamBuilder();
 
-            builder.Stream<string, string>("test")
-                .FilterNot((k, v) => v.Contains("test"))
-                .To("test-output");
-
-            builder.Table("test-ktable", InMemory<string, string>.As("test-store"));
+            builder.GlobalTable("test", InMemory<string, string>.As("test-store"));
 
             Topology t = builder.Build();
 
             KafkaStream stream = new KafkaStream(t, config);
             bool taskGetStateStoreRunning = false;
-            
-            //stream.StateChanged += (old, @new) =>
-            //{
-            //    if (@new == KafkaStream.State.RUNNING && !taskGetStateStoreRunning)
-            //    {
-            //        Task.Factory.StartNew(() =>
-            //        {
-            //            taskGetStateStoreRunning = true;
-            //            while (!source.Token.IsCancellationRequested)
-            //            {
-            //                var store = stream.Store(StoreQueryParameters.FromNameAndType("test-store", QueryableStoreTypes.KeyValueStore<string, string>()));
-            //                var items = store.All().ToList();
-            //                Thread.Sleep(500);
-            //            }
-            //        }, source.Token);
-            //    }
-            //};
+
+            stream.StateChanged += (old, @new) =>
+            {
+                if (@new == KafkaStream.State.RUNNING && !taskGetStateStoreRunning)
+                {
+                    Task.Factory.StartNew(() =>
+                    {
+                        taskGetStateStoreRunning = true;
+                        while (!source.Token.IsCancellationRequested)
+                        {
+                            var store = stream.Store(StoreQueryParameters.FromNameAndType("test-store", QueryableStoreTypes.KeyValueStore<string, string>()));
+                            var items = store.All().ToList();
+                            if (items.Count > 0)
+                                foreach (var e in items)
+                                    Console.WriteLine($"Key:{e.Key}|Value:{e.Value}");
+
+                            Thread.Sleep(500);
+                        }
+                    }, source.Token);
+                }
+            };
 
             Console.CancelKeyPress += (o, e) =>
             {

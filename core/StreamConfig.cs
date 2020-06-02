@@ -1921,7 +1921,13 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         /// <param name="clientId">Consumer client ID</param>
         /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
-        public ConsumerConfig ToGlobalConsumerConfig(string clientId) => ToConsumerConfig(clientId);
+        public ConsumerConfig ToGlobalConsumerConfig(string clientId)
+        {
+            var config = ToConsumerConfig(clientId);
+            config.GroupId = $"{ApplicationId}-Global-{Guid.NewGuid()}";
+            config.AutoOffsetReset = Confluent.Kafka.AutoOffsetReset.Earliest;
+            return config;
+        }
 
         /// <summary>
         /// Get the configs to the <see cref="IAdminClient"/> with specific <paramref name="clientId"/>
