@@ -361,7 +361,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual(1, globalConfig.ApiVersionFallbackMs);
             Assert.AreEqual(false, globalConfig.ApiVersionRequest);
             Assert.AreEqual(100, globalConfig.ApiVersionRequestTimeoutMs);
-            Assert.AreEqual(Confluent.Kafka.AutoOffsetReset.Latest, globalConfig.AutoOffsetReset);
+            Assert.AreEqual(Confluent.Kafka.AutoOffsetReset.Earliest, globalConfig.AutoOffsetReset);
             Assert.AreEqual("127.0.0.1:9092", globalConfig.BootstrapServers);
             Assert.AreEqual(Confluent.Kafka.BrokerAddressFamily.V4, globalConfig.BrokerAddressFamily);
             Assert.AreEqual(100, globalConfig.BrokerAddressTtl);
