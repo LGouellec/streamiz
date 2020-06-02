@@ -66,15 +66,7 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph.Nodes
 
             if (isGlobalKTable)
             {
-                // TODO : 
-                //topologyBuilder.addGlobalStore(storeBuilder,
-                //                               sourceName,
-                //                               consumedInternal().timestampExtractor(),
-                //                               consumedInternal().keyDeserializer(),
-                //                               consumedInternal().valueDeserializer(),
-                //                               topicName,
-                //                               processorParameters.processorName(),
-                //                               processorParameters.processorSupplier());
+                builder.AddGlobalStore(topicName, storeBuilder, sourceName, consumed, processorParameters);
             }
             else
             {

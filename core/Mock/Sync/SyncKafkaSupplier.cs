@@ -21,6 +21,9 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             return consumer;
         }
 
+        public IConsumer<byte[], byte[]> GetGlobalConsumer(ConsumerConfig config)
+            => GetConsumer(config, null);
+
         public IProducer<byte[], byte[]> GetProducer(ProducerConfig config)
         {
             if (producer == null)

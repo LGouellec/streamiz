@@ -12,10 +12,12 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly ILog log = Logger.GetLogger(typeof(StreamStateManager));
         private readonly Dictionary<long, ThreadState> threadState;
         private readonly KafkaStream stream;
+        private GlobalThreadState globalThreadState;
         private static readonly object threadStatesLock = new object();
 
-        public StreamStateManager(KafkaStream stream, Dictionary<long, ThreadState> threadState)
+        public StreamStateManager(KafkaStream stream, Dictionary<long, ThreadState> threadState, GlobalThreadState globalThreadState)
         {
+            this.globalThreadState = globalThreadState;
             this.threadState = threadState;
             this.stream = stream;
         }
@@ -53,10 +55,10 @@ namespace Streamiz.Kafka.Net.Processors
 
             // the global state thread is relevant only if it is started. There are cases
             // when we don't have a global state thread at all, e.g., when we don't have global KTables
-            //if (globalThreadState != null && globalThreadState != GlobalStreamThread.State.RUNNING)
-            //{
-            //    return;
-            //}
+            if (globalThreadState != null && globalThreadState != GlobalThreadState.RUNNING)
+            {
+                return;
+            }
 
             stream.SetState(KafkaStream.State.RUNNING);
         }
@@ -66,7 +68,6 @@ namespace Streamiz.Kafka.Net.Processors
         {
             lock (threadStatesLock)
             {
-                // StreamThreads first
                 if (thread is StreamThread)
                 {
                     ThreadState newState = (ThreadState)@new;
@@ -85,21 +86,30 @@ namespace Streamiz.Kafka.Net.Processors
                         MaybeSetError();
                     }
                 }
-                // TODO :
-                // else if (thread instanceof GlobalStreamThread) {
-                //    // global stream thread has different invariants
-                //     GlobalStreamThread.State newState = (GlobalStreamThread.State)abstractNewState;
-                //    globalThreadState = newState;
+            }
+        }
 
-                //    // special case when global thread is dead
-                //    if (newState == GlobalStreamThread.State.DEAD)
-                //    {
-                //        if (setState(State.ERROR))
-                //        {
-                //            log.error("Global thread has died. The instance will be in error state and should be closed.");
-                //        }
-                //    }
-                //}
+        internal void OnGlobalThreadStateChange(GlobalStreamThread thread, ThreadStateTransitionValidator old, ThreadStateTransitionValidator @new)
+        {
+            lock (threadStatesLock)
+            {
+                if (thread is GlobalStreamThread)
+                {
+                    GlobalThreadState newState = (GlobalThreadState)@new;
+                    globalThreadState = newState;
+
+                    if (newState == GlobalThreadState.RUNNING)
+                    {
+                        MaybeSetRunning();
+                    }
+                    else if (newState == GlobalThreadState.DEAD)
+                    {
+                        if (stream.SetState(KafkaStream.State.ERROR))
+                        {
+                            log.Error("Global thread has died. The instance will be in error state and should be closed.");
+                        }
+                    }
+                }
             }
         }
     }

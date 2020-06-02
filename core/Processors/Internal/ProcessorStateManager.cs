@@ -8,11 +8,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal class ProcessorStateManager : IStateManager
     {
-        private static String STATE_CHANGELOG_TOPIC_SUFFIX = "-changelog";
+        private static string STATE_CHANGELOG_TOPIC_SUFFIX = "-changelog";
 
         private readonly ILog log;
         private readonly string logPrefix;
-        private readonly IDictionary<String, IStateStore> registeredStores = new Dictionary<String, IStateStore>();
+        private readonly IDictionary<string, IStateStore> registeredStores = new Dictionary<string, IStateStore>();
+        private IDictionary<string, IStateStore> globalStateStores = new Dictionary<string, IStateStore>();
 
         public TopicPartition Partition { get; private set; }
 
@@ -113,6 +114,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 return registeredStores[name];
             else
                 return null;
+        }
+
+        public void RegisterGlobalStateStores(IDictionary<string, IStateStore> globalStateStores)
+        {
+            this.globalStateStores = globalStateStores;
         }
 
         #endregion

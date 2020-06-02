@@ -52,5 +52,14 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             builder.SetErrorHandler(loggerAdapter.ErrorConsume);
             return builder.Build();
         }
+
+        public IConsumer<byte[], byte[]> GetGlobalConsumer(ConsumerConfig config)
+        {
+            ConsumerBuilder<byte[], byte[]> builder = new ConsumerBuilder<byte[], byte[]>(config);
+            // TOOD : Finish
+            builder.SetLogHandler(loggerAdapter.LogConsume);
+            builder.SetErrorHandler(loggerAdapter.ErrorConsume);
+            return builder.Build();
+        }
     }
 }

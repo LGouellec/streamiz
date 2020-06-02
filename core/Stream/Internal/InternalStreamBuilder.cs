@@ -7,6 +7,7 @@ using Streamiz.Kafka.Net.Table;
 using Streamiz.Kafka.Net.Table.Internal;
 using Streamiz.Kafka.Net.Table.Internal.Graph;
 using Streamiz.Kafka.Net.Table.Internal.Graph.Nodes;
+using System;
 using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
@@ -85,6 +86,37 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                                     tableSource,
                                     tableSourceNode,
                                     this);
+        }
+
+        #endregion
+
+        #region Build GlobalTable
+
+        internal IGlobalKTable GlobalTable<K, V>(string topic, ConsumedInternal<K, V> consumed, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized)
+        {
+            if (string.IsNullOrEmpty(topic))
+            {
+                throw new ArgumentException("topic can't be null or empty", nameof(topic));
+            }
+
+            // explicitly disable logging for global stores
+            materialized.WithLoggingDisabled();
+
+            string sourceName = new Named(consumed.Named).SuffixWithOrElseGet(TABLE_SOURCE_SUFFIX, this, KStream.SOURCE_NAME);
+            string tableSourceName = new Named(consumed.Named).OrElseGenerateWithPrefix(this, KTable.SOURCE_NAME);
+            string storeName = materialized.StoreName;
+
+            // enforce store name as queryable name to always materialize global table stores
+            var tableSource = new KTableSource<K, V>(storeName, storeName);
+            var processorParameters = new ProcessorParameters<K, V>(tableSource, tableSourceName);
+
+            var tableSourceNode = new TableSourceNode<K, V, IKeyValueStore<Bytes, byte[]>>(
+                topic, tableSourceName, sourceName, consumed,
+                materialized, processorParameters, true);
+
+            this.AddGraphNode(root, tableSourceNode);
+
+            return new GlobalKTable<K, V>(new KTableSourceValueGetterSupplier<K, V>(storeName), materialized.QueryableStoreName);
         }
 
         #endregion

@@ -15,16 +15,27 @@ namespace Streamiz.Kafka.Net.Processors.Internal
     {
         private readonly IDictionary<string, NodeFactory> nodeFactories = new Dictionary<string, NodeFactory>();
         private readonly IDictionary<string, StateStoreFactory> stateFactories = new Dictionary<string, StateStoreFactory>();
-        private readonly IList<string> sourcesTopics = new List<string>();
+        private readonly IDictionary<string, StoreBuilder> globalStateBuilders = new Dictionary<string, StoreBuilder>();
+        private readonly IList<string> sourceTopics = new List<string>();
+        private readonly ISet<string> globalTopics = new HashSet<string>();
         private readonly QuickUnion<string> nodeGrouper = new QuickUnion<string>();
         private IDictionary<string, ISet<string>> nodeGroups = new Dictionary<string, ISet<string>>();
         private IList<ISet<string>> copartitionSourceGroups = new List<ISet<string>>();
+
+        // map from state store names to this state store's corresponding changelog topic if possible
+        private readonly IDictionary<string, string> storesToTopics = new Dictionary<string, string>();
+        // map from changelog topic name to its corresponding state store.
+        private readonly IDictionary<string, string> topicsToStores = new Dictionary<string, string>();
 
         internal InternalTopologyBuilder()
         {
         }
 
-        internal IEnumerable<string> GetSourceTopics() => sourcesTopics;
+        internal IEnumerable<string> GetSourceTopics() => sourceTopics;
+
+        internal IDictionary<string, IStateStore> GlobalStateStores { get; } = new Dictionary<string, IStateStore>();
+
+        internal bool HasNoNonGlobalTopology => !sourceTopics.Any();
 
         #region Connect
 
@@ -37,6 +48,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             foreach (var stateStoreName in stateStoreNames)
             {
+                if (globalStateBuilders.ContainsKey(stateStoreName))
+                {
+                    throw new TopologyException($"Global StateStore {stateStoreName} can be used by a " +
+                        $"Processor without being specified; it should not be explicitly passed.");
+                }
                 if (!stateFactories.ContainsKey(stateStoreName))
                 {
                     throw new TopologyException("StateStore " + stateStoreName + " is not added yet.");
@@ -55,6 +71,16 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
         }
 
+        private void ConnectSourceStoreAndTopic(string sourceStoreName, string topic)
+        {
+            if (storesToTopics.ContainsKey(sourceStoreName))
+            {
+                throw new TopologyException($"Source store {sourceStoreName} is already added.");
+            }
+            storesToTopics[sourceStoreName] = topic;
+            topicsToStores[topic] = sourceStoreName;
+        }
+
         #endregion
 
         #region Add Processors / State Store
@@ -67,12 +93,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             if (nodeFactories.ContainsKey(nameNode))
                 throw new TopologyException($"Source processor {nameNode} is already added.");
 
-            if (sourcesTopics.Contains(topic))
+            if (sourceTopics.Contains(topic))
             {
                 throw new TopologyException($"Topic {topic} has already been registered by another source.");
             }
 
-            sourcesTopics.Add(topic);
+            sourceTopics.Add(topic);
             nodeFactories.Add(nameNode,
                 new SourceNodeFactory<K, V>(nameNode, topic, consumed.TimestampExtractor, consumed.KeySerdes, consumed.ValueSerdes));
             nodeGrouper.Add(nameNode);
@@ -127,6 +153,82 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
         }
 
+        internal void AddGlobalStore<K, V, S>(string topicName, 
+            StoreBuilder<S> storeBuilder, 
+            string sourceName, 
+            ConsumedInternal<K, V> consumed, 
+            ProcessorParameters<K, V> processorParameters) where S : IStateStore
+        {
+            string processorName = processorParameters.ProcessorName;
+
+            this.ValidateGlobalStoreArguments(sourceName, topicName, processorName, processorParameters.Processor, storeBuilder.Name, storeBuilder.LoggingEnabled);
+            this.ValidateTopicNotAlreadyRegistered(topicName);
+
+            var predecessors = new[] { sourceName };
+
+            var nodeFactory = new ProcessorNodeFactory<K, V>(processorName, predecessors, processorParameters.Processor);
+
+            globalTopics.Add(topicName);
+            nodeFactories.Add(sourceName, new SourceNodeFactory<K, V>(sourceName, topicName, consumed.TimestampExtractor, consumed.KeySerdes, consumed.ValueSerdes));
+
+            // TODO: ?
+            // nodeToSourceTopics.put(sourceName, Arrays.asList(topics));
+            nodeGrouper.Add(sourceName);
+            nodeFactory.AddStateStore(storeBuilder.Name);
+            nodeFactories.Add(processorName, nodeFactory);
+            nodeGrouper.Add(processorName);
+            nodeGrouper.Unite(processorName, predecessors);
+            globalStateBuilders.Add(storeBuilder.Name, storeBuilder);
+            ConnectSourceStoreAndTopic(storeBuilder.Name, topicName);
+            nodeGroups = null;
+        }
+
+        private void ValidateTopicNotAlreadyRegistered(string topicName)
+        {
+            if (sourceTopics.Contains(topicName) || globalTopics.Contains(topicName))
+            {
+                throw new TopologyException("Topic " + topicName + " has already been registered by another source.");
+            }
+
+            // TODO: ?
+            //for (Pattern pattern : nodeToSourcePatterns.values())
+            //{
+            //    if (pattern.matcher(topic).matches())
+            //    {
+            //        throw new TopologyException("Topic " + topic + " matches a Pattern already registered by another source.");
+            //    }
+            //}
+        }
+
+        private void ValidateGlobalStoreArguments<K, V>(string sourceName,
+                                              string topicName,
+                                              string processorName,
+                                              IProcessorSupplier<K, V> stateUpdateSupplier,
+                                              string storeName,
+                                              bool loggingEnabled)
+        {
+            if (nodeFactories.ContainsKey(sourceName))
+            {
+                throw new TopologyException($"Processor {sourceName} is already added.");
+            }
+            if (nodeFactories.ContainsKey(processorName))
+            {
+                throw new TopologyException($"Processor {processorName} is already added.");
+            }
+            if (stateFactories.ContainsKey(storeName) || globalStateBuilders.ContainsKey(storeName))
+            {
+                throw new TopologyException("StateStore " + storeName + " is already added.");
+            }
+            if (loggingEnabled)
+            {
+                throw new TopologyException($"StateStore {storeName} for global table must not have logging enabled.");
+            }
+            if (sourceName.Equals(processorName))
+            {
+                throw new TopologyException("sourceName and processorName must be different.");
+            }
+        }
+
         #endregion
 
         #region Build
@@ -147,7 +249,34 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             else
                 nodeGroup = NodeGroups().Values.SelectMany(i => i).ToHashSet();
 
+            ISet<string> globalNodeGroups = GlobalNodeGroups;
+            nodeGroup = nodeGroup.Where(x => !globalNodeGroups.Contains(x)).ToHashSet();
+
             return BuildTopology(nodeGroup, null);
+        }
+
+        public ProcessorTopology BuildGlobalStateTopology()
+        {
+            if (!GlobalNodeGroups.Any())
+            {
+                return null;
+            }
+            return BuildTopology(GlobalNodeGroups, null);
+        }
+
+        private ISet<string> GlobalNodeGroups => nodeGroups
+                .Where(group => group.Value.Any(IsGlobalSource))
+                .SelectMany(group => group.Value)
+                .ToHashSet();
+
+        private bool IsGlobalSource(string node)
+        {
+            var factory = nodeFactories[node];
+            if (factory is ISourceNodeFactory)
+            {
+                return globalTopics.Contains(((ISourceNodeFactory)factory).Topic);                
+            }
+            return false;
         }
 
         public ProcessorTopology BuildTopology(TopicPartition sourceTopicPartition)
@@ -196,7 +325,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             foreach (var sourceProcessor in sources.Values)
                 rootProcessor.AddNextProcessor(sourceProcessor);
 
-            return new ProcessorTopology(rootProcessor, sources, sinks, processors, stateStores);
+            return new ProcessorTopology(rootProcessor, sources, sinks, processors, stateStores, GlobalStateStores, storesToTopics);
         }
 
         private void BuildSinkNode(IDictionary<string, IProcessor> processors, IDictionary<string, IProcessor> sinks, ISinkNodeFactory factory, IProcessor processor)
@@ -224,19 +353,29 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             foreach (string stateStoreName in factory.StateStores)
             {
-                if (!stateStores.ContainsKey(stateStoreName) && stateFactories.ContainsKey(stateStoreName))
+                if (!stateStores.ContainsKey(stateStoreName))
                 {
-                    StateStoreFactory stateStoreFactory = stateFactories[stateStoreName];
+                    if (stateFactories.ContainsKey(stateStoreName))
+                    {
+                        StateStoreFactory stateStoreFactory = stateFactories[stateStoreName];
 
-                    // TODO : changelog topic (remember the changelog topic if this state store is change-logging enabled)
-                    stateStores.Add(stateStoreName, stateStoreFactory.Build(partition));
+                        // TODO : changelog topic (remember the changelog topic if this state store is change-logging enabled)
+                        stateStores.Add(stateStoreName, stateStoreFactory.Build(partition));
+                    }
+                    else
+                    {
+                        stateStores.Add(stateStoreName, GlobalStateStores[stateStoreName]);
+                    }
                 }
             }
         }
 
         internal void RewriteTopology(IStreamConfig config)
         {
-            // NOTHING FOR MOMENT
+            foreach (var storeBuilder in globalStateBuilders.Values)
+            {
+                GlobalStateStores.Add(storeBuilder.Name, storeBuilder.Build());
+            }
         }
 
         internal void BuildAndOptimizeTopology(RootNode root, IList<StreamGraphNode> nodes)
@@ -269,7 +408,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             IDictionary<string, ISet<string>> groups = new Dictionary<string, ISet<string>>();
 
-            foreach (var topicSource in sourcesTopics)
+            foreach(var topicSource in sourceTopics.Concat(globalTopics))
             {
                 groups.Add(topicSource, new HashSet<string>());
                 PutNodeGroupName(groups, topicSource);

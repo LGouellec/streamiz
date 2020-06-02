@@ -128,6 +128,11 @@ namespace Streamiz.Kafka.Net
         long CommitIntervalMs { get; set; }
 
         /// <summary>
+        /// The amount of time to wait for response from cluster when getting matadata.
+        /// </summary>
+        int MetadataRequestTimeoutMs { get; set; }
+
+        /// <summary>
         /// Timeout used for transaction related operations. (Default : 10 seconds).
         /// </summary>
         TimeSpan TransactionTimeout { get; set; }
@@ -958,9 +963,9 @@ namespace Streamiz.Kafka.Net
         /// Non-topic request timeout in milliseconds. This is for metadata requests, etc.
         /// default: 60000 importance: low
         /// </summary>
-        public int? MetadataRequestTimeoutMs
+        public int MetadataRequestTimeoutMs
         {
-            get => _config.MetadataRequestTimeoutMs;
+            get => _config.MetadataRequestTimeoutMs ?? 1000;
             set
             {
                 _config.MetadataRequestTimeoutMs = value;
