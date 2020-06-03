@@ -4,7 +4,6 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -30,7 +29,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key1", "123456"));
 
             builder.Stream<string, string>("topic")
-                .Map((k,v) => KeyValuePair.Create(k, v.Length))
+                .Map((k, v) => KeyValuePair.Create(k, v.Length))
                 .To<StringSerDes, Int32SerDes>("topic-map");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -60,7 +59,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key1", "123456"));
 
             builder.Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(v.Length,k))
+                .Map((k, v) => KeyValuePair.Create(v.Length, k))
                 .To<Int32SerDes, StringSerDes>("topic-map");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -71,7 +70,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
-                var outputTopic = driver.CreateOuputTopic<int,string, Int32SerDes, StringSerDes>("topic-map");
+                var outputTopic = driver.CreateOuputTopic<int, string, Int32SerDes, StringSerDes>("topic-map");
 
                 inputTopic.PipeInputs(data);
                 var result = outputTopic.ReadKeyValue();

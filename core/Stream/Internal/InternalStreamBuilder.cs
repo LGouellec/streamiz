@@ -92,7 +92,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Build GlobalTable
 
-        internal IGlobalKTable GlobalTable<K, V>(string topic, ConsumedInternal<K, V> consumed, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized)
+        internal IGlobalKTable<K, V> GlobalTable<K, V>(string topic, ConsumedInternal<K, V> consumed, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized)
         {
             if (string.IsNullOrEmpty(topic))
             {

@@ -25,7 +25,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
             // Stream - Table join (Global or KTable)
             builder.AddProcessor(processorParameters.ProcessorName, processorParameters.Processor, ParentNodeNames());
 
-            // Steam - KTable join only
+            // Stream - KTable join only
             if (!string.IsNullOrEmpty(otherJoinSideNodeName))
             {
                 builder.ConnectProcessorAndStateStore(processorParameters.ProcessorName, storeNames);

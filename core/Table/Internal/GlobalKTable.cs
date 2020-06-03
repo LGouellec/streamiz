@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Streamiz.Kafka.Net.Table.Internal
+﻿namespace Streamiz.Kafka.Net.Table.Internal
 {
-    internal class GlobalKTable<K, V> : IGlobalKTable
+    internal class GlobalKTable<K, V> : IGlobalKTable<K, V>
     {
         public GlobalKTable(IKTableValueGetterSupplier<K, V> valueGetterSupplier, string queryableStoreName)
         {
-            this.ValueGetterSupplier = valueGetterSupplier;
-            this.QueryableStoreName = queryableStoreName;
+            ValueGetterSupplier = valueGetterSupplier;
+            QueryableStoreName = queryableStoreName;
         }
 
         public IKTableValueGetterSupplier<K, V> ValueGetterSupplier { get; }

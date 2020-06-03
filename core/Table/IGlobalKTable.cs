@@ -34,11 +34,11 @@
     /// 
     /// Records from the source topic that have null keys are dropped.
     /// </summary>
-    public interface IGlobalKTable
+    public interface IGlobalKTable<K, V>
     {
         /// <summary>
-        /// The name of the local state store that can be used to query this <see cref="IGlobalKTable"/>
-        /// or null if this <see cref="IGlobalKTable"/> cannot be queried.
+        /// The name of the local state store that can be used to query this <see cref="IGlobalKTable{K, V}"/>
+        /// or null if this <see cref="IGlobalKTable{K, V}"/> cannot be queried.
         /// </summary>
         string QueryableStoreName { get; }
     }

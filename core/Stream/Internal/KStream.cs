@@ -4,6 +4,7 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream.Internal.Graph;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 using Streamiz.Kafka.Net.Table;
+using Streamiz.Kafka.Net.Table.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -358,14 +359,17 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         #region Join
 
         public IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner, string named = null)
-            where V0 : class
-            where VR : class
             where V0S : ISerDes<V0>, new()
             where VRS : ISerDes<VR>, new()
         {
             var joined = new Joined<K, V, V0>(KeySerdes, ValueSerdes, new V0S(), named);
             var wrapped = new WrappedValueJoiner<V, V0, VR>(valueJoiner);
             return DoStreamTableJoin(table, wrapped, joined, false);
+        }
+
+        public IKStream<K, VR> Join<K0, V0, VR>(IGlobalKTable<K0, V0> globalTable, Func<K, V, K0> keyMapper, Func<V, V0, VR> valueJoiner, string named = null)
+        {
+            return GlobalTableJoin(globalTable, new WrappedKeyValueMapper<K, V, K0>(keyMapper), new WrappedValueJoiner<V, V0, VR>(valueJoiner), false, named);
         }
 
         #endregion
@@ -458,8 +462,6 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         }
 
         private KStream<K, VR> DoStreamTableJoin<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner, Joined<K, V, V0> joined, bool leftJoin)
-                where V0 : class
-                where VR : class
         {
             var allSourceNodes = EnsureJoinableWith((AbstractStream<K, V0>)table);
 
@@ -484,6 +486,24 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 allSourceNodes.ToList(),
                 streamTableJoinNode,
                 builder);
+        }
+
+        private KStream<K, VR> GlobalTableJoin<K0, V0, VR>(IGlobalKTable<K0, V0> globalTable, IKeyValueMapper<K, V, K0> keyMapper, IValueJoiner<V, V0, VR> valueJoiner, bool leftJoin, string named)
+        {
+            var supplier = (globalTable as GlobalKTable<K0, V0>).ValueGetterSupplier;
+            var name = new Named(named).OrElseGenerateWithPrefix(builder, leftJoin ? KStream.LEFTJOIN_NAME : KStream.JOIN_NAME);
+
+            var processorSupplier = new KStreamGlobalKTableJoin<K, K0, V, V0, VR>(
+                supplier,
+                valueJoiner,
+                keyMapper,
+                leftJoin);
+            var parameters = new ProcessorParameters<K, V>(processorSupplier, name);
+            var joinNode = new StreamTableJoinNode<K, V>(name, parameters, new string[0], null);
+
+            builder.AddGraphNode(Node, joinNode);
+
+            return new KStream<K, VR>(name, KeySerdes, null, SetSourceNodes, joinNode, builder);
         }
 
         #endregion

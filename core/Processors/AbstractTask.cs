@@ -68,7 +68,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         protected void RegisterStateStores()
         {
-            if (!Topology.StateStores.Any())
+            if (!Topology.StateStores.Any() && !Topology.GlobalStateStores.Any())
             {
                 return;
             }
@@ -76,6 +76,13 @@ namespace Streamiz.Kafka.Net.Processors
             log.Debug($"{logPrefix}Initializing state stores");
 
             foreach (var kv in Topology.StateStores)
+            {
+                var store = kv.Value;
+                log.Debug($"{logPrefix}Initializing store {kv.Key}");
+                store.Init(Context, store);
+            }
+
+            foreach(var kv in Topology.GlobalStateStores.Where(k => !Topology.StateStores.ContainsKey(k.Key)))
             {
                 var store = kv.Value;
                 log.Debug($"{logPrefix}Initializing store {kv.Key}");

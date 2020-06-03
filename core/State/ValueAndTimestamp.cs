@@ -3,9 +3,8 @@
     internal class ValueAndTimestamp
     {
         public static V GetValueOrNull<V>(ValueAndTimestamp<V> valueAndTimestamp)
-            where V : class
         {
-            return valueAndTimestamp == null ? null : valueAndTimestamp.Value;
+            return valueAndTimestamp == null ? default : valueAndTimestamp.Value;
         }
     }
 

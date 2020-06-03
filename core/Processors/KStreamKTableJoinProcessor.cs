@@ -5,8 +5,6 @@ using Streamiz.Kafka.Net.Table.Internal;
 namespace Streamiz.Kafka.Net.Processors
 {
     internal class KStreamKTableJoinProcessor<K1, K2, V1, V2, R> : AbstractProcessor<K1, V1>
-        where V2 : class
-        where R : class
     {
         private readonly IKTableValueGetter<K2, V2> valueGetter;
         private readonly IKeyValueMapper<K1, V1, K2> mapper;
@@ -38,7 +36,7 @@ namespace Streamiz.Kafka.Net.Processors
             else
             {
                 K2 mappedKey = mapper.Apply(key, value);
-                V2 value2 = mappedKey == null ? null : ValueAndTimestamp.GetValueOrNull(valueGetter.Get(mappedKey));
+                V2 value2 = mappedKey == null ? default : ValueAndTimestamp.GetValueOrNull(valueGetter.Get(mappedKey));
                 if (leftJoin || value2 != null)
                     Forward(key, joiner.Apply(value, value2));
             }

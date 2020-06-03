@@ -4,8 +4,6 @@ using Streamiz.Kafka.Net.Table.Internal;
 namespace Streamiz.Kafka.Net.Stream.Internal.Graph
 {
     internal class KStreamKTableJoin<K, R, V1, V2> : IProcessorSupplier<K, V1>
-        where R : class
-        where V2 : class
     {
         public class KeyValueMapper : IKeyValueMapper<K, V1, K>
         {
