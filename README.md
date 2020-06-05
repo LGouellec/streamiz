@@ -99,9 +99,11 @@ static void Main(string[] args)
 - [x] Unit tests (TestTopologyDriver, ...)
 - [X] Global state store
 - [WIP] Statefull processors impl
+- [ ] Refactor Subtopology & StreamTask assignment
+- [ ] Transform, Through and ToTable Processor
+- [ ] Rocks DB state implementation
 - [ ] Task restoring
 - [ ] Repartition topic
-- [ ] Rocks DB state implementation
 - [ ] Processor API
 - [ ] Optimizing Kafka Streams Topologies
 - [ ] Interactive Queries

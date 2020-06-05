@@ -336,6 +336,16 @@ namespace Streamiz.Kafka.Net.Stream
         /// latest (rolling) aggregate for each key. If the reduce function returns null, it is then interpreted as
         /// deletion for the key, and future messages of the same key coming from upstream operators
         /// will be handled as newly initialized value.</returns>
-        IKTable<K, V> Reduce(Func<V, V, V> reducer, Materialized<K ,V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<K, V> Reduce(Func<V, V, V> reducer, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+
+
+        /// <summary>
+        /// Create a new <see cref="ITimeWindowedKStream{K, V}"/> instance that can be used to perform windowed aggregations.
+        /// </summary>
+        /// <typeparam name="W">the window type</typeparam>
+        /// <param name="options">the specification of the windows aggregation</param>
+        /// <returns>an instance of <see cref="ITimeWindowedKStream{K, V}"/></returns>
+        ITimeWindowedKStream<K, V> WindowedBy<W>(WindowOptions<W> options)
+            where W : Window;
     }
 }

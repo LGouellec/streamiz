@@ -1,19 +1,16 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
-using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using System;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace sample_stream
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             CancellationTokenSource source = new CancellationTokenSource();
 
@@ -29,33 +26,15 @@ namespace sample_stream
 
             StreamBuilder builder = new StreamBuilder();
 
-            builder.GlobalTable("test", InMemory<string, string>.As("test-store"));
+            var table = builder.Table("table", InMemory<string, string>.As("store"));
+            builder.Stream<string, string>("test")
+                    .Join<string, string, StringSerDes, StringSerDes>(table, (v, v1) => $"{v}-{v1}")
+                    .To("output");
+
 
             Topology t = builder.Build();
 
             KafkaStream stream = new KafkaStream(t, config);
-            bool taskGetStateStoreRunning = false;
-
-            stream.StateChanged += (old, @new) =>
-            {
-                if (@new == KafkaStream.State.RUNNING && !taskGetStateStoreRunning)
-                {
-                    Task.Factory.StartNew(() =>
-                    {
-                        taskGetStateStoreRunning = true;
-                        while (!source.Token.IsCancellationRequested)
-                        {
-                            var store = stream.Store(StoreQueryParameters.FromNameAndType("test-store", QueryableStoreTypes.KeyValueStore<string, string>()));
-                            var items = store.All().ToList();
-                            if (items.Count > 0)
-                                foreach (var e in items)
-                                    Console.WriteLine($"Key:{e.Key}|Value:{e.Value}");
-
-                            Thread.Sleep(500);
-                        }
-                    }, source.Token);
-                }
-            };
 
             Console.CancelKeyPress += (o, e) =>
             {

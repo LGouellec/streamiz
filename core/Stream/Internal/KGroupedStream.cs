@@ -128,6 +128,14 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #endregion
 
+        #region Windows
+        public ITimeWindowedKStream<K, V> WindowedBy<W>(WindowOptions<W> options) where W : Window
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
         #endregion
 
         #region Private
