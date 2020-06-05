@@ -93,13 +93,10 @@ static void Main(string[] args)
 
 # TODO implementation
 
-- [x] Topology description
-- [x] Refactor topology node processor builder
-- [x] Subtopology impl
-- [x] Unit tests (TestTopologyDriver, ...)
 - [X] Global state store
 - [WIP] Statefull processors impl
 - [ ] Refactor Subtopology & StreamTask assignment
+- [ ] Refactor Topology description for corresponding to java implementation
 - [ ] Transform, Through and ToTable Processor
 - [ ] Rocks DB state implementation
 - [ ] Task restoring
