@@ -18,6 +18,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         public TimeWindowedKStream(WindowOptions<W> windowOptions, GroupedStreamAggregateBuilder<K, V> aggBuilder, string name, ISerDes<K> keySerde, ISerDes<V> valSerde, List<string> sourceNodes, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder) 
             : base(name, keySerde, valSerde, sourceNodes, streamsGraphNode, builder)
         {
+            CheckIfParamNull(windowOptions, "windowOptions");
+
             this.windowOptions = windowOptions;
             this.aggBuilder = aggBuilder;
         }
@@ -27,18 +29,16 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         #region Count
 
         public IKTable<Windowed<K>, long> Count()
-        {
-            throw new NotImplementedException();
-        }
+             => Count((string)null);
 
         public IKTable<Windowed<K>, long> Count(string named)
-        {
-            throw new NotImplementedException();
-        }
+            => Count(Materialized<K, long, IKeyValueStore<Bytes, byte[]>>.Create(), named);
 
         public IKTable<Windowed<K>, long> Count(Materialized<K, long, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
         {
-            throw new NotImplementedException();
+            materialized = materialized ?? Materialized<K, long, IKeyValueStore<Bytes, byte[]>>.Create();
+
+            return DoCount(materialized, named);
         }
 
         #endregion
@@ -101,6 +101,29 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
 
         #endregion
+
+        #endregion
+
+        #region Privates
+
+        private IKTable<Windowed<K>, long> DoCount(Materialized<K, long, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        {
+            if (materialized.KeySerdes == null)
+                materialized.WithKeySerdes(KeySerdes);
+
+            if (materialized.ValueSerdes == null)
+                materialized.WithValueSerdes(new Int64SerDes());
+
+            string name = new Named(named).OrElseGenerateWithPrefix(builder, KGroupedStream.AGGREGATE_NAME);
+            materialized.UseProvider(builder, KGroupedStream.AGGREGATE_NAME);
+
+            return aggBuilder.Build<Windowed<K>, long>(name,
+                                    null,
+                                    null,
+                                    materialized.QueryableStoreName,
+                                    null,
+                                    null);
+        }
 
         #endregion
     }
