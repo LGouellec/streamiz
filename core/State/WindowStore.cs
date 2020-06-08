@@ -9,5 +9,6 @@ namespace Streamiz.Kafka.Net.State
     /// <typeparam name="V"></typeparam>
     public interface WindowStore<K,V> : IStateStore, ReadOnlyWindowStore<K,V>
     {
+        void Put(K key, V value, long windowStartTimestamp);
     }
 }

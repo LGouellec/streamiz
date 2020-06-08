@@ -4,6 +4,8 @@ using System.Text;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.Internal;
+using Streamiz.Kafka.Net.Stream.Internal.Graph;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 using Streamiz.Kafka.Net.Table;
 
@@ -32,11 +34,11 @@ namespace Streamiz.Kafka.Net.Stream.Internal
              => Count((string)null);
 
         public IKTable<Windowed<K>, long> Count(string named)
-            => Count(Materialized<K, long, IKeyValueStore<Bytes, byte[]>>.Create(), named);
+            => Count(Materialized<K, long, WindowStore<Bytes, byte[]>>.Create(), named);
 
-        public IKTable<Windowed<K>, long> Count(Materialized<K, long, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        public IKTable<Windowed<K>, long> Count(Materialized<K, long, WindowStore<Bytes, byte[]>> materialized, string named = null)
         {
-            materialized = materialized ?? Materialized<K, long, IKeyValueStore<Bytes, byte[]>>.Create();
+            materialized = materialized ?? Materialized<K, long, WindowStore<Bytes, byte[]>>.Create();
 
             return DoCount(materialized, named);
         }
@@ -65,12 +67,12 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             throw new NotImplementedException();
         }
 
-        public IKTable<Windowed<K>, VR> Aggregate<VR>(Func<VR> initializer, Func<K, V, VR, VR> aggregator, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        public IKTable<Windowed<K>, VR> Aggregate<VR>(Func<VR> initializer, Func<K, V, VR, VR> aggregator, Materialized<K, VR, WindowStore<Bytes, byte[]>> materialized, string named = null)
         {
             throw new NotImplementedException();
         }
 
-        public IKTable<Windowed<K>, VR> Aggregate<VR>(Initializer<VR> initializer, Aggregator<K, V, VR> aggregator, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        public IKTable<Windowed<K>, VR> Aggregate<VR>(Initializer<VR> initializer, Aggregator<K, V, VR> aggregator, Materialized<K, VR, WindowStore<Bytes, byte[]>> materialized, string named = null)
         {
             throw new NotImplementedException();
         }
@@ -89,12 +91,12 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             throw new NotImplementedException();
         }
 
-        public IKTable<K, V> Reduce(Reducer<V> reducer, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        public IKTable<K, V> Reduce(Reducer<V> reducer, Materialized<K, V, WindowStore<Bytes, byte[]>> materialized, string named = null)
         {
             throw new NotImplementedException();
         }
 
-        public IKTable<K, V> Reduce(Func<V, V, V> reducer, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        public IKTable<K, V> Reduce(Func<V, V, V> reducer, Materialized<K, V, WindowStore<Bytes, byte[]>> materialized, string named = null)
         {
             throw new NotImplementedException();
         }
@@ -106,7 +108,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Privates
 
-        private IKTable<Windowed<K>, long> DoCount(Materialized<K, long, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        private IKTable<Windowed<K>, long> DoCount(Materialized<K, long, WindowStore<Bytes, byte[]>> materialized, string named = null)
         {
             if (materialized.KeySerdes == null)
                 materialized.WithKeySerdes(KeySerdes);
@@ -117,12 +119,20 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             string name = new Named(named).OrElseGenerateWithPrefix(builder, KGroupedStream.AGGREGATE_NAME);
             materialized.UseProvider(builder, KGroupedStream.AGGREGATE_NAME);
 
-            return aggBuilder.Build<Windowed<K>, long>(name,
-                                    null,
-                                    null,
+            var aggSupplier = new KStreamWindowAggregate<K, V, long, W>(
+                windowOptions,
+                materialized.StoreName,
+                () => 0L,
+                (aggKey, value, aggregate) => aggregate + 1);
+
+            ISerDes<Windowed<K>> windowSerdes = materialized.KeySerdes != null ? new TimeWindowedSerDes<K>(materialized.KeySerdes, windowOptions.Size) : null;
+
+            return aggBuilder.BuildWindow(name,
+                                    new TimestampedWindowStoreMaterializer<K, long>(materialized).Materialize(),
+                                    aggSupplier,
                                     materialized.QueryableStoreName,
-                                    null,
-                                    null);
+                                    windowSerdes,
+                                    materialized.ValueSerdes);
         }
 
         #endregion
