@@ -34,8 +34,9 @@ This project is being written. Thanks for you contribution !
 # Timeline
 
 - End May 2020 - Beta 0.1.0 - All stateless processors, Exactly Once Semantic, InMemory store
-- End August 2020 - Beta 0.2.0 - All statefull processors, Global Store
-- End October 2020 - Beta 0.3.0 - Persistent state store (eg: RocksDB Store)
+- End July 2020 - Beta 0.2.0 - Statefull processors (count, reduce, aggregate), Global Store
+- End August 2020 - Beta 0.3.0 - Join statefull processors
+- End October 2020 - Beta 0.4.0 - Persistent state store (eg: RocksDB Store)
 - End 2020 / Begin 2021 - 1.0.0 RC1 - Processor API, Metrics, Interactive Queries
 
 # Documentation
