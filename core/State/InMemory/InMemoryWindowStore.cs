@@ -32,12 +32,13 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
         public void Close()
         {
+            iterator.Clear();
             closingCallback.Invoke(this);
         }
 
         public void RemoveExpiredData(long time)
         {
-
+            iterator.RemoveAll((k) => k.Key < time);
         }
     }
 
@@ -49,7 +50,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         private readonly TimeSpan retention;
         private readonly long size;
 
-        private readonly long observedStreamTime = -1;
+        private long observedStreamTime = -1;
 
         private readonly ConcurrentDictionary<long, ConcurrentDictionary<Bytes, byte[]>> map =
             new ConcurrentDictionary<long, ConcurrentDictionary<Bytes, byte[]>>();
@@ -145,7 +146,43 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
         public void Put(Bytes key, byte[] value, long windowStartTimestamp)
         {
-            throw new NotImplementedException();
+            RemoveExpiredData();
+
+            observedStreamTime = Math.Max(observedStreamTime, windowStartTimestamp);
+
+            if (windowStartTimestamp <= observedStreamTime - retention.TotalMilliseconds)
+            {
+                logger.Warn("Skipping record for expired segment.");
+            }
+            else
+            {
+                if (value != null)
+                {
+                    map.AddOrUpdate(windowStartTimestamp, 
+                        (k) =>
+                        {
+                            var dic = new ConcurrentDictionary<Bytes, byte[]>();
+                            dic.AddOrUpdate(key, (b) => value, (k, d) => value);
+                            return dic;
+                        }, 
+                        (k, d) =>
+                        {
+                            d.AddOrUpdate(key, (b) => value, (k, d) => value);
+                            return d;
+                        });
+                }
+                else
+                {
+                    if (map.ContainsKey(windowStartTimestamp))
+                    {
+                        ConcurrentDictionary<Bytes, byte[]> tmp = null;
+                        byte[] d = null;
+                        map[windowStartTimestamp].Remove(key, out d);
+                        if (map[windowStartTimestamp].Count == 0)
+                            map.Remove(windowStartTimestamp, out tmp);
+                    }
+                }
+            }
         }
 
         #region Private
