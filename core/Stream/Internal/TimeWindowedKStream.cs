@@ -128,7 +128,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             ISerDes<Windowed<K>> windowSerdes = materialized.KeySerdes != null ? new TimeWindowedSerDes<K>(materialized.KeySerdes, windowOptions.Size) : null;
 
             return aggBuilder.BuildWindow(name,
-                                    new TimestampedWindowStoreMaterializer<K, long>(materialized).Materialize(),
+                                    new TimestampedWindowStoreMaterializer<K, long, W>(windowOptions, materialized).Materialize(),
                                     aggSupplier,
                                     materialized.QueryableStoreName,
                                     windowSerdes,

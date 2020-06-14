@@ -1,15 +1,13 @@
 ﻿using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.Helper;
 using Streamiz.Kafka.Net.Stream;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.SerDes
 {
     internal class TimeWindowedSerDes<T> : AbstractSerDes<Windowed<T>>
     {
-        private static readonly int timestampSize = 8;
         private readonly ISerDes<T> innerSerdes;
         private readonly long windowSize;
 
@@ -24,23 +22,11 @@ namespace Streamiz.Kafka.Net.SerDes
             if (data == null || data.Length == 0)
                 return null;
 
-            byte[] bytes = new byte[data.Length - timestampSize];
+            var start = data.ExtractStoreTimestamp();
 
-            using (var mStream = new MemoryStream(data))
-            {
-                using (var bufferStream = new BufferedStream(mStream))
-                {
-                    byte[] time = new byte[timestampSize];
-
-                    bufferStream.Read(bytes, 0, bytes.Length);
-                    bufferStream.Read(time, bytes.Length, timestampSize);
-
-                    T key = innerSerdes.Deserialize(bytes);
-                    long start = BitConverter.ToInt64(time);
-
-                    return new Windowed<T>(key, new TimeWindow(start, start + windowSize ));
-                }
-            }
+            return new Windowed<T>(
+                innerSerdes.Deserialize(data.ExtractStoreKeyBytes()),
+                new TimeWindow(start, start + windowSize));
         }
 
         public override byte[] Serialize(Windowed<T> data)

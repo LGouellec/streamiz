@@ -10,6 +10,5 @@ https://github.com/apache/kafka/blob/2.2/streams/src/main/java/org/apache/kafka/
 - Custom Windows Option
 https://github.com/jeanlouisboudart/kafka-streams-examples/blob/timestamp-sync-edge-case/src/test/java/io/confluent/examples/streams/window/DailyTimeWindows.java
 
-- test Custom Windo
+- test Custom Window
 https://github.com/jeanlouisboudart/kafka-streams-examples/blob/timestamp-sync-edge-case/src/test/java/io/confluent/examples/streams/window/CustomWindowTest.java
-

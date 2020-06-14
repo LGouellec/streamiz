@@ -6,22 +6,20 @@ namespace Streamiz.Kafka.Net.State.InMemory
 {
     public class InMemoryTimestampedWindowStoreSupplier : WindowBytesStoreSupplier
     {
-        private string storeName;
-        private TimeSpan retention;
-        private long size;
+        private readonly TimeSpan retention;
 
         public InMemoryTimestampedWindowStoreSupplier(string storeName, TimeSpan retention, long size)
         {
-            this.storeName = storeName;
+            Name = storeName;
             this.retention = retention;
-            this.size = size;
+            WindowSize = size;
         }
 
-        public string Name => throw new NotImplementedException();
+        public string Name { get; }
+
+        public long WindowSize { get; }
 
         public WindowStore<Bytes, byte[]> Get()
-        {
-            throw new NotImplementedException();
-        }
+            => new InMemoryWindowStore(Name, retention, WindowSize);
     }
 }
