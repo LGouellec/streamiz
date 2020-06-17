@@ -63,6 +63,12 @@ namespace Streamiz.Kafka.Net.Processors
 
         #region Forward
 
+        public virtual void Forward<K1, V1>(K1 key, V1 value, long ts)
+        {
+            Context.ChangeTimestamp(ts);
+            Forward<K1, V1>(key, value);
+        }
+
         public virtual void Forward<K1, V1>(K1 key, V1 value)
         {
             log.Debug($"{logPrefix}Forward<{typeof(K1).Name},{typeof(V1).Name}> message with key {key} and value {value} to each next processor");
