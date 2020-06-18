@@ -20,10 +20,18 @@ namespace Streamiz.Kafka.Net.Processors
         private TimestampedWindowStore<K, Agg> windowStore;
         private TimestampedTupleForwarder<Windowed<K>, Agg> tupleForwarder;
 
-        public KStreamWindowAggregateProcessor()
+        public KStreamWindowAggregateProcessor(WindowOptions<W> windowOptions,
+                Initializer<Agg> initializer,
+                Aggregator<K, V, Agg> aggregator,
+                string storeName,
+                bool sendOldValues)
         {
+            this.windowOptions = windowOptions;
+            this.initializer = initializer;
+            this.aggregator = aggregator;
+            this.storeName = storeName;
+            this.sendOldValues = sendOldValues;
         }
-
 
         public override void Init(ProcessorContext context)
         {
@@ -54,7 +62,7 @@ namespace Streamiz.Kafka.Net.Processors
                     long newTs;
                     Agg newAgg;
 
-                    if (oldAgg == null)
+                    if (oldAggAndTimestamp == null)
                     {
                         oldAgg = initializer.Apply();
                         newTs = Context.Timestamp;

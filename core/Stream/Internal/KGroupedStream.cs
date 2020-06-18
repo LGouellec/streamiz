@@ -131,7 +131,15 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         #region Windows
         public ITimeWindowedKStream<K, V> WindowedBy<W>(WindowOptions<W> options) where W : Window
         {
-            throw new NotImplementedException();
+            return new TimeWindowedKStream<K, V, W>(
+                options,
+                aggregateBuilder,
+                NameNode,
+                KeySerdes,
+                ValueSerdes,
+                SetSourceNodes,
+                Node,
+                builder);   
         }
 
         #endregion

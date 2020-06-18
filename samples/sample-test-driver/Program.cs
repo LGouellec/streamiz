@@ -5,6 +5,7 @@ using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace sample_test_driver
 {
@@ -20,9 +21,10 @@ namespace sample_test_driver
             StreamBuilder builder = new StreamBuilder();
 
             var table = builder
-                            .Table<string, string>("test")
-                            .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
-                            .Count(InMemory<string, long>.As("count-store"));
+                            .Stream<string, string>("test")
+                            .GroupByKey()
+                            .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromSeconds(2)))
+                            .Count(InMemoryWindows<string, long>.As("count-store", TimeSpan.FromSeconds(2)));
 
             Topology t = builder.Build();
 
@@ -31,7 +33,8 @@ namespace sample_test_driver
                 var inputTopic = driver.CreateInputTopic<string, string>("test");
                 inputTopic.PipeInput("renault", "clio");
                 inputTopic.PipeInput("renault", "megane");
-                inputTopic.PipeInput("ferrari", "red");
+                Thread.Sleep(2000);
+                inputTopic.PipeInput("renault", "scenic");
                 var store = driver.GetKeyValueStore<string, long>("count-store");
                 var elements = store.All();
             }

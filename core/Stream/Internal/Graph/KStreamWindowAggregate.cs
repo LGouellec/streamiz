@@ -35,9 +35,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph
         }
 
         public IProcessor<K, V> Get()
-        {
-            throw new NotImplementedException();
-        }
+            => new KStreamWindowAggregateProcessor<K, V, Agg, W>(WindowOptions, initializer, aggregator, storeName, sendOldValues);
 
         public IKTableValueGetterSupplier<Windowed<K>, Agg> View()
             => new GenericKTableValueGetterSupplier<Windowed<K>, Agg>(

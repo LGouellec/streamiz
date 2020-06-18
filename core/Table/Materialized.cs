@@ -504,5 +504,55 @@ namespace Streamiz.Kafka.Net.Table
 
     }
 
+    /// <summary>
+    /// <see cref="InMemoryWindows{K, V}"/> is a child class of <see cref="Materialized{K, V, S}"/>. 
+    /// It's a class helper for materialize <see cref="IKTable{K, V}"/> with an <see cref="InMemoryTimestampedWindowStoreSupplier"/>
+    /// </summary>
+    /// <typeparam name="K">Type of key</typeparam>
+    /// <typeparam name="V">type of value</typeparam>
+    public class InMemoryWindows<K, V> : Materialized<K, V, WindowStore<Bytes, byte[]>>
+    {
+        /// <summary>
+        /// Protected constructor with state store name and supplier
+        /// </summary>
+        /// <param name="name">State store name for query it</param>
+        /// <param name="supplier">Supplier use to build the state store</param>
+        protected InMemoryWindows(string name, StoreSupplier<WindowStore<Bytes, byte[]>> supplier)
+            : base(name, supplier)
+        {
+
+        }
+
+        /// <summary>
+        /// Materialize a <see cref="InMemoryWindowStore"/> with the given name.
+        /// </summary>
+        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
+        /// <param name="windowSize">the windows size aggregation</param>
+        /// <returns>a new <see cref="InMemoryWindows{K, V}"/> instance with the given storeName and windows size</returns>
+        public static InMemoryWindows<K, V> @As(string storeName, TimeSpan windowSize)
+            => new InMemoryWindows<K, V>(storeName, new InMemoryTimestampedWindowStoreSupplier(storeName, TimeSpan.FromDays(1), (long)windowSize.TotalMilliseconds));
+
+        /// <summary>
+        /// Materialize a <see cref="InMemoryWindowStore"/> with the given name.
+        /// </summary>
+        /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
+        /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
+        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
+        /// <param name="windowSize">the windows size aggregation</param>
+        /// <returns>a new <see cref="InMemoryWindows{K, V}"/> instance with the given storeName</returns>
+        public static InMemoryWindows<K, V> @As<KS, VS>(string storeName, TimeSpan windowSize)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+        {
+            var m = new InMemoryWindows<K, V>(storeName, new InMemoryTimestampedWindowStoreSupplier(storeName, TimeSpan.FromDays(1), (long)windowSize.TotalMilliseconds))
+            {
+                KeySerdes = new KS(),
+                ValueSerdes = new VS()
+            };
+            return m;
+        }
+
+    }
+
     #endregion
 }

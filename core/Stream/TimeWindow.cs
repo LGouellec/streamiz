@@ -10,8 +10,6 @@ namespace Streamiz.Kafka.Net.Stream
         }
 
         public override bool Overlap(Window other)
-        {
-            throw new NotImplementedException();
-        }
+            => other is TimeWindow && StartMs < ((TimeWindow)other).EndMs && ((TimeWindow)other).StartMs < EndMs;
     }
 }

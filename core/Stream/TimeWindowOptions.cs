@@ -5,18 +5,23 @@ namespace Streamiz.Kafka.Net.Stream
 {
     public class TimeWindowOptions : WindowOptions<TimeWindow>
     {
-        private readonly long advanceMs;
+        public static readonly long DEFAULT_RETENTION_MS = 24 * 60 * 60 * 1000L; // one day
 
-        public TimeWindowOptions(long sizeMs, long advanceMs)
+        private readonly long advanceMs;
+        private readonly long graceMs;
+        private readonly long maintainDurationMs;
+
+        public TimeWindowOptions(long sizeMs, long advanceMs, long graceMs, long maintainDurationMs)
         {
             Size = sizeMs;
             this.advanceMs = advanceMs;
-            GracePeriodMs = sizeMs;
+            this.graceMs = this.graceMs;
+            this.maintainDurationMs = maintainDurationMs;
         }
 
         public override long Size { get; }
 
-        public override long GracePeriodMs { get; }
+        public override long GracePeriodMs => graceMs != -1 ? graceMs : maintainDurationMs - Size;
 
         public override IDictionary<long, TimeWindow> WindowsFor(long timestamp)
         {
@@ -32,7 +37,7 @@ namespace Streamiz.Kafka.Net.Stream
         }
 
         public static TimeWindowOptions Of(long sizeMs)
-            => new TimeWindowOptions(sizeMs, sizeMs);
+            => new TimeWindowOptions(sizeMs, sizeMs, -1, DEFAULT_RETENTION_MS);
 
         public static TimeWindowOptions Of(TimeSpan size)
             => Of((long)size.TotalMilliseconds);
