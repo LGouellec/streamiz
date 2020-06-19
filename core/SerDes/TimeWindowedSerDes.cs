@@ -6,7 +6,7 @@ using System.IO;
 
 namespace Streamiz.Kafka.Net.SerDes
 {
-    internal class TimeWindowedSerDes<T> : AbstractSerDes<Windowed<T>>
+    public class TimeWindowedSerDes<T> : AbstractSerDes<Windowed<T>>
     {
         private readonly ISerDes<T> innerSerdes;
         private readonly long windowSize;
