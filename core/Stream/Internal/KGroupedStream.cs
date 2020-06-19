@@ -13,7 +13,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 {
     internal class KGroupedStream
     {
-        //static string REDUCE_NAME = "KSTREAM-REDUCE-";
+        internal static readonly string REDUCE_NAME = "KSTREAM-REDUCE-";
         internal static readonly string AGGREGATE_NAME = "KSTREAM-AGGREGATE-";
     }
 

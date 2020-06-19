@@ -48,58 +48,90 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         #region Aggregate
 
         public IKTable<Windowed<K>, VR> Aggregate<VR>(Func<VR> initializer, Func<K, V, VR, VR> aggregator)
-        {
-            throw new NotImplementedException();
-        }
+            => Aggregate(new WrappedInitializer<VR>(initializer), new WrappedAggregator<K, V, VR>(aggregator));
 
         public IKTable<Windowed<K>, VR> Aggregate<VR>(Initializer<VR> initializer, Aggregator<K, V, VR> aggregator)
-        {
-            throw new NotImplementedException();
-        }
+            => Aggregate(initializer, aggregator, null);
 
         public IKTable<Windowed<K>, VR> Aggregate<VR, VRS>(Func<VR> initializer, Func<K, V, VR, VR> aggregator) where VRS : ISerDes<VR>, new()
-        {
-            throw new NotImplementedException();
-        }
+            => Aggregate<VR, VRS>(new WrappedInitializer<VR>(initializer), new WrappedAggregator<K, V, VR>(aggregator));
 
         public IKTable<Windowed<K>, VR> Aggregate<VR, VRS>(Initializer<VR> initializer, Aggregator<K, V, VR> aggregator) where VRS : ISerDes<VR>, new()
         {
-            throw new NotImplementedException();
+            var materialized = Materialized<K, VR, WindowStore<Bytes, byte[]>>.Create().WithValueSerdes(new VRS()).WithKeySerdes(KeySerdes);
+            return Aggregate(initializer, aggregator, materialized);
         }
 
         public IKTable<Windowed<K>, VR> Aggregate<VR>(Func<VR> initializer, Func<K, V, VR, VR> aggregator, Materialized<K, VR, WindowStore<Bytes, byte[]>> materialized, string named = null)
-        {
-            throw new NotImplementedException();
-        }
+            => Aggregate(new WrappedInitializer<VR>(initializer), new WrappedAggregator<K, V, VR>(aggregator), materialized);
 
         public IKTable<Windowed<K>, VR> Aggregate<VR>(Initializer<VR> initializer, Aggregator<K, V, VR> aggregator, Materialized<K, VR, WindowStore<Bytes, byte[]>> materialized, string named = null)
         {
-            throw new NotImplementedException();
+            materialized = materialized ?? Materialized<K, VR, WindowStore<Bytes, byte[]>>.Create();
+
+            if (materialized.KeySerdes == null)
+                materialized.WithKeySerdes(KeySerdes);
+
+            string name = new Named(named).OrElseGenerateWithPrefix(builder, KGroupedStream.AGGREGATE_NAME);
+            materialized.UseProvider(builder, KGroupedStream.AGGREGATE_NAME);
+
+            var aggSupplier = new KStreamWindowAggregate<K, V, VR, W>(
+                windowOptions,
+                materialized.StoreName,
+                initializer,
+                aggregator);
+
+            ISerDes<Windowed<K>> windowSerdes = materialized.KeySerdes != null ? new TimeWindowedSerDes<K>(materialized.KeySerdes, windowOptions.Size) : null;
+
+            return aggBuilder.BuildWindow(name,
+                                    new TimestampedWindowStoreMaterializer<K, VR, W>(windowOptions, materialized).Materialize(),
+                                    aggSupplier,
+                                    materialized.QueryableStoreName,
+                                    windowSerdes,
+                                    materialized.ValueSerdes);
         }
 
         #endregion
 
         #region Reduce
 
-        public IKTable<K, V> Reduce(Reducer<V> reducer)
+        public IKTable<Windowed<K>, V> Reduce(Reducer<V> reducer)
+            => Reduce(reducer, null);
+
+        public IKTable<Windowed<K>, V> Reduce(Func<V, V, V> reducer)
+            => Reduce(new WrappedReducer<V>(reducer));
+
+        public IKTable<Windowed<K>, V> Reduce(Reducer<V> reducer, Materialized<K, V, WindowStore<Bytes, byte[]>> materialized, string named = null)
         {
-            throw new NotImplementedException();
+            materialized = materialized ?? Materialized<K, V, WindowStore<Bytes, byte[]>>.Create();
+
+            if (materialized.KeySerdes == null)
+                materialized.WithKeySerdes(KeySerdes);
+
+            if (materialized.ValueSerdes == null)
+                materialized.WithValueSerdes(ValueSerdes);
+
+            string name = new Named(named).OrElseGenerateWithPrefix(builder, KGroupedStream.REDUCE_NAME);
+            materialized.UseProvider(builder, KGroupedStream.REDUCE_NAME);
+
+            var aggSupplier = new KStreamWindowAggregate<K, V, V, W>(
+                windowOptions,
+                materialized.StoreName,
+                () => default,
+                (aggKey, value, agg) => agg == null ? value : reducer.Apply(agg, value));
+
+            ISerDes<Windowed<K>> windowSerdes = materialized.KeySerdes != null ? new TimeWindowedSerDes<K>(materialized.KeySerdes, windowOptions.Size) : null;
+
+            return aggBuilder.BuildWindow(name,
+                                    new TimestampedWindowStoreMaterializer<K, V, W>(windowOptions, materialized).Materialize(),
+                                    aggSupplier,
+                                    materialized.QueryableStoreName,
+                                    windowSerdes,
+                                    materialized.ValueSerdes);
         }
 
-        public IKTable<K, V> Reduce(Func<V, V, V> reducer)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IKTable<K, V> Reduce(Reducer<V> reducer, Materialized<K, V, WindowStore<Bytes, byte[]>> materialized, string named = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IKTable<K, V> Reduce(Func<V, V, V> reducer, Materialized<K, V, WindowStore<Bytes, byte[]>> materialized, string named = null)
-        {
-            throw new NotImplementedException();
-        }
+        public IKTable<Windowed<K>, V> Reduce(Func<V, V, V> reducer, Materialized<K, V, WindowStore<Bytes, byte[]>> materialized, string named = null)
+            => Reduce(new WrappedReducer<V>(reducer), materialized);
 
 
         #endregion

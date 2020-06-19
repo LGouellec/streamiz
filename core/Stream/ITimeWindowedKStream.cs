@@ -21,9 +21,9 @@ namespace Streamiz.Kafka.Net.Stream
         IKTable<Windowed<K>, VR> Aggregate<VR>(Func<VR> initializer, Func<K, V, VR, VR> aggregator, Materialized<K, VR, WindowStore<Bytes, byte[]>> materialized, string named = null);
         IKTable<Windowed<K>, VR> Aggregate<VR>(Initializer<VR> initializer, Aggregator<K, V, VR> aggregator, Materialized<K, VR, WindowStore<Bytes, byte[]>> materialized, string named = null);
 
-        IKTable<K, V> Reduce(Reducer<V> reducer);
-        IKTable<K, V> Reduce(Func<V, V, V> reducer);
-        IKTable<K, V> Reduce(Reducer<V> reducer, Materialized<K, V, WindowStore<Bytes, byte[]>> materialized, string named = null);
-        IKTable<K, V> Reduce(Func<V, V, V> reducer, Materialized<K, V, WindowStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<Windowed<K>, V> Reduce(Reducer<V> reducer);
+        IKTable<Windowed<K>, V> Reduce(Func<V, V, V> reducer);
+        IKTable<Windowed<K>, V> Reduce(Reducer<V> reducer, Materialized<K, V, WindowStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<Windowed<K>, V> Reduce(Func<V, V, V> reducer, Materialized<K, V, WindowStore<Bytes, byte[]>> materialized, string named = null);
     }
 }
