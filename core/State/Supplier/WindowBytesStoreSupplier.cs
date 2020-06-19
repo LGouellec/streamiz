@@ -7,6 +7,6 @@ namespace Streamiz.Kafka.Net.State.Supplier
     /// </summary>
     public interface WindowBytesStoreSupplier : StoreSupplier<WindowStore<Bytes, byte[]>>
     {
-        public long WindowSize { get; }
+        public long? WindowSize { get; set; }
     }
 }

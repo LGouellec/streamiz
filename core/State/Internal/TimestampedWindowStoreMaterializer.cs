@@ -22,7 +22,7 @@ namespace Streamiz.Kafka.Net.State.Internal
         public StoreBuilder<TimestampedWindowStore<K, V>> Materialize()
         {
             WindowBytesStoreSupplier supplier = (WindowBytesStoreSupplier)materializedInternal.StoreSupplier;
-            if(supplier == null)
+            if (supplier == null)
             {
                 if (windowsOptions.Size + windowsOptions.GracePeriodMs > materializedInternal.Retention.TotalMilliseconds)
                     throw new ArgumentException($"The retention period of the window store { materializedInternal.StoreName } must be no smaller than its window size plus the grace period. Got size=[{windowsOptions.Size}], grace=[{windowsOptions.GracePeriodMs}], retention=[{materializedInternal.Retention.TotalMilliseconds}].");
@@ -33,6 +33,8 @@ namespace Streamiz.Kafka.Net.State.Internal
                     materializedInternal.Retention,
                     windowsOptions.Size);
             }
+            else
+                supplier.WindowSize = !supplier.WindowSize.HasValue ? windowsOptions.Size : supplier.WindowSize.Value;
 
             var builder = Stores.TimestampedWindowStoreBuilder(supplier, materializedInternal.KeySerdes, materializedInternal.ValueSerdes);
 

@@ -529,8 +529,8 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
         /// <param name="windowSize">the windows size aggregation</param>
         /// <returns>a new <see cref="InMemoryWindows{K, V}"/> instance with the given storeName and windows size</returns>
-        public static InMemoryWindows<K, V> @As(string storeName, TimeSpan windowSize)
-            => new InMemoryWindows<K, V>(storeName, new InMemoryTimestampedWindowStoreSupplier(storeName, TimeSpan.FromDays(1), (long)windowSize.TotalMilliseconds));
+        public static InMemoryWindows<K, V> @As(string storeName, TimeSpan? windowSize = null)
+            => new InMemoryWindows<K, V>(storeName, new InMemoryTimestampedWindowStoreSupplier(storeName, TimeSpan.FromDays(1), windowSize.HasValue ? (long)windowSize.Value.TotalMilliseconds : (long?)null));
 
         /// <summary>
         /// Materialize a <see cref="InMemoryWindowStore"/> with the given name.
@@ -540,11 +540,11 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
         /// <param name="windowSize">the windows size aggregation</param>
         /// <returns>a new <see cref="InMemoryWindows{K, V}"/> instance with the given storeName</returns>
-        public static InMemoryWindows<K, V> @As<KS, VS>(string storeName, TimeSpan windowSize)
+        public static InMemoryWindows<K, V> @As<KS, VS>(string storeName, TimeSpan? windowSize)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
-            var m = new InMemoryWindows<K, V>(storeName, new InMemoryTimestampedWindowStoreSupplier(storeName, TimeSpan.FromDays(1), (long)windowSize.TotalMilliseconds))
+            var m = new InMemoryWindows<K, V>(storeName, new InMemoryTimestampedWindowStoreSupplier(storeName, TimeSpan.FromDays(1), windowSize.HasValue ? (long)windowSize.Value.TotalMilliseconds : (long?)null))
             {
                 KeySerdes = new KS(),
                 ValueSerdes = new VS()

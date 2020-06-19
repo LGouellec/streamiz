@@ -35,14 +35,14 @@ namespace Streamiz.Kafka.Net.State.InMemory
                 //if (next != null)
                 //    return true;
 
-                if (valueIterator == null || (valueIndexIt >= valueIterator.Count && indexIt >= iterator.Count))
+                if (valueIterator != null && valueIndexIt >= valueIterator.Count && indexIt >= iterator.Count)
                     return false;
 
                 next = Next;
                 if (next == null)
                     return false;
 
-                if (next.Value.Key.Equals(keyFrom) || next.Value.Key.Equals(keyTo))
+                if ((keyFrom == null && keyTo == null) || (next.Value.Key.Equals(keyFrom) || next.Value.Key.Equals(keyTo)))
                     return true;
                 else
                 {
@@ -87,7 +87,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         public void Close()
         {
             iterator.Clear();
-            valueIterator.Clear();
+            valueIterator?.Clear();
             closingCallback.Invoke(this);
         }
 
@@ -102,6 +102,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
                 return null;
 
             var current = iterator[indexIt];
+            ++indexIt;
             CurrentTime = current.Key;
 
             if (allKeys)
@@ -199,7 +200,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
         private readonly ConcurrentDictionary<long, ConcurrentDictionary<Bytes, byte[]>> map =
             new ConcurrentDictionary<long, ConcurrentDictionary<Bytes, byte[]>>();
-
+        
         private readonly ISet<InMemoryWindowStoreIteratorWrapper> openIterators = new HashSet<InMemoryWindowStoreIteratorWrapper>();
 
         private readonly ILog logger = Logger.GetLogger(typeof(InMemoryWindowStore));
@@ -229,8 +230,8 @@ namespace Streamiz.Kafka.Net.State.InMemory
             if (openIterators.Count != 0)
             {
                 logger.Warn($"Closing {openIterators.Count} open iterators for store {Name}");
-                foreach (var it in openIterators)
-                    it.Close();
+                for (int i = 0; i< openIterators.Count; ++i)
+                    openIterators.ElementAt(i).Close();
             }
 
             map.Clear();
@@ -363,7 +364,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
             => map.Where(kv => time1 >= kv.Key && time2 <= kv.Key).ToList();
 
         private List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> Tail(long time)
-            => map.Where(kv => kv.Key < time).ToList();
+            => map.Where(kv => kv.Key > time).ToList();
 
         private IWindowStoreEnumerator<byte[]> CreateNewWindowStoreIterator(Bytes key, List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> enumerator)
         {

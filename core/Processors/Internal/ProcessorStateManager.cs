@@ -101,7 +101,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             log.Debug($"{logPrefix}Closing its state manager and all the registered state stores");
 
-            foreach (var state in registeredStores)
+            foreach( var state in registeredStores)
             {
                 log.Debug($"{logPrefix}Closing storage engine {state.Key}");
                 state.Value.Close();

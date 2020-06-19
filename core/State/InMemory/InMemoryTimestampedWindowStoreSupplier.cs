@@ -8,7 +8,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
     {
         private readonly TimeSpan retention;
 
-        public InMemoryTimestampedWindowStoreSupplier(string storeName, TimeSpan retention, long size)
+        public InMemoryTimestampedWindowStoreSupplier(string storeName, TimeSpan retention, long? size)
         {
             Name = storeName;
             this.retention = retention;
@@ -17,9 +17,9 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
         public string Name { get; }
 
-        public long WindowSize { get; }
+        public long? WindowSize { get; set; }
 
         public WindowStore<Bytes, byte[]> Get()
-            => new InMemoryWindowStore(Name, retention, WindowSize);
+            => new InMemoryWindowStore(Name, retention, WindowSize.Value);
     }
 }

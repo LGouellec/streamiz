@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
         public override TimestampedWindowStore<K, V> Build()
         {
             var store = supplier.Get();
-            return new TimestampedWindowStoreImpl<K, V>(store, supplier.WindowSize, keySerdes, valueSerdes);
+            return new TimestampedWindowStoreImpl<K, V>(store, supplier.WindowSize.Value, keySerdes, valueSerdes);
         }
     }
 }
