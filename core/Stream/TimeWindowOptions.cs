@@ -15,7 +15,7 @@ namespace Streamiz.Kafka.Net.Stream
         {
             Size = sizeMs;
             this.advanceMs = advanceMs;
-            this.graceMs = this.graceMs;
+            this.graceMs = graceMs;
             this.maintainDurationMs = maintainDurationMs;
         }
 

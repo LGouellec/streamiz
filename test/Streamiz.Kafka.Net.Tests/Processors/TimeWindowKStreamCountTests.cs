@@ -340,6 +340,5 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 Assert.AreEqual(1, elements[1].Value);
             }
         }
-
     }
 }

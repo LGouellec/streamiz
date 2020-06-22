@@ -32,13 +32,10 @@ namespace Streamiz.Kafka.Net.State.InMemory
         {
             get
             {
-                //if (next != null)
-                //    return true;
-
                 if (valueIterator != null && valueIndexIt >= valueIterator.Count && indexIt >= iterator.Count)
                     return false;
 
-                next = Next;
+                next = CalculateNext();
                 if (next == null)
                     return false;
 
@@ -52,23 +49,20 @@ namespace Streamiz.Kafka.Net.State.InMemory
             }
         }
 
-        protected KeyValuePair<Bytes, byte[]>? Next
+        protected KeyValuePair<Bytes, byte[]>? CalculateNext()
         {
-            get
+            while (valueIterator == null || valueIndexIt >= valueIterator.Count)
             {
-                while (valueIterator == null || valueIndexIt >= valueIterator.Count)
-                {
-                    valueIterator = SetRecordIterator();
-                    if (valueIterator == null)
-                        return null;
-                    else
-                        valueIndexIt = 0;
-                }
-
-                var e = valueIterator[valueIndexIt];
-                ++valueIndexIt;
-                return e;
+                valueIterator = SetRecordIterator();
+                if (valueIterator == null)
+                    return null;
+                else
+                    valueIndexIt = 0;
             }
+
+            var e = valueIterator[valueIndexIt];
+            ++valueIndexIt;
+            return e;
         }
 
         public InMemoryWindowStoreIteratorWrapper(
