@@ -361,10 +361,10 @@ namespace Streamiz.Kafka.Net.State.InMemory
         }
 
         private List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> SubMap(long time1, long time2)
-            => map.Where(kv => time1 >= kv.Key && time2 <= kv.Key).ToList();
+            => map.Where(kv => time1 >= kv.Key && time2 <= kv.Key).OrderBy(kp => kp.Key).ToList();
 
         private List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> Tail(long time)
-            => map.Where(kv => kv.Key > time).ToList();
+            => map.Where(kv => kv.Key > time).OrderBy(kp => kp.Key).ToList();
 
         private IWindowStoreEnumerator<byte[]> CreateNewWindowStoreIterator(Bytes key, List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> enumerator)
         {
