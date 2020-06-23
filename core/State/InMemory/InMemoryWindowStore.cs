@@ -26,12 +26,18 @@ namespace Streamiz.Kafka.Net.State.InMemory
         protected int valueIndexIt = 0;
         protected KeyValuePair<Bytes, byte[]>? next;
 
+        private bool disposed = false;
+
         public long CurrentTime { get; private set; }
 
         public bool HasNext
         {
             get
             {
+                if (disposed)
+                    throw new ObjectDisposedException("Enumerator was disposed");
+
+
                 if (valueIterator != null && valueIndexIt >= valueIterator.Count && indexIt >= iterator.Count)
                     return false;
 
@@ -51,6 +57,10 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
         protected KeyValuePair<Bytes, byte[]>? CalculateNext()
         {
+            if (disposed)
+                throw new ObjectDisposedException("Enumerator was disposed");
+
+
             while (valueIterator == null || valueIndexIt >= valueIterator.Count)
             {
                 valueIterator = SetRecordIterator();
@@ -80,9 +90,15 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
         public void Close()
         {
-            iterator.Clear();
-            valueIterator?.Clear();
-            closingCallback.Invoke(this);
+            if (!disposed)
+            {
+                iterator.Clear();
+                valueIterator?.Clear();
+                closingCallback.Invoke(this);
+                disposed = true;
+            }
+            else
+                throw new ObjectDisposedException("Enumerator was disposed");
         }
 
         public void RemoveExpiredData(long time)
@@ -107,6 +123,9 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
         protected void Reset()
         {
+            if(disposed)
+                throw new ObjectDisposedException("Enumerator was disposed");
+
             indexIt = 0;
             valueIndexIt = 0;
             next = null;
@@ -355,7 +374,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         }
 
         private List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> SubMap(long time1, long time2)
-            => map.Where(kv => time1 >= kv.Key && time2 <= kv.Key).OrderBy(kp => kp.Key).ToList();
+            => map.Where(kv => time1 <= kv.Key && time2 >= kv.Key).OrderBy(kp => kp.Key).ToList();
 
         private List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> Tail(long time)
             => map.Where(kv => kv.Key > time).OrderBy(kp => kp.Key).ToList();

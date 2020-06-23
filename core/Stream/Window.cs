@@ -11,6 +11,8 @@ namespace Streamiz.Kafka.Net.Stream
         public DateTime StartTime { get; private set; }
         public DateTime EndTime { get; private set; }
 
+        public TimeSpan TotalTime => EndTime - StartTime;
+
         public Window(long startMs, long endMs)
         {
             if (startMs < 0)
