@@ -8,6 +8,7 @@ using Streamiz.Kafka.Net.Crosscutting;
 using System;
 using System.Globalization;
 using Streamiz.Kafka.Net.State;
+using System.Text;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -32,6 +33,18 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var context = new ProcessorContext(new StreamConfig(), stateManager);
             wrapped.Init(context, inmemorystore);
             Assert.Throws<StreamsException>(() => wrapped.Put("coucou", 120, 1300));
+        }
+
+        [Test]
+        public void TestWithUnknwonSerdes2()
+        {
+            wrapped = new WrappedWindowStore<string, int>(inmemorystore, 1000 * 2, null, null);
+            var id = new TaskId { Id = 0, Topic = "test", Partition = 0 };
+            var stateManager = new ProcessorStateManager(id, new Confluent.Kafka.TopicPartition("test", 0));
+            var context = new ProcessorContext(new StreamConfig(), stateManager);
+            wrapped.Init(context, inmemorystore);
+            inmemorystore.Put(new Bytes(Encoding.UTF8.GetBytes("test")), BitConverter.GetBytes(100), 300);
+            Assert.Throws<StreamsException>(() => wrapped.Fetch("test", 300));
         }
 
         [Test]

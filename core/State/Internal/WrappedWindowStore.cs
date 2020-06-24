@@ -58,14 +58,6 @@ namespace Streamiz.Kafka.Net.State.Internal
                 throw new StreamsException($"The serializer is not compatible to the actual value (Value type: {typeof(V).FullName}). Change the default Serdes in StreamConfig or provide correct Serdes via method parameters(using the DSL)");
         }
 
-        private K FromKey(Bytes key)
-        {
-            if (keySerdes != null)
-                return keySerdes.Deserialize(key.Get);
-            else
-                throw new StreamsException($"The serializer is not compatible to the actual key (Key type: {typeof(K).FullName}). Change the default Serdes in StreamConfig or provide correct Serdes via method parameters(using the DSL)");
-        }
-
         public V Fetch(K key, long time)
             => FromValue(wrapped.Fetch(GetKeyBytes(key), time));
 
