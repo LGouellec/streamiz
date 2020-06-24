@@ -27,5 +27,11 @@ namespace Streamiz.Kafka.Net.Processors
         /// Return a collection of header of the current record
         /// </summary>
         Headers Headers { get; }
+
+        /// <summary>
+        /// Change current timestamp
+        /// </summary>
+        /// <param name="ts">new timestamp</param>
+        void ChangeTimestamp(long ts);
     }
 }

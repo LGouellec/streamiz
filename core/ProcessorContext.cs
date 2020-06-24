@@ -55,7 +55,12 @@ namespace Streamiz.Kafka.Net
 
         internal void SetRecordMetaData(ConsumeResult<byte[], byte[]> result)
         {
-            this.RecordContext = new RecordContext(result);
+            RecordContext = new RecordContext(result);
+        }
+
+        internal void ChangeTimestamp(long ts)
+        {
+            RecordContext.ChangeTimestamp(ts);
         }
 
         internal IStateStore GetStateStore(string storeName) => States.GetStore(storeName);

@@ -3,9 +3,9 @@ using System;
 
 namespace Producer
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var producerConfig = new ProducerConfig
             {
@@ -16,8 +16,9 @@ namespace Producer
                 SaslUsername = "admin",
                 SecurityProtocol = SecurityProtocol.SaslPlaintext
             };
-            var topic = "test";
+            var topic = args.Length > 0 ? args[0] : "test";
             var builder = new ProducerBuilder<String, String>(producerConfig);
+            Console.WriteLine($"Writting in {topic} topic");
             Console.WriteLine("Enter exit for stopping producer, or enter KEY:VALUE");
             using (var producer = builder.Build())
             {

@@ -26,25 +26,53 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             this.node = node;
         }
 
-        internal IKTable<K, T> Build<T>(
+        internal IKTable<K, VR> Build<VR>(
             string functionName,
-            StoreBuilder<TimestampedKeyValueStore<K, T>> storeBuilder,
-            IKStreamAggProcessorSupplier<K, K, V, T> aggregateSupplier,
+            StoreBuilder<TimestampedKeyValueStore<K, VR>> storeBuilder,
+            IKStreamAggProcessorSupplier<K, K, V, VR> aggregateSupplier,
             string queryableStoreName,
             ISerDes<K> keySerdes,
-            ISerDes<T> valueSerdes)
+            ISerDes<VR> valueSerdes)
         {
             // if repartition required TODO
             // ELSE
-            StatefulProcessorNode<K, V, TimestampedKeyValueStore<K, T>> statefulProcessorNode =
-               new StatefulProcessorNode<K, V, TimestampedKeyValueStore<K, T>>(
+            StatefulProcessorNode<K, V, TimestampedKeyValueStore<K, VR>> statefulProcessorNode =
+               new StatefulProcessorNode<K, V, TimestampedKeyValueStore<K, VR>>(
                    functionName,
                    new ProcessorParameters<K, V>(aggregateSupplier, functionName),
                    storeBuilder);
 
             builder.AddGraphNode(node, statefulProcessorNode);
 
-            return new KTable<K, V, T>(functionName,
+            return new KTable<K, V, VR>(functionName,
+                                    keySerdes,
+                                    valueSerdes,
+                                    sourceNodes,
+                                    queryableStoreName,
+                                    aggregateSupplier,
+                                    statefulProcessorNode,
+                                    builder);
+        }
+
+        internal IKTable<KR, VR> BuildWindow<KR, VR>(
+            string functionName,
+            StoreBuilder<TimestampedWindowStore<K, VR>> storeBuilder,
+            IKStreamAggProcessorSupplier<K, KR, V, VR> aggregateSupplier,
+            string queryableStoreName,
+            ISerDes<KR> keySerdes,
+            ISerDes<VR> valueSerdes)
+        {
+            // if repartition required TODO
+            // ELSE
+            StatefulProcessorNode<K, V, TimestampedWindowStore<K, VR>> statefulProcessorNode =
+               new StatefulProcessorNode<K, V, TimestampedWindowStore<K, VR>>(
+                   functionName,
+                   new ProcessorParameters<K, V>(aggregateSupplier, functionName),
+                   storeBuilder);
+
+            builder.AddGraphNode(node, statefulProcessorNode);
+
+            return new KTableGrouped<K, KR, V, VR>(functionName,
                                     keySerdes,
                                     valueSerdes,
                                     sourceNodes,

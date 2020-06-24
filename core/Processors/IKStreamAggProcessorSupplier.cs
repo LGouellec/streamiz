@@ -6,11 +6,12 @@ namespace Streamiz.Kafka.Net.Processors
     internal interface IKStreamAggProcessorSupplier<K, V>
     {
         IKTableValueGetterSupplier<K, V> View();
+        void EnableSendingOldValues();
     }
 
     internal interface IKStreamAggProcessorSupplier<K, RK, V, T> : 
         IProcessorSupplier<K, V>, IKStreamAggProcessorSupplier<RK, T>
     {
-        void EnableSendingOldValues();
+        new void EnableSendingOldValues();
     }
 }

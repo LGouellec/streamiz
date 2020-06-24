@@ -13,7 +13,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 {
     internal class KGroupedStream
     {
-        //static string REDUCE_NAME = "KSTREAM-REDUCE-";
+        internal static readonly string REDUCE_NAME = "KSTREAM-REDUCE-";
         internal static readonly string AGGREGATE_NAME = "KSTREAM-AGGREGATE-";
     }
 
@@ -124,6 +124,22 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                     name,
                     materialized
             );
+        }
+
+        #endregion
+
+        #region Windows
+        public ITimeWindowedKStream<K, V> WindowedBy<W>(WindowOptions<W> options) where W : Window
+        {
+            return new TimeWindowedKStream<K, V, W>(
+                options,
+                aggregateBuilder,
+                NameNode,
+                KeySerdes,
+                ValueSerdes,
+                SetSourceNodes,
+                Node,
+                builder);   
         }
 
         #endregion

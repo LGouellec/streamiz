@@ -18,5 +18,15 @@ namespace Streamiz.Kafka.Net.Crosscutting
         {
             return (long)((dt.ToUniversalTime() - Jan1St1970).TotalMilliseconds);
         }
+
+        /// <summary>
+        /// Return an instance of <see cref="DateTime"/> using milliseconds from the epoch of 1970-01-01T00:00:00Z.
+        /// </summary>
+        /// <param name="epoch">the number of milliseconds from 1970-01-01T00:00:00Z</param>
+        /// <returns>a datetime</returns>
+        public static DateTime FromMilliseconds(this long epoch)
+        {
+            return Jan1St1970.AddMilliseconds(epoch);
+        }
     }
 }

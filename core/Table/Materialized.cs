@@ -4,7 +4,6 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.InMemory;
 using Streamiz.Kafka.Net.State.Supplier;
-using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
@@ -52,7 +51,8 @@ namespace Streamiz.Kafka.Net.Table
         protected Materialized(string storeName, StoreSupplier<S> storeSupplier)
         {
             this.storeName = storeName;
-            this.StoreSupplier = storeSupplier;
+            StoreSupplier = storeSupplier;
+            retention = TimeSpan.FromDays(1);
         }
 
         /// <summary>
@@ -60,8 +60,8 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         /// <param name="storeSupplier">Supplier use to build the state store</param>
         protected Materialized(StoreSupplier<S> storeSupplier)
+            : this(null, storeSupplier)
         {
-            this.StoreSupplier = storeSupplier;
         }
 
         /// <summary>
@@ -69,8 +69,8 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         /// <param name="storeName">State store name for query it</param>
         protected Materialized(string storeName)
+            : this(storeName, null)
         {
-            this.storeName = storeName;
         }
 
         /// <summary>
@@ -78,15 +78,16 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         /// <param name="materialized">Materialized to copy</param>
         protected Materialized(Materialized<K, V, S> materialized)
+             : this(materialized.StoreName, materialized.StoreSupplier)
         {
-            this.StoreSupplier = materialized.StoreSupplier;
-            this.storeName = materialized.storeName;
-            this.KeySerdes = materialized.KeySerdes;
-            this.ValueSerdes = materialized.ValueSerdes;
-            this.LoggingEnabled = materialized.LoggingEnabled;
-            this.CachingEnabled = materialized.CachingEnabled;
-            this.TopicConfig = materialized.TopicConfig;
-            this.retention = materialized.retention;
+            StoreSupplier = materialized.StoreSupplier;
+            storeName = materialized.storeName;
+            KeySerdes = materialized.KeySerdes;
+            ValueSerdes = materialized.ValueSerdes;
+            LoggingEnabled = materialized.LoggingEnabled;
+            CachingEnabled = materialized.CachingEnabled;
+            TopicConfig = materialized.TopicConfig;
+            retention = materialized.retention;
         }
 
         #endregion
@@ -149,9 +150,9 @@ namespace Streamiz.Kafka.Net.Table
         /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
         /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance</returns>
-        public static Materialized<K, V, S> Create<KS, VS>() 
+        public static Materialized<K, V, S> Create<KS, VS>()
             where KS : ISerDes<K>, new()
-            where VS : ISerDes<V>, new() 
+            where VS : ISerDes<V>, new()
             => Create<KS, VS>(string.Empty);
 
         /// <summary>
@@ -161,7 +162,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given storeName</returns>
-        public static Materialized<K, V, S> Create<KS, VS>(string storeName) 
+        public static Materialized<K, V, S> Create<KS, VS>(string storeName)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
@@ -242,7 +243,7 @@ namespace Streamiz.Kafka.Net.Table
         /// Topic configuration
         /// </summary>
         public IDictionary<string, string> TopicConfig { get; protected set; }
-        
+
         /// <summary>
         /// Is logging enabled
         /// </summary>
@@ -279,7 +280,7 @@ namespace Streamiz.Kafka.Net.Table
         public string QueryableStoreName => queriable ? StoreName : null;
 
         /// <summary>
-        /// Retention configuration
+        /// Retention configuration (default : one day)
         /// </summary>
         public TimeSpan Retention => retention;
 
@@ -295,7 +296,7 @@ namespace Streamiz.Kafka.Net.Table
         public Materialized<K, V, S> WithLoggingEnabled(IDictionary<string, string> config)
         {
             LoggingEnabled = true;
-            this.TopicConfig = config;
+            TopicConfig = config;
             return this;
         }
 
@@ -306,7 +307,7 @@ namespace Streamiz.Kafka.Net.Table
         public Materialized<K, V, S> WithLoggingDisabled()
         {
             LoggingEnabled = false;
-            this.TopicConfig?.Clear();
+            TopicConfig?.Clear();
             return this;
         }
 
@@ -440,10 +441,10 @@ namespace Streamiz.Kafka.Net.Table
 
         internal Materialized<K, V, S> InitConsumed(ConsumedInternal<K, V> consumed)
         {
-            if (this.KeySerdes == null)
-                this.KeySerdes = consumed.KeySerdes;
-            if (this.ValueSerdes == null)
-                this.ValueSerdes = consumed.ValueSerdes;
+            if (KeySerdes == null)
+                KeySerdes = consumed.KeySerdes;
+            if (ValueSerdes == null)
+                ValueSerdes = consumed.ValueSerdes;
 
             return this;
         }
@@ -468,7 +469,7 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         /// <param name="name">State store name for query it</param>
         /// <param name="supplier">Supplier use to build the state store</param>
-        protected InMemory(string name, StoreSupplier<IKeyValueStore<Bytes, byte[]>> supplier) 
+        protected InMemory(string name, StoreSupplier<IKeyValueStore<Bytes, byte[]>> supplier)
             : base(name, supplier)
         {
 
@@ -479,7 +480,7 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
         /// <returns>a new <see cref="InMemory{K, V}"/> instance with the given storeName</returns>
-        public static InMemory<K, V> @As(string storeName) 
+        public static InMemory<K, V> @As(string storeName)
             => new InMemory<K, V>(storeName, new InMemoryKeyValueBytesStoreSupplier(storeName));
 
         /// <summary>
@@ -500,7 +501,57 @@ namespace Streamiz.Kafka.Net.Table
             };
             return m;
         }
-    
+
+    }
+
+    /// <summary>
+    /// <see cref="InMemoryWindows{K, V}"/> is a child class of <see cref="Materialized{K, V, S}"/>. 
+    /// It's a class helper for materialize <see cref="IKTable{K, V}"/> with an <see cref="InMemoryTimestampedWindowStoreSupplier"/>
+    /// </summary>
+    /// <typeparam name="K">Type of key</typeparam>
+    /// <typeparam name="V">type of value</typeparam>
+    public class InMemoryWindows<K, V> : Materialized<K, V, WindowStore<Bytes, byte[]>>
+    {
+        /// <summary>
+        /// Protected constructor with state store name and supplier
+        /// </summary>
+        /// <param name="name">State store name for query it</param>
+        /// <param name="supplier">Supplier use to build the state store</param>
+        protected InMemoryWindows(string name, StoreSupplier<WindowStore<Bytes, byte[]>> supplier)
+            : base(name, supplier)
+        {
+
+        }
+
+        /// <summary>
+        /// Materialize a <see cref="InMemoryWindowStore"/> with the given name.
+        /// </summary>
+        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
+        /// <param name="windowSize">the windows size aggregation</param>
+        /// <returns>a new <see cref="InMemoryWindows{K, V}"/> instance with the given storeName and windows size</returns>
+        public static InMemoryWindows<K, V> @As(string storeName, TimeSpan? windowSize = null)
+            => new InMemoryWindows<K, V>(storeName, new InMemoryTimestampedWindowStoreSupplier(storeName, TimeSpan.FromDays(1), windowSize.HasValue ? (long)windowSize.Value.TotalMilliseconds : (long?)null));
+
+        /// <summary>
+        /// Materialize a <see cref="InMemoryWindowStore"/> with the given name.
+        /// </summary>
+        /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
+        /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
+        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
+        /// <param name="windowSize">the windows size aggregation</param>
+        /// <returns>a new <see cref="InMemoryWindows{K, V}"/> instance with the given storeName</returns>
+        public static InMemoryWindows<K, V> @As<KS, VS>(string storeName, TimeSpan? windowSize)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+        {
+            var m = new InMemoryWindows<K, V>(storeName, new InMemoryTimestampedWindowStoreSupplier(storeName, TimeSpan.FromDays(1), windowSize.HasValue ? (long)windowSize.Value.TotalMilliseconds : (long?)null))
+            {
+                KeySerdes = new KS(),
+                ValueSerdes = new VS()
+            };
+            return m;
+        }
+
     }
 
     #endregion

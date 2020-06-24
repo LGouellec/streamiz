@@ -9,10 +9,12 @@ using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 
 namespace Streamiz.Kafka.Net.Tests.TestDriver
 {
+    // TODO : Refactor for WindowStore tests
     public class ClusterInMemoryTopologyDriverTests
     {
         [Test]
@@ -169,5 +171,6 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             source.Cancel();
             driver.Dispose();
         }
+      
     }
 }

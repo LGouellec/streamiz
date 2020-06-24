@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Streamiz.Kafka.Net.Crosscutting;
+﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.State.InMemory;
 using Streamiz.Kafka.Net.State.Supplier;
 using Streamiz.Kafka.Net.Table;
+using System;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
@@ -14,7 +12,7 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public TimestampedKeyValueStoreMaterializer(Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materializedInternal)
         {
-            this.materialized = materializedInternal;
+            materialized = materializedInternal;
         }
 
         public StoreBuilder<TimestampedKeyValueStore<K, V>> Materialize()
@@ -22,13 +20,12 @@ namespace Streamiz.Kafka.Net.State.Internal
             KeyValueBytesStoreSupplier supplier = (KeyValueBytesStoreSupplier)materialized.StoreSupplier;
             if (supplier == null)
             {
-                String name = materialized.StoreName;
                 // TODO : RocksDB
                 //supplier = Stores.persistentTimestampedKeyValueStore(name);
-                supplier = new InMemoryKeyValueBytesStoreSupplier(name);
+                supplier = new InMemoryKeyValueBytesStoreSupplier(materialized.StoreName);
             }
 
-            StoreBuilder<TimestampedKeyValueStore< K, V >> builder = Stores.TimestampedKeyValueStoreBuilder(
+            StoreBuilder<TimestampedKeyValueStore<K, V>> builder = Stores.TimestampedKeyValueStoreBuilder(
                  supplier,
                  materialized.KeySerdes,
                  materialized.ValueSerdes);
@@ -46,7 +43,7 @@ namespace Streamiz.Kafka.Net.State.Internal
             {
                 builder.WithCachingEnabled();
             }
-            
+
             return builder;
         }
     }

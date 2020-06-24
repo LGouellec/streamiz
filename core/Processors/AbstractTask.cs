@@ -45,7 +45,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public ICollection<TopicPartition> ChangelogPartitions { get; internal set; }
 
-        public bool HasStateStores => false;
+        public bool HasStateStores => !(Topology.StateStores.Count == 0);
 
         public string ApplicationId => configuration.ApplicationId;
 

@@ -51,5 +51,24 @@ namespace Streamiz.Kafka.Net.Processors
             if (!Previous.Contains(prev) && prev != null)
                 Previous.Add(prev);
         }
+
+        public void Forward<K1, V1>(K1 key, V1 value)
+        {
+            foreach (var n in Next)
+                if(n is IProcessor<K1, V1>)
+                    n.Process(key, value);
+        }
+
+        public void Forward<K1, V1>(K1 key, V1 value, string name)
+        {
+            foreach (var n in Next)
+                if (n is IProcessor<K1, V1> && n.Name.Equals(name))
+                    n.Process(key, value);
+        }
+
+        public void Forward<K1, V1>(K1 key, V1 value, long ts)
+        {
+            Forward(key, value);
+        }
     }
 }

@@ -15,7 +15,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// <param name="name">Name of this state store supplier. This must be a valid Kafka topic name; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
         public InMemoryKeyValueBytesStoreSupplier(string name)
         {
-            this.Name = name;
+            Name = name;
         }
 
         /// <summary>
@@ -27,6 +27,6 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// Return a new <see cref="IStateStore"/> instance.
         /// </summary>
         /// <returns>Return a new <see cref="InMemoryKeyValueStore"/>instance.</returns>
-        public IKeyValueStore<Bytes, byte[]> Get() => new InMemoryKeyValueStore(this.Name);
+        public IKeyValueStore<Bytes, byte[]> Get() => new InMemoryKeyValueStore(Name);
     }
 }

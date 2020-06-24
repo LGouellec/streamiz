@@ -15,6 +15,9 @@ namespace Streamiz.Kafka.Net.Processors
         void AddNextProcessor(IProcessor next);
         void Close();
         void Process(object key, object value);
+        void Forward<K1, V1>(K1 key, V1 value);
+        void Forward<K1, V1>(K1 key, V1 value, string name);
+        void Forward<K1, V1>(K1 key, V1 value, long ts);
     }
 
     internal interface IProcessor<K,V> : IProcessor
@@ -24,7 +27,5 @@ namespace Streamiz.Kafka.Net.Processors
         void Process(K key, V value);
         void Forward(K key, V value);
         void Forward(K key, V value, string name);
-        void Forward<K1, V1>(K1 key, V1 value);
-        void Forward<K1, V1>(K1 key, V1 value, string name);
     }
 }

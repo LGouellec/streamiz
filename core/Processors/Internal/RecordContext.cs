@@ -18,12 +18,17 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public long Offset { get; }
 
-        public long Timestamp { get; }
+        public long Timestamp { get; private set; }
 
         public string Topic { get; }
 
         public int Partition { get; }
 
         public Headers Headers { get; }
+
+        public void ChangeTimestamp(long ts)
+        {
+            Timestamp = ts;
+        }
     }
 }
