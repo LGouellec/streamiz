@@ -8,15 +8,17 @@ using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.InMemory;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using System;
 using System.Linq;
 using System.Threading;
 
+
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
-    public class TimeWindowKStreamCountTests
+    public class TimeWindowKStreamAggTests
     {
         internal class StringTimeWindowedSerDes : TimeWindowedSerDes<string>
         {
@@ -37,13 +39,16 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             config.ApplicationId = "test-window-count";
 
             var builder = new StreamBuilder();
-            Materialized<string, long, WindowStore<Bytes, byte[]>> m = null;
+            Materialized<string, int, WindowStore<Bytes, byte[]>> m = null;
 
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
                 .WindowedBy(TimeWindowOptions.Of(2000))
-                .Count(m);
+                .Aggregate(
+                        () => 0,
+                        (k, v, agg) => Math.Max(v.Length, agg),
+                        m);
 
             var topology = builder.Build();
             var processorTopology = topology.Builder.BuildTopology("topic");
@@ -64,16 +69,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 supplier,
                 null);
             task.GroupMetadata = consumer as SyncConsumer;
-            task.InitializeStateStores();
-            task.InitializeTopology();
-
-            Assert.AreEqual(1, task.Context.States.StateStoreNames.Count());
-            var nameStore = task.Context.States.StateStoreNames.ElementAt(0);
-            Assert.IsNotNull(nameStore);
-            Assert.AreNotEqual(string.Empty, nameStore);
-            var store = task.GetStore(nameStore);
-            Assert.IsInstanceOf<TimestampedWindowStore<string, long>>(store);
-            Assert.AreEqual(0, (store as TimestampedWindowStore<string, long>).All().ToList().Count);
+            Assert.Throws<StreamsException>(() => task.InitializeStateStores());
         }
 
         [Test]
@@ -85,38 +81,36 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var builder = new StreamBuilder();
 
-            Materialized<string, long, WindowStore<Bytes, byte[]>> m =
-                Materialized<string, long, WindowStore<Bytes, byte[]>>
+            Materialized<string, int, WindowStore<Bytes, byte[]>> m =
+                Materialized<string, int, WindowStore<Bytes, byte[]>>
                     .Create("count-store")
                     .With(null, null);
 
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromSeconds(5)))
-                .Count(m)
+                .WindowedBy(TimeWindowOptions.Of(2000))
+                .Aggregate(
+                        () => 0,
+                        (k, v, agg) => Math.Max(v.Length, agg),
+                        m)
                 .ToStream()
-                .To<StringTimeWindowedSerDes, Int64SerDes>("output-topic");
+                .To("output-topic");
 
             var topology = builder.Build();
-            using (var driver = new TopologyTestDriver(topology, config))
+            Assert.Throws<StreamsException>(() =>
             {
-                var input = driver.CreateInputTopic<string, string>("topic");
-                var output = driver.CreateOuputTopic("output-topic", TimeSpan.FromSeconds(1), new StringTimeWindowedSerDes(), new Int64SerDes());
-                input.PipeInput("test", "1");
-                input.PipeInput("test-test", "30");
-                var records = output.ReadKeyValueList().ToList();
-                Assert.AreEqual(2, records.Count);
-                Assert.AreEqual("test", records[0].Message.Key.Key);
-                Assert.AreEqual(1, records[0].Message.Value);
-                Assert.AreEqual("test-test", records[1].Message.Key.Key);
-                Assert.AreEqual(1, records[1].Message.Value);
-                Assert.AreEqual(records[0].Message.Key.Window, records[1].Message.Key.Window);
-            }
+                using (var driver = new TopologyTestDriver(topology, config))
+                {
+                    var input = driver.CreateInputTopic<string, string>("topic");
+                    var output = driver.CreateOuputTopic("output-topic", TimeSpan.FromSeconds(1), new StringTimeWindowedSerDes(), new Int64SerDes());
+                    input.PipeInput("test", "1");
+                }
+            });
         }
 
         [Test]
-        public void TimeWindowingCount()
+        public void TimeWindowingAgg()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-window-stream";
@@ -125,19 +119,21 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromSeconds(10)))
-                .Count()
+                .WindowedBy(TimeWindowOptions.Of(2000))
+                .Aggregate<int, Int32SerDes>(
+                        () => 0,
+                        (k, v, agg) => Math.Max(v.Length, agg))
                 .ToStream()
-                .To<StringTimeWindowedSerDes, Int64SerDes>("output");
+                .To<StringTimeWindowedSerDes, Int32SerDes>("output");
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
             {
                 var input = driver.CreateInputTopic<string, string>("topic");
-                var output = driver.CreateOuputTopic("output", TimeSpan.FromSeconds(1), new StringTimeWindowedSerDes(), new Int64SerDes());
+                var output = driver.CreateOuputTopic("output", TimeSpan.FromSeconds(1), new StringTimeWindowedSerDes(), new Int32SerDes());
                 input.PipeInput("test", "1");
-                input.PipeInput("test", "2");
-                input.PipeInput("test", "3");
+                input.PipeInput("test", "230");
+                input.PipeInput("test", "32");
                 var elements = output.ReadKeyValueList().ToList();
                 Assert.AreEqual(3, elements.Count);
                 Assert.AreEqual("test", elements[0].Message.Key.Key);
@@ -145,15 +141,16 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 Assert.AreEqual(1, elements[0].Message.Value);
                 Assert.AreEqual("test", elements[1].Message.Key.Key);
                 Assert.AreEqual(elements[0].Message.Key.Window, elements[1].Message.Key.Window);
-                Assert.AreEqual(2, elements[1].Message.Value);
+                Assert.AreEqual(3, elements[1].Message.Value);
                 Assert.AreEqual("test", elements[2].Message.Key.Key);
                 Assert.AreEqual(elements[0].Message.Key.Window, elements[2].Message.Key.Window);
                 Assert.AreEqual(3, elements[2].Message.Value);
             }
         }
 
+
         [Test]
-        public void TimeWindowingCountWithName()
+        public void TimeWindowingAggWithMaterialize()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-window-stream";
@@ -162,19 +159,22 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromSeconds(10)))
-                .Count("count-01")
+                .WindowedBy(TimeWindowOptions.Of(2000))
+                .Aggregate(
+                        () => 0,
+                        (k, v, agg) => Math.Max(v.Length, agg),
+                        InMemoryWindows<string, int>.As("store").WithValueSerdes<Int32SerDes>())
                 .ToStream()
-                .To<StringTimeWindowedSerDes, Int64SerDes>("output");
+                .To<StringTimeWindowedSerDes, Int32SerDes>("output");
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
             {
                 var input = driver.CreateInputTopic<string, string>("topic");
-                var output = driver.CreateOuputTopic("output", TimeSpan.FromSeconds(1), new StringTimeWindowedSerDes(), new Int64SerDes());
+                var output = driver.CreateOuputTopic("output", TimeSpan.FromSeconds(1), new StringTimeWindowedSerDes(), new Int32SerDes());
                 input.PipeInput("test", "1");
-                input.PipeInput("test", "2");
-                input.PipeInput("test", "3");
+                input.PipeInput("test", "230");
+                input.PipeInput("test", "32");
                 var elements = output.ReadKeyValueList().ToList();
                 Assert.AreEqual(3, elements.Count);
                 Assert.AreEqual("test", elements[0].Message.Key.Key);
@@ -182,7 +182,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 Assert.AreEqual(1, elements[0].Message.Value);
                 Assert.AreEqual("test", elements[1].Message.Key.Key);
                 Assert.AreEqual(elements[0].Message.Key.Window, elements[1].Message.Key.Window);
-                Assert.AreEqual(2, elements[1].Message.Value);
+                Assert.AreEqual(3, elements[1].Message.Value);
                 Assert.AreEqual("test", elements[2].Message.Key.Key);
                 Assert.AreEqual(elements[0].Message.Key.Window, elements[2].Message.Key.Window);
                 Assert.AreEqual(3, elements[2].Message.Value);
@@ -190,7 +190,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
 
         [Test]
-        public void TimeWindowingCountWithMaterialize()
+        public void TimeWindowingAggKeySerdesUnknow()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-window-stream";
@@ -199,45 +199,11 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromSeconds(10)))
-                .Count(Materialized<string, long, WindowStore<Bytes, byte[]>>.Create("count-store"))
-                .ToStream()
-                .To<StringTimeWindowedSerDes, Int64SerDes>("output");
-
-            var topology = builder.Build();
-            using (var driver = new TopologyTestDriver(topology, config))
-            {
-                var input = driver.CreateInputTopic<string, string>("topic");
-                var output = driver.CreateOuputTopic("output", TimeSpan.FromSeconds(1), new StringTimeWindowedSerDes(), new Int64SerDes());
-                input.PipeInput("test", "1");
-                input.PipeInput("test", "2");
-                input.PipeInput("test", "3");
-                var elements = output.ReadKeyValueList().ToList();
-                Assert.AreEqual(3, elements.Count);
-                Assert.AreEqual("test", elements[0].Message.Key.Key);
-                Assert.AreEqual((long)TimeSpan.FromSeconds(10).TotalMilliseconds, elements[0].Message.Key.Window.EndMs - elements[0].Message.Key.Window.StartMs);
-                Assert.AreEqual(1, elements[0].Message.Value);
-                Assert.AreEqual("test", elements[1].Message.Key.Key);
-                Assert.AreEqual(elements[0].Message.Key.Window, elements[1].Message.Key.Window);
-                Assert.AreEqual(2, elements[1].Message.Value);
-                Assert.AreEqual("test", elements[2].Message.Key.Key);
-                Assert.AreEqual(elements[0].Message.Key.Window, elements[2].Message.Key.Window);
-                Assert.AreEqual(3, elements[2].Message.Value);
-            }
-        }
-
-        [Test]
-        public void TimeWindowingCountKeySerdesUnknow()
-        {
-            var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-window-stream";
-
-            var builder = new StreamBuilder();
-            builder
-                .Stream<string, string>("topic")
-                .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromSeconds(10)))
-                .Count(Materialized<string, long, WindowStore<Bytes, byte[]>>.Create("count-store"))
+                .WindowedBy(TimeWindowOptions.Of(2000))
+                .Aggregate(
+                        () => 0,
+                        (k, v, agg) => Math.Max(v.Length, agg),
+                        InMemoryWindows<string, int>.As("store").WithValueSerdes<Int32SerDes>())
                 .ToStream()
                 .To("output");
 
@@ -253,7 +219,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
 
         [Test]
-        public void TimeWindowingCountNothing()
+        public void TimeWindowingAggNothing()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-window-stream";
@@ -262,10 +228,13 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromSeconds(1)))
-                .Count()
+                .WindowedBy(TimeWindowOptions.Of(2000))
+                .Aggregate(
+                        () => 0,
+                        (k, v, agg) => Math.Max(v.Length, agg),
+                        InMemoryWindows<string, int>.As("store").WithValueSerdes<Int32SerDes>())
                 .ToStream()
-                .To<StringTimeWindowedSerDes, Int64SerDes>("output");
+                .To<StringTimeWindowedSerDes, Int32SerDes>("output");
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
@@ -288,22 +257,25 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromSeconds(10)))
-                .Count(InMemoryWindows<string, long>.As("count-store"));
+                .WindowedBy(TimeWindowOptions.Of(2000))
+                .Aggregate(
+                        () => 0,
+                        (k, v, agg) => Math.Max(v.Length, agg),
+                        InMemoryWindows<string, int>.As("store").WithValueSerdes<Int32SerDes>());
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
             {
                 var input = driver.CreateInputTopic<string, string>("topic");
                 input.PipeInput("test", "1");
-                input.PipeInput("test", "2");
-                input.PipeInput("test", "3");
-                var store = driver.GetWindowStore<string, long>("count-store");
+                input.PipeInput("test", "2567");
+                input.PipeInput("test", "32");
+                var store = driver.GetWindowStore<string, int>("store");
                 var elements = store.All().ToList();
                 Assert.AreEqual(1, elements.Count);
                 Assert.AreEqual("test", elements[0].Key.Key);
-                Assert.AreEqual((long)TimeSpan.FromSeconds(10).TotalMilliseconds, elements[0].Key.Window.EndMs - elements[0].Key.Window.StartMs);
-                Assert.AreEqual(3, elements[0].Value);
+                Assert.AreEqual((long)TimeSpan.FromSeconds(2).TotalMilliseconds, elements[0].Key.Window.EndMs - elements[0].Key.Window.StartMs);
+                Assert.AreEqual(4, elements[0].Value);
             }
         }
 
@@ -318,8 +290,11 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromSeconds(5)))
-                .Count(InMemoryWindows<string, long>.As("count-store"));
+                .WindowedBy(TimeWindowOptions.Of(2000))
+                .Aggregate(
+                        () => 0,
+                        (k, v, agg) => Math.Max(v.Length, agg),
+                        InMemoryWindows<string, int>.As("store").WithValueSerdes<Int32SerDes>());
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
@@ -327,18 +302,19 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 DateTime dt = DateTime.Now;
                 var input = driver.CreateInputTopic<string, string>("topic");
                 input.PipeInput("test", "1", dt);
-                input.PipeInput("test", "2", dt);
+                input.PipeInput("test", "2300", dt);
                 input.PipeInput("test", "3", dt.AddMinutes(1));
-                var store = driver.GetWindowStore<string, long>("count-store");
+                var store = driver.GetWindowStore<string, int>("store");
                 var elements = store.All().ToList();
                 Assert.AreEqual(2, elements.Count);
                 Assert.AreEqual("test", elements[0].Key.Key);
-                Assert.AreEqual((long)TimeSpan.FromSeconds(5).TotalMilliseconds, elements[0].Key.Window.EndMs - elements[0].Key.Window.StartMs);
-                Assert.AreEqual(2, elements[0].Value);
+                Assert.AreEqual((long)TimeSpan.FromSeconds(2).TotalMilliseconds, elements[0].Key.Window.EndMs - elements[0].Key.Window.StartMs);
+                Assert.AreEqual(4, elements[0].Value);
                 Assert.AreEqual("test", elements[1].Key.Key);
-                Assert.AreEqual((long)TimeSpan.FromSeconds(5).TotalMilliseconds, elements[1].Key.Window.EndMs - elements[1].Key.Window.StartMs);
+                Assert.AreEqual((long)TimeSpan.FromSeconds(2).TotalMilliseconds, elements[1].Key.Window.EndMs - elements[1].Key.Window.StartMs);
                 Assert.AreEqual(1, elements[1].Value);
             }
         }
+
     }
 }

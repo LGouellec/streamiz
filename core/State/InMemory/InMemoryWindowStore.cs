@@ -26,7 +26,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         protected int valueIndexIt = 0;
         protected KeyValuePair<Bytes, byte[]>? next;
 
-        private bool disposed = false;
+        protected bool disposed = false;
 
         public long CurrentTime { get; private set; }
 
@@ -140,7 +140,16 @@ namespace Streamiz.Kafka.Net.State.InMemory
         {
         }
 
-        public KeyValuePair<long, byte[]> Current => next.HasValue ? new KeyValuePair<long, byte[]>(CurrentTime, next.Value.Value) : default;
+        public KeyValuePair<long, byte[]> Current
+        {
+            get
+            {
+                if (disposed)
+                    throw new ObjectDisposedException("Enumerator was disposed");
+
+                return next.HasValue ? new KeyValuePair<long, byte[]>(CurrentTime, next.Value.Value) : default;
+            }
+        }
 
         object IEnumerator.Current => Current;
 
@@ -170,6 +179,9 @@ namespace Streamiz.Kafka.Net.State.InMemory
         {
             get
             {
+                if (disposed)
+                    throw new ObjectDisposedException("Enumerator was disposed");
+
                 if (next.HasValue)
                 {
                     return new KeyValuePair<Windowed<Bytes>, byte[]>(GetWindowedKey(), next.Value.Value);
