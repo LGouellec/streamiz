@@ -42,7 +42,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(2000))
+                .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Count(m);
 
             var topology = builder.Build();
@@ -93,7 +93,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromSeconds(5)))
+                .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(5)))
                 .Count(m)
                 .ToStream()
                 .To<StringTimeWindowedSerDes, Int64SerDes>("output-topic");
@@ -125,7 +125,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromSeconds(10)))
+                .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(10)))
                 .Count()
                 .ToStream()
                 .To<StringTimeWindowedSerDes, Int64SerDes>("output");
@@ -162,7 +162,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromSeconds(10)))
+                .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(10)))
                 .Count("count-01")
                 .ToStream()
                 .To<StringTimeWindowedSerDes, Int64SerDes>("output");
@@ -199,7 +199,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromSeconds(10)))
+                .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(10)))
                 .Count(Materialized<string, long, WindowStore<Bytes, byte[]>>.Create("count-store"))
                 .ToStream()
                 .To<StringTimeWindowedSerDes, Int64SerDes>("output");
@@ -236,7 +236,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromSeconds(10)))
+                .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(10)))
                 .Count(Materialized<string, long, WindowStore<Bytes, byte[]>>.Create("count-store"))
                 .ToStream()
                 .To("output");
@@ -262,7 +262,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromSeconds(1)))
+                .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(1)))
                 .Count()
                 .ToStream()
                 .To<StringTimeWindowedSerDes, Int64SerDes>("output");
@@ -288,7 +288,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromSeconds(10)))
+                .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(10)))
                 .Count(InMemoryWindows<string, long>.As("count-store"));
 
             var topology = builder.Build();
@@ -318,7 +318,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromSeconds(5)))
+                .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(5)))
                 .Count(InMemoryWindows<string, long>.As("count-store"));
 
             var topology = builder.Build();

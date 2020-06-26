@@ -23,7 +23,7 @@ namespace sample_test_driver
             var table = builder
                             .Stream<string, string>("test")
                             .GroupByKey()
-                            .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromSeconds(10)))
+                            .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(10)))
                             .Count(InMemoryWindows<string, long>.As("count-store"));
 
             Topology t = builder.Build();

@@ -31,7 +31,7 @@ namespace sample_stream
 
             builder.Stream<string, string>("test")
                     .GroupByKey()
-                    .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromMinutes(1)))
+                    .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
                     .Count(InMemoryWindows<string, long>.As("store"))
                     .ToStream()
                     .Map((k, v) => KeyValuePair.Create(k.Key, v.ToString()))

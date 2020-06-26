@@ -40,7 +40,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(2000))
+                .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Reduce((v1, v2) => v1.Length > v2.Length ? v1 : v2);
 
             var topology = builder.Build();
@@ -82,7 +82,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(2000))
+                .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Reduce((v1, v2) => v1.Length > v2.Length ? v1 : v2, m)
                 .ToStream()
                 .To("output-topic");
@@ -109,7 +109,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(2000))
+                .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Reduce((v1, v2) => v1.Length > v2.Length ? v1 : v2)
                 .ToStream()
                 .To<StringTimeWindowedSerDes, StringSerDes>("output");
@@ -146,7 +146,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(2000))
+                .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Reduce(
                     (v1, v2) => v1.Length > v2.Length ? v1 : v2,
                     InMemoryWindows<string, string>.As("store"))
@@ -185,7 +185,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(2000))
+                .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Reduce(
                     (v1, v2) => v1.Length > v2.Length ? v1 : v2,
                     InMemoryWindows<string, string>.As("store"))
@@ -213,7 +213,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(2000))
+                .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Reduce(
                     (v1, v2) => v1.Length > v2.Length ? v1 : v2,
                     InMemoryWindows<string, string>.As("store"))
@@ -240,7 +240,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(2000))
+                .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Reduce(
                     (v1, v2) => v1.Length > v2.Length ? v1 : v2,
                     InMemoryWindows<string, string>.As("store"))
@@ -274,7 +274,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(2000))
+                .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Reduce(
                     (v1, v2) => v1.Length > v2.Length ? v1 : v2,
                     InMemoryWindows<string, string>.As("store"));

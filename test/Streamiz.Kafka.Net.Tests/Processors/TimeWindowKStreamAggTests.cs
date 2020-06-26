@@ -44,7 +44,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(2000))
+                .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Aggregate(
                         () => 0,
                         (k, v, agg) => Math.Max(v.Length, agg),
@@ -89,7 +89,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(2000))
+                .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Aggregate(
                         () => 0,
                         (k, v, agg) => Math.Max(v.Length, agg),
@@ -119,7 +119,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(2000))
+                .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Aggregate<int, Int32SerDes>(
                         () => 0,
                         (k, v, agg) => Math.Max(v.Length, agg))
@@ -158,7 +158,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(2000))
+                .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Aggregate(
                         () => 0,
                         (k, v, agg) => Math.Max(v.Length, agg),
@@ -198,7 +198,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(2000))
+                .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Aggregate(
                         () => 0,
                         (k, v, agg) => Math.Max(v.Length, agg),
@@ -227,7 +227,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(2000))
+                .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Aggregate(
                         () => 0,
                         (k, v, agg) => Math.Max(v.Length, agg),
@@ -256,7 +256,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(2000))
+                .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Aggregate(
                         () => 0,
                         (k, v, agg) => Math.Max(v.Length, agg),
@@ -289,7 +289,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(2000))
+                .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Aggregate(
                         () => 0,
                         (k, v, agg) => Math.Max(v.Length, agg),

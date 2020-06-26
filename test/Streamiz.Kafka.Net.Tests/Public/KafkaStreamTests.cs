@@ -334,7 +334,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             builder
                 .Stream<string, string>("test")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromMinutes(1)))
+                .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
                 .Count(InMemoryWindows<string, long>.As("store"));
 
             var t = builder.Build();
@@ -388,7 +388,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             builder
                 .Stream<string, string>("test")
                 .GroupByKey()
-                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromMinutes(1)))
+                .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
                 .Count(InMemoryWindows<string, long>.As("store"));
 
             var t = builder.Build();
