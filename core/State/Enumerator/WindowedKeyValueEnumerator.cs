@@ -18,12 +18,15 @@ namespace Streamiz.Kafka.Net.State.Enumerator
             this.valueSerdes = valueSerdes;
         }
 
-        public KeyValuePair<Windowed<K>, V> Current
+        public KeyValuePair<Windowed<K>, V>? Current
         {
             get
             {
                 var next = innerEnumerator.Current;
-                return KeyValuePair.Create(WindowedKey(next.Key), valueSerdes.Deserialize(next.Value));
+                if (next.HasValue)
+                    return KeyValuePair.Create(WindowedKey(next.Value.Key), valueSerdes.Deserialize(next.Value.Value));
+                else
+                    return null;
             }
         }
 

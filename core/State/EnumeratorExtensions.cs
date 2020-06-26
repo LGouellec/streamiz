@@ -13,7 +13,8 @@ namespace Streamiz.Kafka.Net.State
 
             while (enumerator.MoveNext())
             {
-                list.Add(enumerator.Current);
+                if(enumerator.Current.HasValue)
+                    list.Add(enumerator.Current.Value);
             }
 
             enumerator.Dispose();

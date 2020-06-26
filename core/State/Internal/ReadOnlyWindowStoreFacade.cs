@@ -5,21 +5,24 @@ using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
-    internal class WindowStoreIteratorFacade<V> : IWindowStoreEnumerator<V>
+    internal class WindowStoreEnumeratorFacade<V> : IWindowStoreEnumerator<V>
     {
         private IWindowStoreEnumerator<ValueAndTimestamp<V>> windowStoreEnumerator;
 
-        public WindowStoreIteratorFacade(IWindowStoreEnumerator<ValueAndTimestamp<V>> windowStoreEnumerator)
+        public WindowStoreEnumeratorFacade(IWindowStoreEnumerator<ValueAndTimestamp<V>> windowStoreEnumerator)
         {
             this.windowStoreEnumerator = windowStoreEnumerator;
         }
 
-        public KeyValuePair<long, V> Current
+        public KeyValuePair<long, V>? Current
         {
             get
             {
                 var innerValue = windowStoreEnumerator.Current;
-                return new KeyValuePair<long, V>(innerValue.Key, innerValue.Value.Value);
+                if (innerValue.HasValue)
+                    return new KeyValuePair<long, V>(innerValue.Value.Key, innerValue.Value.Value.Value);
+                else
+                    return null;
             }
         }
 
@@ -38,21 +41,24 @@ namespace Streamiz.Kafka.Net.State.Internal
             => windowStoreEnumerator.Reset();
     }
 
-    internal class KeyValueIteratorFacade<K, V> : IKeyValueEnumerator<Windowed<K>, V>
+    internal class KeyValueEnumeratorFacade<K, V> : IKeyValueEnumerator<Windowed<K>, V>
     {
         private IKeyValueEnumerator<Windowed<K>, ValueAndTimestamp<V>> keyValueEnumerator;
 
-        public KeyValueIteratorFacade(IKeyValueEnumerator<Windowed<K>, ValueAndTimestamp<V>> keyValueEnumerator)
+        public KeyValueEnumeratorFacade(IKeyValueEnumerator<Windowed<K>, ValueAndTimestamp<V>> keyValueEnumerator)
         {
             this.keyValueEnumerator = keyValueEnumerator;
         }
 
-        public KeyValuePair<Windowed<K>, V> Current
+        public KeyValuePair<Windowed<K>, V>? Current
         {
             get
             {
                 var innerValue = keyValueEnumerator.Current;
-                return new KeyValuePair<Windowed<K>, V>(innerValue.Key, innerValue.Value != null ? innerValue.Value.Value : default);
+                if (innerValue.HasValue)
+                    return new KeyValuePair<Windowed<K>, V>(innerValue.Value.Key, innerValue.Value.Value != null ? innerValue.Value.Value.Value : default);
+                else
+                    return null;
             }
         }
 
@@ -81,7 +87,7 @@ namespace Streamiz.Kafka.Net.State.Internal
         }
 
         public IKeyValueEnumerator<Windowed<K>, V> All()
-            => new KeyValueIteratorFacade<K, V>(innerStore.All());
+            => new KeyValueEnumeratorFacade<K, V>(innerStore.All());
 
         public V Fetch(K key, long time)
         {
@@ -90,9 +96,9 @@ namespace Streamiz.Kafka.Net.State.Internal
         }
 
         public IWindowStoreEnumerator<V> Fetch(K key, DateTime from, DateTime to)
-            => new WindowStoreIteratorFacade<V>(innerStore.Fetch(key, from, to));
+            => new WindowStoreEnumeratorFacade<V>(innerStore.Fetch(key, from, to));
 
         public IKeyValueEnumerator<Windowed<K>, V> FetchAll(DateTime from, DateTime to)
-            => new KeyValueIteratorFacade<K, V>(innerStore.FetchAll(from, to));
+            => new KeyValueEnumeratorFacade<K, V>(innerStore.FetchAll(from, to));
     }
 }

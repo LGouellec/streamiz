@@ -40,8 +40,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             int i = 0;
             while (enumerator.MoveNext())
             {
-                Assert.AreEqual(date.GetMilliseconds(), enumerator.Current.Key);
-                Assert.AreEqual("value", enumerator.Current.Value);
+                Assert.AreEqual(date.GetMilliseconds(), enumerator.Current.Value.Key);
+                Assert.AreEqual("value", enumerator.Current.Value.Value);
                 ++i;
             }
             Assert.AreEqual(1, i);
@@ -59,15 +59,15 @@ namespace Streamiz.Kafka.Net.Tests.Private
             int i = 0;
             while (enumerator.MoveNext())
             {
-                Assert.AreEqual(date.GetMilliseconds(), enumerator.Current.Key);
-                Assert.AreEqual("value", enumerator.Current.Value);
+                Assert.AreEqual(date.GetMilliseconds(), enumerator.Current.Value.Key);
+                Assert.AreEqual("value", enumerator.Current.Value.Value);
                 ++i;
             }
             Assert.AreEqual(1, i);
             enumerator.Reset();
             Assert.IsTrue(enumerator.MoveNext());
-            Assert.AreEqual(date.GetMilliseconds(), enumerator.Current.Key);
-            Assert.AreEqual("value", enumerator.Current.Value);
+            Assert.AreEqual(date.GetMilliseconds(), enumerator.Current.Value.Key);
+            Assert.AreEqual("value", enumerator.Current.Value.Value);
         }
 
         [Test]

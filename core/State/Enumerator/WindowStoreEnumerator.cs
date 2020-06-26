@@ -17,12 +17,15 @@ namespace Streamiz.Kafka.Net.State.Enumerator
             this.serdes = serdes;
         }
 
-        public KeyValuePair<long, V> Current
+        public KeyValuePair<long, V>? Current
         {
             get
             {
                 var next = innerEnumerator.Current;
-                return KeyValuePair.Create(next.Key, serdes.Deserialize(next.Value));
+                if (next.HasValue)
+                    return KeyValuePair.Create(next.Value.Key, serdes.Deserialize(next.Value.Value));
+                else
+                    return null;
             }
         }
 
@@ -39,6 +42,6 @@ namespace Streamiz.Kafka.Net.State.Enumerator
 
         public void Reset() => innerEnumerator.Reset();
 
-        
+
     }
 }

@@ -183,9 +183,9 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             var date = DateTime.Now;
             var store = new InMemoryWindowStore("store", defaultRetention, (long)defaultSize.TotalMilliseconds);
             var it = store.FetchAll(date.AddDays(-1), date.AddDays(1));
-            Assert.AreEqual(new KeyValuePair<Windowed<Bytes>, byte[]>(null, null), it.Current);
+            Assert.AreEqual(null, it.Current);
             Assert.IsFalse(it.MoveNext());
-            Assert.AreEqual(new KeyValuePair<Windowed<Bytes>, byte[]>(null, null), it.Current);
+            Assert.AreEqual(null, it.Current);
         }
 
         [Test]

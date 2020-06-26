@@ -134,14 +134,14 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 while (!token.IsCancellationRequested)
                 {
+                    if (exception != null)
+                    {
+                        Close(false);
+                        throw exception;
+                    }
+
                     try
                     {
-                        if (exception != null)
-                        {
-                            Close(false);
-                            throw exception;
-                        }
-
                         ConsumeResult<byte[], byte[]> record = null;
 
                         if (State == ThreadState.PARTITIONS_ASSIGNED)

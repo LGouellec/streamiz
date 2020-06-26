@@ -1,12 +1,15 @@
-﻿using NUnit.Framework;
+﻿using Moq;
+using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 
 namespace Streamiz.Kafka.Net.Tests.Public
@@ -151,7 +154,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test";
-config.BootstrapServers = "127.0.0.1";
+            config.BootstrapServers = "127.0.0.1";
 
             var builder = new StreamBuilder();
             builder.Table("topic", InMemory<string, string>.As("store"));
@@ -237,7 +240,7 @@ config.BootstrapServers = "127.0.0.1";
             config.ApplicationId = "test";
             config.BootstrapServers = "127.0.0.1";
             config.PollMs = 10;
-            
+
             var supplier = new SyncKafkaSupplier();
             var producer = supplier.GetProducer(config.ToProducerConfig());
 
@@ -290,7 +293,7 @@ config.BootstrapServers = "127.0.0.1";
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test";
-config.BootstrapServers = "127.0.0.1";
+            config.BootstrapServers = "127.0.0.1";
 
             var builder = new StreamBuilder();
             builder.Table("topic", InMemory<string, string>.As("store"));
@@ -300,6 +303,128 @@ config.BootstrapServers = "127.0.0.1";
             Assert.Throws<IllegalStateException>(() => stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.KeyValueStore<string, string>())));
             source.Cancel();
             stream.Close();
+        }
+
+        [Test]
+        public void GetWindowStateStore()
+        {
+            var timeout = TimeSpan.FromSeconds(10);
+            var source = new CancellationTokenSource();
+            bool isRunningState = false;
+            DateTime dt = DateTime.Now;
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
+            config.BootstrapServers = "127.0.0.1";
+
+            var builder = new StreamBuilder();
+            builder
+                .Stream<string, string>("test")
+                .GroupByKey()
+                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromMinutes(1)))
+                .Count(InMemoryWindows<string, long>.As("store"));
+
+            var t = builder.Build();
+            var stream = new KafkaStream(t, config, new SyncKafkaSupplier());
+
+            stream.StateChanged += (old, @new) =>
+            {
+                if (@new.Equals(KafkaStream.State.RUNNING))
+                    isRunningState = true;
+            };
+            stream.Start(source.Token);
+            while (!isRunningState)
+            {
+                Thread.Sleep(250);
+                if (DateTime.Now > dt + timeout)
+                    break;
+            }
+            Assert.IsTrue(isRunningState);
+
+            if (isRunningState)
+            {
+                var store = stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.WindowStore<string, long>()));
+                Assert.IsNotNull(store);
+            }
+
+            source.Cancel();
+            stream.Close();
+        }
+
+        [Test]
+        public void GetWindowElementInStateStore()
+        {
+            var timeout = TimeSpan.FromSeconds(10);
+            var source = new CancellationTokenSource();
+            bool isRunningState = false;
+            DateTime dt = DateTime.Now;
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
+            config.BootstrapServers = "127.0.0.1";
+            config.PollMs = 10;
+
+            var supplier = new SyncKafkaSupplier();
+            var producer = supplier.GetProducer(config.ToProducerConfig());
+
+            var builder = new StreamBuilder();
+            builder
+                .Stream<string, string>("test")
+                .GroupByKey()
+                .WindowedBy(TimeWindowOptions.Of(TimeSpan.FromMinutes(1)))
+                .Count(InMemoryWindows<string, long>.As("store"));
+
+            var t = builder.Build();
+            var stream = new KafkaStream(t, config, supplier);
+
+            stream.StateChanged += (old, @new) =>
+            {
+                if (@new.Equals(KafkaStream.State.RUNNING))
+                    isRunningState = true;
+            };
+            stream.Start(source.Token);
+            while (!isRunningState)
+            {
+                Thread.Sleep(250);
+                if (DateTime.Now > dt + timeout)
+                    break;
+            }
+            Assert.IsTrue(isRunningState);
+
+            if (isRunningState)
+            {
+                var serdes = new StringSerDes();
+                dt = DateTime.Now;
+                producer.Produce("test",
+                    new Confluent.Kafka.Message<byte[], byte[]>
+                    {
+                        Key = serdes.Serialize("key1"),
+                        Value = serdes.Serialize("coucou"),
+                        Timestamp = new Confluent.Kafka.Timestamp(dt)
+                    });
+                Thread.Sleep(50);
+                var store = stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.WindowStore<string, long>()));
+                Assert.IsNotNull(store);
+                var @enum = store.All();
+                Assert.AreEqual(1, store.All().ToList().Count);
+                var item = store.Fetch("key1", dt.AddMinutes(-1), dt.AddMinutes(1));
+                Assert.IsNotNull(item);
+                Assert.IsTrue(item.MoveNext());
+                Assert.IsTrue(item.Current.HasValue);
+                Assert.AreEqual(1, item.Current.Value.Value);
+                item.Dispose();
+            }
+
+            source.Cancel();
+            stream.Close();
+        }
+
+        [Test]
+        public void GetWindowElementInStateStore2()
+        {
+            List<int> l = new List<int> { 0, 1, 2 };
+            var @enum = l.GetEnumerator();
+
         }
     }
 }

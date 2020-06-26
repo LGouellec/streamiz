@@ -39,7 +39,10 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
 
                 if (valueIterator != null && valueIndexIt >= valueIterator.Count && indexIt >= iterator.Count)
+                {
+                    next = null;
                     return false;
+                }
 
                 next = CalculateNext();
                 if (next == null)
@@ -140,14 +143,17 @@ namespace Streamiz.Kafka.Net.State.InMemory
         {
         }
 
-        public KeyValuePair<long, byte[]> Current
+        public KeyValuePair<long, byte[]>? Current
         {
             get
             {
                 if (disposed)
                     throw new ObjectDisposedException("Enumerator was disposed");
 
-                return next.HasValue ? new KeyValuePair<long, byte[]>(CurrentTime, next.Value.Value) : default;
+                if (next.HasValue)
+                    return new KeyValuePair<long, byte[]>(CurrentTime, next.Value.Value);
+                else
+                    return null;
             }
         }
 
@@ -162,7 +168,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
             throw new NotImplementedException();
         }
 
-        public void Reset() => base.Reset();
+        public new void Reset() => base.Reset();
     }
 
     internal class WrappedWindowedKeyValueIterator : InMemoryWindowStoreIteratorWrapper, IKeyValueEnumerator<Windowed<Bytes>, byte[]>
@@ -175,7 +181,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
             this.windowSize = windowSize;
         }
 
-        public KeyValuePair<Windowed<Bytes>, byte[]> Current
+        public KeyValuePair<Windowed<Bytes>, byte[]>? Current
         {
             get
             {
@@ -188,7 +194,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
                 }
                 else
                 {
-                    return default;
+                    return null;
                 }
             }
         }
@@ -210,7 +216,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
             throw new NotImplementedException();
         }
 
-        public void Reset() => base.Reset();
+        public new void Reset() => base.Reset();
     }
 
     #endregion
@@ -247,7 +253,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         {
             RemoveExpiredData();
             long minTime = observedStreamTime - (long)retention.TotalMilliseconds;
-            return CreateNewWindowedKeyValueIterator(null, null, Tail(minTime));
+            return CreateNewWindowedKeyValueEnumerator(null, null, Tail(minTime));
         }
 
         public void Close()
@@ -290,7 +296,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
                 return null;
             }
 
-            return CreateNewWindowStoreIterator(key, SubMap(minTime, to.GetMilliseconds()));
+            return CreateNewWindowStoreEnumerator(key, SubMap(minTime, to.GetMilliseconds()));
         }
 
         public IKeyValueEnumerator<Windowed<Bytes>, byte[]> FetchAll(DateTime from, DateTime to)
@@ -306,7 +312,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
                 //return KeyValueIterators.emptyIterator();
             }
 
-            return CreateNewWindowedKeyValueIterator(null, null, SubMap(minTime, to.GetMilliseconds()));
+            return CreateNewWindowedKeyValueEnumerator(null, null, SubMap(minTime, to.GetMilliseconds()));
         }
 
         public void Flush()
@@ -391,14 +397,14 @@ namespace Streamiz.Kafka.Net.State.InMemory
         private List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> Tail(long time)
             => map.Where(kv => kv.Key > time).OrderBy(kp => kp.Key).ToList();
 
-        private IWindowStoreEnumerator<byte[]> CreateNewWindowStoreIterator(Bytes key, List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> enumerator)
+        private IWindowStoreEnumerator<byte[]> CreateNewWindowStoreEnumerator(Bytes key, List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> enumerator)
         {
             var it = new WrappedInMemoryWindowStoreIterator(key, key, enumerator, openIterators.Remove);
             openIterators.Add(it);
             return it;
         }
 
-        private WrappedWindowedKeyValueIterator CreateNewWindowedKeyValueIterator(Bytes keyFrom, Bytes keyTo, List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> enumerator)
+        private WrappedWindowedKeyValueIterator CreateNewWindowedKeyValueEnumerator(Bytes keyFrom, Bytes keyTo, List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> enumerator)
         {
             var it =
                   new WrappedWindowedKeyValueIterator(keyFrom,

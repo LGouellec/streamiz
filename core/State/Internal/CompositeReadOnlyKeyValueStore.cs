@@ -1,9 +1,6 @@
 ﻿using Streamiz.Kafka.Net.Errors;
-using Streamiz.Kafka.Net.Processors;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
@@ -26,10 +23,11 @@ namespace Streamiz.Kafka.Net.State.Internal
         {
             // TODO: implement DelegatingPeekingKeyValueIterator
 
-            IEnumerable<ReadOnlyKeyValueStore<K, V>> stores = this.GetAllStores();
+            IEnumerable<ReadOnlyKeyValueStore<K, V>> stores = GetAllStores();
             try
             {
-                return stores.SelectMany(x => {
+                return stores.SelectMany(x =>
+                {
                     return x.All();
                 });
             }
@@ -43,7 +41,7 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public long ApproximateNumEntries()
         {
-            IEnumerable<ReadOnlyKeyValueStore<K, V>> stores = this.GetAllStores();
+            IEnumerable<ReadOnlyKeyValueStore<K, V>> stores = GetAllStores();
             long result = 0;
             foreach (var store in stores)
             {
@@ -58,12 +56,12 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public V Get(K key)
         {
-            IEnumerable<ReadOnlyKeyValueStore<K, V>> stores = this.GetAllStores();
+            IEnumerable<ReadOnlyKeyValueStore<K, V>> stores = GetAllStores();
             try
             {
                 return stores.FirstOrDefault(x => x.Get(key) != null).Get(key);
             }
-            catch(InvalidStateStoreException e)
+            catch (InvalidStateStoreException e)
             {
                 // TODO is there a point in doing this?
                 throw new InvalidStateStoreException("State store is not available anymore and may have " +
@@ -73,7 +71,7 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         private IEnumerable<ReadOnlyKeyValueStore<K, V>> GetAllStores()
         {
-            return this.storeProvider.Stores(this.storeName, this.storeType);
+            return storeProvider.Stores(storeName, storeType);
         }
     }
 }
