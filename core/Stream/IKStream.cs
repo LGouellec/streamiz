@@ -564,11 +564,32 @@ namespace Streamiz.Kafka.Net.Stream
         /// <returns>A <see cref="IKGroupedStream{K, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>
         IKGroupedStream<K, V> GroupByKey<KS, VS>(string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new();
 
-        // IN 0.3 Pre Release
-        //IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner, string named = null)
-        //    where V0S : ISerDes<V0>, new()
-        //    where VRS : ISerDes<VR>, new();
+        /// <summary>
+        /// ALPHA PREVIEW. In pre-release, in beta 0.3
+        /// </summary>
+        /// <typeparam name="V0"></typeparam>
+        /// <typeparam name="VR"></typeparam>
+        /// <typeparam name="V0S"></typeparam>
+        /// <typeparam name="VRS"></typeparam>
+        /// <param name="table"></param>
+        /// <param name="valueJoiner"></param>
+        /// <param name="named"></param>
+        /// <returns></returns>
+        IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner, string named = null)
+            where V0S : ISerDes<V0>, new()
+            where VRS : ISerDes<VR>, new();
 
-        //IKStream<K, VR> Join<K0, V0, VR>(IGlobalKTable<K0, V0> globalTable, Func<K, V, K0> keyMapper,  Func<V, V0, VR> valueJoiner, string named = null);
+        /// <summary>
+        /// ALPHA PREVIEW. In pre-release, in beta 0.3
+        /// </summary>
+        /// <typeparam name="K0"></typeparam>
+        /// <typeparam name="V0"></typeparam>
+        /// <typeparam name="VR"></typeparam>
+        /// <param name="globalTable"></param>
+        /// <param name="keyMapper"></param>
+        /// <param name="valueJoiner"></param>
+        /// <param name="named"></param>
+        /// <returns></returns>
+        IKStream<K, VR> Join<K0, V0, VR>(IGlobalKTable<K0, V0> globalTable, Func<K, V, K0> keyMapper, Func<V, V0, VR> valueJoiner, string named = null);
     }
 }
