@@ -145,7 +145,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             Assert.AreEqual(1, ((TimestampedWindowStore<string, long>)store).All().ToList().Count);
             var it = ((TimestampedWindowStore<string, long>)store).Fetch("coucou", dt.AddSeconds(-5), dt.AddSeconds(5));
             Assert.IsTrue(it.MoveNext());
-            Assert.AreEqual(1, it.Current.Value.Value);
+            Assert.AreEqual(1, it.Current.Value.Value.Value);
             driver.Dispose();
         }
 

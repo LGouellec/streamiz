@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.Errors
         /// </summary>
         /// <param name="innerException">Inner exception</param>
         public StreamsException(Exception innerException) 
-            : this("", innerException)
+            : this(innerException.Message, innerException)
         {
         }
 

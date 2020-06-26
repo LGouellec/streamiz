@@ -9,6 +9,7 @@ namespace Streamiz.Kafka.Net.Processors
         int Id { get; }
         ThreadState State { get; }
         bool IsDisposable { get; }
+        bool ThrowException { get; set; }
         string Name { get; }
         bool IsRunning { get; }
         void Run();

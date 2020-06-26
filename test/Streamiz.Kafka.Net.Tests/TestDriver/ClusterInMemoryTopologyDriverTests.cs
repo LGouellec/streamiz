@@ -48,10 +48,11 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             topicConfiguration.ApplicationId = $"test-driver-{config.ApplicationId}";
 
             var builder = new StreamBuilder();
-            var driver = new ClusterInMemoryTopologyDriver("client", builder.Build().Builder, config, topicConfiguration, TimeSpan.FromSeconds(1), source.Token);
-            Assert.Throws<StreamsException>(() => driver.StartDriver());
+            Assert.Throws<StreamsException>(() => {
+                var driver = new ClusterInMemoryTopologyDriver("client", builder.Build().Builder, config, topicConfiguration, TimeSpan.FromSeconds(1), source.Token);
+                driver.StartDriver();
+            });
             source.Cancel();
-            driver.Dispose();
         }
 
         [Test]

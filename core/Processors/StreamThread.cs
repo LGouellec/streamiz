@@ -123,6 +123,8 @@ namespace Streamiz.Kafka.Net.Processors
 
         public bool IsDisposable { get; private set; } = false;
 
+        public bool ThrowException { get; set; } = true;
+
         public int Id => thread.ManagedThreadId;
 
         public void Dispose() => Close(true);
@@ -137,7 +139,13 @@ namespace Streamiz.Kafka.Net.Processors
                     if (exception != null)
                     {
                         Close(false);
-                        throw exception;
+                        if (ThrowException)
+                            throw new StreamsException(exception);
+                        else
+                        {
+                            IsRunning = false;
+                            break;
+                        }
                     }
 
                     try

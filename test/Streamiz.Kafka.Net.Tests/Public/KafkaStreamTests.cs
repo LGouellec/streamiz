@@ -1,7 +1,5 @@
-﻿using Moq;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
-using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
@@ -9,7 +7,6 @@ using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 
 namespace Streamiz.Kafka.Net.Tests.Public
@@ -130,14 +127,18 @@ namespace Streamiz.Kafka.Net.Tests.Public
             stream.StateChanged += (old, @new) =>
             {
                 if (@new.Equals(KafkaStream.State.RUNNING))
+                {
                     isRunningState = true;
+                }
             };
             stream.Start(source.Token);
             while (!isRunningState)
             {
                 Thread.Sleep(250);
                 if (DateTime.Now > dt + timeout)
+                {
                     break;
+                }
             }
             source.Cancel();
             stream.Close();
@@ -165,14 +166,18 @@ namespace Streamiz.Kafka.Net.Tests.Public
             stream.StateChanged += (old, @new) =>
             {
                 if (@new.Equals(KafkaStream.State.RUNNING))
+                {
                     isRunningState = true;
+                }
             };
             stream.Start(source.Token);
             while (!isRunningState)
             {
                 Thread.Sleep(250);
                 if (DateTime.Now > dt + timeout)
+                {
                     break;
+                }
             }
             Assert.IsTrue(isRunningState);
 
@@ -208,14 +213,18 @@ namespace Streamiz.Kafka.Net.Tests.Public
             stream.StateChanged += (old, @new) =>
             {
                 if (@new.Equals(KafkaStream.State.RUNNING))
+                {
                     isRunningState = true;
+                }
             };
             stream.Start(source.Token);
             while (!isRunningState)
             {
                 Thread.Sleep(250);
                 if (DateTime.Now > dt + timeout)
+                {
                     break;
+                }
             }
             Assert.IsTrue(isRunningState);
 
@@ -253,14 +262,18 @@ namespace Streamiz.Kafka.Net.Tests.Public
             stream.StateChanged += (old, @new) =>
             {
                 if (@new.Equals(KafkaStream.State.RUNNING))
+                {
                     isRunningState = true;
+                }
             };
             stream.Start(source.Token);
             while (!isRunningState)
             {
                 Thread.Sleep(250);
                 if (DateTime.Now > dt + timeout)
+                {
                     break;
+                }
             }
             Assert.IsTrue(isRunningState);
 
@@ -330,14 +343,18 @@ namespace Streamiz.Kafka.Net.Tests.Public
             stream.StateChanged += (old, @new) =>
             {
                 if (@new.Equals(KafkaStream.State.RUNNING))
+                {
                     isRunningState = true;
+                }
             };
             stream.Start(source.Token);
             while (!isRunningState)
             {
                 Thread.Sleep(250);
                 if (DateTime.Now > dt + timeout)
+                {
                     break;
+                }
             }
             Assert.IsTrue(isRunningState);
 
@@ -380,14 +397,18 @@ namespace Streamiz.Kafka.Net.Tests.Public
             stream.StateChanged += (old, @new) =>
             {
                 if (@new.Equals(KafkaStream.State.RUNNING))
+                {
                     isRunningState = true;
+                }
             };
             stream.Start(source.Token);
             while (!isRunningState)
             {
                 Thread.Sleep(250);
                 if (DateTime.Now > dt + timeout)
+                {
                     break;
+                }
             }
             Assert.IsTrue(isRunningState);
 
@@ -417,14 +438,6 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             source.Cancel();
             stream.Close();
-        }
-
-        [Test]
-        public void GetWindowElementInStateStore2()
-        {
-            List<int> l = new List<int> { 0, 1, 2 };
-            var @enum = l.GetEnumerator();
-
         }
     }
 }

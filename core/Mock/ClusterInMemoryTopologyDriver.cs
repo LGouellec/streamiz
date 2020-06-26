@@ -93,7 +93,8 @@ namespace Streamiz.Kafka.Net.Mock
                 if (@new is Processors.ThreadState && ((Processors.ThreadState)@new) == Processors.ThreadState.RUNNING)
                     isRunningState = true;
             };
-
+            
+            threadTopology.ThrowException = false;
             threadTopology.Start(token);
             while (!isRunningState)
             {
