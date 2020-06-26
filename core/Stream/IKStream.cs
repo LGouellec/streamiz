@@ -564,10 +564,11 @@ namespace Streamiz.Kafka.Net.Stream
         /// <returns>A <see cref="IKGroupedStream{K, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>
         IKGroupedStream<K, V> GroupByKey<KS, VS>(string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new();
 
-        IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner, string named = null)
-            where V0S : ISerDes<V0>, new()
-            where VRS : ISerDes<VR>, new();
+        // IN 0.3 Pre Release
+        //IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner, string named = null)
+        //    where V0S : ISerDes<V0>, new()
+        //    where VRS : ISerDes<VR>, new();
 
-        IKStream<K, VR> Join<K0, V0, VR>(IGlobalKTable<K0, V0> globalTable, Func<K, V, K0> keyMapper,  Func<V, V0, VR> valueJoiner, string named = null);
+        //IKStream<K, VR> Join<K0, V0, VR>(IGlobalKTable<K0, V0> globalTable, Func<K, V, K0> keyMapper,  Func<V, V0, VR> valueJoiner, string named = null);
     }
 }
