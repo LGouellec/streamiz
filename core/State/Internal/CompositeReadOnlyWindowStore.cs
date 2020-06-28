@@ -2,7 +2,6 @@
 using Streamiz.Kafka.Net.State.Enumerator;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
@@ -31,11 +30,13 @@ namespace Streamiz.Kafka.Net.State.Internal
             var stores = GetAllStores();
             try
             {
-                foreach(var store in stores)
+                foreach (var store in stores)
                 {
                     var result = store.Fetch(key, time);
                     if (result != null)
+                    {
                         return result;
+                    }
                 }
                 return default;
             }
@@ -56,7 +57,9 @@ namespace Streamiz.Kafka.Net.State.Internal
                 {
                     var it = store.Fetch(key, from, to);
                     if (!it.MoveNext())
+                    {
                         it.Dispose();
+                    }
                     else
                     {
                         it.Reset();
