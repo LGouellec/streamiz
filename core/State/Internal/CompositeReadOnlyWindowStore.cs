@@ -1,5 +1,6 @@
 ﻿using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.State.Enumerator;
+using Streamiz.Kafka.Net.State.InMemory;
 using System;
 using System.Collections.Generic;
 
@@ -66,8 +67,7 @@ namespace Streamiz.Kafka.Net.State.Internal
                         return it;
                     }
                 }
-                // TODO : Empty enumerator
-                return null;
+                return new EmptyWindowStoreIterator<V>();
             }
             catch (InvalidStateStoreException e)
             {

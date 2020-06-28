@@ -97,7 +97,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
             {
                 iterator.Clear();
                 valueIterator?.Clear();
-                closingCallback.Invoke(this);
+                closingCallback?.Invoke(this);
                 disposed = true;
             }
             else
@@ -169,6 +169,13 @@ namespace Streamiz.Kafka.Net.State.InMemory
         }
 
         public new void Reset() => base.Reset();
+
+        public static WrappedInMemoryWindowStoreIterator EmptyIterator()
+        {
+            return new WrappedInMemoryWindowStoreIterator(
+                null, null,
+                new List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>>(), null);
+        }
     }
 
     internal class WrappedWindowedKeyValueIterator : InMemoryWindowStoreIteratorWrapper, IKeyValueEnumerator<Windowed<Bytes>, byte[]>
@@ -291,9 +298,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
             if (to.GetMilliseconds() < minTime)
             {
-                // TODO : empty enumerator
-                //return WrappedInMemoryWindowStoreIterator.emptyIterator();
-                return null;
+                return WrappedInMemoryWindowStoreIterator.EmptyIterator();
             }
 
             return CreateNewWindowStoreEnumerator(key, SubMap(minTime, to.GetMilliseconds()));
@@ -306,10 +311,8 @@ namespace Streamiz.Kafka.Net.State.InMemory
             long minTime = Math.Max(from.GetMilliseconds(), observedStreamTime - (long)retention.TotalMilliseconds + 1);
 
             if (to.GetMilliseconds() < minTime)
-            {
-                return null;
-                // TODO
-                //return KeyValueIterators.emptyIterator();
+            { 
+                return new EmptyKeyValueIterator<Windowed<Bytes>, byte[]>();
             }
 
             return CreateNewWindowedKeyValueEnumerator(null, null, SubMap(minTime, to.GetMilliseconds()));
