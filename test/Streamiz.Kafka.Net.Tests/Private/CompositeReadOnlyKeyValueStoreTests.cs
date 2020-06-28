@@ -50,13 +50,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
         }
         private readonly KeyValueStoreType<string, string> storeType = new KeyValueStoreType<string, string>();
-        private readonly InMemoryKeyValueStore store1 = new InMemoryKeyValueStore("store");
-        private readonly InMemoryKeyValueStore store2 = new InMemoryKeyValueStore("store");
-
 
         [Test]
         public void GetTest()
         {
+            InMemoryKeyValueStore store1 = new InMemoryKeyValueStore("store");
+            InMemoryKeyValueStore store2 = new InMemoryKeyValueStore("store");
             var dt = DateTime.Now.GetMilliseconds();
             var valueSerdes = new ValueAndTimestampSerDes<string>(new StringSerDes());
             var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
@@ -71,6 +70,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void AllTest()
         {
+            InMemoryKeyValueStore store1 = new InMemoryKeyValueStore("store");
+            InMemoryKeyValueStore store2 = new InMemoryKeyValueStore("store");
             var dt = DateTime.Now.GetMilliseconds();
             var valueSerdes = new ValueAndTimestampSerDes<string>(new StringSerDes());
             var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
@@ -89,6 +90,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void CountTest()
         {
+            InMemoryKeyValueStore store1 = new InMemoryKeyValueStore("store");
+            InMemoryKeyValueStore store2 = new InMemoryKeyValueStore("store");
             var dt = DateTime.Now.GetMilliseconds();
             var valueSerdes = new ValueAndTimestampSerDes<string>(new StringSerDes());
             var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
