@@ -2,6 +2,7 @@
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.Enumerator;
 using Streamiz.Kafka.Net.State.InMemory;
 using Streamiz.Kafka.Net.State.Internal;
 using System;

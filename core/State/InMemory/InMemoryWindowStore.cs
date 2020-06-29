@@ -169,13 +169,6 @@ namespace Streamiz.Kafka.Net.State.InMemory
         }
 
         public new void Reset() => base.Reset();
-
-        public static WrappedInMemoryWindowStoreIterator EmptyIterator()
-        {
-            return new WrappedInMemoryWindowStoreIterator(
-                null, null,
-                new List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>>(), null);
-        }
     }
 
     internal class WrappedWindowedKeyValueIterator : InMemoryWindowStoreIteratorWrapper, IKeyValueEnumerator<Windowed<Bytes>, byte[]>
@@ -298,7 +291,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
             if (to.GetMilliseconds() < minTime)
             {
-                return WrappedInMemoryWindowStoreIterator.EmptyIterator();
+                return new EmptyWindowStoreIterator<byte[]>();
             }
 
             return CreateNewWindowStoreEnumerator(key, SubMap(minTime, to.GetMilliseconds()));

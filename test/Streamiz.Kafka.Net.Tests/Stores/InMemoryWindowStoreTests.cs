@@ -7,6 +7,7 @@ using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.Enumerator;
 using Streamiz.Kafka.Net.State.InMemory;
 
 namespace Streamiz.Kafka.Net.Tests.Stores
@@ -211,6 +212,30 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             store.Put(key, value, date.AddSeconds(4).GetMilliseconds());
             var r = it.ToList().Count;
             Assert.AreEqual(0, r);
+        }
+
+        [Test]
+        public void EmptyKeyValueIteratorTest()
+        {
+            var dt = DateTime.Now;
+            var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(1), (long)defaultSize.TotalMilliseconds);
+            var enumerator = store.FetchAll(dt.AddDays(1), dt);
+            Assert.IsAssignableFrom<EmptyKeyValueIterator<Windowed<Bytes>, byte[]>>(enumerator);
+            Assert.IsFalse(enumerator.MoveNext());
+            enumerator.Reset();
+            Assert.AreEqual(0, enumerator.ToList().Count);
+        }
+
+        [Test]
+        public void EmptyWindowStoreIteratorTest()
+        {
+            var dt = DateTime.Now;
+            var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(1), (long)defaultSize.TotalMilliseconds);
+            var enumerator = store.Fetch(new Bytes(null), dt.AddDays(1), dt);
+            Assert.IsAssignableFrom<EmptyWindowStoreIterator<byte[]>>(enumerator);
+            Assert.IsFalse(enumerator.MoveNext());
+            enumerator.Reset();
+            Assert.AreEqual(0, enumerator.ToList().Count);
         }
     }
 }
