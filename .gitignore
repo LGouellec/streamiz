@@ -2,4 +2,6 @@ bin
 obj
 .vs
 coverage.opencover.xml
+coverage.json
 _build
+TestResults
