@@ -15,7 +15,7 @@ Nuget package
 
 .. code-block:: shell
 
-    dotnet add package Streamiz.Kafka.Net --version 0.1.0-beta
+    dotnet add package Streamiz.Kafka.Net --version 0.2.0-beta
 
 
 Tutorial: First streamiz application
@@ -51,23 +51,6 @@ This tutorial will describe all the steps required to create a first streamiz ap
 
         // Create a stream instance with toology and configuration
         KafkaStream stream = new KafkaStream(t, config);
-
-        // Subscribe state changed
-        stream.StateChanged += (old, @new) =>
-        {
-            if (@new == KafkaStream.State.RUNNING) // If new state is running, we can quering state store.
-            {
-                Task.Factory.StartNew(() =>
-                {
-                    while (!source.Token.IsCancellationRequested)
-                    {
-                        var store = stream.Store(StoreQueryParameters.FromNameAndType("test-store", QueryableStoreTypes.KeyValueStore<string, string>()));
-                        var items = store.All().ToList();
-                        Thread.Sleep(500);
-                    }
-                }, source.Token);
-            }
-        };
 
         // Subscribe CTRL + C to quit stream application
         Console.CancelKeyPress += (o, e) =>

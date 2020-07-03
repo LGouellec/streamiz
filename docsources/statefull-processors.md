@@ -10,13 +10,13 @@ IMPLEMENTATION WORK IN PROGRESS
 |---|---|---|---|---|---|
 |Aggregate|KGroupedStream -> KTable|   |   |   |&#9745;|
 |Aggregate|KGroupedTable -> KTable|   |   |   |&#9745;|
-|Aggregate(windowed)|KGroupedStream -> KTable|&#9745;|   |   |   |
+|Aggregate(windowed)|KGroupedStream -> KTable|   |   |   |&#9745;|
 |Count|KGroupedStream -> KTable|   |   |   |&#9745;|
 |Count|KGroupedTable -> KTable|   |   |   |&#9745;|
-|Count(windowed)|KGroupedStream → KStream|&#9745;|   |   |   |
+|Count(windowed)|KGroupedStream → KStream|   |   |   |&#9745;|
 |Reduce|KGroupedStream → KTable|   |   |   |&#9745;|
 |Reduce|KGroupedTable → KTable|   |   |   |&#9745;|
-|Reduce(windowed)|KGroupedStream → KTable|&#9745;|   |   |   |
+|Reduce(windowed)|KGroupedStream → KTable|   |   |   |&#9745;|
 |InnerJoin(windowed)|(KStream,KStream) → KStream|&#9745;|   |   |   |
 |LeftJoin(windowed)|(KStream,KStream) → KStream|&#9745;|   |   |   |
 |OuterJoin(windowed)|(KStream,KStream) → KStream|&#9745;|   |   |   |
@@ -25,7 +25,7 @@ IMPLEMENTATION WORK IN PROGRESS
 |OuterJoin|(KTable,KTable) → KTable|&#9745;|   |   |   |
 |InnerJoin|(KStream,KTable) → KStream|&#9745;|   |   |   |
 |LeftJoin|(KStream,KTable) → KStream|&#9745;|   |   |   |
-|InnerJoin|(KStream,GlobalKTable) → KStream|&#9745;|   |   |   |
+|InnerJoin|(KStream,GlobalKTable) → KStream|   |&#9745;|   |   |
 |LeftJoin|(KStream,GlobalKTable) → KStream|&#9745;|   |   |   |
 
 ## Count
@@ -56,6 +56,25 @@ Detailed behavior for IKGroupedStream:
 
 Detailed behavior for IKGroupedTable:
 - Input records with null keys are ignored. Records with null values are not ignored but interpreted as “tombstones” for the corresponding key, which indicate the deletion of the key from the table.
+
+## Count (Windowed)
+
+** Windowed aggregation.** Counts the number of records, per window, by the grouped key. (ITimeWindowedKStream details)
+
+The windowed count turns a ITimeWindowedKStream<K, V> into a windowed IKTable<Windowed<K>, V>.
+
+``` csharp
+var groupedStream = builder
+                        .Stream<string, string>("topic")
+                        .GroupByKey();
+
+var countStream = groupedStream
+                    .WindowedBy(TumblingWindowOptions.Of(2000))
+                    .Count(m);
+```
+
+Detailed behavior:
+- Input records with null keys or values are ignored.
 
 ## Aggregate
 
@@ -109,6 +128,34 @@ Detailed behavior of IKGroupedTable:
 - When subsequent non-null values are received for a key (e.g., UPDATE), then (1) the subtractor is called with the old value as stored in the table and (2) the adder is called with the new value of the input record that was just received. The order of execution for the subtractor and adder is not defined.
 - When a tombstone record – i.e. a record with a null value – is received for a key (e.g., DELETE), then only the subtractor is called. Note that, whenever the subtractor returns a null value itself, then the corresponding key is removed from the resulting IKTable. If that happens, any next input record for that key will trigger the initializer again.
 
+## Aggregate (Windowed)
+
+**Windowed aggregation.** Aggregates the values of records, per window, by the grouped key. Aggregating is a generalization of reduce and allows, for example, the aggregate value to have a different type than the input values. (ITimeWindowedKStream details)
+
+You must provide an initializer (e.g., aggValue = 0), “adder” aggregator (e.g., aggValue + curValue), and a window. When windowing based on sessions, you must additionally provide a “session merger” aggregator (e.g., mergedAggValue = leftAggValue + rightAggValue).
+
+The windowed aggregate turns a ITimeWindowedKStream<K, V> into a windowed KTable<Windowed<K>, V>.
+
+```csharp
+
+var groupedStream = builder
+                        .Stream<string, string>("topic")
+                        .GroupByKey();
+
+var aggStream = groupedStream
+                    .WindowedBy(TumblingWindowOptions.Of(2000))
+                    .Aggregate(
+                        () => 0,
+                        (k, v, agg) => Math.Max(v.Length, agg),
+                        m);
+```
+
+Detailed behavior:
+- The windowed aggregate behaves similar to the rolling aggregate described above. The additional twist is that the behavior applies per window.
+- Input records with null keys are ignored in general.
+- When a record key is received for the first time for a given window, the initializer is called (and called before the adder).
+- Whenever a record with a non-null value is received for a given window, the adder is called.
+
 ## Reduce
 
 **Rolling aggregation.** Combines the values of (non-windowed) records by the grouped key. The current record value is combined with the last reduced value, and a new reduced value is returned. The result value type cannot be changed, unlike aggregate. (see IKGroupedStream for details)
@@ -150,3 +197,25 @@ Detailed behavior for IKGroupedTable:
 - When the first non-null value is received for a key (e.g., INSERT), then only the adder is called.
 - When subsequent non-null values are received for a key (e.g., UPDATE), then (1) the subtractor is called with the old value as stored in the table and (2) the adder is called with the new value of the input record that was just received. The order of execution for the subtractor and adder is not defined.
 - When a tombstone record – i.e. a record with a null value – is received for a key (e.g., DELETE), then only the subtractor is called. Note that, whenever the subtractor returns a null value itself, then the corresponding key is removed from the resulting IKTable. If that happens, any next input record for that key will re-initialize its aggregate value.
+
+## Reduce (Windowed)
+
+**Windowed aggregation.** Combines the values of records, per window, by the grouped key. The current record value is combined with the last reduced value, and a new reduced value is returned. Records with null key or value are ignored. The result value type cannot be changed, unlike aggregate. (ITimeWindowedKStream details)
+
+The windowed reduce turns a turns a ITimeWindowedKStream<K, V> into a windowed KTable<Windowed<K>, V>.
+
+```csharp
+var groupedStream = builder
+                        .Stream<string, string>("topic")
+                        .GroupByKey();
+
+var reduceStream = groupedStream
+                        .WindowedBy(TumblingWindowOptions.Of(2000))
+                        .Reduce((v1, v2) => v1.Length > v2.Length ? v1 : v2);
+```
+
+Detailed behavior:
+- The windowed reduce behaves similar to the rolling reduce described above. The additional twist is that the behavior applies per window.
+- Input records with null keys are ignored in general.
+- When a record key is received for the first time for a given window, then the value of that record is used as the initial aggregate value.
+- Whenever a record with a non-null value is received for a given window, the reducer is called.

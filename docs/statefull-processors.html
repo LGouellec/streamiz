@@ -1,8 +1,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -12,6 +11,10 @@
   
 
   
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   
@@ -19,7 +22,9 @@
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -31,10 +36,6 @@
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="State stores" href="stores.html" />
@@ -52,7 +53,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> Streamiz.Kafka.Net
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> Streamiz.Kafka.Net
           
 
           
@@ -75,6 +76,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -89,8 +91,11 @@
 <li class="toctree-l1"><a class="reference internal" href="stateless-processors.html">Stateless processors</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Statefull processors</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#count">Count</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#count-windowed">Count (Windowed)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#aggregate">Aggregate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#aggregate-windowed">Aggregate (Windowed)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#reduce">Reduce</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reduce-windowed">Reduce (Windowed)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="stores.html">State stores</a></li>
@@ -100,6 +105,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -138,7 +144,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Statefull processors</li>
     
@@ -195,10 +201,10 @@
 <tr>
 <td>Aggregate(windowed)</td>
 <td>KGroupedStream -&gt; KTable</td>
+<td></td>
+<td></td>
+<td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>Count</td>
@@ -219,10 +225,10 @@
 <tr>
 <td>Count(windowed)</td>
 <td>KGroupedStream → KStream</td>
+<td></td>
+<td></td>
+<td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>Reduce</td>
@@ -243,10 +249,10 @@
 <tr>
 <td>Reduce(windowed)</td>
 <td>KGroupedStream → KTable</td>
+<td></td>
+<td></td>
+<td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>InnerJoin(windowed)</td>
@@ -315,8 +321,8 @@
 <tr>
 <td>InnerJoin</td>
 <td>(KStream,GlobalKTable) → KStream</td>
-<td>&#9745;</td>
 <td></td>
+<td>&#9745;</td>
 <td></td>
 <td></td>
 </tr>
@@ -357,6 +363,24 @@
 <p>Detailed behavior for IKGroupedTable:</p>
 <ul class="simple">
 <li><p>Input records with null keys are ignored. Records with null values are not ignored but interpreted as “tombstones” for the corresponding key, which indicate the deletion of the key from the table.</p></li>
+</ul>
+</div>
+<div class="section" id="count-windowed">
+<h2>Count (Windowed)<a class="headerlink" href="#count-windowed" title="Permalink to this headline">¶</a></h2>
+<p>** Windowed aggregation.** Counts the number of records, per window, by the grouped key. (ITimeWindowedKStream details)</p>
+<p>The windowed count turns a ITimeWindowedKStream&lt;K, V&gt; into a windowed IKTable&lt;Windowed<K>, V&gt;.</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span> <span class="n">groupedStream</span> <span class="p">=</span> <span class="n">builder</span>
+                        <span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
+                        <span class="p">.</span><span class="n">GroupByKey</span><span class="p">();</span>
+
+<span class="kt">var</span> <span class="n">countStream</span> <span class="p">=</span> <span class="n">groupedStream</span>
+                    <span class="p">.</span><span class="n">WindowedBy</span><span class="p">(</span><span class="n">TumblingWindowOptions</span><span class="p">.</span><span class="n">Of</span><span class="p">(</span><span class="m">2000</span><span class="p">))</span>
+                    <span class="p">.</span><span class="n">Count</span><span class="p">(</span><span class="n">m</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Detailed behavior:</p>
+<ul class="simple">
+<li><p>Input records with null keys or values are ignored.</p></li>
 </ul>
 </div>
 <div class="section" id="aggregate">
@@ -411,6 +435,31 @@
 <li><p>When a tombstone record – i.e. a record with a null value – is received for a key (e.g., DELETE), then only the subtractor is called. Note that, whenever the subtractor returns a null value itself, then the corresponding key is removed from the resulting IKTable. If that happens, any next input record for that key will trigger the initializer again.</p></li>
 </ul>
 </div>
+<div class="section" id="aggregate-windowed">
+<h2>Aggregate (Windowed)<a class="headerlink" href="#aggregate-windowed" title="Permalink to this headline">¶</a></h2>
+<p><strong>Windowed aggregation.</strong> Aggregates the values of records, per window, by the grouped key. Aggregating is a generalization of reduce and allows, for example, the aggregate value to have a different type than the input values. (ITimeWindowedKStream details)</p>
+<p>You must provide an initializer (e.g., aggValue = 0), “adder” aggregator (e.g., aggValue + curValue), and a window. When windowing based on sessions, you must additionally provide a “session merger” aggregator (e.g., mergedAggValue = leftAggValue + rightAggValue).</p>
+<p>The windowed aggregate turns a ITimeWindowedKStream&lt;K, V&gt; into a windowed KTable&lt;Windowed<K>, V&gt;.</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span> <span class="n">groupedStream</span> <span class="p">=</span> <span class="n">builder</span>
+                        <span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
+                        <span class="p">.</span><span class="n">GroupByKey</span><span class="p">();</span>
+
+<span class="kt">var</span> <span class="n">aggStream</span> <span class="p">=</span> <span class="n">groupedStream</span>
+                    <span class="p">.</span><span class="n">WindowedBy</span><span class="p">(</span><span class="n">TumblingWindowOptions</span><span class="p">.</span><span class="n">Of</span><span class="p">(</span><span class="m">2000</span><span class="p">))</span>
+                    <span class="p">.</span><span class="n">Aggregate</span><span class="p">(</span>
+                        <span class="p">()</span> <span class="p">=&gt;</span> <span class="m">0</span><span class="p">,</span>
+                        <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">agg</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">Math</span><span class="p">.</span><span class="n">Max</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">,</span> <span class="n">agg</span><span class="p">),</span>
+                        <span class="n">m</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Detailed behavior:</p>
+<ul class="simple">
+<li><p>The windowed aggregate behaves similar to the rolling aggregate described above. The additional twist is that the behavior applies per window.</p></li>
+<li><p>Input records with null keys are ignored in general.</p></li>
+<li><p>When a record key is received for the first time for a given window, the initializer is called (and called before the adder).</p></li>
+<li><p>Whenever a record with a non-null value is received for a given window, the adder is called.</p></li>
+</ul>
+</div>
 <div class="section" id="reduce">
 <h2>Reduce<a class="headerlink" href="#reduce" title="Permalink to this headline">¶</a></h2>
 <p><strong>Rolling aggregation.</strong> Combines the values of (non-windowed) records by the grouped key. The current record value is combined with the last reduced value, and a new reduced value is returned. The result value type cannot be changed, unlike aggregate. (see IKGroupedStream for details)</p>
@@ -453,6 +502,27 @@
 <li><p>When a tombstone record – i.e. a record with a null value – is received for a key (e.g., DELETE), then only the subtractor is called. Note that, whenever the subtractor returns a null value itself, then the corresponding key is removed from the resulting IKTable. If that happens, any next input record for that key will re-initialize its aggregate value.</p></li>
 </ul>
 </div>
+<div class="section" id="reduce-windowed">
+<h2>Reduce (Windowed)<a class="headerlink" href="#reduce-windowed" title="Permalink to this headline">¶</a></h2>
+<p><strong>Windowed aggregation.</strong> Combines the values of records, per window, by the grouped key. The current record value is combined with the last reduced value, and a new reduced value is returned. Records with null key or value are ignored. The result value type cannot be changed, unlike aggregate. (ITimeWindowedKStream details)</p>
+<p>The windowed reduce turns a turns a ITimeWindowedKStream&lt;K, V&gt; into a windowed KTable&lt;Windowed<K>, V&gt;.</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span> <span class="n">groupedStream</span> <span class="p">=</span> <span class="n">builder</span>
+                        <span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
+                        <span class="p">.</span><span class="n">GroupByKey</span><span class="p">();</span>
+
+<span class="kt">var</span> <span class="n">reduceStream</span> <span class="p">=</span> <span class="n">groupedStream</span>
+                        <span class="p">.</span><span class="n">WindowedBy</span><span class="p">(</span><span class="n">TumblingWindowOptions</span><span class="p">.</span><span class="n">Of</span><span class="p">(</span><span class="m">2000</span><span class="p">))</span>
+                        <span class="p">.</span><span class="n">Reduce</span><span class="p">((</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">v1</span><span class="p">.</span><span class="n">Length</span> <span class="p">&gt;</span> <span class="n">v2</span><span class="p">.</span><span class="n">Length</span> <span class="p">?</span> <span class="n">v1</span> <span class="p">:</span> <span class="n">v2</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Detailed behavior:</p>
+<ul class="simple">
+<li><p>The windowed reduce behaves similar to the rolling reduce described above. The additional twist is that the behavior applies per window.</p></li>
+<li><p>Input records with null keys are ignored in general.</p></li>
+<li><p>When a record key is received for the first time for a given window, then the value of that record is used as the initial aggregate value.</p></li>
+<li><p>Whenever a record with a non-null value is received for a given window, the reducer is called.</p></li>
+</ul>
+</div>
 </div>
 
 
@@ -475,11 +545,19 @@
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2020, @LGouellec
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -490,7 +568,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

@@ -117,8 +117,6 @@ Grouping is a prerequisite for aggregating a stream or a table and ensures that 
 
 When to set explicit SerDes: Variants of GroupByKey exist to override the configured default SerDes of your application, which you must do if the key and/or value types of the resulting IKGroupedStream do not match the configured default SerDes.
 
-**Note : Not used for moment, waiting statefull implementation**
-
 - IKStream → IKGroupedStream
 
 ## GroupBy
@@ -128,8 +126,6 @@ Groups the records by a new key, which may be of a different key type. When grou
 Grouping is a prerequisite for aggregating a stream or a table and ensures that data is properly partitioned (“keyed”) for subsequent operations.
 
 When to set explicit SerDes: Variants of GroupBy exist to override the configured default SerDes of your application, which you must do if the key and/or value types of the resulting IKGroupedStream or IKGroupedTable do not match the configured default SerDes.
-
-**Note : Not used for moment, waiting statefull implementation**
 
 - IKStream → IKGroupedStream
 - IKTable → IKGroupedTable
