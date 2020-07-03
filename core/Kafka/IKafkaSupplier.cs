@@ -1,4 +1,6 @@
 ﻿using Confluent.Kafka;
+using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.Table;
 
 namespace Streamiz.Kafka.Net.Kafka
 {
@@ -37,7 +39,7 @@ namespace Streamiz.Kafka.Net.Kafka
         IAdminClient GetAdmin(AdminClientConfig config);
 
         /// <summary>
-        /// Build a kafka global consumer with <see cref="ConsumerConfig"/> which is used to consume records for <see cref="Table.IGlobalKTable"/>.
+        /// Build a kafka global consumer with <see cref="ConsumerConfig"/> which is used to consume records for <see cref="IGlobalKTable{K, V}"/>.
         /// </summary>
         /// <param name="config">Global consumer configuration can't be null</param>
         /// <returns>Return a kafka global consumer built</returns>

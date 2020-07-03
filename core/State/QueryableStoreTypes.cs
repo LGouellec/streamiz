@@ -30,7 +30,13 @@ namespace Streamiz.Kafka.Net.State
         /// <typeparam name="V">value type of the store</typeparam>
         /// <returns><see cref="QueryableStoreTypes.TimestampedKeyValueStore{K, V}"/></returns>
         public static IQueryableStoreType<ReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>, K, ValueAndTimestamp<V>> TimestampedKeyValueStore<K, V>() => new TimestampedKeyValueStoreType<K, V>();
-        
+
+        /// <summary>
+        /// A <see cref="IQueryableStoreType{T, K, V}"/> that accepts <see cref="ReadOnlyWindowStore{K, V}"/>.
+        /// </summary>
+        /// <typeparam name="K">key type of the store</typeparam>
+        /// <typeparam name="V">value type of the store</typeparam>
+        /// <returns><see cref="QueryableStoreTypes.WindowStore{K, V}"/></returns>
         public static IQueryableStoreType<ReadOnlyWindowStore<K, V>, K, V> WindowStore<K, V>() => new WindowStoreType<K, V>();
     }
 

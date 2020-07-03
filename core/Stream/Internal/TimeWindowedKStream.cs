@@ -67,6 +67,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public IKTable<Windowed<K>, VR> Aggregate<VR>(Initializer<VR> initializer, Aggregator<K, V, VR> aggregator, Materialized<K, VR, WindowStore<Bytes, byte[]>> materialized, string named = null)
         {
+            CheckIfParamNull(initializer, "initializer");
+            CheckIfParamNull(aggregator, "aggregator");
+
             materialized = materialized ?? Materialized<K, VR, WindowStore<Bytes, byte[]>>.Create();
 
             if (materialized.KeySerdes == null)
@@ -103,6 +106,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public IKTable<Windowed<K>, V> Reduce(Reducer<V> reducer, Materialized<K, V, WindowStore<Bytes, byte[]>> materialized, string named = null)
         {
+            CheckIfParamNull(reducer, "reducer");
+
             materialized = materialized ?? Materialized<K, V, WindowStore<Bytes, byte[]>>.Create();
 
             if (materialized.KeySerdes == null)

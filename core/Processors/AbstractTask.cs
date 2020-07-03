@@ -1,12 +1,11 @@
 ﻿using Confluent.Kafka;
+using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.Stream.Internal;
-using log4net;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -22,7 +21,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         protected AbstractTask(TaskId id, TopicPartition partition, ProcessorTopology topology, IConsumer<byte[], byte[]> consumer, IStreamConfig config)
         {
-            this.log = Logger.GetLogger(this.GetType());
+            log = Logger.GetLogger(GetType());
             logPrefix = $"stream-task[{id.Topic}|{id.Partition}] ";
 
             Partition = partition;
@@ -30,9 +29,9 @@ namespace Streamiz.Kafka.Net.Processors
             Topology = topology;
 
             this.consumer = consumer;
-            this.configuration = config;
+            configuration = config;
 
-            this.stateMgr = new ProcessorStateManager(id, partition);
+            stateMgr = new ProcessorStateManager(id, partition);
         }
 
         public ProcessorTopology Topology { get; }
@@ -82,7 +81,7 @@ namespace Streamiz.Kafka.Net.Processors
                 store.Init(Context, store);
             }
 
-            foreach(var kv in Topology.GlobalStateStores.Where(k => !Topology.StateStores.ContainsKey(k.Key)))
+            foreach (var kv in Topology.GlobalStateStores.Where(k => !Topology.StateStores.ContainsKey(k.Key)))
             {
                 var store = kv.Value;
                 log.Debug($"{logPrefix}Initializing store {kv.Key}");

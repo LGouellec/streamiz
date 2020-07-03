@@ -38,7 +38,7 @@ namespace sample_stream
                     .To("output");
 
             Topology t = builder.Build();
-            bool taskStart = false;
+            //bool taskStart = false;
 
             KafkaStream stream = new KafkaStream(t, config);
 

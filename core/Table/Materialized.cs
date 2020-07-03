@@ -506,7 +506,7 @@ namespace Streamiz.Kafka.Net.Table
 
     /// <summary>
     /// <see cref="InMemoryWindows{K, V}"/> is a child class of <see cref="Materialized{K, V, S}"/>. 
-    /// It's a class helper for materialize <see cref="IKTable{K, V}"/> with an <see cref="InMemoryTimestampedWindowStoreSupplier"/>
+    /// It's a class helper for materialize <see cref="IKTable{K, V}"/> with an <see cref="InMemoryWindowStoreSupplier"/>
     /// </summary>
     /// <typeparam name="K">Type of key</typeparam>
     /// <typeparam name="V">type of value</typeparam>
@@ -530,7 +530,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="windowSize">the windows size aggregation</param>
         /// <returns>a new <see cref="InMemoryWindows{K, V}"/> instance with the given storeName and windows size</returns>
         public static InMemoryWindows<K, V> @As(string storeName, TimeSpan? windowSize = null)
-            => new InMemoryWindows<K, V>(storeName, new InMemoryTimestampedWindowStoreSupplier(storeName, TimeSpan.FromDays(1), windowSize.HasValue ? (long)windowSize.Value.TotalMilliseconds : (long?)null));
+            => new InMemoryWindows<K, V>(storeName, new InMemoryWindowStoreSupplier(storeName, TimeSpan.FromDays(1), windowSize.HasValue ? (long)windowSize.Value.TotalMilliseconds : (long?)null));
 
         /// <summary>
         /// Materialize a <see cref="InMemoryWindowStore"/> with the given name.
@@ -544,7 +544,7 @@ namespace Streamiz.Kafka.Net.Table
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
-            var m = new InMemoryWindows<K, V>(storeName, new InMemoryTimestampedWindowStoreSupplier(storeName, TimeSpan.FromDays(1), windowSize.HasValue ? (long)windowSize.Value.TotalMilliseconds : (long?)null))
+            var m = new InMemoryWindows<K, V>(storeName, new InMemoryWindowStoreSupplier(storeName, TimeSpan.FromDays(1), windowSize.HasValue ? (long)windowSize.Value.TotalMilliseconds : (long?)null))
             {
                 KeySerdes = new KS(),
                 ValueSerdes = new VS()

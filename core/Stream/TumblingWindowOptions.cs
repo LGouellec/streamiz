@@ -1,33 +1,42 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Stream
 {
+    /// <summary>
+    /// Tumbling time windows are a special case of hopping time windows and, like the latter, are windows based on time intervals. 
+    /// They model fixed-size, non-overlapping, gap-less windows. 
+    /// A tumbling window is defined by a single property: the window’s size. 
+    /// A tumbling window is a hopping window whose window size is equal to its advance interval.
+    /// Since tumbling windows never overlap, a data record will belong to one and only one window.
+    /// </summary>
     public class TumblingWindowOptions : TimeWindowOptions
     {
-        protected TumblingWindowOptions(long sizeMs, long advanceMs, long graceMs, long maintainDurationMs) 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sizeMs"></param>
+        /// <param name="advanceMs"></param>
+        /// <param name="graceMs"></param>
+        /// <param name="maintainDurationMs"></param>
+        protected TumblingWindowOptions(long sizeMs, long advanceMs, long graceMs, long maintainDurationMs)
             : base(sizeMs, advanceMs, graceMs, maintainDurationMs)
         {
         }
 
+        /// <summary>
+        /// Static method to create <see cref="TumblingWindowOptions"/> with size windows.
+        /// </summary>
+        /// <param name="sizeMs">Size windows</param>
+        /// <returns>Return a <see cref="TumblingWindowOptions"/> instance</returns>
         public static TumblingWindowOptions Of(long sizeMs)
             => new TumblingWindowOptions(sizeMs, sizeMs, -1, DEFAULT_RETENTION_MS);
 
+        /// <summary>
+        /// Static method to create <see cref="TumblingWindowOptions"/> with size windows.
+        /// </summary>
+        /// <param name="size">TimeSpan size windows</param>
+        /// <returns>Return a <see cref="TumblingWindowOptions"/> instance</returns>
         public static TumblingWindowOptions Of(TimeSpan size)
             => Of((long)size.TotalMilliseconds);
-
-        public override IDictionary<long, TimeWindow> WindowsFor(long timestamp)
-        {
-            long windowStart = (Math.Max(0, timestamp - Size + advanceMs) / advanceMs) * advanceMs;
-            IDictionary<long, TimeWindow> windows = new Dictionary<long, TimeWindow>();
-            while (windowStart <= timestamp)
-            {
-                TimeWindow window = new TimeWindow(windowStart, windowStart + Size);
-                windows.Add(windowStart, window);
-                windowStart += advanceMs;
-            }
-            return windows;
-        }
     }
 }

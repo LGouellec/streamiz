@@ -28,7 +28,7 @@ namespace Streamiz.Kafka.Net.State.Internal
                     throw new ArgumentException($"The retention period of the window store { materializedInternal.StoreName } must be no smaller than its window size plus the grace period. Got size=[{windowsOptions.Size}], grace=[{windowsOptions.GracePeriodMs}], retention=[{materializedInternal.Retention.TotalMilliseconds}].");
 
                 // TODO : RocksDB
-                supplier = new InMemoryTimestampedWindowStoreSupplier(
+                supplier = new InMemoryWindowStoreSupplier(
                     materializedInternal.StoreName,
                     materializedInternal.Retention,
                     windowsOptions.Size);
