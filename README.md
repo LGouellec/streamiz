@@ -49,7 +49,7 @@ Nuget packages are listed to [nuget.org](https://www.nuget.org/packages/Streamiz
 
 Install the last version with :
 ```shell
-dotnet add package Streamiz.Kafka.Net --version 0.1.0-beta
+dotnet add package Streamiz.Kafka.Net --version 0.2.0-beta
 ```
 
 # Usage
