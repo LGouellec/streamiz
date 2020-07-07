@@ -189,6 +189,7 @@ namespace Streamiz.Kafka.Net
     /// Implementation of <see cref="IStreamConfig"/>. Contains all configuration for your stream.
     /// By default, Kafka Streams does not allow users to overwrite the following properties (Streams setting shown in parentheses)
     ///    - EnableAutoCommit = (false) - Streams client will always disable/turn off auto committing
+    ///    - PartitionAssignmentStrategy = <see cref="PartitionAssignmentStrategy.Range"/> - Streams application must have a partition assignment stategy to RANGE for join processing
     /// If <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, Kafka Streams does not allow users to overwrite the following properties (Streams setting shown in parentheses):
     ///    - <see cref="IsolationLevel"/> (<see cref="IsolationLevel.ReadCommitted"/>) - Consumers will always read committed data only
     ///    - <see cref="EnableIdempotence"/> (true) - Producer will always have idempotency enabled
@@ -1462,7 +1463,7 @@ namespace Streamiz.Kafka.Net
         /// Name of partition assignment strategy to use when elected group leader assigns
         /// partitions to group members. default: range,roundrobin importance: medium
         /// </summary>
-        public PartitionAssignmentStrategy? PartitionAssignmentStrategy { get { return _consumerConfig.PartitionAssignmentStrategy; } set { _consumerConfig.PartitionAssignmentStrategy = value; } }
+        public PartitionAssignmentStrategy? PartitionAssignmentStrategy { get { return _consumerConfig.PartitionAssignmentStrategy; } private set { _consumerConfig.PartitionAssignmentStrategy = value; } }
 
         /// <summary>
         /// Action to take when there is no initial offset in offset store or the desired
@@ -1736,6 +1737,7 @@ namespace Streamiz.Kafka.Net
             _config = new ClientConfig();
 
             EnableAutoCommit = false;
+            PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.Range;
         }
 
         #endregion

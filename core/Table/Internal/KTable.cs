@@ -185,6 +185,48 @@ namespace Streamiz.Kafka.Net.Table.Internal
 
         #endregion
 
+        #region Join
+
+        public IKTable<K, VR> Join<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IKTable<K, VR> Join<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region LeftJoin
+
+        public IKTable<K, VR> LeftJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IKTable<K, VR> LeftJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region Outer Join
+
+        public IKTable<K, VR> OuterJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IKTable<K, VR> OuterJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
         #endregion
 
         #region Privates

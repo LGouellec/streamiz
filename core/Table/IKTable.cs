@@ -6,6 +6,7 @@ using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table.Internal;
 using System;
 using System.Collections.Generic;
+using System.Net.WebSockets;
 
 namespace Streamiz.Kafka.Net.Table
 {
@@ -461,5 +462,15 @@ namespace Streamiz.Kafka.Net.Table
         /// <returns>a <see cref="IKGroupedTable{KR, VR}"/> that contains the re-grouped records of the original <see cref="IKTable{K, V}"/></returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
         IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(Func<K, V, KeyValuePair<KR, VR>> keySelector, string named = null) where KRS : ISerDes<KR>, new() where VRS : ISerDes<VR>, new();
+
+
+        IKTable<K, VR> Join<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner);
+        IKTable<K, VR> Join<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<K, VR> LeftJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner);
+        IKTable<K, VR> LeftJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<K, VR> OuterJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner);
+        IKTable<K, VR> OuterJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+
+
     }
 }

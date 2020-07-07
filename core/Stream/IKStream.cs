@@ -1,9 +1,13 @@
+using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net.WebSockets;
+using System.Threading;
 
 namespace Streamiz.Kafka.Net.Stream
 {
@@ -564,32 +568,49 @@ namespace Streamiz.Kafka.Net.Stream
         /// <returns>A <see cref="IKGroupedStream{K, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>
         IKGroupedStream<K, V> GroupByKey<KS, VS>(string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new();
 
-        /// <summary>
-        /// ALPHA PREVIEW. In pre-release, in beta 0.3
-        /// </summary>
-        /// <typeparam name="V0"></typeparam>
-        /// <typeparam name="VR"></typeparam>
-        /// <typeparam name="V0S"></typeparam>
-        /// <typeparam name="VRS"></typeparam>
-        /// <param name="table"></param>
-        /// <param name="valueJoiner"></param>
-        /// <param name="named"></param>
-        /// <returns></returns>
+
         IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner, string named = null)
             where V0S : ISerDes<V0>, new()
             where VRS : ISerDes<VR>, new();
 
-        /// <summary>
-        /// ALPHA PREVIEW. In pre-release, in beta 0.3
-        /// </summary>
-        /// <typeparam name="K0"></typeparam>
-        /// <typeparam name="V0"></typeparam>
-        /// <typeparam name="VR"></typeparam>
-        /// <param name="globalTable"></param>
-        /// <param name="keyMapper"></param>
-        /// <param name="valueJoiner"></param>
-        /// <param name="named"></param>
-        /// <returns></returns>
+        IKStream<K, VR> LeftJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, string named = null)
+            where VTS : ISerDes<VT>, new()
+            where VRS : ISerDes<VR>, new();
+
         IKStream<K, VR> Join<K0, V0, VR>(IGlobalKTable<K0, V0> globalTable, Func<K, V, K0> keyMapper, Func<V, V0, VR> valueJoiner, string named = null);
+
+        IKStream<K, VR> LeftJoin<K0, V0, VR>(IGlobalKTable<K0, V0> globalTable, Func<K, V, K0> keyMapper, Func<V, V0, VR> valueJoiner, string named = null);
+
+
+        IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows)
+            where V0S : ISerDes<V0>, new()
+            where VRS : ISerDes<VR>, new();
+
+        //IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, object joined);
+
+        //IKStream<K, VR> Join<V0, VR>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows);
+
+        //IKStream<K, VR> Join<V0, VR>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, object joined);
+
+        //IKStream<K, VR> LeftJoin<V0, VR, V0S, VRS>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows);
+
+        //IKStream<K, VR> LeftJoin<V0, VR, V0S, VRS>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, object joined);
+
+        //IKStream<K, VR> LeftJoin<V0, VR>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows);
+
+        //IKStream<K, VR> LeftJoin<V0, VR>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, object joined);
+
+        //IKStream<K, VR> OuterJoin<V0, VR, V0S, VRS>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows);
+
+        //IKStream<K, VR> OuterJoin<V0, VR, V0S, VRS>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, object joined);
+
+        //IKStream<K, VR> OuterJoin<V0, VR>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows);
+
+        //IKStream<K, VR> OuterJoin<V0, VR>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, object joined);
+
+
+        IKTable<K, V> ToTable();
+
+        IKTable<K, V> ToTable(Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
     }
 }

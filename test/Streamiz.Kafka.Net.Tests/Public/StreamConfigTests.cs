@@ -135,7 +135,6 @@ namespace Streamiz.Kafka.Net.Tests.Public
             stream.MessageTimeoutMs = 600;
             stream.MetadataMaxAgeMs = 6;
             stream.MetadataRequestTimeoutMs = 83;
-            stream.PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.RoundRobin;
             stream.Partitioner = Confluent.Kafka.Partitioner.Murmur2Random;
             stream.PluginLibraryPaths = "D:";
             stream.QueueBufferingBackpressureThreshold = 10;
@@ -312,7 +311,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual(500, consumerConfig.MessageMaxBytes);
             Assert.AreEqual(6, consumerConfig.MetadataMaxAgeMs);
             Assert.AreEqual(83, consumerConfig.MetadataRequestTimeoutMs);
-            Assert.AreEqual(Confluent.Kafka.PartitionAssignmentStrategy.RoundRobin, consumerConfig.PartitionAssignmentStrategy);
+            Assert.AreEqual(Confluent.Kafka.PartitionAssignmentStrategy.Range, consumerConfig.PartitionAssignmentStrategy);
             Assert.AreEqual("D:", consumerConfig.PluginLibraryPaths);
             Assert.AreEqual(800, consumerConfig.QueuedMaxMessagesKbytes);
             Assert.AreEqual(1, consumerConfig.QueuedMinMessages);
@@ -393,7 +392,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual(500, globalConfig.MessageMaxBytes);
             Assert.AreEqual(6, globalConfig.MetadataMaxAgeMs);
             Assert.AreEqual(83, globalConfig.MetadataRequestTimeoutMs);
-            Assert.AreEqual(Confluent.Kafka.PartitionAssignmentStrategy.RoundRobin, globalConfig.PartitionAssignmentStrategy);
+            Assert.AreEqual(Confluent.Kafka.PartitionAssignmentStrategy.Range, globalConfig.PartitionAssignmentStrategy);
             Assert.AreEqual("D:", globalConfig.PluginLibraryPaths);
             Assert.AreEqual(800, globalConfig.QueuedMaxMessagesKbytes);
             Assert.AreEqual(1, globalConfig.QueuedMinMessages);

@@ -98,7 +98,7 @@ static void Main(string[] args)
 - [WIP] Statefull processors impl
 - [ ] Refactor Subtopology & StreamTask assignment
 - [ ] Refactor Topology description for corresponding to java implementation
-- [ ] Transform, Through and ToTable Processor
+- [ ] Transform and Through Processor
 - [ ] Rocks DB state implementation
 - [ ] Task restoring
 - [ ] Repartition topic
