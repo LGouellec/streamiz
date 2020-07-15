@@ -8,6 +8,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
     internal class SyncPipeInput : IPipeInput
     {
         private readonly StreamTask task;
+        private readonly string topic;
 
         public SyncPipeInput(StreamTask task)
         {
@@ -29,7 +30,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         {
             task.AddRecords(new List<ConsumeResult<byte[], byte[]>> {
                     new ConsumeResult<byte[], byte[]> {
-                        TopicPartitionOffset = new TopicPartitionOffset(task.Partition, 0),
+                        TopicPartitionOffset = new TopicPartitionOffset(new TopicPartition(topic, task.Id.Partition), 0),
                         Message = new Message<byte[], byte[]> { Key = key, Value = value, Timestamp = new Timestamp(timestamp) } } });
         }
     }

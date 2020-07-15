@@ -1,5 +1,6 @@
 ﻿using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
@@ -48,13 +49,6 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             return $"{prefix}-{NextIndex.ToString("D10")}";
         }
   
-        internal void AddGraphNode(StreamGraphNode root, StreamGraphNode node)
-        {
-            logger.Debug($"Adding node {node} in root node {root}");
-            root.AppendChild(node);
-            nodes.Add(node);
-        }
-
         #endregion
 
         #region Build Table
@@ -127,6 +121,23 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         {
             internalTopologyBuilder.BuildAndOptimizeTopology(root, nodes);
         }
+
+        internal void AddGraphNode(List<StreamGraphNode> rootNodes, StreamGraphNode node)
+        {
+            if (rootNodes.Count == 0)
+                throw new TopologyException("Parent node collection can't be empty");
+
+            foreach (var p in rootNodes)
+                AddGraphNode(p, node);
+        }
+
+        internal void AddGraphNode(StreamGraphNode root, StreamGraphNode node)
+        {
+            logger.Debug($"Adding node {node} in root node {root}");
+            root.AppendChild(node);
+            nodes.Add(node);
+        }
+
 
         #endregion
     }

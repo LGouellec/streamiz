@@ -1,5 +1,4 @@
-﻿using Confluent.Kafka;
-using Streamiz.Kafka.Net.State;
+﻿using Streamiz.Kafka.Net.State;
 using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
@@ -19,21 +18,25 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public bool LoggingEnabled => storeBuilder.LoggingEnabled;
         public IDictionary<string, string> LogConfig => storeBuilder.LogConfig;
 
-        public IStateStore Build(TopicPartition partition)
+        public IStateStore Build(TaskId taskId)
         {
-            if (partition != null)
+            if (taskId != null)
             {
-                if (stores.ContainsKey((Name, partition.Partition.Value)))
-                    return stores[(Name, partition.Partition.Value)];
+                if (stores.ContainsKey((Name, taskId.Partition)))
+                {
+                    return stores[(Name, taskId.Partition)];
+                }
                 else
                 {
-                    var store = storeBuilder.Build() as IStateStore;
-                    stores.Add((Name, partition.Partition.Value), store);
+                    var store = storeBuilder.Build();
+                    stores.Add((Name, taskId.Partition), store);
                     return store;
                 }
             }
             else
-                return storeBuilder.Build() as IStateStore;
+            {
+                return storeBuilder.Build();
+            }
         }
     }
 }

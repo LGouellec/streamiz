@@ -62,7 +62,7 @@ namespace Streamiz.Kafka.Net.Processors
             }
 
             var taskCreator = new TaskCreator(builder, configuration, threadId, kafkaSupplier, producer);
-            var manager = new TaskManager(taskCreator, adminClient);
+            var manager = new TaskManager(builder, taskCreator, adminClient);
 
             var listener = new StreamsRebalanceListener(manager);
 

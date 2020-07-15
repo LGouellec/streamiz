@@ -31,7 +31,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// Internally assigned unique ID. 
         /// <para>ID is source topic name</para>
         /// </summary>
-        string Id { get; }
+        int Id { get; }
 
         /// <summary>
         /// All nodes of this sub-topology.

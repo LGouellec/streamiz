@@ -11,20 +11,18 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         protected AbstractTaskCreator()
         {
-            this.log = Logger.GetLogger(this.GetType());
+            log = Logger.GetLogger(GetType());
         }
 
-        public ICollection<T> CreateTasks(IConsumer<byte[], byte[]> consumer, IDictionary<TaskId, TopicPartition> tasksToBeCreated)
+        public ICollection<T> CreateTasks(IConsumer<byte[], byte[]> consumer, IDictionary<TaskId, IList<TopicPartition>> tasksToBeCreated)
         {
             List<T> createdTasks = new List<T>();
             foreach (var newTaskAndPartitions in tasksToBeCreated)
             {
-                TaskId taskId = newTaskAndPartitions.Key;
-                TopicPartition partition = newTaskAndPartitions.Value;
-                T task = this.CreateTask(consumer, taskId, partition);
+                T task = CreateTask(consumer, newTaskAndPartitions.Key, newTaskAndPartitions.Value);
                 if (task != null)
                 {
-                    log.Debug($"Created task {taskId} with assigned partition {partition}");
+                    log.Debug($"Created task {newTaskAndPartitions.Key} with assigned partition {string.Join(",", newTaskAndPartitions.Value)}");
                     createdTasks.Add(task);
                 }
 
@@ -32,6 +30,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             return createdTasks;
         }
 
-        public abstract T CreateTask(IConsumer<byte[], byte[]> consumer, TaskId id, TopicPartition partition);
+        public abstract T CreateTask(IConsumer<byte[], byte[]> consumer, TaskId id, IEnumerable<TopicPartition> partition);
     }
 }

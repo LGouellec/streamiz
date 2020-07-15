@@ -40,7 +40,7 @@ namespace Streamiz.Kafka.Net.State
         /// |   A   |     25     |    35    |
         /// +--------------------------------
         /// </pre>
-        /// And we call  <code>store.Fetch("A", 10.ToDate(), 20.ToDate())</code> then the results will contain the first
+        /// And we call <code>store.Fetch("A", 10.ToDate(), 20.ToDate())</code> then the results will contain the first
         /// three windows from the table above, i.e., all those where 10 &lt;= start time &lt;= 20.
         /// </p>
         /// For each key, the iterator guarantees ordering of windows, starting from the oldest/earliest
@@ -51,6 +51,37 @@ namespace Streamiz.Kafka.Net.State
         /// <param name="to">time range end (inclusive)</param>
         /// <returns>an iterator over key-value pairs <code>timestamp, value</code></returns>
         IWindowStoreEnumerator<V> Fetch(K key, DateTime from, DateTime to);
+
+        /// <summary>
+        /// Get all the key-value pairs with the given key and the time range from all the existing windows.
+        /// This iterator must be closed after use.
+        /// <p>
+        /// The time range is inclusive and applies to the starting timestamp of the window.
+        /// For example, if we have the following windows:
+        /// <pre>
+        /// +-------------------------------+
+        /// |  key  | start time | end time |
+        /// +-------+------------+----------+
+        /// |   A   |     10     |    20    |
+        /// +-------+------------+----------+
+        /// |   A   |     15     |    25    |
+        /// +-------+------------+----------+
+        /// |   A   |     20     |    30    |
+        /// +-------+------------+----------+
+        /// |   A   |     25     |    35    |
+        /// +--------------------------------
+        /// </pre>
+        /// And we call <code>store.Fetch("A", 10, 20)</code> then the results will contain the first
+        /// three windows from the table above, i.e., all those where 10 &lt;= start time &lt;= 20.
+        /// </p>
+        /// For each key, the iterator guarantees ordering of windows, starting from the oldest/earliest
+        /// available window to the newest/latest window.
+        /// </summary>
+        /// <param name="key">the key to fetch</param>
+        /// <param name="from">time range start (inclusive)</param>
+        /// <param name="to">time range end (inclusive)</param>
+        /// <returns>an iterator over key-value pairs <code>timestamp, value</code></returns>
+        IWindowStoreEnumerator<V> Fetch(K key, long from, long to);
 
         /// <summary>
         /// Gets all the key-value pairs in the existing windows.

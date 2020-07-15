@@ -40,11 +40,11 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
     internal class SubTopologyDescription : ISubTopologyDescription
     {
-        public string Id { get; }
+        public int Id { get; }
 
         public IEnumerable<INodeDescription> Nodes { get; }
 
-        public SubTopologyDescription(string id, IList<INodeDescription> nodes)
+        public SubTopologyDescription(int id, IList<INodeDescription> nodes)
         {
             Id = id;
             Nodes = nodes;

@@ -17,5 +17,10 @@ namespace Streamiz.Kafka.Net.State.Supplier
         /// Can be null
         /// </summary>
         public long? WindowSize { get; set; }
+
+        /// <summary>
+        /// The time period for which the <see cref="WindowStore{K, V}"/> will retain historic data.
+        /// </summary>
+        public long Retention { get; }
     }
 }

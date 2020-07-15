@@ -283,18 +283,21 @@ namespace Streamiz.Kafka.Net.State.InMemory
         }
 
         public IWindowStoreEnumerator<byte[]> Fetch(Bytes key, DateTime from, DateTime to)
+            => Fetch(key, from.GetMilliseconds(), to.GetMilliseconds());
+
+        public IWindowStoreEnumerator<byte[]> Fetch(Bytes key, long from, long to)
         {
             RemoveExpiredData();
 
-            long minTime = Math.Max(from.GetMilliseconds(), observedStreamTime - (long)retention.TotalMilliseconds + 1);
+            long minTime = Math.Max(from, observedStreamTime - (long)retention.TotalMilliseconds + 1);
 
 
-            if (to.GetMilliseconds() < minTime)
+            if (to < minTime)
             {
                 return new EmptyWindowStoreIterator<byte[]>();
             }
 
-            return CreateNewWindowStoreEnumerator(key, SubMap(minTime, to.GetMilliseconds()));
+            return CreateNewWindowStoreEnumerator(key, SubMap(minTime, to));
         }
 
         public IKeyValueEnumerator<Windowed<Bytes>, byte[]> FetchAll(DateTime from, DateTime to)

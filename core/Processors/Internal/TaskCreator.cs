@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Confluent.Kafka;
-using Streamiz.Kafka.Net.Crosscutting;
+﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net.Kafka;
-using log4net;
+using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -26,14 +22,14 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             this.producer = producer;
         }
 
-        public override StreamTask CreateTask(IConsumer<byte[], byte[]> consumer, TaskId id, TopicPartition partition)
+        public override StreamTask CreateTask(IConsumer<byte[], byte[]> consumer, TaskId id, IEnumerable<TopicPartition> partitions)
         {
-            log.Debug($"Created task {id} with assigned partition {partition}");
+            log.Debug($"Created task {id} with assigned partition {string.Join(",", partitions)}");
             return new StreamTask(
                 threadId,
                 id,
-                partition,
-                builder.BuildTopology(partition),
+                partitions,
+                builder.BuildTopology(id.Id),
                 consumer,
                 configuration,
                 kafkaSupplier,

@@ -15,6 +15,11 @@ namespace Streamiz.Kafka.Net.Stream
         where W : Window
     {
         /// <summary>
+        /// Default retention MS
+        /// </summary>
+        public static readonly long DEFAULT_RETENTION_MS = 24 * 60 * 60 * 1000L; // one day
+
+        /// <summary>
         /// Create all windows that contain the provided timestamp, indexed by non-negative window start timestamps.
         /// </summary>
         /// <param name="timestamp">the timestamp window should get created for</param>

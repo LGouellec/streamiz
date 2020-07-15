@@ -36,7 +36,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         TaskId Id { get; }
 
-        TopicPartition Partition { get; }
+        IEnumerable<TopicPartition> Partition { get; }
 
         /// <summary>
         /// Any changelog partitions associated with this task

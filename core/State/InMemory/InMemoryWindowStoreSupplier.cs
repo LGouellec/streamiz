@@ -35,6 +35,11 @@ namespace Streamiz.Kafka.Net.State.InMemory
         public long? WindowSize { get; set; }
 
         /// <summary>
+        /// Retention period of state store
+        /// </summary>
+        public long Retention => (long)retention.TotalMilliseconds;
+
+        /// <summary>
         /// Return a new <see cref="WindowStore{K, V}"/> instance.
         /// </summary>
         /// <returns>Return a new <see cref="WindowStore{K, V}"/> instance.</returns>

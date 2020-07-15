@@ -581,7 +581,6 @@ namespace Streamiz.Kafka.Net.Stream
 
         IKStream<K, VR> LeftJoin<K0, V0, VR>(IGlobalKTable<K0, V0> globalTable, Func<K, V, K0> keyMapper, Func<V, V0, VR> valueJoiner, string named = null);
 
-
         IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows)
             where V0S : ISerDes<V0>, new()
             where VRS : ISerDes<VR>, new();

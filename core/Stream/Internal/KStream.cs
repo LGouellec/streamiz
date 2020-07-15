@@ -379,17 +379,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #endregion
 
-        #region Join
-
-        public IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows)
-            where V0S : ISerDes<V0>, new()
-            where VRS : ISerDes<VR>, new()
-        {
-            var joined = new Joined<K, V, V0>(KeySerdes, ValueSerdes, new V0S(), null);
-            var wrapped = new WrappedValueJoiner<V, V0, VR>(valueJoiner);
-            return DoJoin(stream, wrapped, windows, joined, new StreamJoinBuilder(builder, false, false));
-        }
-
+        #region Join Table
+       
         public IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner, string named = null)
             where V0S : ISerDes<V0>, new()
             where VRS : ISerDes<VR>, new()
@@ -406,7 +397,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #endregion
 
-        #region LeftJoin
+        #region LeftJoin Table
 
         public IKStream<K, VR> LeftJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, string named = null)
             where VTS : ISerDes<VT>, new()
@@ -420,6 +411,19 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         public IKStream<K, VR> LeftJoin<K0, V0, VR>(IGlobalKTable<K0, V0> globalTable, Func<K, V, K0> keyMapper, Func<V, V0, VR> valueJoiner, string named = null)
         {
             return GlobalTableJoin(globalTable, new WrappedKeyValueMapper<K, V, K0>(keyMapper), new WrappedValueJoiner<V, V0, VR>(valueJoiner), true, named);
+        }
+
+        #endregion
+
+        #region Join Stream
+
+        public IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows)
+           where V0S : ISerDes<V0>, new()
+           where VRS : ISerDes<VR>, new()
+        {
+            var joinedProps = StreamJoinProps.With(KeySerdes, ValueSerdes, new V0S());
+            var wrapped = new WrappedValueJoiner<V, V0, VR>(valueJoiner);
+            return DoJoin(stream, wrapped, windows, joinedProps, new StreamJoinBuilder(builder, false, false));
         }
 
         #endregion
@@ -601,14 +605,14 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             return new KStream<K, VR>(name, KeySerdes, null, SetSourceNodes, joinNode, builder);
         }
 
-        private KStream<K, VR> DoJoin<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, Joined<K, V, V0> joined, StreamJoinBuilder builder)
+        private KStream<K, VR> DoJoin<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> joinedProps, StreamJoinBuilder builder)
         {
             CheckIfParamNull(stream, "stream");
             CheckIfParamNull(valueJoiner, "valueJoiner");
 
             KStream<K, V0> joinOther = (KStream<K, V0>)stream;
 
-            return builder.Join(this, joinOther, valueJoiner, windows, joined);
+            return builder.Join(this, joinOther, valueJoiner, windows, joinedProps);
         }
 
         #endregion

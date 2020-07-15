@@ -5,8 +5,8 @@ namespace Streamiz.Kafka.Net.Stream
 {
     public class JoinWindowOptions : WindowOptions<Window>
     {
-        private readonly long beforeMs;
-        private readonly long afterMs;
+        internal readonly long beforeMs;
+        internal readonly long afterMs;
         private readonly long graceMs;
         private readonly long maintainDurationMs;
 
@@ -28,6 +28,15 @@ namespace Streamiz.Kafka.Net.Stream
         }
 
         #region Static
+
+        public static JoinWindowOptions Of(long timeDifferenceMs)
+        {
+            // This is a static factory method, so we initialize grace and retention to the defaults.
+            return new JoinWindowOptions(timeDifferenceMs, timeDifferenceMs, -1L, DEFAULT_RETENTION_MS);
+        }
+
+        public static JoinWindowOptions Of(TimeSpan timeDifference)
+            => Of((long)timeDifference.TotalMilliseconds);
 
         #endregion
     }

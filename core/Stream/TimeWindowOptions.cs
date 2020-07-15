@@ -11,11 +11,6 @@ namespace Streamiz.Kafka.Net.Stream
     public abstract class TimeWindowOptions : WindowOptions<TimeWindow>
     {
         /// <summary>
-        /// Default retention MS
-        /// </summary>
-        public static readonly long DEFAULT_RETENTION_MS = 24 * 60 * 60 * 1000L; // one day
-
-        /// <summary>
         /// The size of the window's advance interval in milliseconds
         /// </summary>
         protected readonly long advanceMs;

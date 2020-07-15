@@ -133,7 +133,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         internal void SetTaskId(TaskId id)
         {
-            logPrefix = $"stream-task[{id.Topic}|{id.Partition}]|processor[{Name}]- ";
+            logPrefix = $"stream-task[{id.Id}|{id.Partition}]|processor[{Name}]- ";
         }
 
         public void AddNextProcessor(IProcessor next)

@@ -15,14 +15,14 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly IDictionary<string, IStateStore> registeredStores = new Dictionary<string, IStateStore>();
         private IDictionary<string, IStateStore> globalStateStores = new Dictionary<string, IStateStore>();
 
-        public TopicPartition Partition { get; private set; }
+        public IEnumerable<TopicPartition> Partition { get; private set; }
 
         public IEnumerable<string> StateStoreNames => registeredStores.Keys;
 
-        public ProcessorStateManager(TaskId taskId, TopicPartition partition)
+        public ProcessorStateManager(TaskId taskId, IEnumerable<TopicPartition> partition)
         {
             this.log = Logger.GetLogger(typeof(ProcessorStateManager));
-            this.logPrefix = $"stream-task[{taskId.Topic}|{taskId.Partition}] ";
+            this.logPrefix = $"stream-task[{taskId.Id}|{taskId.Partition}] ";
             Partition = partition;
         }
 

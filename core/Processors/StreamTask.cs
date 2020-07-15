@@ -13,7 +13,7 @@ namespace Streamiz.Kafka.Net.Processors
     {
         private readonly IKafkaSupplier kafkaSupplier;
         private readonly IRecordCollector collector;
-        private readonly IProcessor processor;
+        private readonly IDictionary<string, IProcessor> processors = new Dictionary<string, IProcessor>();
         private readonly RecordQueue<ConsumeResult<byte[], byte[]>> queue;
         private readonly IDictionary<TopicPartition, long> consumedOffsets;
         private readonly bool eosEnabled = false;
@@ -22,8 +22,8 @@ namespace Streamiz.Kafka.Net.Processors
         private bool transactionInFlight = false;
         private readonly string threadId;
 
-        public StreamTask(string threadId, TaskId id, TopicPartition partition, ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer)
-            : base(id, partition, processorTopology, consumer, configuration)
+        public StreamTask(string threadId, TaskId id, IEnumerable<TopicPartition> partitions, ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer)
+            : base(id, partitions, processorTopology, consumer, configuration)
         {
             this.threadId = threadId;
             this.kafkaSupplier = kafkaSupplier;
@@ -42,13 +42,20 @@ namespace Streamiz.Kafka.Net.Processors
             this.collector = new RecordCollector(logPrefix);
             collector.Init(ref this.producer);
 
-            var sourceTimestampExtractor = (processorTopology.GetSourceProcessor(id.Topic) as ISourceProcessor).Extractor;
+            // TODO FIX
+            //var sourceTimestampExtractor = (processorTopology.GetSourceProcessor(id.Topic) as ISourceProcessor).Extractor;
+            ITimestampExtractor sourceTimestampExtractor = null;
             Context = new ProcessorContext(configuration, stateMgr).UseRecordCollector(collector);
-            processor = processorTopology.GetSourceProcessor(partition.Topic);
+
+            foreach (var p in partitions)
+                processors.Add(p.Topic, processorTopology.GetSourceProcessor(p.Topic));
+
+
+            // REFACTOR RECORD QUEUE WITH JOIN
             queue = new RecordQueue<ConsumeResult<byte[], byte[]>>(
                 100,
                 logPrefix,
-                $"record-queue-{id.Topic}-{id.Partition}",
+                $"record-queue-{id.Id}-{id.Partition}",
                 sourceTimestampExtractor == null ? configuration.DefaultTimestampExtractor : sourceTimestampExtractor);
         }
 
@@ -141,8 +148,12 @@ namespace Streamiz.Kafka.Net.Processors
         {
             IsClosed = true;
             log.Info($"{logPrefix}Closing");
+
             Suspend();
-            processor.Close();
+
+            foreach(var kp in processors)
+                kp.Value.Close();
+
             collector.Close();
             CloseStateManager();
             log.Info($"{logPrefix}Closed");
@@ -157,8 +168,9 @@ namespace Streamiz.Kafka.Net.Processors
 
         public override void InitializeTopology()
         {
-            log.Debug($"{logPrefix}Initializing topology with processor source : {processor}.");
-            processor.Init(Context);
+            log.Debug($"{logPrefix}Initializing topology with theses source processors : {string.Join(", ", processors.Keys)}.");
+            foreach(var p in processors)
+                p.Value.Init(Context);
 
             if (eosEnabled)
             {
@@ -228,11 +240,12 @@ namespace Streamiz.Kafka.Net.Processors
                 var record = queue.GetNextRecord();
                 if (record != null)
                 {
+                    // TODO : gérer timestampextractor
                     this.Context.SetRecordMetaData(record);
 
                     var recordInfo = $"Topic:{record.Topic}|Partition:{record.Partition.Value}|Offset:{record.Offset}|Timestamp:{record.Message.Timestamp.UnixTimestampMs}";
                     log.Debug($"{logPrefix}Start processing one record [{recordInfo}]");
-                    processor.Process(record.Message.Key, record.Message.Value);
+                    processors[record.Topic].Process(record.Message.Key, record.Message.Value);
                     log.Debug($"{logPrefix}Completed processing one record [{recordInfo}]");
 
                     queue.Commit();

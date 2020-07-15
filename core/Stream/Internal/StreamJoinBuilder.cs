@@ -1,4 +1,13 @@
-﻿using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
+﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.Supplier;
+using Streamiz.Kafka.Net.Stream.Internal.Graph;
+using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
@@ -20,30 +29,139 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             KStream<K, V0> joinRight,
             IValueJoiner<V, V0, VR> joiner,
             JoinWindowOptions windows,
-            Joined<K, V, V0> joined)
+            StreamJoinProps<K, V, V0> joined)
         {
             var named = new Named(joined.Name);
-            var joinThisSuffix = rightOuter ? "-outer-this-join" : "-this-join";
-            var joinOtherSuffix = leftOuter ? "-outer-other-join" : "-other-join";
+            var joinLeftSuffix = rightOuter ? "-outer-this-join" : "-this-join";
+            var joinRightSuffix = leftOuter ? "-outer-other-join" : "-other-join";
 
-            var thisWindowStreamProcessorName = named.SuffixWithOrElseGet("-this-windowed", builder, KStream.WINDOWED_NAME);
-            var otherWindowStreamProcessorName = named.SuffixWithOrElseGet("-other-windowed", builder, KStream.WINDOWED_NAME);
+            var leftWindowStreamProcessorName = named.SuffixWithOrElseGet("-this-windowed", builder, KStream.WINDOWED_NAME);
+            var rightWindowStreamProcessorName = named.SuffixWithOrElseGet("-other-windowed", builder, KStream.WINDOWED_NAME);
 
-            var joinThisGeneratedName = rightOuter ? builder.NewProcessorName(KStream.OUTERTHIS_NAME) : builder.NewProcessorName(KStream.JOINTHIS_NAME);
-            var joinOtherGeneratedName = leftOuter ? builder.NewProcessorName(KStream.OUTEROTHER_NAME) : builder.NewProcessorName(KStream.JOINOTHER_NAME);
+            var joinLeftGeneratedName = rightOuter ? builder.NewProcessorName(KStream.OUTERTHIS_NAME) : builder.NewProcessorName(KStream.JOINTHIS_NAME);
+            var joinRightGeneratedName = leftOuter ? builder.NewProcessorName(KStream.OUTEROTHER_NAME) : builder.NewProcessorName(KStream.JOINOTHER_NAME);
 
-            var joinThisName = named.SuffixWithOrElseGet(joinThisSuffix, joinThisGeneratedName);
-            var joinOtherName = named.SuffixWithOrElseGet(joinOtherSuffix, joinOtherGeneratedName);
+            var joinLeftName = named.SuffixWithOrElseGet(joinLeftSuffix, joinLeftGeneratedName);
+            var joinRightName = named.SuffixWithOrElseGet(joinRightSuffix, joinRightGeneratedName);
 
             var joinMergeName = named.SuffixWithOrElseGet("-merge", builder, KStream.MERGE_NAME);
 
-            StreamGraphNode thisStreamsGraphNode = joinLeft.Node;
-            StreamGraphNode otherStreamsGraphNode = joinRight.Node;
-            var userProvidedBaseStoreName = joined.Name; // TODO : renamed, and create a StreamJoined DTO
+            StreamGraphNode leftStreamsGraphNode = joinLeft.Node;
+            StreamGraphNode rightStreamsGraphNode = joinRight.Node;
+            var userProvidedBaseStoreName = joined.StoreName;
 
-            // TODO TO FINISH
+            var leftStoreSupplier = joined.LeftStoreSupplier;
+            var rightStoreSupplier = joined.RightStoreSupplier;
 
-            return null;
+            StoreBuilder<WindowStore<K, V>> leftWindowStore;
+            StoreBuilder<WindowStore<K, V0>> rightWindowStore;
+
+            AssertUniqueStoreNames(leftStoreSupplier, rightStoreSupplier);
+
+            if (leftStoreSupplier == null)
+            {
+                var thisJoinStoreName = userProvidedBaseStoreName == null ? joinLeftGeneratedName : userProvidedBaseStoreName + joinLeftSuffix;
+                leftWindowStore = JoinWindowStoreBuilder(thisJoinStoreName, windows, joined.KeySerdes, joined.LeftValueSerdes);
+            }
+            else
+            {
+                AssertWindowSettings(leftStoreSupplier, windows);
+                leftWindowStore = Stores.WindowStoreBuilder(leftStoreSupplier, joined.KeySerdes, joined.LeftValueSerdes);
+            }
+
+            if (rightStoreSupplier == null)
+            {
+                var otherJoinStoreName = userProvidedBaseStoreName == null ? joinRightGeneratedName : userProvidedBaseStoreName + joinRightSuffix;
+                rightWindowStore = JoinWindowStoreBuilder(otherJoinStoreName, windows, joined.KeySerdes, joined.RightValueSerdes);
+            }
+            else
+            {
+                AssertWindowSettings(rightStoreSupplier, windows);
+                rightWindowStore = Stores.WindowStoreBuilder(rightStoreSupplier, joined.KeySerdes, joined.RightValueSerdes);
+            }
+
+
+            var leftStream = new KStreamJoinWindow<K, V>(leftWindowStore.Name);
+            var leftStreamParams = new ProcessorParameters<K, V>(leftStream, leftWindowStore.Name);
+            var leftNode = new ProcessorGraphNode<K, V>(leftWindowStreamProcessorName, leftStreamParams);
+            builder.AddGraphNode(leftStreamsGraphNode, leftNode);
+
+            var rightStream = new KStreamJoinWindow<K, V0>(rightWindowStore.Name);
+            var rightStreamParams = new ProcessorParameters<K, V0>(rightStream, rightWindowStore.Name);
+            var rightNode = new ProcessorGraphNode<K, V0>(rightWindowStreamProcessorName, rightStreamParams);
+            builder.AddGraphNode(rightStreamsGraphNode, rightNode);
+
+            var joinL = new KStreamKStreamJoin<K, V, V0, VR>(joinLeftName, rightWindowStore.Name, windows.beforeMs, windows.afterMs, joiner, leftOuter);
+            var joinLParams = new ProcessorParameters<K, V>(joinL, joinLeftName);
+            var joinR = new KStreamKStreamJoin<K, V0, V, VR>(joinRightName, leftWindowStore.Name, windows.beforeMs, windows.afterMs, joiner.Reverse(), rightOuter);
+            var joinRParams = new ProcessorParameters<K, V0>(joinR, joinRightName);
+            var merge = new PassThrough<K, VR>();
+            var mergeParams = new ProcessorParameters<K, VR>(merge, joinMergeName);
+
+            var joinNode = new StreamStreamJoinNode<K, V, V0, VR>(
+                joinMergeName,
+                joiner,
+                joinLParams,
+                joinRParams,
+                mergeParams,
+                leftStreamParams,
+                rightStreamParams,
+                leftWindowStore,
+                rightWindowStore,
+                joined);
+
+            builder.AddGraphNode(new List<StreamGraphNode> { leftStreamsGraphNode, rightStreamsGraphNode }, joinNode);
+
+            ISet<string> allSourceNodes = new HashSet<string>(joinLeft.SetSourceNodes);
+            allSourceNodes.AddRange(joinRight.SetSourceNodes);
+
+            return new KStream<K, VR>(
+                joinMergeName,
+                joined.KeySerdes,
+                null,
+                allSourceNodes.ToList(),
+                joinNode,
+                builder);
         }
+
+        #region Private
+
+        private void AssertWindowSettings(WindowBytesStoreSupplier supplier, JoinWindowOptions joinWindows)
+        {
+            bool allMatch = supplier.Retention == (joinWindows.Size + joinWindows.GracePeriodMs) &&
+                supplier.WindowSize == joinWindows.Size;
+
+            if (!allMatch)
+            {
+                throw new StreamsException($"Window settings mismatch. WindowBytesStoreSupplier settings {supplier} supplier must match JoinWindows settings {joinWindows}");
+            }
+        }
+
+        private void AssertUniqueStoreNames(WindowBytesStoreSupplier supplier, WindowBytesStoreSupplier otherSupplier)
+        {
+            if (supplier != null
+                && otherSupplier != null
+                && supplier.Name.Equals(otherSupplier.Name))
+            {
+                throw new StreamsException("Both StoreSuppliers have the same name.  StoreSuppliers must provide unique names");
+            }
+        }
+
+        private StoreBuilder<WindowStore<K, V>> JoinWindowStoreBuilder<K, V>(string storeName,
+                                                                             JoinWindowOptions windows,
+                                                                             ISerDes<K> keySerde,
+                                                                             ISerDes<V> valueSerde)
+        {
+            return Stores.WindowStoreBuilder(
+                Stores.InMemoryWindowStore(
+                    storeName + "-store",
+                    TimeSpan.FromMilliseconds(windows.Size + windows.GracePeriodMs),
+                    TimeSpan.FromMilliseconds(windows.Size)
+                ),
+                keySerde,
+                valueSerde
+            );
+        }
+        #endregion
     }
 }

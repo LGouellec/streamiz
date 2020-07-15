@@ -1,4 +1,8 @@
-﻿using System;
+﻿using Streamiz.Kafka.Net.Stream;
+using System;
+using System.Net.WebSockets;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace Streamiz.Kafka.Net.Crosscutting
@@ -19,6 +23,11 @@ namespace Streamiz.Kafka.Net.Crosscutting
             Regex regex = new Regex(HOST_PORT_PATTERN);
             var match = regex.Match(address);
             return match.Success ? Convert.ToInt32(match.Groups[1].Value) : (int?)null;
+        }
+
+        public static IValueJoiner<V2, V1, VR> Reverse<V1, V2, VR>(this IValueJoiner<V1, V2, VR> joiner)
+        {
+            return new WrappedValueJoiner<V2, V1, VR>((v2, v1) => joiner.Apply(v1, v2));
         }
     }
 }

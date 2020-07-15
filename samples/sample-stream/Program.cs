@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using Microsoft.VisualBasic;
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
@@ -29,36 +30,19 @@ namespace sample_stream
 
             StreamBuilder builder = new StreamBuilder();
 
-            builder.Stream<string, string>("test")
-                    .GroupByKey()
-                    .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
-                    .Count(InMemoryWindows<string, long>.As("store"))
-                    .ToStream()
-                    .Map((k, v) => KeyValuePair.Create(k.Key, v.ToString()))
-                    .To("output");
+            var stream1 = builder.Stream<string, string>("test");
+            var stream2 = builder.Stream<string, string>("test2");
+
+            stream1.Join<string, string, StringSerDes, StringSerDes>(stream2,
+                (v1, v2) => $"{v1}-{v2}",
+                JoinWindowOptions.Of(TimeSpan.FromMinutes(1)))
+                .To("output-join");
+
 
             Topology t = builder.Build();
-            //bool taskStart = false;
 
             KafkaStream stream = new KafkaStream(t, config);
 
-            // Subscribe state changed
-            //stream.StateChanged += (old, @new) =>
-            //{
-            //    if (!taskStart && @new == KafkaStream.State.RUNNING) // If new state is running, we can quering state store.
-            //    {
-            //        Task.Factory.StartNew(() =>
-            //        {
-            //            while (!source.Token.IsCancellationRequested)
-            //            {
-            //                var store = stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.WindowStore<string, long>()));
-            //                var items = store.All().ToList();
-            //                Thread.Sleep(500);
-            //            }
-            //        }, source.Token);
-            //        taskStart = true;
-            //    }
-            //};
 
             Console.CancelKeyPress += (o, e) =>
             {

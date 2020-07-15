@@ -19,10 +19,10 @@ namespace Streamiz.Kafka.Net.Processors
         protected ILog log;
         protected readonly string logPrefix = "";
 
-        protected AbstractTask(TaskId id, TopicPartition partition, ProcessorTopology topology, IConsumer<byte[], byte[]> consumer, IStreamConfig config)
+        protected AbstractTask(TaskId id, IEnumerable<TopicPartition> partition, ProcessorTopology topology, IConsumer<byte[], byte[]> consumer, IStreamConfig config)
         {
             log = Logger.GetLogger(GetType());
-            logPrefix = $"stream-task[{id.Topic}|{id.Partition}] ";
+            logPrefix = $"stream-task[{id.Id}|{id.Partition}] ";
 
             Partition = partition;
             Id = id;
@@ -40,7 +40,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public TaskId Id { get; }
 
-        public TopicPartition Partition { get; }
+        public IEnumerable<TopicPartition> Partition { get; }
 
         public ICollection<TopicPartition> ChangelogPartitions { get; internal set; }
 

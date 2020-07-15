@@ -5,6 +5,7 @@ using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,7 +19,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly IList<string> sourceTopics = new List<string>();
         private readonly ISet<string> globalTopics = new HashSet<string>();
         private readonly QuickUnion<string> nodeGrouper = new QuickUnion<string>();
-        private IDictionary<string, ISet<string>> nodeGroups = new Dictionary<string, ISet<string>>();
+        private IDictionary<int, ISet<string>> nodeGroups = new Dictionary<int, ISet<string>>();
         private readonly IList<ISet<string>> copartitionSourceGroups = new List<ISet<string>>();
 
         // map from state store names to this state store's corresponding changelog topic if possible
@@ -232,18 +233,18 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         #region Build
 
-        public ProcessorTopology BuildTopology() => BuildTopology((string)null);
+        public ProcessorTopology BuildTopology() => BuildTopology((int?)null);
 
-        public ProcessorTopology BuildTopology(string topic)
+        public ProcessorTopology BuildTopology(int? id)
         {
             ISet<string> nodeGroup = null;
-            if (!string.IsNullOrEmpty(topic))
+            if (id.HasValue)
             {
                 var groups = NodeGroups();
-                if (groups.ContainsKey(topic))
-                    nodeGroup = NodeGroups()[topic];
+                if (groups.ContainsKey(id.Value))
+                    nodeGroup = NodeGroups()[id.Value];
                 else
-                    throw new TopologyException($"Topic {topic} doesn't exist in this topology");
+                    throw new TopologyException($"Subtopology {id.Value} doesn't exist in this topology");
             }
             else
                 nodeGroup = NodeGroups().Values.SelectMany(i => i).ToHashSet();
@@ -263,39 +264,24 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             return BuildTopology(GlobalNodeGroups, null);
         }
 
-        private ISet<string> GlobalNodeGroups => nodeGroups
-                .Where(group => group.Value.Any(IsGlobalSource))
-                .SelectMany(group => group.Value)
-                .ToHashSet();
-
-        private bool IsGlobalSource(string node)
-        {
-            var factory = nodeFactories[node];
-            if (factory is ISourceNodeFactory)
-            {
-                return globalTopics.Contains(((ISourceNodeFactory)factory).Topic);
-            }
-            return false;
-        }
-
-        public ProcessorTopology BuildTopology(TopicPartition sourceTopicPartition)
+        public ProcessorTopology BuildTopology(TaskId taskId)
         {
             ISet<string> nodeGroup = null;
-            if (sourceTopicPartition != null)
+            if (taskId != null)
             {
                 var groups = NodeGroups();
-                if (groups.ContainsKey(sourceTopicPartition.Topic))
-                    nodeGroup = NodeGroups()[sourceTopicPartition.Topic];
+                if (groups.ContainsKey(taskId.Id))
+                    nodeGroup = NodeGroups()[taskId.Id];
                 else
-                    throw new TopologyException($"Topic {sourceTopicPartition.Topic} doesn't exist in this topology");
+                    throw new TopologyException($"Task Id {taskId.Id} doesn't exist in this topology");
             }
             else
                 nodeGroup = NodeGroups().Values.SelectMany(i => i).ToHashSet();
 
-            return BuildTopology(nodeGroup, sourceTopicPartition);
+            return BuildTopology(nodeGroup, taskId);
         }
 
-        private ProcessorTopology BuildTopology(ISet<string> nodeGroup, TopicPartition sourceTopicPartition)
+        private ProcessorTopology BuildTopology(ISet<string> nodeGroup, TaskId taskId)
         {
             IProcessor rootProcessor = new RootProcessor();
             IDictionary<string, IProcessor> sources = new Dictionary<string, IProcessor>();
@@ -311,7 +297,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     processors.Add(nodeFactory.Name, processor);
 
                     if (nodeFactory is IProcessorNodeFactory)
-                        BuildProcessorNode(processors, stateStores, nodeFactory as IProcessorNodeFactory, processor, sourceTopicPartition);
+                        BuildProcessorNode(processors, stateStores, nodeFactory as IProcessorNodeFactory, processor, taskId);
                     else if (nodeFactory is ISourceNodeFactory)
                         BuildSourceNode(sources, nodeFactory as ISourceNodeFactory, processor);
                     else if (nodeFactory is ISinkNodeFactory)
@@ -342,7 +328,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             sources.Add(factory.Name, processor);
         }
 
-        private void BuildProcessorNode(IDictionary<string, IProcessor> processors, IDictionary<string, IStateStore> stateStores, IProcessorNodeFactory factory, IProcessor processor, TopicPartition partition)
+        private void BuildProcessorNode(IDictionary<string, IProcessor> processors, IDictionary<string, IStateStore> stateStores, IProcessorNodeFactory factory, IProcessor processor, TaskId taskId)
         {
             foreach (string predecessor in factory.Previous)
             {
@@ -359,7 +345,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                         StateStoreFactory stateStoreFactory = stateFactories[stateStoreName];
 
                         // TODO : changelog topic (remember the changelog topic if this state store is change-logging enabled)
-                        stateStores.Add(stateStoreName, stateStoreFactory.Build(partition));
+                        stateStores.Add(stateStoreName, stateStoreFactory.Build(taskId));
                     }
                     else
                     {
@@ -389,11 +375,27 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
         }
 
+        private ISet<string> GlobalNodeGroups => nodeGroups
+        .Where(group => group.Value.Any(IsGlobalSource))
+        .SelectMany(group => group.Value)
+        .ToHashSet();
+
+        private bool IsGlobalSource(string node)
+        {
+            var factory = nodeFactories[node];
+            if (factory is ISourceNodeFactory)
+            {
+                return globalTopics.Contains(((ISourceNodeFactory)factory).Topic);
+            }
+            return false;
+        }
+
+
         #endregion
 
         #region Make Groups
 
-        internal IDictionary<string, ISet<string>> NodeGroups()
+        internal IDictionary<int, ISet<string>> NodeGroups()
         {
             if (nodeGroups == null)
             {
@@ -403,31 +405,34 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             return nodeGroups;
         }
 
-        private IDictionary<string, ISet<string>> MakeNodeGroups()
+        private IDictionary<int, ISet<string>> MakeNodeGroups()
         {
-            IDictionary<string, ISet<string>> groups = new Dictionary<string, ISet<string>>();
+            IDictionary<int, ISet<string>> groups = new Dictionary<int, ISet<string>>();
+            IDictionary<string, ISet<string>> rootToNodeGroup = new Dictionary<string, ISet<string>>();
 
-            foreach (var topicSource in sourceTopics.Concat(globalTopics))
+            int nodeGroupId = 0;
+
+            foreach (var nodeName in nodeFactories.Keys)
             {
-                groups.Add(topicSource, new HashSet<string>());
-                PutNodeGroupName(groups, topicSource);
+                nodeGroupId = PutNodeGroupName(nodeName, nodeGroupId, groups, rootToNodeGroup);
             }
 
             return groups;
         }
 
-        private void PutNodeGroupName(IDictionary<string, ISet<string>> rootToNodeGroup, string topicSource)
+        private int PutNodeGroupName(string nodeName, int nodeGroupId, IDictionary<int, ISet<string>> groups, IDictionary<string, ISet<string>> rootToNodeGroup)
         {
-            var sourceNode = nodeFactories.Values.FirstOrDefault(n => n is ISourceNodeFactory && (n as ISourceNodeFactory).Topic.Equals(topicSource)) as ISourceNodeFactory;
-            if (sourceNode != null)
+            int newNodeGroupId = nodeGroupId;
+            string root = nodeGrouper.Root(nodeName);
+            ISet<string> nodeGroup = rootToNodeGroup.ContainsKey(root) ? rootToNodeGroup[root] : null;
+            if (nodeGroup == null)
             {
-                IList<string> nodes = new List<string>();
-                foreach (var v in nodeGrouper.Ids)
-                    if (v.Value.Equals(sourceNode.Name))
-                        nodes.Add(v.Key);
-
-                rootToNodeGroup[topicSource].AddRange(nodes);
+                nodeGroup = new HashSet<string>();
+                rootToNodeGroup.Add(root, nodeGroup);
+                nodeGroups.Add(newNodeGroupId++, nodeGroup);
             }
+            nodeGroup.Add(nodeName);
+            return newNodeGroupId;
         }
 
         #endregion
@@ -444,7 +449,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             return topologyDes;
         }
 
-        private void DescribeSubTopology(TopologyDescription description, string key, ISet<string> values)
+        private void DescribeSubTopology(TopologyDescription description, int key, ISet<string> values)
         {
             IDictionary<string, NodeDescription> nodesByName = new Dictionary<string, NodeDescription>();
             foreach (var name in values)
@@ -464,5 +469,19 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         }
 
         #endregion
+
+        public TaskId GetTaskIdFromPartition(TopicPartition topicPartition)
+        {
+            var description = Describe();
+            var subTopo =
+                description
+                    .SubTopologies
+                    .FirstOrDefault(sub => sub.Nodes.OfType<ISourceNodeDescription>().FirstOrDefault(source => source.Topics.Contains(topicPartition.Topic)) != null);
+            return new TaskId
+            {
+                Id = subTopo.Id,
+                Partition = topicPartition.Partition
+            };
+        }
     }
 }

@@ -64,6 +64,9 @@ namespace Streamiz.Kafka.Net.State.Internal
         public IWindowStoreEnumerator<V> Fetch(K key, DateTime from, DateTime to)
            => new WindowStoreEnumerator<V>(wrapped.Fetch(GetKeyBytes(key), from, to), valueSerdes);
 
+        public IWindowStoreEnumerator<V> Fetch(K key, long from, long to)
+            => new WindowStoreEnumerator<V>(wrapped.Fetch(GetKeyBytes(key), from, to), valueSerdes);
+
         public IKeyValueEnumerator<Windowed<K>, V> FetchAll(DateTime from, DateTime to)
             => new WindowedKeyValueEnumerator<K, V>(wrapped.FetchAll(from, to), keySerdes, valueSerdes);
 
