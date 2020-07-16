@@ -26,10 +26,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine();
             sb.AppendLine("Topologies:");
             foreach (var sub in subtopologies)
-                sb.Append($"\t{sub}");
+                sb.Append($"   {sub}");
             return sb.ToString();
         }
     }
@@ -55,7 +54,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"Sub-topology: {Id}");
             foreach (var n in Nodes)
-                sb.Append($"\t{n}");
+                sb.Append($"    {n}");
             return sb.ToString();
         }
     }
@@ -125,8 +124,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"Source: {Name} (topics: {string.Join(",", Topics)})");
-            sb.AppendLine($"\t\t   --> {NodeNames(Next)}");
+            sb.AppendLine($"Source: {Name} (topics: [{string.Join(",", Topics)}])");
+            sb.AppendLine($"      --> {NodeNames(Next)}");
             return sb.ToString();
         }
     }
@@ -148,9 +147,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"Processor: {Name} (stores: {string.Join(",", Stores)})");
-            sb.AppendLine($"\t\t   --> {NodeNames(Next)}");
-            sb.AppendLine($"\t\t   <-- {NodeNames(Previous)}");
+            sb.AppendLine($"Processor: {Name} (stores: [{string.Join(",", Stores)}])");
+            sb.AppendLine($"      --> {NodeNames(Next)}");
+            sb.AppendLine($"      <-- {NodeNames(Previous)}");
             return sb.ToString();
         }
     }
@@ -188,7 +187,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             else
                 sb.AppendLine($"Sink: {Name} (extractor class: {TopicNameExtractorType.FullName})");
 
-            sb.AppendLine($"\t\t   <-- {NodeNames(Previous)}");
+            sb.AppendLine($"      <-- {NodeNames(Previous)}");
             return sb.ToString();
         }
     }

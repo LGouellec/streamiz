@@ -17,7 +17,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
     {
         private static string TABLE_SOURCE_SUFFIX = "-source";
 
-        private int index = 0;
+        private int index = -1;
         private static readonly object _locker = new object();
         private readonly ILog logger = Logger.GetLogger(typeof(InternalStreamBuilder));
 
@@ -46,7 +46,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public string NewProcessorName(string prefix)
         {
-            return $"{prefix}-{NextIndex.ToString("D10")}";
+            return $"{prefix}{NextIndex.ToString("D10")}";
         }
   
         #endregion

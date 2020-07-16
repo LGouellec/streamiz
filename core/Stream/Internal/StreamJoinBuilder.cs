@@ -82,12 +82,12 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
 
             var leftStream = new KStreamJoinWindow<K, V>(leftWindowStore.Name);
-            var leftStreamParams = new ProcessorParameters<K, V>(leftStream, leftWindowStore.Name);
+            var leftStreamParams = new ProcessorParameters<K, V>(leftStream, leftWindowStreamProcessorName);
             var leftNode = new ProcessorGraphNode<K, V>(leftWindowStreamProcessorName, leftStreamParams);
             builder.AddGraphNode(leftStreamsGraphNode, leftNode);
 
             var rightStream = new KStreamJoinWindow<K, V0>(rightWindowStore.Name);
-            var rightStreamParams = new ProcessorParameters<K, V0>(rightStream, rightWindowStore.Name);
+            var rightStreamParams = new ProcessorParameters<K, V0>(rightStream, rightWindowStreamProcessorName);
             var rightNode = new ProcessorGraphNode<K, V0>(rightWindowStreamProcessorName, rightStreamParams);
             builder.AddGraphNode(rightStreamsGraphNode, rightNode);
 

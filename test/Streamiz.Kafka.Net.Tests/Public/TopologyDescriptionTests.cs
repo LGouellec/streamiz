@@ -8,6 +8,7 @@ using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Streamiz.Kafka.Net.Tests.Public
 {
@@ -149,108 +150,118 @@ namespace Streamiz.Kafka.Net.Tests.Public
         }
 
         [Test]
-        public void TopologyDescriptionJoinTopology()
+        public void TopologyDescriptionJoinCompareWithJavaToString()
         {
+            #region Expected
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.AppendLine("Topologies:");
+            stringBuilder.AppendLine("   Sub-topology: 0");
+            stringBuilder.AppendLine("    Source: KSTREAM-SOURCE-0000000000 (topics: [test])");
+            stringBuilder.AppendLine("      --> KSTREAM-WINDOWED-0000000002");
+            stringBuilder.AppendLine("    Source: KSTREAM-SOURCE-0000000001 (topics: [test2])");
+            stringBuilder.AppendLine("      --> KSTREAM-WINDOWED-0000000003");
+            stringBuilder.AppendLine("    Processor: KSTREAM-WINDOWED-0000000002 (stores: [KSTREAM-JOINTHIS-0000000004-store])");
+            stringBuilder.AppendLine("      --> KSTREAM-JOINTHIS-0000000004");
+            stringBuilder.AppendLine("      <-- KSTREAM-SOURCE-0000000000");
+            stringBuilder.AppendLine("    Processor: KSTREAM-WINDOWED-0000000003 (stores: [KSTREAM-JOINOTHER-0000000005-store])");
+            stringBuilder.AppendLine("      --> KSTREAM-JOINOTHER-0000000005");
+            stringBuilder.AppendLine("      <-- KSTREAM-SOURCE-0000000001");
+            stringBuilder.AppendLine("    Processor: KSTREAM-JOINTHIS-0000000004 (stores: [KSTREAM-JOINOTHER-0000000005-store])");
+            stringBuilder.AppendLine("      --> KSTREAM-MERGE-0000000006");
+            stringBuilder.AppendLine("      <-- KSTREAM-WINDOWED-0000000002");
+            stringBuilder.AppendLine("    Processor: KSTREAM-JOINOTHER-0000000005 (stores: [KSTREAM-JOINTHIS-0000000004-store])");
+            stringBuilder.AppendLine("      --> KSTREAM-MERGE-0000000006");
+            stringBuilder.AppendLine("      <-- KSTREAM-WINDOWED-0000000003");
+            stringBuilder.AppendLine("    Processor: KSTREAM-MERGE-0000000006 (stores: [])");
+            stringBuilder.AppendLine("      --> KSTREAM-SINK-0000000007");
+            stringBuilder.AppendLine("      <-- KSTREAM-JOINTHIS-0000000004, KSTREAM-JOINOTHER-0000000005");
+            stringBuilder.AppendLine("    Sink: KSTREAM-SINK-0000000007 (topic: output-join)");
+            stringBuilder.AppendLine("      <-- KSTREAM-MERGE-0000000006");
+            #endregion
+            // COMPARE TOSTRING() WITH JAVA TOSTRING() DESCRIBE TOPO
             var builder = new StreamBuilder();
-            var stream1 = builder.Stream("topic1", new StringSerDes(), new StringSerDes());
-            var stream2 = builder.Stream("topic2", new StringSerDes(), new StringSerDes());
+            var stream1 = builder.Stream("test", new StringSerDes(), new StringSerDes());
+            var stream2 = builder.Stream("test2", new StringSerDes(), new StringSerDes());
 
             stream1.Join<string, string, StringSerDes, StringSerDes>(stream2,
                 (v, v2) => $"{v}-{v2}",
                 JoinWindowOptions.Of(TimeSpan.FromMinutes(1)))
-                .To("topic-o");
+                .To("output-join");
 
             var topology = builder.Build();
             var description = topology.Describe();
 
-            // JAVA 
-    //        Sub - topology: 0
-    //Source: KSTREAM - SOURCE - 0000000000(topics: [test])
-    //  -- > KSTREAM - WINDOWED - 0000000002
-    //Source: KSTREAM - SOURCE - 0000000001(topics: [test2])
-    //  -- > KSTREAM - WINDOWED - 0000000003
-    //Processor: KSTREAM - WINDOWED - 0000000002(stores: [KSTREAM - JOINTHIS - 0000000004 - store])
-    //  -- > KSTREAM - JOINTHIS - 0000000004
-    //  < --KSTREAM - SOURCE - 0000000000
-    //Processor: KSTREAM - WINDOWED - 0000000003(stores: [KSTREAM - JOINOTHER - 0000000005 - store])
-    //  -- > KSTREAM - JOINOTHER - 0000000005
-    //  < --KSTREAM - SOURCE - 0000000001
-    //Processor: KSTREAM - JOINOTHER - 0000000005(stores: [KSTREAM - JOINTHIS - 0000000004 - store])
-    //  -- > KSTREAM - MERGE - 0000000006
-    //  < --KSTREAM - WINDOWED - 0000000003
-    //Processor: KSTREAM - JOINTHIS - 0000000004(stores: [KSTREAM - JOINOTHER - 0000000005 - store])
-    //  -- > KSTREAM - MERGE - 0000000006
-    //  < --KSTREAM - WINDOWED - 0000000002
-    //Processor: KSTREAM - MERGE - 0000000006(stores: [])
-    //  -- > KSTREAM - SINK - 0000000007
-    //  < --KSTREAM - JOINTHIS - 0000000004, KSTREAM - JOINOTHER - 0000000005
-    //Sink: KSTREAM - SINK - 0000000007(topic: output - join)
-    //  < --KSTREAM - MERGE - 0000000006
+            Assert.AreEqual(stringBuilder.ToString(), description.ToString());
+        }
+
+        [Test]
+        public void TopologyDescriptionGlobalCompareWithJavaToString()
+        {
+            // TODO : GlobalStore description
+
+            //GlobalKTable<String, String> table = builder.globalTable(INPUT_TOPIC);
+            //KStream<String, String> stream = builder.stream(INPUT_TOPIC2);
+            //KStream<String, String> join = stream.join(table, (k, k1)->k1, (v, v2)->String.format("%s-%s", v, v2));
+            //join.to(OUTPUT_TOPIC);
+
+            //Topologies:
+            //   Sub-topology: 0 for global store (will not generate tasks)
+            //    Source: KSTREAM-SOURCE-0000000001 (topics: [test])
+            //      --> KTABLE-SOURCE-0000000002
+            //    Processor: KTABLE-SOURCE-0000000002 (stores: [test-STATE-STORE-0000000000])
+            //      --> none
+            //      <-- KSTREAM-SOURCE-0000000001
+            //  Sub-topology: 1
+            //    Source: KSTREAM-SOURCE-0000000003 (topics: [test2])
+            //      --> KSTREAM-LEFTJOIN-0000000004
+            //    Processor: KSTREAM-LEFTJOIN-0000000004 (stores: [])
+            //      --> KSTREAM-SINK-0000000005
+            //      <-- KSTREAM-SOURCE-0000000003
+            //    Sink: KSTREAM-SINK-0000000005 (topic: output-join)
+            //      <-- KSTREAM-LEFTJOIN-0000000004
 
 
 
-      // C# 
-    //        Sub - topology: 0
+            #region Expected
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.AppendLine("Topologies:");
+            stringBuilder.AppendLine("   Sub-topology: 0");
+            stringBuilder.AppendLine("    Source: KSTREAM-SOURCE-0000000000 (topics: [test])");
+            stringBuilder.AppendLine("      --> KSTREAM-WINDOWED-0000000002");
+            stringBuilder.AppendLine("    Source: KSTREAM-SOURCE-0000000001 (topics: [test2])");
+            stringBuilder.AppendLine("      --> KSTREAM-WINDOWED-0000000003");
+            stringBuilder.AppendLine("    Processor: KSTREAM-WINDOWED-0000000002 (stores: [KSTREAM-JOINTHIS-0000000004-store])");
+            stringBuilder.AppendLine("      --> KSTREAM-JOINTHIS-0000000004");
+            stringBuilder.AppendLine("      <-- KSTREAM-SOURCE-0000000000");
+            stringBuilder.AppendLine("    Processor: KSTREAM-WINDOWED-0000000003 (stores: [KSTREAM-JOINOTHER-0000000005-store])");
+            stringBuilder.AppendLine("      --> KSTREAM-JOINOTHER-0000000005");
+            stringBuilder.AppendLine("      <-- KSTREAM-SOURCE-0000000001");
+            stringBuilder.AppendLine("    Processor: KSTREAM-JOINTHIS-0000000004 (stores: [KSTREAM-JOINOTHER-0000000005-store])");
+            stringBuilder.AppendLine("      --> KSTREAM-MERGE-0000000006");
+            stringBuilder.AppendLine("      <-- KSTREAM-WINDOWED-0000000002");
+            stringBuilder.AppendLine("    Processor: KSTREAM-JOINOTHER-0000000005 (stores: [KSTREAM-JOINTHIS-0000000004-store])");
+            stringBuilder.AppendLine("      --> KSTREAM-MERGE-0000000006");
+            stringBuilder.AppendLine("      <-- KSTREAM-WINDOWED-0000000003");
+            stringBuilder.AppendLine("    Processor: KSTREAM-MERGE-0000000006 (stores: [])");
+            stringBuilder.AppendLine("      --> KSTREAM-SINK-0000000007");
+            stringBuilder.AppendLine("      <-- KSTREAM-JOINTHIS-0000000004, KSTREAM-JOINOTHER-0000000005");
+            stringBuilder.AppendLine("    Sink: KSTREAM-SINK-0000000007 (topic: output-join)");
+            stringBuilder.AppendLine("      <-- KSTREAM-MERGE-0000000006");
+            #endregion
+            // COMPARE TOSTRING() WITH JAVA TOSTRING() DESCRIBE TOPO
+            var builder = new StreamBuilder();
+            var stream1 = builder.Stream("test", new StringSerDes(), new StringSerDes());
+            var stream2 = builder.Stream("test2", new StringSerDes(), new StringSerDes());
 
-    //Source: KSTREAM - SOURCE--0000000001(topics: topic1)
-    //         -- > KSTREAM - JOINTHIS--0000000005 - store
+            stream1.Join<string, string, StringSerDes, StringSerDes>(stream2,
+                (v, v2) => $"{v}-{v2}",
+                JoinWindowOptions.Of(TimeSpan.FromMinutes(1)))
+                .To("output-join");
 
-    //Source: KSTREAM - SOURCE--0000000002(topics: topic2)
-    //         -- > KSTREAM - JOINOTHER--0000000006 - store
+            var topology = builder.Build();
+            var description = topology.Describe();
 
-    //Processor: KSTREAM - JOINTHIS--0000000005 - store(stores: KSTREAM - JOINTHIS--0000000005 - store)
-    //         -- > KSTREAM - JOINTHIS--0000000005
-    //            < --KSTREAM - SOURCE--0000000001
-
-    //Processor: KSTREAM - JOINOTHER--0000000006 - store(stores: KSTREAM - JOINOTHER--0000000006 - store)
-    //         -- > KSTREAM - JOINOTHER--0000000006
-    //            < --KSTREAM - SOURCE--0000000002
-
-    //Processor: KSTREAM - JOINTHIS--0000000005(stores: KSTREAM - JOINOTHER--0000000006 - store)
-    //         -- > KSTREAM - MERGE--0000000007
-    //            < --KSTREAM - JOINTHIS--0000000005 - store
-
-    //Processor: KSTREAM - JOINOTHER--0000000006(stores: KSTREAM - JOINTHIS--0000000005 - store)
-    //         -- > KSTREAM - MERGE--0000000007
-    //            < --KSTREAM - JOINOTHER--0000000006 - store
-
-    //Processor: KSTREAM - MERGE--0000000007(stores: )
-    //         -- > KSTREAM - SINK--0000000008
-    //            < --KSTREAM - JOINTHIS--0000000005, KSTREAM - JOINOTHER--0000000006
-
-    //Sink: KSTREAM - SINK--0000000008(topic: topic - o)
-    //         < --KSTREAM - MERGE--0000000007
-
-
-            Assert.AreEqual(1, description.SubTopologies.Count());
-            Assert.AreEqual(0, description.SubTopologies.ToArray()[0].Id);
-            Assert.AreEqual(3, description.SubTopologies.ToArray()[0].Nodes.Count());
-
-            var sourceNode = description.SubTopologies.ToArray()[0].Nodes.FirstOrDefault(n => n is ISourceNodeDescription) as ISourceNodeDescription;
-            var filterNode = description.SubTopologies.ToArray()[0].Nodes.FirstOrDefault(n => n is IProcessorNodeDescription) as IProcessorNodeDescription;
-            var sinkNode = description.SubTopologies.ToArray()[0].Nodes.FirstOrDefault(n => n is ISinkNodeDescription) as ISinkNodeDescription;
-
-            Assert.AreEqual("source", sourceNode.Name);
-            Assert.AreEqual(null, sourceNode.TimestampExtractorType);
-            Assert.AreEqual(new List<string> { "topic" }, sourceNode.Topics);
-            Assert.AreEqual(1, sourceNode.Next.Count());
-            Assert.AreEqual(0, sourceNode.Previous.Count());
-            Assert.AreEqual(filterNode, sourceNode.Next.ToArray()[0]);
-
-            Assert.AreEqual("filter", filterNode.Name);
-            Assert.AreEqual(0, filterNode.Stores.Count());
-            Assert.AreEqual(new List<string> { "topic" }, sourceNode.Topics);
-            Assert.AreEqual(1, filterNode.Next.Count());
-            Assert.AreEqual(1, filterNode.Previous.Count());
-            Assert.AreEqual(sinkNode, filterNode.Next.ToArray()[0]);
-            Assert.AreEqual(sourceNode, filterNode.Previous.ToArray()[0]);
-
-            Assert.AreEqual("to", sinkNode.Name);
-            Assert.AreEqual(null, sinkNode.TopicNameExtractorType);
-            Assert.AreEqual("topic-dest", sinkNode.Topic);
-            Assert.AreEqual(0, sinkNode.Next.Count());
-            Assert.AreEqual(1, sinkNode.Previous.Count());
-            Assert.AreEqual(filterNode, sinkNode.Previous.ToArray()[0]);
+            Assert.AreEqual(stringBuilder.ToString(), description.ToString());
         }
 
     }

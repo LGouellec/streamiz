@@ -234,7 +234,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 input.PipeInput("test", "1");
                 input.PipeInput("test", "12");
 
-                var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("KSTREAM-AGGREGATE-STATE-STORE-0000000004");
+                var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("KSTREAM-AGGREGATE-STATE-STORE-0000000003");
                 Assert.IsNotNull(store);
                 Assert.AreEqual(1, store.ApproximateNumEntries());
                 var el = store.Get("TEST");
@@ -272,7 +272,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 input.PipeInput("test", "1");
                 input.PipeInput("test", "12");
 
-                var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("KSTREAM-AGGREGATE-STATE-STORE-0000000004");
+                var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("KSTREAM-AGGREGATE-STATE-STORE-0000000003");
                 Assert.IsNotNull(store);
                 Assert.AreEqual(1, store.ApproximateNumEntries());
                 var el = store.Get("TEST");

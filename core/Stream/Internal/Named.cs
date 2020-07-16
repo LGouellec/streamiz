@@ -73,7 +73,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             }
         }
 
-        internal string OrElseGenerateWithPrefix( INameProvider provider,  string prefix)
+        internal string OrElseGenerateWithPrefix(INameProvider provider,  string prefix)
         {
             // We actually do not need to generate processor names for operation if a name is specified.
             // But before returning, we still need to burn index for the operation to keep topology backward compatibility.
