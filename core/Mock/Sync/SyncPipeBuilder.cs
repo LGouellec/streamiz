@@ -24,7 +24,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public IPipeInput Input(string topic, IStreamConfig configuration)
         {
-            return new SyncPipeInput(task);
+            return new SyncPipeInput(task, topic);
         }
 
         public IPipeOutput Output(string topic, TimeSpan consumeTimeout, IStreamConfig configuration, CancellationToken token = default)

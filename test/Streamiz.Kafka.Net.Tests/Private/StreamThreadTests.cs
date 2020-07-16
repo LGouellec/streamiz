@@ -125,9 +125,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void GetTaskProducerClientIdTest()
         {
-            var taskId = new TaskId { Id = 1, Partition = 0, Topic = "topic" };
+            var taskId = new TaskId { Id = 0, Partition = 0 };
             var result = StreamThread.GetTaskProducerClientId("thread-client", taskId);
-            Assert.AreEqual($"thread-client-topic-0-producer", result);
+            Assert.AreEqual($"thread-client-0-0-producer", result);
         }
 
         [Test]

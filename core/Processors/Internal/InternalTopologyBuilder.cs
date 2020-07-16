@@ -1,5 +1,4 @@
 ﻿using Confluent.Kafka;
-using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
@@ -33,6 +32,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         internal IEnumerable<string> GetSourceTopics() => sourceTopics;
 
+        internal IEnumerable<string> GetGlobalTopics() => globalTopics;
+
         internal IDictionary<string, IStateStore> GlobalStateStores { get; } = new Dictionary<string, IStateStore>();
 
         internal bool HasNoNonGlobalTopology => !sourceTopics.Any();
@@ -65,9 +66,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 var nodeFactory = nodeFactories[processorName];
 
                 if (nodeFactory is IProcessorNodeFactory)
+                {
                     ((IProcessorNodeFactory)nodeFactory).AddStateStore(stateStoreName);
+                }
                 else
+                {
                     throw new TopologyException($"Cannot connect a state store {stateStoreName} to a source node or a sink node.");
+                }
             }
         }
 
@@ -88,10 +93,14 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         internal void AddSourceOperator<K, V>(string topic, string nameNode, ConsumedInternal<K, V> consumed)
         {
             if (string.IsNullOrEmpty(topic))
+            {
                 throw new TopologyException("You must provide at least one topic");
+            }
 
             if (nodeFactories.ContainsKey(nameNode))
+            {
                 throw new TopologyException($"Source processor {nameNode} is already added.");
+            }
 
             if (sourceTopics.Contains(topic))
             {
@@ -108,7 +117,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         internal void AddSinkOperator<K, V>(ITopicNameExtractor<K, V> topicNameExtractor, string nameNode, Produced<K, V> produced, params string[] previousProcessorNames)
         {
             if (nodeFactories.ContainsKey(nameNode))
+            {
                 throw new TopologyException($"Sink processor {nameNode} is already added.");
+            }
 
             nodeFactories.Add(nameNode,
                 new SinkNodeFactory<K, V>(nameNode, previousProcessorNames, topicNameExtractor, produced.KeySerdes, produced.ValueSerdes));
@@ -120,7 +131,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         internal void AddProcessor<K, V>(string nameNode, IProcessorSupplier<K, V> processor, params string[] previousProcessorNames)
         {
             if (nodeFactories.ContainsKey(nameNode))
+            {
                 throw new TopologyException($"Processor {nameNode} is already added.");
+            }
 
             nodeFactories.Add(nameNode, new ProcessorNodeFactory<K, V>(nameNode, previousProcessorNames, processor));
             nodeGrouper.Add(nameNode);
@@ -242,12 +255,18 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 var groups = NodeGroups();
                 if (groups.ContainsKey(id.Value))
+                {
                     nodeGroup = NodeGroups()[id.Value];
+                }
                 else
+                {
                     throw new TopologyException($"Subtopology {id.Value} doesn't exist in this topology");
+                }
             }
             else
+            {
                 nodeGroup = NodeGroups().Values.SelectMany(i => i).ToHashSet();
+            }
 
             ISet<string> globalNodeGroups = GlobalNodeGroups;
             nodeGroup = nodeGroup.Where(x => !globalNodeGroups.Contains(x)).ToHashSet();
@@ -271,12 +290,18 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 var groups = NodeGroups();
                 if (groups.ContainsKey(taskId.Id))
+                {
                     nodeGroup = NodeGroups()[taskId.Id];
+                }
                 else
+                {
                     throw new TopologyException($"Task Id {taskId.Id} doesn't exist in this topology");
+                }
             }
             else
+            {
                 nodeGroup = NodeGroups().Values.SelectMany(i => i).ToHashSet();
+            }
 
             return BuildTopology(nodeGroup, taskId);
         }
@@ -297,18 +322,28 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     processors.Add(nodeFactory.Name, processor);
 
                     if (nodeFactory is IProcessorNodeFactory)
+                    {
                         BuildProcessorNode(processors, stateStores, nodeFactory as IProcessorNodeFactory, processor, taskId);
+                    }
                     else if (nodeFactory is ISourceNodeFactory)
+                    {
                         BuildSourceNode(sources, nodeFactory as ISourceNodeFactory, processor);
+                    }
                     else if (nodeFactory is ISinkNodeFactory)
+                    {
                         BuildSinkNode(processors, sinks, nodeFactory as ISinkNodeFactory, processor);
+                    }
                     else
+                    {
                         throw new TopologyException($"Unknown definition class: {nodeFactory.GetType().Name}");
+                    }
                 }
             }
 
             foreach (var sourceProcessor in sources.Values)
+            {
                 rootProcessor.AddNextProcessor(sourceProcessor);
+            }
 
             return new ProcessorTopology(rootProcessor, sources, sinks, processors, stateStores, GlobalStateStores, storesToTopics);
         }
@@ -429,7 +464,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 nodeGroup = new HashSet<string>();
                 rootToNodeGroup.Add(root, nodeGroup);
-                nodeGroups.Add(newNodeGroupId++, nodeGroup);
+                groups.Add(newNodeGroupId++, nodeGroup);
             }
             nodeGroup.Add(nodeName);
             return newNodeGroupId;
@@ -444,7 +479,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             var topologyDes = new TopologyDescription();
 
             foreach (var kp in NodeGroups())
+            {
                 DescribeSubTopology(topologyDes, kp.Key, kp.Value);
+            }
 
             return topologyDes;
         }
@@ -453,7 +490,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             IDictionary<string, NodeDescription> nodesByName = new Dictionary<string, NodeDescription>();
             foreach (var name in values)
+            {
                 nodesByName.Add(name, nodeFactories[name].Describe());
+            }
 
             foreach (var node in nodesByName.Values)
             {
@@ -477,11 +516,18 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 description
                     .SubTopologies
                     .FirstOrDefault(sub => sub.Nodes.OfType<ISourceNodeDescription>().FirstOrDefault(source => source.Topics.Contains(topicPartition.Topic)) != null);
-            return new TaskId
+            if (subTopo != null)
             {
-                Id = subTopo.Id,
-                Partition = topicPartition.Partition
-            };
+                return new TaskId
+                {
+                    Id = subTopo.Id,
+                    Partition = topicPartition.Partition
+                };
+            }
+            else
+            {
+                throw new TopologyException($"Topic {topicPartition.Topic} doesn't exist in this topology !");
+            }
         }
     }
 }

@@ -11,6 +11,7 @@ using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
@@ -44,18 +45,18 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Reduce((v1, v2) => v1.Length > v2.Length ? v1 : v2);
 
             var topology = builder.Build();
-            var processorTopology = topology.Builder.BuildTopology("topic");
+            TaskId id = new TaskId { Id = 0, Partition = 0 };
+            var processorTopology = topology.Builder.BuildTopology(id);
 
             var supplier = new SyncKafkaSupplier();
             var producer = supplier.GetProducer(config.ToProducerConfig());
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
 
-            TaskId id = new TaskId { Id = 1, Topic = "topic", Partition = 0 };
             var part = new TopicPartition("topic", 0);
             StreamTask task = new StreamTask(
                 "thread-0",
                 id,
-                part,
+                new List<TopicPartition> { part },
                 processorTopology,
                 consumer,
                 config,

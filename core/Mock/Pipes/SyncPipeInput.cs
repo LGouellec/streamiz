@@ -10,9 +10,10 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         private readonly StreamTask task;
         private readonly string topic;
 
-        public SyncPipeInput(StreamTask task)
+        public SyncPipeInput(StreamTask task, string topic)
         {
             this.task = task;
+            this.topic = topic;
         }
 
         public void Dispose()
@@ -30,6 +31,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         {
             task.AddRecords(new List<ConsumeResult<byte[], byte[]>> {
                     new ConsumeResult<byte[], byte[]> {
+                        Topic = topic,
                         TopicPartitionOffset = new TopicPartitionOffset(new TopicPartition(topic, task.Id.Partition), 0),
                         Message = new Message<byte[], byte[]> { Key = key, Value = value, Timestamp = new Timestamp(timestamp) } } });
         }

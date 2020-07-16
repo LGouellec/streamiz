@@ -245,7 +245,13 @@ namespace Streamiz.Kafka.Net.Processors
 
                     var recordInfo = $"Topic:{record.Topic}|Partition:{record.Partition.Value}|Offset:{record.Offset}|Timestamp:{record.Message.Timestamp.UnixTimestampMs}";
                     log.Debug($"{logPrefix}Start processing one record [{recordInfo}]");
-                    processors[record.Topic].Process(record.Message.Key, record.Message.Value);
+                    if (processors.ContainsKey(record.Topic))
+                        processors[record.Topic].Process(record.Message.Key, record.Message.Value);
+                    else
+                    {
+                        log.Error($"{logPrefix}Impossible to process record {recordInfo}. Processor for topic {record.Topic} doesn't exist !");
+                        throw new StreamsException($"{logPrefix}Impossible to process record {recordInfo}. Processor for topic {record.Topic} doesn't exist !");
+                    }
                     log.Debug($"{logPrefix}Completed processing one record [{recordInfo}]");
 
                     queue.Commit();

@@ -47,6 +47,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     t.Resume();
                     activeTasks.Add(taskId, t);
                     revokedTasks.Remove(taskId);
+                    partitionsToTaskId.Add(partition, taskId);
                 }
                 else if (!activeTasks.ContainsKey(taskId))
                 {
@@ -54,6 +55,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                         tasksToBeCreated[taskId].Add(partition);
                     else
                         tasksToBeCreated.Add(taskId, new List<TopicPartition> { partition });
+                    partitionsToTaskId.Add(partition, taskId);
                 }
             }
 
@@ -83,7 +85,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     {
                         revokedTasks.Add(taskId, task);
                     }
-
+                    partitionsToTaskId.Remove(p);
                     activeTasks.Remove(taskId);
                 }
             }
@@ -116,6 +118,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
 
             revokedTasks.Clear();
+            partitionsToTaskId.Clear();
         }
 
         internal int CommitAll()

@@ -11,5 +11,10 @@
         {
             return obj is TaskId && (obj as TaskId).Id.Equals(Id) && (obj as TaskId).Partition.Equals(Partition);
         }
+
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode() & Partition.GetHashCode();
+        }
     }
 }

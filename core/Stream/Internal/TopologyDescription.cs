@@ -55,7 +55,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"Sub-topology: {Id}");
             foreach (var n in Nodes)
-                sb.AppendLine($"\t\t{n}");
+                sb.Append($"\t{n}");
             return sb.ToString();
         }
     }

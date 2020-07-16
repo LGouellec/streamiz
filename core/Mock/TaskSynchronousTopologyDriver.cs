@@ -34,7 +34,7 @@ namespace Streamiz.Kafka.Net.Mock
             supplier = new SyncKafkaSupplier();
             producer = supplier.GetProducer(configuration.ToProducerConfig()) as SyncProducer;
 
-            foreach(var sourceTopic in builder.GetSourceTopics())
+            foreach(var sourceTopic in builder.GetSourceTopics().Union(builder.GetGlobalTopics()))
             {
                 var part = new TopicPartition(sourceTopic, 0);
                 var taskId = builder.GetTaskIdFromPartition(part);
