@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>sample_stream_registry</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Confluent.SchemaRegistry" Version="1.5.0-RC1" />
+    <PackageReference Include="Confluent.SchemaRegistry.Serdes.Avro" Version="1.5.0-RC1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\core\Streamiz.Kafka.Net.csproj" />
+  </ItemGroup>
+
+</Project>
