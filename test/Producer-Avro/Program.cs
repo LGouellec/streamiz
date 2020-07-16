@@ -27,7 +27,7 @@ namespace Producer
                     Url = "http://192.168.56.1:8081"
                 });
             var builder = new ProducerBuilder<string, Person>(producerConfig)
-                .SetValueSerializer(new AvroSerializer<Person>(schemaRegistryClient).AsSyncOverAsync());
+                .SetValueSerializer(new AvroSerializer<Person>(schemaRegistryClient, new AvroSerializerConfig { AutoRegisterSchemas = true }).AsSyncOverAsync());
             Console.WriteLine($"Writting in {topic} topic");
             Console.WriteLine("Enter exit for stopping producer, or enter KEY:VALUE");
             using (var producer = builder.Build())

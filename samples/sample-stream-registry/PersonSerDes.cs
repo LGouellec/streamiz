@@ -19,7 +19,7 @@ namespace sample_stream_registry
             avroSerializer = new AvroSerializer<Person>(client,
                 new AvroSerializerConfig
                 {
-                    AutoRegisterSchemas = false
+                    AutoRegisterSchemas = true
                 });
         }
 
