@@ -1,4 +1,5 @@
-﻿using Streamiz.Kafka.Net.Kafka;
+﻿using Confluent.Kafka;
+using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -17,7 +18,8 @@ namespace Streamiz.Kafka.Net.Mock
         private readonly InternalTopologyBuilder builder;
         private readonly CancellationToken token;
         private readonly IKafkaSupplier supplier;
-        private readonly IDictionary<string, StreamTask> tasks = new Dictionary<string, StreamTask>();
+        private readonly IDictionary<TaskId, StreamTask> tasks = new Dictionary<TaskId, StreamTask>();
+        private readonly IDictionary<TaskId, IList<TopicPartition>> partitionsByTaskId = new Dictionary<TaskId, IList<TopicPartition>>();
         private readonly SyncProducer producer = null;
         private int id = 0;
 
@@ -31,28 +33,37 @@ namespace Streamiz.Kafka.Net.Mock
             builder = topologyBuilder;
             supplier = new SyncKafkaSupplier();
             producer = supplier.GetProducer(configuration.ToProducerConfig()) as SyncProducer;
+
+            foreach(var sourceTopic in builder.GetSourceTopics())
+            {
+                var part = new TopicPartition(sourceTopic, 0);
+                var taskId = builder.GetTaskIdFromPartition(part);
+                if (partitionsByTaskId.ContainsKey(taskId))
+                    partitionsByTaskId[taskId].Add(part);
+                else
+                    partitionsByTaskId.Add(taskId, new List<TopicPartition> { part });
+            }
         }
 
         internal StreamTask GetTask(string topicName)
         {
             StreamTask task;
-            if (tasks.ContainsKey(topicName))
-                task = tasks[topicName];
+            var id = builder.GetTaskIdFromPartition(new Confluent.Kafka.TopicPartition(topicName, 0));
+            if (tasks.ContainsKey(id))
+                task = tasks[id];
             else
             {
-                var topicPartition = new Confluent.Kafka.TopicPartition(topicName, 0);
-                var taskId = new TaskId { Id = id++, Partition = 0 };
                 task = new StreamTask("thread-0",
-                    taskId,
-                    new List<Confluent.Kafka.TopicPartition> { topicPartition },
-                    builder.BuildTopology(taskId),
+                    id,
+                    partitionsByTaskId[id],
+                    builder.BuildTopology(id),
                     supplier.GetConsumer(configuration.ToConsumerConfig(), null),
                     configuration,
                     supplier,
                     producer);
                 task.InitializeStateStores();
                 task.InitializeTopology();
-                tasks.Add(topicName, task);
+                tasks.Add(id, task);
             }
             return task;
         }

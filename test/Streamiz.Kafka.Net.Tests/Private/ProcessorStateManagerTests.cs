@@ -43,9 +43,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void RegisterStateStoreAlreadyRegistered()
         {
-            TaskId id = new TaskId { Id = 1, Partition = 0, Topic = "topic" };
+            TaskId id = new TaskId { Id = 1, Partition = 0 };
             TopicPartition partition = new TopicPartition("topic", 0);
-            ProcessorStateManager stateMgt = new ProcessorStateManager(id, partition);
+            ProcessorStateManager stateMgt = new ProcessorStateManager(id, new List<TopicPartition> { partition });
 
             stateMgt.Register(new TestStateStore("state-store1"), null);
             Assert.Throws<ArgumentException>(() => stateMgt.Register(new TestStateStore("state-store1"), null));
@@ -54,9 +54,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void RegisterStateStoreAndGetIt()
         {
-            TaskId id = new TaskId { Id = 1, Partition = 0, Topic = "topic" };
+            TaskId id = new TaskId { Id = 1, Partition = 0 };
             TopicPartition partition = new TopicPartition("topic", 0);
-            ProcessorStateManager stateMgt = new ProcessorStateManager(id, partition);
+            ProcessorStateManager stateMgt = new ProcessorStateManager(id, new List<TopicPartition> { partition });
 
             stateMgt.Register(new TestStateStore("state-store1"), null);
             var store = stateMgt.GetStore("state-store1");
@@ -67,9 +67,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void RegisterStateStoreAndGetUnknown()
         {
-            TaskId id = new TaskId { Id = 1, Partition = 0, Topic = "topic" };
+            TaskId id = new TaskId { Id = 1, Partition = 0 };
             TopicPartition partition = new TopicPartition("topic", 0);
-            ProcessorStateManager stateMgt = new ProcessorStateManager(id, partition);
+            ProcessorStateManager stateMgt = new ProcessorStateManager(id, new List<TopicPartition> { partition });
 
             stateMgt.Register(new TestStateStore("state-store1"), null);
             var store = stateMgt.GetStore("sdfdfre1");

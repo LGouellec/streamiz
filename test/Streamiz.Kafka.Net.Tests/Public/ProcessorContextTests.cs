@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors.Internal;
 using System;
+using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Tests.Public
 {
@@ -14,8 +15,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var config = new StreamConfig();
             config.ApplicationId = "test";
             var stateMgt = new ProcessorStateManager(
-                new TaskId() { Id = 0, Partition = 0, Topic = "test" },
-                new Confluent.Kafka.TopicPartition("test", 0));
+                new TaskId() { Id = 0, Partition = 0 },
+                new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) });
             ProcessorContext context = new ProcessorContext(config, stateMgt);
 
             Assert.AreEqual("test", context.ApplicationId);
@@ -28,8 +29,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var config = new StreamConfig();
             config.ApplicationId = "test";
             var stateMgt = new ProcessorStateManager(
-                new TaskId() { Id = 0, Partition = 0, Topic = "test" },
-                new Confluent.Kafka.TopicPartition("test", 0));
+                new TaskId() { Id = 0, Partition = 0 },
+                new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) });
             ProcessorContext context = new ProcessorContext(config, stateMgt);
             ConsumeResult<byte[], byte[]> result = new ConsumeResult<byte[], byte[]> { Message = new Message<byte[], byte[]>() };
             result.Topic = "topic";

@@ -26,7 +26,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
 
             var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer);
-            var taskManager = new TaskManager(taskCreator, supplier.GetAdmin(config.ToAdminConfig("admin")), consumer);
+            var taskManager = new TaskManager(topology.Builder, taskCreator, supplier.GetAdmin(config.ToAdminConfig("admin")), consumer);
 
             taskManager.CreateTasks(
                 new List<TopicPartition>
@@ -89,7 +89,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
 
             var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer);
-            var taskManager = new TaskManager(taskCreator, supplier.GetAdmin(config.ToAdminConfig("admin")), consumer);
+            var taskManager = new TaskManager(topology.Builder, taskCreator, supplier.GetAdmin(config.ToAdminConfig("admin")), consumer);
 
             taskManager.CreateTasks(
                 new List<TopicPartition>
@@ -124,7 +124,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
 
             var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer);
-            var taskManager = new TaskManager(taskCreator, supplier.GetAdmin(config.ToAdminConfig("admin")), consumer);
+            var taskManager = new TaskManager(topology.Builder, taskCreator, supplier.GetAdmin(config.ToAdminConfig("admin")), consumer);
 
             taskManager.CreateTasks(
                 new List<TopicPartition>
@@ -213,7 +213,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
 
             var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer);
-            var taskManager = new TaskManager(taskCreator, supplier.GetAdmin(config.ToAdminConfig("admin")), consumer);
+            var taskManager = new TaskManager(topology.Builder, taskCreator, supplier.GetAdmin(config.ToAdminConfig("admin")), consumer);
 
             taskManager.CreateTasks(
                 new List<TopicPartition>
@@ -259,7 +259,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
 
             var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer);
-            var taskManager = new TaskManager(taskCreator, supplier.GetAdmin(config.ToAdminConfig("admin")), consumer);
+            var taskManager = new TaskManager(topology.Builder, taskCreator, supplier.GetAdmin(config.ToAdminConfig("admin")), consumer);
 
             taskManager.CreateTasks(
                 new List<TopicPartition>

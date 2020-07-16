@@ -34,18 +34,19 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Count(m);
 
             var topology = builder.Build();
-            var processorTopology = topology.Builder.BuildTopology("topic");
+            TaskId id = new TaskId { Id = 1, Partition = 0 };
+            var processorTopology = topology.Builder.BuildTopology(id);
 
             var supplier = new SyncKafkaSupplier();
             var producer = supplier.GetProducer(config.ToProducerConfig());
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
 
-            TaskId id = new TaskId { Id = 1, Topic = "topic", Partition = 0 };
+            
             var part = new TopicPartition("topic", 0);
             StreamTask task = new StreamTask(
                 "thread-0",
                 id,
-                part,
+                new List<TopicPartition> { part },
                 processorTopology,
                 consumer,
                 config,
