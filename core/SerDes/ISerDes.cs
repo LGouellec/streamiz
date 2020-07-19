@@ -26,6 +26,8 @@ namespace Streamiz.Kafka.Net.SerDes
         /// <param name="data">object data</param>
         /// <returns>serialized bytes</returns>
         byte[] SerializeObject(object data);
+
+        void Initialize(SerDesContext context);
     }
 
 

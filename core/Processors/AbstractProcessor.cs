@@ -123,7 +123,11 @@ namespace Streamiz.Kafka.Net.Processors
             log.Debug($"{logPrefix}Initializing process context");
             Context = context;
             foreach (var n in Next)
+            {
                 n.Init(context);
+                Key?.Initialize(Context.SerDesContext);
+                Value?.Initialize(Context.SerDesContext);
+            }
             log.Debug($"{logPrefix}Process context initialized");
         }
 

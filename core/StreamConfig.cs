@@ -204,7 +204,7 @@ namespace Streamiz.Kafka.Net
     /// </code>
     /// </exemple>
     /// </summary>
-    public class StreamConfig : Dictionary<string, dynamic>, IStreamConfig
+    public class StreamConfig : Dictionary<string, dynamic>, IStreamConfig, ISchemaRegistryConfig
     {
         #region Not used for moment
 
@@ -263,7 +263,12 @@ namespace Streamiz.Kafka.Net
 
         #endregion
 
-        #region Stream config constants
+        #region Config constants
+
+        internal static readonly string schemaRegistryUrlCst = "schema.registry.url";
+        internal static readonly string schemaRegistryAutoRegisterCst = "schema.registry.auto.register.schema";
+        internal static readonly string schemaRegistryRequestTimeoutMsCst = "schema.registry.request.timeout.ms";
+        internal static readonly string schemaRegistryMaxCachedSchemasCst = "schema.registry.max.cached.schemas";
         internal static readonly string applicatonIdCst = "application.id";
         internal static readonly string clientIdCst = "client.id";
         internal static readonly string numStreamThreadsCst = "num.stream.threads";
@@ -1961,6 +1966,34 @@ namespace Streamiz.Kafka.Net
             config._config = new ClientConfig(_config);
 
             return config;
+        }
+
+        #endregion
+
+        #region ISchemaRegistryConfig Impl
+
+        public int? SchemaRegistryRequestTimeoutMs
+        {
+            get => this[schemaRegistryRequestTimeoutMsCst];
+            set => this.AddOrUpdate(schemaRegistryRequestTimeoutMsCst, value);
+        }
+
+        public int? SchemaRegistryMaxCachedSchemas
+        {
+            get => this[schemaRegistryMaxCachedSchemasCst];
+            set => this.AddOrUpdate(schemaRegistryMaxCachedSchemasCst, value);
+        }
+
+        public string SchemaRegistryUrl
+        {
+            get => this[schemaRegistryUrlCst];
+            set => this.AddOrUpdate(schemaRegistryUrlCst, value);
+        }
+
+        public bool? AutoRegisterSchemas
+        {
+            get => this[schemaRegistryAutoRegisterCst];
+            set => this.AddOrUpdate(schemaRegistryAutoRegisterCst, value);
         }
 
         #endregion

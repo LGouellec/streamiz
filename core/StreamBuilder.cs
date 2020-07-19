@@ -65,7 +65,7 @@ namespace Streamiz.Kafka.Net
         /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
         /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKStream<K, V> Stream<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
-            => this.Stream(topic, keySerdes, valueSerdes, null, null);
+            => Stream(topic, keySerdes, valueSerdes, null, null);
 
         /// <summary>
         /// Create a <see cref="KStream{K, V}"/> from the specified topic.
@@ -84,7 +84,7 @@ namespace Streamiz.Kafka.Net
         /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
         /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKStream<K, V> Stream<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named)
-            => this.Stream(topic, keySerdes, valueSerdes, named, null);
+            => Stream(topic, keySerdes, valueSerdes, named, null);
 
         /// <summary>
         /// Create a <see cref="KStream{K, V}"/> from the specified topic.
@@ -103,7 +103,7 @@ namespace Streamiz.Kafka.Net
         /// <returns>A <see cref="IKStream{K, V}"/> for the specified topic</returns>
         /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if topic is null or empty</exception>
         public IKStream<K, V> Stream<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, ITimestampExtractor extractor)
-            => this.Stream(topic, keySerdes, valueSerdes, null, extractor);
+            => Stream(topic, keySerdes, valueSerdes, null, extractor);
 
         /// <summary>
         /// Create a <see cref="KStream{K, V}"/> from the specified topic.
@@ -125,7 +125,9 @@ namespace Streamiz.Kafka.Net
         public IKStream<K, V> Stream<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named, ITimestampExtractor extractor)
         {
             if (string.IsNullOrEmpty(topic))
+            {
                 throw new ArgumentException("Topic of KStream must not be null or empty");
+            }
 
             var consumedInternal = new ConsumedInternal<K, V>(named, keySerdes, valueSerdes, extractor);
             return internalStreamBuilder.Stream(topic, consumedInternal);
@@ -357,7 +359,9 @@ namespace Streamiz.Kafka.Net
         public IKTable<K, V> Table<K, V>(string topic, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named, ITimestampExtractor extractor)
         {
             if (string.IsNullOrEmpty(topic))
+            {
                 throw new ArgumentException("Topic of KTable must not be null or empty");
+            }
 
             materialized = materialized ?? Materialized<K, V, IKeyValueStore<Bytes, byte[]>>.Create();
 
@@ -727,7 +731,7 @@ namespace Streamiz.Kafka.Net
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
             => GlobalTable(topic, new KS(), new VS(), materialized, named, extractor);
-        
+
 
         #endregion
 
@@ -740,7 +744,7 @@ namespace Streamiz.Kafka.Net
         /// <returns>the <see cref="Topology"/> that represents the specified processing logic</returns>
         public Topology Build()
         {
-            this.internalStreamBuilder.Build();
+            internalStreamBuilder.Build();
             return topology;
         }
     }

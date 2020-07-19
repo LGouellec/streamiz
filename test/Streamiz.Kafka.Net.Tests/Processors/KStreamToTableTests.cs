@@ -74,6 +74,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 var store = driver.GetKeyValueStore<string, string>("table-store");
                 Assert.IsNotNull(store);
                 Assert.AreEqual("test", store.Get("test"));
+                inputTopic.PipeInput("test", "test12");
+                Assert.AreEqual("test12", store.Get("test"));
+
             }
         }
     }

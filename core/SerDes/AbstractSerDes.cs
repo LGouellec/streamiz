@@ -9,6 +9,8 @@ namespace Streamiz.Kafka.Net.SerDes
     /// <typeparam name="T">Type to be serialized from and deserialized into.</typeparam>
     public abstract class AbstractSerDes<T> : ISerDes<T>
     {
+        protected bool isInitialized = false;
+
         /// <summary>
         /// Deserialize a record value from a byte array into an object.
         /// </summary>
@@ -42,5 +44,10 @@ namespace Streamiz.Kafka.Net.SerDes
         /// <param name="data">serialized bytes; may be null; implementations are recommended to handle null by returning a value or null rather than throwing an exception.</param>
         /// <returns>deserialized typed data; may be null</returns>
         public abstract T Deserialize(byte[] data);
+
+        public virtual void Initialize(SerDesContext context)
+        {
+            isInitialized = true;
+        }
     }
 }

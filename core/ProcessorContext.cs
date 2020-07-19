@@ -2,6 +2,7 @@
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.SerDes;
 
 namespace Streamiz.Kafka.Net
 {
@@ -10,6 +11,7 @@ namespace Streamiz.Kafka.Net
     /// </summary>
     public class ProcessorContext
     {
+        internal SerDesContext SerDesContext { get; private set; }
         internal IStreamConfig Configuration { get; private set; }
         internal IRecordContext RecordContext { get; private set; }
         internal IRecordCollector RecordCollector { get; private set; }
@@ -44,6 +46,7 @@ namespace Streamiz.Kafka.Net
         {
             Configuration = configuration;
             States = stateManager;
+            SerDesContext = new SerDesContext(configuration);
         }
 
         internal ProcessorContext UseRecordCollector(IRecordCollector collector)

@@ -396,6 +396,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 GlobalStateStores.Add(storeBuilder.Name, storeBuilder.Build());
             }
+
+            config.DefaultKeySerDes?.Initialize(new SerDes.SerDesContext(config));
+            config.DefaultValueSerDes?.Initialize(new SerDes.SerDesContext(config));
         }
 
         internal void BuildAndOptimizeTopology(RootNode root, IList<StreamGraphNode> nodes)

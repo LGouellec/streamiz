@@ -15,13 +15,17 @@ namespace Streamiz.Kafka.Net.Processors
 
         public override void Init(ProcessorContext context)
         {
-            base.Init(context);
-
             if (Key == null)
+            {
                 Key = context.Configuration.DefaultKeySerDes;
+            }
 
             if (Value == null)
+            {
                 Value = context.Configuration.DefaultValueSerDes;
+            }
+
+            base.Init(context);
         }
 
         public override void Process(K key, V value)

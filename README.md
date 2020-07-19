@@ -95,9 +95,10 @@ static void Main(string[] args)
 # TODO implementation
 
 - [X] Global state store
+- [X] Refactor Subtopology & StreamTask assignment
 - [WIP] Statefull processors impl
-- [WIP] Refactor Subtopology & StreamTask assignment
 - [WIP] Refactor Topology description for corresponding to java implementation
+- [WIIP] Refactor Partition grouper + record queue
 - [ ] Transform and Through Processor
 - [ ] Rocks DB state implementation
 - [ ] Task restoring

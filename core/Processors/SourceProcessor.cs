@@ -1,8 +1,5 @@
 ﻿
 using Streamiz.Kafka.Net.SerDes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -12,7 +9,7 @@ namespace Streamiz.Kafka.Net.Processors
         ITimestampExtractor Extractor { get; }
     }
 
-    internal class SourceProcessor<K,V> : AbstractProcessor<K, V>, ISourceProcessor
+    internal class SourceProcessor<K, V> : AbstractProcessor<K, V>, ISourceProcessor
     {
         private readonly string topicName;
 
@@ -20,7 +17,7 @@ namespace Streamiz.Kafka.Net.Processors
             : base(name, keySerdes, valueSerdes)
         {
             this.topicName = topicName;
-            this.Extractor = extractor;
+            Extractor = extractor;
         }
 
         public string TopicName => topicName;
@@ -29,13 +26,17 @@ namespace Streamiz.Kafka.Net.Processors
 
         public override void Init(ProcessorContext context)
         {
+            if (Key == null)
+            {
+                Key = context.Configuration.DefaultKeySerDes;
+            }
+
+            if (Value == null)
+            {
+                Value = context.Configuration.DefaultValueSerDes;
+            }
+
             base.Init(context);
-
-            if (this.Key == null)
-                this.Key = context.Configuration.DefaultKeySerDes;
-
-            if (this.Value == null)
-                this.Value = context.Configuration.DefaultValueSerDes;
         }
 
         public override void Process(K key, V value)
@@ -43,8 +44,12 @@ namespace Streamiz.Kafka.Net.Processors
             LogProcessingKeyValue(key, value);
 
             foreach (var n in Next)
+            {
                 if (n is IProcessor<K, V>)
+                {
                     ((IProcessor<K, V>)n).Process(key, value);
+                }
+            }
         }
     }
 }
