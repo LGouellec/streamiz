@@ -1,6 +1,7 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
@@ -483,7 +484,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             foreach (var kp in NodeGroups())
             {
-                DescribeSubTopology(topologyDes, kp.Key, kp.Value);
+                bool containsGlobalStore = kp.Value.Any(v => IsGlobalSource(v));
+                if (!containsGlobalStore)
+                    DescribeSubTopology(topologyDes, kp.Key, kp.Value);
+                else
+                    DescribeGlobalStore(topologyDes, kp.Value, kp.Key);
             }
 
             return topologyDes;
@@ -510,6 +515,29 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             description.AddSubtopology(new SubTopologyDescription(key, nodesByName.Values.ToList<INodeDescription>()));
         }
 
+        private void DescribeGlobalStore(TopologyDescription description, ISet<string> values, int key)
+        {
+            var enumerator = values.GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+                string node = enumerator.Current;
+                if (IsGlobalSource(node))
+                {
+                    enumerator.MoveNext();
+                    string processorNode = enumerator.Current;
+                    description.AddGlobalStore(
+                        new GlobalStoreDescription(
+                            node,
+                            processorNode,
+                            ((IProcessorNodeFactory)nodeFactories[processorNode]).StateStores[0],
+                            ((ISourceNodeFactory)nodeFactories[node]).Topic,
+                            key)
+                        );
+                    break;
+                }
+            }
+        }
+
         #endregion
 
         public TaskId GetTaskIdFromPartition(TopicPartition topicPartition)
@@ -519,6 +547,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 description
                     .SubTopologies
                     .FirstOrDefault(sub => sub.Nodes.OfType<ISourceNodeDescription>().FirstOrDefault(source => source.Topics.Contains(topicPartition.Topic)) != null);
+
             if (subTopo != null)
             {
                 return new TaskId
@@ -529,7 +558,20 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
             else
             {
-                throw new TopologyException($"Topic {topicPartition.Topic} doesn't exist in this topology !");
+                var global =
+                    description
+                        .GlobalStores
+                        .FirstOrDefault(g => g.Source.Topics.Contains(topicPartition.Topic));
+                if (global != null)
+                {
+                    return new TaskId
+                    {
+                        Id = global.Id,
+                        Partition = topicPartition.Partition
+                    };
+                }
+                else
+                    throw new TopologyException($"Topic {topicPartition.Topic} doesn't exist in this topology !");
             }
         }
     }

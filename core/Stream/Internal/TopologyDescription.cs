@@ -10,8 +10,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal
     internal class TopologyDescription : ITopologyDescription
     {
         private readonly IList<ISubTopologyDescription> subtopologies = new List<ISubTopologyDescription>();
+        private readonly IList<IGlobalStoreDescription> globalStores = new List<IGlobalStoreDescription>();
 
         public IEnumerable<ISubTopologyDescription> SubTopologies => subtopologies;
+        public IEnumerable<IGlobalStoreDescription> GlobalStores => globalStores;
 
         public TopologyDescription()
         {
@@ -23,12 +25,53 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 subtopologies.Add(sub);
         }
 
+        internal void AddGlobalStore(GlobalStoreDescription globalStoreDescription)
+        {
+            if (!globalStores.Any(g => g.Id.Equals(globalStoreDescription.Id)))
+                globalStores.Add(globalStoreDescription);
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Topologies:");
-            foreach (var sub in subtopologies)
-                sb.Append($"   {sub}");
+
+            var subtopo = subtopologies.OrderBy(i => i.Id).ToArray();
+            var global = globalStores.OrderBy(i => i.Id).ToArray();
+            int expectedId = 0;
+            int subtopoindex = subtopo.Length - 1;
+            int globalindex = global.Length - 1;
+
+            while (subtopoindex != -1 && globalindex != -1)
+            {
+                sb.Append("   ");
+                var sub = subtopo[subtopoindex];
+                var gl = global[globalindex];
+                if (sub.Id.Equals(expectedId))
+                {
+                    sb.Append($"{sub}");
+                    --subtopoindex;
+                }
+                else
+                {
+                    sb.Append($"{gl}");
+                    --globalindex;
+                }
+                ++expectedId;
+            }
+
+            while (subtopoindex != -1)
+            {
+                sb.Append($"   {subtopo[subtopoindex]}");
+                --subtopoindex;
+            }
+
+            while (globalindex != -1)
+            {
+                sb.Append($"   {global[globalindex]}");
+                --globalindex;
+            }
+
             return sb.ToString();
         }
     }
@@ -55,6 +98,50 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             sb.AppendLine($"Sub-topology: {Id}");
             foreach (var n in Nodes)
                 sb.Append($"    {n}");
+            return sb.ToString();
+        }
+    }
+
+    #endregion
+
+    #region GlobalStoreDescription
+
+    public class GlobalStoreDescription : IGlobalStoreDescription
+    {
+        public ISourceNodeDescription Source { get; }
+
+        public IProcessorNodeDescription Processor { get; }
+
+        public int Id { get; }
+
+        public GlobalStoreDescription(string sourceName, string processorName, string storeName, string topicName, int id)
+        {
+            var source = new SourceNodeDescription(sourceName, topicName);
+            var processor = new ProcessorNodeDescription(processorName, new List<string> { storeName });
+            source.AddSuccessor(processor);
+            processor.AddPredecessor(source);
+
+            Id = id;
+            Source = source;
+            Processor = processor;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is GlobalStoreDescription &&
+                ((GlobalStoreDescription)obj).Source.Equals(Source) &&
+                ((GlobalStoreDescription)obj).Processor.Equals(Processor);
+        }
+        public override int GetHashCode()
+        {
+            return Source.GetHashCode() + Processor.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"Sub-topology: {Id} for global store (will not generate tasks)");
+            sb.Append($"    {Source}").Append($"    {Processor}");
             return sb.ToString();
         }
     }
@@ -94,10 +181,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 next.Add(node);
         }
 
-        public override bool Equals(object obj) 
+        public override bool Equals(object obj)
             => obj is INodeDescription && ((INodeDescription)obj).Equals(this.Name);
 
-        public override int GetHashCode() 
+        public override int GetHashCode()
             => Name.GetHashCode();
     }
 
@@ -111,8 +198,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public Type TimestampExtractorType { get; }
 
-        public SourceNodeDescription(string name, string topic) 
-            : this(name, topic, null){}
+        public SourceNodeDescription(string name, string topic)
+            : this(name, topic, null) { }
 
         public SourceNodeDescription(string name, string topic, Type timestampExtractorType)
             : base(name)
@@ -138,7 +225,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
     {
         public IEnumerable<string> Stores { get; }
 
-        public ProcessorNodeDescription(string name, IEnumerable<string> stores = null) 
+        public ProcessorNodeDescription(string name, IEnumerable<string> stores = null)
             : base(name)
         {
             Stores = stores;
@@ -164,7 +251,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public Type TopicNameExtractorType { get; }
 
-        public SinkNodeDescription(string name, string topic) 
+        public SinkNodeDescription(string name, string topic)
             : base(name)
         {
             Topic = topic;

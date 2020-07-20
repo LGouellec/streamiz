@@ -1,4 +1,5 @@
 ﻿using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.Processors.Internal;
 using System;
 using System.Collections.Generic;
 
@@ -20,6 +21,11 @@ namespace Streamiz.Kafka.Net.Stream
         /// All sub-topologies of the represented topology.
         /// </summary>
         IEnumerable<ISubTopologyDescription> SubTopologies { get; }
+
+        /// <summary>
+        /// All global stores of the represented topology
+        /// </summary>
+        IEnumerable<IGlobalStoreDescription> GlobalStores { get; }
     }
 
     /// <summary>
@@ -29,7 +35,6 @@ namespace Streamiz.Kafka.Net.Stream
     {
         /// <summary>
         /// Internally assigned unique ID. 
-        /// <para>ID is source topic name</para>
         /// </summary>
         int Id { get; }
 
@@ -37,6 +42,32 @@ namespace Streamiz.Kafka.Net.Stream
         /// All nodes of this sub-topology.
         /// </summary>
         IEnumerable<INodeDescription> Nodes { get; }
+    }
+
+    /// <summary>
+    /// Represents a <see cref="StreamBuilder.GlobalTable{K, V}(string)"/> global store.
+    /// Adding a global store results in adding a source node and one stateful processor node.
+    /// Note, that all added global stores form a single unit (similar to a Subtopology) even if different
+    /// global stores are not connected to each other.
+    /// Furthermore, global stores are available to all processors without connecting them explicitly, and thus global
+    /// stores will never be part of any subtopology.
+    /// </summary>
+    public interface IGlobalStoreDescription
+    {
+        /// <summary>
+        /// The source node reading from a "global" topic.
+        /// </summary>
+        ISourceNodeDescription Source { get;  }
+
+        /// <summary>
+        /// The processor node maintaining the global store.
+        /// </summary>
+        IProcessorNodeDescription Processor { get;  }
+
+        /// <summary>
+        /// Internally assigned unique ID. 
+        /// </summary>
+        int Id { get; }
     }
 
     /// <summary>

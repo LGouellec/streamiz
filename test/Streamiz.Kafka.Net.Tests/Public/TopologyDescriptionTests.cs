@@ -197,66 +197,31 @@ namespace Streamiz.Kafka.Net.Tests.Public
         [Test]
         public void TopologyDescriptionGlobalCompareWithJavaToString()
         {
-            // TODO : GlobalStore description
-
-            //GlobalKTable<String, String> table = builder.globalTable(INPUT_TOPIC);
-            //KStream<String, String> stream = builder.stream(INPUT_TOPIC2);
-            //KStream<String, String> join = stream.join(table, (k, k1)->k1, (v, v2)->String.format("%s-%s", v, v2));
-            //join.to(OUTPUT_TOPIC);
-
-            //Topologies:
-            //   Sub-topology: 0 for global store (will not generate tasks)
-            //    Source: KSTREAM-SOURCE-0000000001 (topics: [test])
-            //      --> KTABLE-SOURCE-0000000002
-            //    Processor: KTABLE-SOURCE-0000000002 (stores: [test-STATE-STORE-0000000000])
-            //      --> none
-            //      <-- KSTREAM-SOURCE-0000000001
-            //  Sub-topology: 1
-            //    Source: KSTREAM-SOURCE-0000000003 (topics: [test2])
-            //      --> KSTREAM-LEFTJOIN-0000000004
-            //    Processor: KSTREAM-LEFTJOIN-0000000004 (stores: [])
-            //      --> KSTREAM-SINK-0000000005
-            //      <-- KSTREAM-SOURCE-0000000003
-            //    Sink: KSTREAM-SINK-0000000005 (topic: output-join)
-            //      <-- KSTREAM-LEFTJOIN-0000000004
-
-
-
             #region Expected
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.AppendLine("Topologies:");
-            stringBuilder.AppendLine("   Sub-topology: 0");
-            stringBuilder.AppendLine("    Source: KSTREAM-SOURCE-0000000000 (topics: [test])");
-            stringBuilder.AppendLine("      --> KSTREAM-WINDOWED-0000000002");
-            stringBuilder.AppendLine("    Source: KSTREAM-SOURCE-0000000001 (topics: [test2])");
-            stringBuilder.AppendLine("      --> KSTREAM-WINDOWED-0000000003");
-            stringBuilder.AppendLine("    Processor: KSTREAM-WINDOWED-0000000002 (stores: [KSTREAM-JOINTHIS-0000000004-store])");
-            stringBuilder.AppendLine("      --> KSTREAM-JOINTHIS-0000000004");
-            stringBuilder.AppendLine("      <-- KSTREAM-SOURCE-0000000000");
-            stringBuilder.AppendLine("    Processor: KSTREAM-WINDOWED-0000000003 (stores: [KSTREAM-JOINOTHER-0000000005-store])");
-            stringBuilder.AppendLine("      --> KSTREAM-JOINOTHER-0000000005");
+            stringBuilder.AppendLine("   Sub-topology: 0 for global store (will not generate tasks)");
+            stringBuilder.AppendLine("    Source: KSTREAM-SOURCE-0000000001 (topics: [test])");
+            stringBuilder.AppendLine("      --> KTABLE-SOURCE-0000000002");
+            stringBuilder.AppendLine("    Processor: KTABLE-SOURCE-0000000002 (stores: [test-STATE-STORE-0000000000])");
+            stringBuilder.AppendLine("      --> none");
             stringBuilder.AppendLine("      <-- KSTREAM-SOURCE-0000000001");
-            stringBuilder.AppendLine("    Processor: KSTREAM-JOINTHIS-0000000004 (stores: [KSTREAM-JOINOTHER-0000000005-store])");
-            stringBuilder.AppendLine("      --> KSTREAM-MERGE-0000000006");
-            stringBuilder.AppendLine("      <-- KSTREAM-WINDOWED-0000000002");
-            stringBuilder.AppendLine("    Processor: KSTREAM-JOINOTHER-0000000005 (stores: [KSTREAM-JOINTHIS-0000000004-store])");
-            stringBuilder.AppendLine("      --> KSTREAM-MERGE-0000000006");
-            stringBuilder.AppendLine("      <-- KSTREAM-WINDOWED-0000000003");
-            stringBuilder.AppendLine("    Processor: KSTREAM-MERGE-0000000006 (stores: [])");
-            stringBuilder.AppendLine("      --> KSTREAM-SINK-0000000007");
-            stringBuilder.AppendLine("      <-- KSTREAM-JOINTHIS-0000000004, KSTREAM-JOINOTHER-0000000005");
-            stringBuilder.AppendLine("    Sink: KSTREAM-SINK-0000000007 (topic: output-join)");
-            stringBuilder.AppendLine("      <-- KSTREAM-MERGE-0000000006");
+            stringBuilder.AppendLine("   Sub-topology: 1");
+            stringBuilder.AppendLine("    Source: KSTREAM-SOURCE-0000000003 (topics: [test2])");
+            stringBuilder.AppendLine("      --> KSTREAM-JOIN-0000000004");
+            stringBuilder.AppendLine("    Processor: KSTREAM-JOIN-0000000004 (stores: [])");
+            stringBuilder.AppendLine("      --> KSTREAM-SINK-0000000005");
+            stringBuilder.AppendLine("      <-- KSTREAM-SOURCE-0000000003");
+            stringBuilder.AppendLine("    Sink: KSTREAM-SINK-0000000005 (topic: output-join)");
+            stringBuilder.AppendLine("      <-- KSTREAM-JOIN-0000000004");
             #endregion
             // COMPARE TOSTRING() WITH JAVA TOSTRING() DESCRIBE TOPO
             var builder = new StreamBuilder();
-            var stream1 = builder.Stream("test", new StringSerDes(), new StringSerDes());
+            var table = builder.GlobalTable("test", new StringSerDes(), new StringSerDes());
             var stream2 = builder.Stream("test2", new StringSerDes(), new StringSerDes());
 
-            stream1.Join<string, string, StringSerDes, StringSerDes>(stream2,
-                (v, v2) => $"{v}-{v2}",
-                JoinWindowOptions.Of(TimeSpan.FromMinutes(1)))
-                .To("output-join");
+            stream2.Join(table, (k, k1) => k, (v, v2) => $"{v}-{v2}")
+                    .To("output-join");
 
             var topology = builder.Build();
             var description = topology.Describe();
