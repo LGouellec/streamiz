@@ -96,9 +96,9 @@ static void Main(string[] args)
 
 - [X] Global state store
 - [X] Refactor Subtopology & StreamTask assignment
+- [X] Refactor Topology description for corresponding to java implementation
 - [WIP] Statefull processors impl
-- [WIP] Refactor Topology description for corresponding to java implementation
-- [WIIP] Refactor Partition grouper + record queue
+- [WIP] Refactor Partition grouper + record queue
 - [ ] Transform and Through Processor
 - [ ] Rocks DB state implementation
 - [ ] Task restoring

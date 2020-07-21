@@ -27,7 +27,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             this.threadId = threadId;
             this.kafkaSupplier = kafkaSupplier;
-            this.consumedOffsets = new Dictionary<TopicPartition, long>();
+            consumedOffsets = new Dictionary<TopicPartition, long>();
 
             // eos enabled
             if (producer == null)
@@ -37,9 +37,11 @@ namespace Streamiz.Kafka.Net.Processors
                 eosEnabled = true;
             }
             else
+            {
                 this.producer = producer;
+            }
 
-            this.collector = new RecordCollector(logPrefix);
+            collector = new RecordCollector(logPrefix);
             collector.Init(ref this.producer);
 
             // TODO FIX
@@ -48,7 +50,9 @@ namespace Streamiz.Kafka.Net.Processors
             Context = new ProcessorContext(configuration, stateMgr).UseRecordCollector(collector);
 
             foreach (var p in partitions)
+            {
                 processors.Add(p.Topic, processorTopology.GetSourceProcessor(p.Topic));
+            }
 
 
             // REFACTOR RECORD QUEUE WITH JOIN
@@ -66,7 +70,9 @@ namespace Streamiz.Kafka.Net.Processors
         private IEnumerable<TopicPartitionOffset> GetPartitionsWithOffset()
         {
             foreach (var kp in consumedOffsets)
+            {
                 yield return new TopicPartitionOffset(kp.Key, kp.Value + 1);
+            }
         }
 
         private void Commit(bool startNewTransaction)
@@ -76,12 +82,12 @@ namespace Streamiz.Kafka.Net.Processors
             FlushState();
             if (eosEnabled)
             {
-                this.producer.SendOffsetsToTransaction(GetPartitionsWithOffset(), this.GroupMetadata, configuration.TransactionTimeout);
-                this.producer.CommitTransaction(configuration.TransactionTimeout);
+                producer.SendOffsetsToTransaction(GetPartitionsWithOffset(), GroupMetadata, configuration.TransactionTimeout);
+                producer.CommitTransaction(configuration.TransactionTimeout);
                 transactionInFlight = false;
                 if (startNewTransaction)
                 {
-                    this.producer.BeginTransaction();
+                    producer.BeginTransaction();
                     transactionInFlight = true;
                 }
                 consumedOffsets.Clear();
@@ -123,7 +129,7 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 try
                 {
-                    this.producer.InitTransactions(configuration.TransactionTimeout);
+                    producer.InitTransactions(configuration.TransactionTimeout);
                     initTransaction = true;
                 }
                 catch (KafkaRetriableException)
@@ -151,8 +157,10 @@ namespace Streamiz.Kafka.Net.Processors
 
             Suspend();
 
-            foreach(var kp in processors)
+            foreach (var kp in processors)
+            {
                 kp.Value.Close();
+            }
 
             collector.Close();
             CloseStateManager();
@@ -169,12 +177,14 @@ namespace Streamiz.Kafka.Net.Processors
         public override void InitializeTopology()
         {
             log.Debug($"{logPrefix}Initializing topology with theses source processors : {string.Join(", ", processors.Keys)}.");
-            foreach(var p in processors)
+            foreach (var p in processors)
+            {
                 p.Value.Init(Context);
+            }
 
             if (eosEnabled)
             {
-                this.producer.BeginTransaction();
+                producer.BeginTransaction();
                 transactionInFlight = true;
             }
 
@@ -198,9 +208,9 @@ namespace Streamiz.Kafka.Net.Processors
                     throw new IllegalStateException("Task producer should be null.");
                 }
 
-                this.producer = CreateEOSProducer();
+                producer = CreateEOSProducer();
                 InitializeTransaction();
-                collector.Init(ref this.producer);
+                collector.Init(ref producer);
             }
         }
 
@@ -217,7 +227,9 @@ namespace Streamiz.Kafka.Net.Processors
                 if (eosEnabled)
                 {
                     if (transactionInFlight)
+                    {
                         producer.AbortTransaction(configuration.TransactionTimeout);
+                    }
 
                     collector.Close();
                     producer = null;
@@ -228,9 +240,9 @@ namespace Streamiz.Kafka.Net.Processors
         protected override void FlushState()
         {
             base.FlushState();
-            this.collector?.Flush();
+            collector?.Flush();
         }
-        
+
         #endregion
 
         public bool Process()
@@ -241,12 +253,14 @@ namespace Streamiz.Kafka.Net.Processors
                 if (record != null)
                 {
                     // TODO : gérer timestampextractor
-                    this.Context.SetRecordMetaData(record);
+                    Context.SetRecordMetaData(record);
 
                     var recordInfo = $"Topic:{record.Topic}|Partition:{record.Partition.Value}|Offset:{record.Offset}|Timestamp:{record.Message.Timestamp.UnixTimestampMs}";
                     log.Debug($"{logPrefix}Start processing one record [{recordInfo}]");
                     if (processors.ContainsKey(record.Topic))
+                    {
                         processors[record.Topic].Process(record.Message.Key, record.Message.Value);
+                    }
                     else
                     {
                         log.Error($"{logPrefix}Impossible to process record {recordInfo}. Processor for topic {record.Topic} doesn't exist !");
@@ -269,7 +283,9 @@ namespace Streamiz.Kafka.Net.Processors
         public void AddRecords(IEnumerable<ConsumeResult<byte[], byte[]>> records)
         {
             foreach (var r in records)
+            {
                 queue.AddRecord(r);
+            }
 
             // TODO : NO PAUSE FOR MOMENT
             //if (queue.MaxSize <= queue.Size)
