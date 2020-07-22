@@ -147,8 +147,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     {
                         Message = new Message<byte[], byte[]>
                         {
-                            Key = serdes.Serialize($"key{i + 1}"),
-                            Value = serdes.Serialize($"value{i + 1}")
+                            Key = serdes.Serialize($"key{i + 1}", new SerializationContext()),
+                            Value = serdes.Serialize($"value{i + 1}", new SerializationContext())
                         },
                         TopicPartitionOffset = new TopicPartitionOffset(part, offset++)
                     });
@@ -181,8 +181,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.AreEqual(5, results.Count);
             for (int i = 0; i < 5; ++i)
             {
-                Assert.AreEqual($"KEY{i + 1}", serdes.Deserialize(results[i].Message.Key));
-                Assert.AreEqual($"VALUE{i+1}", serdes.Deserialize(results[i].Message.Value));
+                Assert.AreEqual($"KEY{i + 1}", serdes.Deserialize(results[i].Message.Key, new SerializationContext()));
+                Assert.AreEqual($"VALUE{i+1}", serdes.Deserialize(results[i].Message.Value, new SerializationContext()));
             }
 
             // NO RECORD IN THIS TASKS

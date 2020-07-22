@@ -16,6 +16,8 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
             this.topic = topic;
         }
 
+        public string TopicName => topic;
+
         public void Dispose()
         {
             Flush();

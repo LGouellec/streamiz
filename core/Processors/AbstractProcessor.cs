@@ -1,4 +1,5 @@
-﻿using log4net;
+﻿using Confluent.Kafka;
+using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -133,6 +134,13 @@ namespace Streamiz.Kafka.Net.Processors
 
         protected void LogProcessingKeyValue(K key, V value) => log.Debug($"{logPrefix}Process<{typeof(K).Name},{typeof(V).Name}> message with key {key} and {value} with record metadata [topic:{Context.RecordContext.Topic}|partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}]");
 
+        protected SerializationContext GetSerializationContext(bool isKey)
+        {
+            return new SerializationContext(isKey ? MessageComponentType.Key : MessageComponentType.Value,
+                Context?.RecordContext?.Topic,
+                Context?.RecordContext?.Headers);
+        }
+
         #region Setter
 
         internal void SetTaskId(TaskId id)
@@ -157,7 +165,7 @@ namespace Streamiz.Kafka.Net.Processors
             if (key != null && key is byte[])
             {
                 if (KeySerDes != null)
-                    key = Key.DeserializeObject(key as byte[]);
+                    key = Key.DeserializeObject(key as byte[], GetSerializationContext(true));
                 else
                     throwException = true;
             }
@@ -165,7 +173,7 @@ namespace Streamiz.Kafka.Net.Processors
             if (value != null && value is byte[])
             {
                 if (ValueSerDes != null)
-                    value = Value.DeserializeObject(value as byte[]);
+                    value = Value.DeserializeObject(value as byte[], GetSerializationContext(false));
                 else
                     throwException = true;
             }

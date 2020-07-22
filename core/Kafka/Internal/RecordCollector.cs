@@ -67,8 +67,8 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
         public void Send<K, V>(string topic, K key, V value, Headers headers, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer)
         {
-            var k = key != null ? keySerializer.Serialize(key) : null;
-            var v = value != null ? valueSerializer.Serialize(value) : null;
+            var k = key != null ? keySerializer.Serialize(key, new SerializationContext(MessageComponentType.Key, topic,headers)) : null;
+            var v = value != null ? valueSerializer.Serialize(value, new SerializationContext(MessageComponentType.Value, topic, headers)) : null;
 
             producer?.Produce(
                 topic, 

@@ -1,4 +1,5 @@
-﻿using Streamiz.Kafka.Net.State;
+﻿using Confluent.Kafka;
+using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.Helper;
 using Streamiz.Kafka.Net.Stream;
 using System;
@@ -31,7 +32,7 @@ namespace Streamiz.Kafka.Net.SerDes
         /// </summary>
         /// <param name="data">Data array</param>
         /// <returns>Return <see cref="Windowed{K}"/> instance</returns>
-        public override Windowed<T> Deserialize(byte[] data)
+        public override Windowed<T> Deserialize(byte[] data, SerializationContext context)
         {
             if (data == null || data.Length == 0)
                 return null;
@@ -39,7 +40,7 @@ namespace Streamiz.Kafka.Net.SerDes
             var start = data.ExtractStoreTimestamp();
 
             return new Windowed<T>(
-                innerSerdes.Deserialize(data.ExtractStoreKeyBytes()),
+                innerSerdes.Deserialize(data.ExtractStoreKeyBytes(), context),
                 new TimeWindow(start, start + windowSize));
         }
 
@@ -48,7 +49,7 @@ namespace Streamiz.Kafka.Net.SerDes
         /// </summary>
         /// <param name="data">Instance to serialize</param>
         /// <returns>Return an array of byte</returns>
-        public override byte[] Serialize(Windowed<T> data)
+        public override byte[] Serialize(Windowed<T> data, SerializationContext context)
         {
             if (data == null)
                 return null;
@@ -57,7 +58,7 @@ namespace Streamiz.Kafka.Net.SerDes
             {
                 using (var bufferStream = new BufferedStream(mStream))
                 {
-                    bufferStream.Write(innerSerdes.Serialize(data.Key));
+                    bufferStream.Write(innerSerdes.Serialize(data.Key, context));
                     bufferStream.Write(BitConverter.GetBytes(data.Window.StartMs));
                 }
                 return mStream.ToArray();

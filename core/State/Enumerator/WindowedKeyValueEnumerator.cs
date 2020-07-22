@@ -24,7 +24,7 @@ namespace Streamiz.Kafka.Net.State.Enumerator
             {
                 var next = innerEnumerator.Current;
                 if (next.HasValue)
-                    return KeyValuePair.Create(WindowedKey(next.Value.Key), valueSerdes.Deserialize(next.Value.Value));
+                    return KeyValuePair.Create(WindowedKey(next.Value.Key), valueSerdes.Deserialize(next.Value.Value, new Confluent.Kafka.SerializationContext()));
                 else
                     return null;
             }
@@ -42,7 +42,7 @@ namespace Streamiz.Kafka.Net.State.Enumerator
 
         private Windowed<K> WindowedKey(Windowed<Bytes> bytesKey)
         {
-            K key = keySerdes.Deserialize(bytesKey.Key.Get);
+            K key = keySerdes.Deserialize(bytesKey.Key.Get, new Confluent.Kafka.SerializationContext());
             return new Windowed<K>(key, bytesKey.Window);
         }
     }

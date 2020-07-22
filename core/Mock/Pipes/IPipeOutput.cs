@@ -14,6 +14,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
 
     internal interface IPipeOutput : IDisposable
     {
+        string TopicName { get; }
         KeyValuePair<byte[], byte[]> Read();
         IEnumerable<KeyValuePair<byte[], byte[]>> ReadList();
         List<PipeOutputInfo> GetInfos();

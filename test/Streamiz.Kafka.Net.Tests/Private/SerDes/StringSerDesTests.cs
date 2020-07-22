@@ -10,7 +10,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         public void SerializeNullData()
         {
             var serdes = new StringSerDes();
-            var r = serdes.Serialize(null);
+            var r = serdes.Serialize(null, new Confluent.Kafka.SerializationContext());
             Assert.IsNull(r);
         }
 
@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             byte[] b = new byte[] { 99, 111, 117, 99, 111, 117 };
 
             var serdes = new StringSerDes();
-            var r = serdes.Serialize(s);
+            var r = serdes.Serialize(s, new Confluent.Kafka.SerializationContext());
             Assert.IsNotNull(r);
             Assert.Greater(r.Length, 0);
             Assert.AreEqual(b, r);
@@ -32,7 +32,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         public void DeserializeNullData()
         {
             var serdes = new StringSerDes();
-            var r = serdes.Deserialize(null);
+            var r = serdes.Deserialize(null, new Confluent.Kafka.SerializationContext());
             Assert.IsNull(r);
         }
 
@@ -42,7 +42,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             string s = "test";
 
             var serdes = new StringSerDes();
-            var r = serdes.Deserialize(serdes.Serialize(s));
+            var r = serdes.Deserialize(serdes.Serialize(s, new Confluent.Kafka.SerializationContext()), new Confluent.Kafka.SerializationContext());
             Assert.IsNotNull(r);
             Assert.AreEqual(s, r);
         }

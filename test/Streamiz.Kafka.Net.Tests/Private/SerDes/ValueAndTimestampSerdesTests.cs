@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         {
             var stringSerdes = new StringSerDes();
             var serdes = new ValueAndTimestampSerDes<string>(stringSerdes);
-            var r = serdes.Serialize(null);
+            var r = serdes.Serialize(null, new Confluent.Kafka.SerializationContext());
             Assert.IsNull(r);
         }
 
@@ -33,10 +33,10 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var stringSerdes = new StringSerDes();
             var serdes = new ValueAndTimestampSerDes<string>(stringSerdes);
             var data = ValueAndTimestamp<string>.Make(s, millie);
-            var r = serdes.Serialize(data);
+            var r = serdes.Serialize(data, new Confluent.Kafka.SerializationContext());
             Assert.IsNotNull(r);
             Assert.Greater(r.Length, 0);
-            var r2 = serdes.Deserialize(r);
+            var r2 = serdes.Deserialize(r, new Confluent.Kafka.SerializationContext());
             Assert.AreEqual(s, r2.Value);
             Assert.AreEqual(millie, r2.Timestamp);
         }
@@ -46,7 +46,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         {
             var stringSerdes = new StringSerDes();
             var serdes = new ValueAndTimestampSerDes<string>(stringSerdes);
-            var r = serdes.Deserialize(null);
+            var r = serdes.Deserialize(null, new Confluent.Kafka.SerializationContext());
             Assert.IsNull(r);
         }
 
@@ -59,7 +59,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var stringSerdes = new StringSerDes();
             var serdes = new ValueAndTimestampSerDes<string>(stringSerdes);
             var data = ValueAndTimestamp<string>.Make(s, millie);
-            var r = serdes.Deserialize(serdes.Serialize(data));
+            var r = serdes.Deserialize(serdes.Serialize(data, new Confluent.Kafka.SerializationContext()), new Confluent.Kafka.SerializationContext());
             Assert.IsNotNull(r);
             Assert.AreEqual(s, r.Value);
             Assert.AreEqual(millie, r.Timestamp);

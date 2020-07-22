@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using Confluent.Kafka;
+using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
@@ -61,7 +62,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
             var provider = new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1, store2);
             var composite = new CompositeReadOnlyKeyValueStore<string, string>(provider, storeType, "store");
-            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt)));
+            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt), new SerializationContext()));
             var result = composite.Get("test");
             Assert.IsNotNull(result);
             Assert.AreEqual("coucou1", result);
@@ -78,8 +79,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var bytes2 = new Bytes(Encoding.UTF8.GetBytes("test2"));
             var provider = new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1, store2);
             var composite = new CompositeReadOnlyKeyValueStore<string, string>(provider, storeType, "store");
-            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt)));
-            store2.Put(bytes2, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou2", dt)));
+            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt), new SerializationContext()));
+            store2.Put(bytes2, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou2", dt), new SerializationContext()));
             var result = composite.All().ToList();
             Assert.IsNotNull(result);
             Assert.AreEqual(2, result.Count);
@@ -98,8 +99,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var bytes2 = new Bytes(Encoding.UTF8.GetBytes("test2"));
             var provider = new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1, store2);
             var composite = new CompositeReadOnlyKeyValueStore<string, string>(provider, storeType, "store");
-            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt)));
-            store2.Put(bytes2, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou2", dt)));
+            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt), new SerializationContext()));
+            store2.Put(bytes2, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou2", dt), new SerializationContext()));
             Assert.AreEqual(2, composite.ApproximateNumEntries());
         }
     }

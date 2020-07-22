@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.State.Internal
         private Bytes GetKeyBytes(K key)
         {
             if (keySerdes != null)
-                return new Bytes(keySerdes.Serialize(key));
+                return new Bytes(keySerdes.Serialize(key, GetSerializationContext(true)));
             else
                 throw new StreamsException($"The serializer is not compatible to the actual key (Key type: {typeof(K).FullName}). Change the default Serdes in StreamConfig or provide correct Serdes via method parameters(using the DSL)");
         }
@@ -28,7 +28,7 @@ namespace Streamiz.Kafka.Net.State.Internal
         private byte[] GetValueBytes(ValueAndTimestamp<V> value)
         {
             if(valueSerdes != null)
-                return valueSerdes.Serialize(value);
+                return valueSerdes.Serialize(value, GetSerializationContext(false));
             else
                 throw new StreamsException($"The serializer is not compatible to the actual value (Value type: {typeof(V).FullName}). Change the default Serdes in StreamConfig or provide correct Serdes via method parameters(using the DSL)");
         }
@@ -36,7 +36,7 @@ namespace Streamiz.Kafka.Net.State.Internal
         private ValueAndTimestamp<V> FromValue(byte[] values)
         {
             if(valueSerdes != null)
-                return values != null ? valueSerdes.Deserialize(values) : null;
+                return values != null ? valueSerdes.Deserialize(values, GetSerializationContext(false)) : null;
             else
                 throw new StreamsException($"The serializer is not compatible to the actual value (Value type: {typeof(V).FullName}). Change the default Serdes in StreamConfig or provide correct Serdes via method parameters(using the DSL)");
         }
@@ -44,7 +44,7 @@ namespace Streamiz.Kafka.Net.State.Internal
         private K FromKey(Bytes key)
         {
             if(keySerdes != null)
-                return keySerdes.Deserialize(key.Get);
+                return keySerdes.Deserialize(key.Get, GetSerializationContext(true));
             else
                 throw new StreamsException($"The serializer is not compatible to the actual key (Key type: {typeof(K).FullName}). Change the default Serdes in StreamConfig or provide correct Serdes via method parameters(using the DSL)");
         }

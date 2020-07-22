@@ -1,8 +1,10 @@
-﻿using Confluent.Kafka.SyncOverAsync;
+﻿using Confluent.Kafka;
+using Confluent.Kafka.SyncOverAsync;
 using Confluent.SchemaRegistry;
 using Confluent.SchemaRegistry.Serdes;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.SerDes;
+using System;
 
 namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
 {
@@ -39,7 +41,7 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
                 {
                     var schemaConfig = context.Config as ISchemaRegistryConfig;
 
-                    registryClient = new CachedSchemaRegistryClient(GetConfig(schemaConfig));
+                    registryClient = GetSchemaRegistryClient(GetConfig(schemaConfig));
                     avroDeserializer = new AvroDeserializer<T>(registryClient);
                     avroSerializer = new AvroSerializer<T>(registryClient, GetSerializerConfig(schemaConfig));
 
@@ -51,18 +53,29 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
             }
         }
 
-        public override T Deserialize(byte[] data)
+        public override T Deserialize(byte[] data, SerializationContext context)
         {
+            if (!isInitialized)
+                throw new StreamsException($"SchemaAvroSerDes<{typeof(T).Name} is not initialized !");
+
             return avroDeserializer
                    .AsSyncOverAsync()
-                   .Deserialize(data, data == null, new Confluent.Kafka.SerializationContext());
+                   .Deserialize(data, data == null, context);
         }
 
-        public override byte[] Serialize(T data)
+        public override byte[] Serialize(T data, SerializationContext context)
         {
+            if (!isInitialized)
+                throw new StreamsException($"SchemaAvroSerDes<{typeof(T).Name} is not initialized !");
+
             return avroSerializer
                             .AsSyncOverAsync()
-                            .Serialize(data, new Confluent.Kafka.SerializationContext());
+                            .Serialize(data, context);
+        }
+    
+        protected virtual ISchemaRegistryClient GetSchemaRegistryClient(Confluent.SchemaRegistry.SchemaRegistryConfig config)
+        {
+            return new CachedSchemaRegistryClient(config);
         }
     }
 }

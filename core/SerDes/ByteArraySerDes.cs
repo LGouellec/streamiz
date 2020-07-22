@@ -1,4 +1,6 @@
-﻿namespace Streamiz.Kafka.Net.SerDes
+﻿using Confluent.Kafka;
+
+namespace Streamiz.Kafka.Net.SerDes
 {
     /// <summary>
     /// Basic ByteArraySerdes. 
@@ -11,13 +13,13 @@
         /// </summary>
         /// <param name="data">serialized bytes</param>
         /// <returns>Return <code>data</code> parameter</returns>
-        public override byte[] Deserialize(byte[] data) => data;
+        public override byte[] Deserialize(byte[] data, SerializationContext context) => data;
 
         /// <summary>
         /// Serialize just return <code>data</code>.
         /// </summary>
         /// <param name="data">typed data</param>
         /// <returns>Return <code>data</code> parameter</returns>
-        public override byte[] Serialize(byte[] data) => data;
+        public override byte[] Serialize(byte[] data, SerializationContext context) => data;
     }
 }

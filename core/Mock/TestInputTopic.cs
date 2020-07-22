@@ -56,9 +56,9 @@ namespace Streamiz.Kafka.Net.Mock
             if (key != null)
             {
                 if (keySerdes != null)
-                    return keySerdes.Serialize(key);
+                    return keySerdes.Serialize(key, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Key, pipe.TopicName));
                 else
-                    return configuration.DefaultKeySerDes.SerializeObject(key);
+                    return configuration.DefaultKeySerDes.SerializeObject(key, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Key, pipe.TopicName));
             }
             else
                 return null;
@@ -69,9 +69,9 @@ namespace Streamiz.Kafka.Net.Mock
             if (value != null)
             {
                 if (valueSerdes != null)
-                    return valueSerdes.Serialize(value);
+                    return valueSerdes.Serialize(value, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Value, pipe.TopicName));
                 else
-                    return configuration.DefaultValueSerDes.SerializeObject(value);
+                    return configuration.DefaultValueSerDes.SerializeObject(value, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Value, pipe.TopicName));
             }
             else
                 return null;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Confluent.Kafka;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -18,14 +19,14 @@ namespace Streamiz.Kafka.Net.SerDes
         /// </summary>
         /// <param name="data">serialized bytes; may be null; implementations are recommended to handle null by returning a value or null rather than throwing an exception.</param>
         /// <returns>deserialized object data; may be null</returns>
-        object DeserializeObject(byte[] data);
+        object DeserializeObject(byte[] data, SerializationContext context);
 
         /// <summary>
         /// Convert <code>data</code> into a byte array.
         /// </summary>
         /// <param name="data">object data</param>
         /// <returns>serialized bytes</returns>
-        byte[] SerializeObject(object data);
+        byte[] SerializeObject(object data, SerializationContext context);
 
         void Initialize(SerDesContext context);
     }
@@ -42,14 +43,16 @@ namespace Streamiz.Kafka.Net.SerDes
         /// Deserialize a record value from a byte array into a value or object.
         /// </summary>
         /// <param name="data">serialized bytes; may be null; implementations are recommended to handle null by returning a value or null rather than throwing an exception.</param>
+        /// <param name="context">Context relevant to a serialization or deserialization operation.</param>
         /// <returns>deserialized typed data; may be null</returns>
-        T Deserialize(byte[] data);
+        T Deserialize(byte[] data, SerializationContext context);
 
         /// <summary>
         /// Convert <code>data</code> into a byte array.
         /// </summary>
         /// <param name="data">typed data</param>
+        /// <param name="context">Context relevant to a serialization or deserialization operation.</param>
         /// <returns>serialized bytes</returns>
-        byte[] Serialize(T data);
+        byte[] Serialize(T data, SerializationContext context);
     }
 }

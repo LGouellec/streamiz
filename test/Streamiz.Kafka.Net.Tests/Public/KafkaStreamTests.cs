@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using Confluent.Kafka;
+using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.SerDes;
@@ -283,8 +284,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 producer.Produce("topic",
                     new Confluent.Kafka.Message<byte[], byte[]>
                     {
-                        Key = serdes.Serialize("key1"),
-                        Value = serdes.Serialize("coucou")
+                        Key = serdes.Serialize("key1", new SerializationContext()),
+                        Value = serdes.Serialize("coucou", new SerializationContext())
                     });
                 Thread.Sleep(50);
                 var store = stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.KeyValueStore<string, string>()));
@@ -419,8 +420,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 producer.Produce("test",
                     new Confluent.Kafka.Message<byte[], byte[]>
                     {
-                        Key = serdes.Serialize("key1"),
-                        Value = serdes.Serialize("coucou"),
+                        Key = serdes.Serialize("key1", new SerializationContext()),
+                        Value = serdes.Serialize("coucou", new SerializationContext()),
                         Timestamp = new Confluent.Kafka.Timestamp(dt)
                     });
                 Thread.Sleep(50);

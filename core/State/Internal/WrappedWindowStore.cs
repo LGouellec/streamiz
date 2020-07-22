@@ -37,7 +37,7 @@ namespace Streamiz.Kafka.Net.State.Internal
         private Bytes GetKeyBytes(K key)
         {
             if (keySerdes != null)
-                return new Bytes(keySerdes.Serialize(key));
+                return new Bytes(keySerdes.Serialize(key, GetSerializationContext(true)));
             else
                 throw new StreamsException($"The serializer is not compatible to the actual key (Key type: {typeof(K).FullName}). Change the default Serdes in StreamConfig or provide correct Serdes via method parameters(using the DSL)");
         }
@@ -45,7 +45,7 @@ namespace Streamiz.Kafka.Net.State.Internal
         private byte[] GetValueBytes(V value)
         {
             if (valueSerdes != null)
-                return valueSerdes.Serialize(value);
+                return valueSerdes.Serialize(value, GetSerializationContext(false));
             else
                 throw new StreamsException($"The serializer is not compatible to the actual value (Value type: {typeof(V).FullName}). Change the default Serdes in StreamConfig or provide correct Serdes via method parameters(using the DSL)");
         }
@@ -53,7 +53,7 @@ namespace Streamiz.Kafka.Net.State.Internal
         private V FromValue(byte[] values)
         {
             if (valueSerdes != null)
-                return values != null ? valueSerdes.Deserialize(values) : default;
+                return values != null ? valueSerdes.Deserialize(values, GetSerializationContext(false)) : default;
             else
                 throw new StreamsException($"The serializer is not compatible to the actual value (Value type: {typeof(V).FullName}). Change the default Serdes in StreamConfig or provide correct Serdes via method parameters(using the DSL)");
         }

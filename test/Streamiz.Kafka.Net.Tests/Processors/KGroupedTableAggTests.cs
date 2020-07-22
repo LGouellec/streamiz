@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Confluent.Kafka;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
@@ -46,13 +47,13 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
         internal class DictionarySerDes : AbstractSerDes<Dictionary<char, int>>
         {
-            public override Dictionary<char, int> Deserialize(byte[] data)
+            public override Dictionary<char, int> Deserialize(byte[] data, SerializationContext context)
             {
                 var s = Encoding.UTF8.GetString(data);
                 return JsonConvert.DeserializeObject<Dictionary<char, int>>(s);
             }
 
-            public override byte[] Serialize(Dictionary<char, int> data)
+            public override byte[] Serialize(Dictionary<char, int> data, SerializationContext context)
             {
                 return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(data, Formatting.Indented));
             }

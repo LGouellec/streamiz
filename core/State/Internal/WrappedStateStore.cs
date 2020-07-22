@@ -1,4 +1,5 @@
-﻿using Streamiz.Kafka.Net.Processors;
+﻿using Confluent.Kafka;
+using Streamiz.Kafka.Net.Processors;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -8,7 +9,7 @@ namespace Streamiz.Kafka.Net.State.Internal
     internal class WrappedStateStore<S> : IStateStore
         where S : IStateStore
     {
-
+        protected ProcessorContext context;
         protected readonly S wrapped;
 
         public WrappedStateStore(S wrapped)
@@ -28,8 +29,19 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public void Flush() => wrapped.Flush();
 
-        public virtual void Init(ProcessorContext context, IStateStore root) => wrapped.Init(context, root);
+        public virtual void Init(ProcessorContext context, IStateStore root)
+        {
+            this.context = context;
+            wrapped.Init(context, root);
+        }
 
         #endregion
+
+        protected SerializationContext GetSerializationContext(bool isKey)
+        {
+            return new SerializationContext(isKey ? MessageComponentType.Key : MessageComponentType.Value,
+                context?.RecordContext?.Topic,
+                context?.RecordContext?.Headers);
+        }
     }
 }

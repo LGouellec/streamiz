@@ -18,6 +18,8 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
             producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig($"pipe-input-{configuration.ApplicationId}-{topicName}"));
         }
 
+        public string TopicName => topicName;
+
         public void Dispose()
         {
             if (buffer.Count > 0)

@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using Confluent.Kafka;
+using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
@@ -59,7 +60,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
             var provider = new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1, store2);
             var composite = new CompositeReadOnlyWindowStore<string, string>(provider, new WindowStoreType<string, string>(), "store");
-            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt)), dt);
+            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt), new SerializationContext()), dt);
             var result = composite.Fetch("test", dt);
             Assert.IsNotNull(result);
             Assert.AreEqual("coucou1", result);
@@ -75,7 +76,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
             var provider = new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1, store2);
             var composite = new CompositeReadOnlyWindowStore<string, string>(provider, new WindowStoreType<string, string>(), "store");
-            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt.GetMilliseconds())), dt.GetMilliseconds());
+            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt.GetMilliseconds()), new SerializationContext()), dt.GetMilliseconds());
             var result = composite.Fetch("test", dt.AddSeconds(-2), dt.AddSeconds(2));
             Assert.IsNotNull(result);
             var items = result.ToList();
@@ -95,8 +96,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var bytes2 = new Bytes(Encoding.UTF8.GetBytes("test2"));
             var provider = new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1, store2);
             var composite = new CompositeReadOnlyWindowStore<string, string>(provider, new WindowStoreType<string, string>(), "store");
-            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt.GetMilliseconds())), dt.GetMilliseconds());
-            store1.Put(bytes2, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou2", dt.GetMilliseconds())), dt.GetMilliseconds());
+            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt.GetMilliseconds()), new SerializationContext()), dt.GetMilliseconds());
+            store1.Put(bytes2, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou2", dt.GetMilliseconds()), new SerializationContext()), dt.GetMilliseconds());
             var result = composite.FetchAll(dt.AddSeconds(-2), dt.AddSeconds(2));
             Assert.IsNotNull(result);
             var items = result.ToList();
@@ -120,8 +121,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var bytes2 = new Bytes(Encoding.UTF8.GetBytes("test2"));
             var provider = new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1, store2);
             var composite = new CompositeReadOnlyWindowStore<string, string>(provider, new WindowStoreType<string, string>(), "store");
-            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt.GetMilliseconds())), dt.GetMilliseconds());
-            store1.Put(bytes2, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou2", dt.GetMilliseconds())), dt.GetMilliseconds());
+            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt.GetMilliseconds()), new SerializationContext()), dt.GetMilliseconds());
+            store1.Put(bytes2, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou2", dt.GetMilliseconds()), new SerializationContext()), dt.GetMilliseconds());
             var result = composite.All();
             Assert.IsNotNull(result);
             var items = result.ToList();

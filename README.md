@@ -73,11 +73,11 @@ static void Main(string[] args)
     
     StreamBuilder builder = new StreamBuilder();
 
-    builder.Stream<string, string>("test")
-        .FilterNot((k, v) => v.Contains("test"))
-        .To("test-output");
+    var kstream = builder.Stream<string, string>("stream");
+    var ktable = builder.Table("table", InMemory<string, string>.As("table-store"));
 
-    builder.Table("topic", InMemory<string, string>.As("test-ktable-store"));
+    kstream.Join<string, string, StringSerDes, StringSerDes>(ktable, (v, v1) => $"{v}-{v1}")
+           .To("join-topic");
 
     Topology t = builder.Build();
     KafkaStream stream = new KafkaStream(t, config);

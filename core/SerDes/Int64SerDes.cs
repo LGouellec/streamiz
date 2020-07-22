@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Confluent.Kafka;
+using System;
 
 namespace Streamiz.Kafka.Net.SerDes
 {
@@ -12,13 +13,13 @@ namespace Streamiz.Kafka.Net.SerDes
         /// </summary>
         /// <param name="data">serialized bytes.</param>
         /// <returns>deserialized <see cref="Int64"/> using data; may be null</returns>
-        public override long Deserialize(byte[] data) => BitConverter.ToInt64(data);
+        public override long Deserialize(byte[] data, SerializationContext context) => BitConverter.ToInt64(data);
 
         /// <summary>
         /// Convert long <code>data</code> into a byte array.
         /// </summary>
         /// <param name="data"><see cref="Int64"/> data</param>
         /// <returns>serialized bytes</returns>
-        public override byte[] Serialize(long data) => BitConverter.GetBytes(data);
+        public override byte[] Serialize(long data, SerializationContext context) => BitConverter.GetBytes(data);
     }
 }

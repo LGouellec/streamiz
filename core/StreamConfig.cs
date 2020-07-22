@@ -1974,25 +1974,25 @@ namespace Streamiz.Kafka.Net
 
         public int? SchemaRegistryRequestTimeoutMs
         {
-            get => this[schemaRegistryRequestTimeoutMsCst];
+            get => this.ContainsKey(schemaRegistryRequestTimeoutMsCst) ? this[schemaRegistryRequestTimeoutMsCst] : null;
             set => this.AddOrUpdate(schemaRegistryRequestTimeoutMsCst, value);
         }
 
         public int? SchemaRegistryMaxCachedSchemas
         {
-            get => this[schemaRegistryMaxCachedSchemasCst];
+            get => this.ContainsKey(schemaRegistryMaxCachedSchemasCst) ? this[schemaRegistryMaxCachedSchemasCst] : null;
             set => this.AddOrUpdate(schemaRegistryMaxCachedSchemasCst, value);
         }
 
         public string SchemaRegistryUrl
         {
-            get => this[schemaRegistryUrlCst];
+            get => this.ContainsKey(schemaRegistryUrlCst) ? this[schemaRegistryUrlCst] : null;
             set => this.AddOrUpdate(schemaRegistryUrlCst, value);
         }
 
         public bool? AutoRegisterSchemas
         {
-            get => this[schemaRegistryAutoRegisterCst];
+            get => this.ContainsKey(schemaRegistryAutoRegisterCst) ? this[schemaRegistryAutoRegisterCst] : null;
             set => this.AddOrUpdate(schemaRegistryAutoRegisterCst, value);
         }
 

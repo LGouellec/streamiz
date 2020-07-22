@@ -1,4 +1,5 @@
-﻿using Streamiz.Kafka.Net.Errors;
+﻿using Confluent.Kafka;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.State;
 using System.IO;
 
@@ -13,7 +14,7 @@ namespace Streamiz.Kafka.Net.SerDes
             InnerSerdes = innerSerdes ?? throw new StreamsException($"The inner serdes is not compatible to the actual value type {typeof(V).FullName}. Provide correct Serdes via method parameters(using the DSL)");
         }
 
-        public override ValueAndTimestamp<V> Deserialize(byte[] data)
+        public override ValueAndTimestamp<V> Deserialize(byte[] data, SerializationContext context)
         {
             if (data != null)
             {
@@ -23,7 +24,7 @@ namespace Streamiz.Kafka.Net.SerDes
                     long t = reader.ReadInt64();
                     int length = reader.ReadInt32();
                     byte[] d = reader.ReadBytes(length);
-                    V v = InnerSerdes.Deserialize(d);
+                    V v = InnerSerdes.Deserialize(d, context);
                     ValueAndTimestamp<V> obj = ValueAndTimestamp<V>.Make(v, t);
                     return obj;
                 }
@@ -32,14 +33,14 @@ namespace Streamiz.Kafka.Net.SerDes
                 return null;
         }
 
-        public override byte[] Serialize(ValueAndTimestamp<V> data)
+        public override byte[] Serialize(ValueAndTimestamp<V> data, SerializationContext context)
         {
             if (data != null)
             {
                 using (var stream = new MemoryStream())
                 using (var writer = new BinaryWriter(stream))
                 {
-                    byte[] innerobj = InnerSerdes.Serialize(data.Value);
+                    byte[] innerobj = InnerSerdes.Serialize(data.Value, context);
 
                     writer.Write(data.Timestamp);
                     writer.Write(innerobj.Length);

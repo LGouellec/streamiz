@@ -25,6 +25,8 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
             consumer.Subscribe(topicName);
         }
 
+        public string TopicName => topicName;
+
         public int Size => throw new InvalidOperationException("Operation not available in synchronous mode");
 
         public bool IsEmpty => throw new InvalidOperationException("Operation not available in synchronous mode");

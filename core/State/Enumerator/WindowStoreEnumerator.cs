@@ -23,7 +23,7 @@ namespace Streamiz.Kafka.Net.State.Enumerator
             {
                 var next = innerEnumerator.Current;
                 if (next.HasValue)
-                    return KeyValuePair.Create(next.Value.Key, serdes.Deserialize(next.Value.Value));
+                    return KeyValuePair.Create(next.Value.Key, serdes.Deserialize(next.Value.Value, new Confluent.Kafka.SerializationContext()));
                 else
                     return null;
             }

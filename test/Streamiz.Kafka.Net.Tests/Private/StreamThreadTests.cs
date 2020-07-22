@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using Confluent.Kafka;
+using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.Mock.Sync;
@@ -207,8 +208,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             thread.Start(source.Token);
             producer.Produce("topic", new Confluent.Kafka.Message<byte[], byte[]>
             {
-                Key = serdes.Serialize("key1"),
-                Value = serdes.Serialize("coucou")
+                Key = serdes.Serialize("key1", new SerializationContext()),
+                Value = serdes.Serialize("coucou", new SerializationContext())
             });
             //WAIT STREAMTHREAD PROCESS MESSAGE
             System.Threading.Thread.Sleep(100);
@@ -217,8 +218,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             source.Cancel();
             thread.Dispose();
 
-            Assert.AreEqual("key1", serdes.Deserialize(message.Message.Key));
-            Assert.AreEqual("coucou", serdes.Deserialize(message.Message.Value));
+            Assert.AreEqual("key1", serdes.Deserialize(message.Message.Key, new SerializationContext()));
+            Assert.AreEqual("coucou", serdes.Deserialize(message.Message.Value, new SerializationContext()));
             Assert.AreEqual(expectedStates, allStates);
         }
 
@@ -286,8 +287,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             producer.Produce("topic", new Confluent.Kafka.Message<byte[], byte[]>
             {
-                Key = serdes.Serialize("key1"),
-                Value = serdes.Serialize("coucou")
+                Key = serdes.Serialize("key1", new SerializationContext()),
+                Value = serdes.Serialize("coucou", new SerializationContext())
             });
             //WAIT STREAMTHREAD PROCESS MESSAGE
             System.Threading.Thread.Sleep(100);
@@ -301,8 +302,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             thread.Dispose();
             thread2.Dispose();
 
-            Assert.AreEqual("key1", serdes.Deserialize(message.Message.Key));
-            Assert.AreEqual("coucou", serdes.Deserialize(message.Message.Value));
+            Assert.AreEqual("key1", serdes.Deserialize(message.Message.Key, new SerializationContext()));
+            Assert.AreEqual("coucou", serdes.Deserialize(message.Message.Value, new SerializationContext()));
             Assert.AreEqual(expectedStates, allStates);
             // Destroy in memory cluster
             supplier.Destroy();

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using Confluent.Kafka;
+using System.Text;
 
 namespace Streamiz.Kafka.Net.SerDes
 {
@@ -31,7 +32,7 @@ namespace Streamiz.Kafka.Net.SerDes
         /// </summary>
         /// <param name="data">serialized bytes.</param>
         /// <returns>deserialized string using encoding data; may be null</returns>
-        public override string Deserialize(byte[] data)
+        public override string Deserialize(byte[] data, SerializationContext context)
         {
             return data != null ? encoding.GetString(data) : null;
         }
@@ -41,7 +42,7 @@ namespace Streamiz.Kafka.Net.SerDes
         /// </summary>
         /// <param name="data">string data</param>
         /// <returns>serialized bytes</returns>
-        public override byte[] Serialize(string data)
+        public override byte[] Serialize(string data, SerializationContext context)
         {
             return data != null ? encoding.GetBytes(data) : null;
         }
