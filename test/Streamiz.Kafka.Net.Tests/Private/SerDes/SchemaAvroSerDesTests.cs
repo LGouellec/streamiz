@@ -3,8 +3,11 @@ using Avro.Specific;
 using Confluent.SchemaRegistry;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro;
+using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Tests.Helpers;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 {
@@ -144,5 +147,37 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             Assert.AreEqual("TEST", pbis.firstName);
             Assert.AreEqual("TEST", pbis.lastName);
         }
+    
+        [Test]
+        public void CompleteWorkflow()
+        {
+            var client = new MockSchemaRegistryClient();
+            var config = new StreamConfig();
+            config.ApplicationId = "test-workflow-avroserdes";
+            config.DefaultKeySerDes = new StringSerDes();
+            config.DefaultValueSerDes = new MockAvroSerDes(client);
+
+            var builder = new StreamBuilder();
+            builder
+                .Stream<string, Person>("person")
+                .Filter((k, v) => v.age >= 18)
+                .To("person-major");
+
+            var topo = builder.Build();
+            using (var driver = new TopologyTestDriver(topo, config))
+            {
+                var input = driver.CreateInputTopic<string, Person>("person");
+                var output = driver.CreateOuputTopic<string, Person>("person-major");
+                input.PipeInput("test1", new Person { age = 23, firstName = "f", lastName = "l" });
+                input.PipeInput("test2", new Person { age = 12, firstName = "f", lastName = "l" });
+                var records = output.ReadKeyValueList().ToList();
+                Assert.AreEqual(1, records.Count);
+                Assert.AreEqual("test1", records[0].Message.Key);
+                Assert.AreEqual(23, records[0].Message.Value.age);
+                Assert.AreEqual("f", records[0].Message.Value.firstName);
+                Assert.AreEqual("l", records[0].Message.Value.lastName);
+            }
+        }
+    
     }
 }
