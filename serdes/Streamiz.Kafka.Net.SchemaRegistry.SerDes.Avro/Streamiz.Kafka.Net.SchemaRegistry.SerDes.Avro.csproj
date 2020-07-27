@@ -2,7 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>C:\RepoPerso\kafka-streams-dotnet\key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\key.snk" Link="key.snk" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Confluent.SchemaRegistry" Version="1.5.0-RC1" />

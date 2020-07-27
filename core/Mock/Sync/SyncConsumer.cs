@@ -10,10 +10,31 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 {
     internal class SyncConsumer : IConsumer<byte[], byte[]>, IConsumerGroupMetadata
     {
+        internal class SyncConsumerOffset
+        {
+            public long OffsetCommitted { get; set; } = 0L;
+            public long OffsetConsumed { get; set; } = 0L;
+
+            public SyncConsumerOffset(long offset)
+            {
+                OffsetCommitted = offset;
+                OffsetConsumed = offset;
+            }
+            public SyncConsumerOffset(long offsetCommit, long offsetConsumed)
+            {
+                OffsetCommitted = offsetCommit;
+                OffsetConsumed = offsetConsumed;
+            }
+
+            public SyncConsumerOffset()
+            {
+            }
+        }
+
         private readonly ConsumerConfig config;
         private readonly SyncProducer producer;
 
-        private readonly IDictionary<string, long> offsets = new Dictionary<string, long>();
+        private readonly IDictionary<string, SyncConsumerOffset> offsets = new Dictionary<string, SyncConsumerOffset>();
 
         public IConsumerRebalanceListener Listener { get; private set; }
 
@@ -43,7 +64,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         {
             if (!offsets.ContainsKey(partition.Topic))
             {
-                offsets.Add(partition.Topic, 0L);
+                offsets.Add(partition.Topic, new SyncConsumerOffset());
                 Assignment.Add(partition);
             }
         }
@@ -52,11 +73,11 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         {
             if (!offsets.ContainsKey(partition.Topic))
             {
-                offsets.Add(partition.Topic, partition.Offset);
+                offsets.Add(partition.Topic, new SyncConsumerOffset(partition.Offset));
                 Assignment.Add(partition.TopicPartition);
             }
             else
-                offsets[partition.Topic] = partition.Offset;
+                offsets[partition.Topic] = new SyncConsumerOffset(partition.Offset);
         }
 
         public void Assign(IEnumerable<TopicPartitionOffset> partitions)
@@ -81,9 +102,10 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         {
             foreach (var kp in offsets)
             {
-                offsets[kp.Key] = producer.GetHistory(kp.Key).Count() + 1;
+                var o = producer.GetHistory(kp.Key).Count() + 1;
+                offsets[kp.Key] = new SyncConsumerOffset(o);
             }
-            return offsets.Select(k => new TopicPartitionOffset(new TopicPartition(k.Key, 0), k.Value)).ToList();
+            return offsets.Select(k => new TopicPartitionOffset(new TopicPartition(k.Key, 0), k.Value.OffsetCommitted)).ToList();
         }
 
         public void Commit(IEnumerable<TopicPartitionOffset> offsets)
@@ -92,11 +114,11 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             {
                 if (this.offsets.ContainsKey(offset.Topic))
                 {
-                    this.offsets[offset.Topic] = offset.Offset;
+                    this.offsets[offset.Topic] = new SyncConsumerOffset(offset.Offset);
                 }
                 else
                 {
-                    this.offsets.Add(offset.Topic, offset.Offset);
+                    this.offsets.Add(offset.Topic, new SyncConsumerOffset(offset.Offset));
                 }
             }
 
@@ -109,7 +131,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         {
             List<TopicPartitionOffset> r = new List<TopicPartitionOffset>();
             foreach (var kp in offsets)
-                r.Add(new TopicPartitionOffset(new TopicPartition(kp.Key, 0), kp.Value));
+                r.Add(new TopicPartitionOffset(new TopicPartition(kp.Key, 0), kp.Value.OffsetCommitted));
             return r;
         }
 
@@ -183,7 +205,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             {
                 if (!offsets.ContainsKey(t))
                 {
-                    offsets.Add(t, 0L);
+                    offsets.Add(t, new SyncConsumerOffset(0L));
                     Assignment.Add(new TopicPartition(t, 0));
                 }
             }
@@ -195,7 +217,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             Subscription.Add(topic);
             if (!offsets.ContainsKey(topic))
             {
-                offsets.Add(topic, 0L);
+                offsets.Add(topic, new SyncConsumerOffset(0L));
                 Assignment.Add(new TopicPartition(topic, 0));
             }
             Listener?.PartitionsAssigned(this, Assignment);
@@ -240,21 +262,22 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
             foreach (var kp in offsets)
             {
-                if ((dt + timeout) < DateTime.Now)
+                if (timeout != TimeSpan.Zero && (dt + timeout) < DateTime.Now)
                     break;
 
                 if (producer != null)
                 {
                     var messages = producer.GetHistory(kp.Key).ToArray();
-                    if (messages.Length > kp.Value)
+                    if (messages.Length > kp.Value.OffsetConsumed)
                     {
                         result = new ConsumeResult<byte[], byte[]>
                         {
-                            Offset = kp.Value,
+                            Offset = kp.Value.OffsetConsumed,
                             Topic = kp.Key,
                             Partition = 0,
-                            Message = messages[kp.Value]
+                            Message = messages[kp.Value.OffsetConsumed]
                         };
+                        ++kp.Value.OffsetConsumed;
                         return result;
                     }
                 }

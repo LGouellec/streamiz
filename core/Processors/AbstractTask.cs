@@ -54,7 +54,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         #region Abstract
 
-        public abstract bool CanProcess { get; }
+        public abstract bool CanProcess(long now);
         public abstract void Close();
         public abstract void Commit();
         public abstract IStateStore GetStore(string name);

@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors;
 using System;
 using System.Collections.Generic;
@@ -25,17 +26,19 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
 
         public void Flush()
         {
-            while (task.CanProcess)
+            long now = DateTime.Now.GetMilliseconds();
+            while (task.CanProcess(now))
                 task.Process();
         }
 
         public void Pipe(byte[] key, byte[] value, DateTime timestamp)
         {
-            task.AddRecords(new List<ConsumeResult<byte[], byte[]>> {
-                    new ConsumeResult<byte[], byte[]> {
-                        Topic = topic,
-                        TopicPartitionOffset = new TopicPartitionOffset(new TopicPartition(topic, task.Id.Partition), 0),
-                        Message = new Message<byte[], byte[]> { Key = key, Value = value, Timestamp = new Timestamp(timestamp) } } });
+            task.AddRecord(new ConsumeResult<byte[], byte[]>
+            {
+                Topic = topic,
+                TopicPartitionOffset = new TopicPartitionOffset(new TopicPartition(topic, task.Id.Partition), 0),
+                Message = new Message<byte[], byte[]> { Key = key, Value = value, Timestamp = new Timestamp(timestamp) }
+            });
         }
     }
 }

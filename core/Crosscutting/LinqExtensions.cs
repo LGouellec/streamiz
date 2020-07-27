@@ -52,5 +52,10 @@ namespace Streamiz.Kafka.Net.Crosscutting
             }
             return results;
         }
+
+        internal static IEnumerable<T> ToSingle<T>(this T obj)
+        {
+            return new List<T> { obj };
+        }
     }
 }

@@ -59,7 +59,10 @@ namespace Streamiz.Kafka.Net.Processors
 
         public virtual void Close()
         {
-            // do nothing
+            foreach (var n in Next)
+            {
+                n.Close();
+            }
         }
 
         #region Forward

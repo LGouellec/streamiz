@@ -6,6 +6,7 @@ using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -13,11 +14,15 @@ namespace Streamiz.Kafka.Net.Processors
     {
         private readonly IKafkaSupplier kafkaSupplier;
         private readonly IRecordCollector collector;
-        private readonly IDictionary<string, IProcessor> processors = new Dictionary<string, IProcessor>();
-        private readonly RecordQueue<ConsumeResult<byte[], byte[]>> queue;
         private readonly IDictionary<TopicPartition, long> consumedOffsets;
+        private readonly PartitionGrouper partitionGrouper;
+        private readonly IList<IProcessor> processors = new List<IProcessor>();
         private readonly bool eosEnabled = false;
+        // TODO Add config stream key
+        private readonly long maxTaskIdleMs = 0;
+        private readonly int maxBufferedSize = 100;
 
+        private long idleStartTime;
         private IProducer<byte[], byte[]> producer;
         private bool transactionInFlight = false;
         private readonly string threadId;
@@ -44,23 +49,24 @@ namespace Streamiz.Kafka.Net.Processors
             collector = new RecordCollector(logPrefix);
             collector.Init(ref this.producer);
 
-            // TODO FIX
-            //var sourceTimestampExtractor = (processorTopology.GetSourceProcessor(id.Topic) as ISourceProcessor).Extractor;
-            ITimestampExtractor sourceTimestampExtractor = null;
             Context = new ProcessorContext(configuration, stateMgr).UseRecordCollector(collector);
+            var partitionsQueue = new Dictionary<TopicPartition, RecordQueue>();
 
             foreach (var p in partitions)
             {
-                processors.Add(p.Topic, processorTopology.GetSourceProcessor(p.Topic));
+                var sourceProcessor = processorTopology.GetSourceProcessor(p.Topic);
+                var sourceTimestampExtractor = sourceProcessor.Extractor ?? configuration.DefaultTimestampExtractor;
+                var queue = new RecordQueue(
+                    logPrefix,
+                    $"record-queue-{p.Topic}-{id.Id}-{id.Partition}",
+                    sourceTimestampExtractor,
+                    p,
+                    sourceProcessor);
+                partitionsQueue.Add(p, queue);
+                processors.Add(sourceProcessor);
             }
 
-
-            // REFACTOR RECORD QUEUE WITH JOIN
-            queue = new RecordQueue<ConsumeResult<byte[], byte[]>>(
-                100,
-                logPrefix,
-                $"record-queue-{id.Id}-{id.Partition}",
-                sourceTimestampExtractor == null ? configuration.DefaultTimestampExtractor : sourceTimestampExtractor);
+            partitionGrouper = new PartitionGrouper(partitionsQueue);
         }
 
         internal IConsumerGroupMetadata GroupMetadata { get; set; }
@@ -148,7 +154,35 @@ namespace Streamiz.Kafka.Net.Processors
 
         #region Abstract
 
-        public override bool CanProcess => queue.Size > 0;
+        public override bool CanProcess(long now)
+        {
+            if (partitionGrouper.AllPartitionsBuffered)
+            {
+                idleStartTime = -1;
+                return true;
+            }
+            else if (partitionGrouper.NumBuffered() > 0)
+            {
+                if (idleStartTime == -1)
+                {
+                    idleStartTime = now;
+                }
+
+                if (now - idleStartTime >= maxTaskIdleMs)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                idleStartTime = -1;
+                return false;
+            }
+        }
 
         public override void Close()
         {
@@ -159,8 +193,10 @@ namespace Streamiz.Kafka.Net.Processors
 
             foreach (var kp in processors)
             {
-                kp.Value.Close();
+                kp.Close();
             }
+
+            partitionGrouper.Close();
 
             collector.Close();
             CloseStateManager();
@@ -176,10 +212,10 @@ namespace Streamiz.Kafka.Net.Processors
 
         public override void InitializeTopology()
         {
-            log.Debug($"{logPrefix}Initializing topology with theses source processors : {string.Join(", ", processors.Keys)}.");
+            log.Debug($"{logPrefix}Initializing topology with theses source processors : {string.Join(", ", processors.Select(p => p.Name))}.");
             foreach (var p in processors)
             {
-                p.Value.Init(Context);
+                p.Init(Context);
             }
 
             if (eosEnabled)
@@ -224,6 +260,8 @@ namespace Streamiz.Kafka.Net.Processors
             }
             finally
             {
+                partitionGrouper.Clear();
+
                 if (eosEnabled)
                 {
                     if (transactionInFlight)
@@ -247,59 +285,50 @@ namespace Streamiz.Kafka.Net.Processors
 
         public bool Process()
         {
-            if (queue.Size > 0)
+            var record = partitionGrouper.NextRecord;
+            if (record == null)
             {
-                var record = queue.GetNextRecord();
-                if (record != null)
-                {
-                    // TODO : gérer timestampextractor
-                    Context.SetRecordMetaData(record);
-
-                    var recordInfo = $"Topic:{record.Topic}|Partition:{record.Partition.Value}|Offset:{record.Offset}|Timestamp:{record.Message.Timestamp.UnixTimestampMs}";
-                    log.Debug($"{logPrefix}Start processing one record [{recordInfo}]");
-                    if (processors.ContainsKey(record.Topic))
-                    {
-                        processors[record.Topic].Process(record.Message.Key, record.Message.Value);
-                    }
-                    else
-                    {
-                        log.Error($"{logPrefix}Impossible to process record {recordInfo}. Processor for topic {record.Topic} doesn't exist !");
-                        throw new StreamsException($"{logPrefix}Impossible to process record {recordInfo}. Processor for topic {record.Topic} doesn't exist !");
-                    }
-                    log.Debug($"{logPrefix}Completed processing one record [{recordInfo}]");
-
-                    queue.Commit();
-
-                    consumedOffsets.AddOrUpdate(record.TopicPartition, record.Offset);
-                    commitNeeded = true;
-
-                    return true;
-                }
                 return false;
             }
-            return false;
+            else
+            {
+                Context.SetRecordMetaData(record.Record);
+                var recordInfo = $"Topic:{record.Record.Topic}|Partition:{record.Record.Partition.Value}|Offset:{record.Record.Offset}|Timestamp:{record.Record.Message.Timestamp.UnixTimestampMs}";
+
+                log.Debug($"{logPrefix}Start processing one record [{recordInfo}]");
+                record.Processor.Process(record.Record.Message.Key, record.Record.Message.Value);
+                log.Debug($"{logPrefix}Completed processing one record [{recordInfo}]");
+
+                consumedOffsets.AddOrUpdate(record.Record.TopicPartition, record.Record.Offset);
+                commitNeeded = true;
+
+                if (record.Queue.Size.Equals(maxBufferedSize))
+                {
+                    consumer.Resume(record.Record.TopicPartition.ToSingle());
+                }
+
+                return true;
+            }
+        }
+
+        public void AddRecord(ConsumeResult<byte[], byte[]> record)
+        {
+            int newQueueSize = partitionGrouper.AddRecord(record.TopicPartition, record);
+
+            if (newQueueSize > maxBufferedSize)
+            {
+                consumer.Pause(record.TopicPartition.ToSingle());
+            }
+
+            log.Debug($"{logPrefix}Added record into the buffered queue of partition {Partition}, new queue size is {newQueueSize}");
         }
 
         public void AddRecords(IEnumerable<ConsumeResult<byte[], byte[]>> records)
         {
             foreach (var r in records)
             {
-                queue.AddRecord(r);
+                AddRecord(r);
             }
-
-            // TODO : NO PAUSE FOR MOMENT
-            //if (queue.MaxSize <= queue.Size)
-            //    consumer.Pause(new List<TopicPartition> { partition });
-
-            int newQueueSize = queue.Size;
-            log.Debug($"{logPrefix}Added records into the buffered queue of partition {Partition}, new queue size is {newQueueSize}");
-
-            //// if after adding these records, its partition queue's buffered size has been
-            //// increased beyond the threshold, we can then pause the consumption for this partition
-            //if (newQueueSize > maxBufferedSize)
-            //{
-            //    consumer.pause(singleton(partition));
-            //}
         }
     }
 }

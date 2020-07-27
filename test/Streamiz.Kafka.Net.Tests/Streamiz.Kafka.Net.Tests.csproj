@@ -7,9 +7,13 @@
     <AssemblyName>Streamiz.Kafka.Net.Tests</AssemblyName>
     <SonarQubeTestProject>true</SonarQubeTestProject>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>C:\RepoPerso\kafka-streams-dotnet\key.snk</AssemblyOriginatorKeyFile>
     <StartupObject></StartupObject>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\key.snk" Link="key.snk" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="1.3.0">

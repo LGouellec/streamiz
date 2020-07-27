@@ -7,6 +7,7 @@ using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace Streamiz.Kafka.Net.Processors
@@ -150,19 +151,20 @@ namespace Streamiz.Kafka.Net.Processors
 
                     try
                     {
-                        ConsumeResult<byte[], byte[]> record = null;
+                        IEnumerable<ConsumeResult<byte[], byte[]>> records = null;
+                        long now = DateTime.Now.GetMilliseconds();
 
                         if (State == ThreadState.PARTITIONS_ASSIGNED)
                         {
-                            record = PollRequest(TimeSpan.Zero);
+                            records = PollRequest(TimeSpan.Zero);
                         }
                         else if (State == ThreadState.PARTITIONS_REVOKED)
                         {
-                            record = PollRequest(TimeSpan.Zero);
+                            records = PollRequest(TimeSpan.Zero);
                         }
                         else if (State == ThreadState.RUNNING || State == ThreadState.STARTING)
                         {
-                            record = PollRequest(consumeTimeout);
+                            records = PollRequest(consumeTimeout);
                         }
                         else
                         {
@@ -170,36 +172,52 @@ namespace Streamiz.Kafka.Net.Processors
                             throw new StreamsException($"Unexpected state {State} during normal iteration");
                         }
 
-                        if (record != null)
+                        if (records != null && records.Count() > 0)
                         {
-                            var task = manager.ActiveTaskFor(record.TopicPartition);
-                            if (task != null)
+                            foreach (var record in records)
                             {
-                                if(task.IsClosed)
+                                var task = manager.ActiveTaskFor(record.TopicPartition);
+                                if (task != null)
                                 {
-                                    log.Info($"Stream task {task.Id} is already closed, probably because it got unexpectedly migrated to another thread already. Notifying the thread to trigger a new rebalance immediately.");
-                                    // TODO gesture this behaviour
-                                    //throw new TaskMigratedException(task);
+                                    if (task.IsClosed)
+                                    {
+                                        log.Info($"Stream task {task.Id} is already closed, probably because it got unexpectedly migrated to another thread already. Notifying the thread to trigger a new rebalance immediately.");
+                                        // TODO gesture this behaviour
+                                        //throw new TaskMigratedException(task);
+                                    }
+                                    else
+                                        task.AddRecord(record);
                                 }
                                 else
-                                    task.AddRecords(new List<ConsumeResult<byte[], byte[]>> { record });
-                            }
-                            else
-                            {
-                                log.Error($"Unable to locate active task for received-record partition {record.TopicPartition}. Current tasks: {string.Join(",", manager.ActiveTaskIds)}");
-                                throw new NullReferenceException($"Task was unexpectedly missing for partition {record.TopicPartition}");
+                                {
+                                    log.Error($"Unable to locate active task for received-record partition {record.TopicPartition}. Current tasks: {string.Join(",", manager.ActiveTaskIds)}");
+                                    throw new NullReferenceException($"Task was unexpectedly missing for partition {record.TopicPartition}");
+                                }
                             }
                         }
 
-                        foreach (var t in manager.ActiveTasks)
+                        int processed = 0;
+                        do
                         {
-                            if (t.CanProcess)
+                            processed = 0;
+                            foreach (var t in manager.ActiveTasks)
                             {
-                                bool b = t.Process();
-                                if (b && t.CommitNeeded)
-                                    t.Commit();
+                                if (t.CanProcess(now) && t.Process())
+                                {
+                                    processed++;
+                                }
                             }
-                        }
+
+                            if (processed > 0)
+                            {
+                                foreach (var t in manager.ActiveTasks)
+                                {
+                                    if (t.CommitNeeded)
+                                        t.Commit();
+                                }
+                            }
+                            
+                        } while (processed > 0);
 
                         if (State == ThreadState.RUNNING)
                             MaybeCommit();
@@ -309,9 +327,9 @@ namespace Streamiz.Kafka.Net.Processors
             }
         }
 
-        private ConsumeResult<byte[], byte[]> PollRequest(TimeSpan ts)
+        private IEnumerable<ConsumeResult<byte[], byte[]>> PollRequest(TimeSpan ts)
         {
-            return consumer.Consume(ts);
+            return consumer.ConsumeRecords(ts);
         }
 
         internal ThreadState SetState(ThreadState newState)

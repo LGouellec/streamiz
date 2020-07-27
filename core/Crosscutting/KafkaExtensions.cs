@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.WebSockets;
 
 namespace Streamiz.Kafka.Net.Crosscutting
 {
@@ -32,15 +33,24 @@ namespace Streamiz.Kafka.Net.Crosscutting
         {
             List<ConsumeResult<K, V>> records = new List<ConsumeResult<K, V>>();
             DateTime dt = DateTime.Now;
-            while (dt.Add(timeout) > DateTime.Now)
+            do
             {
                 var r = consumer.Consume(TimeSpan.Zero);
                 if (r != null)
                     records.Add(r);
                 else
                     return records;
-            }
+            } while (dt.Add(timeout) > DateTime.Now);
+
             return records;
+        }
+
+        internal static long GetInternalOffset(this Headers headers)
+        {
+            var h = headers.FirstOrDefault(h => h.Key.Equals("message.offset"));
+            return h != null ?
+                BitConverter.ToInt64(h.GetValueBytes()) :
+                -1L;
         }
     }
 }

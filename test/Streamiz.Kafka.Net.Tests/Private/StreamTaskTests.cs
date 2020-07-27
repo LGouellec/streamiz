@@ -2,8 +2,10 @@
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
+using System;
 using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Tests.Private
@@ -63,9 +65,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             task.AddRecords(messages);
 
-            Assert.IsTrue(task.CanProcess);
+            Assert.IsTrue(task.CanProcess(DateTime.Now.GetMilliseconds()));
 
-            while (task.CanProcess)
+            while (task.CanProcess(DateTime.Now.GetMilliseconds()))
             {
                 Assert.IsTrue(task.Process());
                 Assert.IsTrue(task.CommitNeeded);
@@ -152,9 +154,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             task.AddRecords(messages);
 
-            Assert.IsTrue(task.CanProcess);
+            Assert.IsTrue(task.CanProcess(DateTime.Now.GetMilliseconds()));
 
-            while (task.CanProcess)
+            while (task.CanProcess(DateTime.Now.GetMilliseconds()))
             {
                 Assert.IsTrue(task.Process());
                 Assert.IsTrue(task.CommitNeeded);
@@ -165,9 +167,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
             task.Resume();
             task.AddRecords(messages);
 
-            Assert.IsTrue(task.CanProcess);
+            Assert.IsTrue(task.CanProcess(DateTime.Now.GetMilliseconds()));
 
-            while (task.CanProcess)
+            while (task.CanProcess(DateTime.Now.GetMilliseconds()))
             {
                 Assert.IsTrue(task.Process());
                 Assert.IsTrue(task.CommitNeeded);
@@ -247,9 +249,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             task.AddRecords(messages);
 
-            Assert.IsTrue(task.CanProcess);
+            Assert.IsTrue(task.CanProcess(DateTime.Now.GetMilliseconds()));
 
-            while (task.CanProcess)
+            while (task.CanProcess(DateTime.Now.GetMilliseconds()))
             {
                 Assert.IsTrue(task.Process());
                 Assert.IsTrue(task.CommitNeeded);
@@ -260,9 +262,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
             task.Resume();
             task.AddRecords(messages);
 
-            Assert.IsTrue(task.CanProcess);
+            Assert.IsTrue(task.CanProcess(DateTime.Now.GetMilliseconds()));
 
-            while (task.CanProcess)
+            while (task.CanProcess(DateTime.Now.GetMilliseconds()))
             {
                 Assert.IsTrue(task.Process());
                 Assert.IsTrue(task.CommitNeeded);

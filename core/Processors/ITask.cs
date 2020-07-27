@@ -10,7 +10,7 @@ namespace Streamiz.Kafka.Net.Processors
     {
         bool IsClosed { get; }
 
-        bool CanProcess { get; }
+        bool CanProcess(long now);
 
         bool CommitNeeded { get; }
 

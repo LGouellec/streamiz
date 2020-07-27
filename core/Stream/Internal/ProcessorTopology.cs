@@ -38,10 +38,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             StoresToTopics = storesToTopics;
         }
 
-        internal IProcessor GetSourceProcessor(string name)
+        internal ISourceProcessor GetSourceProcessor(string name)
         {
             var processor = SourceOperators.FirstOrDefault(kp => kp.Value is ISourceProcessor && (kp.Value as ISourceProcessor).TopicName.Equals(name));
-            return processor.Value;
+            return processor.Value as ISourceProcessor;
         }
 
         internal IEnumerable<string> GetSourceTopics() => SourceOperators.Select(o => (o.Value as ISourceProcessor).TopicName);

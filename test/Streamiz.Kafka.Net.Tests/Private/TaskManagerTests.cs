@@ -1,8 +1,10 @@
 ﻿using Confluent.Kafka;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Mock.Sync;
+using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -43,7 +45,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 var task = taskManager.ActiveTaskFor(new TopicPartition("topic", i));
                 Assert.IsNotNull(task);
                 Assert.AreEqual("test-app", task.ApplicationId);
-                Assert.IsFalse(task.CanProcess);
+                Assert.IsFalse(task.CanProcess(DateTime.Now.GetMilliseconds()));
                 Assert.IsFalse(task.CommitNeeded);
                 Assert.IsFalse(task.HasStateStores);
             }
@@ -60,7 +62,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 var task = taskManager.ActiveTaskFor(new TopicPartition("topic", i));
                 Assert.IsNotNull(task);
                 Assert.AreEqual("test-app", task.ApplicationId);
-                Assert.IsFalse(task.CanProcess);
+                Assert.IsFalse(task.CanProcess(DateTime.Now.GetMilliseconds()));
                 Assert.IsFalse(task.CommitNeeded);
                 Assert.IsFalse(task.HasStateStores);
             }
@@ -155,9 +157,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             task.AddRecords(messages);
 
-            Assert.IsTrue(task.CanProcess);
+            Assert.IsTrue(task.CanProcess(DateTime.Now.GetMilliseconds()));
 
-            while (task.CanProcess)
+            while (task.CanProcess(DateTime.Now.GetMilliseconds()))
                 Assert.IsTrue(task.Process());
 
             // ONLY ONE TASK HAVE BEEN RECORDS
@@ -188,7 +190,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             // NO RECORD IN THIS TASKS
             part = new TopicPartition("topic", 2);
             task = taskManager.ActiveTaskFor(part);
-            Assert.IsFalse(task.CanProcess);
+            Assert.IsFalse(task.CanProcess(DateTime.Now.GetMilliseconds()));
             Assert.IsFalse(task.Process());
 
             taskManager.Close();
