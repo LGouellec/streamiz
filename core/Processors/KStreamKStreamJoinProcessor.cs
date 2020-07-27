@@ -50,14 +50,16 @@ namespace Streamiz.Kafka.Net.Processors
             long timeTo = Math.Max(0L, inputRecordTimestamp + afterMs);
             bool needOuterJoin = outer;
 
-            var enumerator = window.Fetch(key, timeFrom, timeTo);
-            while (enumerator.MoveNext())
+            using (var enumerator = window.Fetch(key, timeFrom, timeTo))
             {
-                needOuterJoin = false;
-                var otherRecord = enumerator.Current;
-                Forward(key,
-                    joiner.Apply(value, otherRecord.Value.Value),
-                    Math.Max(inputRecordTimestamp, otherRecord.Value.Key));
+                while (enumerator.MoveNext())
+                {
+                    needOuterJoin = false;
+                    var otherRecord = enumerator.Current;
+                    Forward(key,
+                        joiner.Apply(value, otherRecord.Value.Value),
+                        Math.Max(inputRecordTimestamp, otherRecord.Value.Key));
+                }
             }
 
             if (needOuterJoin)

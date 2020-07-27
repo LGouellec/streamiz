@@ -31,8 +31,6 @@ namespace sample_stream
             var stream1 = builder.Stream<string, string>("test");
             var stream2 = builder.Stream<string, string>("test2");
 
-            // TODO : to test
-
             stream1.Join<string, string, StringSerDes, StringSerDes>(stream2,
                 (v1, v2) => $"{v1}-{v2}",
                 JoinWindowOptions.Of(TimeSpan.FromMinutes(1)))
