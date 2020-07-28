@@ -7,7 +7,7 @@
     <AssemblyName>Streamiz.Kafka.Net.Tests</AssemblyName>
     <SonarQubeTestProject>true</SonarQubeTestProject>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>C:\RepoPerso\kafka-streams-dotnet\key.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\..\key.snk</AssemblyOriginatorKeyFile>
     <StartupObject></StartupObject>
   </PropertyGroup>
 
