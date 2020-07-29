@@ -78,44 +78,5 @@ namespace Streamiz.Kafka.Net.Crosscutting
         }
 
         public int Count => data.Count;
-
-        public override string ToString()
-        {
-            string s = "";
-            for (int i = 0; i < data.Count; ++i)
-            {
-                s += data[i].ToString() + " ";
-            }
-
-            s += "count = " + data.Count;
-            return s;
-        }
-
-        public bool IsConsistent()
-        {
-            // is the heap property true for all data?
-            if (data.Count == 0)
-            {
-                return true;
-            }
-
-            int li = data.Count - 1; // last index
-            for (int pi = 0; pi < data.Count; ++pi) // each parent index
-            {
-                int lci = 2 * pi + 1; // left child index
-                int rci = 2 * pi + 2; // right child index
-
-                if (lci <= li && data[pi].CompareTo(data[lci]) > 0)
-                {
-                    return false; // if lc exists and it's greater than parent then bad.
-                }
-
-                if (rci <= li && data[pi].CompareTo(data[rci]) > 0)
-                {
-                    return false; // check the right child too.
-                }
-            }
-            return true; // passed all checks
-        } // IsConsistent
     }
 }

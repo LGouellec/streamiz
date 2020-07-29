@@ -1,5 +1,6 @@
 ﻿using Confluent.Kafka;
 using NUnit.Framework;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
@@ -53,6 +54,14 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     Headers = new Headers()
                 }
             };
+        }
+
+        [Test]
+        public void AddOneRecordErrorTest()
+        {
+            var grouper = new PartitionGrouper(new Dictionary<TopicPartition, RecordQueue>());
+            Assert.Throws<IllegalStateException>(() => grouper.AddRecord(topicPart1, MakeMessageWithKey("key", "test")));
+            Assert.Throws<IllegalStateException>(() => grouper.NumBuffered(topicPart1));
         }
 
         [Test]

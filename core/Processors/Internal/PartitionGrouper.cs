@@ -1,10 +1,7 @@
 ﻿using Confluent.Kafka;
-using log4net.Layout;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
-using System;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -22,7 +19,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             Processor = processor;
             Record = record;
             Queue = queue;
-        }        
+        }
     }
 
     internal class PartitionGrouper
@@ -47,16 +44,20 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             var queue = partitionsQueue.Get(topicPartition);
             if (queue == null)
+            {
                 throw new IllegalStateException($"Partition {topicPartition} was not found");
+            }
 
             int oldSize = queue.Size;
             int newSize = queue.Queue(record);
 
-            if(oldSize == 0 && newSize > 0)
+            if (oldSize == 0 && newSize > 0)
             {
                 priorityQueue.Enqueue(queue);
                 if (priorityQueue.Count == partitionsQueue.Count)
+                {
                     allBuffered = true;
+                }
             }
 
             totalBuffered += (newSize - oldSize);
@@ -72,17 +73,23 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 if (queue != null)
                 {
                     var r = queue.Poll();
-                    if(r != null)
+                    if (r != null)
                     {
                         --totalBuffered;
                         if (queue.IsEmpty)
+                        {
                             allBuffered = false;
+                        }
                         else
+                        {
                             priorityQueue.Enqueue(queue);
+                        }
 
-                        if(r.Message.Timestamp.UnixTimestampMs > streamTime)
+                        if (r.Message.Timestamp.UnixTimestampMs > streamTime)
+                        {
                             streamTime = r.Message.Timestamp.UnixTimestampMs;
-                        
+                        }
+
                         record = new RecordInfo(queue.Processor, r, queue);
                     }
                 }
@@ -113,7 +120,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             var queue = partitionsQueue.Get(topicPartition);
 
             if (queue == null)
+            {
                 throw new IllegalStateException($"Partition {topicPartition} was not found");
+            }
 
             return queue.Size;
         }

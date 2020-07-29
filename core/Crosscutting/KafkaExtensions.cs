@@ -1,8 +1,6 @@
 ﻿using Confluent.Kafka;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net.WebSockets;
 
 namespace Streamiz.Kafka.Net.Crosscutting
 {
@@ -19,15 +17,18 @@ namespace Streamiz.Kafka.Net.Crosscutting
             return l;
         }
 
-        internal static IEnumerable<PartitionMetadata> PartitionsForTopic(this Metadata clusterMetadata, string topic)
-        {
-            if (clusterMetadata.Topics.Any(t => t.Topic.Equals(topic)))
-            {
-                return clusterMetadata.Topics.Find(t => t.Topic.Equals(topic)).Partitions;
-            }
-            else
-                return new List<PartitionMetadata>();
-        }
+        // NOT USED FOR MOMENT
+        //internal static IEnumerable<PartitionMetadata> PartitionsForTopic(this Metadata clusterMetadata, string topic)
+        //{
+        //    if (clusterMetadata.Topics.Any(t => t.Topic.Equals(topic)))
+        //    {
+        //        return clusterMetadata.Topics.Find(t => t.Topic.Equals(topic)).Partitions;
+        //    }
+        //    else
+        //    {
+        //        return new List<PartitionMetadata>();
+        //    }
+        //}
 
         internal static IEnumerable<ConsumeResult<K, V>> ConsumeRecords<K, V>(this IConsumer<K, V> consumer, TimeSpan timeout)
         {
@@ -37,20 +38,16 @@ namespace Streamiz.Kafka.Net.Crosscutting
             {
                 var r = consumer.Consume(TimeSpan.Zero);
                 if (r != null)
+                {
                     records.Add(r);
+                }
                 else
+                {
                     return records;
+                }
             } while (dt.Add(timeout) > DateTime.Now);
 
             return records;
-        }
-
-        internal static long GetInternalOffset(this Headers headers)
-        {
-            var h = headers.FirstOrDefault(h => h.Key.Equals("message.offset"));
-            return h != null ?
-                BitConverter.ToInt64(h.GetValueBytes()) :
-                -1L;
         }
     }
 }
