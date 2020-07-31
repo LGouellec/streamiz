@@ -29,7 +29,7 @@ namespace Streamiz.Kafka.Net.Stream
             return new StreamJoinProps(
                 storeSupplier,
                 otherStoreSupplier,
-                null, 
+                null,
                 null
             );
         }
@@ -69,14 +69,21 @@ namespace Streamiz.Kafka.Net.Stream
             );
         }
 
+        internal static StreamJoinProps<T1, T2, T3> From<T1, T2, T3>(StreamJoinProps props)
+        {
+            if (props != null)
+            {
+                return new StreamJoinProps<T1, T2, T3>(null, null, null, props.LeftStoreSupplier, props.RightStoreSupplier, props.Name, props.StoreName);
+            }
+            else
+            {
+                return new StreamJoinProps<T1, T2, T3>(null, null, null, null, null, null, null);
+            }
+        }
     }
 
     public class StreamJoinProps<K, V1, V2> : StreamJoinProps
     {
-        protected readonly ISerDes<K> keySerdes;
-        protected readonly ISerDes<V1> valueSerdes;
-        protected readonly ISerDes<V2> otherValueSerdes;
-
         internal StreamJoinProps(
             ISerDes<K> keySerdes,
             ISerDes<V1> valueSerdes,
@@ -87,13 +94,13 @@ namespace Streamiz.Kafka.Net.Stream
             string storeName)
             : base(thisStoreSupplier, otherStoreSupplier, name, storeName)
         {
-            this.keySerdes = keySerdes;
-            this.valueSerdes = valueSerdes;
-            this.otherValueSerdes = otherValueSerdes;
+            KeySerdes = keySerdes;
+            LeftValueSerdes = valueSerdes;
+            RightValueSerdes = otherValueSerdes;
         }
 
-        public ISerDes<K> KeySerdes => keySerdes;
-        public ISerDes<V1> LeftValueSerdes => valueSerdes;
-        public ISerDes<V2> RightValueSerdes => otherValueSerdes;
+        public ISerDes<K> KeySerdes { get; internal set; }
+        public ISerDes<V1> LeftValueSerdes { get; internal set; }
+        public ISerDes<V2> RightValueSerdes { get; internal set; }
     }
 }

@@ -380,50 +380,194 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         #endregion
 
         #region Join Table
-       
-        public IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner, string named = null)
+
+        public IKStream<K, VR> Join<V0, VR, V0S>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner, string named = null)
             where V0S : ISerDes<V0>, new()
-            where VRS : ISerDes<VR>, new()
+            => Join<V0, VR, V0S>(table, new WrappedValueJoiner<V, V0, VR>(valueJoiner), named);
+
+        public IKStream<K, VR> Join<V0, VR>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner, string named = null)
+            => Join(table, new WrappedValueJoiner<V, V0, VR>(valueJoiner), named);
+
+        public IKStream<K, VR> Join<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner, string named = null)
         {
-            var joined = new Joined<K, V, V0>(KeySerdes, ValueSerdes, new V0S(), named);
-            var wrapped = new WrappedValueJoiner<V, V0, VR>(valueJoiner);
-            return DoStreamTableJoin(table, wrapped, joined, false);
+            return table is AbstractStream<K, V0> ?
+                Join(table, valueJoiner, ((AbstractStream<K, V0>)table).ValueSerdes, named) :
+                Join(table, valueJoiner, null, named);
         }
 
-        public IKStream<K, VR> Join<K0, V0, VR>(IGlobalKTable<K0, V0> globalTable, Func<K, V, K0> keyMapper, Func<V, V0, VR> valueJoiner, string named = null)
+        public IKStream<K, VR> Join<V0, VR, V0S>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner, string named = null)
+            where V0S : ISerDes<V0>, new()
+            => Join(table, valueJoiner, new V0S(), named);
+
+        private IKStream<K, VR> Join<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner, ISerDes<V0> valueSerdes, string named = null)
         {
-            return GlobalTableJoin(globalTable, new WrappedKeyValueMapper<K, V, K0>(keyMapper), new WrappedValueJoiner<V, V0, VR>(valueJoiner), false, named);
+            var joined = new Joined<K, V, V0>(KeySerdes, ValueSerdes, valueSerdes, named);
+            return DoStreamTableJoin(table, valueJoiner, joined, false);
         }
+
 
         #endregion
 
         #region LeftJoin Table
 
-        public IKStream<K, VR> LeftJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, string named = null)
+        public IKStream<K, VR> LeftJoin<VT, VR, VTS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, string named = null)
             where VTS : ISerDes<VT>, new()
-            where VRS : ISerDes<VR>, new()
+            => LeftJoin<VT, VR, VTS>(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), named);
+
+        public IKStream<K, VR> LeftJoin<VT, VR, VTS>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, string named = null)
+            where VTS : ISerDes<VT>, new()
+            => LeftJoin(table, valueJoiner, new VTS(), named);
+
+        public IKStream<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, string named = null)
+            => LeftJoin(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), named);
+
+        public IKStream<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, string named = null)
         {
-            var joined = new Joined<K, V, VT>(KeySerdes, ValueSerdes, new VTS(), named);
-            var wrapped = new WrappedValueJoiner<V, VT, VR>(valueJoiner);
-            return DoStreamTableJoin(table, wrapped, joined, true);
+            return table is AbstractStream<K, VT> ?
+                LeftJoin(table, valueJoiner, ((AbstractStream<K, VT>)table).ValueSerdes, named) :
+                LeftJoin(table, valueJoiner, null, named);
         }
 
-        public IKStream<K, VR> LeftJoin<K0, V0, VR>(IGlobalKTable<K0, V0> globalTable, Func<K, V, K0> keyMapper, Func<V, V0, VR> valueJoiner, string named = null)
+        private IKStream<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, ISerDes<VT> valueSerdes, string named = null)
         {
-            return GlobalTableJoin(globalTable, new WrappedKeyValueMapper<K, V, K0>(keyMapper), new WrappedValueJoiner<V, V0, VR>(valueJoiner), true, named);
+            var joined = new Joined<K, V, VT>(KeySerdes, ValueSerdes, valueSerdes, named);
+            return DoStreamTableJoin(table, valueJoiner, joined, true);
         }
+
+        #endregion
+
+        #region Join GlobalTable
+
+        public IKStream<K, VR> Join<K0, V0, VR>(IGlobalKTable<K0, V0> globalTable, Func<K, V, K0> keyMapper, Func<V, V0, VR> valueJoiner, string named = null)
+            => Join(globalTable, new WrappedKeyValueMapper<K, V, K0>(keyMapper), new WrappedValueJoiner<V, V0, VR>(valueJoiner), named);
+
+        public IKStream<K, VR> Join<K0, V0, VR>(IGlobalKTable<K0, V0> globalTable, IKeyValueMapper<K, V, K0> keyMapper, IValueJoiner<V, V0, VR> valueJoiner, string named = null)
+            => GlobalTableJoin(globalTable, keyMapper, valueJoiner, false, named);
+
+        #endregion
+
+        #region LeftJoin GlobalTable
+
+        public IKStream<K, VR> LeftJoin<K0, V0, VR>(IGlobalKTable<K0, V0> globalTable, Func<K, V, K0> keyMapper, Func<V, V0, VR> valueJoiner, string named = null)
+            => LeftJoin(globalTable, new WrappedKeyValueMapper<K, V, K0>(keyMapper), new WrappedValueJoiner<V, V0, VR>(valueJoiner), named);
+
+        public IKStream<K, VR> LeftJoin<K0, V0, VR>(IGlobalKTable<K0, V0> globalTable, IKeyValueMapper<K, V, K0> keyMapper, IValueJoiner<V, V0, VR> valueJoiner, string named = null)
+            => GlobalTableJoin(globalTable, keyMapper, valueJoiner, true, named);
 
         #endregion
 
         #region Join Stream
 
-        public IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows)
-           where V0S : ISerDes<V0>, new()
-           where VRS : ISerDes<VR>, new()
+        public IKStream<K, VR> Join<V0, VR, V0S>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null)
+            where V0S : ISerDes<V0>, new()
+            => Join<V0, VR, V0S>(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows, props);
+
+        public IKStream<K, VR> Join<V0, VR>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null)
+            => Join(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows, props);
+
+        public IKStream<K, VR> Join<V0, VR, V0S>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null)
+            where V0S : ISerDes<V0>, new()
+            => Join(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), new V0S());
+
+        public IKStream<K, VR> Join<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null)
         {
-            var joinedProps = StreamJoinProps.With(KeySerdes, ValueSerdes, new V0S());
-            var wrapped = new WrappedValueJoiner<V, V0, VR>(valueJoiner);
-            return DoJoin(stream, wrapped, windows, joinedProps, new StreamJoinBuilder(builder, false, false));
+            return stream is AbstractStream<K, V0> ?
+                Join(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), ((AbstractStream<K, V0>)stream).ValueSerdes) :
+                Join(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), null);
+        }
+
+        private IKStream<K, VR> Join<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props, ISerDes<V0> valueSerdes)
+        {
+            props = props ?? StreamJoinProps.From<K, V, V0>(null);
+            props.RightValueSerdes = valueSerdes;
+            if (props.KeySerdes == null)
+            {
+                props.KeySerdes = KeySerdes;
+            }
+
+            if (props.LeftValueSerdes == null)
+            {
+                props.LeftValueSerdes = ValueSerdes;
+            }
+
+            return DoJoin(stream, valueJoiner, windows, props, new StreamJoinBuilder(builder, false, false));
+        }
+
+        #endregion
+
+        #region LeftJoin Stream
+
+        public IKStream<K, VR> LeftJoin<V0, VR, V0S>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null) where V0S : ISerDes<V0>, new()
+            => LeftJoin<V0, VR, V0S>(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows, props);
+
+        public IKStream<K, VR> LeftJoin<V0, VR>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null)
+            => LeftJoin(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows, props);
+
+        public IKStream<K, VR> LeftJoin<V0, VR, V0S>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null) where V0S : ISerDes<V0>, new()
+            => LeftJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), new V0S());
+
+        public IKStream<K, VR> LeftJoin<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null)
+        {
+            return stream is AbstractStream<K, V0> ?
+                LeftJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), ((AbstractStream<K, V0>)stream).ValueSerdes) :
+                LeftJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), null);
+        }
+
+        private IKStream<K, VR> LeftJoin<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props, ISerDes<V0> valueSerdes)
+        {
+            props = props ?? StreamJoinProps.From<K, V, V0>(null);
+            props.RightValueSerdes = valueSerdes;
+            if (props.KeySerdes == null)
+            {
+                props.KeySerdes = KeySerdes;
+            }
+
+            if (props.LeftValueSerdes == null)
+            {
+                props.LeftValueSerdes = ValueSerdes;
+            }
+
+            return DoJoin(stream, valueJoiner, windows, props, new StreamJoinBuilder(builder, true, false));
+        }
+
+        #endregion
+
+        #region OuterJoin Stream
+
+        public IKStream<K, VR> OuterJoin<V0, VR, V0S>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null) where V0S : ISerDes<V0>, new()
+            => OuterJoin<V0, VR, V0S>(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows, props);
+
+
+        public IKStream<K, VR> OuterJoin<V0, VR>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null)
+            => OuterJoin(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows, props);
+
+
+        public IKStream<K, VR> OuterJoin<V0, VR, V0S>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null) where V0S : ISerDes<V0>, new()
+            => OuterJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), new V0S());
+
+
+        public IKStream<K, VR> OuterJoin<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null)
+        {
+            return stream is AbstractStream<K, V0> ?
+                OuterJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), ((AbstractStream<K, V0>)stream).ValueSerdes) :
+                OuterJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), null);
+        }
+
+        private IKStream<K, VR> OuterJoin<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props, ISerDes<V0> valueSerdes)
+        {
+            props = props ?? StreamJoinProps.From<K, V, V0>(null);
+            props.RightValueSerdes = valueSerdes;
+            if (props.KeySerdes == null)
+            {
+                props.KeySerdes = KeySerdes;
+            }
+
+            if (props.LeftValueSerdes == null)
+            {
+                props.LeftValueSerdes = ValueSerdes;
+            }
+
+            return DoJoin(stream, valueJoiner, windows, props, new StreamJoinBuilder(builder, true, true));
         }
 
         #endregion
