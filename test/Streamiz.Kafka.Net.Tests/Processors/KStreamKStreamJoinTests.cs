@@ -24,7 +24,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic2")
-                .Join<string, string, StringSerDes, StringSerDes>(
+                .Join(
                     stream,
                     (s, v) => $"{s}-{v}",
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))

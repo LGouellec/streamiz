@@ -8,6 +8,12 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 {
     public class KStreamTableJoinTests
     {
+        class MyJoinValueMapper : IValueJoiner<string, string, string>
+        {
+            public string Apply(string value1, string value2)
+                => $"{value1}-{value2}";
+        }
+
         [Test]
         public void StreamTableJoin()
         {
@@ -23,7 +29,76 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("stream")
-                .Join<string, string, StringSerDes, StringSerDes>(table, (s, v) => $"{s}-{v}")
+                .Join<string, string, StringSerDes>(table, (s, v) => $"{s}-{v}")
+                .To("output");
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("test");
+                var inputTopic2 = driver.CreateInputTopic<string, string>("stream");
+                var outputTopic = driver.CreateOuputTopic<string, string>("output");
+                inputTopic.PipeInput("test", "test");
+                inputTopic2.PipeInput("test", "coucou");
+                var record = outputTopic.ReadKeyValue();
+                Assert.IsNotNull(record);
+                Assert.AreEqual("test", record.Message.Key);
+                Assert.AreEqual("coucou-test", record.Message.Value);
+            }
+        }
+
+        [Test]
+        public void StreamTableJoin2()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>
+            {
+                ApplicationId = "test-stream-table-join"
+            };
+
+            StreamBuilder builder = new StreamBuilder();
+
+            var table = builder
+                            .Table("test", InMemory<string, string>.As("store"));
+
+            builder
+                .Stream<string, string>("stream")
+                .Join<string, string, StringSerDes>(table, new MyJoinValueMapper())
+                .To("output");
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("test");
+                var inputTopic2 = driver.CreateInputTopic<string, string>("stream");
+                var outputTopic = driver.CreateOuputTopic<string, string>("output");
+                inputTopic.PipeInput("test", "test");
+                inputTopic2.PipeInput("test", "coucou");
+                var record = outputTopic.ReadKeyValue();
+                Assert.IsNotNull(record);
+                Assert.AreEqual("test", record.Message.Key);
+                Assert.AreEqual("coucou-test", record.Message.Value);
+            }
+        }
+
+
+        [Test]
+        public void StreamTableJoin3()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>
+            {
+                ApplicationId = "test-stream-table-join"
+            };
+
+            StreamBuilder builder = new StreamBuilder();
+
+            var table = builder
+                            .Table("test", InMemory<string, string>.As("store"));
+
+            builder
+                .Stream<string, string>("stream")
+                .Join(table, new MyJoinValueMapper())
                 .To("output");
 
             Topology t = builder.Build();
@@ -59,7 +134,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("stream")
-                .Join<string, string, StringSerDes, StringSerDes>(table, (s, v) => $"{s}-{v}")
+                .Join(table, (s, v) => $"{s}-{v}")
                 .To("output");
 
             Topology t = builder.Build();
@@ -95,7 +170,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("stream")
-                .Join<string, string, StringSerDes, StringSerDes>(table, (s, v) => $"{s}-{v}")
+                .Join(table, (s, v) => $"{s}-{v}")
                 .To("output");
 
             Topology t = builder.Build();

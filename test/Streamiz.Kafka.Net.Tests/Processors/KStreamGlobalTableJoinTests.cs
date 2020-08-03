@@ -8,6 +8,18 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 {
     public class KStreamGlobalTableJoinTests
     {
+        class MyKeyValueMapper : IKeyValueMapper<string, string, string>
+        {
+            public string Apply(string key, string value)
+                => key;
+        }
+
+        class MyJoinValueMapper : IValueJoiner<string, string, string>
+        {
+            public string Apply(string value1, string value2)
+               => $"{value1}-{value2}";
+        }
+
         [Test]
         public void KStreamGlobalJoinOK()
         {
@@ -40,6 +52,40 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 Assert.AreEqual("coucou-test", record.Message.Value);
             }
         }
+
+        [Test]
+        public void KStreamGlobalJoinOK2()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>
+            {
+                ApplicationId = "test-stream-table-join"
+            };
+
+            StreamBuilder builder = new StreamBuilder();
+
+            var global = builder.GlobalTable("global", InMemory<string, string>.As("global-store"));
+
+            builder
+                .Stream<string, string>("stream")
+                .Join(global, new MyKeyValueMapper(), new MyJoinValueMapper())
+                .To("output");
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("global");
+                var inputTopic2 = driver.CreateInputTopic<string, string>("stream");
+                var outputTopic = driver.CreateOuputTopic<string, string>("output");
+                inputTopic.PipeInput("test", "test");
+                inputTopic2.PipeInput("test", "coucou");
+                var record = outputTopic.ReadKeyValue();
+                Assert.IsNotNull(record);
+                Assert.AreEqual("test", record.Message.Key);
+                Assert.AreEqual("coucou-test", record.Message.Value);
+            }
+        }
+
 
         [Test]
         public void KStreamGlobalJoinKO()

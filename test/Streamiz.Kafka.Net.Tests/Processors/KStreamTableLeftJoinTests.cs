@@ -9,6 +9,12 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 {
     public class KStreamTableLeftJoinTests
     {
+        class MyJoinValueMapper : IValueJoiner<string, string, string>
+        {
+            public string Apply(string value1, string value2)
+                => $"{value1}-{value2}";
+        }
+
 
         [Test]
         public void StreamTableLeftJoin()
@@ -25,7 +31,121 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("stream")
-                .LeftJoin<string, string, StringSerDes, StringSerDes>(table, (s, v) => $"{s}-{v}")
+                .LeftJoin(table, (s, v) => $"{s}-{v}")
+                .To("output");
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("test");
+                var inputTopic2 = driver.CreateInputTopic<string, string>("stream");
+                var outputTopic = driver.CreateOuputTopic<string, string>("output");
+                inputTopic.PipeInput("test", "test");
+                inputTopic2.PipeInput("test", "coucou");
+                inputTopic2.PipeInput("test-sylvain", "1234");
+                var record = outputTopic.ReadKeyValueList().ToList();
+                Assert.IsNotNull(record);
+                Assert.AreEqual(2, record.Count);
+                Assert.AreEqual("test", record[0].Message.Key);
+                Assert.AreEqual("coucou-test", record[0].Message.Value);
+                Assert.AreEqual("test-sylvain", record[1].Message.Key);
+                Assert.AreEqual("1234-", record[1].Message.Value);
+            }
+        }
+
+        [Test]
+        public void StreamTableLeftJoin2()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>
+            {
+                ApplicationId = "test-stream-table-left-join"
+            };
+
+            StreamBuilder builder = new StreamBuilder();
+
+            var table = builder
+                            .Table("test", InMemory<string, string>.As("store"));
+
+            builder
+                .Stream<string, string>("stream")
+                .LeftJoin<string, string, StringSerDes>(table, new MyJoinValueMapper())
+                .To("output");
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("test");
+                var inputTopic2 = driver.CreateInputTopic<string, string>("stream");
+                var outputTopic = driver.CreateOuputTopic<string, string>("output");
+                inputTopic.PipeInput("test", "test");
+                inputTopic2.PipeInput("test", "coucou");
+                inputTopic2.PipeInput("test-sylvain", "1234");
+                var record = outputTopic.ReadKeyValueList().ToList();
+                Assert.IsNotNull(record);
+                Assert.AreEqual(2, record.Count);
+                Assert.AreEqual("test", record[0].Message.Key);
+                Assert.AreEqual("coucou-test", record[0].Message.Value);
+                Assert.AreEqual("test-sylvain", record[1].Message.Key);
+                Assert.AreEqual("1234-", record[1].Message.Value);
+            }
+        }
+
+        [Test]
+        public void StreamTableLeftJoin3()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>
+            {
+                ApplicationId = "test-stream-table-left-join"
+            };
+
+            StreamBuilder builder = new StreamBuilder();
+
+            var table = builder
+                            .Table("test", InMemory<string, string>.As("store"));
+
+            builder
+                .Stream<string, string>("stream")
+                .LeftJoin<string, string, StringSerDes>(table, (s, v) => $"{s}-{v}")
+                .To("output");
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("test");
+                var inputTopic2 = driver.CreateInputTopic<string, string>("stream");
+                var outputTopic = driver.CreateOuputTopic<string, string>("output");
+                inputTopic.PipeInput("test", "test");
+                inputTopic2.PipeInput("test", "coucou");
+                inputTopic2.PipeInput("test-sylvain", "1234");
+                var record = outputTopic.ReadKeyValueList().ToList();
+                Assert.IsNotNull(record);
+                Assert.AreEqual(2, record.Count);
+                Assert.AreEqual("test", record[0].Message.Key);
+                Assert.AreEqual("coucou-test", record[0].Message.Value);
+                Assert.AreEqual("test-sylvain", record[1].Message.Key);
+                Assert.AreEqual("1234-", record[1].Message.Value);
+            }
+        }
+
+        [Test]
+        public void StreamTableLeftJoin4()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>
+            {
+                ApplicationId = "test-stream-table-left-join"
+            };
+
+            StreamBuilder builder = new StreamBuilder();
+
+            var table = builder
+                            .Table("test", InMemory<string, string>.As("store"));
+
+            builder
+                .Stream<string, string>("stream")
+                .LeftJoin(table, new MyJoinValueMapper())
                 .To("output");
 
             Topology t = builder.Build();
@@ -65,7 +185,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("stream")
-                .LeftJoin<string, string, StringSerDes, StringSerDes>(table, (s, v) => $"{s}-{v}")
+                .LeftJoin(table, (s, v) => $"{s}-{v}")
                 .To("output");
 
             Topology t = builder.Build();
@@ -106,7 +226,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("stream")
-                .LeftJoin<string, string, StringSerDes, StringSerDes>(table, (s, v) => $"{s}-{v}")
+                .LeftJoin(table, (s, v) => $"{s}-{v}")
                 .To("output");
 
             Topology t = builder.Build();
