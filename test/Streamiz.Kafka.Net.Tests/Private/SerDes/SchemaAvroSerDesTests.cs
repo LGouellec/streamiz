@@ -147,7 +147,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             Assert.AreEqual("TEST", pbis.firstName);
             Assert.AreEqual("TEST", pbis.lastName);
         }
-    
+
         [Test]
         public void CompleteWorkflow()
         {
@@ -178,6 +178,31 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
                 Assert.AreEqual("l", records[0].Message.Value.lastName);
             }
         }
-    
+
+        [Test]
+        public void WorkflowWithInvalidConfiguration()
+        {
+            var config = new StreamConfig();
+            config.ApplicationId = "test-workflow-avroserdes";
+            config.DefaultKeySerDes = new StringSerDes();
+            config.DefaultValueSerDes = new SchemaAvroSerDes<Person>();
+
+            var builder = new StreamBuilder();
+            builder
+                .Stream<string, Person>("person")
+                .Filter((k, v) => v.age >= 18)
+                .To("person-major");
+
+            var topo = builder.Build();
+            Assert.Throws<System.ArgumentException>(() =>
+            {
+                using (var driver = new TopologyTestDriver(topo, config))
+                {
+                    var input = driver.CreateInputTopic<string, Person>("person");
+                    input.PipeInput("test1", new Person { age = 23, firstName = "f", lastName = "l" });
+                }
+            });
+        }
+
     }
 }

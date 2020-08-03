@@ -7,7 +7,7 @@ using System;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
-    public class KStreamKStreamJoinTests
+    public class KStreamKStreamLeftJoinTests
     {
         class MyJoinerMapper : IValueJoiner<string, string, string>
         {
@@ -16,11 +16,11 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
 
         [Test]
-        public void StreamStreamJoin()
+        public void StreamStreamLeftJoin()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-left-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -29,7 +29,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic2")
-                .Join(
+                .LeftJoin(
                     stream,
                     (s, v) => $"{s}-{v}",
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))
@@ -52,11 +52,11 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
 
         [Test]
-        public void StreamStreamJoin2()
+        public void StreamStreamLeftJoin2()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-left-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -65,7 +65,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic2")
-                .Join<string, string, StringSerDes>(
+                .LeftJoin<string, string, StringSerDes>(
                     stream,
                     (s, v) => $"{s}-{v}",
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))
@@ -88,11 +88,11 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
 
         [Test]
-        public void StreamStreamJoin3()
+        public void StreamStreamLeftJoin3()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-left-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -101,7 +101,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic2")
-                .Join<string, string, StringSerDes>(
+                .LeftJoin<string, string, StringSerDes>(
                     stream,
                     new MyJoinerMapper(),
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))
@@ -124,11 +124,11 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
 
         [Test]
-        public void StreamStreamJoin4()
+        public void StreamStreamLeftJoin4()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-left-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -137,7 +137,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic2")
-                .Join(
+                .LeftJoin(
                     stream,
                     new MyJoinerMapper(),
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))
@@ -160,11 +160,11 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
 
         [Test]
-        public void StreamWithNullStream()
+        public void StreamWithNullLeftStream()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-left-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -173,14 +173,14 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             Assert.Throws<ArgumentNullException>(() => builder
                .Stream<string, string>("topic2")
-               .Join(
+               .LeftJoin(
                    null,
                    new MyJoinerMapper(),
                    JoinWindowOptions.Of(TimeSpan.FromSeconds(10))));
         }
 
         [Test]
-        public void StreamWithNullStream2()
+        public void StreamWithNullLeftStream2()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
@@ -193,7 +193,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             Assert.Throws<ArgumentNullException>(() => builder
                .Stream<string, string>("topic2")
-               .Join(stream, (IValueJoiner<string, string, string>)null, JoinWindowOptions.Of(TimeSpan.FromSeconds(10))));
+               .LeftJoin(stream, (IValueJoiner<string, string, string>)null, JoinWindowOptions.Of(TimeSpan.FromSeconds(10))));
         }
 
         [Test]
@@ -201,7 +201,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-left-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -214,7 +214,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             Assert.Throws<StreamsException>(() => builder
                .Stream<string, string>("topic2")
-               .Join(stream, new MyJoinerMapper(), JoinWindowOptions.Of(TimeSpan.FromSeconds(10)), joinProps));
+               .LeftJoin(stream, new MyJoinerMapper(), JoinWindowOptions.Of(TimeSpan.FromSeconds(10)), joinProps));
         }
 
         [Test]
@@ -222,7 +222,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-left-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -237,15 +237,15 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             // joinProps use supplier with retention 10 secondes => BAD THING !!
             Assert.Throws<StreamsException>(() => builder
                .Stream<string, string>("topic2")
-               .Join(stream, new MyJoinerMapper(), JoinWindowOptions.Of(TimeSpan.FromSeconds(10)), joinProps));
+               .LeftJoin(stream, new MyJoinerMapper(), JoinWindowOptions.Of(TimeSpan.FromSeconds(10)), joinProps));
         }
 
         [Test]
-        public void StreamStreamJoinWithNoRecordInRigthJoin()
+        public void StreamStreamLeftJoinWithNoRecordInRigthJoin()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-left-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -254,7 +254,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic2")
-                .Join(
+                .LeftJoin(
                     stream,
                     (s, v) => $"{s}-{v}",
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))
@@ -268,16 +268,18 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 var outputTopic = driver.CreateOuputTopic<string, string>("output-join");
                 inputTopic2.PipeInput("test", "coucou");
                 var record = outputTopic.ReadKeyValue();
-                Assert.IsNull(record);
+                Assert.IsNotNull(record);
+                Assert.AreEqual("test", record.Message.Key);
+                Assert.AreEqual("coucou-", record.Message.Value);
             }
         }
 
         [Test]
-        public void StreamStreamJoinWithNoRecordInLeftJoin()
+        public void StreamStreamLeftJoinWithNoRecordInLeftJoin()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-left-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -286,7 +288,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic2")
-                .Join(
+                .LeftJoin(
                     stream,
                     (s, v) => $"{s}-{v}",
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))

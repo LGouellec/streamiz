@@ -4,10 +4,11 @@ using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 using System;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
-    public class KStreamKStreamJoinTests
+    public class KStreamKStreamOuterJoinTests
     {
         class MyJoinerMapper : IValueJoiner<string, string, string>
         {
@@ -16,11 +17,11 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
 
         [Test]
-        public void StreamStreamJoin()
+        public void StreamStreamOuterJoin()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-outer-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -29,7 +30,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic2")
-                .Join(
+                .OuterJoin(
                     stream,
                     (s, v) => $"{s}-{v}",
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))
@@ -44,19 +45,21 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 var outputTopic = driver.CreateOuputTopic<string, string>("output-join");
                 inputTopic.PipeInput("test", "test");
                 inputTopic2.PipeInput("test", "coucou");
-                var record = outputTopic.ReadKeyValue();
-                Assert.IsNotNull(record);
-                Assert.AreEqual("test", record.Message.Key);
-                Assert.AreEqual("coucou-test", record.Message.Value);
+                var records = outputTopic.ReadKeyValueList().ToList();
+                Assert.AreEqual(2, records.Count);
+                Assert.AreEqual("test", records[0].Message.Key);
+                Assert.AreEqual("-test", records[0].Message.Value);
+                Assert.AreEqual("test", records[1].Message.Key);
+                Assert.AreEqual("coucou-test", records[1].Message.Value);
             }
         }
 
         [Test]
-        public void StreamStreamJoin2()
+        public void StreamStreamOuterJoin2()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-outer-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -65,7 +68,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic2")
-                .Join<string, string, StringSerDes>(
+                .OuterJoin<string, string, StringSerDes>(
                     stream,
                     (s, v) => $"{s}-{v}",
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))
@@ -80,19 +83,21 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 var outputTopic = driver.CreateOuputTopic<string, string>("output-join");
                 inputTopic.PipeInput("test", "test");
                 inputTopic2.PipeInput("test", "coucou");
-                var record = outputTopic.ReadKeyValue();
-                Assert.IsNotNull(record);
-                Assert.AreEqual("test", record.Message.Key);
-                Assert.AreEqual("coucou-test", record.Message.Value);
+                var records = outputTopic.ReadKeyValueList().ToList();
+                Assert.AreEqual(2, records.Count);
+                Assert.AreEqual("test", records[0].Message.Key);
+                Assert.AreEqual("-test", records[0].Message.Value);
+                Assert.AreEqual("test", records[1].Message.Key);
+                Assert.AreEqual("coucou-test", records[1].Message.Value);
             }
         }
 
         [Test]
-        public void StreamStreamJoin3()
+        public void StreamStreamOuterJoin3()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-outer-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -101,7 +106,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic2")
-                .Join<string, string, StringSerDes>(
+                .OuterJoin<string, string, StringSerDes>(
                     stream,
                     new MyJoinerMapper(),
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))
@@ -116,19 +121,21 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 var outputTopic = driver.CreateOuputTopic<string, string>("output-join");
                 inputTopic.PipeInput("test", "test");
                 inputTopic2.PipeInput("test", "coucou");
-                var record = outputTopic.ReadKeyValue();
-                Assert.IsNotNull(record);
-                Assert.AreEqual("test", record.Message.Key);
-                Assert.AreEqual("coucou-test", record.Message.Value);
+                var records = outputTopic.ReadKeyValueList().ToList();
+                Assert.AreEqual(2, records.Count);
+                Assert.AreEqual("test", records[0].Message.Key);
+                Assert.AreEqual("-test", records[0].Message.Value);
+                Assert.AreEqual("test", records[1].Message.Key);
+                Assert.AreEqual("coucou-test", records[1].Message.Value);
             }
         }
 
         [Test]
-        public void StreamStreamJoin4()
+        public void StreamStreamOuterJoin4()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-outer-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -137,7 +144,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic2")
-                .Join(
+                .OuterJoin(
                     stream,
                     new MyJoinerMapper(),
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))
@@ -152,19 +159,21 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 var outputTopic = driver.CreateOuputTopic<string, string>("output-join");
                 inputTopic.PipeInput("test", "test");
                 inputTopic2.PipeInput("test", "coucou");
-                var record = outputTopic.ReadKeyValue();
-                Assert.IsNotNull(record);
-                Assert.AreEqual("test", record.Message.Key);
-                Assert.AreEqual("coucou-test", record.Message.Value);
+                var records = outputTopic.ReadKeyValueList().ToList();
+                Assert.AreEqual(2, records.Count);
+                Assert.AreEqual("test", records[0].Message.Key);
+                Assert.AreEqual("-test", records[0].Message.Value);
+                Assert.AreEqual("test", records[1].Message.Key);
+                Assert.AreEqual("coucou-test", records[1].Message.Value);
             }
         }
 
         [Test]
-        public void StreamWithNullStream()
+        public void StreamWithNullOuterStream()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-outer-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -173,18 +182,18 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             Assert.Throws<ArgumentNullException>(() => builder
                .Stream<string, string>("topic2")
-               .Join(
+               .OuterJoin(
                    null,
                    new MyJoinerMapper(),
                    JoinWindowOptions.Of(TimeSpan.FromSeconds(10))));
         }
 
         [Test]
-        public void StreamWithNullStream2()
+        public void StreamWithNullOuterStream2()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-outer-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -193,7 +202,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             Assert.Throws<ArgumentNullException>(() => builder
                .Stream<string, string>("topic2")
-               .Join(stream, (IValueJoiner<string, string, string>)null, JoinWindowOptions.Of(TimeSpan.FromSeconds(10))));
+               .OuterJoin(stream, (IValueJoiner<string, string, string>)null, JoinWindowOptions.Of(TimeSpan.FromSeconds(10))));
         }
 
         [Test]
@@ -201,7 +210,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-outer-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -214,7 +223,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             Assert.Throws<StreamsException>(() => builder
                .Stream<string, string>("topic2")
-               .Join(stream, new MyJoinerMapper(), JoinWindowOptions.Of(TimeSpan.FromSeconds(10)), joinProps));
+               .OuterJoin(stream, new MyJoinerMapper(), JoinWindowOptions.Of(TimeSpan.FromSeconds(10)), joinProps));
         }
 
         [Test]
@@ -222,7 +231,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-left-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -237,15 +246,15 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             // joinProps use supplier with retention 10 secondes => BAD THING !!
             Assert.Throws<StreamsException>(() => builder
                .Stream<string, string>("topic2")
-               .Join(stream, new MyJoinerMapper(), JoinWindowOptions.Of(TimeSpan.FromSeconds(10)), joinProps));
+               .OuterJoin(stream, new MyJoinerMapper(), JoinWindowOptions.Of(TimeSpan.FromSeconds(10)), joinProps));
         }
 
         [Test]
-        public void StreamStreamJoinWithNoRecordInRigthJoin()
+        public void StreamStreamOuterJoinWithNoRecordInRigthJoin()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-outer-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -254,7 +263,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic2")
-                .Join(
+                .OuterJoin(
                     stream,
                     (s, v) => $"{s}-{v}",
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))
@@ -268,16 +277,18 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 var outputTopic = driver.CreateOuputTopic<string, string>("output-join");
                 inputTopic2.PipeInput("test", "coucou");
                 var record = outputTopic.ReadKeyValue();
-                Assert.IsNull(record);
+                Assert.IsNotNull(record);
+                Assert.AreEqual("test", record.Message.Key);
+                Assert.AreEqual("coucou-", record.Message.Value);
             }
         }
 
         [Test]
-        public void StreamStreamJoinWithNoRecordInLeftJoin()
+        public void StreamStreamOuterJoinWithNoRecordInLeftJoin()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-stream-stream-join"
+                ApplicationId = "test-stream-stream-outer-join"
             };
 
             StreamBuilder builder = new StreamBuilder();
@@ -286,7 +297,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic2")
-                .Join(
+                .OuterJoin(
                     stream,
                     (s, v) => $"{s}-{v}",
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))
@@ -300,9 +311,10 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 var outputTopic = driver.CreateOuputTopic<string, string>("output-join");
                 inputTopic.PipeInput("test", "test");
                 var record = outputTopic.ReadKeyValue();
-                Assert.IsNull(record);
+                Assert.IsNotNull(record);
+                Assert.AreEqual("test", record.Message.Key);
+                Assert.AreEqual("-test", record.Message.Value);
             }
         }
-
     }
 }

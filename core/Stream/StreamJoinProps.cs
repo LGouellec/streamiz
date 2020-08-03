@@ -34,9 +34,20 @@ namespace Streamiz.Kafka.Net.Stream
             );
         }
 
-        public static StreamJoinProps<K, V1, V2> With<K, V1, V2>(ISerDes<K> keySerde,
-                                                      ISerDes<V1> valueSerde,
-                                                      ISerDes<V2> otherValueSerde)
+        public static StreamJoinProps<K, V1, V2> With<K, V1, V2>(WindowBytesStoreSupplier storeSupplier, WindowBytesStoreSupplier otherStoreSupplier)
+        {
+            return new StreamJoinProps<K, V1, V2>(
+                null,
+                null,
+                null,
+                storeSupplier,
+                otherStoreSupplier,
+                null,
+                null
+            );
+        }
+
+        public static StreamJoinProps<K, V1, V2> With<K, V1, V2>(ISerDes<K> keySerde, ISerDes<V1> valueSerde, ISerDes<V2> otherValueSerde)
         {
             return new StreamJoinProps<K, V1, V2>(
                 keySerde,
@@ -68,6 +79,33 @@ namespace Streamiz.Kafka.Net.Stream
                 storeName
             );
         }
+
+        public static StreamJoinProps<K, V1, V2> As<K, V1, V2>(string storeName)
+        {
+            return new StreamJoinProps<K, V1, V2>(
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              storeName
+          );
+        }
+
+        public static StreamJoinProps<K, V1, V2> As<K, V1, V2>(string name, string storeName)
+        {
+            return new StreamJoinProps<K, V1, V2>(
+              null,
+              null,
+              null,
+              null,
+              null,
+              name,
+              storeName
+            );
+        }
+
 
         internal static StreamJoinProps<T1, T2, T3> From<T1, T2, T3>(StreamJoinProps props)
         {
