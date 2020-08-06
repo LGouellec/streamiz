@@ -182,6 +182,16 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         string BootstrapServers { get; set; }
 
+        /// <summary>
+        /// Maximum amount of time a stream task will stay idle when not all of its partition buffers contain records, to avoid potential out-of-order record processing across multiple input streams. (Default: 0)
+        /// </summary>
+        long MaxTaskIdleMs { get; set; }
+
+        /// <summary>
+        /// Maximum number of records to buffer per partition. (Default: 1000)
+        /// </summary>
+        long BufferedRecordsPerPartition { get; set; }
+
         #endregion
     }
 
@@ -279,6 +289,8 @@ namespace Streamiz.Kafka.Net
         internal static readonly string transactionTimeoutCst = "transaction.timeout";
         internal static readonly string commitIntervalMsCst = "commit.interval.ms";
         internal static readonly string pollMsCst = "poll.ms";
+        internal static readonly string maxTaskIdleCst = "max.task.idle.ms";
+        internal static readonly string bufferedRecordsPerPartitionCst = "buffered.records.per.partition";
 
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -1729,6 +1741,7 @@ namespace Streamiz.Kafka.Net
             Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
             TransactionTimeout = TimeSpan.FromSeconds(10);
             PollMs = 100;
+            MaxTaskIdleMs = 0;
 
             if (properties != null)
             {
@@ -1878,6 +1891,24 @@ namespace Streamiz.Kafka.Net
         {
             get => this[pollMsCst];
             set => this.AddOrUpdate(pollMsCst, value);
+        }
+
+        /// <summary>
+        /// Maximum amount of time a stream task will stay idle when not all of its partition buffers contain records, to avoid potential out-of-order record processing across multiple input streams. (Default: 0)
+        /// </summary>
+        public long MaxTaskIdleMs
+        {
+            get => this[maxTaskIdleCst];
+            set => this.AddOrUpdate(maxTaskIdleCst, value);
+        }
+
+        /// <summary>
+        /// Maximum number of records to buffer per partition. (Default: 1000)
+        /// </summary>
+        public long BufferedRecordsPerPartition
+        {
+            get => this[bufferedRecordsPerPartitionCst];
+            set => this.AddOrUpdate(bufferedRecordsPerPartitionCst, value);
         }
 
         /// <summary>
