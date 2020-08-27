@@ -4,6 +4,7 @@ using Streamiz.Kafka.Net.Kafka;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 
 namespace Streamiz.Kafka.Net.Mock.Sync
@@ -35,6 +36,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         private readonly SyncProducer producer;
 
         private readonly IDictionary<string, SyncConsumerOffset> offsets = new Dictionary<string, SyncConsumerOffset>();
+        private readonly IDictionary<TopicPartition, bool> partitionsState = new Dictionary<TopicPartition, bool>();
 
         public IConsumerRebalanceListener Listener { get; private set; }
 
@@ -159,7 +161,13 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public void Pause(IEnumerable<TopicPartition> partitions)
         {
-            // TODO : 
+            foreach (var p in partitions)
+            {
+                if (partitionsState.ContainsKey(p))
+                    partitionsState[p] = true;
+                else
+                    partitionsState.Add(p, true);
+            }
         }
 
         public Offset Position(TopicPartition partition)
@@ -176,8 +184,13 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public void Resume(IEnumerable<TopicPartition> partitions)
         {
-            // TODO
-            throw new NotImplementedException();
+            foreach (var p in partitions)
+            {
+                if (partitionsState.ContainsKey(p))
+                    partitionsState[p] = false;
+                else
+                    partitionsState.Add(p, false);
+            }
         }
 
         public void Seek(TopicPartitionOffset tpo)
@@ -265,7 +278,10 @@ namespace Streamiz.Kafka.Net.Mock.Sync
                 if (timeout != TimeSpan.Zero && (dt + timeout) < DateTime.Now)
                     break;
 
-                if (producer != null)
+                var tp = new TopicPartition(kp.Key, 0);
+                if (producer != null && 
+                    ((partitionsState.ContainsKey(tp) && !partitionsState[tp]) || 
+                    !partitionsState.ContainsKey(tp)))
                 {
                     var messages = producer.GetHistory(kp.Key).ToArray();
                     if (messages.Length > kp.Value.OffsetConsumed)

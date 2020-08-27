@@ -54,6 +54,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         #region Abstract
 
+        public abstract PartitionGrouper Grouper { get; }
         public abstract bool CanProcess(long now);
         public abstract void Close();
         public abstract void Commit();

@@ -1742,6 +1742,7 @@ namespace Streamiz.Kafka.Net
             TransactionTimeout = TimeSpan.FromSeconds(10);
             PollMs = 100;
             MaxTaskIdleMs = 0;
+            BufferedRecordsPerPartition = 1000;
 
             if (properties != null)
             {

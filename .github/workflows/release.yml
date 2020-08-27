@@ -23,6 +23,6 @@ jobs:
     - name: Pack Core
       run: dotnet pack core/Streamiz.Kafka.Net.csproj  --configuration Release --include-source --include-symbols --no-build --no-restore
     - name: Pack Registry.Avro
-      run: dotnet pack core/serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.csproj  --configuration Release --include-source --include-symbols --no-build --no-restore
+      run: dotnet pack serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.csproj  --configuration Release --include-source --include-symbols --no-build --no-restore
     - name: Publish in nuget.org
-      run: dotnet nuget push core/**/*symbols.nupkg -k ${{ secrets.NUGET_PACKAGE_TOKEN }} -s https://api.nuget.org/v3/index.json --no-symbols true      
+      run: dotnet nuget push **/*symbols.nupkg -k ${{ secrets.NUGET_PACKAGE_TOKEN }} -s https://api.nuget.org/v3/index.json --no-symbols true      

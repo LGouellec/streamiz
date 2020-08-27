@@ -18,9 +18,8 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly PartitionGrouper partitionGrouper;
         private readonly IList<IProcessor> processors = new List<IProcessor>();
         private readonly bool eosEnabled = false;
-        // TODO Add config stream key
         private readonly long maxTaskIdleMs = 0;
-        private readonly int maxBufferedSize = 100;
+        private readonly long maxBufferedSize = 100;
 
         private long idleStartTime;
         private IProducer<byte[], byte[]> producer;
@@ -33,6 +32,9 @@ namespace Streamiz.Kafka.Net.Processors
             this.threadId = threadId;
             this.kafkaSupplier = kafkaSupplier;
             consumedOffsets = new Dictionary<TopicPartition, long>();
+            maxTaskIdleMs = configuration.MaxTaskIdleMs;
+            maxBufferedSize = configuration.BufferedRecordsPerPartition;
+            idleStartTime = -1;
 
             // eos enabled
             if (producer == null)
@@ -153,6 +155,8 @@ namespace Streamiz.Kafka.Net.Processors
         #endregion
 
         #region Abstract
+
+        public override PartitionGrouper Grouper => partitionGrouper;
 
         public override bool CanProcess(long now)
         {
@@ -302,7 +306,7 @@ namespace Streamiz.Kafka.Net.Processors
                 consumedOffsets.AddOrUpdate(record.Record.TopicPartition, record.Record.Offset);
                 commitNeeded = true;
 
-                if (record.Queue.Size.Equals(maxBufferedSize))
+                if (record.Queue.Size == maxBufferedSize)
                 {
                     consumer.Resume(record.Record.TopicPartition.ToSingle());
                 }

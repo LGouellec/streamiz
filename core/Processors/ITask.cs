@@ -44,5 +44,7 @@ namespace Streamiz.Kafka.Net.Processors
         ICollection<TopicPartition> ChangelogPartitions { get; }
 
         bool HasStateStores { get; }
+
+        PartitionGrouper Grouper { get; }
     }
 }

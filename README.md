@@ -35,7 +35,7 @@ This project is being written. Thanks for you contribution !
 
 - End May 2020 - Beta 0.1.0 - All stateless processors, Exactly Once Semantic, InMemory store
 - End July 2020 - Beta 0.2.0 - Statefull processors (count, reduce, aggregate), Global Store
-- Begin September 2020 - 1.0.0 - Join statefull processors
+- End September 2020 - 1.0.0 - Join statefull processors
 - End October 2020 - 1.1.0 - Persistent state store (eg: RocksDB Store)
 - End 2020 / Begin 2021 - 1.2.0 - Processor API, Metrics, Interactive Queries, Standby Replica
 
@@ -103,6 +103,7 @@ static void Main(string[] args)
 - [ ] Rocks DB state implementation
 - [ ] Task restoring
 - [ ] Repartition topic
+- [ ] Repartition Processor
 - [ ] Processor API
 - [ ] Optimizing Kafka Streams Topologies
 - [ ] Standby Replica
