@@ -8,6 +8,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly StoreBuilder storeBuilder;
         private readonly Dictionary<(string, int), IStateStore> stores =
             new Dictionary<(string, int), IStateStore>();
+        internal readonly List<string> users = new List<string>();
 
         public StateStoreFactory(StoreBuilder builder)
         {

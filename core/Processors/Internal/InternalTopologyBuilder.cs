@@ -64,6 +64,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     throw new TopologyException("Processor " + processorName + " is not added yet.");
                 }
 
+                var stateFactory = stateFactories[stateStoreName];
+                foreach(var u in stateFactory.users)
+                    nodeGrouper.Unite(u, processorName);
+                stateFactory.users.Add(processorName);
+
+
                 var nodeFactory = nodeFactories[processorName];
 
                 if (nodeFactory is IProcessorNodeFactory)

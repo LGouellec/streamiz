@@ -197,7 +197,7 @@ namespace Streamiz.Kafka.Net.Mock
         public TestInputTopic<K, V> CreateInputTopic<K, V, KS, VS>(string topicName)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
-            => CreateInputTopic<K, V>(topicName, new KS(), new VS());
+            => CreateInputTopic(topicName, new KS(), new VS());
 
         #endregion
 
@@ -261,6 +261,26 @@ namespace Streamiz.Kafka.Net.Mock
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
             => CreateOuputTopic<K, V>(topicName, consumeTimeout, new KS(), new VS());
+
+        #endregion
+
+        #region Create Multi Input Topic
+
+        public TestMultiInputTopic<K, V> CreateMultiInputTopic<K, V>(params string[] topics)
+            => CreateMultiInputTopic<K, V>(null, null, topics);
+
+        public TestMultiInputTopic<K, V> CreateMultiInputTopic<K, V>(ISerDes<K> keySerdes, ISerDes<V> valueSerdes, params string[] topics)
+        {
+            var multi = behavior.CreateMultiInputTopic(topics, keySerdes, valueSerdes);
+            foreach (var topic in topics)
+                inputs.Add(topic, multi.GetPipe(topic));
+            return multi;
+        }
+
+        public TestMultiInputTopic<K, V> CreateMultiInputTopic<K, V, KS, VS>(params string[] topics)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => CreateMultiInputTopic(new KS(), new VS(), topics);
 
         #endregion
 

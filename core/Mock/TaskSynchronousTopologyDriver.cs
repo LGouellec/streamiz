@@ -1,5 +1,6 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net.Kafka;
+using Streamiz.Kafka.Net.Mock.Pipes;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -69,6 +70,20 @@ namespace Streamiz.Kafka.Net.Mock
         }
 
         #region IBehaviorTopologyTestDriver
+
+        public TestMultiInputTopic<K, V> CreateMultiInputTopic<K, V>(string[] topics, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
+        {
+            Dictionary<string, IPipeInput> pipes = new Dictionary<string, IPipeInput>();
+            
+            foreach(var t in topics)
+            {
+                var task = GetTask(t);
+                var builder = new SyncPipeBuilder(task);
+                pipes.Add(t, builder.Input(t, configuration));
+            }
+
+            return new TestMultiInputTopic<K, V>(pipes, configuration, keySerdes, valueSerdes);
+        }
 
         public TestInputTopic<K, V> CreateInputTopic<K, V>(string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
         {

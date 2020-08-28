@@ -58,6 +58,11 @@ namespace Streamiz.Kafka.Net.Mock
             return new TestInputTopic<K, V>(pipeInput, configuration, keySerdes, valueSerdes);
         }
 
+        public TestMultiInputTopic<K, V> CreateMultiInputTopic<K, V>(string[] topics, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public TestOutputTopic<K, V> CreateOutputTopic<K, V>(string topicName, TimeSpan consumeTimeout, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
         {
             var pipeOutput = pipeBuilder.Output(topicName, consumeTimeout, configuration, token);
