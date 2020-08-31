@@ -252,7 +252,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-window-stream";
-
+            
             var builder = new StreamBuilder();
 
             builder

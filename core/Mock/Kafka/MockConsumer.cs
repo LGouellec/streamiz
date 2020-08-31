@@ -76,7 +76,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         }
 
         public void Commit(ConsumeResult<byte[], byte[]> result)
-            => Commit(new List<TopicPartitionOffset> { new TopicPartitionOffset(result.TopicPartition, result.Offset) });
+            => Commit(new List<TopicPartitionOffset> { new TopicPartitionOffset(result.TopicPartition, result.Offset + 1) });
 
         public List<TopicPartitionOffset> Committed(TimeSpan timeout)
         {

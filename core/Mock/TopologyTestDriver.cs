@@ -333,5 +333,6 @@ namespace Streamiz.Kafka.Net.Mock
         }
 
         #endregion
+
     }
 }

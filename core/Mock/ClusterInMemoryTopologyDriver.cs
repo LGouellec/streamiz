@@ -60,12 +60,20 @@ namespace Streamiz.Kafka.Net.Mock
 
         public TestMultiInputTopic<K, V> CreateMultiInputTopic<K, V>(string[] topics, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
         {
-            throw new NotImplementedException();
+            Dictionary<string, IPipeInput> pipes = new Dictionary<string, IPipeInput>();
+
+            foreach (var t in topics)
+            {
+                var pipeInput = pipeBuilder.Input(t, configuration);
+                pipes.Add(t, pipeInput);
+            }
+
+            return new TestMultiInputTopic<K, V>(pipes, configuration, keySerdes, valueSerdes);
         }
 
         public TestOutputTopic<K, V> CreateOutputTopic<K, V>(string topicName, TimeSpan consumeTimeout, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
         {
-            var pipeOutput = pipeBuilder.Output(topicName, consumeTimeout, configuration, token);
+            var pipeOutput = pipeBuilder.Output(topicName, consumeTimeout, topicConfiguration, token);
             return new TestOutputTopic<K, V>(pipeOutput, topicConfiguration, keySerdes, valueSerdes);
         }
 

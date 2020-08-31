@@ -22,6 +22,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         private readonly Queue<(byte[], byte[])> queue = new Queue<(byte[], byte[])>();
         private readonly object _lock = new object();
 
+
         public string TopicName => topicName;
 
         public int Size
@@ -60,7 +61,6 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         private void ReadThread()
         {
             consumer.Subscribe(topicName);
-
             while (!token.IsCancellationRequested)
             {
                 var record = consumer.Consume(timeout);

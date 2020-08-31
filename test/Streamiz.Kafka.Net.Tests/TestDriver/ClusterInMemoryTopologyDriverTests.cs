@@ -108,7 +108,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             var source = new CancellationTokenSource();
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-config";
-            config.PollMs = 100;
+            config.PollMs = 50;
             var topicConfiguration = config.Clone();
             topicConfiguration.ApplicationId = $"test-driver-{config.ApplicationId}";
 
@@ -162,7 +162,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             Assert.AreEqual("1", ((MockReadOnlyKeyValueStore<string, string>)store).Get("coucou"));
 
             input.PipeInput("coucou", null);
-            Thread.Sleep(100);
+            Thread.Sleep(1000);
 
             Assert.AreEqual(0, ((MockReadOnlyKeyValueStore<string, string>)store).All().Count());
             Assert.AreEqual(null, ((MockReadOnlyKeyValueStore<string, string>)store).Get("coucou"));

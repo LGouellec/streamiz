@@ -3,11 +3,13 @@ using Streamiz.Kafka.Net.Mock.Pipes;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Streamiz.Kafka.Net.Mock
 {
     public class TestMultiInputTopic<K, V>
     {
+        private DateTime? lastDate = null;
         private Dictionary<string, IPipeInput> pipes;
         private IStreamConfig configuration;
         private ISerDes<K> keySerdes;
@@ -58,13 +60,31 @@ namespace Streamiz.Kafka.Net.Mock
         internal IPipeInput GetPipe(string topic)
             => pipes.ContainsKey(topic) ? pipes[topic] : null;
 
-        #region Pipe Inputs
+        internal DateTime LastDate
+        {
+            get
+            {
+                if (lastDate == null)
+                    lastDate = DateTime.Now;
+                else
+                    lastDate = lastDate.Value.AddSeconds(1);
+
+                return lastDate.Value;
+            }
+        }
+
+        #region Pipe One Input
 
         private void PipeInput(string topic, TestRecord<K, V> record)
         {
-            DateTime ts = record.Timestamp.HasValue ? record.Timestamp.Value : DateTime.Now;
-            var tuple = GetBytes(topic, record.Key, record.Value);
-            pipes[topic].Pipe(tuple.Item1, tuple.Item2, ts);
+            if (pipes.ContainsKey(topic))
+            {
+                DateTime ts = record.Timestamp.HasValue ? record.Timestamp.Value : LastDate;
+                var tuple = GetBytes(topic, record.Key, record.Value);
+                pipes[topic].Pipe(tuple.Item1, tuple.Item2, ts);
+            }
+            else
+                throw new ArgumentException($"{topic} doesn't found in this MultiInputTopic !");
         }
 
         /// <summary>
@@ -102,6 +122,16 @@ namespace Streamiz.Kafka.Net.Mock
         /// <param name="timestamp">Timestamp to record</param>
         public void PipeInput(string topic, K key, V value, DateTime timestamp)
             => PipeInput(topic, new TestRecord<K, V> { Key = key, Value = value, Timestamp = timestamp });
+
+        #endregion
+
+        #region Pipe Inputs
+
+        public void PipeInputs(string topic, params (K,V)[] datas)
+        {
+            foreach(var d in datas)
+                PipeInput(topic, new TestRecord<K, V> { Value = d.Item2, Key = d.Item1 });
+        }
 
         #endregion
 
