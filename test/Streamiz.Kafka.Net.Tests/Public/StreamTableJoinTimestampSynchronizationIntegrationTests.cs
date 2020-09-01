@@ -10,7 +10,7 @@ using Streamiz.Kafka.Net.Tests.Helpers;
 using System;
 using System.Linq;
 
-namespace Streamiz.Kafka.Net.Tests.Private
+namespace Streamiz.Kafka.Net.Tests.Public
 {
     /// <summary>
     /// Unit test inspired by @jeanlouisboudart

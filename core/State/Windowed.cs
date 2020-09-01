@@ -36,5 +36,13 @@ namespace Streamiz.Kafka.Net.State
         /// Return the window containing the values associated with this key.
         /// </summary>
         public Window Window { get; }
+
+        public override bool Equals(object obj)
+            => obj is Windowed<K>
+                && Key.Equals(((Windowed<K>)obj).Key)
+                && Window.Equals(((Windowed<K>)obj).Window);
+
+        public override int GetHashCode()
+            => Window.GetHashCode() << 32 | Key.GetHashCode();
     }
 }

@@ -123,7 +123,11 @@ namespace Streamiz.Kafka.Net.Mock
 
         #region Pipe List Inputs
 
-        private void PipeInputs(IEnumerable<TestRecord<K,V>> records)
+        /// <summary>
+        /// Send input records with the given record list on the topic, flush at the end.
+        /// </summary>
+        /// <param name="records">List of records (key, value and timestamp)</param>
+        public void PipeInputs(IEnumerable<TestRecord<K,V>> records)
         {
             foreach (var record in records)
             {
@@ -136,21 +140,21 @@ namespace Streamiz.Kafka.Net.Mock
         }
 
         /// <summary>
-        /// Send input records with the given record list on the topic,  then commit each record individually.
+        /// Send input records with the given record list on the topic, flush at the end.
         /// </summary>
         /// <param name="valueInputs">List of values</param>
         public void PipeInputs(IEnumerable<V> valueInputs)
             => PipeInputs(valueInputs.Select(v => new TestRecord<K, V> { Value = v }));
 
         /// <summary>
-        /// Send input records with the given record list on the topic,  then commit each record individually.
+        /// Send input records with the given record list on the topic, flush at the end.
         /// </summary>
         /// <param name="inputs">List of keyvalues</param>
         public void PipeInputs(IEnumerable<KeyValuePair<K, V>> inputs)
             => PipeInputs(inputs.Select(kv => new TestRecord<K, V> { Value = kv.Value, Key = kv.Key }));
 
         /// <summary>
-        /// Send input records with the given record list on the topic,  then commit each record individually.
+        /// Send input records with the given record list on the topic, flush at the end.
         /// </summary>
         /// <param name="inputs">List of keyvalues</param>
         /// <param name="timestamp">Date of the first record</param>

@@ -28,5 +28,13 @@ namespace Streamiz.Kafka.Net.Crosscutting
         {
             return Jan1St1970.AddMilliseconds(epoch);
         }
+
+
+        public static DateTime TruncateUnitDays(this DateTime dt)
+        {
+            var stringDate = dt.ToShortDateString();
+            var d = DateTime.Parse(stringDate);
+            return DateTime.SpecifyKind(d, dt.Kind);
+        }
     }
 }

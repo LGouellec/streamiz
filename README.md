@@ -100,6 +100,7 @@ static void Main(string[] args)
 - [X] Refactor Partition grouper + record queue
 - [WIP] Statefull processors impl
 - [ ] Transform and Through Processor
+- [ ] Supress Processor (.suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded())))
 - [ ] Rocks DB state implementation
 - [ ] Task restoring
 - [ ] Repartition topic
