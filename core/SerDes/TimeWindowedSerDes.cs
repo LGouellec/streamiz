@@ -31,6 +31,7 @@ namespace Streamiz.Kafka.Net.SerDes
         /// Deserialize data array to <see cref="Windowed{K}"/>
         /// </summary>
         /// <param name="data">Data array</param>
+        /// <param name="context">serialization context</param>
         /// <returns>Return <see cref="Windowed{K}"/> instance</returns>
         public override Windowed<T> Deserialize(byte[] data, SerializationContext context)
         {
@@ -48,6 +49,7 @@ namespace Streamiz.Kafka.Net.SerDes
         /// Serialize an <see cref="Windowed{K}"/> instance to byte array
         /// </summary>
         /// <param name="data">Instance to serialize</param>
+        /// <param name="context">serialization context</param>
         /// <returns>Return an array of byte</returns>
         public override byte[] Serialize(Windowed<T> data, SerializationContext context)
         {

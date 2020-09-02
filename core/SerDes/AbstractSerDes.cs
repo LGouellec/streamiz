@@ -10,6 +10,9 @@ namespace Streamiz.Kafka.Net.SerDes
     /// <typeparam name="T">Type to be serialized from and deserialized into.</typeparam>
     public abstract class AbstractSerDes<T> : ISerDes<T>
     {
+        /// <summary>
+        /// initialized boolean
+        /// </summary>
         protected bool isInitialized = false;
 
         /// <summary>
@@ -50,6 +53,11 @@ namespace Streamiz.Kafka.Net.SerDes
         /// <returns>deserialized typed data; may be null</returns>
         public abstract T Deserialize(byte[] data, SerializationContext context);
 
+        /// <summary>
+        /// Initialize method with a current context which contains <see cref="IStreamConfig"/>.
+        /// Can be used to initialize the serdes according to some parameters present in the configuration such as the schema.registry.url
+        /// </summary>
+        /// <param name="context">SerDesContext with stream configuration</param>
         public virtual void Initialize(SerDesContext context)
         {
             isInitialized = true;

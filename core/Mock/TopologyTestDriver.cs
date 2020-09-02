@@ -266,9 +266,28 @@ namespace Streamiz.Kafka.Net.Mock
 
         #region Create Multi Input Topic
 
+        /// <summary>
+        /// Create <see cref="TestMultiInputTopic{K, V}"/> to be used for piping records to multiple topics in same time.
+        /// Need to call <see cref="TestMultiInputTopic{K, V}.Flush"/> at the end of writting !
+        /// The key and value serializer as specified in the <see cref="IStreamConfig"/> are used.
+        /// </summary>
+        /// <typeparam name="K">key type</typeparam>
+        /// <typeparam name="V">value type</typeparam>
+        /// <param name="topics">the list of topics</param>
+        /// <returns><see cref="TestMultiInputTopic{K, V}"/> instance</returns>
         public TestMultiInputTopic<K, V> CreateMultiInputTopic<K, V>(params string[] topics)
             => CreateMultiInputTopic<K, V>(null, null, topics);
 
+        /// <summary>
+        /// Create <see cref="TestMultiInputTopic{K, V}"/> to be used for piping records to multiple topics in same time.
+        /// Need to call <see cref="TestMultiInputTopic{K, V}.Flush"/> at the end of writting !
+        /// </summary>
+        /// <typeparam name="K">key type</typeparam>
+        /// <typeparam name="V">value type</typeparam>
+        /// <param name="keySerdes">key serializer instance</param>
+        /// <param name="valueSerdes">value serializer instance</param>
+        /// <param name="topics">the list of topics</param>
+        /// <returns><see cref="TestMultiInputTopic{K, V}"/> instance</returns>
         public TestMultiInputTopic<K, V> CreateMultiInputTopic<K, V>(ISerDes<K> keySerdes, ISerDes<V> valueSerdes, params string[] topics)
         {
             var multi = behavior.CreateMultiInputTopic(topics, keySerdes, valueSerdes);
@@ -277,6 +296,17 @@ namespace Streamiz.Kafka.Net.Mock
             return multi;
         }
 
+        /// <summary>
+        /// Create <see cref="TestMultiInputTopic{K, V}"/> to be used for piping records to multiple topics in same time.
+        /// Need to call <see cref="TestMultiInputTopic{K, V}.Flush"/> at the end of writting !
+        /// The key and value serializer as specified in the type parameters.
+        /// </summary>
+        /// <typeparam name="K">key type</typeparam>
+        /// <typeparam name="V">value type</typeparam>
+        /// <typeparam name="KS">key serializer type</typeparam>
+        /// <typeparam name="VS">value serializer type</typeparam>
+        /// <param name="topics">the list of topics</param>
+        /// <returns><see cref="TestMultiInputTopic{K, V}"/> instance</returns>
         public TestMultiInputTopic<K, V> CreateMultiInputTopic<K, V, KS, VS>(params string[] topics)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()

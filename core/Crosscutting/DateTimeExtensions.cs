@@ -29,7 +29,11 @@ namespace Streamiz.Kafka.Net.Crosscutting
             return Jan1St1970.AddMilliseconds(epoch);
         }
 
-
+        /// <summary>
+        /// Truncate date with juste day/month/year
+        /// </summary>
+        /// <param name="dt">Date</param>
+        /// <returns>Return new datetime with day/month/year</returns>
         public static DateTime TruncateUnitDays(this DateTime dt)
         {
             var stringDate = dt.ToShortDateString();

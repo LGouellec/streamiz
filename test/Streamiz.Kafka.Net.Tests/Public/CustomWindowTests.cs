@@ -130,7 +130,12 @@ namespace Streamiz.Kafka.Net.Tests.Public
             // This test illustrate problems with daylight savings
             //Some timezone have daylight savings time (DST) resulting in two days in year that have either 23 or 25 hours.
             //Kafka streams currently support only fixed period for the moment.
-            TimeZoneInfo zoneWithDST = TimeZoneInfo.FindSystemTimeZoneById("Romance Standard Time"); //  Europe/Paris
+            TimeZoneInfo zoneWithDST = null;
+            if(Environment.OSVersion.Platform == PlatformID.Win32NT)
+                zoneWithDST  = TimeZoneInfo.FindSystemTimeZoneById("Romance Standard Time"); //  Europe/Paris
+            else if (Environment.OSVersion.Platform == PlatformID.Unix)
+                zoneWithDST = TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris"); // LINUX testing CI
+
 
             var inputRecords = new List<TestRecord<string, int>>{
                 new TestRecord<string, int>(null, 1, TimeZoneInfo.ConvertTime(new DateTime(2019, 3, 30, 1, 39, 0, DateTimeKind.Local), zoneWithDST)),
@@ -154,7 +159,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Verify(inputRecords, expected, zoneWithDST);
         }
 
-        #region Helpers
+#region Helpers
 
         private void Verify(List<TestRecord<string, int>> inputRecords, List<(Windowed<int>, int)> expectedValues, TimeZoneInfo zone)
         {
@@ -200,6 +205,6 @@ namespace Streamiz.Kafka.Net.Tests.Public
             return new Windowed<int>(key, new TimeWindow(start.GetMilliseconds(), end.GetMilliseconds()));
         }
 
-        #endregion
+#endregion
     }
 }

@@ -31,6 +31,7 @@ namespace Streamiz.Kafka.Net.SerDes
         /// Deserialize a record value from a byte array into string value
         /// </summary>
         /// <param name="data">serialized bytes.</param>
+        /// <param name="context">serialization context</param>
         /// <returns>deserialized string using encoding data; may be null</returns>
         public override string Deserialize(byte[] data, SerializationContext context)
         {
@@ -41,6 +42,7 @@ namespace Streamiz.Kafka.Net.SerDes
         /// Convert string <code>data</code> into a byte array using encoding.
         /// </summary>
         /// <param name="data">string data</param>
+        /// <param name="context">serialization context</param>
         /// <returns>serialized bytes</returns>
         public override byte[] Serialize(string data, SerializationContext context)
         {

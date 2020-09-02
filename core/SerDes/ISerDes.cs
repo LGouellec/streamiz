@@ -17,7 +17,8 @@ namespace Streamiz.Kafka.Net.SerDes
         /// <summary>
         /// Deserialize a record value from a byte array into an object.
         /// </summary>
-        /// <param name="data">serialized bytes; may be null; implementations are recommended to handle null by returning a value or null rather than throwing an exception.</param>
+        /// <param name="data">serialized bnytes; may be null; implementations are recommended to handle null by returning a value or null rather than throwing an exception.</param>
+        /// <param name="context">serialization context</param>
         /// <returns>deserialized object data; may be null</returns>
         object DeserializeObject(byte[] data, SerializationContext context);
 
@@ -25,6 +26,7 @@ namespace Streamiz.Kafka.Net.SerDes
         /// Convert <code>data</code> into a byte array.
         /// </summary>
         /// <param name="data">object data</param>
+        /// <param name="context">serialization context</param>
         /// <returns>serialized bytes</returns>
         byte[] SerializeObject(object data, SerializationContext context);
 

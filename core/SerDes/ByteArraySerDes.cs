@@ -12,6 +12,7 @@ namespace Streamiz.Kafka.Net.SerDes
         /// Deserialize just return <code>data</code>.
         /// </summary>
         /// <param name="data">serialized bytes</param>
+        /// <param name="context">serialization context</param>
         /// <returns>Return <code>data</code> parameter</returns>
         public override byte[] Deserialize(byte[] data, SerializationContext context) => data;
 
@@ -19,6 +20,7 @@ namespace Streamiz.Kafka.Net.SerDes
         /// Serialize just return <code>data</code>.
         /// </summary>
         /// <param name="data">typed data</param>
+        /// <param name="context">serialization context</param>
         /// <returns>Return <code>data</code> parameter</returns>
         public override byte[] Serialize(byte[] data, SerializationContext context) => data;
     }

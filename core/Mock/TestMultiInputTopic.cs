@@ -3,17 +3,34 @@ using Streamiz.Kafka.Net.Mock.Pipes;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace Streamiz.Kafka.Net.Mock
 {
+    /// <summary>
+    /// <see cref="TestMultiInputTopic{K, V}"/> is used to pipe records to multiples topics in <see cref="TopologyTestDriver"/> and it's NOT THREADSAFE.
+    /// To use <see cref="TestMultiInputTopic{K, V}"/> create a new instance via
+    /// <see cref="TopologyTestDriver.CreateMultiInputTopic{K, V}(string[])"/>.
+    /// In actual test code, you can pipe new record values, keys and values or list of keyvalue pairs.
+    /// After writtring messages, you must call <see cref="TestMultiInputTopic{K, V}.Flush"/> to persist them !! 
+    /// <example>
+    /// Processing messages
+    /// <code>
+    /// var topic = driver.CreateMultiInputTopic&lt;string, string&gt;("test1", "test2");
+    /// topic.PipeInput("test1", "key1", "hello");
+    /// topic.PipeInput("test2", "key1", "coucou");
+    /// topic.Flush();
+    /// </code>
+    /// </example>
+    /// </summary>
+    /// <typeparam name="K">Key type</typeparam>
+    /// <typeparam name="V">Value type</typeparam>
     public class TestMultiInputTopic<K, V>
     {
         private DateTime? lastDate = null;
-        private Dictionary<string, IPipeInput> pipes;
-        private IStreamConfig configuration;
-        private ISerDes<K> keySerdes;
-        private ISerDes<V> valueSerdes;
+        private readonly Dictionary<string, IPipeInput> pipes;
+        private readonly IStreamConfig configuration;
+        private readonly ISerDes<K> keySerdes;
+        private readonly ISerDes<V> valueSerdes;
 
         internal TestMultiInputTopic(Dictionary<string, IPipeInput> pipes, IStreamConfig configuration, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
         {
@@ -35,12 +52,18 @@ namespace Streamiz.Kafka.Net.Mock
             if (key != null)
             {
                 if (keySerdes != null)
+                {
                     return keySerdes.Serialize(key, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Key, topic));
+                }
                 else
+                {
                     return configuration.DefaultKeySerDes.SerializeObject(key, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Key, topic));
+                }
             }
             else
+            {
                 return null;
+            }
         }
 
         private byte[] GetValueBytes(string topic, V value)
@@ -48,12 +71,18 @@ namespace Streamiz.Kafka.Net.Mock
             if (value != null)
             {
                 if (valueSerdes != null)
+                {
                     return valueSerdes.Serialize(value, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Value, topic));
+                }
                 else
+                {
                     return configuration.DefaultValueSerDes.SerializeObject(value, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Value, topic));
+                }
             }
             else
+            {
                 return null;
+            }
         }
 
 
@@ -65,9 +94,13 @@ namespace Streamiz.Kafka.Net.Mock
             get
             {
                 if (lastDate == null)
+                {
                     lastDate = DateTime.Now;
+                }
                 else
+                {
                     lastDate = lastDate.Value.AddSeconds(1);
+                }
 
                 return lastDate.Value;
             }
@@ -84,7 +117,9 @@ namespace Streamiz.Kafka.Net.Mock
                 pipes[topic].Pipe(tuple.Item1, tuple.Item2, ts);
             }
             else
+            {
                 throw new ArgumentException($"{topic} doesn't found in this MultiInputTopic !");
+            }
         }
 
         /// <summary>
@@ -127,18 +162,30 @@ namespace Streamiz.Kafka.Net.Mock
 
         #region Pipe Inputs
 
-        public void PipeInputs(string topic, params (K,V)[] datas)
+        /// <summary>
+        /// Send multiple input records to specific topic
+        /// </summary>
+        /// <param name="topic">topic name</param>
+        /// <param name="datas">list of key/value records</param>
+        public void PipeInputs(string topic, params (K, V)[] datas)
         {
-            foreach(var d in datas)
+            foreach (var d in datas)
+            {
                 PipeInput(topic, new TestRecord<K, V> { Value = d.Item2, Key = d.Item1 });
+            }
         }
 
         #endregion
 
+        /// <summary>
+        /// Flush all messages since last flush. After writting messages, please call this function for processing them !
+        /// </summary>
         public void Flush()
         {
             foreach (var kp in pipes)
+            {
                 kp.Value.Flush();
+            }
         }
     }
 }

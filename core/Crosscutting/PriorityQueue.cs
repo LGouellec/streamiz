@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Crosscutting
 {
-    public class PriorityQueue<T>
+    internal class PriorityQueue<T>
         where T : class, IComparable<T>
     {
         private readonly List<T> data;

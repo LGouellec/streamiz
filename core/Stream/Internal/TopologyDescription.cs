@@ -106,7 +106,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
     #region GlobalStoreDescription
 
-    public class GlobalStoreDescription : IGlobalStoreDescription
+
+    internal class GlobalStoreDescription : IGlobalStoreDescription
     {
         public ISourceNodeDescription Source { get; }
 

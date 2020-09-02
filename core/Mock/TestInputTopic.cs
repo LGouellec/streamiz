@@ -9,7 +9,7 @@ namespace Streamiz.Kafka.Net.Mock
     /// <summary>
     /// <see cref="TestInputTopic{K, V}"/> is used to pipe records to topic in <see cref="TopologyTestDriver"/> and it's NOT THREADSAFE.
     /// To use <see cref="TestInputTopic{K, V}"/> create a new instance via
-    /// <see cref="TopologyTestDriver.CreateOuputTopic{K, V}(string)"/>.
+    /// <see cref="TopologyTestDriver.CreateInputTopic{K, V}(string)"/>.
     /// In actual test code, you can pipe new record values, keys and values or list of keyvalue pairs.
     /// If you have multiple source topics, you need to create a <see cref="TestInputTopic{K, V}"/> for each.
     /// <example>
