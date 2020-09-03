@@ -2004,24 +2004,36 @@ namespace Streamiz.Kafka.Net
 
         #region ISchemaRegistryConfig Impl
 
+        /// <summary>
+        /// Specifies the timeout for requests to Confluent Schema Registry. default: 30000
+        /// </summary>
         public int? SchemaRegistryRequestTimeoutMs
         {
             get => this.ContainsKey(schemaRegistryRequestTimeoutMsCst) ? this[schemaRegistryRequestTimeoutMsCst] : null;
             set => this.AddOrUpdate(schemaRegistryRequestTimeoutMsCst, value);
         }
 
+        /// <summary>
+        /// Specifies the maximum number of schemas CachedSchemaRegistryClient should cache locally. default: 1000
+        /// </summary>
         public int? SchemaRegistryMaxCachedSchemas
         {
             get => this.ContainsKey(schemaRegistryMaxCachedSchemasCst) ? this[schemaRegistryMaxCachedSchemasCst] : null;
             set => this.AddOrUpdate(schemaRegistryMaxCachedSchemasCst, value);
         }
 
+        /// <summary>
+        /// A comma-separated list of URLs for schema registry instances that are used register or lookup schemas.
+        /// </summary>
         public string SchemaRegistryUrl
         {
             get => this.ContainsKey(schemaRegistryUrlCst) ? this[schemaRegistryUrlCst] : null;
             set => this.AddOrUpdate(schemaRegistryUrlCst, value);
         }
 
+        /// <summary>
+        /// Specifies whether or not the Avro serializer should attempt to auto-register unrecognized schemas with Confluent Schema Registry. default: true
+        /// </summary>
         public bool? AutoRegisterSchemas
         {
             get => this.ContainsKey(schemaRegistryAutoRegisterCst) ? this[schemaRegistryAutoRegisterCst] : null;

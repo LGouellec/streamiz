@@ -53,5 +53,17 @@ namespace Streamiz.Kafka.Net.State
         /// <returns></returns>
         public override int GetHashCode()
             => Window.GetHashCode() << 32 | Key.GetHashCode();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"Key : {Key}");
+            sb.AppendLine($"Window : {Window}");
+            return sb.ToString();
+        }
     }
 }

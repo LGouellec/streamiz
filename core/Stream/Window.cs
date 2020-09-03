@@ -80,5 +80,12 @@ namespace Streamiz.Kafka.Net.Stream
         /// <returns></returns>
         public override int GetHashCode()
             => (int) (((StartMs << 32) | EndMs) % 0xFFFFFFFFL);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+            => $"Start time : {StartTime} | End time : {EndTime}";
     }
 }

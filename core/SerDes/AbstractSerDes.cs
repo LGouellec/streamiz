@@ -46,7 +46,7 @@ namespace Streamiz.Kafka.Net.SerDes
         public abstract byte[] Serialize(T data, SerializationContext context);
 
         /// <summary>
-        /// |ABSTRACT] - Deserialize a record value from a byte array into a value or object.
+        /// [ABSTRACT] - Deserialize a record value from a byte array into a value or object.
         /// </summary>
         /// <param name="data">serialized bytes; may be null; implementations are recommended to handle null by returning a value or null rather than throwing an exception.</param>
         /// <param name="context">Context relevant to a serialization or deserialization operation.</param>
