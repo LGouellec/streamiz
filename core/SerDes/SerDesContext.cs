@@ -11,7 +11,7 @@
         /// </summary>
         public IStreamConfig Config { get; private set; }
 
-        SerDesContext(IStreamConfig config)
+        internal SerDesContext(IStreamConfig config)
         {
             Config = config;
         }

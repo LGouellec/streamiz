@@ -103,6 +103,7 @@ static void Main(string[] args)
 - [ ] Transform and Through Processor
 - [ ] Supress Processor (.suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded())))
 - [ ] Rocks DB state implementation
+- [ ] Changelog Topic
 - [ ] Task restoring
 - [ ] Repartition topic
 - [ ] Repartition Processor
