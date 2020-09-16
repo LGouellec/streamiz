@@ -2,6 +2,8 @@
 
 ⚠️ <span style="color:red">**Only no persistent store are supported !**</span> => RocksDB implementation will arrive soon. ⚠️
 
+**No changelog topics are created with In Memory store for moment !**
+
 ## In Memory
 
 As his name, this is an inmemory key value state store which is supplied by InMemoryKeyValueBytesStoreSupplier.

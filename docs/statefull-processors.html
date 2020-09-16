@@ -96,6 +96,22 @@
 <li class="toctree-l2"><a class="reference internal" href="#aggregate-windowed">Aggregate (Windowed)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#reduce">Reduce</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#reduce-windowed">Reduce (Windowed)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ikstream-ikstream-join">IKStream-IKStream Join</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#inner-join-windowed">Inner Join (Windowed)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#left-join-windowed">Left Join (Windowed)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#outer-join-windowed">Outer Join (Windowed)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ikstream-iktable-join">IKStream-IKTable Join</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#inner-join">Inner Join</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#left-join">Left Join</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ikstream-iglobalktable-join">IKStream-IGlobalKTable Join</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Inner Join</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Left Join</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="stores.html">State stores</a></li>
@@ -184,7 +200,7 @@
 <tbody>
 <tr>
 <td>Aggregate</td>
-<td>KGroupedStream -&gt; KTable</td>
+<td>KGroupedStream -&gt; IKTable</td>
 <td></td>
 <td></td>
 <td></td>
@@ -192,7 +208,7 @@
 </tr>
 <tr>
 <td>Aggregate</td>
-<td>KGroupedTable -&gt; KTable</td>
+<td>KGroupedTable -&gt; IKTable</td>
 <td></td>
 <td></td>
 <td></td>
@@ -200,7 +216,7 @@
 </tr>
 <tr>
 <td>Aggregate(windowed)</td>
-<td>KGroupedStream -&gt; KTable</td>
+<td>KGroupedStream -&gt; IKTable</td>
 <td></td>
 <td></td>
 <td></td>
@@ -208,7 +224,7 @@
 </tr>
 <tr>
 <td>Count</td>
-<td>KGroupedStream -&gt; KTable</td>
+<td>KGroupedStream -&gt; IKTable</td>
 <td></td>
 <td></td>
 <td></td>
@@ -216,7 +232,7 @@
 </tr>
 <tr>
 <td>Count</td>
-<td>KGroupedTable -&gt; KTable</td>
+<td>KGroupedTable -&gt; IKTable</td>
 <td></td>
 <td></td>
 <td></td>
@@ -224,7 +240,7 @@
 </tr>
 <tr>
 <td>Count(windowed)</td>
-<td>KGroupedStream → KStream</td>
+<td>KGroupedStream → IKStream</td>
 <td></td>
 <td></td>
 <td></td>
@@ -232,7 +248,7 @@
 </tr>
 <tr>
 <td>Reduce</td>
-<td>KGroupedStream → KTable</td>
+<td>KGroupedStream → IKTable</td>
 <td></td>
 <td></td>
 <td></td>
@@ -240,7 +256,7 @@
 </tr>
 <tr>
 <td>Reduce</td>
-<td>KGroupedTable → KTable</td>
+<td>KGroupedTable → IKTable</td>
 <td></td>
 <td></td>
 <td></td>
@@ -248,7 +264,7 @@
 </tr>
 <tr>
 <td>Reduce(windowed)</td>
-<td>KGroupedStream → KTable</td>
+<td>KGroupedStream → IKTable</td>
 <td></td>
 <td></td>
 <td></td>
@@ -256,31 +272,31 @@
 </tr>
 <tr>
 <td>InnerJoin(windowed)</td>
-<td>(KStream,KStream) → KStream</td>
+<td>(IKStream,IKStream) → IKStream</td>
+<td></td>
+<td></td>
+<td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>LeftJoin(windowed)</td>
-<td>(KStream,KStream) → KStream</td>
+<td>(IKStream,IKStream) → IKStream</td>
+<td></td>
+<td></td>
+<td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>OuterJoin(windowed)</td>
-<td>(KStream,KStream) → KStream</td>
+<td>(IKStream,IKStream) → IKStream</td>
+<td></td>
+<td></td>
+<td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>InnerJoin</td>
-<td>(KTable,KTable) → KTable</td>
+<td>(IKTable,IKTable) → IKTable</td>
 <td>&#9745;</td>
 <td></td>
 <td></td>
@@ -288,7 +304,7 @@
 </tr>
 <tr>
 <td>LeftJoin</td>
-<td>(KTable,KTable) → KTable</td>
+<td>(IKTable,IKTable) → IKTable</td>
 <td>&#9745;</td>
 <td></td>
 <td></td>
@@ -296,7 +312,7 @@
 </tr>
 <tr>
 <td>OuterJoin</td>
-<td>(KTable,KTable) → KTable</td>
+<td>(IKTable,IKTable) → IKTable</td>
 <td>&#9745;</td>
 <td></td>
 <td></td>
@@ -304,35 +320,35 @@
 </tr>
 <tr>
 <td>InnerJoin</td>
-<td>(KStream,KTable) → KStream</td>
+<td>(IKStream,IKTable) → IKStream</td>
+<td></td>
+<td></td>
 <td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>LeftJoin</td>
-<td>(KStream,KTable) → KStream</td>
+<td>(IKStream,IKTable) → IKStream</td>
+<td></td>
+<td></td>
 <td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>InnerJoin</td>
-<td>(KStream,GlobalKTable) → KStream</td>
+<td>(IKStream,IGlobalKTable) → IKStream</td>
+<td></td>
+<td></td>
 <td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>LeftJoin</td>
-<td>(KStream,GlobalKTable) → KStream</td>
+<td>(IKStream,IGlobalKTable) → IKStream</td>
+<td></td>
+<td></td>
 <td></td>
 <td>&#9745;</td>
-<td></td>
-<td></td>
 </tr>
 </tbody>
 </table><div class="section" id="count">
@@ -389,7 +405,7 @@
 <p>When aggregating a grouped stream, you must provide an initializer (e.g., aggValue = 0) and an “adder” aggregator (e.g., aggValue + curValue).</p>
 <p>Several variants of aggregate exist.</p>
 <ul class="simple">
-<li><p>KGroupedStream → KTable</p></li>
+<li><p>KGroupedStream → IKTable</p></li>
 <li><p>IKGroupedTable  -&gt; IKTable</p></li>
 </ul>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span> <span class="n">groupedStream</span> <span class="p">=</span> <span class="n">builder</span>
@@ -439,7 +455,7 @@
 <h2>Aggregate (Windowed)<a class="headerlink" href="#aggregate-windowed" title="Permalink to this headline">¶</a></h2>
 <p><strong>Windowed aggregation.</strong> Aggregates the values of records, per window, by the grouped key. Aggregating is a generalization of reduce and allows, for example, the aggregate value to have a different type than the input values. (ITimeWindowedKStream details)</p>
 <p>You must provide an initializer (e.g., aggValue = 0), “adder” aggregator (e.g., aggValue + curValue), and a window. When windowing based on sessions, you must additionally provide a “session merger” aggregator (e.g., mergedAggValue = leftAggValue + rightAggValue).</p>
-<p>The windowed aggregate turns a ITimeWindowedKStream&lt;K, V&gt; into a windowed KTable&lt;Windowed<K>, V&gt;.</p>
+<p>The windowed aggregate turns a ITimeWindowedKStream&lt;K, V&gt; into a windowed IKTable&lt;Windowed<K>, V&gt;.</p>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span> <span class="n">groupedStream</span> <span class="p">=</span> <span class="n">builder</span>
                         <span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
                         <span class="p">.</span><span class="n">GroupByKey</span><span class="p">();</span>
@@ -505,7 +521,7 @@
 <div class="section" id="reduce-windowed">
 <h2>Reduce (Windowed)<a class="headerlink" href="#reduce-windowed" title="Permalink to this headline">¶</a></h2>
 <p><strong>Windowed aggregation.</strong> Combines the values of records, per window, by the grouped key. The current record value is combined with the last reduced value, and a new reduced value is returned. Records with null key or value are ignored. The result value type cannot be changed, unlike aggregate. (ITimeWindowedKStream details)</p>
-<p>The windowed reduce turns a turns a ITimeWindowedKStream&lt;K, V&gt; into a windowed KTable&lt;Windowed<K>, V&gt;.</p>
+<p>The windowed reduce turns a turns a ITimeWindowedKStream&lt;K, V&gt; into a windowed IKTable&lt;Windowed<K>, V&gt;.</p>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span> <span class="n">groupedStream</span> <span class="p">=</span> <span class="n">builder</span>
                         <span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
                         <span class="p">.</span><span class="n">GroupByKey</span><span class="p">();</span>
@@ -522,6 +538,198 @@
 <li><p>When a record key is received for the first time for a given window, then the value of that record is used as the initial aggregate value.</p></li>
 <li><p>Whenever a record with a non-null value is received for a given window, the reducer is called.</p></li>
 </ul>
+</div>
+<div class="section" id="ikstream-ikstream-join">
+<h2>IKStream-IKStream Join<a class="headerlink" href="#ikstream-ikstream-join" title="Permalink to this headline">¶</a></h2>
+<p>IKStream-IKStream joins are always windowed joins, because otherwise the size of the internal state store used to perform the join – e.g., a sliding window or “buffer” – would grow indefinitely. For stream-stream joins it’s important to highlight that a new input record on one side will produce a join output for each matching record on the other side, and there can be multiple such matching records in a given join window.</p>
+<div class="section" id="inner-join-windowed">
+<h3>Inner Join (Windowed)<a class="headerlink" href="#inner-join-windowed" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>(IKStream, IKStream) → IKStream</p></li>
+</ul>
+<p>Performs an INNER JOIN of this stream with another stream. Even though this operation is windowed, the joined stream will be of type IKStream&lt;K, V&gt; rather than IKStream&lt;Windowed<K>, V&gt;.</p>
+<p>Data must be co-partitioned: The input data for both sides must be co-partitioned.</p>
+<p>Causes data re-partitioning of a stream if and only if the stream was marked for re-partitioning (if both are marked, both are re-partitioned).</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>var stream1 = builder.Stream&lt;string, string&gt;(&quot;topic1&quot;);
+var stream2 = builder.Stream&lt;string, string&gt;(&quot;topic2&quot;);
+
+stream1.Join(stream2, 
+                    (v1, v2) =&gt; $&quot;{v1}-{v2}&quot;,
+                    JoinWindowOptions.Of(TimeSpan.FromMinutes(1)))
+        .To(&quot;output-join&quot;);
+</pre></div>
+</div>
+<p>Detailed behavior:</p>
+<ul class="simple">
+<li><p>The join is key-based, i.e. with the join predicate leftRecord.key == rightRecord.key, and window-based, i.e. two input records are joined if and only if their timestamps are “close” to each other as defined by the user-supplied JoinWindows, i.e. the window defines an additional join predicate over the record timestamps.</p></li>
+<li><p>The join will be triggered under the conditions listed below whenever new input is received. When it is triggered, the user-supplied ValueJoiner will be called to produce join output records.</p></li>
+<li><p>Input records with a null key or a null value are ignored and do not trigger the join. See the semantics overview at the bottom of this section for a detailed description.</p></li>
+</ul>
+</div>
+<div class="section" id="left-join-windowed">
+<h3>Left Join (Windowed)<a class="headerlink" href="#left-join-windowed" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>(IKStream, IKStream) → IKStream</p></li>
+</ul>
+<p>Performs a LEFT JOIN of this stream with another stream. Even though this operation is windowed, the joined stream will be of type IKStream&lt;K, V&gt; rather than IKStream&lt;Windowed<K>, V&gt;.</p>
+<p>Data must be co-partitioned: The input data for both sides must be co-partitioned.</p>
+<p>Causes data re-partitioning of a stream if and only if the stream was marked for re-partitioning (if both are marked, both are re-partitioned).</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>var stream1 = builder.Stream&lt;string, string&gt;(&quot;topic1&quot;);
+var stream2 = builder.Stream&lt;string, string&gt;(&quot;topic2&quot;);
+
+stream1.LeftJoin(stream2, 
+                    (v1, v2) =&gt; $&quot;{v1}-{v2}&quot;,
+                    JoinWindowOptions.Of(TimeSpan.FromMinutes(1)))
+        .To(&quot;output-join&quot;);
+</pre></div>
+</div>
+<p>Detailed behavior:</p>
+<ul class="simple">
+<li><p>The join is key-based, i.e. with the join predicate leftRecord.key == rightRecord.key, and window-based, i.e. two input records are joined if and only if their timestamps are “close” to each other as defined by the user-supplied JoinWindows, i.e. the window defines an additional join predicate over the record timestamps.</p></li>
+<li><p>The join will be triggered under the conditions listed below whenever new input is received. When it is triggered, the user-supplied ValueJoiner will be called to produce join output records.</p></li>
+<li><p>Input records with a null key or a null value are ignored and do not trigger the join. For each input record on the left side that does not have any match on the right side, the joiner will be called with joiner(leftRecord.value, null); this explains the row with timestamp=3 in the table below, which lists [A, null] in the LEFT JOIN column.</p></li>
+</ul>
+</div>
+<div class="section" id="outer-join-windowed">
+<h3>Outer Join (Windowed)<a class="headerlink" href="#outer-join-windowed" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>(IKStream, IKStream) → IKStream</p></li>
+</ul>
+<p>Performs a OUTER JOIN of this stream with another stream. Even though this operation is windowed, the joined stream will be of type IKStream&lt;K, V&gt; rather than IKStream&lt;Windowed<K>, V&gt;.</p>
+<p>Data must be co-partitioned: The input data for both sides must be co-partitioned.</p>
+<p>Causes data re-partitioning of a stream if and only if the stream was marked for re-partitioning (if both are marked, both are re-partitioned).</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>var stream1 = builder.Stream&lt;string, string&gt;(&quot;topic1&quot;);
+var stream2 = builder.Stream&lt;string, string&gt;(&quot;topic2&quot;);
+
+stream1.OuterJoin(stream2, 
+                    (v1, v2) =&gt; $&quot;{v1}-{v2}&quot;,
+                    JoinWindowOptions.Of(TimeSpan.FromMinutes(1)))
+        .To(&quot;output-join&quot;);
+</pre></div>
+</div>
+<p>Detailed behavior:</p>
+<ul class="simple">
+<li><p>The join is key-based, i.e. with the join predicate leftRecord.key == rightRecord.key, and window-based, i.e. two input records are joined if and only if their timestamps are “close” to each other as defined by the user-supplied JoinWindows, i.e. the window defines an additional join predicate over the record timestamps.</p></li>
+<li><p>The join will be triggered under the conditions listed below whenever new input is received. When it is triggered, the user-supplied ValueJoiner will be called to produce join output records.</p></li>
+<li><p>Input records with a null key or a null value are ignored and do not trigger the join. For each input record on one side that does not have any match on the other side, the joiner will be called with joiner(leftRecord.value, null) or joiner(null, rightRecord.value), respectively; this explains the row with timestamp=3 in the table below, which lists [A, null] in the OUTER JOIN column (unlike LEFT JOIN, [null, x] is possible, too, but no such example is shown in the table).</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="ikstream-iktable-join">
+<h2>IKStream-IKTable Join<a class="headerlink" href="#ikstream-iktable-join" title="Permalink to this headline">¶</a></h2>
+<p>IKStream-IKTable joins are always non-windowed joins. They allow you to perform table lookups against a IKTable (changelog stream) upon receiving a new record from the IKStream (record stream). An example use case would be to enrich a stream of user activities (IKStream) with the latest user profile information (IKTable).</p>
+<div class="section" id="inner-join">
+<h3>Inner Join<a class="headerlink" href="#inner-join" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>(IKStream, IKTable) → IKStream</p></li>
+</ul>
+<p>Performs an INNER JOIN of this stream with the table, effectively doing a table lookup.</p>
+<p>Data must be co-partitioned: The input data for both sides must be co-partitioned.</p>
+<p>Causes data re-partitioning of the stream if and only if the stream was marked for re-partitioning.</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>var stream1 = builder.Stream&lt;string, string&gt;(&quot;topic1&quot;);
+var table = builder.Table&lt;string, string&gt;(&quot;topic2&quot;, InMemory&lt;string, string&gt;.As(&quot;table-store&quot;));
+
+stream1.Join(table,(v1, v2) =&gt; $&quot;{v1}-{v2}&quot;)
+        .To(&quot;output-join&quot;);
+</pre></div>
+</div>
+<p>Detailed behavior:</p>
+<ul class="simple">
+<li><p>The join is key-based, i.e. with the join predicate leftRecord.key == rightRecord.key.</p></li>
+<li><p>The join will be triggered under the conditions listed below whenever new input is received. When it is triggered, the user-supplied joiner will be called to produce join output records.</p></li>
+<li><p>Only input records for the left side (stream) trigger the join. Input records for the right side (table) update only the internal right-side join state.
+Input records for the stream with a null key or a null value are ignored and do not trigger the join.
+Input records for the table with a null value are interpreted as tombstones for the corresponding key, which indicate the deletion of the key from the table. Tombstones do not trigger the join.</p></li>
+</ul>
+</div>
+<div class="section" id="left-join">
+<h3>Left Join<a class="headerlink" href="#left-join" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>(IKStream, IKTable) → IKStream</p></li>
+</ul>
+<p>Performs an LEFT JOIN of this stream with the table, effectively doing a table lookup.</p>
+<p>Data must be co-partitioned: The input data for both sides must be co-partitioned.</p>
+<p>Causes data re-partitioning of the stream if and only if the stream was marked for re-partitioning.b</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>var stream1 = builder.Stream&lt;string, string&gt;(&quot;topic1&quot;);
+var table = builder.Table&lt;string, string&gt;(&quot;topic2&quot;, InMemory&lt;string, string&gt;.As(&quot;table-store&quot;));
+
+stream1.LeftJoin(table,(v1, v2) =&gt; $&quot;{v1}-{v2}&quot;)
+        .To(&quot;output-join&quot;);
+</pre></div>
+</div>
+<p>Detailed behavior:</p>
+<ul class="simple">
+<li><p>The join is key-based, i.e. with the join predicate leftRecord.key == rightRecord.key.</p></li>
+<li><p>The join will be triggered under the conditions listed below whenever new input is received. When it is triggered, the user-supplied joiner will be called to produce join output records.</p></li>
+<li><p>Only input records for the left side (stream) trigger the join. Input records for the right side (table) update only the internal right-side join state.
+Input records for the stream with a null key or a null value are ignored and do not trigger the join.
+Input records for the table with a null value are interpreted as tombstones for the corresponding key, which indicate the deletion of the key from the table. Tombstones do not trigger the join.
+For each input record on the left side that does not have any match on the right side, the ValueJoiner will be called with joiner(leftRecord.value, null); this explains the row with timestamp=3 in the table below, which lists [A, null] in the LEFT JOIN column.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="ikstream-iglobalktable-join">
+<h2>IKStream-IGlobalKTable Join<a class="headerlink" href="#ikstream-iglobalktable-join" title="Permalink to this headline">¶</a></h2>
+<p>IKStream-IGlobalKTable joins are always non-windowed joins. They allow you to perform table lookups against a IGlobalKTable (entire changelog stream) upon receiving a new record from the IKStream (record stream). An example use case would be “star queries” or “star joins”, where you would enrich a stream of user activities (IKStream) with the latest user profile information (IGlobalKTable) and further context information (further GlobalKTables). However, because GlobalKTables have no notion of time, a IKStream-IGlobalKTable join is not a temporal join, and there is no event-time synchronization between updates to a IGlobalKTable and processing of IKStream records.</p>
+<p>At a high-level, IKStream-IGlobalKTable joins are very similar to IKStream-IKTable joins. However, global tables provide you with much more flexibility at the some expense when compared to partitioned tables:</p>
+<ul class="simple">
+<li><p>They do not require data co-partitioning.</p></li>
+<li><p>They allow for efficient “star joins”; i.e., joining a large-scale “facts” stream against “dimension” tables</p></li>
+<li><p>They allow for joining against foreign keys; i.e., you can lookup data in the table not just by the keys of records in the stream, but also by data in the record values.</p></li>
+<li><p>They make many use cases feasible where you must work on heavily skewed data and thus suffer from hot partitions.</p></li>
+<li><p>They are often more efficient than their partitioned IKTable counterpart when you need to perform multiple joins in succession.</p></li>
+</ul>
+<div class="section" id="id1">
+<h3>Inner Join<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>(IKStream, IGlobalKTable) → IKStream</p></li>
+</ul>
+<p>Performs an INNER JOIN of this stream with the global table, effectively doing a table lookup. (details)</p>
+<p>The IGlobalKTable is fully bootstrapped upon (re)start of a KafkaStreams instance, which means the table is fully populated with all the data in the underlying topic that is available at the time of the startup. The actual data processing begins only once the bootstrapping has completed.</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>var stream1 = builder.Stream&lt;string, string&gt;(&quot;topic1&quot;);
+var table = builder.GlobalTable&lt;string, string&gt;(&quot;topic2&quot;, InMemory&lt;string, string&gt;.As(&quot;table-store&quot;));
+
+stream1.Join(table, 
+                (k,v) =&gt; k.ToUpper(), 
+                (v1, v2) =&gt; $&quot;{v1}-{v2}&quot;)
+        .To(&quot;output-join&quot;);
+</pre></div>
+</div>
+<p>Detailed behavior:</p>
+<ul class="simple">
+<li><p>The join is indirectly key-based, i.e. with the join predicate keymapper(leftRecord.key, leftRecord.value) == rightRecord.key.</p></li>
+<li><p>The join will be triggered under the conditions listed below whenever new input is received. When it is triggered, the user-supplied ValueJoiner will be called to produce join output records.</p></li>
+<li><p>Only input records for the left side (stream) trigger the join. Input records for the right side (table) update only the internal right-side join state.
+Input records for the stream with a null key or a null value are ignored and do not trigger the join.
+Input records for the table with a null value are interpreted as tombstones, which indicate the deletion of a record key from the table. Tombstones do not trigger the join.</p></li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h3>Left Join<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>(IKStream, IGlobalKTable) → IKStream</p></li>
+</ul>
+<p>Performs an LEFT JOIN of this stream with the global table, effectively doing a table lookup. (details)</p>
+<p>The IGlobalKTable is fully bootstrapped upon (re)start of a KafkaStreams instance, which means the table is fully populated with all the data in the underlying topic that is available at the time of the startup. The actual data processing begins only once the bootstrapping has completed.</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span>var stream1 = builder.Stream&lt;string, string&gt;(&quot;topic1&quot;);
+var table = builder.GlobalTable&lt;string, string&gt;(&quot;topic2&quot;, InMemory&lt;string, string&gt;.As(&quot;table-store&quot;));
+
+stream1.LeftJoin(table, 
+                (k,v) =&gt; k.ToUpper(), 
+                (v1, v2) =&gt; $&quot;{v1}-{v2}&quot;)
+        .To(&quot;output-join&quot;);
+</pre></div>
+</div>
+<p>Detailed behavior:</p>
+<ul class="simple">
+<li><p>The join is indirectly key-based, i.e. with the join predicate keymapper(leftRecord.key, leftRecord.value) == rightRecord.key.</p></li>
+<li><p>The join will be triggered under the conditions listed below whenever new input is received. When it is triggered, the user-supplied ValueJoiner will be called to produce join output records.</p></li>
+<li><p>Only input records for the left side (stream) trigger the join. Input records for the right side (table) update only the internal right-side join state.
+Input records for the stream with a null key or a null value are ignored and do not trigger the join.
+Input records for the table with a null value are interpreted as tombstones, which indicate the deletion of a record key from the table. Tombstones do not trigger the join.
+For each input record on the left side that does not have any match on the right side, the joiner will be called with joiner(leftRecord.value, null)</p></li>
+</ul>
+</div>
 </div>
 </div>
 

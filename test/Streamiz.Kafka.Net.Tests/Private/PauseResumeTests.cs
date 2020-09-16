@@ -47,7 +47,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         }
 
         //[Test]
-        // TODO : FIX THAT
+        // TODO : fix that
         public void WorkflowCompleteBufferedRecordsTest()
         {
             int maxBuffered = 10;
