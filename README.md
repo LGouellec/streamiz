@@ -37,7 +37,7 @@ This project is being written. Thanks for you contribution !
 - End July 2020 - Beta 0.2.0 - Statefull processors (count, reduce, aggregate), Global Store
 - End September 2020 - 1.0.0 - Join statefull processors (Only KStream INNER, LEFT AND OUTER JOIN)
 - End October 2020 - 1.1.0 - FULL Join statefull processors (KTable join)
-- End November 2020 - 1.2.0 - Persistent state store (eg: RocksDB Store)
+- End November 2020 - 1.2.0 - Persistent state store (eg: RocksDB Store), Repartition and Changelog topics
 - End 2020 / Begin 2021 - 1.3.0 - Processor API, Metrics, Interactive Queries, Standby Replica
 
 # Documentation
