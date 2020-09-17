@@ -12,7 +12,7 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
         protected readonly string name;
         protected readonly ISerDes<K> keySerdes;
         protected readonly ISerDes<V> valueSerdes;
-        private bool enableCaching;
+        // private bool enableCaching;
         private bool enableLogging = true;
 
         public string Name => name;
