@@ -204,5 +204,37 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             });
         }
 
+        [Test]
+        public void DefautlValue()
+        {
+            var mockSchemaClient = new MockSchemaRegistryClient();
+            var config = new StreamConfig();
+            var serdes = new MockAvroSerDes(mockSchemaClient);
+            config.ApplicationId = "test-workflow-avroserdes";
+            config.DefaultKeySerDes = new StringSerDes();
+            config.DefaultValueSerDes = serdes;
+            config.SchemaRegistryMaxCachedSchemas = null;
+            config.SchemaRegistryRequestTimeoutMs = null;
+
+            var builder = new StreamBuilder();
+            builder
+                .Stream<string, Person>("person")
+                .Filter((k, v) => v.age >= 18)
+                .MapValues((v) => v.age)
+                .To<StringSerDes, Int32SerDes>("person-major");
+
+            var topo = builder.Build();
+            using (var driver = new TopologyTestDriver(topo, config))
+            {
+                var input = driver.CreateInputTopic<string, Person>("person");
+                var output = driver.CreateOuputTopic<string, int, StringSerDes, Int32SerDes>("person-major");
+                input.PipeInput("test1", new Person { age = 23, firstName = "f", lastName = "l" });
+                var record = output.ReadKeyValue();
+                Assert.IsNotNull(record);
+                Assert.AreEqual("test1", record.Message.Key);
+                Assert.AreEqual(23, record.Message.Value);
+            }                
+        }
+
     }
 }
