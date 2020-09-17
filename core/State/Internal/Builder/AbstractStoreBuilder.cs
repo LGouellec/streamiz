@@ -28,13 +28,13 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
 
         public StoreBuilder<T> WithCachingEnabled()
         {
-            enableCaching = true;
+            //enableCaching = true;
             return this;
         }
 
         public StoreBuilder<T> WithCachingDisabled()
         {
-            enableCaching = false;
+            //enableCaching = false;
             return this;
         }
 
