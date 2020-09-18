@@ -15,7 +15,7 @@ Nuget package
 
 .. code-block:: shell
 
-    dotnet add package Streamiz.Kafka.Net --version 0.2.0-beta
+    dotnet add package Streamiz.Kafka.Net --version 1.0.0
 
 
 Tutorial: First streamiz application
