@@ -185,39 +185,33 @@ namespace Streamiz.Kafka.Net.Table.Internal
 
         #endregion
 
-        //#region Join
+        #region Join
 
-        //public IKTable<K, VR> Join<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner)
-        //    => Join<VT, VR, VTS, VRS>(table, valueJoiner, null);
+        public IKTable<K, VR> Join<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner)
+            => Join<VT, VR, VTS, VRS>(table, valueJoiner, null);
 
-        //public IKTable<K, VR> Join<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
-        //    => Join<VT, VR, VTS, VRS>(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), materialized, named);
+        public IKTable<K, VR> Join<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+            => Join<VT, VR, VTS, VRS>(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), materialized, named);
 
-        //public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner)
-        //    => Join<VT, VR>(table, valueJoiner, null);
+        public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner)
+            => Join<VT, VR>(table, valueJoiner, null);
 
-        //public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner)
-        //    => Join<VT, VR>(table, valueJoiner, null);
+        public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner)
+            => Join<VT, VR>(table, valueJoiner, null);
 
-        //public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
-        //    => Join<VT, VR>(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), materialized, named);
+        public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+            => Join<VT, VR>(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), materialized, named);
 
-        //public IKTable<K, VR> Join<VT, VR, VTS, VRS>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner)
-        //    => Join<VT, VR>(table, valueJoiner, null);
+        public IKTable<K, VR> Join<VT, VR, VTS, VRS>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner)
+            => Join<VT, VR>(table, valueJoiner, null);
 
-        //public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
-        //{
-        //    throw new NotImplementedException();
-        //    // => DoJoin<VT, VR>(table, valueJoiner, named, materialized, false, false);
-        //}
+        public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+            => DoJoin<VT, VR>(table, valueJoiner, named, materialized, false, false);
 
-        //public IKTable<K, VR> Join<VT, VR, VTS, VRS>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
-        //{
-        //    throw new NotImplementedException();
-        //    // => DoJoin<VT, VR>(table, valueJoiner, named, materialized, false, false);
-        //}
+        public IKTable<K, VR> Join<VT, VR, VTS, VRS>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+            => DoJoin<VT, VR>(table, valueJoiner, named, materialized, false, false);
 
-        //#endregion
+        #endregion
 
         //#region LeftJoin
 
@@ -404,38 +398,17 @@ namespace Streamiz.Kafka.Net.Table.Internal
                 builder);
         }
 
-        //private IKTable<K, VR> DoJoin<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> joiner, string named, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materializedInternal, bool leftOuter, bool rightOuter)
-        //{
-        //    CheckIfParamNull(table, "table");
-        //    CheckIfParamNull(joiner, "joiner");
+        private IKTable<K, VR> DoJoin<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> joiner, string named, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materializedInternal, bool leftOuter, bool rightOuter)
+        {
+            CheckIfParamNull(table, "table");
+            CheckIfParamNull(joiner, "joiner");
 
-        //    materializedInternal = materializedInternal ?? Materialized<K, VR, IKeyValueStore<Bytes, byte[]>>.Create();
+            materializedInternal = materializedInternal ?? Materialized<K, VR, IKeyValueStore<Bytes, byte[]>>.Create();
 
-        //    var joinMergeName = new Named(named).OrElseGenerateWithPrefix(builder, KTable.MERGE_NAME);
-
-        //    if (leftOuter)
-        //        EnableSendingOldValues();
-        //    if (rightOuter)
-        //        (table as IKTableGetter<K, V0>)?.EnableSendingOldValues();
-
-        //    //AbstractKTableKTableJoin<K, VR, V, V0> joinLeft = null;
-        //    //AbstractKTableKTableJoin<K, VR, V0, V> joinRigth = null;
-
-        //    if (!leftOuter) // INNER JOIN
-        //    {
-                
-        //    }
-        //    else if(!rightOuter) // LEFT JOIN
-        //    {
-
-        //    }
-        //    else // OUTER JOIN
-        //    {
-
-        //    }
-
-        //    return null;
-        //}
+            var tableJoinBuilder = new TableJoinBuilder(builder, leftOuter, rightOuter);
+            
+            return tableJoinBuilder.Join(this, table, joiner, named, materializedInternal);
+        }
 
         #endregion
 

@@ -176,22 +176,25 @@ namespace Streamiz.Kafka.Net.Processors
                         {
                             foreach (var record in records)
                             {
-                                var task = manager.ActiveTaskFor(record.TopicPartition);
-                                if (task != null)
+                                if (record != null)
                                 {
-                                    if (task.IsClosed)
+                                    var task = manager.ActiveTaskFor(record.TopicPartition);
+                                    if (task != null)
                                     {
-                                        log.Info($"Stream task {task.Id} is already closed, probably because it got unexpectedly migrated to another thread already. Notifying the thread to trigger a new rebalance immediately.");
-                                        // TODO gesture this behaviour
-                                        //throw new TaskMigratedException(task);
+                                        if (task.IsClosed)
+                                        {
+                                            log.Info($"Stream task {task.Id} is already closed, probably because it got unexpectedly migrated to another thread already. Notifying the thread to trigger a new rebalance immediately.");
+                                            // TODO gesture this behaviour
+                                            //throw new TaskMigratedException(task);
+                                        }
+                                        else
+                                            task.AddRecord(record);
                                     }
                                     else
-                                        task.AddRecord(record);
-                                }
-                                else
-                                {
-                                    log.Error($"Unable to locate active task for received-record partition {record.TopicPartition}. Current tasks: {string.Join(",", manager.ActiveTaskIds)}");
-                                    throw new NullReferenceException($"Task was unexpectedly missing for partition {record.TopicPartition}");
+                                    {
+                                        log.Error($"Unable to locate active task for received-record partition {record.TopicPartition}. Current tasks: {string.Join(",", manager.ActiveTaskIds)}");
+                                        throw new NullReferenceException($"Task was unexpectedly missing for partition {record.TopicPartition}");
+                                    }
                                 }
                             }
                         }
@@ -329,7 +332,8 @@ namespace Streamiz.Kafka.Net.Processors
 
         private IEnumerable<ConsumeResult<byte[], byte[]>> PollRequest(TimeSpan ts)
         {
-            return consumer.ConsumeRecords(ts);
+            //return consumer.ConsumeRecords(ts);
+            return consumer.Consume(ts).ToSingle();
         }
 
         internal ThreadState SetState(ThreadState newState)
