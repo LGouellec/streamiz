@@ -7,47 +7,36 @@ using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace sample_stream
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
-            CancellationTokenSource source = new CancellationTokenSource();
-
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app";
-            config.BootstrapServers = "192.168.56.1:9092";
-            config.SaslMechanism = SaslMechanism.Plain;
-            config.SaslUsername = "admin";
-            config.SaslPassword = "admin";
-            config.SecurityProtocol = SecurityProtocol.SaslPlaintext;
-            config.AutoOffsetReset = AutoOffsetReset.Earliest;
-            config.NumStreamThreads = 1;
+            config.BootstrapServers = "localhost:29092";
+            config.NumStreamThreads = 3;
+            config.PollMs = 10;
+            config.BufferedRecordsPerPartition = 20000;
 
             StreamBuilder builder = new StreamBuilder();
 
-            var stream1 = builder.Stream<string, string>("test");
-            var stream2 = builder.Stream<string, string>("test2");
-
-            stream1.Join(stream2,
-                (v1, v2) => $"{v1}-{v2}",
-                JoinWindowOptions.Of(TimeSpan.FromMinutes(1)))
-                .To("output-join");
+            builder.Stream<string, string>("test")
+                    .Filter((k, v) => v.Length % 2 == 0)
+                    .To("test-output");
 
             Topology t = builder.Build();
 
-            KafkaStream stream = new KafkaStream(t, config);
+            KafkaStream stream1 = new KafkaStream(t, config);
 
-
-            Console.CancelKeyPress += (o, e) =>
-            {
-                source.Cancel();
-                stream.Close();
+            Console.CancelKeyPress += (o, e) => {
+                stream1.Dispose();
             };
 
-            stream.Start(source.Token);
+            await stream1.StartAsync();
         }
     }
 }

@@ -31,6 +31,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Producer-Avro", "test\Produ
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro", "serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.csproj", "{2BC1A318-1AE9-4A32-B8B1-D8296FABFF8B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kafka-error-valid-state", "samples\kafka-error-valid-state\kafka-error-valid-state.csproj", "{1F030407-07B9-4118-B6A6-1A6D389425A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -161,6 +163,18 @@ Global
 		{2BC1A318-1AE9-4A32-B8B1-D8296FABFF8B}.Release|x64.Build.0 = Release|Any CPU
 		{2BC1A318-1AE9-4A32-B8B1-D8296FABFF8B}.Release|x86.ActiveCfg = Release|Any CPU
 		{2BC1A318-1AE9-4A32-B8B1-D8296FABFF8B}.Release|x86.Build.0 = Release|Any CPU
+		{1F030407-07B9-4118-B6A6-1A6D389425A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F030407-07B9-4118-B6A6-1A6D389425A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F030407-07B9-4118-B6A6-1A6D389425A8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1F030407-07B9-4118-B6A6-1A6D389425A8}.Debug|x64.Build.0 = Debug|Any CPU
+		{1F030407-07B9-4118-B6A6-1A6D389425A8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1F030407-07B9-4118-B6A6-1A6D389425A8}.Debug|x86.Build.0 = Debug|Any CPU
+		{1F030407-07B9-4118-B6A6-1A6D389425A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F030407-07B9-4118-B6A6-1A6D389425A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F030407-07B9-4118-B6A6-1A6D389425A8}.Release|x64.ActiveCfg = Release|Any CPU
+		{1F030407-07B9-4118-B6A6-1A6D389425A8}.Release|x64.Build.0 = Release|Any CPU
+		{1F030407-07B9-4118-B6A6-1A6D389425A8}.Release|x86.ActiveCfg = Release|Any CPU
+		{1F030407-07B9-4118-B6A6-1A6D389425A8}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -176,6 +190,7 @@ Global
 		{FFD63973-67BE-4142-AC82-A74D487B22B3} = {FFB1B148-D781-4D08-A1E8-4A7F7147FCD4}
 		{A8D0F9DD-AFC2-42E7-BD5B-8E667EEBBFDA} = {E3C25908-114E-4CD0-BD07-4660152F3A70}
 		{2BC1A318-1AE9-4A32-B8B1-D8296FABFF8B} = {3C748A6C-9316-4507-8FEE-77C684C4F028}
+		{1F030407-07B9-4118-B6A6-1A6D389425A8} = {FFB1B148-D781-4D08-A1E8-4A7F7147FCD4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {66BAF5BD-970F-480F-92B9-761323FFAA58}
