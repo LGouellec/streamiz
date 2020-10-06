@@ -104,6 +104,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#transactiontimeout">TransactionTimeout</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#commitintervalms">CommitIntervalMs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pollms">PollMs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#maxpollrecords">MaxPollRecords</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#maxtaskidlems">MaxTaskIdleMs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bufferedrecordsperpartition">BufferedRecordsPerPartition</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#kafka-consumers-and-producer-configuration-parameters">Kafka consumers and producer configuration parameters</a></li>
@@ -337,6 +340,19 @@ otherwise the default value is <code class="docutils literal notranslate"><span 
 <div class="section" id="pollms">
 <h3>PollMs<a class="headerlink" href="#pollms" title="Permalink to this headline">¶</a></h3>
 <p>The amount of time in milliseconds to block waiting for input. (Default : 100)</p>
+</div>
+<div class="section" id="maxpollrecords">
+<h3>MaxPollRecords<a class="headerlink" href="#maxpollrecords" title="Permalink to this headline">¶</a></h3>
+<p>The maximum number of records returned in consumption processing by thread. (Default: 500)</p>
+</div>
+<div class="section" id="maxtaskidlems">
+<h3>MaxTaskIdleMs<a class="headerlink" href="#maxtaskidlems" title="Permalink to this headline">¶</a></h3>
+<p>Maximum amount of time a stream task will stay idle when not all of its partition buffers contain records, to avoid potential out-of-order record processing across multiple input streams. (Default: 0)</p>
+</div>
+<div class="section" id="bufferedrecordsperpartition">
+<h3>BufferedRecordsPerPartition<a class="headerlink" href="#bufferedrecordsperpartition" title="Permalink to this headline">¶</a></h3>
+<p>Maximum number of records to buffer per partition. (Default: 1000)
+If this number is exceeded, the consumer pauses for this partition until stream instance process messages.</p>
 </div>
 </div>
 <div class="section" id="kafka-consumers-and-producer-configuration-parameters">
