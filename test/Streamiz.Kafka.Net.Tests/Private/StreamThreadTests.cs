@@ -1,11 +1,13 @@
 ﻿using Confluent.Kafka;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -307,6 +309,55 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.AreEqual(expectedStates, allStates);
             // Destroy in memory cluster
             supplier.Destroy();
+        }
+
+        [Test]
+        public void StreamThreadCommitIntervalWorkflow()
+        {
+            var source = new System.Threading.CancellationTokenSource();
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
+            config.Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
+            config.PollMs = 1;
+            config.CommitIntervalMs = 1;
+
+            var serdes = new StringSerDes();
+            var builder = new StreamBuilder();
+            builder.Stream<string, string>("topic").To("topic2");
+
+            var topo = builder.Build();
+
+            var supplier = new SyncKafkaSupplier();
+            var producer = supplier.GetProducer(config.ToProducerConfig());
+            var consumer = supplier.GetConsumer(config.ToConsumerConfig("test-consum"), null);
+            consumer.Subscribe("topic2");
+            var thread = StreamThread.Create(
+                "thread-0", "c0",
+                topo.Builder, config,
+                supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                0) as StreamThread;
+
+            thread.Start(source.Token);
+            producer.Produce("topic", new Confluent.Kafka.Message<byte[], byte[]>
+            {
+                Key = serdes.Serialize("key1", new SerializationContext()),
+                Value = serdes.Serialize("coucou", new SerializationContext())
+            });
+            //WAIT STREAMTHREAD PROCESS MESSAGE
+            System.Threading.Thread.Sleep(100);
+            var message = consumer.Consume(100);
+
+            Assert.AreEqual("key1", serdes.Deserialize(message.Message.Key, new SerializationContext()));
+            Assert.AreEqual("coucou", serdes.Deserialize(message.Message.Value, new SerializationContext()));
+
+            var offsets = thread.GetCommittedOffsets(new List<TopicPartition> { new TopicPartition("topic", 0) }, TimeSpan.FromSeconds(10)).ToList();
+            Assert.AreEqual(1, offsets.Count);
+            Assert.AreEqual(1, offsets[0].Offset.Value);
+            Assert.AreEqual(0, offsets[0].TopicPartition.Partition.Value);
+            Assert.AreEqual("topic", offsets[0].Topic);
+
+            source.Cancel();
+            thread.Dispose();
         }
 
         #endregion

@@ -406,5 +406,9 @@ namespace Streamiz.Kafka.Net.Processors
 
             return oldState;
         }
+    
+        // FOR TEST
+        internal IEnumerable<TopicPartitionOffset> GetCommittedOffsets(IEnumerable<TopicPartition> partitions, TimeSpan timeout)
+            => consumer.Committed(partitions, timeout);
     }
 }

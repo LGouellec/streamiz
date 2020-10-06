@@ -143,8 +143,11 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public List<TopicPartitionOffset> Committed(IEnumerable<TopicPartition> partitions, TimeSpan timeout)
         {
-            // TODO : 
-            throw new NotImplementedException();
+            List<TopicPartitionOffset> r = new List<TopicPartitionOffset>();
+            foreach (var kp in offsets)
+                if(partitions.Select(t => t.Topic).Distinct().Contains(kp.Key))
+                    r.Add(new TopicPartitionOffset(new TopicPartition(kp.Key, 0), kp.Value.OffsetCommitted));
+            return r;
         }
 
         public void Dispose()
