@@ -389,5 +389,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
         }
 
         #endregion
+
+        #region StreamThread Commit Requested TODO
+
+        #endregion
     }
 }

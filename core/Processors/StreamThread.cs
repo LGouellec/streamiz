@@ -220,10 +220,13 @@ namespace Streamiz.Kafka.Net.Processors
                             {
                                 processed = manager.Process(now);
 
-                                if (processed > 0)
-                                    manager.MaybeCommitPerUserRequested();
-                                else
+                                if (processed == 0)
                                     break;
+                                // NOT AVAILABLE NOW, NEED PROCESSOR API
+                                //if (processed > 0)
+                                //    manager.MaybeCommitPerUserRequested();
+                                //else
+                                //    break;
                             }
 
                             timeSinceLastPoll = Math.Max(DateTime.Now.GetMilliseconds() - lastPollMs, 0);
@@ -254,7 +257,7 @@ namespace Streamiz.Kafka.Net.Processors
                             SetState(ThreadState.RUNNING);
                         }
 
-                        if (records.Count() > 0)
+                        if (records.Any())
                             log.Info($"Processing {records.Count()} records in {DateTime.Now - n}");
                     }
                     catch (KafkaException e)

@@ -125,39 +125,40 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             partitionsToTaskId.Clear();
         }
 
-        internal int MaybeCommitPerUserRequested()
-        {
-            int committed = 0;
-            Exception firstException = null;
+        // NOT AVAILABLE NOW, NEED PROCESSOR API
+        //internal int MaybeCommitPerUserRequested()
+        //{
+        //    int committed = 0;
+        //    Exception firstException = null;
 
-            foreach(var task in ActiveTasks)
-            {
-                if(task.CommitNeeded && task.CommitRequested)
-                {
-                    try
-                    {
-                        task.Commit();
-                        ++committed;
-                        log.Debug($"Committed stream task {task.Id} per user request in");
-                    }
-                    catch(Exception e)
-                    {
-                        log.Error($"Failed to commit stream task {task.Id} due to the following error: {e}");
-                        if (firstException == null)
-                        {
-                            firstException = e;
-                        }
-                    }
-                }
-            }
+        //    foreach(var task in ActiveTasks)
+        //    {
+        //        if(task.CommitNeeded && task.CommitRequested)
+        //        {
+        //            try
+        //            {
+        //                task.Commit();
+        //                ++committed;
+        //                log.Debug($"Committed stream task {task.Id} per user request in");
+        //            }
+        //            catch(Exception e)
+        //            {
+        //                log.Error($"Failed to commit stream task {task.Id} due to the following error: {e}");
+        //                if (firstException == null)
+        //                {
+        //                    firstException = e;
+        //                }
+        //            }
+        //        }
+        //    }
 
-            if (firstException != null)
-            {
-                throw firstException;
-            }
+        //    if (firstException != null)
+        //    {
+        //        throw firstException;
+        //    }
 
-            return committed;
-        }
+        //    return committed;
+        //}
 
         internal int CommitAll()
         {
@@ -196,7 +197,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 catch(Exception e)
                 {
                     log.Error($"Failed to process stream task {task.Id} due to the following error: {e}");
-                    throw e;
+                    throw;
                 }
             }
 

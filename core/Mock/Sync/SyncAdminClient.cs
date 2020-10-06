@@ -49,7 +49,22 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public Metadata GetMetadata(string topic, TimeSpan timeout)
         {
-            throw new NotImplementedException();
+            var error = new Error(ErrorCode.NoError);
+
+            var brokersMetadata = new List<BrokerMetadata> {
+                new BrokerMetadata(1, "localhost", 9092)
+            };
+
+            var partitionsMetadata = new List<PartitionMetadata>
+            {
+                new PartitionMetadata(1, 1, new int[1]{1}, new int[1]{1}, error)
+            };
+
+            var topicMetadata = new TopicMetadata(topic, partitionsMetadata, error);
+
+            return new Metadata(brokersMetadata,
+                new List<TopicMetadata>() { topicMetadata },
+                1, "localhost");
         }
 
         public Metadata GetMetadata(TimeSpan timeout)
