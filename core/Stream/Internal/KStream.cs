@@ -760,5 +760,6 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         }
 
         #endregion
+
     }
 }

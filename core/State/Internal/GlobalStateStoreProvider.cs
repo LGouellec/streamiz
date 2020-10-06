@@ -1,4 +1,5 @@
 ﻿using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors;
 using System;
 using System.Collections.Generic;
@@ -35,12 +36,12 @@ namespace Streamiz.Kafka.Net.State.Internal
             {
                 return new[] { new ReadOnlyKeyValueStoreFacade<K, V>(stateStore as TimestampedKeyValueStore<K, V>) as T };
             }
-            // TODO: handle TimestampedWindowStore 
-            //} else if (store instanceof TimestampedWindowStore && queryableStoreType instanceof QueryableStoreTypes.WindowStoreType) {
-            //    return (List<T>) Collections.singletonList(new ReadOnlyWindowStoreFacade((TimestampedWindowStore<Object, Object>) store));
-            //}
-
-            return new[] { stateStore as T };
+            else if (stateStore is TimestampedWindowStore<K, V> && queryableStoreType is WindowStoreType<K, V>)
+            {
+                return new[] { new ReadOnlyWindowStoreFacade<K, V>(stateStore as TimestampedWindowStore<K, V>) as T };
+            }
+            else
+                return new[] { stateStore as T };
         }
     }
 }

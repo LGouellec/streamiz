@@ -51,7 +51,7 @@ namespace Streamiz.Kafka.Net.Processors
             collector = new RecordCollector(logPrefix);
             collector.Init(ref this.producer);
 
-            Context = new ProcessorContext(configuration, stateMgr).UseRecordCollector(collector);
+            Context = new ProcessorContext(this, configuration, stateMgr).UseRecordCollector(collector);
             var partitionsQueue = new Dictionary<TopicPartition, RecordQueue>();
 
             foreach (var p in partitions)
@@ -118,6 +118,7 @@ namespace Streamiz.Kafka.Net.Processors
                 }
             }
             commitNeeded = false;
+            commitRequested = false;
         }
 
         private IProducer<byte[], byte[]> CreateEOSProducer()

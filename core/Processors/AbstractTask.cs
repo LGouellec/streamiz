@@ -14,7 +14,8 @@ namespace Streamiz.Kafka.Net.Processors
         protected readonly IStreamConfig configuration;
         protected IConsumer<byte[], byte[]> consumer;
         protected bool taskInitialized;
-        protected bool commitNeeded;
+        protected bool commitNeeded = false;
+        protected bool commitRequested = false;
         protected IStateManager stateMgr;
         protected ILog log;
         protected readonly string logPrefix = "";
@@ -49,8 +50,11 @@ namespace Streamiz.Kafka.Net.Processors
         public string ApplicationId => configuration.ApplicationId;
 
         public bool CommitNeeded => commitNeeded;
+        public bool CommitRequested => commitRequested;
 
         public bool IsClosed { get; protected set; }
+
+        public void RequestCommit() => commitRequested = true;
 
         #region Abstract
 

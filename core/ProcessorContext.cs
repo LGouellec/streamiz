@@ -11,6 +11,7 @@ namespace Streamiz.Kafka.Net
     /// </summary>
     public class ProcessorContext
     {
+        internal AbstractTask Task { get; private set; }
         internal SerDesContext SerDesContext { get; private set; }
         internal IStreamConfig Configuration { get; private set; }
         internal IRecordContext RecordContext { get; private set; }
@@ -42,10 +43,18 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         public Partition Partition => RecordContext.Partition;
 
-        internal ProcessorContext(IStreamConfig configuration, IStateManager stateManager)
-        {
+        /// <summary>
+        /// Current task id of processing
+        /// </summary>
+        public virtual TaskId Id => Task.Id;
+
+
+        internal ProcessorContext(AbstractTask task, IStreamConfig configuration, IStateManager stateManager)
+        { 
+            Task = task;
             Configuration = configuration;
             States = stateManager;
+
             SerDesContext = new SerDesContext(configuration);
         }
 
@@ -66,11 +75,16 @@ namespace Streamiz.Kafka.Net
             RecordContext.ChangeTimestamp(ts);
         }
 
-        internal IStateStore GetStateStore(string storeName) => States.GetStore(storeName);
+        internal virtual IStateStore GetStateStore(string storeName) => States.GetStore(storeName);
 
         internal void Register(IStateStore store, StateRestoreCallback callback)
         {
             States.Register(store, callback);
         }
+
+        /// <summary>
+        /// Requests a commit
+        /// </summary>
+        public virtual void Commit() => Task.RequestCommit();
     }
 }

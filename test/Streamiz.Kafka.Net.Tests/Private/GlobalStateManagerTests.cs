@@ -74,7 +74,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void ShouldInitializeWithGlobalContext()
         {
-            var processorContext = new ProcessorContext(null, null);
+            var processorContext = new ProcessorContext(null, null, null);
             stateManager.SetGlobalProcessorContext(processorContext);
 
             stateManager.Initialize();

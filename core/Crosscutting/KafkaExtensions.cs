@@ -31,6 +31,9 @@ namespace Streamiz.Kafka.Net.Crosscutting
         //}
 
         internal static IEnumerable<ConsumeResult<K, V>> ConsumeRecords<K, V>(this IConsumer<K, V> consumer, TimeSpan timeout)
+            => ConsumeRecords(consumer, timeout, 500);
+
+        internal static IEnumerable<ConsumeResult<K, V>> ConsumeRecords<K, V>(this IConsumer<K, V> consumer, TimeSpan timeout, long maxRecords)
         {
             List<ConsumeResult<K, V>> records = new List<ConsumeResult<K, V>>();
             DateTime dt = DateTime.Now;
@@ -45,6 +48,9 @@ namespace Streamiz.Kafka.Net.Crosscutting
                 {
                     return records;
                 }
+
+                if (records.Count >= maxRecords)
+                    break;
             } while (dt.Add(timeout) > DateTime.Now);
 
             return records;
