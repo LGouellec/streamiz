@@ -17,24 +17,15 @@ namespace sample_stream
             CancellationTokenSource source = new CancellationTokenSource();
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-app";
-            config.BootstrapServers = "192.168.56.1:9092";
-            config.SaslMechanism = SaslMechanism.Plain;
-            config.SaslUsername = "admin";
-            config.SaslPassword = "admin";
-            config.SecurityProtocol = SecurityProtocol.SaslPlaintext;
-            config.AutoOffsetReset = AutoOffsetReset.Earliest;
-            config.NumStreamThreads = 1;
-
+            config.ApplicationId = "test-perf-app";
+            config.BootstrapServers = "localhost:29092";
+            config.PollMs = 100;
+            config.MaxPollRecords = 500;
             StreamBuilder builder = new StreamBuilder();
 
-            var stream1 = builder.Stream<string, string>("test");
-            var stream2 = builder.Stream<string, string>("test2");
-
-            stream1.Join(stream2,
-                (v1, v2) => $"{v1}-{v2}",
-                JoinWindowOptions.Of(TimeSpan.FromMinutes(1)))
-                .To("output-join");
+            builder
+                .Stream<string, string>("test")
+                .To("test-output");
 
             Topology t = builder.Build();
 

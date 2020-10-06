@@ -1,10 +1,14 @@
 ﻿using Confluent.Kafka;
+using log4net;
+using Streamiz.Kafka.Net.Crosscutting;
+using System;
 using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal class TaskManager
     {
+        private readonly ILog log = Logger.GetLogger(typeof(TaskManager));
         private readonly InternalTopologyBuilder builder;
         private readonly TaskCreator taskCreator;
         private readonly IAdminClient adminClient;
@@ -121,6 +125,40 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             partitionsToTaskId.Clear();
         }
 
+        internal int MaybeCommitPerUserRequested()
+        {
+            int committed = 0;
+            Exception firstException = null;
+
+            foreach(var task in ActiveTasks)
+            {
+                if(task.CommitNeeded && task.CommitRequested)
+                {
+                    try
+                    {
+                        task.Commit();
+                        ++committed;
+                        log.Debug($"Committed stream task {task.Id} per user request in");
+                    }
+                    catch(Exception e)
+                    {
+                        log.Error($"Failed to commit stream task {task.Id} due to the following error: {e}");
+                        if (firstException == null)
+                        {
+                            firstException = e;
+                        }
+                    }
+                }
+            }
+
+            if (firstException != null)
+            {
+                throw firstException;
+            }
+
+            return committed;
+        }
+
         internal int CommitAll()
         {
             int committed = 0;
@@ -140,6 +178,29 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 }
                 return committed;
             }
+        }
+
+        internal int Process(long now)
+        {
+            int processed = 0;
+
+            foreach (var task in ActiveTasks)
+            {
+                try
+                {
+                    if (task.CanProcess(now) && task.Process())
+                    {
+                        processed++;
+                    }
+                }
+                catch(Exception e)
+                {
+                    log.Error($"Failed to process stream task {task.Id} due to the following error: {e}");
+                    throw e;
+                }
+            }
+
+            return processed;
         }
     }
 }

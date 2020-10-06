@@ -11,6 +11,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 {
     public class GlobalStateStoreProviderTests
     {
+        WindowStore<object, object> wStore;
         IKeyValueStore<object, object> kvStore;
         TimestampedKeyValueStore<object, object> timestampedKVStore;
         IDictionary<string, IStateStore> stores;
@@ -18,9 +19,14 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [SetUp]
         public void Setup()
         {
+            wStore = this.CreateMockStore<WindowStore<object, object>>();
             kvStore = this.CreateMockStore<IKeyValueStore<object, object>>();
             timestampedKVStore = this.CreateMockStore<TimestampedKeyValueStore<object, object>>();
-            stores = new Dictionary<string, IStateStore> { { "kv-store", kvStore }, { "ts-kv-store", timestampedKVStore } };
+            stores = new Dictionary<string, IStateStore> {
+                { "kv-store", kvStore },
+                { "ts-kv-store", timestampedKVStore },
+                { "ws-store", wStore },
+            };
         }
 
         [Test]
@@ -40,6 +46,16 @@ namespace Streamiz.Kafka.Net.Tests.Private
             GlobalStateStoreProvider provider = new GlobalStateStoreProvider(new Dictionary<string, IStateStore> { { "test", mockStore } });
 
             Assert.Throws<InvalidStateStoreException>(() => provider.Stores(StoreQueryParameters.FromNameAndType("test", QueryableStoreTypes.KeyValueStore<object, object>())));
+        }
+
+        [Test]
+        public void ShouldReturnWindowStore()
+        {
+            GlobalStateStoreProvider provider = new GlobalStateStoreProvider(stores);
+
+            var result = provider.Stores(StoreQueryParameters.FromNameAndType("ws-store", QueryableStoreTypes.WindowStore<object, object>()));
+
+            Assert.AreEqual(wStore, result.Single());
         }
 
         [Test]
