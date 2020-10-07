@@ -4,6 +4,7 @@ using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
+using System;
 using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Processors
@@ -161,6 +162,11 @@ namespace Streamiz.Kafka.Net.Processors
 
         #region Process object
 
+        public void Process(ConsumeResult<byte[], byte[]> record)
+        {
+
+        }
+
         public void Process(object key, object value)
         {
             bool throwException = false;
@@ -168,7 +174,7 @@ namespace Streamiz.Kafka.Net.Processors
             if (key != null && key is byte[])
             {
                 if (KeySerDes != null)
-                    key = Key.DeserializeObject(key as byte[], GetSerializationContext(true));
+                    key = DeserializeKey(Context?.RecordContext?.Topic, Context?.RecordContext?.Headers, key as byte[]);
                 else
                     throwException = true;
             }
@@ -176,7 +182,7 @@ namespace Streamiz.Kafka.Net.Processors
             if (value != null && value is byte[])
             {
                 if (ValueSerDes != null)
-                    value = Value.DeserializeObject(value as byte[], GetSerializationContext(false));
+                    value = DeserializeValue(Context?.RecordContext?.Topic, Context?.RecordContext?.Headers, value as byte[]);
                 else
                     throwException = true;
             }
@@ -207,6 +213,18 @@ namespace Streamiz.Kafka.Net.Processors
         public override int GetHashCode()
         {
             return Name.GetHashCode();
+        }
+
+        public virtual object DeserializeKey(ConsumeResult<byte[], byte[]>)
+        {
+            return Key.DeserializeObject(data,
+                                                new SerializationContext(MessageComponentType.Key, topicName, headers));
+        }
+
+        public virtual object DeserializeValue(string topicName, Headers headers, byte[] data)
+        {
+            return Value.DeserializeObject(data,
+                                            new SerializationContext(MessageComponentType.Value, topicName, headers));
         }
     }
 }

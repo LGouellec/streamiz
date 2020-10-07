@@ -54,19 +54,5 @@ namespace Streamiz.Kafka.Net.Processors
                 }
             }
         }
-
-        public object DeserializeKey(string topicName, Headers headers, byte[] data)
-        {
-            return Key.DeserializeObject(data,
-                new SerializationContext(MessageComponentType.Key, topicName, headers)
-                );
-        }
-
-        public object DeserializeValue(string topicName, Headers headers, byte[] data)
-        {
-            return Value.DeserializeObject(data,
-                    new SerializationContext(MessageComponentType.Value, topicName, headers)
-            );
-        }
     }
 }

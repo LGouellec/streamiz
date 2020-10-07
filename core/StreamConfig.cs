@@ -117,6 +117,8 @@ namespace Streamiz.Kafka.Net
         #region Stream Config Property
 
         Func<Exception, ExceptionHandlerResponse> InnerExceptionHandler { get; set; } 
+        Func<ProcessorContext, ConsumeResult<byte[], byte[]>, Exception, ExceptionHandlerResponse> DeserializationExceptionHandler { get; set; } 
+        Func<Message<byte[], byte[]>, Exception, ExceptionHandlerResponse> ProductionExceptionHandler { get; set; } 
 
         /// <summary>
         /// Maximum allowed time between calls to consume messages (e.g., rd_kafka_consumer_poll())
@@ -1765,7 +1767,9 @@ namespace Streamiz.Kafka.Net
             MaxPollRecords = 500;
             MaxTaskIdleMs = 0;
             BufferedRecordsPerPartition = 1000;
-            InnerExceptionHandler = (e) => ExceptionHandlerResponse.FAIL;
+            InnerExceptionHandler = (exception) => ExceptionHandlerResponse.FAIL;
+            ProductionExceptionHandler = (msg, exception) => ExceptionHandlerResponse.FAIL;
+            DeserializationExceptionHandler = (context, record, exception) => ExceptionHandlerResponse.FAIL;
 
             if (properties != null)
             {
@@ -1946,6 +1950,9 @@ namespace Streamiz.Kafka.Net
         }
 
         public Func<Exception, ExceptionHandlerResponse> InnerExceptionHandler { get; set; }
+
+        public Func<ProcessorContext, ConsumeResult<byte[], byte[]>, Exception, ExceptionHandlerResponse> DeserializationExceptionHandler { get; set; }
+        public Func<Message<byte[], byte[]>, Exception, ExceptionHandlerResponse> ProductionExceptionHandler { get; set; }
 
         /// <summary>
         /// Get the configs to the <see cref="IProducer{TKey, TValue}"/>
