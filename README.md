@@ -106,7 +106,7 @@ static void Main(string[] args)
 - [ ] Changelog Topic
 - [ ] Task restoring
 - [ ] Repartition topic
-- [ ] Repartition Processor
+- [ ] Repartition Processor [KAFKA-8611](https://issues.apache.org/jira/browse/KAFKA-8611) | [PR #7170](https://github.com/apache/kafka/pull/7170)
 - [ ] Processor API
 - [ ] Optimizing Kafka Streams Topologies
 - [ ] Standby Replica
