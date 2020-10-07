@@ -6,6 +6,7 @@ using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -138,13 +139,6 @@ namespace Streamiz.Kafka.Net.Processors
 
         protected void LogProcessingKeyValue(K key, V value) => log.Debug($"{logPrefix}Process<{typeof(K).Name},{typeof(V).Name}> message with key {key} and {value} with record metadata [topic:{Context.RecordContext.Topic}|partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}]");
 
-        protected SerializationContext GetSerializationContext(bool isKey)
-        {
-            return new SerializationContext(isKey ? MessageComponentType.Key : MessageComponentType.Value,
-                Context?.RecordContext?.Topic,
-                Context?.RecordContext?.Headers);
-        }
-
         #region Setter
 
         internal void SetTaskId(TaskId id)
@@ -164,28 +158,33 @@ namespace Streamiz.Kafka.Net.Processors
 
         public void Process(ConsumeResult<byte[], byte[]> record)
         {
-
-        }
-
-        public void Process(object key, object value)
-        {
             bool throwException = false;
+            ObjectDeserialized key = null;
+            ObjectDeserialized value = null;
 
-            if (key != null && key is byte[])
+            if (KeySerDes != null)
             {
-                if (KeySerDes != null)
-                    key = DeserializeKey(Context?.RecordContext?.Topic, Context?.RecordContext?.Headers, key as byte[]);
-                else
-                    throwException = true;
+                key = DeserializeKey(record);
+                if (key.MustBeSkipped)
+                {
+                    log.Debug($"{logPrefix} Message with record metadata [topic:{Context.RecordContext.Topic}|partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}] was skipped !");
+                    return;
+                }
             }
+            else
+                throwException = true;
 
-            if (value != null && value is byte[])
+            if (ValueSerDes != null)
             {
-                if (ValueSerDes != null)
-                    value = DeserializeValue(Context?.RecordContext?.Topic, Context?.RecordContext?.Headers, value as byte[]);
-                else
-                    throwException = true;
+                value = DeserializeValue(record);
+                if (key.MustBeSkipped)
+                {
+                    log.Debug($"{logPrefix} Message with record metadata [topic:{Context.RecordContext.Topic}|partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}] was skipped !");
+                    return;
+                }
             }
+            else
+                throwException = true;
 
             if (throwException)
             {
@@ -193,7 +192,13 @@ namespace Streamiz.Kafka.Net.Processors
                 log.Error($"{logPrefix}Impossible to receive source data because keySerdes and/or valueSerdes is not setted ! KeySerdes : {(KeySerDes != null ? KeySerDes.GetType().Name : "NULL")} | ValueSerdes : {(ValueSerDes != null ? ValueSerDes.GetType().Name : "NULL")}.");
                 throw new StreamsException($"{logPrefix}The {s} serdes is not compatible to the actual {s} for this processor. Change the default {s} serdes in StreamConfig or provide correct Serdes via method parameters(using the DSL)");
             }
-            else if ((key == null || key is K) && (value == null || value is V))
+            else
+                Process(key.Bean, value.Bean);
+        }
+
+        public void Process(object key, object value)
+        {
+            if((key == null || key is K) && (value == null || value is V))
                 Process((K)key, (V)value);
         }
 
@@ -215,16 +220,54 @@ namespace Streamiz.Kafka.Net.Processors
             return Name.GetHashCode();
         }
 
-        public virtual object DeserializeKey(ConsumeResult<byte[], byte[]>)
+        public virtual ObjectDeserialized DeserializeKey(ConsumeResult<byte[], byte[]> record)
         {
-            return Key.DeserializeObject(data,
-                                                new SerializationContext(MessageComponentType.Key, topicName, headers));
+            try
+            {
+                var o = Key.DeserializeObject(record.Message.Key, new SerializationContext(MessageComponentType.Key, record.Topic, record.Message.Headers));
+                return new ObjectDeserialized(o, false);
+            }catch(Exception e)
+            {
+                var handlerResponse = Context.Configuration.DeserializationExceptionHandler != null ?
+                    Context.Configuration.DeserializationExceptionHandler(Context, record, e) : ExceptionHandlerResponse.FAIL;
+
+                if (handlerResponse == ExceptionHandlerResponse.FAIL)
+                    throw;
+                else
+                {
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine($"{logPrefix}Error during key deserialization [Topic:{record.Topic}|Partition:{record.Partition}|Offset:{record.Offset}|Timestamp:{record.Message.Timestamp.UnixTimestampMs}] with exception {e}.");
+                    sb.AppendLine($"{logPrefix}DeserializationExceptionHandler return 'CONTINUE', so this message will be skipped and not processed !");
+                    log.Error(sb.ToString());
+                    return ObjectDeserialized.ObjectSkipped;
+                }
+            }
+
         }
 
-        public virtual object DeserializeValue(string topicName, Headers headers, byte[] data)
+        public virtual ObjectDeserialized DeserializeValue(ConsumeResult<byte[], byte[]> record)
         {
-            return Value.DeserializeObject(data,
-                                            new SerializationContext(MessageComponentType.Value, topicName, headers));
+            try
+            {
+                var o = Value.DeserializeObject(record.Message.Value, new SerializationContext(MessageComponentType.Value, record.Topic, record.Message.Headers));
+                return new ObjectDeserialized(o, false);
+            }
+            catch (Exception e)
+            {
+                var handlerResponse = Context.Configuration.DeserializationExceptionHandler != null ?
+                    Context.Configuration.DeserializationExceptionHandler(Context, record, e) : ExceptionHandlerResponse.FAIL;
+
+                if (handlerResponse == ExceptionHandlerResponse.FAIL)
+                    throw;
+                else
+                {
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine($"{logPrefix}Error during value deserialization [Topic:{record.Topic}|Partition:{record.Partition}|Offset:{record.Offset}|Timestamp:{record.Message.Timestamp.UnixTimestampMs}] with exception {e}.");
+                    sb.AppendLine($"{logPrefix}DeserializationExceptionHandler return 'CONTINUE', so this message will be skipped and not processed !");
+                    log.Error(sb.ToString());
+                    return ObjectDeserialized.ObjectSkipped;
+                }
+            }
         }
     }
 }

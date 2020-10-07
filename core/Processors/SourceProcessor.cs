@@ -1,5 +1,6 @@
 ﻿
 using Confluent.Kafka;
+using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 
 namespace Streamiz.Kafka.Net.Processors
@@ -8,8 +9,8 @@ namespace Streamiz.Kafka.Net.Processors
     {
         string TopicName { get; }
         ITimestampExtractor Extractor { get; }
-        object DeserializeKey(string topicName, Headers headers, byte[] data);
-        object DeserializeValue(string topicName, Headers headers, byte[] data);
+        ObjectDeserialized DeserializeKey(ConsumeResult<byte[], byte[]> record);
+        ObjectDeserialized DeserializeValue(ConsumeResult<byte[], byte[]> record);
     }
 
     internal class SourceProcessor<K, V> : AbstractProcessor<K, V>, ISourceProcessor
