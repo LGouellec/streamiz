@@ -116,6 +116,8 @@ namespace Streamiz.Kafka.Net
 
         #region Stream Config Property
 
+        Func<ProcessorContext, Exception, ExceptionHandlerResponse> InnerExceptionHandler { get; set; } 
+
         /// <summary>
         /// The amount of time in milliseconds to block waiting for input.
         /// </summary>

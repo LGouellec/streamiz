@@ -67,7 +67,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                     producer.Flush();
                 }catch(ObjectDisposedException e)
                 {
-                    // now I know object has been disposed
+                    // has been disposed
                 }
             }
         }

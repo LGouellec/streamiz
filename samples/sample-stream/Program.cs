@@ -30,13 +30,13 @@ namespace sample_stream
 
             Topology t = builder.Build();
 
-            KafkaStream stream1 = new KafkaStream(t, config);
+            KafkaStream stream = new KafkaStream(t, config);
 
             Console.CancelKeyPress += (o, e) => {
-                stream1.Dispose();
+                stream.Dispose();
             };
 
-            await stream1.StartAsync();
+            await stream.StartAsync();
         }
     }
 }
