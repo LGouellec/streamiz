@@ -15,9 +15,10 @@ namespace sample_stream
     {
         private static async Task Main(string[] args)
         {
+            CancellationTokenSource source = new CancellationTokenSource();
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-perf-app";
-            config.BootstrapServers = "localhost:29092";
+            config.BootstrapServers = "localhost:9093";
             config.PollMs = 100;
             config.MaxPollRecords = 500;
             StreamBuilder builder = new StreamBuilder();

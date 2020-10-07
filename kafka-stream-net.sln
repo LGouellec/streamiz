@@ -31,8 +31,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Producer-Avro", "test\Produ
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro", "serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.csproj", "{2BC1A318-1AE9-4A32-B8B1-D8296FABFF8B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kafka-error-valid-state", "samples\kafka-error-valid-state\kafka-error-valid-state.csproj", "{1F030407-07B9-4118-B6A6-1A6D389425A8}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
