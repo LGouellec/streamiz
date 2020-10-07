@@ -16,17 +16,15 @@ namespace sample_stream
         private static async Task Main(string[] args)
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-app";
+            config.ApplicationId = "test-perf-app";
             config.BootstrapServers = "localhost:29092";
-            config.NumStreamThreads = 3;
-            config.PollMs = 10;
-            config.BufferedRecordsPerPartition = 20000;
-
+            config.PollMs = 100;
+            config.MaxPollRecords = 500;
             StreamBuilder builder = new StreamBuilder();
 
-            builder.Stream<string, string>("test")
-                    .Filter((k, v) => v.Length % 2 == 0)
-                    .To("test-output");
+            builder
+                .Stream<string, string>("test")
+                .To("test-output");
 
             Topology t = builder.Build();
 

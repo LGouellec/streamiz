@@ -442,7 +442,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
         }
 
         [Test]
-            public void GetWStateStoreInvalidStateStoreException()
+        public void GetWStateStoreInvalidStateStoreException()
         {
             var timeout = TimeSpan.FromSeconds(10);
             var source = new CancellationTokenSource();
@@ -531,6 +531,66 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 }
             }
             Assert.IsTrue(state);
+
+            source.Cancel();
+            stream.Close();
+        }
+
+
+        [Test]
+        public void BuildGlobalStateStore()
+        {
+            var timeout = TimeSpan.FromSeconds(10);
+            var source = new CancellationTokenSource();
+            bool isRunningState = false;
+            DateTime dt = DateTime.Now;
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
+            config.BootstrapServers = "127.0.0.1";
+            config.PollMs = 1;
+
+            var builder = new StreamBuilder();
+            builder.GlobalTable<string, string>("test", InMemory<string, string>.As("store"));
+
+            var supplier = new SyncKafkaSupplier();
+            var producer = supplier.GetProducer(new ProducerConfig());
+            var t = builder.Build();
+            var stream = new KafkaStream(t, config, supplier);
+
+            stream.StateChanged += (old, @new) =>
+            {
+                if (@new.Equals(KafkaStream.State.RUNNING))
+                {
+                    isRunningState = true;
+                }
+            };
+            stream.Start(source.Token);
+            while (!isRunningState)
+            {
+                Thread.Sleep(250);
+                if (DateTime.Now > dt + timeout)
+                {
+                    break;
+                }
+            }
+            Assert.IsTrue(isRunningState);
+
+            if (isRunningState)
+            {
+                var stringSerdes = new StringSerDes();
+                producer.Produce("test",
+                    new Message<byte[], byte[]>
+                    {
+                        Key = stringSerdes.Serialize("key", new SerializationContext()),
+                        Value = stringSerdes.Serialize("value", new SerializationContext())
+                    });
+
+                Thread.Sleep(250);
+                var store = stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.KeyValueStore<string, string>()));
+                Assert.IsNotNull(store);
+                Assert.AreEqual(1, store.ApproximateNumEntries());
+            }
 
             source.Cancel();
             stream.Close();

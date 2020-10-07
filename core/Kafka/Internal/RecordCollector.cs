@@ -16,14 +16,14 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
         private static object _lock = new object();
 
         private IProducer<byte[], byte[]> producer;
-        private readonly IDictionary<TopicPartition, long> offsets;
+        //private readonly IDictionary<TopicPartition, long> offsets;
         private readonly string logPrefix;
         private readonly ILog log = Logger.GetLogger(typeof(RecordCollector));
 
         public RecordCollector(string logPrefix)
         {
             this.logPrefix = $"{logPrefix}";
-            offsets = new Dictionary<TopicPartition, long>();
+            //offsets = new Dictionary<TopicPartition, long>();
         }
 
         public void Init(ref IProducer<byte[], byte[]> producer)
@@ -78,17 +78,22 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             var v = value != null ? valueSerializer.Serialize(value, new SerializationContext(MessageComponentType.Value, topic, headers)) : null;
 
             producer?.Produce(
-                topic, 
-                new Message<byte[], byte[]> { Key = k, Value = v },
-                (report) => {
-                    if (report.Error.Code == ErrorCode.NoError && report.Status == PersistenceStatus.Persisted)
-                    {
-                        if (offsets.ContainsKey(report.TopicPartition) && offsets[report.TopicPartition] <= report.Offset)
-                            offsets[report.TopicPartition] = report.Offset;
-                        else
-                            offsets.Add(report.TopicPartition, report.Offset);
-                    }
-                });
+                topic,
+                new Message<byte[], byte[]> { Key = k, Value = v });
+
+            // NOT USED FOR MOMENT
+            //producer?.Produce(
+            //    topic, 
+            //    new Message<byte[], byte[]> { Key = k, Value = v },
+            //    (report) => {
+            //        if (report.Error.Code == ErrorCode.NoError && report.Status == PersistenceStatus.Persisted)
+            //        {
+            //            if (offsets.ContainsKey(report.TopicPartition) && offsets[report.TopicPartition] <= report.Offset)
+            //                offsets[report.TopicPartition] = report.Offset;
+            //            else
+            //                offsets.Add(report.TopicPartition, report.Offset);
+            //        }
+            //    });
         }
     }
 }

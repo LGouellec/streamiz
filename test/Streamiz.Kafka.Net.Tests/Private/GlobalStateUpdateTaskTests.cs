@@ -11,7 +11,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 {
     public class GlobalStateUpdateTaskTests
     {
-        private Mock<ProcessorContext> contextMock;
+        private Mock<GlobalProcessorContext> contextMock;
 
         private Mock<IGlobalStateManager> stateManagerMock;
 
@@ -26,7 +26,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [SetUp]
         public void Setup()
         {
-            contextMock = new Mock<ProcessorContext>(null, null);
+            contextMock = new Mock<GlobalProcessorContext>(null, null);
             stateManagerMock = new Mock<IGlobalStateManager>();
             processorMock = new Mock<IProcessor>();
             sourceProcessorMock = new Mock<ISourceProcessor>();

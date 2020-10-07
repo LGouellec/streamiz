@@ -119,6 +119,24 @@ namespace Streamiz.Kafka.Net
         Func<ProcessorContext, Exception, ExceptionHandlerResponse> InnerExceptionHandler { get; set; } 
 
         /// <summary>
+        /// Maximum allowed time between calls to consume messages (e.g., rd_kafka_consumer_poll())
+        /// for high-level consumers. If this interval is exceeded the consumer is considered
+        /// failed and the group will rebalance in order to reassign the partitions to another
+        /// consumer group member. Warning: Offset commits may be not possible at this point.
+        /// Note: It is recommended to set `enable.auto.offset.store=false` for long-time
+        /// processing applications and then explicitly store offsets (using offsets_store())
+        /// *after* message processing, to make sure offsets are not auto-committed prior
+        /// to processing has finished. The interval is checked two times per second. See
+        /// KIP-62 for more information. default: 300000 importance: high
+        /// </summary>
+        int? MaxPollIntervalMs { get; set; }
+
+        /// <summary>
+        /// The maximum number of records returned in a single call to poll(). (Default: 500)
+        /// </summary>
+        long MaxPollRecords { get; set; }
+
+        /// <summary>
         /// The amount of time in milliseconds to block waiting for input.
         /// </summary>
         long PollMs { get; set; }
@@ -291,6 +309,7 @@ namespace Streamiz.Kafka.Net
         internal static readonly string transactionTimeoutCst = "transaction.timeout";
         internal static readonly string commitIntervalMsCst = "commit.interval.ms";
         internal static readonly string pollMsCst = "poll.ms";
+        internal static readonly string maxPollRecordsCst = "max.poll.records.ms";
         internal static readonly string maxTaskIdleCst = "max.task.idle.ms";
         internal static readonly string bufferedRecordsPerPartitionCst = "buffered.records.per.partition";
 
@@ -1743,6 +1762,7 @@ namespace Streamiz.Kafka.Net
             Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
             TransactionTimeout = TimeSpan.FromSeconds(10);
             PollMs = 100;
+            MaxPollRecords = 500;
             MaxTaskIdleMs = 0;
             BufferedRecordsPerPartition = 1000;
 
@@ -1757,6 +1777,7 @@ namespace Streamiz.Kafka.Net
             _adminClientConfig = new AdminClientConfig();
             _config = new ClientConfig();
 
+            MaxPollIntervalMs = 300000;
             EnableAutoCommit = false;
             PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.Range;
         }
@@ -1894,6 +1915,15 @@ namespace Streamiz.Kafka.Net
         {
             get => this[pollMsCst];
             set => this.AddOrUpdate(pollMsCst, value);
+        }
+
+        /// <summary>
+        /// The maximum number of records returned in a single call to poll(). (Default: 500)
+        /// </summary>
+        public long MaxPollRecords
+        {
+            get => this[maxPollRecordsCst];
+            set => this.AddOrUpdate(maxPollRecordsCst, value);
         }
 
         /// <summary>

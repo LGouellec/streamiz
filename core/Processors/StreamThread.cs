@@ -71,7 +71,7 @@ namespace Streamiz.Kafka.Net.Processors
             var consumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig(customerID), listener);
             manager.Consumer = consumer;
 
-            var thread = new StreamThread(threadId, customerID, manager, consumer, builder, TimeSpan.FromMilliseconds(configuration.PollMs), configuration.CommitIntervalMs);
+            var thread = new StreamThread(threadId, customerID, manager, consumer, builder, configuration);
             listener.Thread = thread;
 
             return thread;
@@ -81,6 +81,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public ThreadState State { get; private set; }
 
+        private readonly IStreamConfig streamConfig;
         private readonly ILog log = Logger.GetLogger(typeof(StreamThread));
         private readonly Thread thread;
         private readonly IConsumer<byte[], byte[]> consumer;
@@ -93,10 +94,20 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly long commitTimeMs = 0;
         private CancellationToken token;
         private DateTime lastCommit = DateTime.Now;
+        
+        private int numIterations = 1;
+        private long lastPollMs;
 
         private readonly object stateLock = new object();
 
         public event ThreadStateListener StateChanged;
+
+        private StreamThread(string threadId, string clientId, TaskManager manager, IConsumer<byte[], byte[]> consumer, InternalTopologyBuilder builder, IStreamConfig configuration)
+            : this(threadId, clientId, manager, consumer, builder, TimeSpan.FromMilliseconds(configuration.PollMs), configuration.CommitIntervalMs)
+
+        {
+            streamConfig = configuration;
+        }
 
         private StreamThread(string threadId, string clientId, TaskManager manager, IConsumer<byte[], byte[]> consumer, InternalTopologyBuilder builder, TimeSpan timeSpan, long commitInterval)
         {
@@ -172,6 +183,8 @@ namespace Streamiz.Kafka.Net.Processors
                             throw new StreamsException($"Unexpected state {State} during normal iteration");
                         }
 
+                        DateTime n = DateTime.Now;
+
                         if (records != null && records.Count() > 0)
                         {
                             foreach (var record in records)
@@ -194,29 +207,46 @@ namespace Streamiz.Kafka.Net.Processors
                                     throw new NullReferenceException($"Task was unexpectedly missing for partition {record.TopicPartition}");
                                 }
                             }
+                            
+                            log.Info($"Add {records.Count()} records in tasks in {DateTime.Now - n}");
                         }
 
                         int processed = 0;
+                        long timeSinceLastPoll = 0;
                         do
                         {
                             processed = 0;
-                            foreach (var t in manager.ActiveTasks)
+                            for (int i = 0; i < numIterations; ++i)
                             {
-                                if (t.CanProcess(now) && t.Process())
-                                {
-                                    processed++;
-                                }
+                                processed = manager.Process(now);
+
+                                if (processed == 0)
+                                    break;
+                                // NOT AVAILABLE NOW, NEED PROCESSOR API
+                                //if (processed > 0)
+                                //    manager.MaybeCommitPerUserRequested();
+                                //else
+                                //    break;
                             }
 
-                            if (processed > 0)
+                            timeSinceLastPoll = Math.Max(DateTime.Now.GetMilliseconds() - lastPollMs, 0);
+
+
+                            if (MaybeCommit())
                             {
-                                foreach (var t in manager.ActiveTasks)
-                                {
-                                    if (t.CommitNeeded)
-                                        t.Commit();
-                                }
+                                numIterations = numIterations > 1 ? numIterations / 2 : numIterations;
                             }
                             
+                            else if (timeSinceLastPoll > streamConfig.MaxPollIntervalMs.Value / 2)
+                            {
+                                numIterations = numIterations > 1 ? numIterations / 2 : numIterations;
+                                break;
+                            }
+                            else if (processed > 0)
+                            {
+                                numIterations++;
+
+                            }
                         } while (processed > 0);
 
                         if (State == ThreadState.RUNNING)
@@ -226,6 +256,9 @@ namespace Streamiz.Kafka.Net.Processors
                         {
                             SetState(ThreadState.RUNNING);
                         }
+
+                        if (records.Any())
+                            log.Info($"Processing {records.Count()} records in {DateTime.Now - n}");
                     }
                     catch (KafkaException e)
                     {
@@ -329,6 +362,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         private IEnumerable<ConsumeResult<byte[], byte[]>> PollRequest(TimeSpan ts)
         {
+            lastPollMs = DateTime.Now.GetMilliseconds();
             return consumer.ConsumeRecords(ts);
         }
 
@@ -372,5 +406,9 @@ namespace Streamiz.Kafka.Net.Processors
 
             return oldState;
         }
+    
+        // FOR TEST
+        internal IEnumerable<TopicPartitionOffset> GetCommittedOffsets(IEnumerable<TopicPartition> partitions, TimeSpan timeout)
+            => consumer.Committed(partitions, timeout);
     }
 }
