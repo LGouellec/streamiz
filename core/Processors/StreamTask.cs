@@ -48,7 +48,7 @@ namespace Streamiz.Kafka.Net.Processors
                 this.producer = producer;
             }
 
-            collector = new RecordCollector(logPrefix);
+            collector = new RecordCollector(logPrefix, configuration, id);
             collector.Init(ref this.producer);
 
             Context = new ProcessorContext(this, configuration, stateMgr).UseRecordCollector(collector);
