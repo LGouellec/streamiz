@@ -153,13 +153,18 @@ namespace Streamiz.Kafka.Net.Processors
                         {
                             Close(false);
 
-                            var response = streamConfig.InnerExceptionHandler(exception);
-                            if (response == ExceptionHandlerResponse.FAIL)
-                                throw new StreamsException(exception);
-                            else if (response == ExceptionHandlerResponse.CONTINUE)
+                            if (!(exception is DeserializationException) && !(exception is ProductionException))
                             {
-                                // TODO : recrate stream thread
+                                var response = streamConfig.InnerExceptionHandler(exception);
+                                if (response == ExceptionHandlerResponse.FAIL)
+                                    throw new StreamsException(exception);
+                                else if (response == ExceptionHandlerResponse.CONTINUE)
+                                {
+                                    // TODO : recreate stream thread
+                                }
                             }
+                            else
+                                throw new StreamsException(exception);
                         }
                         else
                         {

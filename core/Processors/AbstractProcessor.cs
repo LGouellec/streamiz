@@ -232,7 +232,7 @@ namespace Streamiz.Kafka.Net.Processors
                     Context.Configuration.DeserializationExceptionHandler(Context, record, e) : ExceptionHandlerResponse.FAIL;
 
                 if (handlerResponse == ExceptionHandlerResponse.FAIL)
-                    throw;
+                    throw new DeserializationException($"{ logPrefix }Error during key deserialization[Topic:{ record.Topic}| Partition:{ record.Partition}| Offset:{ record.Offset}| Timestamp:{ record.Message.Timestamp.UnixTimestampMs}]", e);
                 else
                 {
                     StringBuilder sb = new StringBuilder();
@@ -258,7 +258,7 @@ namespace Streamiz.Kafka.Net.Processors
                     Context.Configuration.DeserializationExceptionHandler(Context, record, e) : ExceptionHandlerResponse.FAIL;
 
                 if (handlerResponse == ExceptionHandlerResponse.FAIL)
-                    throw;
+                    throw new DeserializationException($"{ logPrefix }Error during value deserialization[Topic:{ record.Topic}| Partition:{ record.Partition}| Offset:{ record.Offset}| Timestamp:{ record.Message.Timestamp.UnixTimestampMs}]", e);
                 else
                 {
                     StringBuilder sb = new StringBuilder();

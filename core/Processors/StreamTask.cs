@@ -301,7 +301,7 @@ namespace Streamiz.Kafka.Net.Processors
                 var recordInfo = $"Topic:{record.Record.Topic}|Partition:{record.Record.Partition.Value}|Offset:{record.Record.Offset}|Timestamp:{record.Record.Message.Timestamp.UnixTimestampMs}";
 
                 log.Debug($"{logPrefix}Start processing one record [{recordInfo}]");
-                record.Processor.Process(record.Record.Message.Key, record.Record.Message.Value);
+                record.Processor.Process(record.Record);
                 log.Debug($"{logPrefix}Completed processing one record [{recordInfo}]");
 
                 consumedOffsets.AddOrUpdate(record.Record.TopicPartition, record.Record.Offset);
