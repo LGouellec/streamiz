@@ -108,6 +108,28 @@ namespace Streamiz.Kafka.Net.Tests.Public
         }
 
         [Test]
+        public async Task StartKafkaStreamWithToken()
+        {
+            CancellationTokenSource source = new CancellationTokenSource();
+            KafkaStream.State lastState = KafkaStream.State.CREATED;
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
+            config.BootstrapServers = "127.0.0.1";
+
+            var builder = new StreamBuilder();
+            builder.Stream<string, string>("topic").To("topic2");
+
+            var t = builder.Build();
+            var stream = new KafkaStream(t, config, new SyncKafkaSupplier());
+            stream.StateChanged += (o, n) => lastState = n;
+            await stream.StartAsync(source.Token);
+            Thread.Sleep(1500);
+            source.Cancel();
+            Thread.Sleep(1500);
+            Assert.AreEqual(KafkaStream.State.NOT_RUNNING, lastState);
+        }
+
+        [Test]
         public async Task StartKafkaStreamWaitRunningState()
         {
             var timeout = TimeSpan.FromSeconds(10);
