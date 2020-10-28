@@ -33,11 +33,8 @@ This project is being written. Thanks for you contribution !
 
 # Timeline
 
-- End May 2020 - Beta 0.1.0 - All stateless processors, Exactly Once Semantic, InMemory store
-- End July 2020 - Beta 0.2.0 - Statefull processors (count, reduce, aggregate), Global Store
-- End September 2020 - 1.0.0 - Join statefull processors (Only KStream INNER, LEFT AND OUTER JOIN)
-- End October 2020 - 1.1.0 - FULL Join statefull processors (KTable join)
-- End November 2020 - 1.2.0 - Persistent state store (eg: RocksDB Store), Repartition and Changelog topics
+- End November 2020 - 1.1.0 - FULL Join statefull processors (KTable join)
+- End December 2020 - 1.2.0 - Persistent state store (eg: RocksDB Store), Repartition and Changelog topics
 - End 2020 / Begin 2021 - 1.3.0 - Processor API, Metrics, Interactive Queries, Standby Replica
 
 # Documentation
@@ -59,9 +56,7 @@ There, a sample streamiz application :
 
 ``` csharp
 static void Main(string[] args)
-{
-    CancellationTokenSource source = new CancellationTokenSource();
-    
+{ 
     var config = new StreamConfig<StringSerDes, StringSerDes>();
     config.ApplicationId = "test-app";
     config.BootstrapServers = "192.168.56.1:9092";
@@ -84,11 +79,10 @@ static void Main(string[] args)
     KafkaStream stream = new KafkaStream(t, config);
 
     Console.CancelKeyPress += (o, e) => {
-        source.Cancel();
-        stream.Close();
+        stream.Dispose();
     };
 
-    stream.Start(source.Token);
+    await stream.StartAsync();
 }
 ```
 

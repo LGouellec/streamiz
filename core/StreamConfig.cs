@@ -116,7 +116,7 @@ namespace Streamiz.Kafka.Net
 
         #region Stream Config Property
 
-        Func<Exception, ExceptionHandlerResponse> InnerExceptionHandler { get; set; } 
+        //Func<Exception, ExceptionHandlerResponse> InnerExceptionHandler { get; set; } 
 
         /// <summary>
         /// Maximum allowed time between calls to consume messages (e.g., rd_kafka_consumer_poll())
