@@ -116,6 +116,8 @@ namespace Streamiz.Kafka.Net
 
         #region Stream Config Property
 
+        //Func<Exception, ExceptionHandlerResponse> InnerExceptionHandler { get; set; } 
+
         /// <summary>
         /// Maximum allowed time between calls to consume messages (e.g., rd_kafka_consumer_poll())
         /// for high-level consumers. If this interval is exceeded the consumer is considered
@@ -1763,6 +1765,7 @@ namespace Streamiz.Kafka.Net
             MaxPollRecords = 500;
             MaxTaskIdleMs = 0;
             BufferedRecordsPerPartition = 1000;
+            InnerExceptionHandler = (e) => ExceptionHandlerResponse.FAIL;
 
             if (properties != null)
             {
@@ -1941,6 +1944,8 @@ namespace Streamiz.Kafka.Net
             get => this[bufferedRecordsPerPartitionCst];
             set => this.AddOrUpdate(bufferedRecordsPerPartitionCst, value);
         }
+
+        public Func<Exception, ExceptionHandlerResponse> InnerExceptionHandler { get; set; }
 
         /// <summary>
         /// Get the configs to the <see cref="IProducer{TKey, TValue}"/>

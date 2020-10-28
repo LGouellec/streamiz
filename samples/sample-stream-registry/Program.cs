@@ -6,12 +6,13 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace sample_stream_registry
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             CancellationTokenSource source = new CancellationTokenSource();
 
@@ -40,11 +41,10 @@ namespace sample_stream_registry
 
             Console.CancelKeyPress += (o, e) =>
             {
-                source.Cancel();
-                stream.Close();
+                stream.Dispose();
             };
 
-            stream.Start(source.Token);
+            await stream.StartAsync();
         }
     }
 }

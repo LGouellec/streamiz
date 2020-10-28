@@ -15,7 +15,7 @@ Nuget package
 
 .. code-block:: shell
 
-    dotnet add package Streamiz.Kafka.Net --version 1.0.0
+    dotnet add package Streamiz.Kafka.Net
 
 
 Tutorial: First streamiz application
@@ -25,11 +25,8 @@ This tutorial will describe all the steps required to create a first streamiz ap
 
 .. code-block:: csharp
 
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
-        // Generate cancellable token
-        CancellationTokenSource source = new CancellationTokenSource();
-
         // Stream configuration
         var config = new StreamConfig<StringSerDes, StringSerDes>();
         config.ApplicationId = "test-app";
@@ -55,10 +52,9 @@ This tutorial will describe all the steps required to create a first streamiz ap
         // Subscribe CTRL + C to quit stream application
         Console.CancelKeyPress += (o, e) =>
         {
-            source.Cancel();
-            stream.Close();
+            stream.Dispose();
         };
 
         // Start stream instance with cancellable token
-        stream.Start(source.Token);
+        await stream.StartAsync();
     }

@@ -2,6 +2,7 @@
 using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.SerDes;
+using System;
 using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Kafka.Internal
@@ -61,7 +62,13 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             log.Debug($"{logPrefix}Flusing producer");
             if (producer != null)
             {
-                producer.Flush();
+                try
+                {
+                    producer.Flush();
+                }catch(ObjectDisposedException)
+                {
+                    // has been disposed
+                }
             }
         }
 

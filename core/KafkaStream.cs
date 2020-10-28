@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 [assembly: InternalsVisibleTo("Streamiz.Kafka.Net.Tests, PublicKey=00240000048000009400000006020000002400005253413100040000010001000d9d4a8e90a3b987f68f047ec499e5a3405b46fcad30f52abadefca93b5ebce094d05976950b38cc7f0855f600047db0a351ede5e0b24b9d5f1de6c59ab55dee145da5d13bb86f7521b918c35c71ca5642fc46ba9b04d4900725a2d4813639ff47898e1b762ba4ccd5838e2dd1e1664bd72bf677d872c87749948b1174bd91ad")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2, PublicKey=0024000004800000940000000602000000240000525341310004000001000100c547cac37abd99c8db225ef2f6c8a3602f3b3606cc9891605d02baa56104f4cfc0734aa39b93bf7852f7d9266654753cc297e7d2edfe0bac1cdcf9f717241550e0a7b191195b7667bb4f64bcb8e2121380fd1d9d46ad2d92d2d15605093924cceaf74c4861eff62abf69b9291ed0a340e113be11e6a7d3113e92484cf7045cc7")]
@@ -26,7 +27,9 @@ namespace Streamiz.Kafka.Net
 
     /// <summary>
     /// A Kafka client that allows for performing continuous computation on input coming from one or more input topics and
-    /// sends output to zero, one, or more output topics.
+    /// sends output to zero, one, or more output topics. 
+    /// <see cref="KafkaStream"/> is disposable, so please call <see cref="KafkaStream.Dispose"/> when you exit your application,
+    /// or using <see cref="CancellationToken"/> token pass to <see cref="KafkaStream.StartAsync(CancellationToken?)"/>.
     /// 
     /// The computational logic can be specified using the <see cref="StreamBuilder"/> which provides the high-level DSL to define
     /// transformations.
@@ -45,7 +48,6 @@ namespace Streamiz.Kafka.Net
     /// <example>
     /// A simple example might look like this:
     /// <code>
-    /// CancellationTokenSource source = new CancellationTokenSource();
     /// var config = new StreamConfig&lt;StringSerDes, StringSerDes&gt;();
     /// config.ApplicationId = "test-kstream-app";
     /// config.BootstrapServers = "192.168.56.1:9092";
@@ -56,15 +58,14 @@ namespace Streamiz.Kafka.Net
     /// KafkaStream stream = new KafkaStream(builder.Build(), config);
     /// 
     /// Console.CancelKeyPress += (o, e) => {
-    ///     source.Cancel();
-    ///     stream.Close();
+    ///     stream.Dispose();
     /// };
     ///      
     /// stream.Start(source.Token);
     /// </code>
     /// </example>
     /// </summary>
-    public sealed class KafkaStream
+    public sealed class KafkaStream : IDisposable
     {
         #region State Stream
 
@@ -246,6 +247,8 @@ namespace Streamiz.Kafka.Net
         private readonly QueryableStoreProvider queryableStoreProvider;
         private readonly GlobalStreamThread globalStreamThread;
 
+        private CancellationTokenSource _cancelSource = new CancellationTokenSource();
+
         internal State StreamState { get; private set; }
 
         /// <summary>
@@ -262,7 +265,6 @@ namespace Streamiz.Kafka.Net
         public KafkaStream(Topology topology, IStreamConfig configuration)
             : this(topology, configuration, new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(configuration)))
         {
-
         }
 
         /// <summary>
@@ -360,26 +362,62 @@ namespace Streamiz.Kafka.Net
         /// Because threads are started in the background, this method does not block.
         /// </summary>
         /// <param name="token">Token for propagates notification that the stream should be canceled.</param>
-        public void Start(CancellationToken token = default)
+        [Obsolete("This method is deprecated, please use StartAsync(...) instead. It will be removed in next release version.")]
+        public void Start(CancellationToken? token = null)
         {
-            if (SetState(State.REBALANCING))
+            StartAsync(token).RunSynchronously();
+        }
+
+        /// <summary>
+        /// Start asynchronously the <see cref="KafkaStream"/> instance by starting all its threads.
+        /// This function is expected to be called only once during the life cycle of the client.
+        /// Because threads are started in the background, this method does not block.
+        /// </summary>
+        /// <param name="token">Token for propagates notification that the stream should be canceled.</param>
+        public async Task StartAsync(CancellationToken? token = null)
+        {
+            if (token.HasValue)
             {
-                logger.Info($"{logPrefix}Starting Streams client with this topology : {topology.Describe()}");
-
-                if (globalStreamThread != null)
-                {
-                    globalStreamThread.Start(token);
-                }
-
-                foreach (var t in threads)
-                    t.Start(token);
+                token.Value.Register(() => {
+                    _cancelSource.Cancel();
+                    Dispose();
+                });
             }
+
+            await Task.Factory.StartNew(() =>
+            {
+                if (SetState(State.REBALANCING))
+                {
+                    logger.Info($"{logPrefix}Starting Streams client with this topology : {topology.Describe()}");
+
+                    if (globalStreamThread != null)
+                    {
+                        globalStreamThread.Start(_cancelSource.Token);
+                    }
+
+                    foreach (var t in threads)
+                        t.Start(_cancelSource.Token);
+                }
+            }, token.HasValue ? token.Value : _cancelSource.Token);
         }
 
         /// <summary>
         /// Shutdown this <see cref="KafkaStream"/> instance by signaling all the threads to stop, and then wait for them to join.
         /// This will block until all threads have stopped.
         /// </summary>
+        public void Dispose()
+        {
+            if (!_cancelSource.IsCancellationRequested)
+                _cancelSource.Cancel();
+
+            Close();
+        }
+
+        /// <summary>
+        /// Shutdown this <see cref="KafkaStream"/> instance by signaling all the threads to stop, and then wait for them to join.
+        /// This will block until all threads have stopped.
+        /// </summary>
+        [Obsolete("This method is deprecated, please use Dispose() instead. It will be removed in next release version.")]
         public void Close()
         {
             if (!SetState(State.PENDING_SHUTDOWN))

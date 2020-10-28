@@ -10,11 +10,7 @@ namespace Producer
             var producerConfig = new ProducerConfig
             {
                 Acks = Acks.All,
-                BootstrapServers = "192.168.56.1:9092",
-                SaslMechanism = SaslMechanism.Plain,
-                SaslPassword = "admin",
-                SaslUsername = "admin",
-                SecurityProtocol = SecurityProtocol.SaslPlaintext
+                BootstrapServers = "localhost:29092"
             };
             var topic = args.Length > 0 ? args[0] : "test";
             var builder = new ProducerBuilder<String, String>(producerConfig);
