@@ -13,7 +13,7 @@ namespace Streamiz.Kafka.Net.Stream
     /// Finally, a sink is a node in the graph that receives records from upstream nodes and writes them to
     /// a Kafka topic.
     /// A <see cref="Topology"/> allows you to construct an acyclic graph of these nodes, and then passed into a new
-    /// <see cref="KafkaStream"/> instance that will then <see cref="KafkaStream.Start(System.Threading.CancellationToken)"/> begin consuming, processing, and producing
+    /// <see cref="KafkaStream"/> instance that will then <see cref="KafkaStream.StartAsync(System.Threading.CancellationToken?)"/> begin consuming, processing, and producing
     /// records}.
     /// </summary>
     public class Topology
