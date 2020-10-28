@@ -138,17 +138,11 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             {
                 if(IsRecoverableError(produceException.Error))
                 {
-                    throw new TaskMigratedException($"Producer got fenced trying to send a record
-                        formatException(""),
-                        uncaughtException.getCause()
-                    );
+                    throw new TaskMigratedException($"Producer got fenced trying to send a record [{logPrefix}] : {produceException.Message}");
                 }
                 else
                 {
-                    throw new StreamsException(
-                        formatException(String.format("Error encountered trying to send record to topic %s", record.topic())),
-                        uncaughtException
-                    );
+                    throw new StreamsException($"Error encountered trying to send record to topic {topic} [{logPrefix}] : {produceException.Message}");
                 }
             }
         }

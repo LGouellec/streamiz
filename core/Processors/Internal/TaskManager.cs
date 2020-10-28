@@ -203,5 +203,24 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             return processed;
         }
+
+        internal void HandleLostAll()
+        {
+            log.Debug($"Closing lost active tasks as zombies.");
+            revokedTasks.Clear();
+
+            var enumerator = activeTasks.GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+                var task = enumerator.Current.Value;
+                task.Suspend();
+                foreach(var part in task.Partition)
+                {
+                    partitionsToTaskId.Remove(part);
+                }
+                task.Close();
+            }
+            activeTasks.Clear();
+        }
     }
 }
