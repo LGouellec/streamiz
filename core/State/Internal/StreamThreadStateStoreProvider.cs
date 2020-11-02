@@ -11,8 +11,6 @@ namespace Streamiz.Kafka.Net.State.Internal
         private readonly IThread streamThread;
         private readonly InternalTopologyBuilder internalTopologyBuilder;
 
-        public IThread Thread => streamThread;
-
         public StreamThreadStateStoreProvider(IThread streamThread, InternalTopologyBuilder internalTopologyBuilder)
         {
             this.streamThread = streamThread;
@@ -61,10 +59,5 @@ namespace Streamiz.Kafka.Net.State.Internal
             return stores;
         }
 
-        public override int GetHashCode() => streamThread.Id.GetHashCode();
-
-        public override bool Equals(object obj)
-            => obj is StreamThreadStateStoreProvider &&
-            ((StreamThreadStateStoreProvider)obj).streamThread.Id.Equals(streamThread.Id);
     }
 }

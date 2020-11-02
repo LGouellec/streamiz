@@ -149,33 +149,9 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     if (exception != null)
                     {
-                        if (ThrowException)
-                        {
-                            if (!(exception is DeserializationException) && !(exception is ProductionException))
-                            {
-                                var response = streamConfig.InnerExceptionHandler(exception);
-                                if (response == ExceptionHandlerResponse.FAIL)
-                                {
-                                    Close(false);
-                                    throw new StreamsException(exception);
-                                }
-                                else if (response == ExceptionHandlerResponse.CONTINUE)
-                                {
-                                    exception = null;
-                                    continue;
-                                }
-                            }
-                            else
-                            {
-                                Close(false);
-                                throw new StreamsException(exception);
-                            }
-                        }
-                        else
-                        {
-                            IsRunning = false;
+                        bool mustStop = TreatException(exception);
+                        if (mustStop)
                             break;
-                        }
                     }
 
                     try
@@ -309,6 +285,35 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     log.Error($"{logPrefix}Failed to close consumer due to the following error:", e);
                 }
+            }
+        }
+
+        private bool TreatException(Exception exception)
+        {
+            if (!(exception is DeserializationException) && !(exception is ProductionException))
+            {
+                var response = streamConfig.InnerExceptionHandler(exception);
+                if (response == ExceptionHandlerResponse.FAIL)
+                {
+                    Close(false);
+                    if (ThrowException)
+                        throw new StreamsException(exception);
+                    return true;
+                }
+                else if (response == ExceptionHandlerResponse.CONTINUE)
+                {
+                    return false;
+                }
+                else
+                    return true;
+            }
+            else
+            {
+                Close(false);
+                if (ThrowException)
+                    throw new StreamsException(exception);
+
+                return true;
             }
         }
 

@@ -10,28 +10,28 @@ namespace Streamiz.Kafka.Net.Mock.Sync
     /// </summary>
     internal class SyncKafkaSupplier : IKafkaSupplier
     {
-        private SyncProducer producer = null;
+        protected SyncProducer producer = null;
 
-        public IAdminClient GetAdmin(AdminClientConfig config) => new SyncAdminClient();
+        public virtual IAdminClient GetAdmin(AdminClientConfig config) => new SyncAdminClient();
 
-        public IConsumer<byte[], byte[]> GetConsumer(ConsumerConfig config, IConsumerRebalanceListener rebalanceListener)
+        public virtual IConsumer<byte[], byte[]> GetConsumer(ConsumerConfig config, IConsumerRebalanceListener rebalanceListener)
         {
             var consumer = new SyncConsumer(config, producer);
             consumer.SetRebalanceListener(rebalanceListener);
             return consumer;
         }
 
-        public IConsumer<byte[], byte[]> GetGlobalConsumer(ConsumerConfig config)
+        public virtual IConsumer<byte[], byte[]> GetGlobalConsumer(ConsumerConfig config)
             => GetConsumer(config, null);
 
-        public IProducer<byte[], byte[]> GetProducer(ProducerConfig config)
+        public virtual IProducer<byte[], byte[]> GetProducer(ProducerConfig config)
         {
             if (producer == null)
                 producer = new SyncProducer(config);
             return producer;
         }
 
-        public IConsumer<byte[], byte[]> GetRestoreConsumer(ConsumerConfig config)
+        public virtual IConsumer<byte[], byte[]> GetRestoreConsumer(ConsumerConfig config)
             => GetConsumer(config, null);
     }
 }

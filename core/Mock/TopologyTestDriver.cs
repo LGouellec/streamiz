@@ -1,4 +1,5 @@
-﻿using Streamiz.Kafka.Net.Mock.Kafka;
+﻿using Streamiz.Kafka.Net.Kafka;
+using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.Mock.Pipes;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -100,6 +101,11 @@ namespace Streamiz.Kafka.Net.Mock
         { }
 
         private TopologyTestDriver(InternalTopologyBuilder builder, IStreamConfig config, Mode mode)
+            : this(builder, config, mode, null)
+        {
+        }
+
+        internal TopologyTestDriver(InternalTopologyBuilder builder, IStreamConfig config, Mode mode, IKafkaSupplier supplier)
         {
             topologyBuilder = builder;
             configuration = config;
@@ -126,6 +132,7 @@ namespace Streamiz.Kafka.Net.Mock
                         topologyBuilder,
                         configuration,
                         topicConfiguration,
+                        supplier,
                         tokenSource.Token);
                     break;
                 case Mode.ASYNC_CLUSTER_IN_MEMORY:
@@ -134,13 +141,14 @@ namespace Streamiz.Kafka.Net.Mock
                         topologyBuilder,
                         configuration,
                         topicConfiguration,
+                        supplier,
                         tokenSource.Token);
                     break;
             }
 
             behavior.StartDriver();
         }
-
+        
         /// <summary>
         /// Close the driver, its topology, and all processors.
         /// </summary>
@@ -364,5 +372,23 @@ namespace Streamiz.Kafka.Net.Mock
 
         #endregion
 
+        #region Property
+
+        /// <summary>
+        /// Indicate if <see cref="TopologyTestDriver"/> is running or not.
+        /// </summary>
+        public bool IsRunning => behavior.IsRunning;
+
+        /// <summary>
+        /// Indicate if <see cref="TopologyTestDriver"/> is stopped or not.
+        /// </summary>
+        public bool IsStopped => behavior.IsStopped;
+
+        /// <summary>
+        /// Indicate if <see cref="TopologyTestDriver"/> is in error or not.
+        /// </summary>
+        public bool IsError => behavior.IsError;
+
+        #endregion
     }
 }

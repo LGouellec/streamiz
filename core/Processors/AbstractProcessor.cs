@@ -177,7 +177,7 @@ namespace Streamiz.Kafka.Net.Processors
             if (ValueSerDes != null)
             {
                 value = DeserializeValue(record);
-                if (key.MustBeSkipped)
+                if (value.MustBeSkipped)
                 {
                     log.Debug($"{logPrefix} Message with record metadata [topic:{Context.RecordContext.Topic}|partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}] was skipped !");
                     return;
