@@ -73,13 +73,17 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public void Assign(TopicPartitionOffset partition)
         {
+            long offset = 0;
+            if (partition.Offset.Value >= 0)
+                offset = partition.Offset.Value;
+
             if (!offsets.ContainsKey(partition.Topic))
             {
-                offsets.Add(partition.Topic, new SyncConsumerOffset(partition.Offset));
+                offsets.Add(partition.Topic, new SyncConsumerOffset(offset));
                 Assignment.Add(partition.TopicPartition);
             }
             else
-                offsets[partition.Topic] = new SyncConsumerOffset(partition.Offset);
+                offsets[partition.Topic] = new SyncConsumerOffset(offset);
         }
 
         public void Assign(IEnumerable<TopicPartitionOffset> partitions)
@@ -139,8 +143,11 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public List<TopicPartitionOffset> Committed(IEnumerable<TopicPartition> partitions, TimeSpan timeout)
         {
-            // TODO : 
-            throw new NotImplementedException();
+            List<TopicPartitionOffset> r = new List<TopicPartitionOffset>();
+            foreach (var kp in offsets)
+                if(partitions.Select(t => t.Topic).Distinct().Contains(kp.Key))
+                    r.Add(new TopicPartitionOffset(new TopicPartition(kp.Key, 0), kp.Value.OffsetCommitted));
+            return r;
         }
 
         public void Dispose()
@@ -241,6 +248,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             var offsets = this.Committed(TimeSpan.FromSeconds(1));
             Assignment.Clear();
             Listener?.PartitionsRevoked(this, offsets);
+            this.offsets.Clear();
         }
 
         public void Unsubscribe()
@@ -262,7 +270,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public ConsumeResult<byte[], byte[]> Consume(TimeSpan timeout)
         {
-            if (Subscription.Count == 0)
+            if (Subscription.Count == 0 && Assignment.Count == 0)
                 throw new StreamsException("No subscription have been done !");
 
             return ConsumeInternal(timeout);

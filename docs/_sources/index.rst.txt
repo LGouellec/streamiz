@@ -33,10 +33,8 @@ Here is the easiest way to create a first sync, from scratch :
 
 Add this code ::
 
-   static void Main(string[] args)
-   {
-      CancellationTokenSource source = new CancellationTokenSource();
-      
+   static async Task Main(string[] args)
+   {     
       var config = new StreamConfig<StringSerDes, StringSerDes>();
       config.ApplicationId = "test-app";
       config.BootstrapServers = "192.168.56.1:9092";
@@ -57,11 +55,10 @@ Add this code ::
       KafkaStream stream = new KafkaStream(t, config);
 
       Console.CancelKeyPress += (o, e) => {
-         source.Cancel();
-         stream.Close();
+         stream.Dispose();
       };
 
-      stream.Start(source.Token);
+      await stream.StartAsync();
    }
 
 

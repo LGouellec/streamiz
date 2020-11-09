@@ -11,6 +11,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
 {
     public class GlobalStateStoreProviderTests
     {
+        WindowStore<object, object> wStore;
+        TimestampedWindowStore<object, object> timestampWStore;
         IKeyValueStore<object, object> kvStore;
         TimestampedKeyValueStore<object, object> timestampedKVStore;
         IDictionary<string, IStateStore> stores;
@@ -18,9 +20,16 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [SetUp]
         public void Setup()
         {
+            wStore = this.CreateMockStore<WindowStore<object, object>>();
             kvStore = this.CreateMockStore<IKeyValueStore<object, object>>();
             timestampedKVStore = this.CreateMockStore<TimestampedKeyValueStore<object, object>>();
-            stores = new Dictionary<string, IStateStore> { { "kv-store", kvStore }, { "ts-kv-store", timestampedKVStore } };
+            timestampWStore = this.CreateMockStore<TimestampedWindowStore<object, object>>();
+            stores = new Dictionary<string, IStateStore> {
+                { "kv-store", kvStore },
+                { "ts-kv-store", timestampedKVStore },
+                { "ws-store", wStore },
+                { "ts-w-store", timestampWStore }
+            };
         }
 
         [Test]
@@ -43,6 +52,16 @@ namespace Streamiz.Kafka.Net.Tests.Private
         }
 
         [Test]
+        public void ShouldReturnWindowStore()
+        {
+            GlobalStateStoreProvider provider = new GlobalStateStoreProvider(stores);
+
+            var result = provider.Stores(StoreQueryParameters.FromNameAndType("ws-store", QueryableStoreTypes.WindowStore<object, object>()));
+
+            Assert.AreEqual(wStore, result.Single());
+        }
+
+        [Test]
         public void ShouldReturnKeyValueStore()
         {
             GlobalStateStoreProvider provider = new GlobalStateStoreProvider(stores);
@@ -60,6 +79,16 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var result = provider.Stores(StoreQueryParameters.FromNameAndType("ts-kv-store", QueryableStoreTypes.TimestampedKeyValueStore<object, object>()));
 
             Assert.AreEqual(timestampedKVStore, result.Single());
+        }
+
+        [Test]
+        public void ShouldReturnWindowStoreAsTimestampedWindowStore()
+        {
+            GlobalStateStoreProvider provider = new GlobalStateStoreProvider(stores);
+
+            var result = provider.Stores(StoreQueryParameters.FromNameAndType("ts-w-store", QueryableStoreTypes.WindowStore<object, object>()));
+
+            Assert.AreEqual(1, result.Count());
         }
 
         [Test]

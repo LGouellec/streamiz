@@ -55,7 +55,6 @@ namespace Streamiz.Kafka.Net.Tests.Public
         {
             var stream = new StreamConfig();
             stream.ApplicationId = "test";
-
             stream.Guarantee = ProcessingGuarantee.EXACTLY_ONCE;
 
             Assert.AreEqual(ProcessingGuarantee.EXACTLY_ONCE, stream.Guarantee);
@@ -70,6 +69,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
             stream.TransactionTimeout = TimeSpan.FromSeconds(10);
             stream.CommitIntervalMs = 12;
             stream.PollMs = 150;
+            stream.MaxPollRecords = 10;
+            stream.MaxPollIntervalMs = 100;
 
             Assert.AreEqual("test", stream.ApplicationId);
             Assert.AreEqual(ProcessingGuarantee.EXACTLY_ONCE, stream.Guarantee);
@@ -79,6 +80,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual(TimeSpan.FromSeconds(10), stream.TransactionTimeout);
             Assert.AreEqual(12, stream.CommitIntervalMs);
             Assert.AreEqual(150, stream.PollMs);
+            Assert.AreEqual(10, stream.MaxPollRecords);
+            Assert.AreEqual(100, stream.MaxPollIntervalMs);
         }
 
         [Test]

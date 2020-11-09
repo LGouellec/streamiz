@@ -177,6 +177,19 @@ otherwise the default value is ```StreamConfig.DEFAULT_COMMIT_INTERVAL_MS```.
 
 The amount of time in milliseconds to block waiting for input. (Default : 100)
 
+### MaxPollRecords
+
+The maximum number of records returned in consumption processing by thread. (Default: 500)
+
+### MaxTaskIdleMs
+
+Maximum amount of time a stream task will stay idle when not all of its partition buffers contain records, to avoid potential out-of-order record processing across multiple input streams. (Default: 0)
+
+### BufferedRecordsPerPartition
+
+Maximum number of records to buffer per partition. (Default: 1000)
+If this number is exceeded, the consumer pauses for this partition until stream instance process messages.
+
 ## Kafka consumers and producer configuration parameters
 
 You can specify parameters for the Kafka consumers, producers, and admin client that are used internally. The consumer, producer and admin client settings are defined by wrapper properties on ConsumerConfig, ProducerConfig and AdminConfig.

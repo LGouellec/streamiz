@@ -9,6 +9,7 @@ using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Streamiz.Kafka.Net.Tests.Public
 {
@@ -89,9 +90,9 @@ namespace Streamiz.Kafka.Net.Tests.Public
         #endregion
 
         [Test]
-        public void StartKafkaStream()
+        public async Task StartKafkaStream()
         {
-            var source = new CancellationTokenSource();
+            
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test";
             config.BootstrapServers = "127.0.0.1";
@@ -101,17 +102,38 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var t = builder.Build();
             var stream = new KafkaStream(t, config, new SyncKafkaSupplier());
-            stream.Start(source.Token);
+            await stream.StartAsync();
             Thread.Sleep(1500);
-            source.Cancel();
-            stream.Close();
+            stream.Dispose();
         }
 
         [Test]
-        public void StartKafkaStreamWaitRunningState()
+        public async Task StartKafkaStreamWithToken()
+        {
+            CancellationTokenSource source = new CancellationTokenSource();
+            KafkaStream.State lastState = KafkaStream.State.CREATED;
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
+            config.BootstrapServers = "127.0.0.1";
+
+            var builder = new StreamBuilder();
+            builder.Stream<string, string>("topic").To("topic2");
+
+            var t = builder.Build();
+            var stream = new KafkaStream(t, config, new SyncKafkaSupplier());
+            stream.StateChanged += (o, n) => lastState = n;
+            await stream.StartAsync(source.Token);
+            Thread.Sleep(1500);
+            source.Cancel();
+            Thread.Sleep(1500);
+            Assert.AreEqual(KafkaStream.State.NOT_RUNNING, lastState);
+        }
+
+        [Test]
+        public async Task StartKafkaStreamWaitRunningState()
         {
             var timeout = TimeSpan.FromSeconds(10);
-            var source = new CancellationTokenSource();
+            
             bool isRunningState = false;
             DateTime dt = DateTime.Now;
 
@@ -132,7 +154,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     isRunningState = true;
                 }
             };
-            stream.Start(source.Token);
+            await stream.StartAsync();
             while (!isRunningState)
             {
                 Thread.Sleep(250);
@@ -141,16 +163,15 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     break;
                 }
             }
-            source.Cancel();
-            stream.Close();
+            stream.Dispose();
             Assert.IsTrue(isRunningState);
         }
 
         [Test]
-        public void GetStateStore()
+        public async Task GetStateStore()
         {
             var timeout = TimeSpan.FromSeconds(10);
-            var source = new CancellationTokenSource();
+            
             bool isRunningState = false;
             DateTime dt = DateTime.Now;
 
@@ -171,7 +192,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     isRunningState = true;
                 }
             };
-            stream.Start(source.Token);
+            await stream.StartAsync();
             while (!isRunningState)
             {
                 Thread.Sleep(250);
@@ -188,15 +209,14 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 Assert.IsNotNull(store);
             }
 
-            source.Cancel();
-            stream.Close();
+            stream.Dispose();
         }
 
         [Test]
-        public void GetStateStoreDoesntExists()
+        public async Task GetStateStoreDoesntExists()
         {
             var timeout = TimeSpan.FromSeconds(10);
-            var source = new CancellationTokenSource();
+            
             bool isRunningState = false;
             DateTime dt = DateTime.Now;
             var supplier = new SyncKafkaSupplier();
@@ -218,7 +238,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     isRunningState = true;
                 }
             };
-            stream.Start(source.Token);
+            await stream.StartAsync();
             while (!isRunningState)
             {
                 Thread.Sleep(250);
@@ -234,15 +254,14 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 Assert.Throws<InvalidStateStoreException>(() => stream.Store(StoreQueryParameters.FromNameAndType("stodfdsfdsfre", QueryableStoreTypes.KeyValueStore<string, string>())));
             }
 
-            source.Cancel();
-            stream.Close();
+            stream.Dispose();
         }
 
         [Test]
-        public void GetElementInStateStore()
+        public async Task GetElementInStateStore()
         {
             var timeout = TimeSpan.FromSeconds(10);
-            var source = new CancellationTokenSource();
+            
             bool isRunningState = false;
             DateTime dt = DateTime.Now;
 
@@ -267,7 +286,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     isRunningState = true;
                 }
             };
-            stream.Start(source.Token);
+            await stream.StartAsync();
             while (!isRunningState)
             {
                 Thread.Sleep(250);
@@ -296,14 +315,13 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 Assert.AreEqual("coucou", item);
             }
 
-            source.Cancel();
-            stream.Close();
+            stream.Dispose();
         }
 
         [Test]
         public void GetStateStoreBeforeRunningState()
         {
-            var source = new CancellationTokenSource();
+            
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test";
@@ -315,15 +333,14 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var t = builder.Build();
             var stream = new KafkaStream(t, config, new SyncKafkaSupplier());
             Assert.Throws<IllegalStateException>(() => stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.KeyValueStore<string, string>())));
-            source.Cancel();
-            stream.Close();
+            stream.Dispose();
         }
 
         [Test]
-        public void GetWindowStateStore()
+        public async Task GetWindowStateStore()
         {
             var timeout = TimeSpan.FromSeconds(10);
-            var source = new CancellationTokenSource();
+            
             bool isRunningState = false;
             DateTime dt = DateTime.Now;
 
@@ -348,7 +365,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     isRunningState = true;
                 }
             };
-            stream.Start(source.Token);
+            await stream.StartAsync();
             while (!isRunningState)
             {
                 Thread.Sleep(250);
@@ -365,15 +382,14 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 Assert.IsNotNull(store);
             }
 
-            source.Cancel();
-            stream.Close();
+            stream.Dispose();
         }
 
         [Test]
-        public void GetWindowElementInStateStore()
+        public async Task GetWindowElementInStateStore()
         {
             var timeout = TimeSpan.FromSeconds(10);
-            var source = new CancellationTokenSource();
+            
             bool isRunningState = false;
             DateTime dt = DateTime.Now;
 
@@ -402,7 +418,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     isRunningState = true;
                 }
             };
-            stream.Start(source.Token);
+            await stream.StartAsync();
             while (!isRunningState)
             {
                 Thread.Sleep(250);
@@ -437,15 +453,14 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 item.Dispose();
             }
 
-            source.Cancel();
-            stream.Close();
+            stream.Dispose();
         }
 
         [Test]
-            public void GetWStateStoreInvalidStateStoreException()
+        public async Task GetWStateStoreInvalidStateStoreException()
         {
             var timeout = TimeSpan.FromSeconds(10);
-            var source = new CancellationTokenSource();
+            
             bool state = false;
             DateTime dt = DateTime.Now;
 
@@ -474,7 +489,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     }
                 }
             };
-            stream.Start(source.Token);
+            await stream.StartAsync();
             while (!state)
             {
                 Thread.Sleep(250);
@@ -485,15 +500,14 @@ namespace Streamiz.Kafka.Net.Tests.Public
             }
             Assert.IsTrue(state);
 
-            source.Cancel();
-            stream.Close();
+            stream.Dispose();
         }
 
         [Test]
-        public void GetKVStateStoreInvalidStateStoreException()
+        public async Task GetKVStateStoreInvalidStateStoreException()
         {
             var timeout = TimeSpan.FromSeconds(10);
-            var source = new CancellationTokenSource();
+            
             bool state = false;
             DateTime dt = DateTime.Now;
 
@@ -521,7 +535,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     }
                 }
             };
-            stream.Start(source.Token);
+            await stream.StartAsync();
             while (!state)
             {
                 Thread.Sleep(250);
@@ -532,8 +546,66 @@ namespace Streamiz.Kafka.Net.Tests.Public
             }
             Assert.IsTrue(state);
 
-            source.Cancel();
-            stream.Close();
+            stream.Dispose();
+        }
+
+
+        [Test]
+        public async Task BuildGlobalStateStore()
+        {
+            var timeout = TimeSpan.FromSeconds(10);
+            
+            bool isRunningState = false;
+            DateTime dt = DateTime.Now;
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
+            config.BootstrapServers = "127.0.0.1";
+            config.PollMs = 1;
+
+            var builder = new StreamBuilder();
+            builder.GlobalTable<string, string>("test", InMemory<string, string>.As("store"));
+
+            var supplier = new SyncKafkaSupplier();
+            var producer = supplier.GetProducer(new ProducerConfig());
+            var t = builder.Build();
+            var stream = new KafkaStream(t, config, supplier);
+
+            stream.StateChanged += (old, @new) =>
+            {
+                if (@new.Equals(KafkaStream.State.RUNNING))
+                {
+                    isRunningState = true;
+                }
+            };
+            await stream.StartAsync();
+            while (!isRunningState)
+            {
+                Thread.Sleep(250);
+                if (DateTime.Now > dt + timeout)
+                {
+                    break;
+                }
+            }
+            Assert.IsTrue(isRunningState);
+
+            if (isRunningState)
+            {
+                var stringSerdes = new StringSerDes();
+                producer.Produce("test",
+                    new Message<byte[], byte[]>
+                    {
+                        Key = stringSerdes.Serialize("key", new SerializationContext()),
+                        Value = stringSerdes.Serialize("value", new SerializationContext())
+                    });
+
+                Thread.Sleep(250);
+                var store = stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.KeyValueStore<string, string>()));
+                Assert.IsNotNull(store);
+                Assert.AreEqual(1, store.ApproximateNumEntries());
+            }
+
+            stream.Dispose();
         }
 
     }

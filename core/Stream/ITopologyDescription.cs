@@ -1,5 +1,4 @@
 ﻿using Streamiz.Kafka.Net.Processors;
-using Streamiz.Kafka.Net.Processors.Internal;
 using System;
 using System.Collections.Generic;
 
@@ -12,7 +11,7 @@ namespace Streamiz.Kafka.Net.Stream
     /// In contrast, two sub-topologies are not connected but can be linked to each other via topics, i.e., if one
     /// sub-topology writes into a topic and another sub-topology reads from the same topic.
     /// </p>
-    /// When <see cref="KafkaStream.Start(System.Threading.CancellationToken)"/> is called, different sub-topologies will be constructed and executed as independent
+    /// When <see cref="KafkaStream.StartAsync(System.Threading.CancellationToken?)"/> is called, different sub-topologies will be constructed and executed as independent
     /// <see cref="StreamTask"/>.
     /// </summary>
     public interface ITopologyDescription
