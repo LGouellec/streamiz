@@ -83,7 +83,7 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
             else
                 deliveryHandler(new DeliveryReport<byte[], byte[]>()
                 {
-                    Error = new Error(ErrorCode.Local_InvalidArg, "Invlaid arg", false)
+                    Error = new Error(ErrorCode.Local_InvalidArg, "Invalid arg", false)
                 });
         }
 
@@ -94,7 +94,7 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
             else
                 deliveryHandler(new DeliveryReport<byte[], byte[]>()
                 {
-                    Error = new Error(ErrorCode.Local_InvalidArg, "Invlaid arg", false)
+                    Error = new Error(ErrorCode.Local_InvalidArg, "Invalid arg", false)
                 });
         }
 
