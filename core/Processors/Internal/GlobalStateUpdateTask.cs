@@ -56,7 +56,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             var recordInfo = $"Topic:{record.Topic}|Partition:{record.Partition.Value}|Offset:{record.Offset}|Timestamp:{record.Message.Timestamp.UnixTimestampMs}";
             log.Debug($"Start processing one record [{recordInfo}]");
-            processor.Process(record.Message.Key, record.Message.Value);
+            processor.Process(record);
             log.Debug($"Completed processing one record [{recordInfo}]");
         }
 

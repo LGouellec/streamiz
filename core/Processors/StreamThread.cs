@@ -149,23 +149,9 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     if (exception != null)
                     {
-                        if (ThrowException)
-                        {
-                            Close(false);
-
-                            //var response = streamConfig.InnerExceptionHandler(exception);
-                            //if (response == ExceptionHandlerResponse.FAIL)
-                            //    throw new StreamsException(exception);
-                            //else if (response == ExceptionHandlerResponse.CONTINUE)
-                            //{
-                            //    // TODO : recrate stream thread
-                            //}
-                        }
-                        else
-                        {
-                            IsRunning = false;
+                        bool mustStop = TreatException(exception);
+                        if (mustStop)
                             break;
-                        }
                     }
 
                     try
@@ -268,6 +254,10 @@ namespace Streamiz.Kafka.Net.Processors
                         if (records.Any())
                             log.Debug($"Processing {records.Count()} records in {DateTime.Now - n}");
                     }
+                    catch(TaskMigratedException e)
+                    {
+                        HandleTaskMigrated(e);
+                    }
                     catch (KafkaException e)
                     {
                         log.Error($"{logPrefix}Encountered the following unexpected Kafka exception during processing, this usually indicate Streams internal errors:", e);
@@ -298,6 +288,35 @@ namespace Streamiz.Kafka.Net.Processors
             }
         }
 
+        private bool TreatException(Exception exception)
+        {
+            if (!(exception is DeserializationException) && !(exception is ProductionException))
+            {
+                var response = streamConfig.InnerExceptionHandler(exception);
+                if (response == ExceptionHandlerResponse.FAIL)
+                {
+                    Close(false);
+                    if (ThrowException)
+                        throw new StreamsException(exception);
+                    return true;
+                }
+                else if (response == ExceptionHandlerResponse.CONTINUE)
+                {
+                    return false;
+                }
+                else
+                    return true;
+            }
+            else
+            {
+                Close(false);
+                if (ThrowException)
+                    throw new StreamsException(exception);
+
+                return true;
+            }
+        }
+
         public void Start(CancellationToken token)
         {
             log.Info($"{logPrefix}Starting");
@@ -317,6 +336,17 @@ namespace Streamiz.Kafka.Net.Processors
         public IEnumerable<ITask> ActiveTasks => manager.ActiveTasks;
 
         #endregion
+
+        private void HandleTaskMigrated(TaskMigratedException e)
+        {
+            log.Warn($"{logPrefix}Detected that the thread is being fenced. " +
+                         "This implies that this thread missed a rebalance and dropped out of the consumer group. " +
+                         "Will close out all assigned tasks and rejoin the consumer group.", e);
+
+            manager.HandleLostAll();
+            consumer.Unsubscribe();
+            consumer.Subscribe(builder.GetSourceTopics());
+        }
 
         private bool MaybeCommit()
         {

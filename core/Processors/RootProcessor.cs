@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Confluent.Kafka;
 using Streamiz.Kafka.Net.SerDes;
 
 namespace Streamiz.Kafka.Net.Processors
@@ -32,6 +33,12 @@ namespace Streamiz.Kafka.Net.Processors
         {
             foreach (var n in Next)
                 n.Init(context);
+        }
+
+        public void Process(ConsumeResult<byte[], byte[]> record)
+        {
+            foreach (var n in Next)
+                n.Process(record);
         }
 
         public void Process(object key, object value)

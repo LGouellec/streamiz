@@ -246,6 +246,7 @@ namespace Streamiz.Kafka.Net
         private readonly object stateLock = new object();
         private readonly QueryableStoreProvider queryableStoreProvider;
         private readonly GlobalStreamThread globalStreamThread;
+        private readonly StreamStateManager manager = null;
 
         private CancellationTokenSource _cancelSource = new CancellationTokenSource();
 
@@ -342,7 +343,7 @@ namespace Streamiz.Kafka.Net
                 stateStoreProviders.Add(new StreamThreadStateStoreProvider(threads[i], this.topology.Builder));
             }
 
-            var manager = new StreamStateManager(this, threadState, globalThreadState);
+            manager = new StreamStateManager(this, threadState, globalThreadState);
             if (hasGlobalTopology)
             {
                 globalStreamThread.StateChanged += manager.OnGlobalThreadStateChange;

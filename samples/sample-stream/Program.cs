@@ -19,6 +19,10 @@ namespace sample_stream
             config.BootstrapServers = "localhost:29092";
             config.PollMs = 100;
             config.MaxPollRecords = 500;
+            //config.DeserializationExceptionHandler = (context, record, exception) => ExceptionHandlerResponse.FAIL;
+            //config.ProductionExceptionHandler = (record, exception) => ExceptionHandlerResponse.FAIL;
+            //config.InnerExceptionHandler = (exception) => ExceptionHandlerResponse.FAIL;
+
             StreamBuilder builder = new StreamBuilder();
 
             builder

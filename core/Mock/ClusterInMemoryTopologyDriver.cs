@@ -23,18 +23,25 @@ namespace Streamiz.Kafka.Net.Mock
 
         public ClusterInMemoryTopologyDriver(string clientId, InternalTopologyBuilder topologyBuilder, IStreamConfig configuration, IStreamConfig topicConfiguration, CancellationToken token)
             : this(clientId, topologyBuilder, configuration, topicConfiguration, TimeSpan.FromSeconds(30), token)
-        {
-        }
+        {}
+
+        public ClusterInMemoryTopologyDriver(string clientId, InternalTopologyBuilder topologyBuilder, IStreamConfig configuration, IStreamConfig topicConfiguration, IKafkaSupplier supplier, CancellationToken token)
+            : this(clientId, topologyBuilder, configuration, topicConfiguration, TimeSpan.FromSeconds(30), supplier, token)
+        { }
 
         public ClusterInMemoryTopologyDriver(string clientId, InternalTopologyBuilder topologyBuilder, IStreamConfig configuration, IStreamConfig topicConfiguration, TimeSpan startTimeout, CancellationToken token)
+            : this(clientId, topologyBuilder, configuration, topicConfiguration, startTimeout, null, token)
+        {}
+
+        public ClusterInMemoryTopologyDriver(string clientId, InternalTopologyBuilder topologyBuilder, IStreamConfig configuration, IStreamConfig topicConfiguration, TimeSpan startTimeout, IKafkaSupplier supplier, CancellationToken token)
         {
+            kafkaSupplier = supplier ?? new MockKafkaSupplier();
             this.startTimeout = startTimeout;
             this.configuration = configuration;
             this.configuration.ClientId = clientId;
             this.topicConfiguration = topicConfiguration;
             this.token = token;
 
-            kafkaSupplier = new MockKafkaSupplier();
             pipeBuilder = new KafkaPipeBuilder(kafkaSupplier);
 
             // ONLY FOR CHECK IF TOLOGY IS CORRECT
@@ -49,6 +56,12 @@ namespace Streamiz.Kafka.Net.Mock
                 kafkaSupplier.GetAdmin(configuration.ToAdminConfig($"{clientId}-admin")),
                 0);
         }
+
+        public bool IsRunning { get; private set; }
+
+        public bool IsStopped => !IsRunning;
+
+        public bool IsError { get; private set; }
 
         #region IBehaviorTopologyTestDriver
 
@@ -79,6 +92,7 @@ namespace Streamiz.Kafka.Net.Mock
 
         public void Dispose()
         {
+            IsRunning = false;
             threadTopology.Dispose();
             (kafkaSupplier as MockKafkaSupplier)?.Destroy();
         }
@@ -104,7 +118,20 @@ namespace Streamiz.Kafka.Net.Mock
             threadTopology.StateChanged += (thread, old, @new) =>
             {
                 if (@new is Processors.ThreadState && ((Processors.ThreadState)@new) == Processors.ThreadState.RUNNING)
+                {
                     isRunningState = true;
+                    IsRunning = true;
+                }
+                else if (@new is Processors.ThreadState && ((Processors.ThreadState)@new) == Processors.ThreadState.DEAD)
+                {
+                    IsRunning = false;
+                    IsError = true;
+                }
+                else if (@new is Processors.ThreadState && ((Processors.ThreadState)@new) == Processors.ThreadState.PENDING_SHUTDOWN)
+                {
+                    IsRunning = false;
+                    IsError = false;
+                }
             };
             
             threadTopology.ThrowException = false;

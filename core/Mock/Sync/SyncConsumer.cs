@@ -248,6 +248,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             var offsets = this.Committed(TimeSpan.FromSeconds(1));
             Assignment.Clear();
             Listener?.PartitionsRevoked(this, offsets);
+            this.offsets.Clear();
         }
 
         public void Unsubscribe()
