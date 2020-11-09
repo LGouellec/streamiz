@@ -1,7 +1,5 @@
 ﻿using Streamiz.Kafka.Net.Processors;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.Table.Internal.Graph
 {
@@ -22,16 +20,32 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
             this.queryableName = queryableName;
         }
 
-        public IKTableValueGetterSupplier<K, VR> View => throw new NotImplementedException();
+        public IKTableValueGetterSupplier<K, VR> View
+        {
+            get
+            {
+                // if the result KTable is materialized, use the materialized store to return getter value;
+                // otherwise rely on the parent getter and apply join on-the-fly
+                if (!string.IsNullOrEmpty(queryableName))
+                {
+                    return new KTableMaterializedValueGetterSupplier<K, VR>(queryableName);
+                }
+                else
+                {
+                    var stores = leftParent.View.StoreNames.Concat(rightParent.View.StoreNames).ToArray();
+                    return new GenericKTableValueGetterSupplier<K, VR>(stores, leftParent.View.Get());
+                }
+            }
+        }
 
         public void EnableSendingOldValues()
         {
-            throw new NotImplementedException();
+            leftParent.EnableSendingOldValues();
+            rightParent.EnableSendingOldValues();
+            sendOldValues = true;
         }
 
         public IProcessor<K, Change<VR>> Get()
-        {
-            throw new NotImplementedException();
-        }
+            => new KTableKTableJoinMergeProcessor<K, VR>(queryableName, sendOldValues);
     }
 }

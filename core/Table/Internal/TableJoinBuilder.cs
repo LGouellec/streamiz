@@ -76,10 +76,8 @@ namespace Streamiz.Kafka.Net.Table.Internal
 
             var tableNode = new KTableKTableJoinNode<K, V, V0, VR>(
                 joinMergeName,
-                null,
                 joinLeftProcessorParameters,
                 joinRightProcessorParameters,
-                null,
                 joinLeftName,
                 joinRigthName,
                 (tableLeft as IKTableGetter<K, V>).ValueGetterSupplier.StoreNames,

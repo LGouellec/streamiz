@@ -17,17 +17,15 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph.Nodes
 
         public KTableKTableJoinNode(
             string name,
-            IValueJoiner<Change<V1>, Change<V2>, Change<VR>> valueJoiner,
             ProcessorParameters<K, Change<V1>> joinLeftParams,
             ProcessorParameters<K, Change<V2>> joinRightParams,
-            ProcessorParameters<K, Change<VR>> joinMergeParams,
             string leftJoinSideName,
             string rightJoinSideName,
             string[] leftStoreNames,
             string[] rightStoreNames,
             string queryableStoreName,
             StoreBuilder<TimestampedKeyValueStore<K, VR>> storeBuilder)
-            : base(name, valueJoiner, joinLeftParams, joinRightParams, joinMergeParams, leftJoinSideName, rightJoinSideName)
+            : base(name, null, joinLeftParams, joinRightParams, null, leftJoinSideName, rightJoinSideName)
         {
             this.leftStoreNames = leftStoreNames;
             this.rightStoreNames = rightStoreNames;
@@ -38,13 +36,22 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph.Nodes
                 (IKTableProcessorSupplier<K, V1, VR>)joinLeftParams.Processor,
                 (IKTableProcessorSupplier<K, V2, VR>)joinRightParams.Processor,
                 queryableStoreName);
+            JoinMergeParams = new ProcessorParameters<K, Change<VR>>(JoinMergeProcessorSupplier, name);
         }
 
         public IProcessorSupplier<K, Change<VR>> JoinMergeProcessorSupplier { get; }
 
         public override void WriteToTopology(InternalTopologyBuilder builder)
         {
-            throw new NotImplementedException();
+            builder.AddProcessor(JoinLeftParams.ProcessorName, JoinLeftParams.Processor, LeftJoinSideName);
+            builder.AddProcessor(JoinRightParams.ProcessorName, JoinRightParams.Processor, RightJoinSideName);
+            builder.AddProcessor(JoinMergeParams.ProcessorName, JoinMergeProcessorSupplier, JoinLeftParams.ProcessorName, JoinRightParams.ProcessorName);
+
+            builder.ConnectProcessorAndStateStore(JoinLeftParams.ProcessorName, leftStoreNames);
+            builder.ConnectProcessorAndStateStore(JoinRightParams.ProcessorName, rightStoreNames);
+
+            if (storeBuilder != null)
+                builder.AddStateStore(storeBuilder, JoinMergeParams.ProcessorName);
         }
     }
 }

@@ -6,10 +6,10 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal abstract class AbstractKTableKTableJoin<K, VR, V1, V2> : IKTableProcessorSupplier<K, V1, VR>
     {
-        private bool sendOldValues = false;
-        private readonly IKTableGetter<K, V1> table1;
-        private readonly IKTableGetter<K, V2> table2;
-        private readonly IValueJoiner<V1, V2, VR> valueJoiner;
+        protected bool sendOldValues = false;
+        protected readonly IKTableGetter<K, V1> table1;
+        protected readonly IKTableGetter<K, V2> table2;
+        protected readonly IValueJoiner<V1, V2, VR> valueJoiner;
 
         public abstract IKTableValueGetterSupplier<K, VR> View { get; }
         public abstract IProcessor<K, Change<V1>> Get();
