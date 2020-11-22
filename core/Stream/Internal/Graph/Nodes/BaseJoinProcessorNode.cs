@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
             string rightJoinSideName)
             : base(name)
         {
-            ValueJoiner = valueJoiner ?? throw new ArgumentNullException(nameof(valueJoiner));
+            ValueJoiner = valueJoiner;
             JoinLeftParams = joinLeftParams ?? throw new ArgumentNullException(nameof(joinLeftParams));
             JoinRightParams = joinRightParams ?? throw new ArgumentNullException(nameof(joinRightParams));
             JoinMergeParams = joinMergeParams;

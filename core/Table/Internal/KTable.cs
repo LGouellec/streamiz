@@ -71,7 +71,9 @@ namespace Streamiz.Kafka.Net.Table.Internal
                     return ((IKTableProcessorSupplier<K, S, V>)tableProcessorSupplier).View;
                 }
                 else
+                {
                     return null;
+                }
             }
         }
 
@@ -187,29 +189,29 @@ namespace Streamiz.Kafka.Net.Table.Internal
 
         #region Join
 
-        public IKTable<K, VR> Join<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner)
-            => Join<VT, VR, VTS, VRS>(table, valueJoiner, null);
+        public IKTable<K, VR> Join<VT, VR, VTS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner)
+            => Join<VT, VR, VTS>(table, valueJoiner, null);
 
-        public IKTable<K, VR> Join<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
-            => Join<VT, VR, VTS, VRS>(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), materialized, named);
+        public IKTable<K, VR> Join<VT, VR, VTS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+            => Join<VT, VR, VTS>(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), materialized, named);
 
         public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner)
-            => Join<VT, VR>(table, valueJoiner, null);
+            => Join(table, valueJoiner, null);
 
         public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner)
-            => Join<VT, VR>(table, valueJoiner, null);
+            => Join(table, valueJoiner, null);
 
         public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
-            => Join<VT, VR>(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), materialized, named);
+            => Join(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), materialized, named);
 
-        public IKTable<K, VR> Join<VT, VR, VTS, VRS>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner)
-            => Join<VT, VR>(table, valueJoiner, null);
+        public IKTable<K, VR> Join<VT, VR, VTS>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner)
+            => Join(table, valueJoiner, null);
 
         public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
-            => DoJoin<VT, VR>(table, valueJoiner, named, materialized, false, false);
+            => DoJoin(table, valueJoiner, named, materialized, false, false);
 
-        public IKTable<K, VR> Join<VT, VR, VTS, VRS>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
-            => DoJoin<VT, VR>(table, valueJoiner, named, materialized, false, false);
+        public IKTable<K, VR> Join<VT, VR, VTS>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+            => DoJoin(table, valueJoiner, named, materialized, false, false);
 
         #endregion
 
@@ -253,7 +255,9 @@ namespace Streamiz.Kafka.Net.Table.Internal
             StoreBuilder<TimestampedKeyValueStore<K, V>> storeBuilder;
 
             if (predicate == null)
+            {
                 throw new ArgumentNullException($"Filter() doesn't allow null predicate function");
+            }
 
             if (materializedInternal != null)
             {
@@ -309,7 +313,9 @@ namespace Streamiz.Kafka.Net.Table.Internal
         private IKTable<K, VR> DoMapValues<VR>(IValueMapperWithKey<K, V, VR> mapper, string named, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materializedInternal)
         {
             if (mapper == null)
+            {
                 throw new ArgumentNullException($"MapValues() doesn't allow null mapper function");
+            }
 
             ISerDes<K> keySerde;
             ISerDes<VR> valueSerde;
@@ -371,7 +377,9 @@ namespace Streamiz.Kafka.Net.Table.Internal
         private IKGroupedTable<K1, V1> DoGroup<K1, V1>(IKeyValueMapper<K, V, KeyValuePair<K1, V1>> keySelector, Grouped<K1, V1> grouped)
         {
             if (keySelector == null)
+            {
                 throw new ArgumentNullException("GroupBy() doesn't allow null selector function");
+            }
 
             var selectName = new Named(grouped.Named).OrElseGenerateWithPrefix(builder, KTable.SELECT_NAME);
 
@@ -406,7 +414,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
             materializedInternal = materializedInternal ?? Materialized<K, VR, IKeyValueStore<Bytes, byte[]>>.Create();
 
             var tableJoinBuilder = new TableJoinBuilder(builder, leftOuter, rightOuter);
-            
+
             return tableJoinBuilder.Join(this, table, joiner, named, materializedInternal);
         }
 

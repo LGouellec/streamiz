@@ -36,6 +36,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
             var joinMergeName = renamed.OrElseGenerateWithPrefix(builder, KTable.MERGE_NAME);
             ISet<string> allSourceNodes = new HashSet<string>((tableLeft as AbstractStream<K, V>).SetSourceNodes);
             allSourceNodes.AddRange((tableRight as AbstractStream<K, V0>).SetSourceNodes);
+            materializedInternal.UseProvider(builder, $"{joinMergeName}-");
 
             if (leftOuter)
                 (tableLeft as IKTableGetter<K, V>)?.EnableSendingOldValues();
@@ -78,8 +79,8 @@ namespace Streamiz.Kafka.Net.Table.Internal
                 joinMergeName,
                 joinLeftProcessorParameters,
                 joinRightProcessorParameters,
-                joinLeftName,
-                joinRigthName,
+                (tableLeft as AbstractStream<K, V>).NameNode,
+                (tableRight as AbstractStream<K, V0>).NameNode,
                 (tableLeft as IKTableGetter<K, V>).ValueGetterSupplier.StoreNames,
                 (tableRight as IKTableGetter<K, V0>).ValueGetterSupplier.StoreNames,
                 queryableStoreName,
