@@ -54,11 +54,13 @@ namespace Streamiz.Kafka.Net.Table.Internal
             }
             else if (!rightOuter) // LEFT JOIN
             {
-                // TODO
+                joinLeft = new KTableKTableLeftJoin<K, VR, V, V0>((tableLeft as IKTableGetter<K, V>), (tableRight as IKTableGetter<K, V0>), joiner);
+                joinRight = new KTableKTableRightJoin<K, VR, V0, V>((tableRight as IKTableGetter<K, V0>), (tableLeft as IKTableGetter<K, V>), joiner.Reverse());
             }
             else // OUTER JOIN
             {
-                // TODO
+                joinLeft = new KTableKTableOuterJoin<K, VR, V, V0>((tableLeft as IKTableGetter<K, V>), (tableRight as IKTableGetter<K, V0>), joiner);
+                joinRight = new KTableKTableOuterJoin<K, VR, V0, V>((tableRight as IKTableGetter<K, V0>), (tableLeft as IKTableGetter<K, V>), joiner.Reverse());
             }
 
             var joinLeftName = renamed.SuffixWithOrElseGet("-join-this", builder, KTable.JOINTHIS_NAME);
