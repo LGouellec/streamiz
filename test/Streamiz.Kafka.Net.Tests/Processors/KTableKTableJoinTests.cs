@@ -121,5 +121,113 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 Assert.AreEqual("test-coucou", mergeStore.Get("test"));
             }
         }
+
+        [Test]
+        public void TableTableJoinWithtoutStateStore()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>
+            {
+                ApplicationId = "test-table-table-join"
+            };
+
+            StreamBuilder builder = new StreamBuilder();
+
+            var table1 = builder.Table("table1", InMemory<string, string>.As("store1"));
+            var table2 = builder.Table("table2", InMemory<string, string>.As("store2"));
+
+            var tableJoin = table1.Join(table2, (v1, v2) => $"{v1}-{v2}");
+            
+            tableJoin.ToStream().To("topic-output");
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic1 = driver.CreateInputTopic<string, string>("table1");
+                var inputTopic2 = driver.CreateInputTopic<string, string>("table2");
+                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                inputTopic1.PipeInput("test", "test");
+                inputTopic2.PipeInput("test", "coucou");
+                var record = outputTopic.ReadKeyValue();
+                Assert.IsNotNull(record);
+                Assert.AreEqual("test", record.Message.Key);
+                Assert.AreEqual("test-coucou", record.Message.Value);
+            }
+
+        }
+
+        [Test]
+        public void TableTableJoinNullKey()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>
+            {
+                ApplicationId = "test-table-table-join"
+            };
+
+            StreamBuilder builder = new StreamBuilder();
+
+            var table1 = builder.Table("table1", InMemory<string, string>.As("store1"));
+            var table2 = builder.Table("table2", InMemory<string, string>.As("store2"));
+
+            var tableJoin = table1.Join(table2, (v1, v2) => $"{v1}-{v2}");
+
+            tableJoin.ToStream().To("topic-output");
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic1 = driver.CreateInputTopic<string, string>("table1");
+                var inputTopic2 = driver.CreateInputTopic<string, string>("table2");
+                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                inputTopic1.PipeInput("test", "test");
+                inputTopic1.PipeInput(null, "test");
+                inputTopic2.PipeInput("test", "coucou");
+                var record = outputTopic.ReadKeyValue();
+                Assert.IsNotNull(record);
+                Assert.AreEqual("test", record.Message.Key);
+                Assert.AreEqual("test-coucou", record.Message.Value);
+            }
+        }
+
+        [Test]
+        public void TableTableJoinGetterSupplier()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>
+            {
+                ApplicationId = "test-table-table-join"
+            };
+
+            StreamBuilder builder = new StreamBuilder();
+
+            var table1 = builder.Table("users", InMemory<string, string>.As("store-users"));
+            var table2 = builder.Table("regions", InMemory<string, string>.As("store-regions"));
+            var stream = builder.Stream<string, string>("orders");
+
+            var tableJoin = table1.Join(table2, (v1, v2) => $"{v1}-{v2}", InMemory<string, string>.As("merge-store"));
+
+            stream
+                .Join(tableJoin, (order, ur) => $"Order:{order}|UserRegion:{ur}")
+                .To("topic-output");
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic1 = driver.CreateInputTopic<string, string>("users");
+                var inputTopic2 = driver.CreateInputTopic<string, string>("regions");
+                var inputTopic3 = driver.CreateInputTopic<string, string>("orders");
+                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                
+                inputTopic1.PipeInput("sylvain", "sylvain");
+                inputTopic2.PipeInput("sylvain", "France");
+                inputTopic3.PipeInput("sylvain", "iPhone12Pro");
+
+                var record = outputTopic.ReadKeyValue();
+                Assert.IsNotNull(record);
+                Assert.AreEqual("sylvain", record.Message.Key);
+                Assert.AreEqual("Order:iPhone12Pro|UserRegion:sylvain-France", record.Message.Value);
+            }
+        }
     }
 }

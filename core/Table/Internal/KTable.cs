@@ -241,6 +241,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
         //    throw new NotImplementedException();
         //}
 
+
         //#endregion
 
         #endregion
@@ -411,7 +412,13 @@ namespace Streamiz.Kafka.Net.Table.Internal
             CheckIfParamNull(table, "table");
             CheckIfParamNull(joiner, "joiner");
 
-            materializedInternal = materializedInternal ?? Materialized<K, VR, IKeyValueStore<Bytes, byte[]>>.Create();
+            Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> Create()
+            {
+                var m = Materialized<K, VR, IKeyValueStore<Bytes, byte[]>>.Create();
+                m.NoMaterialized = true;
+                return m;
+            }
+            materializedInternal = materializedInternal ?? Create();
 
             var tableJoinBuilder = new TableJoinBuilder(builder, leftOuter, rightOuter);
 
