@@ -5,6 +5,7 @@ using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
+using Streamiz.Kafka.Net.Table.Internal.Graph;
 using Streamiz.Kafka.Net.Table.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
@@ -39,10 +40,14 @@ namespace Streamiz.Kafka.Net.Table.Internal
             materializedInternal.UseProvider(builder, $"{joinMergeName}-");
 
             if (leftOuter)
+            {
                 (tableLeft as IKTableGetter<K, V>)?.EnableSendingOldValues();
+            }
 
             if (rightOuter)
+            {
                 (tableRight as IKTableGetter<K, V0>)?.EnableSendingOldValues();
+            }
 
             AbstractKTableKTableJoin<K, VR, V, V0> joinLeft = null;
             AbstractKTableKTableJoin<K, VR, V0, V> joinRight = null;
@@ -70,7 +75,9 @@ namespace Streamiz.Kafka.Net.Table.Internal
             var joinRightProcessorParameters = new TableProcessorParameters<K, V0>(joinRight, joinRigthName);
 
             if (materializedInternal.KeySerdes == null && tableLeft is AbstractStream<K, V>)
+            {
                 materializedInternal.WithKeySerdes((tableLeft as AbstractStream<K, V>).KeySerdes);
+            }
 
             ISerDes<K> keySerdes = materializedInternal.KeySerdes;
             ISerDes<VR> ValueSerdes = materializedInternal.ValueSerdes;

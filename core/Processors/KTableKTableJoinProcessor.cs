@@ -4,17 +4,11 @@ using System;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    internal class KTableKTableJoinProcessor<K, V1, V2, VR> : AbstractProcessor<K, Change<V1>>
+    internal class KTableKTableJoinProcessor<K, V1, V2, VR> : AbstractKTableKTableJoinProcessor<K, V1, V2, VR>
     {
-        private readonly IKTableValueGetter<K, V2> valueGetter;
-        private readonly IValueJoiner<V1, V2, VR> joiner;
-        private readonly bool sendOldValues;
-
         public KTableKTableJoinProcessor(IKTableValueGetter<K, V2> valueGetter, IValueJoiner<V1, V2, VR> joiner, bool sendOldValues)
+            : base(valueGetter, joiner, sendOldValues)
         {
-            this.valueGetter = valueGetter;
-            this.joiner = joiner;
-            this.sendOldValues = sendOldValues;
         }
 
         public override void Init(ProcessorContext context)

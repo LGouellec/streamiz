@@ -189,12 +189,6 @@ namespace Streamiz.Kafka.Net.Table.Internal
 
         #region Join
 
-        public IKTable<K, VR> Join<VT, VR, VTS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner)
-            => Join<VT, VR, VTS>(table, valueJoiner, null);
-
-        public IKTable<K, VR> Join<VT, VR, VTS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
-            => Join<VT, VR, VTS>(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), materialized, named);
-
         public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner)
             => Join(table, valueJoiner, null);
 
@@ -204,45 +198,46 @@ namespace Streamiz.Kafka.Net.Table.Internal
         public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
             => Join(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), materialized, named);
 
-        public IKTable<K, VR> Join<VT, VR, VTS>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner)
-            => Join(table, valueJoiner, null);
-
         public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
-            => DoJoin(table, valueJoiner, named, materialized, false, false);
-
-        public IKTable<K, VR> Join<VT, VR, VTS>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
             => DoJoin(table, valueJoiner, named, materialized, false, false);
 
         #endregion
 
-        //#region LeftJoin
+        #region LeftJoin
 
-        //public IKTable<K, VR> LeftJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner)
-        //{
-        //    throw new NotImplementedException();
-        //}
+        public IKTable<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner)
+            => LeftJoin(table, valueJoiner, null);
 
-        //public IKTable<K, VR> LeftJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //#endregion
-
-        //#region Outer Join
-
-        //public IKTable<K, VR> OuterJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public IKTable<K, VR> OuterJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
-        //{
-        //    throw new NotImplementedException();
-        //}
+        public IKTable<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+            => DoJoin(table, valueJoiner, named, materialized, true, false);
 
 
-        //#endregion
+        public IKTable<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner)
+            => LeftJoin(table, valueJoiner, null);
+
+        public IKTable<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+            => LeftJoin(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), materialized, named);
+        
+
+        #endregion
+
+        #region Outer Join
+
+        public IKTable<K, VR> OuterJoin<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner)
+            => OuterJoin(table, valueJoiner, null);
+
+
+        public IKTable<K, VR> OuterJoin<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+            => DoJoin(table, valueJoiner, named, materialized, true, true);
+
+
+        public IKTable<K, VR> OuterJoin<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner)
+            => OuterJoin(table, valueJoiner, null);
+
+        public IKTable<K, VR> OuterJoin<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+            => OuterJoin(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), materialized, named);
+
+        #endregion
 
         #endregion
 

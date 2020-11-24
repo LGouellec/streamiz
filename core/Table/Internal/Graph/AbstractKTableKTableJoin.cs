@@ -1,8 +1,9 @@
-﻿using Streamiz.Kafka.Net.Stream;
+﻿using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using Streamiz.Kafka.Net.Table.Internal;
 
-namespace Streamiz.Kafka.Net.Processors
+namespace Streamiz.Kafka.Net.Table.Internal.Graph
 {
     internal abstract class AbstractKTableKTableJoin<K, VR, V1, V2> : IKTableProcessorSupplier<K, V1, VR>
     {

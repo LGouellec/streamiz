@@ -1,8 +1,7 @@
-﻿using Streamiz.Kafka.Net.Stream;
-using Streamiz.Kafka.Net.Table;
-using Streamiz.Kafka.Net.Table.Internal;
+﻿using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.Stream;
 
-namespace Streamiz.Kafka.Net.Processors
+namespace Streamiz.Kafka.Net.Table.Internal.Graph
 {
     internal class KTableKTableInnerJoin<K, VR, V1, V2> : AbstractKTableKTableJoin<K, VR, V1, V2>
     {

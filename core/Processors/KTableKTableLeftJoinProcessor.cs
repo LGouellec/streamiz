@@ -4,23 +4,11 @@ using System;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    internal class KTableKTableLeftJoinProcessor<K, V1, V2, VR> : AbstractProcessor<K, Change<V1>>
+    internal class KTableKTableLeftJoinProcessor<K, V1, V2, VR> : AbstractKTableKTableJoinProcessor<K, V1, V2, VR>
     {
-        private readonly IKTableValueGetter<K, V2> valueGetter;
-        private readonly IValueJoiner<V1, V2, VR> joiner;
-        private readonly bool sendOldValues;
-
-        public KTableKTableLeftJoinProcessor(IKTableValueGetter<K, V2> iKTableValueGetter, IValueJoiner<V1, V2, VR> valueJoiner, bool sendOldValues)
+        public KTableKTableLeftJoinProcessor(IKTableValueGetter<K, V2> valueGetter, IValueJoiner<V1, V2, VR> valueJoiner, bool sendOldValues)
+            : base(valueGetter, valueJoiner, sendOldValues)
         {
-            valueGetter = iKTableValueGetter;
-            joiner = valueJoiner;
-            this.sendOldValues = sendOldValues;
-        }
-
-        public override void Init(ProcessorContext context)
-        {
-            base.Init(context);
-            valueGetter.Init(context);
         }
 
         public override void Process(K key, Change<V1> value)
@@ -54,21 +42,15 @@ namespace Streamiz.Kafka.Net.Processors
 
             if (value.NewValue != null)
             {
-                newValue = joiner.Apply(value.NewValue, valueAndTsRight.Value);
+                newValue = joiner.Apply(value.NewValue, valueAndTsRight == null ? default : valueAndTsRight.Value);
             }
 
             if (sendOldValues && value.OldValue != null)
             {
-                oldValue = joiner.Apply(value.OldValue, valueAndTsRight.Value);
+                oldValue = joiner.Apply(value.OldValue, valueAndTsRight == null ? default : valueAndTsRight.Value);
             }
 
             Forward(key, new Change<VR>(oldValue, newValue), resultTimestamp);
-        }
-
-        public override void Close()
-        {
-            base.Close();
-            valueGetter.Close();
         }
     }
 }
