@@ -205,7 +205,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var table2 = builder.Table("regions", InMemory<string, string>.As("store-regions"));
             var stream = builder.Stream<string, string>("orders");
 
-            var tableJoin = table1.LeftJoin(table2, (v1, v2) => $"{v1}-{v2 ?? "?"}", InMemory<string, string>.As("merge-store"));
+            var tableJoin = table1.LeftJoin(table2, (v1, v2) => $"{v1}-{v2 ?? "?"}");
 
             stream
                 .Join(tableJoin, 

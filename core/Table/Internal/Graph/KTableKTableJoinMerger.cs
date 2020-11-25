@@ -32,7 +32,7 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
                 }
                 else
                 {
-                    var stores = leftParent.View.StoreNames.Concat(rightParent.View.StoreNames).ToArray();
+                    var stores = leftParent.View.StoreNames.Concat(rightParent.View.StoreNames).Distinct().ToArray();
                     return new GenericKTableValueGetterSupplier<K, VR>(stores, leftParent.View.Get());
                 }
             }
