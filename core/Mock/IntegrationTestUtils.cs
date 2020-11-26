@@ -27,5 +27,34 @@ namespace Streamiz.Kafka.Net.Mock
 
             return results;
         }
+
+        /// <summary>
+        /// Read output to map.
+        /// This method can be used if the result is considered a table, when you are only interested in the last table update (ie, the final table state).
+        /// 
+        /// </summary>
+        /// <typeparam name="K">key type</typeparam>
+        /// <typeparam name="V">value type</typeparam>
+        /// <param name="outputTopic">output topic</param>
+        /// <returns>Map of output topic by key.</returns>
+        public static Dictionary<K, V> ReadKeyValuesToMap<K, V>(this TestOutputTopic<K, V> outputTopic)
+        {
+            Dictionary<K, V> map = new Dictionary<K, V>();
+
+            var result = outputTopic.ReadKeyValueList();
+            foreach (var r in result)
+            {
+                if (map.ContainsKey(r.Message.Key))
+                {
+                    map[r.Message.Key] = r.Message.Value;
+                }
+                else
+                {
+                    map.Add(r.Message.Key, r.Message.Value);
+                }
+            }
+
+            return map;
+        }
     }
 }

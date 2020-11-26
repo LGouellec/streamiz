@@ -240,6 +240,11 @@ namespace Streamiz.Kafka.Net.Table
         #region Property
 
         /// <summary>
+        /// Is state store is not materialized. Default : false, so it's materialized.
+        /// </summary>
+        public bool NoMaterialized { get; set; } = false;
+
+        /// <summary>
         /// Topic configuration
         /// </summary>
         public IDictionary<string, string> TopicConfig { get; protected set; }
@@ -430,7 +435,7 @@ namespace Streamiz.Kafka.Net.Table
         internal Materialized<K, V, S> UseProvider(INameProvider provider, string generatedStorePrefix)
         {
             queriable = !string.IsNullOrEmpty(StoreName);
-            if (!queriable && provider != null)
+            if (!queriable && provider != null && !NoMaterialized)
             {
                 storeName = provider.NewStoreName(generatedStorePrefix);
                 queriable = true;
