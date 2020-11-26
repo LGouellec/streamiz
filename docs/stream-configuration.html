@@ -106,7 +106,11 @@
 <li class="toctree-l3"><a class="reference internal" href="#pollms">PollMs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#maxpollrecords">MaxPollRecords</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#maxtaskidlems">MaxTaskIdleMs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#maxpollintervalms">MaxPollIntervalMs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#bufferedrecordsperpartition">BufferedRecordsPerPartition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#innerexceptionhandler">InnerExceptionHandler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#deserializationexceptionhandler">DeserializationExceptionHandler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#productionexceptionhandler">ProductionExceptionHandler</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#kafka-consumers-and-producer-configuration-parameters">Kafka consumers and producer configuration parameters</a></li>
@@ -349,10 +353,26 @@ otherwise the default value is <code class="docutils literal notranslate"><span 
 <h3>MaxTaskIdleMs<a class="headerlink" href="#maxtaskidlems" title="Permalink to this headline">¶</a></h3>
 <p>Maximum amount of time a stream task will stay idle when not all of its partition buffers contain records, to avoid potential out-of-order record processing across multiple input streams. (Default: 0)</p>
 </div>
+<div class="section" id="maxpollintervalms">
+<h3>MaxPollIntervalMs<a class="headerlink" href="#maxpollintervalms" title="Permalink to this headline">¶</a></h3>
+<p>Maximum allowed time between calls to consume messages for high-level consumers. If this interval is exceeded the consumer is considered failed and the group will rebalance in order to reassign the partitions to another consumer group member.</p>
+</div>
 <div class="section" id="bufferedrecordsperpartition">
 <h3>BufferedRecordsPerPartition<a class="headerlink" href="#bufferedrecordsperpartition" title="Permalink to this headline">¶</a></h3>
 <p>Maximum number of records to buffer per partition. (Default: 1000)
 If this number is exceeded, the consumer pauses for this partition until stream instance process messages.</p>
+</div>
+<div class="section" id="innerexceptionhandler">
+<h3>InnerExceptionHandler<a class="headerlink" href="#innerexceptionhandler" title="Permalink to this headline">¶</a></h3>
+<p>Inner exception handling function called during processing.</p>
+</div>
+<div class="section" id="deserializationexceptionhandler">
+<h3>DeserializationExceptionHandler<a class="headerlink" href="#deserializationexceptionhandler" title="Permalink to this headline">¶</a></h3>
+<p>Deserialization exception handling function called when deserialization exception during kafka consumption is raise.</p>
+</div>
+<div class="section" id="productionexceptionhandler">
+<h3>ProductionExceptionHandler<a class="headerlink" href="#productionexceptionhandler" title="Permalink to this headline">¶</a></h3>
+<p>Production exception handling function called when kafka produce exception is raise.</p>
 </div>
 </div>
 <div class="section" id="kafka-consumers-and-producer-configuration-parameters">

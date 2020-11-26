@@ -14,7 +14,7 @@ Welcome to Streamiz.Kafka.Net 🚀
 It's allowed to develop .NET applications that transform input Kafka topics into output Kafka topics. 
 It's a rewriting inspired by `Kafka Streams <https://github.com/apache/kafka>`_. 
 
-Streamiz.Kafka.Net aims to provide the same functionality `Kafka Streams <https://github.com/apache/kafka>`_. 
+Streamiz.Kafka.Net aims to provide the same functionality as `Kafka Streams <https://github.com/apache/kafka>`_. 
 So you can found documentation here :
 
 * `Confluent Kafka Streams <https://docs.confluent.io/current/streams/index.html>`_

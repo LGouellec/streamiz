@@ -2,32 +2,6 @@
 
 Stateful transformations depend on state for processing inputs and producing outputs and require a state store associated with the stream processor. For example, in aggregating operations, a windowing state store is used to collect the latest aggregation results per window. In join operations, a windowing state store is used to collect all of the records received so far within the defined window boundary.
 
-IMPLEMENTATION WORK IN PROGRESS
-
-**To follow the progress, you can star [the Github project](https://github.com/LGouellec/kafka-streams-dotnet) and watch it !** 
-
-|Operator Name|Method|TODO|IMPLEMENTED|TESTED|DOCUMENTED|
-|---|---|---|---|---|---|
-|Aggregate|KGroupedStream -> IKTable|   |   |   |&#9745;|
-|Aggregate|KGroupedTable -> IKTable|   |   |   |&#9745;|
-|Aggregate(windowed)|KGroupedStream -> IKTable|   |   |   |&#9745;|
-|Count|KGroupedStream -> IKTable|   |   |   |&#9745;|
-|Count|KGroupedTable -> IKTable|   |   |   |&#9745;|
-|Count(windowed)|KGroupedStream → IKStream|   |   |   |&#9745;|
-|Reduce|KGroupedStream → IKTable|   |   |   |&#9745;|
-|Reduce|KGroupedTable → IKTable|   |   |   |&#9745;|
-|Reduce(windowed)|KGroupedStream → IKTable|   |   |   |&#9745;|
-|InnerJoin(windowed)|(IKStream,IKStream) → IKStream|   |   |   |&#9745;|
-|LeftJoin(windowed)|(IKStream,IKStream) → IKStream|   |   |   |&#9745;|
-|OuterJoin(windowed)|(IKStream,IKStream) → IKStream|   |   |   |&#9745;|
-|InnerJoin|(IKTable,IKTable) → IKTable|&#9745;|   |   |   |
-|LeftJoin|(IKTable,IKTable) → IKTable|&#9745;|   |   |   |
-|OuterJoin|(IKTable,IKTable) → IKTable|&#9745;|   |   |   |
-|InnerJoin|(IKStream,IKTable) → IKStream|   |   |   |&#9745;|
-|LeftJoin|(IKStream,IKTable) → IKStream|   |   |   |&#9745;|
-|InnerJoin|(IKStream,IGlobalKTable) → IKStream|   |   |   |&#9745;|
-|LeftJoin|(IKStream,IGlobalKTable) → IKStream|   |   |   |&#9745;|
-
 ## Count
 
 **Rolling aggregation.** Counts the number of records by the grouped key. (see IKGroupedStream for details)
@@ -416,3 +390,72 @@ Detailed behavior:
 Input records for the stream with a null key or a null value are ignored and do not trigger the join.
 Input records for the table with a null value are interpreted as tombstones, which indicate the deletion of a record key from the table. Tombstones do not trigger the join.
 For each input record on the left side that does not have any match on the right side, the joiner will be called with joiner(leftRecord.value, null)
+
+## IKTable-IKTable Equi-Join
+
+IKTable-IKTable equi-joins are always non-windowed joins. They are designed to be consistent with their counterparts in relational databases. The changelog streams of both IKTables are materialized into local state stores to represent the latest snapshot of their table duals. The join result is a new IKTable that represents the changelog stream of the join operation.
+
+### Inner Join
+
+- (IKTable, IKTable) → IKTable
+
+Performs an INNER JOIN of this table with another table. The result is an ever-updating KTable that represents the "current" result of the join.
+
+Data must be co-partitioned: The input data for both sides must be co-partitioned.
+
+```csharp
+var table1 = builder.Table<string, string>("topic2", InMemory<string, string>.As("table1-store"));
+var table2 = builder.Table<string, string>("topic2", InMemory<string, string>.As("table2-store"));
+
+var tableJoin = table1.Join(table2,(v1, v2) => $"{v1}-{v2}");
+```
+
+Detailed behavior:
+- The join is key-based, i.e. with the join predicate leftRecord.key == rightRecord.key.
+- The join will be triggered under the conditions listed below whenever new input is received. When it is triggered, the user-supplied value joiner will be called to produce join output records.
+- Input records with a null key are ignored and do not trigger the join.
+- Input records with a null value are interpreted as tombstones for the corresponding key, which indicate the deletion of the key from the table. Tombstones do not trigger the join. When an input tombstone is received, then an output tombstone is forwarded directly to the join result IKTable if required (i.e. only if the corresponding key actually exists already in the join result IKTable).
+
+### Left Join
+
+- (IKTable, IKTable) → IKTable
+
+Performs a LEFT JOIN of this table with another table.
+
+Data must be co-partitioned: The input data for both sides must be co-partitioned.
+
+``` csharp
+var table1 = builder.Table<string, string>("topic2", InMemory<string, string>.As("table1-store"));
+var table2 = builder.Table<string, string>("topic2", InMemory<string, string>.As("table2-store"));
+
+var tableJoin = table1.LeftJoin(table2,(v1, v2) => $"{v1}-{v2}");
+```
+
+Detailed behavior:
+- The join is key-based, i.e. with the join predicate leftRecord.key == rightRecord.key.
+- The join will be triggered under the conditions listed below whenever new input is received. When it is triggered, the user-supplied value joiner will be called to produce join output records.
+- Input records with a null key are ignored and do not trigger the join.
+- Input records with a null value are interpreted as tombstones for the corresponding key, which indicate the deletion of the key from the table. Tombstones do not trigger the join. When an input tombstone is received, then an output tombstone is forwarded directly to the join result IKTable if required (i.e. only if the corresponding key actually exists already in the join result IKTable).
+- For each input record on the left side that does not have any match on the right side, the ValueJoiner will be called with (leftRecord.value, null); this explains the row with timestamp=3 in the table below, which lists [A, null] in the LEFT JOIN column.
+
+### Outer Join
+
+- (IKTable, IKTable) → IKTable
+
+Performs a OUTER JOIN of this table with another table.
+
+Data must be co-partitioned: The input data for both sides must be co-partitioned.
+
+``` csharp
+var table1 = builder.Table<string, string>("topic2", InMemory<string, string>.As("table1-store"));
+var table2 = builder.Table<string, string>("topic2", InMemory<string, string>.As("table2-store"));
+
+var tableJoin = table1.OuterJoin(table2,(v1, v2) => $"{v1}-{v2}");
+```
+
+Detailed behavior:
+- The join is key-based, i.e. with the join predicate leftRecord.key == rightRecord.key.
+- The join will be triggered under the conditions listed below whenever new input is received. When it is triggered, the user-supplied ValueJoiner will be called to produce join output records.
+- Input records with a null key are ignored and do not trigger the join.
+- Input records with a null value are interpreted as tombstones for the corresponding key, which indicate the deletion of the key from the table. Tombstones do not trigger the join. When an input tombstone is received, then an output tombstone is forwarded directly to the join result IKTable if required (i.e. only if the corresponding key actually exists already in the join result IKTable).
+- For each input record on one side that does not have any match on the other side, the ValueJoiner will be called with (leftRecord.value, null) or (null, rightRecord.value), respectively; this explains the rows with timestamp=3 and timestamp=7 in the table below, which list [A, null] and [null, b], respectively, in the OUTER JOIN column.
