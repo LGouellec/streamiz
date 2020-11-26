@@ -463,19 +463,492 @@ namespace Streamiz.Kafka.Net.Table
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
         IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(Func<K, V, KeyValuePair<KR, VR>> keySelector, string named = null) where KRS : ISerDes<KR>, new() where VRS : ISerDes<VR>, new();
 
+        /// <summary>
+        /// Join records of this <see cref="IKTable{K, V}"/> with another <see cref="IKTable{K, VT}"/>'s records using non-windowed inner equi join.
+        /// The join is a primary key join with join attribute <code>thisKTable.key == otherKTable.key</code>.
+        /// The result is an ever updating <see cref="IKTable{K, VR}"/> that represents the current (i.e., processing time) result
+        /// of the join.
+        /// <para>
+        /// The join is computed by (1) updating the internal state of one <see cref="IKTable{K, V}"/> and (2) performing a lookup for a
+        /// matching record in the current (i.e., processing time) internal state of the other <see cref="IKTable{K, VT}"/>.
+        /// This happens in a symmetric way, i.e., for each update of either this or  other input
+        /// <see cref="IKTable{K, VR}"/> the result gets updated.
+        /// </para>
+        /// <para>
+        /// For each <see cref="IKTable{K, V}"/> record that finds a corresponding record in the other <see cref="IKTable{K, VT}"/> the provided
+        /// <see cref="IValueJoiner{V, VT, VR}"/> value joiner will be called to compute a value (with arbitrary type) for the result record.
+        /// The key of the result record is the same as for both joining input records.
+        /// </para>
+        /// <para>
+        /// Note that keyvalue record with nukk values (so-called tombstone records) have delete semantics.
+        /// Thus, for input tombstones the provided value-joiner is not called but a tombstone record is forwarded
+        /// directly to delete a record in the result <see cref="IKTable{K, VR}"/> if required (i.e., if there is anything to be deleted).
+        /// </para>
+        /// <para>
+        /// Input records with null key will be dropped and no join computation is performed.
+        /// </para>
+        /// <para>
+        /// Both input streams (or to be more precise, their underlying source topics) need to have the same number of
+        /// partitions.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="VT">the value type of the other</typeparam>
+        /// <typeparam name="VR">the value type of the result</typeparam>
+        /// <param name="table">the other <see cref="IKTable{K, VT}"/> to be joined with this <see cref="IKTable{K, V}"/></param>
+        /// <param name="valueJoiner">a value joiner that computes the join result for a pair of matching records</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains join-records for each key and values computed by the given value joiner, one for each matched record-pair with the same key</returns>
         IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner);
+
+        /// <summary>
+        /// Join records of this <see cref="IKTable{K, V}"/> with another <see cref="IKTable{K, VT}"/>'s records using non-windowed inner equi join,
+        /// with the <see cref="Materialized{K, VR, S}"/> instance for configuration of the key serde,
+        /// result table's value serde, and key-value state store.
+        /// The join is a primary key join with join attribute <code>thisKTable.key == otherKTable.key</code>.
+        /// The result is an ever updating <see cref="IKTable{K, VR}"/> that represents the current (i.e., processing time) result
+        /// of the join.
+        /// <para>
+        /// The join is computed by (1) updating the internal state of one <see cref="IKTable{K, V}"/> and (2) performing a lookup for a
+        /// matching record in the current (i.e., processing time) internal state of the other <see cref="IKTable{K, VT}"/>.
+        /// This happens in a symmetric way, i.e., for each update of either this or  other input
+        /// <see cref="IKTable{K, VR}"/> the result gets updated.
+        /// </para>
+        /// <para>
+        /// For each <see cref="IKTable{K, V}"/> record that finds a corresponding record in the other <see cref="IKTable{K, VT}"/> the provided
+        /// <see cref="IValueJoiner{V, VT, VR}"/> value joiner will be called to compute a value (with arbitrary type) for the result record.
+        /// The key of the result record is the same as for both joining input records.
+        /// </para>
+        /// <para>
+        /// Note that keyvalue record with nukk values (so-called tombstone records) have delete semantics.
+        /// Thus, for input tombstones the provided value-joiner is not called but a tombstone record is forwarded
+        /// directly to delete a record in the result <see cref="IKTable{K, VR}"/> if required (i.e., if there is anything to be deleted).
+        /// </para>
+        /// <para>
+        /// Input records with null key will be dropped and no join computation is performed.
+        /// </para>
+        /// <para>
+        /// Both input streams (or to be more precise, their underlying source topics) need to have the same number of
+        /// partitions.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="VT">the value type of the other</typeparam>
+        /// <typeparam name="VR">the value type of the result</typeparam>
+        /// <param name="table">the other <see cref="IKTable{K, VT}"/> to be joined with this <see cref="IKTable{K, V}"/></param>
+        /// <param name="valueJoiner">a value joiner that computes the join result for a pair of matching records</param>
+        /// <param name="materialized">an instance of <see cref="Materialized{K, VR, S}"/> used to describe how the state store should be materialized.</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains join-records for each key and values computed by the given value joiner, one for each matched record-pair with the same key</returns>
         IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+
+        /// <summary>
+        /// Join records of this <see cref="IKTable{K, V}"/> with another <see cref="IKTable{K, VT}"/>'s records using non-windowed inner equi join.
+        /// The join is a primary key join with join attribute <code>thisKTable.key == otherKTable.key</code>.
+        /// The result is an ever updating <see cref="IKTable{K, VR}"/> that represents the current (i.e., processing time) result
+        /// of the join.
+        /// <para>
+        /// The join is computed by (1) updating the internal state of one <see cref="IKTable{K, V}"/> and (2) performing a lookup for a
+        /// matching record in the current (i.e., processing time) internal state of the other <see cref="IKTable{K, VT}"/>.
+        /// This happens in a symmetric way, i.e., for each update of either this or  other input
+        /// <see cref="IKTable{K, VR}"/> the result gets updated.
+        /// </para>
+        /// <para>
+        /// For each <see cref="IKTable{K, V}"/> record that finds a corresponding record in the other <see cref="IKTable{K, VT}"/> the provided
+        /// <see cref="Func{V, VT, VR}"/> value joiner will be called to compute a value (with arbitrary type) for the result record.
+        /// The key of the result record is the same as for both joining input records.
+        /// </para>
+        /// <para>
+        /// Note that keyvalue record with nukk values (so-called tombstone records) have delete semantics.
+        /// Thus, for input tombstones the provided value-joiner is not called but a tombstone record is forwarded
+        /// directly to delete a record in the result <see cref="IKTable{K, VR}"/> if required (i.e., if there is anything to be deleted).
+        /// </para>
+        /// <para>
+        /// Input records with null key will be dropped and no join computation is performed.
+        /// </para>
+        /// <para>
+        /// Both input streams (or to be more precise, their underlying source topics) need to have the same number of
+        /// partitions.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="VT">the value type of the other</typeparam>
+        /// <typeparam name="VR">the value type of the result</typeparam>
+        /// <param name="table">the other <see cref="IKTable{K, VT}"/> to be joined with this <see cref="IKTable{K, V}"/></param>
+        /// <param name="valueJoiner">a value joiner that computes the join result for a pair of matching records</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains join-records for each key and values computed by the given value joiner, one for each matched record-pair with the same key</returns>
         IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner);
+
+        /// <summary>
+        /// Join records of this <see cref="IKTable{K, V}"/> with another <see cref="IKTable{K, VT}"/>'s records using non-windowed inner equi join,
+        /// with the <see cref="Materialized{K, VR, S}"/> instance for configuration of the key serde,
+        /// result table's value serde, and key-value state store.
+        /// The join is a primary key join with join attribute <code>thisKTable.key == otherKTable.key</code>.
+        /// The result is an ever updating <see cref="IKTable{K, VR}"/> that represents the current (i.e., processing time) result
+        /// of the join.
+        /// <para>
+        /// The join is computed by (1) updating the internal state of one <see cref="IKTable{K, V}"/> and (2) performing a lookup for a
+        /// matching record in the current (i.e., processing time) internal state of the other <see cref="IKTable{K, VT}"/>.
+        /// This happens in a symmetric way, i.e., for each update of either this or  other input
+        /// <see cref="IKTable{K, VR}"/> the result gets updated.
+        /// </para>
+        /// <para>
+        /// For each <see cref="IKTable{K, V}"/> record that finds a corresponding record in the other <see cref="IKTable{K, VT}"/> the provided
+        /// <see cref="Func{V, VT, VR}"/> value joiner will be called to compute a value (with arbitrary type) for the result record.
+        /// The key of the result record is the same as for both joining input records.
+        /// </para>
+        /// <para>
+        /// Note that keyvalue record with nukk values (so-called tombstone records) have delete semantics.
+        /// Thus, for input tombstones the provided value-joiner is not called but a tombstone record is forwarded
+        /// directly to delete a record in the result <see cref="IKTable{K, VR}"/> if required (i.e., if there is anything to be deleted).
+        /// </para>
+        /// <para>
+        /// Input records with null key will be dropped and no join computation is performed.
+        /// </para>
+        /// <para>
+        /// Both input streams (or to be more precise, their underlying source topics) need to have the same number of
+        /// partitions.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="VT">the value type of the other</typeparam>
+        /// <typeparam name="VR">the value type of the result</typeparam>
+        /// <param name="table">the other <see cref="IKTable{K, VT}"/> to be joined with this <see cref="IKTable{K, V}"/></param>
+        /// <param name="valueJoiner">a value joiner that computes the join result for a pair of matching records</param>
+        /// <param name="materialized">an instance of <see cref="Materialized{K, VR, S}"/> used to describe how the state store should be materialized.</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains join-records for each key and values computed by the given value joiner, one for each matched record-pair with the same key</returns>
         IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
+        /// <summary>
+        /// Join records of this <see cref="IKTable{K, V}"/> (left input) with another <see cref="IKTable{K, VT}"/>'s (right input) records using
+        /// non-windowed left equi join.
+        /// The join is a primary key join with join attribute <code>thisKTable.key == otherKTable.key</code>.
+        /// In contrast to <see cref="IKTable{K, V}.Join{VT, VR}(IKTable{K, VT}, Func{V, VT, VR})"/> , all records from left <see cref="IKTable{K, V}"/> will produce
+        /// an output record (cf. below).
+        /// The result is an ever updating <see cref="IKTable{K, VR}"/> that represents the current (i.e., processing time) result
+        /// of the join.
+        /// <para>
+        /// The join is computed by (1) updating the internal state of one <see cref="IKTable{K, V}"/> and (2) performing a lookup for a
+        /// matching record in the current (i.e., processing time) internal state of the other <see cref="IKTable{K, VT}"/>.
+        /// This happens in a symmetric way, i.e., for each update of either this or other input
+        /// <see cref="IKTable{K, VR}"/> the result gets updated.
+        /// </para>
+        /// <para>
+        /// For each <see cref="IKTable{K, V}"/> record that finds a corresponding record in the other <see cref="IKTable{K, VT}"/>'s state the
+        /// provided <see cref="IValueJoiner{V, VT, VR}"/> value joiner will be called to compute a value (with arbitrary type) for the result record.
+        /// Additionally, for each record of left <see cref="IKTable{K, V}"/> that does not find a corresponding record in the
+        /// right <see cref="IKTable{K, VT}"/>'s state the provided <see cref="IValueJoiner{V, VT, VR}"/> value joiner will be called with rightValue =
+        /// null to compute a value (with arbitrary type) for the result record.
+        /// The key of the result record is the same as for both joining input records.
+        /// </para>
+        /// <para>
+        /// Note that keyvalue record with null values (so-called tombstone records) have delete semantics.
+        /// For example, for left input tombstones the provided value-joiner is not called but a tombstone record is
+        /// forwarded directly to delete a record in the result <see cref="IKTable{K, VR}"/> if required (i.e., if there is anything to be
+        /// deleted).
+        /// Input records with null key will be dropped and no join computation is performed.
+        /// </para>
+        /// <para>
+        /// Both input streams (or to be more precise, their underlying source topics) need to have the same number of
+        /// partitions.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="VT">the value type of the other </typeparam>
+        /// <typeparam name="VR">the value type of the result</typeparam>
+        /// <param name="table">the other <see cref="IKTable{K, VT}"/> to be joined with this <see cref="IKTable{K, V}"/></param>
+        /// <param name="valueJoiner">a value joiner that computes the join result for a pair of matching records</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains join-records for each key and values computed by the given value joiner, one for each matched record-pair with the same key plus one for each non-matching record of left <see cref="IKTable{K, V}"/></returns>
         IKTable<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner);
+
+        /// <summary>
+        /// Join records of this <see cref="IKTable{K, V}"/> (left input) with another <see cref="IKTable{K, VT}"/>'s (right input) records using
+        /// non-windowed left equi join, with the <see cref="Materialized{K, VR, S}"/> instance for configuration of the key serde,
+        /// result table's value serde, and key-value state store.
+        /// The join is a primary key join with join attribute <code>thisKTable.key == otherKTable.key</code>.
+        /// In contrast to <see cref="IKTable{K, V}.Join{VT, VR}(IKTable{K, VT}, Func{V, VT, VR})"/> , all records from left <see cref="IKTable{K, V}"/> will produce
+        /// an output record (cf. below).
+        /// The result is an ever updating <see cref="IKTable{K, VR}"/> that represents the current (i.e., processing time) result
+        /// of the join.
+        /// <para>
+        /// The join is computed by (1) updating the internal state of one <see cref="IKTable{K, V}"/> and (2) performing a lookup for a
+        /// matching record in the current (i.e., processing time) internal state of the other <see cref="IKTable{K, VT}"/>.
+        /// This happens in a symmetric way, i.e., for each update of either this or other input
+        /// <see cref="IKTable{K, VR}"/> the result gets updated.
+        /// </para>
+        /// <para>
+        /// For each <see cref="IKTable{K, V}"/> record that finds a corresponding record in the other <see cref="IKTable{K, VT}"/>'s state the
+        /// provided <see cref="IValueJoiner{V, VT, VR}"/> value joiner will be called to compute a value (with arbitrary type) for the result record.
+        /// Additionally, for each record of left <see cref="IKTable{K, V}"/> that does not find a corresponding record in the
+        /// right <see cref="IKTable{K, VT}"/>'s state the provided <see cref="IValueJoiner{V, VT, VR}"/> value joiner will be called with rightValue =
+        /// null to compute a value (with arbitrary type) for the result record.
+        /// The key of the result record is the same as for both joining input records.
+        /// </para>
+        /// <para>
+        /// Note that keyvalue record with null values (so-called tombstone records) have delete semantics.
+        /// For example, for left input tombstones the provided value-joiner is not called but a tombstone record is
+        /// forwarded directly to delete a record in the result <see cref="IKTable{K, VR}"/> if required (i.e., if there is anything to be
+        /// deleted).
+        /// Input records with null key will be dropped and no join computation is performed.
+        /// </para>
+        /// <para>
+        /// Both input streams (or to be more precise, their underlying source topics) need to have the same number of
+        /// partitions.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="VT">the value type of the other </typeparam>
+        /// <typeparam name="VR">the value type of the result</typeparam>
+        /// <param name="table">the other <see cref="IKTable{K, VT}"/> to be joined with this <see cref="IKTable{K, V}"/></param>
+        /// <param name="valueJoiner">a value joiner that computes the join result for a pair of matching records</param>
+        /// <param name="materialized">an instance of <see cref="Materialized{K, VR, S}"/> used to describe how the state store should be materialized.</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains join-records for each key and values computed by the given value joiner, one for each matched record-pair with the same key plus one for each non-matching record of left <see cref="IKTable{K, V}"/></returns>
         IKTable<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        
+        /// <summary>
+        /// Join records of this <see cref="IKTable{K, V}"/> (left input) with another <see cref="IKTable{K, VT}"/>'s (right input) records using
+        /// non-windowed left equi join.
+        /// The join is a primary key join with join attribute <code>thisKTable.key == otherKTable.key</code>.
+        /// In contrast to <see cref="IKTable{K, V}.Join{VT, VR}(IKTable{K, VT}, Func{V, VT, VR})"/> , all records from left <see cref="IKTable{K, V}"/> will produce
+        /// an output record (cf. below).
+        /// The result is an ever updating <see cref="IKTable{K, VR}"/> that represents the current (i.e., processing time) result
+        /// of the join.
+        /// <para>
+        /// The join is computed by (1) updating the internal state of one <see cref="IKTable{K, V}"/> and (2) performing a lookup for a
+        /// matching record in the current (i.e., processing time) internal state of the other <see cref="IKTable{K, VT}"/>.
+        /// This happens in a symmetric way, i.e., for each update of either this or other input
+        /// <see cref="IKTable{K, VR}"/> the result gets updated.
+        /// </para>
+        /// <para>
+        /// For each <see cref="IKTable{K, V}"/> record that finds a corresponding record in the other <see cref="IKTable{K, VT}"/>'s state the
+        /// provided <see cref="Func{V, VT, VR}"/> value joiner will be called to compute a value (with arbitrary type) for the result record.
+        /// Additionally, for each record of left <see cref="IKTable{K, V}"/> that does not find a corresponding record in the
+        /// right <see cref="IKTable{K, VT}"/>'s state the provided <see cref="Func{V, VT, VR}"/> value joiner will be called with rightValue =
+        /// null to compute a value (with arbitrary type) for the result record.
+        /// The key of the result record is the same as for both joining input records.
+        /// </para>
+        /// <para>
+        /// Note that keyvalue record with null values (so-called tombstone records) have delete semantics.
+        /// For example, for left input tombstones the provided value-joiner is not called but a tombstone record is
+        /// forwarded directly to delete a record in the result <see cref="IKTable{K, VR}"/> if required (i.e., if there is anything to be
+        /// deleted).
+        /// Input records with null key will be dropped and no join computation is performed.
+        /// </para>
+        /// <para>
+        /// Both input streams (or to be more precise, their underlying source topics) need to have the same number of
+        /// partitions.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="VT">the value type of the other </typeparam>
+        /// <typeparam name="VR">the value type of the result</typeparam>
+        /// <param name="table">the other <see cref="IKTable{K, VT}"/> to be joined with this <see cref="IKTable{K, V}"/></param>
+        /// <param name="valueJoiner">a value joiner that computes the join result for a pair of matching records</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains join-records for each key and values computed by the given value joiner, one for each matched record-pair with the same key plus one for each non-matching record of left <see cref="IKTable{K, V}"/></returns>
         IKTable<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner);
+
+        /// <summary>
+        /// Join records of this <see cref="IKTable{K, V}"/> (left input) with another <see cref="IKTable{K, VT}"/>'s (right input) records using
+        /// non-windowed left equi join, with the <see cref="Materialized{K, VR, S}"/> instance for configuration of the key serde,
+        /// result table's value serde, and key-value state store.
+        /// The join is a primary key join with join attribute <code>thisKTable.key == otherKTable.key</code>.
+        /// In contrast to <see cref="IKTable{K, V}.Join{VT, VR}(IKTable{K, VT}, Func{V, VT, VR})"/> , all records from left <see cref="IKTable{K, V}"/> will produce
+        /// an output record (cf. below).
+        /// The result is an ever updating <see cref="IKTable{K, VR}"/> that represents the current (i.e., processing time) result
+        /// of the join.
+        /// <para>
+        /// The join is computed by (1) updating the internal state of one <see cref="IKTable{K, V}"/> and (2) performing a lookup for a
+        /// matching record in the current (i.e., processing time) internal state of the other <see cref="IKTable{K, VT}"/>.
+        /// This happens in a symmetric way, i.e., for each update of either this or other input
+        /// <see cref="IKTable{K, VR}"/> the result gets updated.
+        /// </para>
+        /// <para>
+        /// For each <see cref="IKTable{K, V}"/> record that finds a corresponding record in the other <see cref="IKTable{K, VT}"/>'s state the
+        /// provided <see cref="Func{V, VT, VR}"/> value joiner will be called to compute a value (with arbitrary type) for the result record.
+        /// Additionally, for each record of left <see cref="IKTable{K, V}"/> that does not find a corresponding record in the
+        /// right <see cref="IKTable{K, VT}"/>'s state the provided <see cref="Func{V, VT, VR}"/> value joiner will be called with rightValue =
+        /// null to compute a value (with arbitrary type) for the result record.
+        /// The key of the result record is the same as for both joining input records.
+        /// </para>
+        /// <para>
+        /// Note that keyvalue record with null values (so-called tombstone records) have delete semantics.
+        /// For example, for left input tombstones the provided value-joiner is not called but a tombstone record is
+        /// forwarded directly to delete a record in the result <see cref="IKTable{K, VR}"/> if required (i.e., if there is anything to be
+        /// deleted).
+        /// Input records with null key will be dropped and no join computation is performed.
+        /// </para>
+        /// <para>
+        /// Both input streams (or to be more precise, their underlying source topics) need to have the same number of
+        /// partitions.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="VT">the value type of the other </typeparam>
+        /// <typeparam name="VR">the value type of the result</typeparam>
+        /// <param name="table">the other <see cref="IKTable{K, VT}"/> to be joined with this <see cref="IKTable{K, V}"/></param>
+        /// <param name="valueJoiner">a value joiner that computes the join result for a pair of matching records</param>
+        /// <param name="materialized">an instance of <see cref="Materialized{K, VR, S}"/> used to describe how the state store should be materialized.</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains join-records for each key and values computed by the given value joiner, one for each matched record-pair with the same key plus one for each non-matching record of left <see cref="IKTable{K, V}"/></returns>
         IKTable<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
+        /// <summary>
+        /// Join records of this <see cref="IKTable{K, V}"/> (left input) with another <see cref="IKTable{K, VT}"/>'s (right input) records using
+        /// non-windowed outer equi join.
+        /// The join is a primary key join with join attribute <code>thisKTable.key == otherKTable.key</code>.
+        /// In contrast to <see cref="IKTable{K, V}.Join{VT, VR}(IKTable{K, VT}, Func{V, VT, VR})"/> or <see cref="IKTable{K, V}.LeftJoin{VT, VR}(IKTable{K, VT}, Func{V, VT, VR})"/>
+        /// all records from both input KTable's will produce an output record (cf. below).
+        /// The result is an ever updating <see cref="IKTable{K, VR}"/> that represents the current(i.e., processing time) result
+        /// of the join.
+        /// <para>
+        /// The join is computed by (1) updating the internal state of one <see cref="IKTable{K, V}"/> and (2) performing a lookup for a
+        /// matching record in the current (i.e., processing time) internal state of the other <see cref="IKTable{K, VT}"/>.
+        /// This happens in a symmetric way, i.e., for each update of either this or other input
+        /// <see cref="IKTable{K, VR}"/> the result gets updated.
+        /// </para>
+        /// <para>
+        /// For each <see cref="IKTable{K, V}"/> record that finds a corresponding record in the other <see cref="IKTable{K, VT}"/>'s state the
+        /// provided <see cref="IValueJoiner{V, VT, VR}"/> value joiner will be called to compute a value (with arbitrary type) for the result record.
+        /// Additionally, for each record that does not find a corresponding record in the corresponding other
+        /// KTable's state the provided <see cref="IValueJoiner{V, VT, VR}"/> value joiner will be called with null value for the
+        /// corresponding other value to compute a value (with arbitrary type) for the result record.
+        /// The key of the result record is the same as for both joining input records.
+        /// </para>
+        /// <para>
+        /// Note that keyvalue records with  null values (so-called tombstone records) have delete semantics.
+        /// Thus, for input tombstones the provided value-joiner is not called but a tombstone record is forwarded directly
+        /// to delete a record in the result <see cref="IKTable{K, VR}"/>  if required (i.e., if there is anything to be deleted).
+        /// </para>
+        /// <para>
+        /// Input records with null key will be dropped and no join computation is performed.
+        /// Both input streams (or to be more precise, their underlying source topics) need to have the same number of
+        /// partitions.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="VT">the value type of the other </typeparam>
+        /// <typeparam name="VR">the value type of the result </typeparam>
+        /// <param name="table">the other <see cref="IKTable{K, VT}"/>  to be joined with this <see cref="IKTable{K, V}"/> </param>
+        /// <param name="valueJoiner"> a value joiner that computes the join result for a pair of matching records</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains join-records for each key and values computed by the given value joiner, one for each matched record-pair with the same key plus one for each non-matching record both KTables</returns>
         IKTable<K, VR> OuterJoin<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner);
+
+        /// <summary>
+        /// Join records of this <see cref="IKTable{K, V}"/> (left input) with another <see cref="IKTable{K, VT}"/>'s (right input) records using
+        /// non-windowed outer equi join, with the <see cref="Materialized{K, VR, S}"/> instance for configuration of the key serde,
+        /// result table's value serde, and key-value state store.
+        /// The join is a primary key join with join attribute <code>thisKTable.key == otherKTable.key</code>.
+        /// In contrast to <see cref="IKTable{K, V}.Join{VT, VR}(IKTable{K, VT}, Func{V, VT, VR})"/> or <see cref="IKTable{K, V}.LeftJoin{VT, VR}(IKTable{K, VT}, Func{V, VT, VR})"/>
+        /// all records from both input KTable's will produce an output record (cf. below).
+        /// The result is an ever updating <see cref="IKTable{K, VR}"/> that represents the current(i.e., processing time) result
+        /// of the join.
+        /// <para>
+        /// The join is computed by (1) updating the internal state of one <see cref="IKTable{K, V}"/> and (2) performing a lookup for a
+        /// matching record in the current (i.e., processing time) internal state of the other <see cref="IKTable{K, VT}"/>.
+        /// This happens in a symmetric way, i.e., for each update of either this or other input
+        /// <see cref="IKTable{K, VR}"/> the result gets updated.
+        /// </para>
+        /// <para>
+        /// For each <see cref="IKTable{K, V}"/> record that finds a corresponding record in the other <see cref="IKTable{K, VT}"/>'s state the
+        /// provided <see cref="IValueJoiner{V, VT, VR}"/> value joiner will be called to compute a value (with arbitrary type) for the result record.
+        /// Additionally, for each record that does not find a corresponding record in the corresponding other
+        /// KTable's state the provided <see cref="IValueJoiner{V, VT, VR}"/> value joiner will be called with null value for the
+        /// corresponding other value to compute a value (with arbitrary type) for the result record.
+        /// The key of the result record is the same as for both joining input records.
+        /// </para>
+        /// <para>
+        /// Note that keyvalue records with  null values (so-called tombstone records) have delete semantics.
+        /// Thus, for input tombstones the provided value-joiner is not called but a tombstone record is forwarded directly
+        /// to delete a record in the result <see cref="IKTable{K, VR}"/>  if required (i.e., if there is anything to be deleted).
+        /// </para>
+        /// <para>
+        /// Input records with null key will be dropped and no join computation is performed.
+        /// Both input streams (or to be more precise, their underlying source topics) need to have the same number of
+        /// partitions.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="VT">the value type of the other </typeparam>
+        /// <typeparam name="VR">the value type of the result </typeparam>
+        /// <param name="table">the other <see cref="IKTable{K, VT}"/>  to be joined with this <see cref="IKTable{K, V}"/> </param>
+        /// <param name="valueJoiner"> a value joiner that computes the join result for a pair of matching records</param>
+        /// <param name="materialized">an instance of <see cref="Materialized{K, VR, S}"/> used to describe how the state store should be materialized.</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains join-records for each key and values computed by the given value joiner, one for each matched record-pair with the same key plus one for each non-matching record both KTables</returns>
         IKTable<K, VR> OuterJoin<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+
+        /// <summary>
+        /// Join records of this <see cref="IKTable{K, V}"/> (left input) with another <see cref="IKTable{K, VT}"/>'s (right input) records using
+        /// non-windowed outer equi join.
+        /// The join is a primary key join with join attribute <code>thisKTable.key == otherKTable.key</code>.
+        /// In contrast to <see cref="IKTable{K, V}.Join{VT, VR}(IKTable{K, VT}, Func{V, VT, VR})"/> or <see cref="IKTable{K, V}.LeftJoin{VT, VR}(IKTable{K, VT}, Func{V, VT, VR})"/>
+        /// all records from both input KTable's will produce an output record (cf. below).
+        /// The result is an ever updating <see cref="IKTable{K, VR}"/> that represents the current(i.e., processing time) result
+        /// of the join.
+        /// <para>
+        /// The join is computed by (1) updating the internal state of one <see cref="IKTable{K, V}"/> and (2) performing a lookup for a
+        /// matching record in the current (i.e., processing time) internal state of the other <see cref="IKTable{K, VT}"/>.
+        /// This happens in a symmetric way, i.e., for each update of either this or other input
+        /// <see cref="IKTable{K, VR}"/> the result gets updated.
+        /// </para>
+        /// <para>
+        /// For each <see cref="IKTable{K, V}"/> record that finds a corresponding record in the other <see cref="IKTable{K, VT}"/>'s state the
+        /// provided <see cref="Func{V, VT, VR}"/> value joiner will be called to compute a value (with arbitrary type) for the result record.
+        /// Additionally, for each record that does not find a corresponding record in the corresponding other
+        /// KTable's state the provided <see cref="Func{V, VT, VR}"/> value joiner will be called with null value for the
+        /// corresponding other value to compute a value (with arbitrary type) for the result record.
+        /// The key of the result record is the same as for both joining input records.
+        /// </para>
+        /// <para>
+        /// Note that keyvalue records with  null values (so-called tombstone records) have delete semantics.
+        /// Thus, for input tombstones the provided value-joiner is not called but a tombstone record is forwarded directly
+        /// to delete a record in the result <see cref="IKTable{K, VR}"/>  if required (i.e., if there is anything to be deleted).
+        /// </para>
+        /// <para>
+        /// Input records with null key will be dropped and no join computation is performed.
+        /// Both input streams (or to be more precise, their underlying source topics) need to have the same number of
+        /// partitions.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="VT">the value type of the other </typeparam>
+        /// <typeparam name="VR">the value type of the result </typeparam>
+        /// <param name="table">the other <see cref="IKTable{K, VT}"/>  to be joined with this <see cref="IKTable{K, V}"/> </param>
+        /// <param name="valueJoiner"> a value joiner that computes the join result for a pair of matching records</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains join-records for each key and values computed by the given value joiner, one for each matched record-pair with the same key plus one for each non-matching record both KTables</returns>
         IKTable<K, VR> OuterJoin<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner);
+
+        /// <summary>
+        /// Join records of this <see cref="IKTable{K, V}"/> (left input) with another <see cref="IKTable{K, VT}"/>'s (right input) records using
+        /// non-windowed outer equi join, with the <see cref="Materialized{K, VR, S}"/> instance for configuration of the key serde,
+        /// result table's value serde, and key-value state store.
+        /// The join is a primary key join with join attribute <code>thisKTable.key == otherKTable.key</code>.
+        /// In contrast to <see cref="IKTable{K, V}.Join{VT, VR}(IKTable{K, VT}, Func{V, VT, VR})"/> or <see cref="IKTable{K, V}.LeftJoin{VT, VR}(IKTable{K, VT}, Func{V, VT, VR})"/>
+        /// all records from both input KTable's will produce an output record (cf. below).
+        /// The result is an ever updating <see cref="IKTable{K, VR}"/> that represents the current(i.e., processing time) result
+        /// of the join.
+        /// <para>
+        /// The join is computed by (1) updating the internal state of one <see cref="IKTable{K, V}"/> and (2) performing a lookup for a
+        /// matching record in the current (i.e., processing time) internal state of the other <see cref="IKTable{K, VT}"/>.
+        /// This happens in a symmetric way, i.e., for each update of either this or other input
+        /// <see cref="IKTable{K, VR}"/> the result gets updated.
+        /// </para>
+        /// <para>
+        /// For each <see cref="IKTable{K, V}"/> record that finds a corresponding record in the other <see cref="IKTable{K, VT}"/>'s state the
+        /// provided <see cref="Func{V, VT, VR}"/> value joiner will be called to compute a value (with arbitrary type) for the result record.
+        /// Additionally, for each record that does not find a corresponding record in the corresponding other
+        /// KTable's state the provided <see cref="Func{V, VT, VR}"/> value joiner will be called with null value for the
+        /// corresponding other value to compute a value (with arbitrary type) for the result record.
+        /// The key of the result record is the same as for both joining input records.
+        /// </para>
+        /// <para>
+        /// Note that keyvalue records with  null values (so-called tombstone records) have delete semantics.
+        /// Thus, for input tombstones the provided value-joiner is not called but a tombstone record is forwarded directly
+        /// to delete a record in the result <see cref="IKTable{K, VR}"/>  if required (i.e., if there is anything to be deleted).
+        /// </para>
+        /// <para>
+        /// Input records with null key will be dropped and no join computation is performed.
+        /// Both input streams (or to be more precise, their underlying source topics) need to have the same number of
+        /// partitions.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="VT">the value type of the other </typeparam>
+        /// <typeparam name="VR">the value type of the result </typeparam>
+        /// <param name="table">the other <see cref="IKTable{K, VT}"/>  to be joined with this <see cref="IKTable{K, V}"/> </param>
+        /// <param name="valueJoiner"> a value joiner that computes the join result for a pair of matching records</param>
+        /// <param name="materialized">an instance of <see cref="Materialized{K, VR, S}"/> used to describe how the state store should be materialized.</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>a <see cref="IKTable{K, VR}"/> that contains join-records for each key and values computed by the given value joiner, one for each matched record-pair with the same key plus one for each non-matching record both KTables</returns>
         IKTable<K, VR> OuterJoin<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
     }
 }
