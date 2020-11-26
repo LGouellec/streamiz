@@ -169,18 +169,15 @@
 <p>Just few lines of code, with the settings kafka cluster and DSL builder, you may to create your first .NET streamiz application.</p>
 <div class="section" id="nuget-package">
 <h2>Nuget package<a class="headerlink" href="#nuget-package" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dotnet add package Streamiz.Kafka.Net --version <span class="m">1</span>.0.0
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dotnet add package Streamiz.Kafka.Net
 </pre></div>
 </div>
 </div>
 <div class="section" id="tutorial-first-streamiz-application">
 <h2>Tutorial: First streamiz application<a class="headerlink" href="#tutorial-first-streamiz-application" title="Permalink to this headline">¶</a></h2>
 <p>This tutorial will describe all the steps required to create a first streamiz application with a simple case :</p>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="k">void</span> <span class="nf">Main</span><span class="p">(</span><span class="kt">string</span><span class="p">[]</span> <span class="n">args</span><span class="p">)</span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="k">async</span> <span class="n">Task</span> <span class="nf">Main</span><span class="p">(</span><span class="kt">string</span><span class="p">[]</span> <span class="n">args</span><span class="p">)</span>
 <span class="p">{</span>
-    <span class="c1">// Generate cancellable token</span>
-    <span class="n">CancellationTokenSource</span> <span class="n">source</span> <span class="p">=</span> <span class="k">new</span> <span class="n">CancellationTokenSource</span><span class="p">();</span>
-
     <span class="c1">// Stream configuration</span>
     <span class="kt">var</span> <span class="n">config</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StreamConfig</span><span class="p">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span> <span class="n">StringSerDes</span><span class="p">&gt;();</span>
     <span class="n">config</span><span class="p">.</span><span class="n">ApplicationId</span> <span class="p">=</span> <span class="s">&quot;test-app&quot;</span><span class="p">;</span>
@@ -206,12 +203,11 @@
     <span class="c1">// Subscribe CTRL + C to quit stream application</span>
     <span class="n">Console</span><span class="p">.</span><span class="n">CancelKeyPress</span> <span class="p">+=</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span> <span class="p">=&gt;</span>
     <span class="p">{</span>
-        <span class="n">source</span><span class="p">.</span><span class="n">Cancel</span><span class="p">();</span>
-        <span class="n">stream</span><span class="p">.</span><span class="n">Close</span><span class="p">();</span>
+        <span class="n">stream</span><span class="p">.</span><span class="n">Dispose</span><span class="p">();</span>
     <span class="p">};</span>
 
     <span class="c1">// Start stream instance with cancellable token</span>
-    <span class="n">stream</span><span class="p">.</span><span class="n">Start</span><span class="p">(</span><span class="n">source</span><span class="p">.</span><span class="n">Token</span><span class="p">);</span>
+    <span class="k">await</span> <span class="n">stream</span><span class="p">.</span><span class="n">StartAsync</span><span class="p">();</span>
 <span class="p">}</span>
 </pre></div>
 </div>

@@ -23,7 +23,18 @@ namespace Streamiz.Kafka.Net.Mock
         private readonly IDictionary<TaskId, IList<TopicPartition>> partitionsByTaskId = new Dictionary<TaskId, IList<TopicPartition>>();
         private readonly SyncProducer producer = null;
 
+        public bool IsRunning { get; private set; }
+
+        public bool IsStopped => !IsRunning;
+
+        public bool IsError { get; private set; } = false;
+
         public TaskSynchronousTopologyDriver(string clientId, InternalTopologyBuilder topologyBuilder, IStreamConfig configuration, IStreamConfig topicConfiguration, CancellationToken token)
+            : this(clientId, topologyBuilder, configuration, topicConfiguration, null, token)
+        {
+        }
+
+        public TaskSynchronousTopologyDriver(string clientId, InternalTopologyBuilder topologyBuilder, IStreamConfig configuration, IStreamConfig topicConfiguration, IKafkaSupplier supplier, CancellationToken token)
         {
             this.configuration = configuration;
             this.configuration.ClientId = clientId;
@@ -31,10 +42,10 @@ namespace Streamiz.Kafka.Net.Mock
 
             this.token = token;
             builder = topologyBuilder;
-            supplier = new SyncKafkaSupplier();
-            producer = supplier.GetProducer(configuration.ToProducerConfig()) as SyncProducer;
+            this.supplier = supplier ?? new SyncKafkaSupplier();
+            producer = this.supplier.GetProducer(configuration.ToProducerConfig()) as SyncProducer;
 
-            foreach(var sourceTopic in builder.GetSourceTopics().Union(builder.GetGlobalTopics()))
+            foreach (var sourceTopic in builder.GetSourceTopics().Union(builder.GetGlobalTopics()))
             {
                 var part = new TopicPartition(sourceTopic, 0);
                 var taskId = builder.GetTaskIdFromPartition(part);
@@ -102,11 +113,14 @@ namespace Streamiz.Kafka.Net.Mock
         {
             foreach (var t in tasks.Values)
                 t.Close();
+            
+            IsRunning = false;
         }
 
         public void StartDriver()
         {
             // NOTHING
+            IsRunning = true;
         }
 
         public IStateStore GetStateStore<K, V>(string name)

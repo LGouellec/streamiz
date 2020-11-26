@@ -10,6 +10,7 @@ using System.Threading;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
+    //ReadKeyValuesToMap
     public class KTableToStreamTests
     {
         [Test]
@@ -125,6 +126,37 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
                 var results = outputTopic.ReadKeyValueList().Select(r => KeyValuePair.Create(r.Message.Key, r.Message.Value));
                 Assert.AreEqual(expected, results);
+            }
+        }
+
+        [Test]
+        public void KTableToStreamWithLastUpdate()
+        {
+            var builder = new StreamBuilder();
+
+            builder.Table("table-topic", InMemory<string, string>.As("table-topic-store"))
+                .ToStream().To("table-stream");
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-map";
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("table-topic");
+                var outputTopic = driver.CreateOuputTopic<string, string>("table-stream");
+                var expected = new List<KeyValuePair<string, string>>();
+                expected.Add(KeyValuePair.Create("key1", "c"));
+
+                inputTopic.PipeInput("key1", "a");
+                inputTopic.PipeInput("key1", "b");
+                inputTopic.PipeInput("key1", "c");
+
+                var results = outputTopic.ReadKeyValuesToMap();
+
+                Assert.AreEqual(1, results.Count);
+                Assert.AreEqual("c", results["key1"]);
             }
         }
     }

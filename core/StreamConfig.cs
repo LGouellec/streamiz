@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors;
@@ -117,6 +118,21 @@ namespace Streamiz.Kafka.Net
         #region Stream Config Property
 
         /// <summary>
+        /// Inner exception handling function called during processing.
+        /// </summary>
+        Func<Exception, ExceptionHandlerResponse> InnerExceptionHandler { get; set; }
+
+        /// <summary>
+        /// Deserialization exception handling function called when deserialization exception during kafka consumption is raise.
+        /// </summary>
+        Func<ProcessorContext, ConsumeResult<byte[], byte[]>, Exception, ExceptionHandlerResponse> DeserializationExceptionHandler { get; set; }
+
+        /// <summary>
+        /// Production exception handling function called when kafka produce exception is raise.
+        /// </summary>
+        Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler { get; set; } 
+
+        /// <summary>
         /// Maximum allowed time between calls to consume messages (e.g., rd_kafka_consumer_poll())
         /// for high-level consumers. If this interval is exceeded the consumer is considered
         /// failed and the group will rebalance in order to reassign the partitions to another
@@ -140,8 +156,8 @@ namespace Streamiz.Kafka.Net
         long PollMs { get; set; }
 
         /// <summary>
-        /// The frequency with which to save the position of the processor. (Note, if <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, the default value is <code>" + EOS_DEFAULT_COMMIT_INTERVAL_MS + "</code>,"
-        /// otherwise the default value is <code>" + DEFAULT_COMMIT_INTERVAL_MS + "</code>.
+        /// The frequency with which to save the position of the processor. (Note, if <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, the default value is <see cref="StreamConfig.EOS_DEFAULT_COMMIT_INTERVAL_MS"/>,
+        /// otherwise the default value is <see cref="StreamConfig.DEFAULT_COMMIT_INTERVAL_MS"/>)
         /// </summary>
         long CommitIntervalMs { get; set; }
 
@@ -1763,6 +1779,9 @@ namespace Streamiz.Kafka.Net
             MaxPollRecords = 500;
             MaxTaskIdleMs = 0;
             BufferedRecordsPerPartition = 1000;
+            InnerExceptionHandler = (exception) => ExceptionHandlerResponse.FAIL;
+            ProductionExceptionHandler = (report) => ExceptionHandlerResponse.FAIL;
+            DeserializationExceptionHandler = (context, record, exception) => ExceptionHandlerResponse.FAIL;
 
             if (properties != null)
             {
@@ -1897,8 +1916,8 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
-        /// The frequency with which to save the position of the processor. (Note, if <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, the default value is <code>" + EOS_DEFAULT_COMMIT_INTERVAL_MS + "</code>,"
-        /// otherwise the default value is <code>" + DEFAULT_COMMIT_INTERVAL_MS + "</code>.
+        /// The frequency with which to save the position of the processor. (Note, if <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, the default value is <see cref="StreamConfig.EOS_DEFAULT_COMMIT_INTERVAL_MS"/>,
+        /// otherwise the default value is <see cref="StreamConfig.DEFAULT_COMMIT_INTERVAL_MS"/>)
         /// </summary>
         public long CommitIntervalMs
         {
@@ -1941,6 +1960,21 @@ namespace Streamiz.Kafka.Net
             get => this[bufferedRecordsPerPartitionCst];
             set => this.AddOrUpdate(bufferedRecordsPerPartitionCst, value);
         }
+
+        /// <summary>
+        /// Inner exception handling function called during processing.
+        /// </summary>
+        public Func<Exception, ExceptionHandlerResponse> InnerExceptionHandler { get; set; }
+
+        /// <summary>
+        /// Deserialization exception handling function called when deserialization exception during kafka consumption is raise.
+        /// </summary>
+        public Func<ProcessorContext, ConsumeResult<byte[], byte[]>, Exception, ExceptionHandlerResponse> DeserializationExceptionHandler { get; set; }
+
+        /// <summary>
+        /// Production exception handling function called when kafka produce exception is raise.
+        /// </summary>
+        public Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler { get; set; }
 
         /// <summary>
         /// Get the configs to the <see cref="IProducer{TKey, TValue}"/>

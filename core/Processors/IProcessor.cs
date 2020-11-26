@@ -1,4 +1,5 @@
-﻿using Streamiz.Kafka.Net.SerDes;
+﻿using Confluent.Kafka;
+using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
 
@@ -14,6 +15,7 @@ namespace Streamiz.Kafka.Net.Processors
         IList<IProcessor> Next { get; }
         void AddNextProcessor(IProcessor next);
         void Close();
+        void Process(ConsumeResult<byte[], byte[]> record);
         void Process(object key, object value);
         void Forward<K1, V1>(K1 key, V1 value);
         void Forward<K1, V1>(K1 key, V1 value, string name);

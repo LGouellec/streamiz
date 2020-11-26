@@ -185,10 +185,28 @@ The maximum number of records returned in consumption processing by thread. (Def
 
 Maximum amount of time a stream task will stay idle when not all of its partition buffers contain records, to avoid potential out-of-order record processing across multiple input streams. (Default: 0)
 
+### MaxPollIntervalMs
+
+Maximum allowed time between calls to consume messages for high-level consumers. If this interval is exceeded the consumer is considered failed and the group will rebalance in order to reassign the partitions to another consumer group member.
+
 ### BufferedRecordsPerPartition
 
 Maximum number of records to buffer per partition. (Default: 1000)
 If this number is exceeded, the consumer pauses for this partition until stream instance process messages.
+
+
+
+### InnerExceptionHandler
+
+Inner exception handling function called during processing.
+
+### DeserializationExceptionHandler
+
+Deserialization exception handling function called when deserialization exception during kafka consumption is raise.
+
+### ProductionExceptionHandler
+
+Production exception handling function called when kafka produce exception is raise.
 
 ## Kafka consumers and producer configuration parameters
 

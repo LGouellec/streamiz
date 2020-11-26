@@ -166,7 +166,7 @@
 </div>
 <p>It’s allowed to develop .NET applications that transform input Kafka topics into output Kafka topics.
 It’s a rewriting inspired by <a class="reference external" href="https://github.com/apache/kafka">Kafka Streams</a>.</p>
-<p>Streamiz.Kafka.Net aims to provide the same functionality <a class="reference external" href="https://github.com/apache/kafka">Kafka Streams</a>.
+<p>Streamiz.Kafka.Net aims to provide the same functionality as <a class="reference external" href="https://github.com/apache/kafka">Kafka Streams</a>.
 So you can found documentation here :</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://docs.confluent.io/current/streams/index.html">Confluent Kafka Streams</a></p></li>
@@ -183,10 +183,8 @@ So you can found documentation here :</p>
 <li><p>Please retrieve your kafka cluster connection information</p></li>
 </ul>
 <p>Add this code</p>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="k">void</span> <span class="nf">Main</span><span class="p">(</span><span class="kt">string</span><span class="p">[]</span> <span class="n">args</span><span class="p">)</span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="k">async</span> <span class="n">Task</span> <span class="nf">Main</span><span class="p">(</span><span class="kt">string</span><span class="p">[]</span> <span class="n">args</span><span class="p">)</span>
 <span class="p">{</span>
-   <span class="n">CancellationTokenSource</span> <span class="n">source</span> <span class="p">=</span> <span class="k">new</span> <span class="n">CancellationTokenSource</span><span class="p">();</span>
-
    <span class="kt">var</span> <span class="n">config</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StreamConfig</span><span class="p">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span> <span class="n">StringSerDes</span><span class="p">&gt;();</span>
    <span class="n">config</span><span class="p">.</span><span class="n">ApplicationId</span> <span class="p">=</span> <span class="s">&quot;test-app&quot;</span><span class="p">;</span>
    <span class="n">config</span><span class="p">.</span><span class="n">BootstrapServers</span> <span class="p">=</span> <span class="s">&quot;192.168.56.1:9092&quot;</span><span class="p">;</span>
@@ -207,11 +205,10 @@ So you can found documentation here :</p>
    <span class="n">KafkaStream</span> <span class="n">stream</span> <span class="p">=</span> <span class="k">new</span> <span class="n">KafkaStream</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">config</span><span class="p">);</span>
 
    <span class="n">Console</span><span class="p">.</span><span class="n">CancelKeyPress</span> <span class="p">+=</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
-      <span class="n">source</span><span class="p">.</span><span class="n">Cancel</span><span class="p">();</span>
-      <span class="n">stream</span><span class="p">.</span><span class="n">Close</span><span class="p">();</span>
+      <span class="n">stream</span><span class="p">.</span><span class="n">Dispose</span><span class="p">();</span>
    <span class="p">};</span>
 
-   <span class="n">stream</span><span class="p">.</span><span class="n">Start</span><span class="p">(</span><span class="n">source</span><span class="p">.</span><span class="n">Token</span><span class="p">);</span>
+   <span class="k">await</span> <span class="n">stream</span><span class="p">.</span><span class="n">StartAsync</span><span class="p">();</span>
 <span class="p">}</span>
 </pre></div>
 </div>

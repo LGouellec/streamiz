@@ -79,8 +79,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var key = Encoding.ASCII.GetBytes("key");
             var value = Encoding.ASCII.GetBytes("value");
             globalStateUpdateTask.Initialize();
-
-            globalStateUpdateTask.Update(new ConsumeResult<byte[], byte[]>()
+            var record = new ConsumeResult<byte[], byte[]>()
             {
                 Topic = sourceProcessorMock.Object.TopicName,
                 Message = new Message<byte[], byte[]>()
@@ -88,10 +87,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     Key = key,
                     Value = value
                 }
-            });
+            };
 
-            sourceProcessorMock.Verify(x => x.Process(key, value), Times.Once);
-            otherSourceProcessorMock.Verify(x => x.Process(key, value), Times.Never);
+            globalStateUpdateTask.Update(record);
+
+            sourceProcessorMock.Verify(x => x.Process(record), Times.Once);
+            otherSourceProcessorMock.Verify(x => x.Process(record), Times.Never);
         }
 
         [Test]
@@ -101,7 +102,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var value = Encoding.ASCII.GetBytes("value");
             globalStateUpdateTask.Initialize();
 
-            globalStateUpdateTask.Update(new ConsumeResult<byte[], byte[]>()
+            var record = new ConsumeResult<byte[], byte[]>()
             {
                 Topic = otherSourceProcessorMock.Object.TopicName,
                 Message = new Message<byte[], byte[]>()
@@ -109,10 +110,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     Key = key,
                     Value = value
                 }
-            });
+            };
 
-            sourceProcessorMock.Verify(x => x.Process(key, value), Times.Never);
-            otherSourceProcessorMock.Verify(x => x.Process(key, value), Times.Once);
+            globalStateUpdateTask.Update(record);
+
+            sourceProcessorMock.Verify(x => x.Process(record), Times.Never);
+            otherSourceProcessorMock.Verify(x => x.Process(record), Times.Once);
         }
 
         [Test]

@@ -5,7 +5,7 @@
     <RootNamespace>Streamiz.Kafka.Net</RootNamespace>
     <AssemblyName>Streamiz.Kafka.Net</AssemblyName>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
     <Authors>@LGouellec</Authors>
     <PackageId>Streamiz.Kafka.Net</PackageId>
     <Product>Streamiz.Kafka.NET</Product>
@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Confluent.Kafka" Version="1.5.1" />
+    <PackageReference Include="Confluent.Kafka" Version="1.5.2" />
     <PackageReference Include="log4net" Version="2.0.8" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />

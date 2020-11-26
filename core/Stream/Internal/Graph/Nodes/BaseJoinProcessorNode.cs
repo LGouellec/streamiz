@@ -21,10 +21,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
             string rightJoinSideName)
             : base(name)
         {
-            ValueJoiner = valueJoiner ?? throw new ArgumentNullException(nameof(valueJoiner));
+            ValueJoiner = valueJoiner;
             JoinLeftParams = joinLeftParams ?? throw new ArgumentNullException(nameof(joinLeftParams));
             JoinRightParams = joinRightParams ?? throw new ArgumentNullException(nameof(joinRightParams));
-            JoinMergeParams = joinMergeParams ?? throw new ArgumentNullException(nameof(joinMergeParams));
+            JoinMergeParams = joinMergeParams;
             LeftJoinSideName = leftJoinSideName;
             RightJoinSideName = rightJoinSideName;
         }
@@ -32,7 +32,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
         public IValueJoiner<V1, V2, VR> ValueJoiner { get; }
         public ProcessorParameters<K, V1> JoinLeftParams { get; }
         public ProcessorParameters<K, V2> JoinRightParams { get; }
-        public ProcessorParameters<K, VR> JoinMergeParams { get; }
+        public ProcessorParameters<K, VR> JoinMergeParams { get; internal set; }
         public string LeftJoinSideName { get; }
         public string RightJoinSideName { get; }
     }
