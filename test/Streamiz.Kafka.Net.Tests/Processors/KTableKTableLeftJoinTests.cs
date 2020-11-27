@@ -234,5 +234,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 Assert.AreEqual("Order:PixelA4|UserRegion:lise-?", records["lise"]);
             }
         }
+
+
     }
 }
