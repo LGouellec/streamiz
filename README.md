@@ -33,7 +33,6 @@ This project is being written. Thanks for you contribution !
 
 # Timeline
 
-- End November 2020 - 1.1.0 - FULL Join statefull processors (KTable join)
 - End December 2020 - 1.2.0 - Persistent state store (eg: RocksDB Store), Repartition and Changelog topics
 - End 2020 / Begin 2021 - 1.3.0 - Processor API, Metrics, Interactive Queries, Standby Replica
 
@@ -93,7 +92,7 @@ static void Main(string[] args)
 - [X] Refactor Subtopology & StreamTask assignment
 - [X] Refactor Topology description for corresponding to java implementation
 - [X] Refactor Partition grouper + record queue
-- [WIP] Statefull processors impl
+- [X] Statefull processors impl
 - [ ] Transform and Through Processor
 - [ ] Supress Processor (.suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded())))
 - [ ] Rocks DB state implementation

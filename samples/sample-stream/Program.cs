@@ -16,14 +16,15 @@ namespace sample_stream
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app";
-            config.BootstrapServers = "localhost:29092";
-            config.PollMs = 100;
-            config.MaxPollRecords = 500;
+            config.BootstrapServers = "localhost:19092";
+            config.PollMs = 25;
+            config.MaxPollRecords = 1000;
 
             StreamBuilder builder = new StreamBuilder();
 
             builder
                 .Stream<string, string>("test")
+                .Filter((k, v) => !string.IsNullOrEmpty(v))
                 .To("test-output");
 
             Topology t = builder.Build();
