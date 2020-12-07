@@ -23,11 +23,11 @@
 Streamiz Kafka .NET is .NET stream processing library for Apache Kafka. 
 
 It's allowed to develop .NET applications that transform input Kafka topics into output Kafka topics. 
-It's supported .NET Standard 2.1.
+It's supported .NET Standard 2.1. 
 
-It's a rewriting inspired by [Kafka Streams](https://github.com/apache/kafka).
+**So this library can be used by >= .NET Core 3.0 and/or .NET 5.0 applications.**
 
-Finally it will provide the same functionality as [Kafka Streams](https://github.com/apache/kafka).
+It's a rewriting inspired by [Kafka Streams](https://github.com/apache/kafka). Finally it will provide the same functionality as [Kafka Streams](https://github.com/apache/kafka).
 
 This project is being written. Thanks for you contribution !
 
