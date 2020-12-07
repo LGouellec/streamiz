@@ -16,11 +16,7 @@ namespace sample_stream
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app";
-            config.BootstrapServers = "192.168.56.1:9092";
-            config.SaslMechanism = Confluent.Kafka.SaslMechanism.Plain;
-            config.SecurityProtocol = Confluent.Kafka.SecurityProtocol.SaslPlaintext;
-            config.SaslUsername = "admin";
-            config.SaslPassword = "admin";
+            config.BootstrapServers = "localhost:9092";
 
             StreamBuilder builder = new StreamBuilder();
             IKStream<string, string> kStream = builder.Stream<string, string>("test-topic");

@@ -401,7 +401,7 @@ namespace Streamiz.Kafka.Net.Processors
         private IEnumerable<ConsumeResult<byte[], byte[]>> PollRequest(TimeSpan ts)
         {
             lastPollMs = DateTime.Now.GetMilliseconds();
-            return consumer.ConsumeRecords(ts);
+            return consumer.ConsumeRecords(ts, streamConfig.MaxPollRecords);
         }
 
         internal ThreadState SetState(ThreadState newState)

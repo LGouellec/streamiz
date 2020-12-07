@@ -19,18 +19,21 @@ namespace Streamiz.Kafka.Net.Processors
             private readonly IGlobalStateMaintainer globalStateMaintainer;
             private readonly TimeSpan pollTime;
             private readonly TimeSpan flushInterval;
+            private readonly long maxPollRecords;
             private DateTime lastFlush;
 
             public StateConsumer(
                 IConsumer<byte[], byte[]> globalConsumer,
                 IGlobalStateMaintainer globalStateMaintainer,
                 TimeSpan pollTime,
-                TimeSpan flushInterval)
+                TimeSpan flushInterval, 
+                long maxPollRecords)
             {
                 this.globalConsumer = globalConsumer;
                 this.globalStateMaintainer = globalStateMaintainer;
                 this.pollTime = pollTime;
                 this.flushInterval = flushInterval;
+                this.maxPollRecords = maxPollRecords;
             }
 
             public void Initialize()
@@ -45,7 +48,7 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 try
                 {
-                    var received = globalConsumer.ConsumeRecords(pollTime);
+                    var received = globalConsumer.ConsumeRecords(pollTime, maxPollRecords);
                     foreach (var record in received)
                     {
                         globalStateMaintainer.Update(record);
@@ -159,7 +162,8 @@ namespace Streamiz.Kafka.Net.Processors
                     globalStateMaintainer,
                     // if poll time is bigger than int allows something is probably wrong anyway
                     new TimeSpan(0, 0, 0, 0, (int)configuration.PollMs),
-                    new TimeSpan(0, 0, 0, 0, (int)configuration.CommitIntervalMs));
+                    new TimeSpan(0, 0, 0, 0, (int)configuration.CommitIntervalMs),
+                    configuration.MaxPollRecords);
                 stateConsumer.Initialize();
                 return stateConsumer;
             }
