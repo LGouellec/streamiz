@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,7 +11,7 @@ namespace Streamiz.Kafka.Net.Mock
     public static class IntegrationTestUtils
     {
         /// <summary>
-        /// Wait until <paramref name="size"/> messages in topic
+        /// Wait until <paramref name="size"/> messages in topic and 10 timeout seconds.
         /// </summary>
         /// <typeparam name="K">key type</typeparam>
         /// <typeparam name="V">value type</typeparam>
@@ -19,10 +20,15 @@ namespace Streamiz.Kafka.Net.Mock
         /// <returns>Return a list of records</returns>
         public static List<ConsumeResult<K, V>> WaitUntilMinKeyValueRecordsReceived<K, V>(TestOutputTopic<K, V> topic, int size)
         {
+            DateTime dt = DateTime.Now;
+            TimeSpan ts = TimeSpan.FromSeconds(10);
+
             List<ConsumeResult<K, V>> results = new List<ConsumeResult<K, V>>();
             do
             {
                 results.AddRange(topic.ReadKeyValueList().ToList());
+                if (dt + ts < DateTime.Now)
+                    break;
             } while (results.Count < size);
 
             return results;
