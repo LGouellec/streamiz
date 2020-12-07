@@ -83,11 +83,14 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         private bool CreateTopic(string topic, int partitions)
         {
-            if (!topics.Values.Any(t => t.Name.Equals(topic, StringComparison.InvariantCultureIgnoreCase)))
+            lock (rebalanceLock)
             {
-                var t = new MockTopic(topic, partitions);
-                topics.Add(topic, t);
-                return true;
+                if (!topics.Values.Any(t => t.Name.Equals(topic, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    var t = new MockTopic(topic, partitions);
+                    topics.Add(topic, t);
+                    return true;
+                }
             }
             return false;
         }
