@@ -12,28 +12,25 @@ namespace sample_stream
     /// </summary>
     internal class Program
     {
-        private static async Task Main(string[] args)
+        static async System.Threading.Tasks.Task Main(string[] args)
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app";
-            config.BootstrapServers = "localhost:19092";
-            config.PollMs = 25;
-            config.MaxPollRecords = 1000;
+            config.BootstrapServers = "192.168.56.1:9092";
+            config.SaslMechanism = Confluent.Kafka.SaslMechanism.Plain;
+            config.SecurityProtocol = Confluent.Kafka.SecurityProtocol.SaslPlaintext;
+            config.SaslUsername = "admin";
+            config.SaslPassword = "admin";
 
             StreamBuilder builder = new StreamBuilder();
+            IKStream<string, string> kStream = builder.Stream<string, string>("test-topic");
 
-            builder
-                .Stream<string, string>("test")
-                .Filter((k, v) => !string.IsNullOrEmpty(v))
-                .To("test-output");
+            kStream.Print(Printed<string, string>.ToOut());
 
             Topology t = builder.Build();
-
             KafkaStream stream = new KafkaStream(t, config);
 
-            Console.CancelKeyPress += (o, e) => {
-                stream.Dispose();
-            };
+            Console.CancelKeyPress += (o, e) => stream.Dispose();
 
             await stream.StartAsync();
         }

@@ -37,16 +37,17 @@ namespace Streamiz.Kafka.Net.Crosscutting
         {
             List<ConsumeResult<K, V>> records = new List<ConsumeResult<K, V>>();
             DateTime dt = DateTime.Now;
+            TimeSpan ts = TimeSpan.Zero;
             do
             {
-                var r = consumer.Consume(TimeSpan.Zero);
+                var r = consumer.Consume(ts);
                 if (r != null)
                 {
                     records.Add(r);
                 }
                 else
                 {
-                    return records;
+                    ts = (dt.Add(timeout) - DateTime.Now);
                 }
 
                 if (records.Count >= maxRecords)
