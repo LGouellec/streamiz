@@ -153,7 +153,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                                                                              ISerDes<V> valueSerde)
         {
             return Stores.WindowStoreBuilder(
-                Stores.InMemoryWindowStore(
+                Stores.DefaultWindowStore(
                     storeName + "-store",
                     TimeSpan.FromMilliseconds(windows.Size + windows.GracePeriodMs),
                     TimeSpan.FromMilliseconds(windows.Size)

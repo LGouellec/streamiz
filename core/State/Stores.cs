@@ -10,6 +10,9 @@ namespace Streamiz.Kafka.Net.State
 {
     internal static class Stores
     {
+        public static KeyValueBytesStoreSupplier DefaultKeyValueStore(string name)
+            => InMemoryKeyValueStore(name);
+
         public static KeyValueBytesStoreSupplier PersistentKeyValueStore(string name)
         {
             // TODO : RocksDB IMPLEMENTATION
@@ -22,10 +25,21 @@ namespace Streamiz.Kafka.Net.State
             return new InMemoryKeyValueBytesStoreSupplier(name);
         }
 
+
+        public static WindowBytesStoreSupplier DefaultWindowStore(string name, TimeSpan retention, TimeSpan windowSize)
+            => InMemoryWindowStore(name, retention, windowSize);
+
+        public static WindowBytesStoreSupplier PersistentWindowStore(string name, TimeSpan retention, TimeSpan windowSize)
+        {
+            // TODO:
+            return null;
+        }
+
         public static WindowBytesStoreSupplier InMemoryWindowStore(string name, TimeSpan retention, TimeSpan windowSize)
         {
             return new InMemoryWindowStoreSupplier(name, retention, (long)windowSize.TotalMilliseconds);
         }
+
 
         public static StoreBuilder<TimestampedKeyValueStore<K, V>> TimestampedKeyValueStoreBuilder<K, V>(KeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
         {
