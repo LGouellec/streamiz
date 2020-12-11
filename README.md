@@ -54,7 +54,7 @@ dotnet add package Streamiz.Kafka.Net
 There, a sample streamiz application :
 
 ``` csharp
-static void Main(string[] args)
+static async System.Threading.Tasks.Task Main(string[] args)
 { 
     var config = new StreamConfig<StringSerDes, StringSerDes>();
     config.ApplicationId = "test-app";
