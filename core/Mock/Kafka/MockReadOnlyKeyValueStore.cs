@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Streamiz.Kafka.Net.Mock.Kafka
 {
-    internal class MockReadOnlyKeyValueStore<K, V> : IStateStore, ReadOnlyKeyValueStore<K, V>
+    internal class MockReadOnlyKeyValueStore<K, V> : IStateStore, IReadOnlyKeyValueStore<K, V>
     {
         private readonly IEnumerable<IStateStore> stores;
 
@@ -21,14 +21,14 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             this.stores = stores;
         }
 
-        private IEnumerable<ReadOnlyKeyValueStore<K, V>> GetAllStores()
+        private IEnumerable<IReadOnlyKeyValueStore<K, V>> GetAllStores()
         {
             var readonlystores = stores
-                .OfType<ReadOnlyKeyValueStore<K, V>>()
+                .OfType<IReadOnlyKeyValueStore<K, V>>()
                 .ToList();
 
             var timestamp = stores
-                .OfType<TimestampedKeyValueStore<K, V>>()
+                .OfType<ITimestampedKeyValueStore<K, V>>()
                 .Select(s => new ReadOnlyKeyValueStoreFacade<K, V>(s));
 
             readonlystores.AddRange(timestamp);
@@ -41,7 +41,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public V Get(K key)
         {
-            IEnumerable<ReadOnlyKeyValueStore<K, V>> allStores = GetAllStores();
+            IEnumerable<IReadOnlyKeyValueStore<K, V>> allStores = GetAllStores();
             var item = allStores.FirstOrDefault(x => x.Get(key) != null);
             return item != null ? item.Get(key) : default;
         }

@@ -336,13 +336,13 @@ namespace Streamiz.Kafka.Net.Mock
         /// <typeparam name="V">value type</typeparam>
         /// <param name="name">the name of the store</param>
         /// <returns>the key value store, or null if no <see cref="ReadOnlyKeyValueStore{K, V}"/> or <see cref="TimestampedKeyValueStore{K, V}"/> has been registered with the given name</returns>
-        public ReadOnlyKeyValueStore<K, V> GetKeyValueStore<K, V>(string name)
+        public IReadOnlyKeyValueStore<K, V> GetKeyValueStore<K, V>(string name)
         {
             var store = behavior.GetStateStore<K, V>(name);
-            if (store is TimestampedKeyValueStore<K, V>)
-                return new ReadOnlyKeyValueStoreFacade<K, V>(store as TimestampedKeyValueStore<K, V>);
-            else if (store is ReadOnlyKeyValueStore<K, V>)
-                return (ReadOnlyKeyValueStore<K, V>)store;
+            if (store is ITimestampedKeyValueStore<K, V>)
+                return new ReadOnlyKeyValueStoreFacade<K, V>(store as ITimestampedKeyValueStore<K, V>);
+            else if (store is IReadOnlyKeyValueStore<K, V>)
+                return (IReadOnlyKeyValueStore<K, V>)store;
             else
                 return null;
         }
@@ -359,13 +359,13 @@ namespace Streamiz.Kafka.Net.Mock
         /// <typeparam name="V">value type</typeparam>
         /// <param name="name">the name of the store</param>
         /// <returns>the key value store, or null if no <see cref="ReadOnlyWindowStore{K, V}"/> or <see cref="TimestampedWindowStore{K, V}"/> has been registered with the given name</returns>
-        public ReadOnlyWindowStore<K, V> GetWindowStore<K, V>(string name)
+        public IReadOnlyWindowStore<K, V> GetWindowStore<K, V>(string name)
         {
             var store = behavior.GetStateStore<K, V>(name);
-            if (store is TimestampedWindowStore<K, V>)
-                return new ReadOnlyWindowStoreFacade<K, V>(store as TimestampedWindowStore<K, V>);
-            else if (store is ReadOnlyWindowStore<K, V>)
-                return (ReadOnlyWindowStore<K, V>)store;
+            if (store is ITimestampedWindowStore<K, V>)
+                return new ReadOnlyWindowStoreFacade<K, V>(store as ITimestampedWindowStore<K, V>);
+            else if (store is IReadOnlyWindowStore<K, V>)
+                return (IReadOnlyWindowStore<K, V>)store;
             else
                 return null;
         }

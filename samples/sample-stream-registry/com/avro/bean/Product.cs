@@ -13,61 +13,61 @@ namespace com.avro.bean
 	using global::Avro;
 	using global::Avro.Specific;
 	
-	public partial class Person : ISpecificRecord
+	public partial class Product : ISpecificRecord
 	{
-		public static Schema _SCHEMA = Schema.Parse("{\"type\":\"record\",\"name\":\"Person\",\"namespace\":\"com.avro.bean\",\"fields\":[{\"name\":\"f" +
-				"irstName\",\"type\":\"string\"},{\"name\":\"lastName\",\"type\":\"string\"},{\"name\":\"age\",\"ty" +
-				"pe\":\"int\"}]}");
-		private string _firstName;
-		private string _lastName;
-		private int _age;
+		public static Schema _SCHEMA = Schema.Parse("{\"type\":\"record\",\"name\":\"Product\",\"namespace\":\"com.avro.bean\",\"fields\":[{\"name\":\"" +
+				"product_id\",\"type\":\"int\"},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"price\",\"type\"" +
+				":\"float\"}]}");
+		private int _product_id;
+		private string _name;
+		private float _price;
 		public virtual Schema Schema
 		{
 			get
 			{
-				return Person._SCHEMA;
+				return Product._SCHEMA;
 			}
 		}
-		public string firstName
+		public int product_id
 		{
 			get
 			{
-				return this._firstName;
+				return this._product_id;
 			}
 			set
 			{
-				this._firstName = value;
+				this._product_id = value;
 			}
 		}
-		public string lastName
+		public string name
 		{
 			get
 			{
-				return this._lastName;
+				return this._name;
 			}
 			set
 			{
-				this._lastName = value;
+				this._name = value;
 			}
 		}
-		public int age
+		public float price
 		{
 			get
 			{
-				return this._age;
+				return this._price;
 			}
 			set
 			{
-				this._age = value;
+				this._price = value;
 			}
 		}
 		public virtual object Get(int fieldPos)
 		{
 			switch (fieldPos)
 			{
-			case 0: return this.firstName;
-			case 1: return this.lastName;
-			case 2: return this.age;
+			case 0: return this.product_id;
+			case 1: return this.name;
+			case 2: return this.price;
 			default: throw new AvroRuntimeException("Bad index " + fieldPos + " in Get()");
 			};
 		}
@@ -75,9 +75,9 @@ namespace com.avro.bean
 		{
 			switch (fieldPos)
 			{
-			case 0: this.firstName = (System.String)fieldValue; break;
-			case 1: this.lastName = (System.String)fieldValue; break;
-			case 2: this.age = (System.Int32)fieldValue; break;
+			case 0: this.product_id = (System.Int32)fieldValue; break;
+			case 1: this.name = (System.String)fieldValue; break;
+			case 2: this.price = (System.Single)fieldValue; break;
 			default: throw new AvroRuntimeException("Bad index " + fieldPos + " in Put()");
 			};
 		}

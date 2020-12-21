@@ -11,19 +11,19 @@ namespace Streamiz.Kafka.Net.Tests.Private
 {
     public class GlobalStateStoreProviderTests
     {
-        WindowStore<object, object> wStore;
-        TimestampedWindowStore<object, object> timestampWStore;
+        IWindowStore<object, object> wStore;
+        ITimestampedWindowStore<object, object> timestampWStore;
         IKeyValueStore<object, object> kvStore;
-        TimestampedKeyValueStore<object, object> timestampedKVStore;
+        ITimestampedKeyValueStore<object, object> timestampedKVStore;
         IDictionary<string, IStateStore> stores;
 
         [SetUp]
         public void Setup()
         {
-            wStore = this.CreateMockStore<WindowStore<object, object>>();
+            wStore = this.CreateMockStore<IWindowStore<object, object>>();
             kvStore = this.CreateMockStore<IKeyValueStore<object, object>>();
-            timestampedKVStore = this.CreateMockStore<TimestampedKeyValueStore<object, object>>();
-            timestampWStore = this.CreateMockStore<TimestampedWindowStore<object, object>>();
+            timestampedKVStore = this.CreateMockStore<ITimestampedKeyValueStore<object, object>>();
+            timestampWStore = this.CreateMockStore<ITimestampedWindowStore<object, object>>();
             stores = new Dictionary<string, IStateStore> {
                 { "kv-store", kvStore },
                 { "ts-kv-store", timestampedKVStore },
@@ -108,8 +108,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var result = provider.Stores(StoreQueryParameters.FromNameAndType("ts-kv-store", QueryableStoreTypes.KeyValueStore<object, object>()));
 
-            Assert.IsInstanceOf(typeof(ReadOnlyKeyValueStore<object, object>), result.Single());
-            Assert.IsNotInstanceOf(typeof(TimestampedKeyValueStore<object, object>), result.Single());
+            Assert.IsInstanceOf(typeof(IReadOnlyKeyValueStore<object, object>), result.Single());
+            Assert.IsNotInstanceOf(typeof(ITimestampedKeyValueStore<object, object>), result.Single());
         }
 
         private T CreateMockStore<T>(bool isOpen = true) where T : class, IStateStore

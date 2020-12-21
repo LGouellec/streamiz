@@ -17,7 +17,7 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly Aggregator<K, V, Agg> aggregator;
 
         private long observedStreamTime = -1;
-        private TimestampedWindowStore<K, Agg> windowStore;
+        private ITimestampedWindowStore<K, Agg> windowStore;
         private TimestampedTupleForwarder<Windowed<K>, Agg> tupleForwarder;
 
         public KStreamWindowAggregateProcessor(WindowOptions<W> windowOptions,
@@ -36,7 +36,7 @@ namespace Streamiz.Kafka.Net.Processors
         public override void Init(ProcessorContext context)
         {
             base.Init(context);
-            windowStore = (TimestampedWindowStore<K, Agg>)context.GetStateStore(storeName);
+            windowStore = (ITimestampedWindowStore<K, Agg>)context.GetStateStore(storeName);
             tupleForwarder = new TimestampedTupleForwarder<Windowed<K>, Agg>(this, sendOldValues);
         }
 

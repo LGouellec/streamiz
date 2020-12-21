@@ -4,6 +4,7 @@ using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Table;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,14 +27,25 @@ namespace sample_stream_registry
             config.AutoOffsetReset = AutoOffsetReset.Earliest;
             // NEED FOR SchemaAvroSerDes
             config.SchemaRegistryUrl = "http://192.168.56.1:8081";
-            config.AutoRegisterSchemas = false;
+            config.AutoRegisterSchemas = true;
 
             StreamBuilder builder = new StreamBuilder();
 
-            builder.Stream<string, Person, StringSerDes, SchemaAvroSerDes<Person>>("person")
-                    .Filter((k, v) => v.age >= 18)
-                    .MapValues((v) => $"{v.firstName}-{v.lastName}-{v.age}")
-                    .To<StringSerDes, StringSerDes>("output");
+            var table = builder.Table("product",
+                                new Int32SerDes(),
+                                new SchemaAvroSerDes<Product>(),
+                                InMemory<int, Product>.As("product-store"));
+
+            builder.Stream<int, Order, Int32SerDes, SchemaAvroSerDes<Order>>("orders")
+                    .Join(table, (order, product) => new OrderProduct
+                    {
+                        order_id = order.order_id,
+                        price = order.price,
+                        product_id = product.product_id,
+                        product_name = product.name,
+                        product_price = product.price
+                    })
+                    .To<Int32SerDes, SchemaAvroSerDes<OrderProduct>>("orders-output");
 
             Topology t = builder.Build();
 

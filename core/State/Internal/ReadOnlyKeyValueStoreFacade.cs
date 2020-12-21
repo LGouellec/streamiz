@@ -3,11 +3,11 @@ using System.Linq;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
-    internal class ReadOnlyKeyValueStoreFacade<K, V> : ReadOnlyKeyValueStore<K, V>
+    internal class ReadOnlyKeyValueStoreFacade<K, V> : IReadOnlyKeyValueStore<K, V>
     {
-        private readonly TimestampedKeyValueStore<K, V> innerStore;
+        private readonly ITimestampedKeyValueStore<K, V> innerStore;
 
-        public ReadOnlyKeyValueStoreFacade(TimestampedKeyValueStore<K, V> store)
+        public ReadOnlyKeyValueStoreFacade(ITimestampedKeyValueStore<K, V> store)
         {
             innerStore = store;
         }

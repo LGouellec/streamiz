@@ -40,6 +40,9 @@ namespace Streamiz.Kafka.Net.Processors
                 Value = context.Configuration.DefaultValueSerDes;
             }
 
+            Key?.Initialize(context.SerDesContext);
+            Value?.Initialize(context.SerDesContext);
+
             base.Init(context);
         }
 

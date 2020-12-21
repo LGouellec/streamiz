@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "name": "Order",
+  "namespace": "com.avro.bean",
+  "fields": [
+    {
+      "name": "order_id",
+      "type": "int"
+    },
+    {
+      "name": "price",
+      "type": "float"
+    },
+    {
+      "name": "product_id",
+      "type": "int"
+    }
+  ]
+}

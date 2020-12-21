@@ -18,7 +18,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
         public string Name => "TEST";
 
-        public WindowStore<Bytes, byte[]> Get()
+        public IWindowStore<Bytes, byte[]> Get()
             => null;
     }
 

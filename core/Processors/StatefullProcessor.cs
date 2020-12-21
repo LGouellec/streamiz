@@ -7,7 +7,7 @@ namespace Streamiz.Kafka.Net.Processors
     {
         protected readonly string storeName;
         protected readonly bool sendOldValues;
-        protected TimestampedKeyValueStore<K1, V1> store;
+        protected ITimestampedKeyValueStore<K1, V1> store;
         protected TimestampedTupleForwarder<K, V> tupleForwarder;
 
         protected StatefullProcessor(string storeName, bool sendOldValues)
@@ -19,7 +19,7 @@ namespace Streamiz.Kafka.Net.Processors
         public override void Init(ProcessorContext context)
         {
             base.Init(context);
-            store = (TimestampedKeyValueStore<K1, V1>)context.GetStateStore(storeName);
+            store = (ITimestampedKeyValueStore<K1, V1>)context.GetStateStore(storeName);
             tupleForwarder = new TimestampedTupleForwarder<K, V>(this, sendOldValues);
         }
     }

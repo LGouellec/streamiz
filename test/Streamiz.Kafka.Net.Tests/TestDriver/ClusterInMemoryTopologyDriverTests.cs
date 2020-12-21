@@ -10,7 +10,7 @@ using System.Threading;
 
 namespace Streamiz.Kafka.Net.Tests.TestDriver
 {
-    // TODO : Refactor for WindowStore tests
+    // TODO : Refactor for IWindowStore tests
     public class ClusterInMemoryTopologyDriverTests
     {
         [Test]

@@ -7,8 +7,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
     {
         private readonly ProcessorParameters<K, V1> windowedLeftParams;
         private readonly ProcessorParameters<K, V2> windowedRightParams;
-        private readonly StoreBuilder<WindowStore<K, V1>> windowedLeftStoreBuilder;
-        private readonly StoreBuilder<WindowStore<K, V2>> windowedRightStoreBuilder;
+        private readonly StoreBuilder<IWindowStore<K, V1>> windowedLeftStoreBuilder;
+        private readonly StoreBuilder<IWindowStore<K, V2>> windowedRightStoreBuilder;
         private readonly StreamJoinProps<K, V1, V2> joinedProps;
 
         public StreamStreamJoinNode(
@@ -19,8 +19,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
             ProcessorParameters<K, VR> joinMergeParams,
             ProcessorParameters<K, V1> windowedLeftParams,
             ProcessorParameters<K, V2> windowedRightParams,
-            StoreBuilder<WindowStore<K, V1>> windowedLeftStoreBuilder,
-            StoreBuilder<WindowStore<K, V2>> windowedRightStoreBuilder,
+            StoreBuilder<IWindowStore<K, V1>> windowedLeftStoreBuilder,
+            StoreBuilder<IWindowStore<K, V2>> windowedRightStoreBuilder,
             StreamJoinProps<K, V1, V2> joinedProps)
             : base(name, valueJoiner, joinLeftParams, joinRightParams, joinMergeParams, null, null)
         {

@@ -8,7 +8,7 @@ namespace Streamiz.Kafka.Net.Processors
     internal class KStreamJoinWindowProcessor<K, V> : AbstractProcessor<K, V>
     {
         private readonly string storeName;
-        private WindowStore<K, V> window;
+        private IWindowStore<K, V> window;
 
         public KStreamJoinWindowProcessor(string storeName)
         {
@@ -19,7 +19,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             base.Init(context);
 
-            window = (WindowStore<K, V>)context.GetStateStore(storeName);
+            window = (IWindowStore<K, V>)context.GetStateStore(storeName);
         }
 
         public override void Process(K key, V value)

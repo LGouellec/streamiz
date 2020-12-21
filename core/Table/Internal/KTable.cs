@@ -248,7 +248,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
             ISerDes<K> keySerde;
             ISerDes<V> valueSerde;
             String queryableStoreName;
-            StoreBuilder<TimestampedKeyValueStore<K, V>> storeBuilder;
+            StoreBuilder<ITimestampedKeyValueStore<K, V>> storeBuilder;
 
             if (predicate == null)
             {
@@ -316,7 +316,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
             ISerDes<K> keySerde;
             ISerDes<VR> valueSerde;
             String queryableStoreName;
-            StoreBuilder<TimestampedKeyValueStore<K, VR>> storeBuilder;
+            StoreBuilder<ITimestampedKeyValueStore<K, VR>> storeBuilder;
 
             if (materializedInternal != null)
             {
