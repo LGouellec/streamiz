@@ -13,7 +13,7 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph.Nodes
         private readonly string[] leftStoreNames;
         private readonly string[] rightStoreNames;
         private readonly string queryableStoreName;
-        private readonly StoreBuilder<TimestampedKeyValueStore<K, VR>> storeBuilder;
+        private readonly StoreBuilder<ITimestampedKeyValueStore<K, VR>> storeBuilder;
 
         public KTableKTableJoinNode(
             string name,
@@ -24,7 +24,7 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph.Nodes
             string[] leftStoreNames,
             string[] rightStoreNames,
             string queryableStoreName,
-            StoreBuilder<TimestampedKeyValueStore<K, VR>> storeBuilder)
+            StoreBuilder<ITimestampedKeyValueStore<K, VR>> storeBuilder)
             : base(name, null, joinLeftParams, joinRightParams, null, leftJoinSideName, rightJoinSideName)
         {
             this.leftStoreNames = leftStoreNames;

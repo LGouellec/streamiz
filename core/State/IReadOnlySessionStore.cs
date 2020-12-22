@@ -9,7 +9,7 @@ namespace Streamiz.Kafka.Net.State
     /// </summary>
     /// <typeparam name="K"></typeparam>
     /// <typeparam name="AGG"></typeparam>
-    public interface ReadOnlySessionStore<K,AGG>
+    public interface IReadOnlySessionStore<K,AGG>
     {
     }
 }

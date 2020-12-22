@@ -12,7 +12,7 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly IValueJoiner<V, V1, VR> joiner;
         private readonly bool outer;
 
-        private WindowStore<K, V1> window;
+        private IWindowStore<K, V1> window;
 
 
         public KStreamKStreamJoinProcessor(
@@ -34,7 +34,7 @@ namespace Streamiz.Kafka.Net.Processors
         public override void Init(ProcessorContext context)
         {
             base.Init(context);
-            window = (WindowStore<K, V1>)context.GetStateStore(windowStoreName);
+            window = (IWindowStore<K, V1>)context.GetStateStore(windowStoreName);
         }
 
         public override void Process(K key, V value)

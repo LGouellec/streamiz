@@ -11,7 +11,7 @@ namespace Streamiz.Kafka.Net.State
     /// </summary>
     /// <typeparam name="K">Type of keys</typeparam>
     /// <typeparam name="V">Type of values</typeparam>
-    public interface ReadOnlyWindowStore<K,V>
+    public interface IReadOnlyWindowStore<K,V>
     {
         /// <summary>
         /// Get the value of key from a window.

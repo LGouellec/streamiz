@@ -6,13 +6,13 @@ using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
-    internal class CompositeReadOnlyWindowStore<K, V> : ReadOnlyWindowStore<K, V>
+    internal class CompositeReadOnlyWindowStore<K, V> : IReadOnlyWindowStore<K, V>
     {
-        private readonly IStateStoreProvider<ReadOnlyWindowStore<K, V>, K, V> storeProvider;
-        private readonly IQueryableStoreType<ReadOnlyWindowStore<K, V>, K, V> storeType;
+        private readonly IStateStoreProvider<IReadOnlyWindowStore<K, V>, K, V> storeProvider;
+        private readonly IQueryableStoreType<IReadOnlyWindowStore<K, V>, K, V> storeType;
         private readonly string storeName;
 
-        public CompositeReadOnlyWindowStore(IStateStoreProvider<ReadOnlyWindowStore<K, V>, K, V> storeProvider, WindowStoreType<K, V> storeType, string storeName)
+        public CompositeReadOnlyWindowStore(IStateStoreProvider<IReadOnlyWindowStore<K, V>, K, V> storeProvider, WindowStoreType<K, V> storeType, string storeName)
         {
             this.storeProvider = storeProvider;
             this.storeType = storeType;
@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public IKeyValueEnumerator<Windowed<K>, V> All()
         {
-            return new CompositeKeyValueEnumerator<Windowed<K>, V, ReadOnlyWindowStore<K, V>>(
+            return new CompositeKeyValueEnumerator<Windowed<K>, V, IReadOnlyWindowStore<K, V>>(
                 storeProvider.Stores(storeName, storeType),
                 (store) => store.All());
         }
@@ -107,12 +107,12 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public IKeyValueEnumerator<Windowed<K>, V> FetchAll(DateTime from, DateTime to)
         {
-            return new CompositeKeyValueEnumerator<Windowed<K>, V, ReadOnlyWindowStore<K, V>>(
+            return new CompositeKeyValueEnumerator<Windowed<K>, V, IReadOnlyWindowStore<K, V>>(
                 storeProvider.Stores(storeName, storeType),
                 (store) => store.FetchAll(from, to));
         }
 
-        private IEnumerable<ReadOnlyWindowStore<K, V>> GetAllStores()
+        private IEnumerable<IReadOnlyWindowStore<K, V>> GetAllStores()
         {
             return storeProvider.Stores(storeName, storeType);
         }

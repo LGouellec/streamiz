@@ -38,7 +38,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             config.ApplicationId = "test-window-count";
 
             var builder = new StreamBuilder();
-            Materialized<string, long, WindowStore<Bytes, byte[]>> m = null;
+            Materialized<string, long, IWindowStore<Bytes, byte[]>> m = null;
 
             builder
                 .Stream<string, string>("topic")
@@ -73,8 +73,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             Assert.IsNotNull(nameStore);
             Assert.AreNotEqual(string.Empty, nameStore);
             var store = task.GetStore(nameStore);
-            Assert.IsInstanceOf<TimestampedWindowStore<string, long>>(store);
-            Assert.AreEqual(0, (store as TimestampedWindowStore<string, long>).All().ToList().Count);
+            Assert.IsInstanceOf<ITimestampedWindowStore<string, long>>(store);
+            Assert.AreEqual(0, (store as ITimestampedWindowStore<string, long>).All().ToList().Count);
         }
 
         [Test]
@@ -86,8 +86,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var builder = new StreamBuilder();
 
-            Materialized<string, long, WindowStore<Bytes, byte[]>> m =
-                Materialized<string, long, WindowStore<Bytes, byte[]>>
+            Materialized<string, long, IWindowStore<Bytes, byte[]>> m =
+                Materialized<string, long, IWindowStore<Bytes, byte[]>>
                     .Create("count-store")
                     .With(null, null);
 
@@ -201,7 +201,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Stream<string, string>("topic")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(10)))
-                .Count(Materialized<string, long, WindowStore<Bytes, byte[]>>.Create("count-store"))
+                .Count(Materialized<string, long, IWindowStore<Bytes, byte[]>>.Create("count-store"))
                 .ToStream()
                 .To<StringTimeWindowedSerDes, Int64SerDes>("output");
 
@@ -238,7 +238,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Stream<string, string>("topic")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(10)))
-                .Count(Materialized<string, long, WindowStore<Bytes, byte[]>>.Create("count-store"))
+                .Count(Materialized<string, long, IWindowStore<Bytes, byte[]>>.Create("count-store"))
                 .ToStream()
                 .To("output");
 

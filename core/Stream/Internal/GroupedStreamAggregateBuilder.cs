@@ -28,7 +28,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         internal IKTable<K, VR> Build<VR>(
             string functionName,
-            StoreBuilder<TimestampedKeyValueStore<K, VR>> storeBuilder,
+            StoreBuilder<ITimestampedKeyValueStore<K, VR>> storeBuilder,
             IKStreamAggProcessorSupplier<K, K, V, VR> aggregateSupplier,
             string queryableStoreName,
             ISerDes<K> keySerdes,
@@ -36,8 +36,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         {
             // if repartition required TODO
             // ELSE
-            StatefulProcessorNode<K, V, TimestampedKeyValueStore<K, VR>> statefulProcessorNode =
-               new StatefulProcessorNode<K, V, TimestampedKeyValueStore<K, VR>>(
+            StatefulProcessorNode<K, V, ITimestampedKeyValueStore<K, VR>> statefulProcessorNode =
+               new StatefulProcessorNode<K, V, ITimestampedKeyValueStore<K, VR>>(
                    functionName,
                    new ProcessorParameters<K, V>(aggregateSupplier, functionName),
                    storeBuilder);
@@ -56,7 +56,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         internal IKTable<KR, VR> BuildWindow<KR, VR>(
             string functionName,
-            StoreBuilder<TimestampedWindowStore<K, VR>> storeBuilder,
+            StoreBuilder<ITimestampedWindowStore<K, VR>> storeBuilder,
             IKStreamAggProcessorSupplier<K, KR, V, VR> aggregateSupplier,
             string queryableStoreName,
             ISerDes<KR> keySerdes,
@@ -64,8 +64,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         {
             // if repartition required TODO
             // ELSE
-            StatefulProcessorNode<K, V, TimestampedWindowStore<K, VR>> statefulProcessorNode =
-               new StatefulProcessorNode<K, V, TimestampedWindowStore<K, VR>>(
+            StatefulProcessorNode<K, V, ITimestampedWindowStore<K, VR>> statefulProcessorNode =
+               new StatefulProcessorNode<K, V, ITimestampedWindowStore<K, VR>>(
                    functionName,
                    new ProcessorParameters<K, V>(aggregateSupplier, functionName),
                    storeBuilder);

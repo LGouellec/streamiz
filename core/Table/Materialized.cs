@@ -114,9 +114,9 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         /// <param name="supplier">the <see cref="WindowBytesStoreSupplier"/> used to materialize the store</param>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given supplier</returns>
-        public static Materialized<K, V, WindowStore<Bytes, byte[]>> Create(WindowBytesStoreSupplier supplier)
+        public static Materialized<K, V, IWindowStore<Bytes, byte[]>> Create(WindowBytesStoreSupplier supplier)
         {
-            var m = new Materialized<K, V, WindowStore<Bytes, byte[]>>(supplier);
+            var m = new Materialized<K, V, IWindowStore<Bytes, byte[]>>(supplier);
             return m;
         }
 
@@ -127,9 +127,9 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         /// <param name="supplier">the <see cref="SessionBytesStoreSupplier"/> used to materialize the store</param>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given supplier</returns>
-        public static Materialized<K, V, SessionStore<Bytes, byte[]>> Create(SessionBytesStoreSupplier supplier)
+        public static Materialized<K, V, ISessionStore<Bytes, byte[]>> Create(SessionBytesStoreSupplier supplier)
         {
-            var m = new Materialized<K, V, SessionStore<Bytes, byte[]>>(supplier);
+            var m = new Materialized<K, V, ISessionStore<Bytes, byte[]>>(supplier);
             return m;
         }
 
@@ -183,11 +183,11 @@ namespace Streamiz.Kafka.Net.Table
         /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
         /// <param name="supplier">the <see cref="WindowBytesStoreSupplier"/> used to materialize the store</param>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given supplier</returns>
-        public static Materialized<K, V, WindowStore<Bytes, byte[]>> Create<KS, VS>(WindowBytesStoreSupplier supplier)
+        public static Materialized<K, V, IWindowStore<Bytes, byte[]>> Create<KS, VS>(WindowBytesStoreSupplier supplier)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
-            var m = new Materialized<K, V, WindowStore<Bytes, byte[]>>(supplier)
+            var m = new Materialized<K, V, IWindowStore<Bytes, byte[]>>(supplier)
             {
                 KeySerdes = new KS(),
                 ValueSerdes = new VS()
@@ -204,11 +204,11 @@ namespace Streamiz.Kafka.Net.Table
         /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
         /// <param name="supplier">the <see cref="SessionBytesStoreSupplier"/> used to materialize the store</param>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given supplier</returns>
-        public static Materialized<K, V, SessionStore<Bytes, byte[]>> Create<KS, VS>(SessionBytesStoreSupplier supplier)
+        public static Materialized<K, V, ISessionStore<Bytes, byte[]>> Create<KS, VS>(SessionBytesStoreSupplier supplier)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
-            var m = new Materialized<K, V, SessionStore<Bytes, byte[]>>(supplier)
+            var m = new Materialized<K, V, ISessionStore<Bytes, byte[]>>(supplier)
             {
                 KeySerdes = new KS(),
                 ValueSerdes = new VS()
@@ -515,14 +515,14 @@ namespace Streamiz.Kafka.Net.Table
     /// </summary>
     /// <typeparam name="K">Type of key</typeparam>
     /// <typeparam name="V">type of value</typeparam>
-    public class InMemoryWindows<K, V> : Materialized<K, V, WindowStore<Bytes, byte[]>>
+    public class InMemoryWindows<K, V> : Materialized<K, V, IWindowStore<Bytes, byte[]>>
     {
         /// <summary>
         /// Protected constructor with state store name and supplier
         /// </summary>
         /// <param name="name">State store name for query it</param>
         /// <param name="supplier">Supplier use to build the state store</param>
-        protected InMemoryWindows(string name, StoreSupplier<WindowStore<Bytes, byte[]>> supplier)
+        protected InMemoryWindows(string name, StoreSupplier<IWindowStore<Bytes, byte[]>> supplier)
             : base(name, supplier)
         {
 

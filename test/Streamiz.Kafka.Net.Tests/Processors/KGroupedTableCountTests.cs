@@ -65,10 +65,10 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             Assert.AreNotEqual(string.Empty, nameStore2);
             var store1 = task.GetStore(nameStore1);
             var store2 = task.GetStore(nameStore2);
-            Assert.IsInstanceOf<TimestampedKeyValueStore<string, string>>(store1);
-            Assert.IsInstanceOf<TimestampedKeyValueStore<string, long>>(store2);
-            Assert.AreEqual(0, (store1 as TimestampedKeyValueStore<string, string>).ApproximateNumEntries());
-            Assert.AreEqual(0, (store2 as TimestampedKeyValueStore<string, long>).ApproximateNumEntries());
+            Assert.IsInstanceOf<ITimestampedKeyValueStore<string, string>>(store1);
+            Assert.IsInstanceOf<ITimestampedKeyValueStore<string, long>>(store2);
+            Assert.AreEqual(0, (store1 as ITimestampedKeyValueStore<string, string>).ApproximateNumEntries());
+            Assert.AreEqual(0, (store2 as ITimestampedKeyValueStore<string, long>).ApproximateNumEntries());
         }
 
         [Test]

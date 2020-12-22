@@ -77,11 +77,11 @@ namespace Streamiz.Kafka.Net.State.Internal
             => keyValueEnumerator.Reset();
     }
 
-    internal class ReadOnlyWindowStoreFacade<K, V> : ReadOnlyWindowStore<K, V>
+    internal class ReadOnlyWindowStoreFacade<K, V> : IReadOnlyWindowStore<K, V>
     {
-        private readonly TimestampedWindowStore<K, V> innerStore;
+        private readonly ITimestampedWindowStore<K, V> innerStore;
 
-        public ReadOnlyWindowStoreFacade(TimestampedWindowStore<K, V> store)
+        public ReadOnlyWindowStoreFacade(ITimestampedWindowStore<K, V> store)
         {
             innerStore = store;
         }

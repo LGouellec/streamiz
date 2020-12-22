@@ -15,30 +15,30 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
     public class CompositeReadOnlyKeyValueStoreTests
     {
-        class MockStateProvider<K, V> : IStateStoreProvider<ReadOnlyKeyValueStore<K, V>, K, V>
+        class MockStateProvider<K, V> : IStateStoreProvider<IReadOnlyKeyValueStore<K, V>, K, V>
         {
-            private readonly List<TimestampedKeyValueStore<K, V>> stores = new List<TimestampedKeyValueStore<K, V>>();
+            private readonly List<ITimestampedKeyValueStore<K, V>> stores = new List<ITimestampedKeyValueStore<K, V>>();
 
             public MockStateProvider(long windowSize, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, params InMemoryKeyValueStore[] stores)
             {
                 this.stores = stores
                                 .Select(s => new TimestampedKeyValueStoreImpl<K, V>(s, keySerdes, new ValueAndTimestampSerDes<V>(valueSerdes)))
-                                .Cast<TimestampedKeyValueStore<K, V>>()
+                                .Cast<ITimestampedKeyValueStore<K, V>>()
                                 .ToList();
             }
 
-            public IEnumerable<ReadOnlyKeyValueStore<K, V>> Stores(string storeName, IQueryableStoreType<ReadOnlyKeyValueStore<K, V>, K, V> queryableStoreType)
+            public IEnumerable<IReadOnlyKeyValueStore<K, V>> Stores(string storeName, IQueryableStoreType<IReadOnlyKeyValueStore<K, V>, K, V> queryableStoreType)
             {
                 return
                     stores
                         .Where(s => s.Name.Equals(storeName))
-                        .Select<TimestampedKeyValueStore<K, V>, ReadOnlyKeyValueStore<K, V>>(s =>
+                        .Select<ITimestampedKeyValueStore<K, V>, IReadOnlyKeyValueStore<K, V>>(s =>
                         {
-                            if (s is ReadOnlyKeyValueStore<K, V>)
+                            if (s is IReadOnlyKeyValueStore<K, V>)
                             {
-                                return s as ReadOnlyKeyValueStore<K, V>;
+                                return s as IReadOnlyKeyValueStore<K, V>;
                             }
-                            else if (s is TimestampedKeyValueStore<K, V>)
+                            else if (s is ITimestampedKeyValueStore<K, V>)
                             {
                                 return new ReadOnlyKeyValueStoreFacade<K, V>(s);
                             }
