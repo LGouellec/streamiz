@@ -4,7 +4,7 @@ using Streamiz.Kafka.Net.State.Supplier;
 namespace Streamiz.Kafka.Net.State.Internal.Builder
 {
     internal class TimestampedKeyValueStoreBuilder<K, V>
-        : AbstractStoreBuilder<K, ValueAndTimestamp<V>, TimestampedKeyValueStore<K, V>>
+        : AbstractStoreBuilder<K, ValueAndTimestamp<V>, ITimestampedKeyValueStore<K, V>>
     {
         private readonly KeyValueBytesStoreSupplier storeSupplier;
 
@@ -14,7 +14,7 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
             storeSupplier = supplier;
         }
 
-        public override TimestampedKeyValueStore<K, V> Build()
+        public override ITimestampedKeyValueStore<K, V> Build()
         {
             var store = storeSupplier.Get();
             return new TimestampedKeyValueStoreImpl<K, V>(store, keySerdes, valueSerdes);

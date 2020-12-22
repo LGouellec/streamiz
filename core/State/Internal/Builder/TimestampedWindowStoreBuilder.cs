@@ -7,7 +7,7 @@ using Streamiz.Kafka.Net.State.Supplier;
 namespace Streamiz.Kafka.Net.State.Internal.Builder
 {
     internal class TimestampedWindowStoreBuilder<K, V>
-        : AbstractStoreBuilder<K, ValueAndTimestamp<V>, TimestampedWindowStore<K, V>>
+        : AbstractStoreBuilder<K, ValueAndTimestamp<V>, ITimestampedWindowStore<K, V>>
     {
         private readonly WindowBytesStoreSupplier supplier;
 
@@ -17,7 +17,7 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
             this.supplier = supplier;
         }
 
-        public override TimestampedWindowStore<K, V> Build()
+        public override ITimestampedWindowStore<K, V> Build()
         {
             var store = supplier.Get();
             return new TimestampedWindowStoreImpl<K, V>(store, supplier.WindowSize.Value, keySerdes, valueSerdes);

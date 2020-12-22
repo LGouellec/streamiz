@@ -40,7 +40,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <code>
         /// KafkaStreams streams = ... // counting words
         /// Store queryableStoreName = ... // the queryableStoreName should be the name of the store as defined by the Materialized instance
-        /// var localWindowStore = streams.Store(StoreQueryParameters.FromNameAndType(queryableStoreName, QueryableStoreTypes.WindowStore&lt;string, long&gt;()));
+        /// var localWindowStore = streams.Store(StoreQueryParameters.FromNameAndType(queryableStoreName, QueryableStoreTypes.IWindowStore&lt;string, long&gt;()));
         /// String key = "some-word";
         /// DateTime fromTime = ...;
         /// DateTime toTime = ...;
@@ -64,7 +64,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <code>
         /// KafkaStreams streams = ... // counting words
         /// Store queryableStoreName = ... // the queryableStoreName should be the name of the store as defined by the Materialized instance
-        /// var localWindowStore = streams.Store(StoreQueryParameters.FromNameAndType(queryableStoreName, QueryableStoreTypes.WindowStore&lt;string, long&gt;()));
+        /// var localWindowStore = streams.Store(StoreQueryParameters.FromNameAndType(queryableStoreName, QueryableStoreTypes.IWindowStore&lt;string, long&gt;()));
         /// String key = "some-word";
         /// DateTime fromTime = ...;
         /// DateTime toTime = ...;
@@ -89,7 +89,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <code>
         /// KafkaStreams streams = ... // counting words
         /// Store queryableStoreName = ... // the queryableStoreName should be the name of the store as defined by the Materialized instance
-        /// var localWindowStore = streams.Store(StoreQueryParameters.FromNameAndType(queryableStoreName, QueryableStoreTypes.WindowStore&lt;string, long&gt;()));
+        /// var localWindowStore = streams.Store(StoreQueryParameters.FromNameAndType(queryableStoreName, QueryableStoreTypes.IWindowStore&lt;string, long&gt;()));
         /// String key = "some-word";
         /// DateTime fromTime = ...;
         /// DateTime toTime = ...;
@@ -100,7 +100,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="materialized">an instance of <see cref="Materialized{K, V, S}"/> used to materialize a state store.(Note: the valueSerde will be automatically set to <see cref="Int64SerDes"/> if there is no valueSerde provided)</param>
         /// <param name="named">a named config used to name the processor in the topology.</param>
         /// <returns>a windowed <see cref="IKTable{K, V}"/> that contains "update" records with unmodified keys and long  that represent the latest (rolling) count (i.e., number of records) for each key within a window</returns>
-        IKTable<Windowed<K>, long> Count(Materialized<K, long, WindowStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<Windowed<K>, long> Count(Materialized<K, long, IWindowStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
         /// Aggregate the values of records in this stream by the grouped key and defined windows.
@@ -224,7 +224,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="materialized">a <see cref="Materialized{K, V, S}"/> config used to materialize a state store. Cannot be null.</param>
         /// <param name="named">a named config used to name the processor in the topology.</param>
         /// <returns>a windowed <see cref="IKTable{K, VR}"/> that contains "update" records with unmodified keys, and values that represent the latest (rolling) aggregate for each key within a window </returns>
-        IKTable<Windowed<K>, VR> Aggregate<VR>(Func<VR> initializer, Func<K, V, VR, VR> aggregator, Materialized<K, VR, WindowStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<Windowed<K>, VR> Aggregate<VR>(Func<VR> initializer, Func<K, V, VR, VR> aggregator, Materialized<K, VR, IWindowStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
         /// Aggregate the values of records in this stream by the grouped key and defined windows.
@@ -250,7 +250,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="materialized">a <see cref="Materialized{K, V, S}"/> config used to materialize a state store. Cannot be null.</param>
         /// <param name="named">a named config used to name the processor in the topology.</param>
         /// <returns>a windowed <see cref="IKTable{K, VR}"/> that contains "update" records with unmodified keys, and values that represent the latest (rolling) aggregate for each key within a window </returns>
-        IKTable<Windowed<K>, VR> Aggregate<VR>(Initializer<VR> initializer, Aggregator<K, V, VR> aggregator, Materialized<K, VR, WindowStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<Windowed<K>, VR> Aggregate<VR>(Initializer<VR> initializer, Aggregator<K, V, VR> aggregator, Materialized<K, VR, IWindowStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
         /// Combine the values of records in this stream by the grouped key and defined windows.
@@ -312,7 +312,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="materialized">a <see cref="Materialized{K, V, S}"/> config used to materialize a state store.</param>
         /// <param name="named">a named config used to name the processor in the topology.</param>
         /// <returns>a windowed <see cref="IKTable{K, V}"/> that contains "update" records with unmodified keys, and values that represent the latest (rolling) aggregate for each key within a window. </returns>
-        IKTable<Windowed<K>, V> Reduce(Reducer<V> reducer, Materialized<K, V, WindowStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<Windowed<K>, V> Reduce(Reducer<V> reducer, Materialized<K, V, IWindowStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
         /// Combine the values of records in this stream by the grouped key and defined windows.
@@ -334,6 +334,6 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="materialized">a <see cref="Materialized{K, V, S}"/> config used to materialize a state store.</param>
         /// <param name="named">a named config used to name the processor in the topology.</param>
         /// <returns>a windowed <see cref="IKTable{K, V}"/> that contains "update" records with unmodified keys, and values that represent the latest (rolling) aggregate for each key within a window. </returns>
-        IKTable<Windowed<K>, V> Reduce(Func<V, V, V> reducer, Materialized<K, V, WindowStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<Windowed<K>, V> Reduce(Func<V, V, V> reducer, Materialized<K, V, IWindowStore<Bytes, byte[]>> materialized, string named = null);
     }
 }

@@ -11,4 +11,8 @@
     <ProjectReference Include="..\..\serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="com\" />
+  </ItemGroup>
+
 </Project>

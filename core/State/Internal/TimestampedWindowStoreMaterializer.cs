@@ -11,15 +11,15 @@ namespace Streamiz.Kafka.Net.State.Internal
         where W : Window
     {
         private readonly WindowOptions<W> windowsOptions;
-        private readonly Materialized<K, V, WindowStore<Bytes, byte[]>> materializedInternal;
+        private readonly Materialized<K, V, IWindowStore<Bytes, byte[]>> materializedInternal;
 
-        public TimestampedWindowStoreMaterializer(WindowOptions<W> windowsOptions, Materialized<K, V, WindowStore<Bytes, byte[]>> materializedInternal)
+        public TimestampedWindowStoreMaterializer(WindowOptions<W> windowsOptions, Materialized<K, V, IWindowStore<Bytes, byte[]>> materializedInternal)
         {
             this.windowsOptions = windowsOptions;
             this.materializedInternal = materializedInternal;
         }
 
-        public StoreBuilder<TimestampedWindowStore<K, V>> Materialize()
+        public StoreBuilder<ITimestampedWindowStore<K, V>> Materialize()
         {
             WindowBytesStoreSupplier supplier = (WindowBytesStoreSupplier)materializedInternal.StoreSupplier;
             if (supplier == null)
@@ -27,11 +27,10 @@ namespace Streamiz.Kafka.Net.State.Internal
                 if (windowsOptions.Size + windowsOptions.GracePeriodMs > materializedInternal.Retention.TotalMilliseconds)
                     throw new ArgumentException($"The retention period of the window store { materializedInternal.StoreName } must be no smaller than its window size plus the grace period. Got size=[{windowsOptions.Size}], grace=[{windowsOptions.GracePeriodMs}], retention=[{materializedInternal.Retention.TotalMilliseconds}].");
 
-                // TODO : RocksDB
-                supplier = new InMemoryWindowStoreSupplier(
+                supplier = Stores.DefaultWindowStore(
                     materializedInternal.StoreName,
                     materializedInternal.Retention,
-                    windowsOptions.Size);
+                    TimeSpan.FromMilliseconds(windowsOptions.Size));
             }
             else
                 supplier.WindowSize = !supplier.WindowSize.HasValue ? windowsOptions.Size : supplier.WindowSize.Value;

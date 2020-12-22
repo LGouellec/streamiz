@@ -5,7 +5,7 @@ using System;
 namespace Streamiz.Kafka.Net.State.Internal.Builder
 {
     internal class WindowStoreBuilder<K, V>
-        : AbstractStoreBuilder<K, V, WindowStore<K, V>>
+        : AbstractStoreBuilder<K, V, IWindowStore<K, V>>
     {
         private readonly WindowBytesStoreSupplier supplier;
 
@@ -15,7 +15,7 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
             this.supplier = supplier;
         }
 
-        public override WindowStore<K, V> Build()
+        public override IWindowStore<K, V> Build()
             => new WrappedWindowStore<K, V>(supplier.Get(), supplier.WindowSize.Value, keySerdes, valueSerdes);
     }
 }

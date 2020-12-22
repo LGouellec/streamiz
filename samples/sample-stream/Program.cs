@@ -2,7 +2,6 @@
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 using System;
-using System.Threading.Tasks;
 
 namespace sample_stream
 {

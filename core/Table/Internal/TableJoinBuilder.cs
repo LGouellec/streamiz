@@ -82,7 +82,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
             ISerDes<K> keySerdes = materializedInternal.KeySerdes;
             ISerDes<VR> ValueSerdes = materializedInternal.ValueSerdes;
             string queryableStoreName = materializedInternal.QueryableStoreName;
-            StoreBuilder<TimestampedKeyValueStore<K, VR>> storeBuilder = queryableStoreName != null ? new TimestampedKeyValueStoreMaterializer<K, VR>(materializedInternal).Materialize() : null;
+            StoreBuilder<ITimestampedKeyValueStore<K, VR>> storeBuilder = queryableStoreName != null ? new TimestampedKeyValueStoreMaterializer<K, VR>(materializedInternal).Materialize() : null;
 
             var tableNode = new KTableKTableJoinNode<K, V, V0, VR>(
                 joinMergeName,

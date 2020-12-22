@@ -43,7 +43,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// Return a new <see cref="WindowStore{K, V}"/> instance.
         /// </summary>
         /// <returns>Return a new <see cref="WindowStore{K, V}"/> instance.</returns>
-        public WindowStore<Bytes, byte[]> Get()
+        public IWindowStore<Bytes, byte[]> Get()
             => new InMemoryWindowStore(Name, retention, WindowSize.Value);
     }
 }

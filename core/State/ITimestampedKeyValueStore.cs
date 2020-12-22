@@ -5,7 +5,7 @@
     /// </summary>
     /// <typeparam name="K">key type</typeparam>
     /// <typeparam name="V">value type</typeparam>
-    public interface TimestampedKeyValueStore<K,V> : IKeyValueStore<K, ValueAndTimestamp<V>>
+    public interface ITimestampedKeyValueStore<K,V> : IKeyValueStore<K, ValueAndTimestamp<V>>
     {
     }
 }

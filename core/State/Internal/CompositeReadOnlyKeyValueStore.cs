@@ -4,15 +4,15 @@ using System.Linq;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
-    internal class CompositeReadOnlyKeyValueStore<K, V> : ReadOnlyKeyValueStore<K, V>
+    internal class CompositeReadOnlyKeyValueStore<K, V> : IReadOnlyKeyValueStore<K, V>
     {
-        private readonly IStateStoreProvider<ReadOnlyKeyValueStore<K, V>, K, V> storeProvider;
-        private readonly IQueryableStoreType<ReadOnlyKeyValueStore<K, V>, K, V> storeType;
+        private readonly IStateStoreProvider<IReadOnlyKeyValueStore<K, V>, K, V> storeProvider;
+        private readonly IQueryableStoreType<IReadOnlyKeyValueStore<K, V>, K, V> storeType;
         private readonly string storeName;
 
         public CompositeReadOnlyKeyValueStore(
-            IStateStoreProvider<ReadOnlyKeyValueStore<K, V>, K, V> storeProvider,
-            IQueryableStoreType<ReadOnlyKeyValueStore<K, V>, K, V> storeType, string storeName)
+            IStateStoreProvider<IReadOnlyKeyValueStore<K, V>, K, V> storeProvider,
+            IQueryableStoreType<IReadOnlyKeyValueStore<K, V>, K, V> storeType, string storeName)
         {
             this.storeProvider = storeProvider;
             this.storeType = storeType;
@@ -23,7 +23,7 @@ namespace Streamiz.Kafka.Net.State.Internal
         {
             // TODO: implement DelegatingPeekingKeyValueIterator
 
-            IEnumerable<ReadOnlyKeyValueStore<K, V>> stores = GetAllStores();
+            IEnumerable<IReadOnlyKeyValueStore<K, V>> stores = GetAllStores();
             try
             {
                 return stores.SelectMany(x =>
@@ -41,7 +41,7 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public long ApproximateNumEntries()
         {
-            IEnumerable<ReadOnlyKeyValueStore<K, V>> stores = GetAllStores();
+            IEnumerable<IReadOnlyKeyValueStore<K, V>> stores = GetAllStores();
             long result = 0;
             foreach (var store in stores)
             {
@@ -56,7 +56,7 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public V Get(K key)
         {
-            IEnumerable<ReadOnlyKeyValueStore<K, V>> stores = GetAllStores();
+            IEnumerable<IReadOnlyKeyValueStore<K, V>> stores = GetAllStores();
             try
             {
                 return stores.FirstOrDefault(x => x.Get(key) != null).Get(key);
@@ -69,7 +69,7 @@ namespace Streamiz.Kafka.Net.State.Internal
             }
         }
 
-        private IEnumerable<ReadOnlyKeyValueStore<K, V>> GetAllStores()
+        private IEnumerable<IReadOnlyKeyValueStore<K, V>> GetAllStores()
         {
             return storeProvider.Stores(storeName, storeType);
         }

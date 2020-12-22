@@ -591,7 +591,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             var parameters = new ProcessorParameters<K, V>(tableSource, name);
 
             var storeBuilder = new TimestampedKeyValueStoreMaterializer<K, V>(materialized).Materialize();
-            var tableNode = new StatefulProcessorNode<K, V, TimestampedKeyValueStore<K, V>>(name, parameters, storeBuilder);
+            var tableNode = new StatefulProcessorNode<K, V, ITimestampedKeyValueStore<K, V>>(name, parameters, storeBuilder);
             builder.AddGraphNode(Node, tableNode);
 
             return new KTable<K, V, V>(

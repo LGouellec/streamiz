@@ -11,7 +11,7 @@ namespace Streamiz.Kafka.Net.Mock
     public static class IntegrationTestUtils
     {
         /// <summary>
-        /// Wait until <paramref name="size"/> messages in topic and 10 timeout seconds.
+        /// Wait until <paramref name="size"/> messages in topic. This methods use 10 seconds of timeout.
         /// </summary>
         /// <typeparam name="K">key type</typeparam>
         /// <typeparam name="V">value type</typeparam>

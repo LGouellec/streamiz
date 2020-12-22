@@ -5,7 +5,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
     internal class WindowKeyValueStoreGetter<K, V> : IKTableValueGetter<Windowed<K>, V>
     {
         private readonly string storeName;
-        private TimestampedWindowStore<K, V> store;
+        private ITimestampedWindowStore<K, V> store;
 
         public WindowKeyValueStoreGetter(string storeName)
         {
@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
 
         public void Init(ProcessorContext context)
         {
-            store = (TimestampedWindowStore<K, V>)context.GetStateStore(storeName);
+            store = (ITimestampedWindowStore<K, V>)context.GetStateStore(storeName);
         }
     }
 }

@@ -75,8 +75,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var builder = new StreamBuilder();
 
-            Materialized<string, string, WindowStore<Bytes, byte[]>> m =
-                Materialized<string, string, WindowStore<Bytes, byte[]>>
+            Materialized<string, string, IWindowStore<Bytes, byte[]>> m =
+                Materialized<string, string, IWindowStore<Bytes, byte[]>>
                     .Create("store")
                     .With(null, null);
 

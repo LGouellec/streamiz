@@ -4,11 +4,11 @@ using Streamiz.Kafka.Net.SerDes;
 namespace Streamiz.Kafka.Net.State.Internal
 {
     internal class TimestampedWindowStoreImpl<K, V> :
-        WrappedWindowStore<K, ValueAndTimestamp<V>>, TimestampedWindowStore<K, V>
+        WrappedWindowStore<K, ValueAndTimestamp<V>>, ITimestampedWindowStore<K, V>
     {
         private bool initStoreSerdes = false;
 
-        public TimestampedWindowStoreImpl(WindowStore<Bytes, byte[]> wrapped, long windowSizeMs, ISerDes<K> keySerdes, ISerDes<ValueAndTimestamp<V>> valueSerdes)
+        public TimestampedWindowStoreImpl(IWindowStore<Bytes, byte[]> wrapped, long windowSizeMs, ISerDes<K> keySerdes, ISerDes<ValueAndTimestamp<V>> valueSerdes)
             : base(wrapped, windowSizeMs, keySerdes, valueSerdes)
         {
         }

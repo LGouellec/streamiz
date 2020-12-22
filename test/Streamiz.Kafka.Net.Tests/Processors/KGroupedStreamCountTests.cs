@@ -61,8 +61,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             Assert.IsNotNull(nameStore);
             Assert.AreNotEqual(string.Empty, nameStore);
             var store = task.GetStore(nameStore);
-            Assert.IsInstanceOf<TimestampedKeyValueStore<string, long>>(store);
-            Assert.AreEqual(0, (store as TimestampedKeyValueStore<string, long>).ApproximateNumEntries());
+            Assert.IsInstanceOf<ITimestampedKeyValueStore<string, long>>(store);
+            Assert.AreEqual(0, (store as ITimestampedKeyValueStore<string, long>).ApproximateNumEntries());
         }
 
         [Test]

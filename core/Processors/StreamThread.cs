@@ -68,7 +68,7 @@ namespace Streamiz.Kafka.Net.Processors
             var listener = new StreamsRebalanceListener(manager);
 
             log.Info($"{logPrefix}Creating consumer client");
-            var consumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig(customerID), listener);
+            var consumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig(GetConsumerClientId(customerID)), listener);
             manager.Consumer = consumer;
 
             var thread = new StreamThread(threadId, customerID, manager, consumer, builder, configuration);

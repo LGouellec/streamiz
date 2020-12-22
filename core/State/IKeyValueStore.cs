@@ -8,7 +8,7 @@ namespace Streamiz.Kafka.Net.State
     /// </summary>
     /// <typeparam name="K">Key type</typeparam>
     /// <typeparam name="V">Value type</typeparam>
-    public interface IKeyValueStore<K, V> : IStateStore, ReadOnlyKeyValueStore<K, V>
+    public interface IKeyValueStore<K, V> : IStateStore, IReadOnlyKeyValueStore<K, V>
     {
         /// <summary>
         /// Update the value associated with this key.

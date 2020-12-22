@@ -83,7 +83,7 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
         {
             if (!isInitialized)
             {
-                throw new StreamsException($"SchemaAvroSerDes<{typeof(T).Name} is not initialized !");
+                throw new StreamsException($"SchemaAvroSerDes<{typeof(T).Name}> is not initialized !");
             }
 
             return avroDeserializer
@@ -101,7 +101,7 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
         {
             if (!isInitialized)
             {
-                throw new StreamsException($"SchemaAvroSerDes<{typeof(T).Name} is not initialized !");
+                throw new StreamsException($"SchemaAvroSerDes<{typeof(T).Name}> is not initialized !");
             }
 
             return avroSerializer

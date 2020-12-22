@@ -7,7 +7,7 @@ namespace Streamiz.Kafka.Net.State
     /// </summary>
     /// <typeparam name="K">Type of keys</typeparam>
     /// <typeparam name="V">Type of values</typeparam>
-    public interface WindowStore<K,V> : IStateStore, ReadOnlyWindowStore<K,V>
+    public interface IWindowStore<K,V> : IStateStore, IReadOnlyWindowStore<K,V>
     {
         /// <summary>
         /// Put a key-value pair into the window with given window start timestamp.

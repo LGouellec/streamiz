@@ -18,15 +18,15 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph.Nodes
     internal class TableProcessorNode<K, V, KS, VS> : TableProcessorNode
     {
         private readonly ProcessorParameters<K, Change<V>> processorParameters;
-        private readonly StoreBuilder<TimestampedKeyValueStore<KS, VS>> storeBuilder;
+        private readonly StoreBuilder<ITimestampedKeyValueStore<KS, VS>> storeBuilder;
         private readonly String[] storeNames;
 
-        public TableProcessorNode(string name, ProcessorParameters<K, Change<V>> processorParameters, StoreBuilder<TimestampedKeyValueStore<KS, VS>> storeBuilder)
+        public TableProcessorNode(string name, ProcessorParameters<K, Change<V>> processorParameters, StoreBuilder<ITimestampedKeyValueStore<KS, VS>> storeBuilder)
             : this(name, processorParameters, storeBuilder, null)
         {
         }
 
-        public TableProcessorNode(string name, ProcessorParameters<K, Change<V>> processorParameters, StoreBuilder<TimestampedKeyValueStore<KS, VS>> storeBuilder, string[] storeNames)
+        public TableProcessorNode(string name, ProcessorParameters<K, Change<V>> processorParameters, StoreBuilder<ITimestampedKeyValueStore<KS, VS>> storeBuilder, string[] storeNames)
             : base(name)
         {
             this.processorParameters = processorParameters;

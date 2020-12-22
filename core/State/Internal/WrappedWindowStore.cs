@@ -8,13 +8,13 @@ using System;
 namespace Streamiz.Kafka.Net.State.Internal
 {
     internal class WrappedWindowStore<K, V> :
-        WrappedStateStore<WindowStore<Bytes, byte[]>>, WindowStore<K, V>
+        WrappedStateStore<IWindowStore<Bytes, byte[]>>, IWindowStore<K, V>
     {
         private readonly long windowSizeMs;
         protected ISerDes<K> keySerdes;
         protected ISerDes<V> valueSerdes;
 
-        public WrappedWindowStore(WindowStore<Bytes, byte[]> wrapped, long windowSizeMs, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+        public WrappedWindowStore(IWindowStore<Bytes, byte[]> wrapped, long windowSizeMs, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
             : base(wrapped)
         {
             this.windowSizeMs = windowSizeMs;

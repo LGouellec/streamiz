@@ -1,8 +1,6 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
-using Streamiz.Kafka.Net.State.InMemory;
 using Streamiz.Kafka.Net.State.Supplier;
 using Streamiz.Kafka.Net.Table;
-using System;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
@@ -15,17 +13,15 @@ namespace Streamiz.Kafka.Net.State.Internal
             materialized = materializedInternal;
         }
 
-        public StoreBuilder<TimestampedKeyValueStore<K, V>> Materialize()
+        public StoreBuilder<ITimestampedKeyValueStore<K, V>> Materialize()
         {
             KeyValueBytesStoreSupplier supplier = (KeyValueBytesStoreSupplier)materialized.StoreSupplier;
             if (supplier == null)
             {
-                // TODO : RocksDB
-                //supplier = Stores.persistentTimestampedKeyValueStore(name);
-                supplier = new InMemoryKeyValueBytesStoreSupplier(materialized.StoreName);
+                supplier = Stores.DefaultKeyValueStore(materialized.StoreName);
             }
 
-            StoreBuilder<TimestampedKeyValueStore<K, V>> builder = Stores.TimestampedKeyValueStoreBuilder(
+            StoreBuilder<ITimestampedKeyValueStore<K, V>> builder = Stores.TimestampedKeyValueStoreBuilder(
                  supplier,
                  materialized.KeySerdes,
                  materialized.ValueSerdes);

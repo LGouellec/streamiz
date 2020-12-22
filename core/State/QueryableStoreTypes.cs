@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.State
         /// <typeparam name="K">key type of the store</typeparam>
         /// <typeparam name="V">value type of the store</typeparam>
         /// <returns><see cref="KeyValueStore{K, V}"/></returns>
-        public static IQueryableStoreType<ReadOnlyKeyValueStore<K, V>, K, V> KeyValueStore<K, V>() => new KeyValueStoreType<K, V>();
+        public static IQueryableStoreType<IReadOnlyKeyValueStore<K, V>, K, V> KeyValueStore<K, V>() => new KeyValueStoreType<K, V>();
 
         /// <summary>
         /// A <see cref="IQueryableStoreType{T, K, V}"/> that accepts <see cref="ReadOnlyKeyValueStore{K, U}"/> as T where
@@ -29,7 +29,7 @@ namespace Streamiz.Kafka.Net.State
         /// <typeparam name="K">key type of the store</typeparam>
         /// <typeparam name="V">value type of the store</typeparam>
         /// <returns><see cref="QueryableStoreTypes.TimestampedKeyValueStore{K, V}"/></returns>
-        public static IQueryableStoreType<ReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>, K, ValueAndTimestamp<V>> TimestampedKeyValueStore<K, V>() => new TimestampedKeyValueStoreType<K, V>();
+        public static IQueryableStoreType<IReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>, K, ValueAndTimestamp<V>> TimestampedKeyValueStore<K, V>() => new TimestampedKeyValueStoreType<K, V>();
 
         /// <summary>
         /// A <see cref="IQueryableStoreType{T, K, V}"/> that accepts <see cref="ReadOnlyWindowStore{K, V}"/>.
@@ -37,42 +37,42 @@ namespace Streamiz.Kafka.Net.State
         /// <typeparam name="K">key type of the store</typeparam>
         /// <typeparam name="V">value type of the store</typeparam>
         /// <returns><see cref="QueryableStoreTypes.WindowStore{K, V}"/></returns>
-        public static IQueryableStoreType<ReadOnlyWindowStore<K, V>, K, V> WindowStore<K, V>() => new WindowStoreType<K, V>();
+        public static IQueryableStoreType<IReadOnlyWindowStore<K, V>, K, V> WindowStore<K, V>() => new WindowStoreType<K, V>();
     }
 
-    internal class KeyValueStoreType<K, V> : QueryableStoreTypeMatcher<ReadOnlyKeyValueStore<K, V>, K, V>
+    internal class KeyValueStoreType<K, V> : QueryableStoreTypeMatcher<IReadOnlyKeyValueStore<K, V>, K, V>
     {
         public KeyValueStoreType() 
-            : base(new[] { typeof(ReadOnlyKeyValueStore<K, V>), typeof(ReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>) })
+            : base(new[] { typeof(IReadOnlyKeyValueStore<K, V>), typeof(IReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>) })
         {
         }
 
-        public override ReadOnlyKeyValueStore<K, V> Create(IStateStoreProvider<ReadOnlyKeyValueStore<K, V>, K, V> storeProvider, string storeName)
+        public override IReadOnlyKeyValueStore<K, V> Create(IStateStoreProvider<IReadOnlyKeyValueStore<K, V>, K, V> storeProvider, string storeName)
         {
             return new CompositeReadOnlyKeyValueStore<K, V>(storeProvider, this, storeName);
         }
     }
 
-    internal class TimestampedKeyValueStoreType<K, V>: QueryableStoreTypeMatcher<ReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>, K, ValueAndTimestamp<V>>
+    internal class TimestampedKeyValueStoreType<K, V>: QueryableStoreTypeMatcher<IReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>, K, ValueAndTimestamp<V>>
     {
-        public TimestampedKeyValueStoreType(): base(new[] { typeof(ReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>), typeof(TimestampedKeyValueStore<K, V>) })
+        public TimestampedKeyValueStoreType(): base(new[] { typeof(IReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>), typeof(ITimestampedKeyValueStore<K, V>) })
         {
         }
 
-        public override ReadOnlyKeyValueStore<K, ValueAndTimestamp<V>> Create(IStateStoreProvider<ReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>, K, ValueAndTimestamp<V>> storeProvider, string storeName)
+        public override IReadOnlyKeyValueStore<K, ValueAndTimestamp<V>> Create(IStateStoreProvider<IReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>, K, ValueAndTimestamp<V>> storeProvider, string storeName)
         {
             return new CompositeReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>(storeProvider, this, storeName);
         }
     }
 
-    internal class WindowStoreType<K, V> : QueryableStoreTypeMatcher<ReadOnlyWindowStore<K, V>, K, V>
+    internal class WindowStoreType<K, V> : QueryableStoreTypeMatcher<IReadOnlyWindowStore<K, V>, K, V>
     {
         public WindowStoreType()
-        : base(new[] { typeof(ReadOnlyWindowStore<K, V>), typeof(TimestampedWindowStore<K, V>) })
+        : base(new[] { typeof(IReadOnlyWindowStore<K, V>), typeof(ITimestampedWindowStore<K, V>) })
         {
         }
 
-        public override ReadOnlyWindowStore<K, V> Create(IStateStoreProvider<ReadOnlyWindowStore<K, V>, K, V> storeProvider, string storeName)
+        public override IReadOnlyWindowStore<K, V> Create(IStateStoreProvider<IReadOnlyWindowStore<K, V>, K, V> storeProvider, string storeName)
         {
             return new CompositeReadOnlyWindowStore<K, V>(storeProvider, this, storeName);
         }
