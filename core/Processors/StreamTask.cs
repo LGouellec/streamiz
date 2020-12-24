@@ -5,6 +5,7 @@ using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.Stream.Internal;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,6 +13,9 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal class StreamTask : AbstractTask
     {
+        [ThreadStatic]
+        internal static Headers CurrentHeaders;
+
         private readonly IKafkaSupplier kafkaSupplier;
         private readonly IRecordCollector collector;
         private readonly IDictionary<TopicPartition, long> consumedOffsets;
@@ -20,11 +24,13 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly bool eosEnabled = false;
         private readonly long maxTaskIdleMs = 0;
         private readonly long maxBufferedSize = 100;
+        private readonly bool followHeaders = false;
 
         private long idleStartTime;
         private IProducer<byte[], byte[]> producer;
         private bool transactionInFlight = false;
         private readonly string threadId;
+
 
         public StreamTask(string threadId, TaskId id, IEnumerable<TopicPartition> partitions, ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer)
             : base(id, partitions, processorTopology, consumer, configuration)
@@ -34,6 +40,7 @@ namespace Streamiz.Kafka.Net.Processors
             consumedOffsets = new Dictionary<TopicPartition, long>();
             maxTaskIdleMs = configuration.MaxTaskIdleMs;
             maxBufferedSize = configuration.BufferedRecordsPerPartition;
+            followHeaders = configuration.FollowHeaders;
             idleStartTime = -1;
 
             // eos enabled
@@ -298,6 +305,9 @@ namespace Streamiz.Kafka.Net.Processors
             else
             {
                 Context.SetRecordMetaData(record.Record);
+                if (followHeaders)
+                    CurrentHeaders = record.Record.Message.Headers;
+
                 var recordInfo = $"Topic:{record.Record.Topic}|Partition:{record.Record.Partition.Value}|Offset:{record.Record.Offset}|Timestamp:{record.Record.Message.Timestamp.UnixTimestampMs}";
 
                 log.Debug($"{logPrefix}Start processing one record [{recordInfo}]");

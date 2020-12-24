@@ -15,11 +15,19 @@ namespace sample_stream
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app";
-            config.BootstrapServers = "localhost:9092";
+            config.BootstrapServers = "localhost:9093";
+            config.FollowHeaders = true;
+            config.NumStreamThreads = 2;
 
             StreamBuilder builder = new StreamBuilder();
-            IKStream<string, string> kStream = builder.Stream<string, string>("test-topic");
-
+            IKStream<string, string> kStream = builder.Stream<string, string>("test");
+            kStream.MapValues((v) =>
+            {
+                var headers = HeadersMetadata.GetCurrentMetadata();
+                if(headers.Count > 0 )
+                    Console.WriteLine("RANDOM : " + BitConverter.ToInt32(headers.GetLastBytes("random")));
+                return v;
+            });
             kStream.Print(Printed<string, string>.ToOut());
 
             Topology t = builder.Build();

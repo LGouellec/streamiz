@@ -8,6 +8,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal class TaskManager
     {
+        [ThreadStatic] 
+        internal static StreamTask CurrentTask = null;
+        
         private readonly ILog log = Logger.GetLogger(typeof(TaskManager));
         private readonly InternalTopologyBuilder builder;
         private readonly TaskCreator taskCreator;
@@ -111,10 +114,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             foreach (var t in activeTasks)
             {
+                CurrentTask = t.Value;
                 t.Value.Close();
             }
 
             activeTasks.Clear();
+            CurrentTask = null;
 
             foreach (var t in revokedTasks)
             {
@@ -171,6 +176,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 foreach (var t in ActiveTasks)
                 {
+                    CurrentTask = t;
                     if (t.CommitNeeded)
                     {
                         t.Commit();
@@ -189,6 +195,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 try
                 {
+                    CurrentTask = task;
                     if (task.CanProcess(now) && task.Process())
                     {
                         processed++;
