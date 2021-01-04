@@ -13,9 +13,6 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal class StreamTask : AbstractTask
     {
-        [ThreadStatic]
-        internal static Headers CurrentHeaders;
-
         private readonly IKafkaSupplier kafkaSupplier;
         private readonly IRecordCollector collector;
         private readonly IDictionary<TopicPartition, long> consumedOffsets;

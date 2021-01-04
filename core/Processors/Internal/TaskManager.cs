@@ -43,6 +43,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public void CreateTasks(ICollection<TopicPartition> assignment)
         {
+            CurrentTask = null;
             IDictionary<TaskId, IList<TopicPartition>> tasksToBeCreated = new Dictionary<TaskId, IList<TopicPartition>>();
 
             foreach (var partition in assignment)
@@ -81,6 +82,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public void RevokeTasks(ICollection<TopicPartition> assignment)
         {
+            CurrentTask = null;
             foreach (var p in assignment)
             {
                 var taskId = builder.GetTaskIdFromPartition(p);
@@ -112,6 +114,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public void Close()
         {
+            CurrentTask = null;
             foreach (var t in activeTasks)
             {
                 CurrentTask = t.Value;
@@ -183,6 +186,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                         ++committed;
                     }
                 }
+                CurrentTask = null;
                 return committed;
             }
         }
@@ -207,13 +211,14 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     throw;
                 }
             }
-
+            CurrentTask = null;
             return processed;
         }
 
         internal void HandleLostAll()
         {
             log.Debug($"Closing lost active tasks as zombies.");
+            CurrentTask = null;
             revokedTasks.Clear();
 
             var enumerator = activeTasks.GetEnumerator();

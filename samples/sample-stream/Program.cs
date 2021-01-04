@@ -23,7 +23,7 @@ namespace sample_stream
             IKStream<string, string> kStream = builder.Stream<string, string>("test");
             kStream.MapValues((v) =>
             {
-                var headers = HeadersMetadata.GetCurrentMetadata();
+                var headers = StreamizMetadata.GetCurrentHeadersMetadata();
                 if(headers.Count > 0 )
                     Console.WriteLine("RANDOM : " + BitConverter.ToInt32(headers.GetLastBytes("random")));
                 return v;
