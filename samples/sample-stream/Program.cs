@@ -16,7 +16,7 @@ namespace sample_stream
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app";
             config.BootstrapServers = "localhost:9093";
-            config.FollowHeaders = true;
+            config.FollowMetadata = true;
             config.NumStreamThreads = 2;
 
             StreamBuilder builder = new StreamBuilder();

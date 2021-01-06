@@ -226,7 +226,7 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         long BufferedRecordsPerPartition { get; set; }
 
-        bool FollowHeaders { get; set; }
+        bool FollowMetadata { get; set; }
 
         #endregion
     }
@@ -328,7 +328,7 @@ namespace Streamiz.Kafka.Net
         internal static readonly string maxPollRecordsCst = "max.poll.records.ms";
         internal static readonly string maxTaskIdleCst = "max.task.idle.ms";
         internal static readonly string bufferedRecordsPerPartitionCst = "buffered.records.per.partition";
-        internal static readonly string followheadersCst = "follow.headers";
+        internal static readonly string followMetadataCst = "follow.metadata";
 
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -1785,7 +1785,7 @@ namespace Streamiz.Kafka.Net
             InnerExceptionHandler = (exception) => ExceptionHandlerResponse.FAIL;
             ProductionExceptionHandler = (report) => ExceptionHandlerResponse.FAIL;
             DeserializationExceptionHandler = (context, record, exception) => ExceptionHandlerResponse.FAIL;
-            FollowHeaders = false;
+            FollowMetadata = false;
 
             if (properties != null)
             {
@@ -1807,10 +1807,10 @@ namespace Streamiz.Kafka.Net
 
         #region IStreamConfig Impl
 
-        public bool FollowHeaders
+        public bool FollowMetadata
         {
-            get => this[followheadersCst];
-            set => this.AddOrUpdate(followheadersCst, value);
+            get => this[followMetadataCst];
+            set => this.AddOrUpdate(followMetadataCst, value);
         }
 
         /// <summary>

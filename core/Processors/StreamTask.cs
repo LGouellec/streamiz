@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly bool eosEnabled = false;
         private readonly long maxTaskIdleMs = 0;
         private readonly long maxBufferedSize = 100;
-        private readonly bool followHeaders = false;
+        private readonly bool followMetadata = false;
 
         private long idleStartTime;
         private IProducer<byte[], byte[]> producer;
@@ -37,7 +37,7 @@ namespace Streamiz.Kafka.Net.Processors
             consumedOffsets = new Dictionary<TopicPartition, long>();
             maxTaskIdleMs = configuration.MaxTaskIdleMs;
             maxBufferedSize = configuration.BufferedRecordsPerPartition;
-            followHeaders = configuration.FollowHeaders;
+            followMetadata = configuration.FollowMetadata;
             idleStartTime = -1;
 
             // eos enabled
@@ -56,6 +56,8 @@ namespace Streamiz.Kafka.Net.Processors
             collector.Init(ref this.producer);
 
             Context = new ProcessorContext(this, configuration, stateMgr).UseRecordCollector(collector);
+            Context.FollowMetadata = followMetadata;
+
             var partitionsQueue = new Dictionary<TopicPartition, RecordQueue>();
 
             foreach (var p in partitions)
@@ -302,9 +304,7 @@ namespace Streamiz.Kafka.Net.Processors
             else
             {
                 Context.SetRecordMetaData(record.Record);
-                if (followHeaders)
-                    CurrentHeaders = record.Record.Message.Headers;
-
+                
                 var recordInfo = $"Topic:{record.Record.Topic}|Partition:{record.Record.Partition.Value}|Offset:{record.Record.Offset}|Timestamp:{record.Record.Message.Timestamp.UnixTimestampMs}";
 
                 log.Debug($"{logPrefix}Start processing one record [{recordInfo}]");
