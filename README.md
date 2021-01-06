@@ -16,8 +16,7 @@
 </div>
 <br/>
 
-<!-- <img src="./resources/logo-kafka-stream-net.png" width="100"> -->
-<img src="./resources/streamiz_v2.svg" width="200">
+<img src="./resources/streamiz_v2.svg" width="150">
 
 ----
 
