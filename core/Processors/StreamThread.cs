@@ -156,103 +156,116 @@ namespace Streamiz.Kafka.Net.Processors
 
                     try
                     {
-                        IEnumerable<ConsumeResult<byte[], byte[]>> records = null;
-                        long now = DateTime.Now.GetMilliseconds();
+                        if (!manager.RebalanceInProgress)
+                        {
+                            IEnumerable<ConsumeResult<byte[], byte[]>> records = null;
+                            long now = DateTime.Now.GetMilliseconds();
 
-                        if (State == ThreadState.PARTITIONS_ASSIGNED)
-                        {
-                            records = PollRequest(TimeSpan.Zero);
-                        }
-                        else if (State == ThreadState.PARTITIONS_REVOKED)
-                        {
-                            records = PollRequest(TimeSpan.Zero);
-                        }
-                        else if (State == ThreadState.RUNNING || State == ThreadState.STARTING)
-                        {
-                            records = PollRequest(consumeTimeout);
-                        }
-                        else
-                        {
-                            log.Error($"{logPrefix}Unexpected state {State} during normal iteration");
-                            throw new StreamsException($"Unexpected state {State} during normal iteration");
-                        }
-
-                        DateTime n = DateTime.Now;
-
-                        if (records != null && records.Count() > 0)
-                        {
-                            foreach (var record in records)
+                            if (State == ThreadState.PARTITIONS_ASSIGNED)
                             {
-                                var task = manager.ActiveTaskFor(record.TopicPartition);
-                                if (task != null)
+                                records = PollRequest(TimeSpan.Zero);
+                            }
+                            else if (State == ThreadState.PARTITIONS_REVOKED)
+                            {
+                                records = PollRequest(TimeSpan.Zero);
+                            }
+                            else if (State == ThreadState.RUNNING || State == ThreadState.STARTING)
+                            {
+                                records = PollRequest(consumeTimeout);
+                            }
+                            else
+                            {
+                                log.Error($"{logPrefix}Unexpected state {State} during normal iteration");
+                                throw new StreamsException($"Unexpected state {State} during normal iteration");
+                            }
+
+                            DateTime n = DateTime.Now;
+
+                            if (records != null && records.Any())
+                            {
+                                foreach (var record in records)
                                 {
-                                    if (task.IsClosed)
+                                    var task = manager.ActiveTaskFor(record.TopicPartition);
+                                    if (task != null)
                                     {
-                                        log.Info($"Stream task {task.Id} is already closed, probably because it got unexpectedly migrated to another thread already. Notifying the thread to trigger a new rebalance immediately.");
-                                        // TODO gesture this behaviour
-                                        //throw new TaskMigratedException(task);
+                                        if (task.IsClosed)
+                                        {
+                                            log.Info($"Stream task {task.Id} is already closed, probably because it got unexpectedly migrated to another thread already. Notifying the thread to trigger a new rebalance immediately.");
+                                            // TODO gesture this behaviour
+                                            //throw new TaskMigratedException(task);
+                                        }
+                                        else
+                                            task.AddRecord(record);
                                     }
                                     else
-                                        task.AddRecord(record);
+                                    {
+                                        if (consumer.Assignment.Contains(record.TopicPartition))
+                                        {
+                                            log.Error($"Unable to locate active task for received-record partition {record.TopicPartition}. Current tasks: {string.Join(",", manager.ActiveTaskIds)}. Current Consumer Assignment : {string.Join(",", consumer.Assignment.Select(t => $"{t.Topic}-[{t.Partition}]"))}");
+                                            throw new NullReferenceException($"Task was unexpectedly missing for partition {record.TopicPartition}");
+                                        }
+                                        else
+                                        {
+                                            // during rebalancing, sometimes task manager doesn't have task, but records in poll contains message for this task. 
+                                            // Skip this message, message will read for an another instance.
+                                            // Warning to trace
+                                            log.Warn($"Unable to locate active task for received-record partition {record.TopicPartition}. Current tasks: {string.Join(",", manager.ActiveTaskIds)}. Current Consumer Assignment : {string.Join(",", consumer.Assignment.Select(t => $"{t.Topic}-[{t.Partition}]"))}");
+                                        }
+                                    }
                                 }
-                                else
+
+                                log.Debug($"Add {records.Count()} records in tasks in {DateTime.Now - n}");
+                            }
+
+                            int processed = 0;
+                            long timeSinceLastPoll = 0;
+                            do
+                            {
+                                processed = 0;
+                                for (int i = 0; i < numIterations; ++i)
                                 {
-                                    log.Error($"Unable to locate active task for received-record partition {record.TopicPartition}. Current tasks: {string.Join(",", manager.ActiveTaskIds)}");
-                                    throw new NullReferenceException($"Task was unexpectedly missing for partition {record.TopicPartition}");
+                                    processed = manager.Process(now);
+
+                                    if (processed == 0)
+                                        break;
+                                    // NOT AVAILABLE NOW, NEED PROCESSOR API
+                                    //if (processed > 0)
+                                    //    manager.MaybeCommitPerUserRequested();
+                                    //else
+                                    //    break;
                                 }
-                            }
-                            
-                            log.Debug($"Add {records.Count()} records in tasks in {DateTime.Now - n}");
-                        }
 
-                        int processed = 0;
-                        long timeSinceLastPoll = 0;
-                        do
-                        {
-                            processed = 0;
-                            for (int i = 0; i < numIterations; ++i)
-                            {
-                                processed = manager.Process(now);
+                                timeSinceLastPoll = Math.Max(DateTime.Now.GetMilliseconds() - lastPollMs, 0);
 
-                                if (processed == 0)
+
+                                if (MaybeCommit())
+                                {
+                                    numIterations = numIterations > 1 ? numIterations / 2 : numIterations;
+                                }
+
+                                else if (timeSinceLastPoll > streamConfig.MaxPollIntervalMs.Value / 2)
+                                {
+                                    numIterations = numIterations > 1 ? numIterations / 2 : numIterations;
                                     break;
-                                // NOT AVAILABLE NOW, NEED PROCESSOR API
-                                //if (processed > 0)
-                                //    manager.MaybeCommitPerUserRequested();
-                                //else
-                                //    break;
-                            }
+                                }
+                                else if (processed > 0)
+                                {
+                                    numIterations++;
 
-                            timeSinceLastPoll = Math.Max(DateTime.Now.GetMilliseconds() - lastPollMs, 0);
+                                }
+                            } while (processed > 0);
 
+                            if (State == ThreadState.RUNNING)
+                                MaybeCommit();
 
-                            if (MaybeCommit())
+                            if (State == ThreadState.PARTITIONS_ASSIGNED)
                             {
-                                numIterations = numIterations > 1 ? numIterations / 2 : numIterations;
+                                SetState(ThreadState.RUNNING);
                             }
-                            
-                            else if (timeSinceLastPoll > streamConfig.MaxPollIntervalMs.Value / 2)
-                            {
-                                numIterations = numIterations > 1 ? numIterations / 2 : numIterations;
-                                break;
-                            }
-                            else if (processed > 0)
-                            {
-                                numIterations++;
 
-                            }
-                        } while (processed > 0);
-
-                        if (State == ThreadState.RUNNING)
-                            MaybeCommit();
-
-                        if (State == ThreadState.PARTITIONS_ASSIGNED)
-                        {
-                            SetState(ThreadState.RUNNING);
+                            if (records.Any())
+                                log.Debug($"Processing {records.Count()} records in {DateTime.Now - n}");
                         }
-
-                        if (records.Any())
-                            log.Debug($"Processing {records.Count()} records in {DateTime.Now - n}");
                     }
                     catch(TaskMigratedException e)
                     {
