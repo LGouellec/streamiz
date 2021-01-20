@@ -11,7 +11,7 @@ namespace Streamiz.Kafka.Net
             if (task != null)
             {
                 if (task.Context.FollowMetadata)
-                    return task.Context?.RecordContext?.Headers;
+                    return task.Context.RecordContext.Headers;
                 else
                     return null;
             }
@@ -25,7 +25,7 @@ namespace Streamiz.Kafka.Net
             if (task != null)
             {
                 if (task.Context.FollowMetadata)
-                    return task.Context?.RecordContext?.Timestamp;
+                    return task.Context.RecordContext.Timestamp;
                 else
                     return null;
             }
@@ -39,7 +39,7 @@ namespace Streamiz.Kafka.Net
             if (task != null)
             {
                 if (task.Context.FollowMetadata)
-                    return task.Context?.RecordContext?.Offset;
+                    return task.Context.RecordContext.Offset;
                 else
                     return null;
             }
@@ -53,7 +53,7 @@ namespace Streamiz.Kafka.Net
             if (task != null)
             {
                 if (task.Context.FollowMetadata)
-                    return task.Context?.RecordContext?.Partition;
+                    return task.Context.RecordContext.Partition;
                 else
                     return null;
             }
@@ -67,7 +67,7 @@ namespace Streamiz.Kafka.Net
             if (task != null)
             {
                 if (task.Context.FollowMetadata)
-                    return task.Context?.RecordContext?.Topic;
+                    return task.Context.RecordContext.Topic;
                 else
                     return null;
             }

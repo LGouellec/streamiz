@@ -9,8 +9,22 @@ namespace Streamiz.Kafka.Net.Processors.Internal
     internal class TaskManager
     {
         [ThreadStatic] 
-        internal static StreamTask CurrentTask = null;
-        
+        private static StreamTask _currentTask = null;
+        internal static StreamTask CurrentTask
+        {
+            get
+            {
+                if (_currentTask == null)
+                    return UnassignedStreamTask.Create();
+                else
+                    return _currentTask;
+            }
+            set
+            {
+                _currentTask = value;
+            }
+        }
+
         private readonly ILog log = Logger.GetLogger(typeof(TaskManager));
         private readonly InternalTopologyBuilder builder;
         private readonly TaskCreator taskCreator;

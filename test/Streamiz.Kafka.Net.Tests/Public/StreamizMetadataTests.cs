@@ -598,5 +598,16 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.Null(h);
         }
         /** TIMESTAMP **/
+
+        [Test]
+        public void GetUnassignedMetadataTests()
+        {
+            Assert.Null(StreamizMetadata.GetCurrentHeadersMetadata());
+            Assert.Null(StreamizMetadata.GetCurrentOffsetMetadata());
+            Assert.Null(StreamizMetadata.GetCurrentPartitionMetadata());
+            Assert.Null(StreamizMetadata.GetCurrentTimestampMetadata());
+            Assert.Null(StreamizMetadata.GetCurrentTopicMetadata());
+        }
+
     }
 }
