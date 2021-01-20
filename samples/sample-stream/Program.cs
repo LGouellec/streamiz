@@ -1,5 +1,6 @@
 ﻿using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using System;
 
@@ -15,12 +16,18 @@ namespace sample_stream
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app";
-            config.BootstrapServers = "localhost:9092";
+            config.BootstrapServers = "localhost:9093";
 
             StreamBuilder builder = new StreamBuilder();
-            IKStream<string, string> kStream = builder.Stream<string, string>("test-topic");
 
-            kStream.Print(Printed<string, string>.ToOut());
+            builder.Stream<string, string>("evenements")
+            .GroupByKey()
+            .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
+            .Aggregate(() => "", (k, v, va) => va += v)
+            .ToStream()
+            .Print(Printed<Windowed<String>, String>.ToOut());
+
+            // kStream.Print(Printed<string, string>.ToOut());
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
