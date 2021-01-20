@@ -325,17 +325,17 @@ namespace Streamiz.Kafka.Net.Mock
         #region Store
 
         /// <summary>
-        /// Get the <see cref="ReadOnlyKeyValueStore{K, V}"/> or <see cref="TimestampedKeyValueStore{K, V}"/> with the given name.
+        /// Get the <see cref="IReadOnlyKeyValueStore{K, V}"/> or <see cref="ITimestampedKeyValueStore{K, V}"/> with the given name.
         /// The store can be a "regular" or global store.
         /// <p>
-        /// If the registered store is a <see cref="TimestampedKeyValueStore{K, V}"/> this method will return a value-only query
+        /// If the registered store is a <see cref="ITimestampedKeyValueStore{K, V}"/> this method will return a value-only query
         /// interface.
         /// </p>
         /// </summary>
         /// <typeparam name="K">key type</typeparam>
         /// <typeparam name="V">value type</typeparam>
         /// <param name="name">the name of the store</param>
-        /// <returns>the key value store, or null if no <see cref="ReadOnlyKeyValueStore{K, V}"/> or <see cref="TimestampedKeyValueStore{K, V}"/> has been registered with the given name</returns>
+        /// <returns>the key value store, or null if no <see cref="IReadOnlyKeyValueStore{K, V}"/> or <see cref="ITimestampedKeyValueStore{K, V}"/> has been registered with the given name</returns>
         public IReadOnlyKeyValueStore<K, V> GetKeyValueStore<K, V>(string name)
         {
             var store = behavior.GetStateStore<K, V>(name);
@@ -348,17 +348,17 @@ namespace Streamiz.Kafka.Net.Mock
         }
 
         /// <summary>
-        /// Get the <see cref="ReadOnlyWindowStore{K, V}"/> or <see cref="TimestampedWindowStore{K, V}"/> with the given name.
+        /// Get the <see cref="IReadOnlyWindowStore{K, V}"/> or <see cref="ITimestampedWindowStore{K, V}"/> with the given name.
         /// The store can be a "regular" or global store.
         /// <p>
-        /// If the registered store is a <see cref="TimestampedWindowStore{K, V}"/> this method will return a value-only query
+        /// If the registered store is a <see cref="ITimestampedWindowStore{K, V}"/> this method will return a value-only query
         /// interface.
         /// </p>
         /// </summary>
         /// <typeparam name="K">key type</typeparam>
         /// <typeparam name="V">value type</typeparam>
         /// <param name="name">the name of the store</param>
-        /// <returns>the key value store, or null if no <see cref="ReadOnlyWindowStore{K, V}"/> or <see cref="TimestampedWindowStore{K, V}"/> has been registered with the given name</returns>
+        /// <returns>the key value store, or null if no <see cref="IReadOnlyWindowStore{K, V}"/> or <see cref="ITimestampedWindowStore{K, V}"/> has been registered with the given name</returns>
         public IReadOnlyWindowStore<K, V> GetWindowStore<K, V>(string name)
         {
             var store = behavior.GetStateStore<K, V>(name);

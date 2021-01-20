@@ -15,7 +15,7 @@ namespace Streamiz.Kafka.Net.State
     public class QueryableStoreTypes
     {
         /// <summary>
-        /// A <see cref="IQueryableStoreType{T, K, V}"/> that accepts <see cref="ReadOnlyKeyValueStore{K, V}"/> as T.
+        /// A <see cref="IQueryableStoreType{T, K, V}"/> that accepts <see cref="IReadOnlyKeyValueStore{K, V}"/> as T.
         /// </summary>
         /// <typeparam name="K">key type of the store</typeparam>
         /// <typeparam name="V">value type of the store</typeparam>
@@ -23,7 +23,7 @@ namespace Streamiz.Kafka.Net.State
         public static IQueryableStoreType<IReadOnlyKeyValueStore<K, V>, K, V> KeyValueStore<K, V>() => new KeyValueStoreType<K, V>();
 
         /// <summary>
-        /// A <see cref="IQueryableStoreType{T, K, V}"/> that accepts <see cref="ReadOnlyKeyValueStore{K, U}"/> as T where
+        /// A <see cref="IQueryableStoreType{T, K, V}"/> that accepts <see cref="IReadOnlyKeyValueStore{K, U}"/> as T where
         /// U is <see cref="ValueAndTimestamp{V}"/>.
         /// </summary>
         /// <typeparam name="K">key type of the store</typeparam>
@@ -32,12 +32,12 @@ namespace Streamiz.Kafka.Net.State
         public static IQueryableStoreType<IReadOnlyKeyValueStore<K, ValueAndTimestamp<V>>, K, ValueAndTimestamp<V>> TimestampedKeyValueStore<K, V>() => new TimestampedKeyValueStoreType<K, V>();
 
         /// <summary>
-        /// A <see cref="IQueryableStoreType{T, K, V}"/> that accepts <see cref="ReadOnlyWindowStore{K, V}"/>.
+        /// A <see cref="IQueryableStoreType{T, K, V}"/> that accepts <see cref="IReadOnlyWindowStore{K, V}"/>.
         /// </summary>
         /// <typeparam name="K">key type of the store</typeparam>
         /// <typeparam name="V">value type of the store</typeparam>
-        /// <returns><see cref="QueryableStoreTypes.WindowStore{K, V}"/></returns>
-        public static IQueryableStoreType<IReadOnlyWindowStore<K, V>, K, V> WindowStore<K, V>() => new WindowStoreType<K, V>();
+        /// <returns><see cref="QueryableStoreTypes.IWindowStore{K, V}"/></returns>
+        public static IQueryableStoreType<IReadOnlyWindowStore<K, V>, K, V> IWindowStore<K, V>() => new WindowStoreType<K, V>();
     }
 
     internal class KeyValueStoreType<K, V> : QueryableStoreTypeMatcher<IReadOnlyKeyValueStore<K, V>, K, V>

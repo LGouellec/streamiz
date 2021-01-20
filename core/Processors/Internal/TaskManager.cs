@@ -9,7 +9,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
     internal class TaskManager
     {
         [ThreadStatic] 
-        private static StreamTask _currentTask = null;
+        private static StreamTask _currentTask;
         internal static StreamTask CurrentTask
         {
             get

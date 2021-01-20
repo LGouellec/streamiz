@@ -1,5 +1,6 @@
 ﻿using Confluent.Kafka;
 using System;
+using System.Security.Cryptography;
 
 namespace Producer
 {
@@ -7,8 +8,6 @@ namespace Producer
     {
         private static void Main(string[] args)
         {
-            Random rd = new Random(DateTime.Now.Millisecond);
-
             var producerConfig = new ProducerConfig
             {
                 Acks = Acks.All,
@@ -24,7 +23,7 @@ namespace Producer
                 while (!s.Contains("exit", StringComparison.InvariantCultureIgnoreCase))
                 {
                     string[] r = s.Split(":");
-                    var randomInt = rd.Next(0, 100000);
+                    var randomInt = RandomNumberGenerator.GetInt32(100000);
                     Headers headers = new Headers();
                     headers.Add(new Header("random", BitConverter.GetBytes(randomInt)));
                     producer.Produce(topic, new Message<string, string> { 

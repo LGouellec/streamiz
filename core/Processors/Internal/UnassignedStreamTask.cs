@@ -29,7 +29,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             config = configuration;
         }
 
-        public virtual ProcessorContext Context => new UnassignedProcessorContext(this, config);
+        public virtual new ProcessorContext Context => new UnassignedProcessorContext(this, config);
 
         public static UnassignedStreamTask Create()
         {

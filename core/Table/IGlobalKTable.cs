@@ -17,7 +17,7 @@
     /// <code>
     /// builder.GlobalTable(topic, new StringSerDes(), new StringSerDes(), InMemory{string, string}.As("topics-store"));
     /// </code>
-    /// all GlobalKTables are backed by a <see cref="State.ReadOnlyKeyValueStore{K, V}"/> and are therefore queryable via the
+    /// all GlobalKTables are backed by a <see cref="State.IReadOnlyKeyValueStore{K, V}"/> and are therefore queryable via the
     /// interactive queries API.
     /// For example:
     /// <code>

@@ -226,6 +226,10 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         long BufferedRecordsPerPartition { get; set; }
 
+        /// <summary>
+        /// Authorize your streams application to follow metadata (timestamp, topic, partition, offset and headers) during processing record.
+        /// You can use <see cref="StreamizMetadata"/> to get these metadatas. (Default : false)
+        /// </summary>
         bool FollowMetadata { get; set; }
 
         #endregion
@@ -1807,6 +1811,10 @@ namespace Streamiz.Kafka.Net
 
         #region IStreamConfig Impl
 
+        /// <summary>
+        /// Authorize your streams application to follow metadata (timestamp, topic, partition, offset and headers) during processing record.
+        /// You can use <see cref="StreamizMetadata"/> to get these metadatas. (Default : false)
+        /// </summary>
         public bool FollowMetadata
         {
             get => this[followMetadataCst];
