@@ -1,5 +1,6 @@
 ﻿using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using System;
 
@@ -16,19 +17,16 @@ namespace sample_stream
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app";
             config.BootstrapServers = "localhost:9093";
-            config.FollowMetadata = true;
-            config.NumStreamThreads = 2;
-
+            
+          
             StreamBuilder builder = new StreamBuilder();
-            IKStream<string, string> kStream = builder.Stream<string, string>("test");
-            kStream.MapValues((v) =>
-            {
-                var headers = StreamizMetadata.GetCurrentHeadersMetadata();
-                if(headers.Count > 0 )
-                    Console.WriteLine("RANDOM : " + BitConverter.ToInt32(headers.GetLastBytes("random")));
-                return v;
-            });
-            kStream.Print(Printed<string, string>.ToOut());
+
+            builder.Stream<string, string>("evenements")
+            .GroupByKey()
+            .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
+            .Aggregate(() => "", (k, v, va) => va += v)
+            .ToStream()
+            .Print(Printed<Windowed<String>, String>.ToOut());
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
