@@ -226,6 +226,12 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         long BufferedRecordsPerPartition { get; set; }
 
+        /// <summary>
+        /// Authorize your streams application to follow metadata (timestamp, topic, partition, offset and headers) during processing record.
+        /// You can use <see cref="StreamizMetadata"/> to get these metadatas. (Default : false)
+        /// </summary>
+        bool FollowMetadata { get; set; }
+
         #endregion
     }
 
@@ -326,6 +332,7 @@ namespace Streamiz.Kafka.Net
         internal static readonly string maxPollRecordsCst = "max.poll.records.ms";
         internal static readonly string maxTaskIdleCst = "max.task.idle.ms";
         internal static readonly string bufferedRecordsPerPartitionCst = "buffered.records.per.partition";
+        internal static readonly string followMetadataCst = "follow.metadata";
 
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -1782,6 +1789,7 @@ namespace Streamiz.Kafka.Net
             InnerExceptionHandler = (exception) => ExceptionHandlerResponse.FAIL;
             ProductionExceptionHandler = (report) => ExceptionHandlerResponse.FAIL;
             DeserializationExceptionHandler = (context, record, exception) => ExceptionHandlerResponse.FAIL;
+            FollowMetadata = false;
 
             if (properties != null)
             {
@@ -1802,6 +1810,16 @@ namespace Streamiz.Kafka.Net
         #endregion
 
         #region IStreamConfig Impl
+
+        /// <summary>
+        /// Authorize your streams application to follow metadata (timestamp, topic, partition, offset and headers) during processing record.
+        /// You can use <see cref="StreamizMetadata"/> to get these metadatas. (Default : false)
+        /// </summary>
+        public bool FollowMetadata
+        {
+            get => this[followMetadataCst];
+            set => this.AddOrUpdate(followMetadataCst, value);
+        }
 
         /// <summary>
         /// The number of threads to execute stream processing.

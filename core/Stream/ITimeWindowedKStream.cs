@@ -14,7 +14,7 @@ namespace Streamiz.Kafka.Net.Stream
     /// The specified windows define either hopping time windows that can be overlapping or tumbling (c.f.
     /// <see cref="HoppingWindowOptions"/> and <see cref="TumblingWindowOptions"/>)
     /// <p>
-    /// The result is written into a local <see cref="WindowStore{K, V}"/> (which is basically an ever-updating
+    /// The result is written into a local <see cref="IWindowStore{K, V}"/> (which is basically an ever-updating
     /// materialized view) that can be queried using the name provided in the <see cref="Materialized{K, V, S}"/> instance.
     /// Furthermore, updates to the store are sent downstream into a windowed <see cref="IKTable{K, V}"/> changelog stream, where
     /// "windowed" implies that the <see cref="IKTable{K, V}"/> key is a combined key of the original record key and a window ID.
@@ -31,10 +31,10 @@ namespace Streamiz.Kafka.Net.Stream
         /// Count the number of records in this stream by the grouped key and defined windows.
         /// Records with null key or value are ignored.
         /// <p>
-        /// The result is written into a local <see cref="WindowStore{K, V}"/> (which is basically an ever-updating materialized view)
+        /// The result is written into a local <see cref="IWindowStore{K, V}"/> (which is basically an ever-updating materialized view)
         /// that can be queried using the name provided with <see cref="Materialized{K, V, S}"/>.
         /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}"/> changelog stream.
-        /// To query the local <see cref="WindowStore{K, V}"/> it must be obtained via <see cref="KafkaStream.Store{T, K, V}(StoreQueryParameters{T, K, V})"/>.
+        /// To query the local <see cref="IWindowStore{K, V}"/> it must be obtained via <see cref="KafkaStream.Store{T, K, V}(StoreQueryParameters{T, K, V})"/>.
         /// </p>
         /// <exemple>
         /// <code>
@@ -55,10 +55,10 @@ namespace Streamiz.Kafka.Net.Stream
         /// Count the number of records in this stream by the grouped key and defined windows.
         /// Records with null key or value are ignored.
         /// <p>
-        /// The result is written into a local <see cref="WindowStore{K, V}"/> (which is basically an ever-updating materialized view)
+        /// The result is written into a local <see cref="IWindowStore{K, V}"/> (which is basically an ever-updating materialized view)
         /// that can be queried using the name provided with <see cref="Materialized{K, V, S}"/>.
         /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}"/> changelog stream.
-        /// To query the local <see cref="WindowStore{K, V}"/> it must be obtained via <see cref="KafkaStream.Store{T, K, V}(StoreQueryParameters{T, K, V})"/>.
+        /// To query the local <see cref="IWindowStore{K, V}"/> it must be obtained via <see cref="KafkaStream.Store{T, K, V}(StoreQueryParameters{T, K, V})"/>.
         /// </p>
         /// <exemple>
         /// <code>
@@ -80,10 +80,10 @@ namespace Streamiz.Kafka.Net.Stream
         /// Count the number of records in this stream by the grouped key and defined windows.
         /// Records with null key or value are ignored.
         /// <p>
-        /// The result is written into a local <see cref="WindowStore{K, V}"/> (which is basically an ever-updating materialized view)
+        /// The result is written into a local <see cref="IWindowStore{K, V}"/> (which is basically an ever-updating materialized view)
         /// that can be queried using the name provided with <see cref="Materialized{K, V, S}"/>.
         /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}"/> changelog stream.
-        /// To query the local <see cref="WindowStore{K, V}"/> it must be obtained via <see cref="KafkaStream.Store{T, K, V}(StoreQueryParameters{T, K, V})"/>.
+        /// To query the local <see cref="IWindowStore{K, V}"/> it must be obtained via <see cref="KafkaStream.Store{T, K, V}(StoreQueryParameters{T, K, V})"/>.
         /// </p>
         /// <exemple>
         /// <code>
@@ -107,7 +107,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// Records with null key or value are ignored.
         /// Aggregating is a generalization of <see cref="Reduce(Func{V, V, V})"/> combining via Reduce(...) as it, for example,
         /// allows the result to have a different type than the input values.
-        /// The result is written into a local <see cref="WindowStore{K, V}"/> (which is basically an ever-updating materialized view)
+        /// The result is written into a local <see cref="IWindowStore{K, V}"/> (which is basically an ever-updating materialized view)
         /// that can be queried using the store name as provided with <see cref="Materialized{K, V, S}"/>.
         /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}"/> changelog stream.
         /// <p>
@@ -131,7 +131,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// Records with null key or value are ignored.
         /// Aggregating is a generalization of <see cref="Reduce(Func{V, V, V})"/> combining via Reduce(...) as it, for example,
         /// allows the result to have a different type than the input values.
-        /// The result is written into a local <see cref="WindowStore{K, V}"/> (which is basically an ever-updating materialized view)
+        /// The result is written into a local <see cref="IWindowStore{K, V}"/> (which is basically an ever-updating materialized view)
         /// that can be queried using the store name as provided with <see cref="Materialized{K, V, S}"/>.
         /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}"/> changelog stream.
         /// <p>
@@ -155,7 +155,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// Records with null key or value are ignored.
         /// Aggregating is a generalization of <see cref="Reduce(Func{V, V, V})"/> combining via Reduce(...) as it, for example,
         /// allows the result to have a different type than the input values.
-        /// The result is written into a local <see cref="WindowStore{K, V}"/> (which is basically an ever-updating materialized view)
+        /// The result is written into a local <see cref="IWindowStore{K, V}"/> (which is basically an ever-updating materialized view)
         /// that can be queried using the store name as provided with <see cref="Materialized{K, V, S}"/>.
         /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}"/> changelog stream.
         /// <p>
@@ -180,7 +180,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// Records with null key or value are ignored.
         /// Aggregating is a generalization of <see cref="Reduce(Func{V, V, V})"/> combining via Reduce(...) as it, for example,
         /// allows the result to have a different type than the input values.
-        /// The result is written into a local <see cref="WindowStore{K, V}"/> (which is basically an ever-updating materialized view)
+        /// The result is written into a local <see cref="IWindowStore{K, V}"/> (which is basically an ever-updating materialized view)
         /// that can be queried using the store name as provided with <see cref="Materialized{K, V, S}"/>.
         /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}"/> changelog stream.
         /// <p>
@@ -205,7 +205,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// Records with null key or value are ignored.
         /// Aggregating is a generalization of <see cref="Reduce(Func{V, V, V})"/> combining via Reduce(...) as it, for example,
         /// allows the result to have a different type than the input values.
-        /// The result is written into a local <see cref="WindowStore{K, V}"/> (which is basically an ever-updating materialized view)
+        /// The result is written into a local <see cref="IWindowStore{K, V}"/> (which is basically an ever-updating materialized view)
         /// that can be queried using the store name as provided with <see cref="Materialized{K, V, S}"/>.
         /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}"/> changelog stream.
         /// <p>
@@ -231,7 +231,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// Records with null key or value are ignored.
         /// Aggregating is a generalization of <see cref="Reduce(Func{V, V, V})"/> combining via Reduce(...) as it, for example,
         /// allows the result to have a different type than the input values.
-        /// The result is written into a local <see cref="WindowStore{K, V}"/> (which is basically an ever-updating materialized view)
+        /// The result is written into a local <see cref="IWindowStore{K, V}"/> (which is basically an ever-updating materialized view)
         /// that can be queried using the store name as provided with <see cref="Materialized{K, V, S}"/>.
         /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}"/> changelog stream.
         /// <p>
@@ -257,7 +257,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// Records with null key or value are ignored.
         /// Combining implies that the type of the aggregate result is the same as the type of the input value.
         /// <p>
-        /// The result is written into a local <see cref="WindowStore{K, V}"/> (which is basically an ever-updating materialized view)
+        /// The result is written into a local <see cref="IWindowStore{K, V}"/> (which is basically an ever-updating materialized view)
         /// that can be queried using the store name as provided with <see cref="Materialized{K, V, S}"/>.
         /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}"/> changelog stream.
         /// </p>
@@ -277,7 +277,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// Records with null key or value are ignored.
         /// Combining implies that the type of the aggregate result is the same as the type of the input value.
         /// <p>
-        /// The result is written into a local <see cref="WindowStore{K, V}"/> (which is basically an ever-updating materialized view)
+        /// The result is written into a local <see cref="IWindowStore{K, V}"/> (which is basically an ever-updating materialized view)
         /// that can be queried using the store name as provided with <see cref="Materialized{K, V, S}"/>.
         /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}"/> changelog stream.
         /// </p>
@@ -297,7 +297,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// Records with null key or value are ignored.
         /// Combining implies that the type of the aggregate result is the same as the type of the input value.
         /// <p>
-        /// The result is written into a local <see cref="WindowStore{K, V}"/> (which is basically an ever-updating materialized view)
+        /// The result is written into a local <see cref="IWindowStore{K, V}"/> (which is basically an ever-updating materialized view)
         /// that can be queried using the store name as provided with <see cref="Materialized{K, V, S}"/>.
         /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}"/> changelog stream.
         /// </p>
@@ -319,7 +319,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// Records with null key or value are ignored.
         /// Combining implies that the type of the aggregate result is the same as the type of the input value.
         /// <p>
-        /// The result is written into a local <see cref="WindowStore{K, V}"/> (which is basically an ever-updating materialized view)
+        /// The result is written into a local <see cref="IWindowStore{K, V}"/> (which is basically an ever-updating materialized view)
         /// that can be queried using the store name as provided with <see cref="Materialized{K, V, S}"/>.
         /// Furthermore, updates to the store are sent downstream into a <see cref="IKTable{K, V}"/> changelog stream.
         /// </p>

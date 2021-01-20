@@ -56,7 +56,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             GlobalStateStoreProvider provider = new GlobalStateStoreProvider(stores);
 
-            var result = provider.Stores(StoreQueryParameters.FromNameAndType("ws-store", QueryableStoreTypes.WindowStore<object, object>()));
+            var result = provider.Stores(StoreQueryParameters.FromNameAndType("ws-store", QueryableStoreTypes.IWindowStore<object, object>()));
 
             Assert.AreEqual(wStore, result.Single());
         }
@@ -86,7 +86,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             GlobalStateStoreProvider provider = new GlobalStateStoreProvider(stores);
 
-            var result = provider.Stores(StoreQueryParameters.FromNameAndType("ts-w-store", QueryableStoreTypes.WindowStore<object, object>()));
+            var result = provider.Stores(StoreQueryParameters.FromNameAndType("ts-w-store", QueryableStoreTypes.IWindowStore<object, object>()));
 
             Assert.AreEqual(1, result.Count());
         }

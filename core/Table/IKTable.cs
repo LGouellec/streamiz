@@ -23,7 +23,7 @@ namespace Streamiz.Kafka.Net.Table
     /// An aggregation of a <see cref="IKStream{K, V}"/> also yields a <see cref="IKTable{K, V}"/>.
     /// A <see cref="IKTable{K, V}"/> can be transformed record by record, joined with another <see cref="IKTable{K, V}"/> or <see cref="IKStream{K, V}"/>, or
     /// can be re-partitioned and aggregated into a new <see cref="IKTable{K, V}"/>.
-    /// Some <see cref="IKTable{K, V}"/> have an internal state <see cref="ReadOnlyKeyValueStore{K, V}"/> and are therefore queryable via the interactive queries API.
+    /// Some <see cref="IKTable{K, V}"/> have an internal state <see cref="IReadOnlyKeyValueStore{K, V}"/> and are therefore queryable via the interactive queries API.
     /// Records from the source topic that have null keys are dropped.
     /// </summary>
     /// <typeparam name="K">Type of primary key</typeparam>

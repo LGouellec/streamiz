@@ -17,6 +17,7 @@ namespace Streamiz.Kafka.Net
         internal IRecordContext RecordContext { get; private set; }
         internal IRecordCollector RecordCollector { get; private set; }
         internal IStateManager States { get; private set; }
+        internal bool FollowMetadata { get; set; }
 
         /// <summary>
         /// Current application id
