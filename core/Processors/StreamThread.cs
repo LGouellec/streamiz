@@ -284,31 +284,20 @@ namespace Streamiz.Kafka.Net.Processors
 
         private bool TreatException(Exception exception)
         {
-            if (!(exception is DeserializationException) && !(exception is ProductionException))
-            {
-                var response = streamConfig.InnerExceptionHandler(exception);
-                if (response == ExceptionHandlerResponse.FAIL)
-                {
-                    Close(false);
-                    if (ThrowException)
-                        throw new StreamsException(exception);
-                    return true;
-                }
-                else if (response == ExceptionHandlerResponse.CONTINUE)
-                {
-                    return false;
-                }
-                else
-                    return true;
-            }
-            else
+            if (exception is DeserializationException || exception is ProductionException)
             {
                 Close(false);
-                if (ThrowException)
-                    throw new StreamsException(exception);
-
+                if (ThrowException) throw new StreamsException(exception);
                 return true;
             }
+            var response = streamConfig.InnerExceptionHandler(exception);
+            if (response == ExceptionHandlerResponse.FAIL)
+            {
+                Close(false);
+                if (ThrowException) throw new StreamsException(exception);
+                return true;
+            }
+            return response != ExceptionHandlerResponse.CONTINUE;
         }
 
         public void Start(CancellationToken token)
