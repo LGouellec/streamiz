@@ -156,26 +156,9 @@ namespace Streamiz.Kafka.Net.Processors
 
                     try
                     {
-                        IEnumerable<ConsumeResult<byte[], byte[]>> records = null;
                         long now = DateTime.Now.GetMilliseconds();
 
-                        if (State == ThreadState.PARTITIONS_ASSIGNED)
-                        {
-                            records = PollRequest(TimeSpan.Zero);
-                        }
-                        else if (State == ThreadState.PARTITIONS_REVOKED)
-                        {
-                            records = PollRequest(TimeSpan.Zero);
-                        }
-                        else if (State == ThreadState.RUNNING || State == ThreadState.STARTING)
-                        {
-                            records = PollRequest(consumeTimeout);
-                        }
-                        else
-                        {
-                            log.Error($"{logPrefix}Unexpected state {State} during normal iteration");
-                            throw new StreamsException($"Unexpected state {State} during normal iteration");
-                        }
+                        var records = PollRequest(GetTimeout());
 
                         DateTime n = DateTime.Now;
 
@@ -286,6 +269,16 @@ namespace Streamiz.Kafka.Net.Processors
                     log.Error($"{logPrefix}Failed to close consumer due to the following error:", e);
                 }
             }
+        }
+
+        private TimeSpan GetTimeout()
+        {
+            if (State == ThreadState.PARTITIONS_ASSIGNED || State == ThreadState.PARTITIONS_REVOKED)
+                return TimeSpan.Zero;
+            if (State == ThreadState.RUNNING || State == ThreadState.STARTING)
+                return consumeTimeout;
+            log.Error($"{logPrefix}Unexpected state {State} during normal iteration");
+            throw new StreamsException($"Unexpected state {State} during normal iteration");
         }
 
         private bool TreatException(Exception exception)
