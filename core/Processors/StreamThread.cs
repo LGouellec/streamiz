@@ -142,18 +142,10 @@ namespace Streamiz.Kafka.Net.Processors
 
         public void Run()
         {
-            Exception exception = null;
             if (IsRunning)
             {
                 while (!token.IsCancellationRequested)
                 {
-                    if (exception != null)
-                    {
-                        bool mustStop = TreatException(exception);
-                        if (mustStop)
-                            break;
-                    }
-
                     try
                     {
                         long now = DateTime.Now.GetMilliseconds();
@@ -218,15 +210,17 @@ namespace Streamiz.Kafka.Net.Processors
                     {
                         HandleTaskMigrated(e);
                     }
-                    catch (KafkaException e)
+                    catch (KafkaException exception)
                     {
-                        log.Error($"{logPrefix}Encountered the following unexpected Kafka exception during processing, this usually indicate Streams internal errors:", e);
-                        exception = e;
+                        log.Error($"{logPrefix}Encountered the following unexpected Kafka exception during processing, " +
+                            $"this usually indicate Streams internal errors:", exception);
+
+                        if (TreatException(exception) != ExceptionHandlerResponse.CONTINUE) break;
                     }
-                    catch (Exception e)
+                    catch (Exception exception)
                     {
-                        log.Error($"{logPrefix}Encountered the following error during processing:", e);
-                        exception = e;
+                        log.Error($"{logPrefix}Encountered the following error during processing:", exception);
+                        if (TreatException(exception) != ExceptionHandlerResponse.CONTINUE) break;
                     }
                 }
 
@@ -250,10 +244,9 @@ namespace Streamiz.Kafka.Net.Processors
 
         private TimeSpan GetTimeout()
         {
-            if (State == ThreadState.PARTITIONS_ASSIGNED || State == ThreadState.PARTITIONS_REVOKED)
-                return TimeSpan.Zero;
-            if (State == ThreadState.RUNNING || State == ThreadState.STARTING)
-                return consumeTimeout;
+            if (State == ThreadState.PARTITIONS_ASSIGNED || State == ThreadState.PARTITIONS_REVOKED) return TimeSpan.Zero;
+            if (State == ThreadState.RUNNING || State == ThreadState.STARTING) return consumeTimeout;
+            
             log.Error($"{logPrefix}Unexpected state {State} during normal iteration");
             throw new StreamsException($"Unexpected state {State} during normal iteration");
         }
@@ -282,22 +275,21 @@ namespace Streamiz.Kafka.Net.Processors
             return count;
         }
 
-        private bool TreatException(Exception exception)
+        private ExceptionHandlerResponse TreatException(Exception exception)
         {
             if (exception is DeserializationException || exception is ProductionException)
             {
                 Close(false);
                 if (ThrowException) throw new StreamsException(exception);
-                return true;
+                return ExceptionHandlerResponse.FAIL;
             }
             var response = streamConfig.InnerExceptionHandler(exception);
             if (response == ExceptionHandlerResponse.FAIL)
             {
                 Close(false);
                 if (ThrowException) throw new StreamsException(exception);
-                return true;
             }
-            return response != ExceptionHandlerResponse.CONTINUE;
+            return response;
         }
 
         public void Start(CancellationToken token)
