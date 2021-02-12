@@ -17,7 +17,8 @@ namespace sample_stream
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app";
             config.BootstrapServers = "localhost:9093";
-
+            
+          
             StreamBuilder builder = new StreamBuilder();
 
             builder.Stream<string, string>("evenements")
@@ -26,8 +27,6 @@ namespace sample_stream
             .Aggregate(() => "", (k, v, va) => va += v)
             .ToStream()
             .Print(Printed<Windowed<String>, String>.ToOut());
-
-            // kStream.Print(Printed<string, string>.ToOut());
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);

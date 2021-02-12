@@ -108,7 +108,7 @@ namespace Streamiz.Kafka.Net.Table
         public static Materialized<K, V, S> Create() => new Materialized<K, V, S>(string.Empty);
 
         /// <summary>
-        /// Materialize a <see cref="WindowStore{K, V}"/> using the provided <see cref="WindowBytesStoreSupplier"/>
+        /// Materialize a <see cref="IWindowStore{K, V}"/> using the provided <see cref="WindowBytesStoreSupplier"/>
         /// Important: Custom subclasses are allowed here, but they should respect the retention contract:
         /// Window stores are required to retain windows at least as long as (window size + window grace period).
         /// </summary>
@@ -121,7 +121,7 @@ namespace Streamiz.Kafka.Net.Table
         }
 
         /// <summary>
-        /// Materialize a <see cref="SessionStore{K, AGG}"/> using the provided <see cref="SessionBytesStoreSupplier"/>
+        /// Materialize a <see cref="ISessionStore{K, AGG}"/> using the provided <see cref="SessionBytesStoreSupplier"/>
         /// Important: Custom subclasses are allowed here, but they should respect the retention contract:
         /// Session stores are required to retain windows at least as long as (session inactivity gap + session grace period).
         /// </summary>
@@ -175,7 +175,7 @@ namespace Streamiz.Kafka.Net.Table
         }
 
         /// <summary>
-        /// Materialize a <see cref="WindowStore{K, V}"/> using the provided <see cref="WindowBytesStoreSupplier"/>
+        /// Materialize a <see cref="IWindowStore{K, V}"/> using the provided <see cref="WindowBytesStoreSupplier"/>
         /// Important: Custom subclasses are allowed here, but they should respect the retention contract:
         /// Window stores are required to retain windows at least as long as (window size + window grace period).
         /// </summary>
@@ -196,7 +196,7 @@ namespace Streamiz.Kafka.Net.Table
         }
 
         /// <summary>
-        /// Materialize a <see cref="SessionStore{K, AGG}"/> using the provided <see cref="SessionBytesStoreSupplier"/>
+        /// Materialize a <see cref="ISessionStore{K, AGG}"/> using the provided <see cref="SessionBytesStoreSupplier"/>
         /// Important: Custom subclasses are allowed here, but they should respect the retention contract:
         /// Session stores are required to retain windows at least as long as (session inactivity gap + session grace period).
         /// </summary>

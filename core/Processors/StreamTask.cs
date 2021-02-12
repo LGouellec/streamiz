@@ -5,6 +5,7 @@ using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.Stream.Internal;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -20,11 +21,13 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly bool eosEnabled = false;
         private readonly long maxTaskIdleMs = 0;
         private readonly long maxBufferedSize = 100;
+        private readonly bool followMetadata = false;
 
         private long idleStartTime;
         private IProducer<byte[], byte[]> producer;
         private bool transactionInFlight = false;
         private readonly string threadId;
+
 
         public StreamTask(string threadId, TaskId id, IEnumerable<TopicPartition> partitions, ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer)
             : base(id, partitions, processorTopology, consumer, configuration)
@@ -34,6 +37,7 @@ namespace Streamiz.Kafka.Net.Processors
             consumedOffsets = new Dictionary<TopicPartition, long>();
             maxTaskIdleMs = configuration.MaxTaskIdleMs;
             maxBufferedSize = configuration.BufferedRecordsPerPartition;
+            followMetadata = configuration.FollowMetadata;
             idleStartTime = -1;
 
             // eos enabled
@@ -52,6 +56,8 @@ namespace Streamiz.Kafka.Net.Processors
             collector.Init(ref this.producer);
 
             Context = new ProcessorContext(this, configuration, stateMgr).UseRecordCollector(collector);
+            Context.FollowMetadata = followMetadata;
+
             var partitionsQueue = new Dictionary<TopicPartition, RecordQueue>();
 
             foreach (var p in partitions)
@@ -298,6 +304,7 @@ namespace Streamiz.Kafka.Net.Processors
             else
             {
                 Context.SetRecordMetaData(record.Record);
+                
                 var recordInfo = $"Topic:{record.Record.Topic}|Partition:{record.Record.Partition.Value}|Offset:{record.Record.Offset}|Timestamp:{record.Record.Message.Timestamp.UnixTimestampMs}";
 
                 log.Debug($"{logPrefix}Start processing one record [{recordInfo}]");
