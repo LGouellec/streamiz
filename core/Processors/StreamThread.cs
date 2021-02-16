@@ -141,12 +141,21 @@ namespace Streamiz.Kafka.Net.Processors
         public void Dispose() => Close(true);
 
         public void Run()
-
         {
+            Exception exception = null;
             if (IsRunning)
             {
                 while (!token.IsCancellationRequested)
                 {
+                    if (exception != null)
+                    {
+                        ExceptionHandlerResponse response = TreatException(exception);
+                        if (response == ExceptionHandlerResponse.FAIL)
+                            break;
+                        else if (response == ExceptionHandlerResponse.CONTINUE)
+                            exception = null;
+                    }
+
                     try
                     {
                         if (!manager.RebalanceInProgress)
@@ -210,17 +219,16 @@ namespace Streamiz.Kafka.Net.Processors
                     {
                         HandleTaskMigrated(e);
                     }
-                    catch (KafkaException exception)
+                    catch (KafkaException e)
                     {
                         log.Error($"{logPrefix}Encountered the following unexpected Kafka exception during processing, " +
                             $"this usually indicate Streams internal errors:", exception);
-
-                        if (TreatException(exception) != ExceptionHandlerResponse.CONTINUE) break;
+                        exception = e;
                     }
-                    catch (Exception exception)
+                    catch (Exception e)
                     {
                         log.Error($"{logPrefix}Encountered the following error during processing:", exception);
-                        if (TreatException(exception) != ExceptionHandlerResponse.CONTINUE) break;
+                        exception = e;
                     }
                 }
 
