@@ -539,7 +539,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             thread.Dispose();
 
             Assert.NotNull(h);
-            Assert.IsTrue(h.Value.FromMilliseconds() > dt.ToUniversalTime());
+            Assert.IsTrue(h.Value > dt.GetMilliseconds());
         }
 
         [Test]
