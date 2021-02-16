@@ -138,7 +138,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             DateTime dt = DateTime.Now;
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test";
+            config.ApplicationId = "test-12345";
             config.BootstrapServers = "127.0.0.1";
 
             var builder = new StreamBuilder();
