@@ -94,7 +94,7 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly long commitTimeMs = 0;
         private CancellationToken token;
         private DateTime lastCommit = DateTime.Now;
-        
+
         private int numIterations = 1;
         private long lastPollMs;
 
@@ -149,64 +149,26 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     if (exception != null)
                     {
-                        bool mustStop = TreatException(exception);
-                        if (mustStop)
+                        ExceptionHandlerResponse response = TreatException(exception);
+                        if (response == ExceptionHandlerResponse.FAIL)
                             break;
+                        else if (response == ExceptionHandlerResponse.CONTINUE)
+                            exception = null;
                     }
 
                     try
                     {
                         if (!manager.RebalanceInProgress)
                         {
-                            IEnumerable<ConsumeResult<byte[], byte[]>> records = null;
                             long now = DateTime.Now.GetMilliseconds();
-
-                            if (State == ThreadState.PARTITIONS_ASSIGNED)
-                            {
-                                records = PollRequest(TimeSpan.Zero);
-                            }
-                            else if (State == ThreadState.PARTITIONS_REVOKED)
-                            {
-                                records = PollRequest(TimeSpan.Zero);
-                            }
-                            else if (State == ThreadState.RUNNING || State == ThreadState.STARTING)
-                            {
-                                records = PollRequest(consumeTimeout);
-                            }
-                            else
-                            {
-                                log.Error($"{logPrefix}Unexpected state {State} during normal iteration");
-                                throw new StreamsException($"Unexpected state {State} during normal iteration");
-                            }
+                            var records = PollRequest(GetTimeout());
 
                             DateTime n = DateTime.Now;
+                            var count = AddToTasks(records);
+                            if (count > 0)
+                                log.Debug($"Add {count} records in tasks in {DateTime.Now - n}");
 
-                            if (records != null && records.Any())
-                            {
-                                foreach (var record in records)
-                                {
-                                    var task = manager.ActiveTaskFor(record.TopicPartition);
-                                    if (task != null)
-                                    {
-                                        if (task.IsClosed)
-                                        {
-                                            log.Info($"Stream task {task.Id} is already closed, probably because it got unexpectedly migrated to another thread already. Notifying the thread to trigger a new rebalance immediately.");
-                                            // TODO gesture this behaviour
-                                            //throw new TaskMigratedException(task);
-                                        }
-                                        else
-                                            task.AddRecord(record);
-                                    }
-                                    else if (consumer.Assignment.Contains(record.TopicPartition))
-                                    {
-                                        log.Error($"Unable to locate active task for received-record partition {record.TopicPartition}. Current tasks: {string.Join(",", manager.ActiveTaskIds)}. Current Consumer Assignment : {string.Join(",", consumer.Assignment.Select(t => $"{t.Topic}-[{t.Partition}]"))}");
-                                        throw new NullReferenceException($"Task was unexpectedly missing for partition {record.TopicPartition}");
-                                    }
-                                }
-
-                                log.Debug($"Add {records.Count()} records in tasks in {DateTime.Now - n}");
-                            }
-
+                            n = DateTime.Now;
                             int processed = 0;
                             long timeSinceLastPoll = 0;
                             do
@@ -227,12 +189,10 @@ namespace Streamiz.Kafka.Net.Processors
 
                                 timeSinceLastPoll = Math.Max(DateTime.Now.GetMilliseconds() - lastPollMs, 0);
 
-
                                 if (MaybeCommit())
                                 {
                                     numIterations = numIterations > 1 ? numIterations / 2 : numIterations;
                                 }
-
                                 else if (timeSinceLastPoll > streamConfig.MaxPollIntervalMs.Value / 2)
                                 {
                                     numIterations = numIterations > 1 ? numIterations / 2 : numIterations;
@@ -241,34 +201,33 @@ namespace Streamiz.Kafka.Net.Processors
                                 else if (processed > 0)
                                 {
                                     numIterations++;
-
                                 }
+
                             } while (processed > 0);
 
                             if (State == ThreadState.RUNNING)
                                 MaybeCommit();
 
                             if (State == ThreadState.PARTITIONS_ASSIGNED)
-                            {
                                 SetState(ThreadState.RUNNING);
-                            }
 
                             if (records.Any())
-                                log.Debug($"Processing {records.Count()} records in {DateTime.Now - n}");
+                                log.Debug($"Processing {count} records in {DateTime.Now - n}");
                         }
                     }
-                    catch(TaskMigratedException e)
+                    catch (TaskMigratedException e)
                     {
                         HandleTaskMigrated(e);
                     }
                     catch (KafkaException e)
                     {
-                        log.Error($"{logPrefix}Encountered the following unexpected Kafka exception during processing, this usually indicate Streams internal errors:", e);
+                        log.Error($"{logPrefix}Encountered the following unexpected Kafka exception during processing, " +
+                            $"this usually indicate Streams internal errors:", exception);
                         exception = e;
                     }
                     catch (Exception e)
                     {
-                        log.Error($"{logPrefix}Encountered the following error during processing:", e);
+                        log.Error($"{logPrefix}Encountered the following error during processing:", exception);
                         exception = e;
                     }
                 }
@@ -291,33 +250,60 @@ namespace Streamiz.Kafka.Net.Processors
             }
         }
 
-        private bool TreatException(Exception exception)
+        private TimeSpan GetTimeout()
         {
-            if (!(exception is DeserializationException) && !(exception is ProductionException))
+            if (State == ThreadState.PARTITIONS_ASSIGNED || State == ThreadState.PARTITIONS_REVOKED)
+                return TimeSpan.Zero;
+            if (State == ThreadState.RUNNING || State == ThreadState.STARTING)
+                return consumeTimeout;
+
+            log.Error($"{logPrefix}Unexpected state {State} during normal iteration");
+            throw new StreamsException($"Unexpected state {State} during normal iteration");
+        }
+
+        private int AddToTasks(IEnumerable<ConsumeResult<byte[], byte[]>> records)
+        {
+            int count = 0;
+            foreach (var record in records)
             {
-                var response = streamConfig.InnerExceptionHandler(exception);
-                if (response == ExceptionHandlerResponse.FAIL)
+                count++;
+                var task = manager.ActiveTaskFor(record.TopicPartition);
+                if(task != null)
                 {
-                    Close(false);
-                    if (ThrowException)
-                        throw new StreamsException(exception);
-                    return true;
+                    if (task.IsClosed)
+                    {
+                        log.Info($"Stream task {task.Id} is already closed, probably because it got unexpectedly migrated to another thread already. " +
+                            $"Notifying the thread to trigger a new rebalance immediately.");
+                        // TODO gesture this behaviour
+                        //throw new TaskMigratedException(task);
+                    }
+                    else
+                        task.AddRecord(record);
                 }
-                else if (response == ExceptionHandlerResponse.CONTINUE)
+                else if (consumer.Assignment.Contains(record.TopicPartition))
                 {
-                    return false;
-                }
-                else
-                    return true;
+                    log.Error($"Unable to locate active task for received-record partition {record.TopicPartition}. Current tasks: {string.Join(",", manager.ActiveTaskIds)}. Current Consumer Assignment : {string.Join(",", consumer.Assignment.Select(t => $"{t.Topic}-[{t.Partition}]"))}");
+                    throw new NullReferenceException($"Task was unexpectedly missing for partition {record.TopicPartition}");
+                }                
             }
-            else
+            return count;
+        }
+
+        private ExceptionHandlerResponse TreatException(Exception exception)
+        {
+            if (exception is DeserializationException || exception is ProductionException)
             {
                 Close(false);
-                if (ThrowException)
-                    throw new StreamsException(exception);
-
-                return true;
+                if (ThrowException) throw new StreamsException(exception);
+                return ExceptionHandlerResponse.FAIL;
             }
+            var response = streamConfig.InnerExceptionHandler(exception);
+            if (response == ExceptionHandlerResponse.FAIL)
+            {
+                Close(false);
+                if (ThrowException) throw new StreamsException(exception);
+            }
+            return response;
         }
 
         public void Start(CancellationToken token)
@@ -447,7 +433,7 @@ namespace Streamiz.Kafka.Net.Processors
 
             return oldState;
         }
-    
+
         // FOR TEST
         internal IEnumerable<TopicPartitionOffset> GetCommittedOffsets(IEnumerable<TopicPartition> partitions, TimeSpan timeout)
             => consumer.Committed(partitions, timeout);
