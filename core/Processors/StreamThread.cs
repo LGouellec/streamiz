@@ -197,20 +197,10 @@ namespace Streamiz.Kafka.Net.Processors
                                         else
                                             task.AddRecord(record);
                                     }
-                                    else
+                                    else if (consumer.Assignment.Contains(record.TopicPartition))
                                     {
-                                        if (consumer.Assignment.Contains(record.TopicPartition))
-                                        {
-                                            log.Error($"Unable to locate active task for received-record partition {record.TopicPartition}. Current tasks: {string.Join(",", manager.ActiveTaskIds)}. Current Consumer Assignment : {string.Join(",", consumer.Assignment.Select(t => $"{t.Topic}-[{t.Partition}]"))}");
-                                            throw new NullReferenceException($"Task was unexpectedly missing for partition {record.TopicPartition}");
-                                        }
-                                        else
-                                        {
-                                            // during rebalancing, sometimes task manager doesn't have task, but records in poll contains message for this task. 
-                                            // Skip this message, message will read for an another instance.
-                                            // Warning to trace
-                                            log.Warn($"Unable to locate active task for received-record partition {record.TopicPartition}. Current tasks: {string.Join(",", manager.ActiveTaskIds)}. Current Consumer Assignment : {string.Join(",", consumer.Assignment.Select(t => $"{t.Topic}-[{t.Partition}]"))}");
-                                        }
+                                        log.Error($"Unable to locate active task for received-record partition {record.TopicPartition}. Current tasks: {string.Join(",", manager.ActiveTaskIds)}. Current Consumer Assignment : {string.Join(",", consumer.Assignment.Select(t => $"{t.Topic}-[{t.Partition}]"))}");
+                                        throw new NullReferenceException($"Task was unexpectedly missing for partition {record.TopicPartition}");
                                     }
                                 }
 
