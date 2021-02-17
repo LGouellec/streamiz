@@ -88,7 +88,11 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             {
                 producer?.Produce(
                     topic,
-                    new Message<byte[], byte[]> { Key = k, Value = v },
+                    new Message<byte[], byte[]> {
+                        Key = k,
+                        Value = v,
+                        Headers = headers
+                    },
                     (report) =>
                     {
                         if (report.Error.IsError)

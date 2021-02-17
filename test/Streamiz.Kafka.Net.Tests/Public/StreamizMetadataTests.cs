@@ -12,6 +12,72 @@ namespace Streamiz.Kafka.Net.Tests.Public
     {
         /** HEADERS **/
         [Test]
+        public void ChangeHeadersMetadataTests()
+        {
+            var source = new System.Threading.CancellationTokenSource();
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
+            config.Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
+            config.PollMs = 1;
+            config.FollowMetadata = true;
+            var configConsumer = config.Clone();
+            configConsumer.ApplicationId = "test-consumer";
+            Headers h = null;
+            Headers headers = new Headers();
+            headers.Add("k", new byte[1] { 13 });
+
+            var serdes = new StringSerDes();
+            var builder = new StreamBuilder();
+            builder
+                .Stream<string, string>("topic")
+                .MapValues((v) =>
+                {
+                    h = StreamizMetadata.GetCurrentHeadersMetadata();
+                    h.Add("h", new byte[1] { 20 });
+                    return v;
+                })
+                .To("output");
+
+            var topo = builder.Build();
+
+            var supplier = new SyncKafkaSupplier();
+            var producer = supplier.GetProducer(config.ToProducerConfig());
+            var consumer = supplier.GetConsumer(configConsumer.ToConsumerConfig(), null);
+
+            var thread = StreamThread.Create(
+                "thread-0", "c0",
+                topo.Builder, config,
+                supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                0) as StreamThread;
+
+            thread.Start(source.Token);
+            producer.Produce("topic", new Confluent.Kafka.Message<byte[], byte[]>
+            {
+                Key = serdes.Serialize("key1", new SerializationContext()),
+                Value = serdes.Serialize("coucou", new SerializationContext()),
+                Headers = headers
+            });
+
+            consumer.Subscribe("output");
+            ConsumeResult<byte[], byte[]> result = null;
+            do
+            {
+                result = consumer.Consume(100);
+            } while (result == null);
+
+
+            source.Cancel();
+            thread.Dispose();
+
+            Assert.NotNull(h);
+            Assert.AreEqual(2, h.Count);
+            Assert.AreEqual("k", h[0].Key);
+            Assert.AreEqual("h", h[1].Key);
+            Assert.AreEqual(new byte[1] { 13 }, h[0].GetValueBytes());
+            Assert.AreEqual(new byte[1] { 20 }, h[1].GetValueBytes());
+        }
+
+        [Test]
         public void GetCurrentHeadersMetadataTests()
         {
             var source = new System.Threading.CancellationTokenSource();

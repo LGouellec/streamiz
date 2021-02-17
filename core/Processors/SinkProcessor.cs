@@ -49,7 +49,7 @@ namespace Streamiz.Kafka.Net.Processors
             }
 
             var topicName = topicNameExtractor.Extract(key, value, Context.RecordContext);
-            Context.RecordCollector.Send(topicName, key, value, null, timestamp, KeySerDes, ValueSerDes);
+            Context.RecordCollector.Send(topicName, key, value, Context.RecordContext.Headers, timestamp, KeySerDes, ValueSerDes);
         }
     }
 }
