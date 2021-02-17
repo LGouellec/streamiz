@@ -4,9 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Streamiz.Kafka.Net.Tests.Helpers
+namespace Streamiz.Kafka.Net.SchemaRegistry.Mock
 {
-    internal class MockSchemaRegistryClient : ISchemaRegistryClient
+    /// <summary>
+    /// Mock schema registry client. Implements <see cref="ISchemaRegistryClient"/>.
+    /// </summary>
+    public class MockSchemaRegistryClient : ISchemaRegistryClient
     {
         private class RegisterSchema
         {

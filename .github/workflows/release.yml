@@ -22,6 +22,8 @@ jobs:
       run: dotnet test --no-restore --verbosity normal
     - name: Pack Core
       run: dotnet pack core/Streamiz.Kafka.Net.csproj  --configuration Release --include-source --include-symbols --no-build --no-restore
+    - name: Pack Registry Mock
+      run: dotnet pack crosscutting/Streamiz.Kafka.Net.SchemaRegistry.Mock/Streamiz.Kafka.Net.SchemaRegistry.Mock.csproj  --configuration Release --include-source --include-symbols --no-build --no-restore
     - name: Pack Registry.Avro
       run: dotnet pack serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.csproj  --configuration Release --include-source --include-symbols --no-build --no-restore
     - name: Publish in nuget.org

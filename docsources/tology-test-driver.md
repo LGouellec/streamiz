@@ -81,3 +81,51 @@ using (var driver = new TopologyTestDriver(t, config))
     Assert.AreEqual("value1", rbis);
 }
 ```
+
+## Unit test with AVRO SerDes
+
+SchemaAvroSerDes need to connect to Confluent Schema Registry to serialize/deserialize AVRO bean. 
+So if you want write unit test with your avro beans, most of time you will not have one Confluent Schema Registry.
+Since 1.1.4 release, you have a mock schema registry client implementation.
+
+You have just to configuration SchemaRegistryUrl with string starts with "mock://[SCOPE_NAME]" :
+``` csharp
+config.SchemaRegistryUrl = "mock://test"; // scope here is test
+
+// If you run multiple unit test in parallel, maybe you would reset mock schema registry after each test
+// You can drop your scope like :
+MockSchemaRegistry.DropScope("test");
+```
+
+Sample code :
+``` csharp
+var config = new StreamConfig<StringSerDes, SchemaAvroSerDes<Order>>();
+config.ApplicationId = "test-mock-registry";
+config.SchemaRegistryUrl = "mock://test";
+
+StreamBuilder builder = new StreamBuilder();
+
+builder.Stream<string, Order>("test")
+        .Filter((k, v) => k.Contains("test"))
+        .To("test-output");
+
+Topology t = builder.Build();
+
+using (var driver = new TopologyTestDriver(t, config))
+{
+    var inputTopic = driver.CreateInputTopic<string, Order>("test");
+    var outputTopic = driver.CreateOuputTopic<string, Order>("test-output", TimeSpan.FromSeconds(5));
+    inputTopic.PipeInput("test",
+                    new Order
+                    {
+                        order_id = 12,
+                        price = 150,
+                        product_id = 1
+                    });
+    var r = outputTopic.ReadKeyValue();
+    Assert.IsNotNull(r);
+    Assert.AreEqual("test", r.Message.Key);
+    Assert.AreEqual(12, r.Message.Value.order_id);
+}
+MockSchemaRegistry.DropScope("test");
+```
