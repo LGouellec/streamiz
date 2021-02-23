@@ -3,7 +3,11 @@ using Confluent.Kafka.SyncOverAsync;
 using Confluent.SchemaRegistry;
 using Confluent.SchemaRegistry.Serdes;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.SchemaRegistry.Mock;
 using Streamiz.Kafka.Net.SerDes;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
 {
@@ -116,7 +120,40 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
         /// <returns></returns>
         protected virtual ISchemaRegistryClient GetSchemaRegistryClient(Confluent.SchemaRegistry.SchemaRegistryConfig config)
         {
-            return new CachedSchemaRegistryClient(config);
+            string mockScope = MaybeGetScope(config.Url);
+            if (mockScope != null)
+            {
+                return MockSchemaRegistry.GetClientForScope(mockScope);
+            }
+            else
+            {
+                return new CachedSchemaRegistryClient(config);
+            }
         }
+
+        #region Privates
+
+        private string MaybeGetScope(string schemaRegistryUrl)
+        {
+            IEnumerable<string> urls = schemaRegistryUrl != null ?
+                schemaRegistryUrl.Split(",").ToList() :
+                Enumerable.Empty<string>();
+            List<string> scope = new List<string>();
+
+            foreach (var url in urls)
+                if (url.StartsWith("mock://"))
+                    scope.Add(url.Replace("mock://", string.Empty));
+
+            if (!scope.Any())
+                return null;
+            else if (scope.Count > 1)
+                throw new ArgumentException($"Only one mock scope is permitted for 'schema.registry.url'. Got: {schemaRegistryUrl}");
+            else if (urls.Count() > scope.Count)
+                throw new ArgumentException($"Cannot mix mock and real urls for 'schema.registry.url'. Got: {schemaRegistryUrl}");
+            else
+                return scope.First();
+        }
+
+        #endregion
     }
 }

@@ -1,12 +1,16 @@
 ﻿using Avro;
 using Avro.Specific;
+using Confluent.Kafka;
 using Confluent.SchemaRegistry;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock;
+using Streamiz.Kafka.Net.SchemaRegistry.Mock;
 using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro;
 using Streamiz.Kafka.Net.SerDes;
-using Streamiz.Kafka.Net.Tests.Helpers;
+using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Tests.Helpers.Bean.Avro;
+using System;
 using System.Linq;
 
 namespace Streamiz.Kafka.Net.Tests.Private.SerDes
@@ -102,7 +106,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 
     public class SchemaAvroSerDesTests
     {
-        string topic = "person";
+        readonly string topic = "person";
 
         [Test]
         public void DeserializeWithoutInit()
@@ -117,7 +121,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         {
             var serdes = new SchemaAvroSerDes<Person>();
             Assert.Throws<StreamsException>(() => serdes.Serialize(null, new Confluent.Kafka.SerializationContext()));
-            Assert.Throws<StreamsException>(() => serdes.SerializeObject((Person)null, new Confluent.Kafka.SerializationContext()));
+            Assert.Throws<StreamsException>(() => serdes.SerializeObject(null, new Confluent.Kafka.SerializationContext()));
         }
 
         [Test]
@@ -233,8 +237,149 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
                 Assert.IsNotNull(record);
                 Assert.AreEqual("test1", record.Message.Key);
                 Assert.AreEqual(23, record.Message.Value);
-            }                
+            }
         }
 
+        [Test]
+        public void TestMockSchemaRegistry()
+        {
+            var config = new StreamConfig();
+            config.ApplicationId = "app-test";
+            config.AutoOffsetReset = AutoOffsetReset.Earliest;
+            config.NumStreamThreads = 1;
+            config.SchemaRegistryUrl = "mock://test";
+
+            config.Acks = Acks.All;
+            config.AddConsumerConfig("allow.auto.create.topics", "false");
+            config.MaxTaskIdleMs = 50;
+
+            StreamBuilder builder = new StreamBuilder();
+
+            var ss = builder.Stream<string, Order, StringSerDes, SchemaAvroSerDes<Order>>("test-topic")
+            .Peek((k, v) =>
+            {
+                Console.WriteLine($"Order #  {v.order_id }");
+            });
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, Order, StringSerDes, SchemaAvroSerDes<Order>>("test-topic");
+                inputTopic.PipeInput("test",
+                    new Order
+                    {
+                        order_id = 12,
+                        price = 150,
+                        product_id = 1
+                    });
+            }
+
+            var client = MockSchemaRegistry.GetClientForScope("test");
+            Assert.IsAssignableFrom<MockSchemaRegistryClient>(client);
+            Assert.NotNull(client.GetSchemaAsync(1).GetAwaiter().GetResult());
+
+            MockSchemaRegistry.DropScope("test");
+        }
+
+        [Test]
+        public void TestMockSchemaRegistryInputOutput()
+        {
+            var config = new StreamConfig<StringSerDes, SchemaAvroSerDes<Order>>();
+            config.ApplicationId = "test-mock-registry";
+            config.SchemaRegistryUrl = "mock://test";
+
+            StreamBuilder builder = new StreamBuilder();
+
+            builder.Stream<string, Order>("test")
+                    .Filter((k, v) => k.Contains("test"))
+                    .To("test-output");
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, Order>("test");
+                var outputTopic = driver.CreateOuputTopic<string, Order>("test-output", TimeSpan.FromSeconds(5));
+                inputTopic.PipeInput("test",
+                    new Order
+                    {
+                        order_id = 12,
+                        price = 150,
+                        product_id = 1
+                    });
+                var r = outputTopic.ReadKeyValue();
+                Assert.IsNotNull(r);
+                Assert.AreEqual("test", r.Message.Key);
+                Assert.AreEqual(12, r.Message.Value.order_id);
+            }
+            MockSchemaRegistry.DropScope("test");
+        }
+
+        [Test]
+        public void TestMockSchemaRegistryExceptionConfiguration()
+        {
+            var config = new StreamConfig();
+            config.ApplicationId = "app-test";
+            config.SchemaRegistryUrl = "mock://test1,mock://test2";
+
+            StreamBuilder builder = new StreamBuilder();
+
+            var ss = builder.Stream<string, Order, StringSerDes, SchemaAvroSerDes<Order>>("test-topic")
+            .Peek((k, v) =>
+            {
+                Console.WriteLine($"Order #  {v.order_id }");
+            });
+
+            Topology t = builder.Build();
+
+            Assert.Throws<ArgumentException>(() =>
+            {
+                using (var driver = new TopologyTestDriver(t, config))
+                {
+                    var inputTopic = driver.CreateInputTopic<string, Order, StringSerDes, SchemaAvroSerDes<Order>>("test-topic");
+                    inputTopic.PipeInput("test",
+                        new Order
+                        {
+                            order_id = 12,
+                            price = 150,
+                            product_id = 1
+                        });
+                }
+            });
+        }
+
+        [Test]
+        public void TestMockSchemaRegistryExceptionConfiguration2()
+        {
+            var config = new StreamConfig();
+            config.ApplicationId = "app-test";
+            config.SchemaRegistryUrl = "mock://test1,http://localhost:8081";
+
+            StreamBuilder builder = new StreamBuilder();
+
+            var ss = builder.Stream<string, Order, StringSerDes, SchemaAvroSerDes<Order>>("test-topic")
+            .Peek((k, v) =>
+            {
+                Console.WriteLine($"Order #  {v.order_id }");
+            });
+
+            Topology t = builder.Build();
+
+            Assert.Throws<ArgumentException>(() =>
+            {
+                using (var driver = new TopologyTestDriver(t, config))
+                {
+                    var inputTopic = driver.CreateInputTopic<string, Order, StringSerDes, SchemaAvroSerDes<Order>>("test-topic");
+                    inputTopic.PipeInput("test",
+                        new Order
+                        {
+                            order_id = 12,
+                            price = 150,
+                            product_id = 1
+                        });
+                }
+            });
+        }
     }
 }

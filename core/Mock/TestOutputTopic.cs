@@ -46,6 +46,11 @@ namespace Streamiz.Kafka.Net.Mock
             this.configuration = configuration;
             this.keySerdes = keySerdes;
             this.valueSerdes = valueSerdes;
+
+            if (this.keySerdes != null)
+                this.keySerdes.Initialize(new SerDesContext(configuration));
+            if (this.valueSerdes != null)
+                this.valueSerdes.Initialize(new SerDesContext(configuration));
         }
 
         internal IPipeOutput Pipe => pipe;
