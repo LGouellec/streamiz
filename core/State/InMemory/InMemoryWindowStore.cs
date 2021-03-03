@@ -221,7 +221,6 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
     #endregion
 
-
     internal class InMemoryWindowStore : IWindowStore<Bytes, byte[]>
     {
         private readonly TimeSpan retention;
