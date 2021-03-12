@@ -46,7 +46,10 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
             {
                 c.AutoRegisterSchemas = config.AutoRegisterSchemas;
             }
-
+            if(config.SubjectNameStrategy.HasValue)
+            {
+                c.SubjectNameStrategy = (Confluent.SchemaRegistry.SubjectNameStrategy)config.SubjectNameStrategy.Value;
+            }
             return c;
         }
 
