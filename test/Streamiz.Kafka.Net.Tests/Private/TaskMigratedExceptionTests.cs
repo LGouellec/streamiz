@@ -190,6 +190,16 @@ namespace Streamiz.Kafka.Net.Tests.Private
             {
                 throw new NotImplementedException();
             }
+
+            public void CommitTransaction()
+            {
+                throw new NotImplementedException();
+            }
+
+            public void AbortTransaction()
+            {
+                throw new NotImplementedException();
+            }
         }
 
         #endregion

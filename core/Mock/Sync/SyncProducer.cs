@@ -147,5 +147,15 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             CreateTopic(topicName);
             return topics[topicName].ToArray();
         }
+
+        public void CommitTransaction()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AbortTransaction()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

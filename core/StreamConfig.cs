@@ -1379,6 +1379,66 @@ namespace Streamiz.Kafka.Net
             }
         }
 
+        /// <summary>
+        /// Comma-separated list of Windows Certificate stores to load CA certificates from.
+        /// Certificates will be loaded in the same order as stores are specified. If no
+        /// certificates can be loaded from any of the specified stores an error is logged
+        /// and the OpenSSL library's default CA location is used instead. Store names are
+        /// typically one or more of: MY, Root, Trust, CA. default: Root importance: low
+        /// </summary>
+        public string SslCaCertificateStores
+        {
+            get => _config.SslCaCertificateStores;
+            set
+            {
+                _config.SslCaCertificateStores = value;
+                _consumerConfig.SslCaCertificateStores = value;
+                _producerConfig.SslCaCertificateStores = value;
+                _adminClientConfig.SslCaCertificateStores = value;
+            }
+        }
+
+        /// <summary>
+        /// If enabled librdkafka will initialize the PRNG with srand(current_time.milliseconds)
+        /// on the first invocation of rd_kafka_new() (required only if rand_r() is not available
+        /// on your platform). If disabled the application must call srand() prior to calling
+        /// rd_kafka_new(). default: true importance: low
+        /// </summary>
+        public bool? EnableRandomSeed
+        {
+            get => _config.EnableRandomSeed;
+            set
+            {
+                _config.EnableRandomSeed = value;
+                _consumerConfig.EnableRandomSeed = value;
+                _producerConfig.EnableRandomSeed = value;
+                _adminClientConfig.EnableRandomSeed = value;
+            }
+        }
+
+        /// <summary>
+        /// Apache Kafka topic creation is asynchronous and it takes some time for a new
+        /// topic to propagate throughout the cluster to all brokers. If a client requests
+        /// topic metadata after manual topic creation but before the topic has been fully
+        /// propagated to the broker the client is requesting metadata from, the topic will
+        /// seem to be non-existent and the client will mark the topic as such, failing queued
+        /// produced messages with `ERR__UNKNOWN_TOPIC`. This setting delays marking a topic
+        /// as non-existent until the configured propagation max time has passed. The maximum
+        /// propagation time is calculated from the time the topic is first referenced in
+        /// the client, e.g., on produce(). default: 30000 importance: low
+        /// </summary>
+        public int? TopicMetadataPropagationMaxMs
+        {
+            get => _config.TopicMetadataPropagationMaxMs;
+            set
+            {
+                _config.TopicMetadataPropagationMaxMs = value;
+                _consumerConfig.TopicMetadataPropagationMaxMs = value;
+                _producerConfig.TopicMetadataPropagationMaxMs = value;
+                _adminClientConfig.TopicMetadataPropagationMaxMs = value;
+            }
+        }
+
         #endregion
 
         #region ConsumerConfig
@@ -1554,6 +1614,16 @@ namespace Streamiz.Kafka.Net
         /// false importance: medium
         /// </summary>
         public bool? CheckCrcs { get { return _consumerConfig.CheckCrcs; } set { _consumerConfig.CheckCrcs = value; } }
+
+        /// <summary>
+        /// Allow automatic topic creation on the broker when subscribing to or assigning
+        /// non-existent topics. The broker must also be configured with `auto.create.topics.enable=true`
+        /// for this configuraiton to take effect. Note: The default value (false) is different
+        /// from the Java consumer (true). Requires broker version >= 0.11.0.0, for older
+        /// broker versions only the broker configuration applies. default: false importance:
+        /// low
+        /// </summary>
+        public bool? AllowAutoCreateTopics { get { return _consumerConfig.AllowAutoCreateTopics; } set { _consumerConfig.AllowAutoCreateTopics = value; } }
 
         #endregion
 
@@ -1737,6 +1807,26 @@ namespace Streamiz.Kafka.Net
         /// is also limited by message.max.bytes. default: 10000 importance: medium
         /// </summary>
         public int? BatchNumMessages { get { return _producerConfig.BatchNumMessages; } set { _producerConfig.BatchNumMessages = value; } }
+
+        /// <summary>
+        /// Maximum size (in bytes) of all messages batched in one MessageSet, including
+        /// protocol framing overhead. This limit is applied after the first message has
+        /// been added to the batch, regardless of the first message's size, this is to ensure
+        /// that messages that exceed batch.size are produced. The total MessageSet size
+        /// is also limited by batch.num.messages and message.max.bytes. default: 1000000
+        /// importance: medium
+        /// </summary>
+        public int? BatchSize { get { return _producerConfig.BatchSize; } set { _producerConfig.BatchSize = value; } }
+
+        /// <summary>
+        /// Delay in milliseconds to wait to assign new sticky partitions for each topic.
+        /// By default, set to double the time of linger.ms. To disable sticky behavior,
+        /// set to 0. This behavior affects messages with the key NULL in all cases, and
+        /// messages with key lengths of zero when the consistent_random partitioner is in
+        /// use. These messages would otherwise be assigned randomly. A higher value allows
+        /// for more effective batching of these messages. default: 10 importance: low
+        /// </summary>
+        public int? StickyPartitioningLingerMs { get { return _producerConfig.StickyPartitioningLingerMs; } set { _producerConfig.StickyPartitioningLingerMs = value; } }
 
         #endregion
 

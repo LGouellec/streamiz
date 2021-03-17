@@ -27,6 +27,11 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             // TODO : 
         }
 
+        public void AbortTransaction()
+        {
+            throw new NotImplementedException();
+        }
+
         public int AddBrokers(string brokers) => 0;
 
         public void BeginTransaction()
@@ -37,6 +42,11 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         public void CommitTransaction(TimeSpan timeout)
         {
             // TODO
+        }
+
+        public void CommitTransaction()
+        {
+            throw new NotImplementedException();
         }
 
         public void Dispose()

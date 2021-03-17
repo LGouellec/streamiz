@@ -208,5 +208,20 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                 if (Assignment.Contains(p.TopicPartition))
                     Assignment.Remove(p.TopicPartition);
         }
+
+        public void IncrementalAssign(IEnumerable<TopicPartitionOffset> partitions)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void IncrementalAssign(IEnumerable<TopicPartition> partitions)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void IncrementalUnassign(IEnumerable<TopicPartition> partitions)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
