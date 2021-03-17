@@ -10,7 +10,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
     {
         public Handle Handle => throw new NotImplementedException();
 
-        public string Name => throw new NotImplementedException();
+        public string Name { get; protected set; }
 
         public int AddBrokers(string brokers)
         {
