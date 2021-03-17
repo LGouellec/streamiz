@@ -28,7 +28,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Confluent.SchemaRegistry" Version="1.5.2" />
+    <PackageReference Include="Confluent.SchemaRegistry" Version="1.6.2" />
   </ItemGroup>
   
   <ItemGroup>

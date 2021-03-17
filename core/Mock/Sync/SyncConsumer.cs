@@ -315,5 +315,20 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         {
             Listener = rebalanceListener;
         }
+
+        public void IncrementalAssign(IEnumerable<TopicPartitionOffset> partitions)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void IncrementalAssign(IEnumerable<TopicPartition> partitions)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void IncrementalUnassign(IEnumerable<TopicPartition> partitions)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -10,7 +10,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
     {
         public Handle Handle => throw new NotImplementedException();
 
-        public string Name => throw new NotImplementedException();
+        public string Name { get; protected set; }
 
         public int AddBrokers(string brokers)
         {
@@ -28,6 +28,11 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         }
 
         public Task CreateTopicsAsync(IEnumerable<TopicSpecification> topics, CreateTopicsOptions options = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<List<DeleteRecordsResult>> DeleteRecordsAsync(IEnumerable<TopicPartitionOffset> topicPartitionOffsets, DeleteRecordsOptions options = null)
         {
             throw new NotImplementedException();
         }

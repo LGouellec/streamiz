@@ -40,6 +40,11 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
         {
         }
 
+        public void AbortTransaction()
+        {
+            throw new NotImplementedException();
+        }
+
         public int AddBrokers(string brokers)
         {
             return 0;
@@ -51,6 +56,11 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
 
         public void CommitTransaction(TimeSpan timeout)
         {
+        }
+
+        public void CommitTransaction()
+        {
+            throw new NotImplementedException();
         }
 
         public void Dispose()
