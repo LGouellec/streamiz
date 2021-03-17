@@ -12,6 +12,17 @@ namespace Streamiz.Kafka.Net.State.RocksDb
     {
         private RocksDbOptions rocksDbOptions;
 
+        private const Compression COMPRESSION_TYPE = Compression.No;
+        private const Compaction COMPACTION_STYLE = Compaction.Universal;
+        private const long WRITE_BUFFER_SIZE = 16 * 1024 * 1024L;
+        private const long BLOCK_CACHE_SIZE = 50 * 1024 * 1024L;
+        private const long BLOCK_SIZE = 4096L;
+        private const int MAX_WRITE_BUFFERS = 3;
+        //private const String DB_FILE_DIR = "rocksdb";
+
+        private WriteOptions writeOptions;
+        
+
         internal ProcessorContext InternalProcessorContext { get; set; }
 
         public RocksDbKeyValueStore(string name)
@@ -91,28 +102,22 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             // TODO : open rocksdb database
             DbOptions dbOptions = new DbOptions();
             ColumnFamilyOptions columnFamilyOptions = new ColumnFamilyOptions();
+            BlockBasedTableOptions tableConfig = new BlockBasedTableOptions();
 
             rocksDbOptions = new RocksDbOptions(dbOptions, columnFamilyOptions);
 
-            // userSpecifiedOptions = new RocksDBGenericOptionsToDbOptionsColumnFamilyOptionsAdapter(dbOptions, columnFamilyOptions);
+            tableConfig.SetBlockCache(RocksDbSharp.Cache.CreateLru(BLOCK_CACHE_SIZE));
+            tableConfig.SetBlockSize(BLOCK_SIZE);
+            tableConfig.SetFilterPolicy(BloomFilterPolicy.Create());
 
-            BlockBasedTableConfigWithAccessibleCache tableConfig = new BlockBasedTableConfigWithAccessibleCache();
-            cache = new LRUCache(BLOCK_CACHE_SIZE);
-            tableConfig.setBlockCache(cache);
-            tableConfig.setBlockSize(BLOCK_SIZE);
-
-            filter = new BloomFilter();
-            tableConfig.setFilter(filter);
-
-            userSpecifiedOptions.optimizeFiltersForHits();
-            userSpecifiedOptions.setTableFormatConfig(tableConfig);
-            userSpecifiedOptions.setWriteBufferSize(WRITE_BUFFER_SIZE);
-            userSpecifiedOptions.setCompressionType(COMPRESSION_TYPE);
-            userSpecifiedOptions.setCompactionStyle(COMPACTION_STYLE);
-            userSpecifiedOptions.setMaxWriteBufferNumber(MAX_WRITE_BUFFERS);
-            userSpecifiedOptions.setCreateIfMissing(true);
-            userSpecifiedOptions.setErrorIfExists(false);
-            userSpecifiedOptions.setInfoLogLevel(InfoLogLevel.ERROR_LEVEL);
+            rocksDbOptions.SetOptimizeFiltersForHits(1);
+            rocksDbOptions.SetBlockBasedTableFactory(tableConfig);
+            rocksDbOptions.SetCompression(COMPRESSION_TYPE);
+            rocksDbOptions.SetCompactionStyle(COMPACTION_STYLE);
+            rocksDbOptions.SetMaxWriteBufferNumber(MAX_WRITE_BUFFERS);
+            rocksDbOptions.SetCreateIfMissing(true);
+            rocksDbOptions.SetErrorIfExists(false);
+            rocksDbOptions.SetInfoLogLevel(RocksLogLevel.ERROR);
             // this is the recommended way to increase parallelism in RocksDb
             // note that the current implementation of setIncreaseParallelism affects the number
             // of compaction threads but not flush threads (the latter remains one). Also
@@ -120,13 +125,10 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             // https://github.com/facebook/rocksdb/blob/62ad0a9b19f0be4cefa70b6b32876e764b7f3c11/util/options.cc#L580
             // subtracts one from the value passed to determine the number of compaction threads
             // (this could be a bug in the RocksDB code and their devs have been contacted).
-            userSpecifiedOptions.setIncreaseParallelism(Math.max(Runtime.getRuntime().availableProcessors(), 2));
+            rocksDbOptions.IncreaseParallelism(Math.Max(Environment.ProcessorCount, 2));
 
-            wOptions = new WriteOptions();
-            wOptions.setDisableWAL(true);
-
-            fOptions = new FlushOptions();
-            fOptions.setWaitForFlush(true);
+            writeOptions = new WriteOptions();
+            writeOptions.DisableWal(1);
 
              Class<RocksDBConfigSetter> configSetterClass =
                 (Class<RocksDBConfigSetter>)configs.get(StreamsConfig.ROCKSDB_CONFIG_SETTER_CLASS_CONFIG);

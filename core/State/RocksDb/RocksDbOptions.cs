@@ -3,6 +3,17 @@ using System;
 
 namespace Streamiz.Kafka.Net.State.RocksDb
 {
+    public enum RocksLogLevel
+    {
+        DEBUG = 0,
+        INFO = 1,
+        WARN = 2,
+        ERROR = 3,
+        FATAL = 4,
+        HEADER = 5,
+        NUM_INFO_LOG = 6
+    }
+
     public class RocksDbOptions
     {
         private readonly DbOptions dbOptions;
@@ -14,6 +25,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             this.columnFamilyOptions = columnFamilyOptions;
         }
 
+        #region DbOptions
         public RocksDbOptions EnableStatistics()
         {
             dbOptions.EnableStatistics();
@@ -236,5 +248,322 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             dbOptions.SkipStatsUpdateOnOpen(val);
             return this;
         }
+        #endregion
+
+        #region ColumnFamilyOptions
+        public RocksDbOptions OptimizeForPointLookup(ulong blockCacheSizeMb)
+        {
+            columnFamilyOptions.OptimizeForPointLookup(blockCacheSizeMb);
+            return this;
+        }
+        public RocksDbOptions OptimizeLevelStyleCompaction(ulong memtableMemoryBudget)
+        {
+            columnFamilyOptions.OptimizeLevelStyleCompaction(memtableMemoryBudget);
+            return this;
+        }
+        public RocksDbOptions OptimizeUniversalStyleCompaction(ulong memtableMemoryBudget)
+        {
+            columnFamilyOptions.OptimizeUniversalStyleCompaction(memtableMemoryBudget);
+            return this;
+        }
+        public RocksDbOptions SetArenaBlockSize(ulong value)
+        {
+            columnFamilyOptions.SetArenaBlockSize(value);
+            return this;
+        }
+        public RocksDbOptions SetBlockBasedTableFactory(BlockBasedTableOptions table_options)
+        {
+            columnFamilyOptions.SetBlockBasedTableFactory(table_options);
+            return this;
+        }
+        public RocksDbOptions SetBloomLocality(uint value)
+        {
+            columnFamilyOptions.SetBloomLocality(value);
+            return this;
+        }
+        public RocksDbOptions SetCompactionFilter(IntPtr compactionFilter)
+        {
+            columnFamilyOptions.SetCompactionFilter(compactionFilter);
+            return this;
+        }
+        public RocksDbOptions SetCompactionFilterFactory(IntPtr compactionFilterFactory)
+        {
+            columnFamilyOptions.SetCompactionFilterFactory(compactionFilterFactory);
+            return this;
+        }
+        public RocksDbOptions SetCompactionReadaheadSize(ulong size)
+        {
+            columnFamilyOptions.SetCompactionReadaheadSize(size);
+            return this;
+        }
+        public RocksDbOptions SetCompactionStyle(Compaction value)
+        {
+            columnFamilyOptions.SetCompactionStyle(value);
+            return this;
+        }
+        public RocksDbOptions SetComparator(IntPtr comparator)
+        {
+            columnFamilyOptions.SetComparator(comparator);
+            return this;
+        }
+        public RocksDbOptions SetComparator(Comparator comparator)
+        {
+            columnFamilyOptions.SetComparator(comparator);
+            return this;
+        }
+        public RocksDbOptions SetCompression(Compression value)
+        {
+            columnFamilyOptions.SetCompression(value);
+            return this;
+        }
+        public RocksDbOptions SetCompressionOptions(int p1, int p2, int p3, int p4)
+        {
+            columnFamilyOptions.SetCompressionOptions(p1, p2, p3, p4);
+            return this;
+        }
+        public RocksDbOptions SetCompressionPerLevel(Compression[] levelValues, ulong numLevels)
+        {
+            columnFamilyOptions.SetCompressionPerLevel(levelValues, numLevels);
+            return this;
+        }
+        [Obsolete]
+        public RocksDbOptions SetCompressionPerLevel(Compression[] levelValues, UIntPtr numLevels)
+        {
+            columnFamilyOptions.SetCompressionPerLevel(levelValues, numLevels);
+            return this;
+        }
+        public RocksDbOptions SetDisableAutoCompactions(int value)
+        {
+            columnFamilyOptions.SetDisableAutoCompactions(value);
+            return this;
+        }
+        public RocksDbOptions SetFifoCompactionOptions(IntPtr fifoCompactionOptions)
+        {
+            columnFamilyOptions.SetFifoCompactionOptions(fifoCompactionOptions);
+            return this;
+        }
+        public RocksDbOptions SetHardPendingCompactionBytesLimit(ulong value)
+        {
+            columnFamilyOptions.SetHardPendingCompactionBytesLimit(value);
+            return this;
+        }
+        [Obsolete]
+        public RocksDbOptions SetHardRateLimit(double value)
+        {
+            columnFamilyOptions.SetHardRateLimit(value);
+            return this;
+        }
+        public RocksDbOptions SetHashLinkListRep(ulong value)
+        {
+            columnFamilyOptions.SetHashLinkListRep(value);
+            return this;
+        }
+        public RocksDbOptions SetHashSkipListRep(ulong p1, int p2, int p3)
+        {
+            columnFamilyOptions.SetHashSkipListRep(p1, p2, p3);
+            return this;
+        }
+        public RocksDbOptions SetInfoLogLevel(RocksLogLevel value)
+        {
+            columnFamilyOptions.SetInfoLogLevel((int)value);
+            return this;
+        }
+        public RocksDbOptions SetInplaceUpdateNumLocks(ulong value)
+        {
+            columnFamilyOptions.SetInplaceUpdateNumLocks(value);
+            return this;
+        }
+        public RocksDbOptions SetInplaceUpdateSupport(bool value)
+        {
+            columnFamilyOptions.SetInplaceUpdateSupport(value);
+            return this;
+        }
+        public RocksDbOptions SetLevel0FileNumCompactionTrigger(int value)
+        {
+            columnFamilyOptions.SetLevel0FileNumCompactionTrigger(value);
+            return this;
+        }
+        public RocksDbOptions SetLevel0SlowdownWritesTrigger(int value)
+        {
+            columnFamilyOptions.SetLevel0SlowdownWritesTrigger(value);
+            return this;
+        }
+        public RocksDbOptions SetLevel0StopWritesTrigger(int value)
+        {
+            columnFamilyOptions.SetLevel0StopWritesTrigger(value);
+            return this;
+        }
+        public RocksDbOptions SetLevelCompactionDynamicLevelBytes(bool value)
+        {
+            columnFamilyOptions.SetLevelCompactionDynamicLevelBytes(value);
+            return this;
+        }
+        public RocksDbOptions SetMaxBytesForLevelBase(ulong value)
+        {
+            columnFamilyOptions.SetMaxBytesForLevelBase(value);
+            return this;
+        }
+        public RocksDbOptions SetMaxBytesForLevelMultiplier(double value)
+        {
+            columnFamilyOptions.SetMaxBytesForLevelMultiplier(value);
+            return this;
+        }
+        public RocksDbOptions SetMaxBytesForLevelMultiplierAdditional(int[] levelValues, ulong numLevels)
+        {
+            columnFamilyOptions.SetMaxBytesForLevelMultiplierAdditional(levelValues, numLevels);
+            return this;
+        }
+        public RocksDbOptions SetMaxCompactionBytes(ulong bytes)
+        {
+            columnFamilyOptions.SetMaxCompactionBytes(bytes);
+            return this;
+        }
+        [Obsolete]
+        public RocksDbOptions SetMaxMemCompactionLevel(int value)
+        {
+            columnFamilyOptions.SetMaxMemCompactionLevel(value);
+            return this;
+        }
+        public RocksDbOptions SetMaxSequentialSkipInIterations(ulong value)
+        {
+            columnFamilyOptions.SetMaxSequentialSkipInIterations(value);
+            return this;
+        }
+        public RocksDbOptions SetMaxSuccessiveMerges(ulong value)
+        {
+            columnFamilyOptions.SetMaxSuccessiveMerges(value);
+            return this;
+        }
+        public RocksDbOptions SetMaxWriteBufferNumber(int value)
+        {
+            columnFamilyOptions.SetMaxWriteBufferNumber(value);
+            return this;
+        }
+        public RocksDbOptions SetMaxWriteBufferNumberToMaintain(int value)
+        {
+            columnFamilyOptions.SetMaxWriteBufferNumberToMaintain(value);
+            return this;
+        }
+        public RocksDbOptions SetMemtableHugePageSize(ulong size)
+        {
+            columnFamilyOptions.SetMemtableHugePageSize(size);
+            return this;
+        }
+        public RocksDbOptions SetMemtablePrefixBloomSizeRatio(double ratio)
+        {
+            columnFamilyOptions.SetMemtablePrefixBloomSizeRatio(ratio);
+            return this;
+        }
+        public RocksDbOptions SetMemtableVectorRep()
+        {
+            columnFamilyOptions.SetMemtableVectorRep();
+            return this;
+        }
+        public RocksDbOptions SetMergeOperator(IntPtr mergeOperator)
+        {
+            columnFamilyOptions.SetMergeOperator(mergeOperator);
+            return this;
+        }
+        public RocksDbOptions SetMergeOperator(MergeOperator mergeOperator)
+        {
+            columnFamilyOptions.SetMergeOperator(mergeOperator);
+            return this;
+        }
+        public RocksDbOptions SetMinLevelToCompress(int level)
+        {
+            columnFamilyOptions.SetMinLevelToCompress(level);
+            return this;
+        }
+        public RocksDbOptions SetMinWriteBufferNumberToMerge(int value)
+        {
+            columnFamilyOptions.SetMinWriteBufferNumberToMerge(value);
+            return this;
+        }
+        public RocksDbOptions SetNumLevels(int value)
+        {
+            columnFamilyOptions.SetNumLevels(value);
+
+            return this;
+        }
+        public RocksDbOptions SetOptimizeFiltersForHits(int value)
+        {
+            columnFamilyOptions.SetOptimizeFiltersForHits(value);
+            return this;
+        }
+        public RocksDbOptions SetPlainTableFactory(uint p1, int p2, double p3, ulong p4)
+        {
+            columnFamilyOptions.SetPlainTableFactory(p1, p2, p3, p4);
+            return this;
+        }
+        public RocksDbOptions SetPrefixExtractor(SliceTransform sliceTransform)
+        {
+            columnFamilyOptions.SetPrefixExtractor(sliceTransform);
+            return this;
+        }
+        public RocksDbOptions SetPrefixExtractor(IntPtr sliceTransform)
+        {
+            columnFamilyOptions.SetPrefixExtractor(sliceTransform);
+            return this;
+        }
+        [Obsolete]
+        public RocksDbOptions SetPurgeRedundantKvsWhileFlush(bool value)
+        {
+            columnFamilyOptions.SetPurgeRedundantKvsWhileFlush(value);
+            return this;
+        }
+        [Obsolete("no longer used")]
+        public RocksDbOptions SetRateLimitDelayMaxMilliseconds(uint value)
+        {
+            columnFamilyOptions.SetRateLimitDelayMaxMilliseconds(value);
+            return this;
+        }
+        public RocksDbOptions SetReportBgIoStats(bool value)
+        {
+            columnFamilyOptions.SetReportBgIoStats(value);
+            return this;
+        }
+        [Obsolete("no longer used")]
+        public RocksDbOptions SetSkipLogErrorOnRecovery(bool value)
+        {
+            columnFamilyOptions.SetSkipLogErrorOnRecovery(value);
+            return this;
+        }
+        public RocksDbOptions SetSoftPendingCompactionBytesLimit(ulong value)
+        {
+            columnFamilyOptions.SetSoftPendingCompactionBytesLimit(value);
+            return this;
+        }
+        [Obsolete("no longer used")]
+        public RocksDbOptions SetSoftRateLimit(double value)
+        {
+            columnFamilyOptions.SetSoftRateLimit(value);
+            return this;
+        }
+        public RocksDbOptions SetTargetFileSizeBase(ulong value)
+        {
+            columnFamilyOptions.SetTargetFileSizeBase(value);
+            return this;
+        }
+        public RocksDbOptions SetTargetFileSizeMultiplier(int value)
+        {
+            columnFamilyOptions.SetTargetFileSizeMultiplier(value);
+            return this;
+        }
+        public RocksDbOptions SetUint64addMergeOperator()
+        {
+            columnFamilyOptions.SetUint64addMergeOperator();
+            return this;
+        }
+        public RocksDbOptions SetUniversalCompactionOptions(IntPtr universalCompactionOptions)
+        {
+            columnFamilyOptions.SetUniversalCompactionOptions(universalCompactionOptions);
+            return this;
+        }
+        public RocksDbOptions SetWriteBufferSize(ulong value)
+        {
+            columnFamilyOptions.SetWriteBufferSize(value);
+            return this;
+        }
+        #endregion
     }
 }
