@@ -188,6 +188,12 @@ namespace Streamiz.Kafka.Net.Tests.Public
             stream.TransactionalId = "transac";
             stream.TransactionTimeout = TimeSpan.FromSeconds(1);
             stream.TransactionTimeoutMs = 400;
+            stream.SslCaCertificateStores = "store1";
+            stream.EnableRandomSeed = true;
+            stream.TopicMetadataPropagationMaxMs = 60000;
+            stream.AllowAutoCreateTopics = true;
+            stream.BatchSize = 100;
+            stream.StickyPartitioningLingerMs = 5;
 
             var producerConfig = stream.ToProducerConfig();
             var consumerConfig = stream.ToConsumerConfig();
@@ -274,6 +280,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual(false, producerConfig.TopicMetadataRefreshSparse);
             Assert.AreEqual("transac", producerConfig.TransactionalId);
             Assert.AreEqual(400, producerConfig.TransactionTimeoutMs);
+            Assert.AreEqual(100, producerConfig.BatchSize);
+            Assert.AreEqual(5, producerConfig.StickyPartitioningLingerMs);
 
             #endregion
 
@@ -356,6 +364,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual(500, consumerConfig.TopicMetadataRefreshFastIntervalMs);
             Assert.AreEqual(200, consumerConfig.TopicMetadataRefreshIntervalMs);
             Assert.AreEqual(false, consumerConfig.TopicMetadataRefreshSparse);
+            Assert.AreEqual(true, consumerConfig.AllowAutoCreateTopics);
             #endregion
 
             #region GlobalConfig
@@ -437,6 +446,9 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual(500, globalConfig.TopicMetadataRefreshFastIntervalMs);
             Assert.AreEqual(200, globalConfig.TopicMetadataRefreshIntervalMs);
             Assert.AreEqual(false, globalConfig.TopicMetadataRefreshSparse);
+            Assert.AreEqual("store1", globalConfig.SslCaCertificateStores);
+            Assert.AreEqual(true, globalConfig.EnableRandomSeed);
+            Assert.AreEqual(60000, globalConfig.TopicMetadataPropagationMaxMs);
             #endregion
 
             #region AdminConfig
@@ -500,6 +512,9 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual(500, adminConfig.TopicMetadataRefreshFastIntervalMs);
             Assert.AreEqual(200, adminConfig.TopicMetadataRefreshIntervalMs);
             Assert.AreEqual(false, adminConfig.TopicMetadataRefreshSparse);
+            Assert.AreEqual("store1", globalConfig.SslCaCertificateStores);
+            Assert.AreEqual(true, globalConfig.EnableRandomSeed);
+            Assert.AreEqual(60000, globalConfig.TopicMetadataPropagationMaxMs);
             #endregion
         }
     }
