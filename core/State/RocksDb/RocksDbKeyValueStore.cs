@@ -4,6 +4,7 @@ using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Streamiz.Kafka.Net.State.RocksDb
 {
@@ -131,6 +132,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
             context.Configuration.RocksDbConfigHandler?.Invoke(Name, rocksDbOptions);
 
+            Directory.CreateDirectory(context.Configuration.)
 
             dbDir = new File(new File(stateDir, parentDir), name);
 
