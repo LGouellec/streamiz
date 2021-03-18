@@ -2,7 +2,7 @@
 {
 
     /// <summary>
-    ///     Subject name strategy. Refer to: https://www.confluent.io/blog/put-several-event-types-kafka-topic/
+    ///  Subject name strategy. Refer to: https://www.confluent.io/blog/put-several-event-types-kafka-topic/
     /// </summary>
     public enum SubjectNameStrategy
     {
