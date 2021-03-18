@@ -5,6 +5,7 @@ using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State.RocksDb;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -116,6 +117,11 @@ namespace Streamiz.Kafka.Net
         #endregion
 
         #region Stream Config Property
+
+        /// <summary>
+        /// A Rocks DB config handler function
+        /// </summary>
+        Func<string, RocksDbOptions> RocksDbConfigHandler { get; set; }
 
         /// <summary>
         /// Inner exception handling function called during processing.
@@ -231,6 +237,11 @@ namespace Streamiz.Kafka.Net
         /// You can use <see cref="StreamizMetadata"/> to get these metadatas. (Default : false)
         /// </summary>
         bool FollowMetadata { get; set; }
+
+        /// <summary>
+        /// Directory location for state store. This path must be unique for each streams instance sharing the same underlying filesystem.
+        /// </summary>
+        string StateDir { get; set; }
 
         #endregion
     }
@@ -2068,6 +2079,12 @@ namespace Streamiz.Kafka.Net
             get => this[bufferedRecordsPerPartitionCst];
             set => this.AddOrUpdate(bufferedRecordsPerPartitionCst, value);
         }
+
+        /// <summary>
+        /// A Rocks DB config handler function
+        /// </summary>
+        public Func<string, RocksDbOptions, IStreamConfig> RocksDbConfigHandler { get; set; }
+
 
         /// <summary>
         /// Inner exception handling function called during processing.

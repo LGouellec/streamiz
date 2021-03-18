@@ -4,7 +4,6 @@ using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.State.RocksDb
 {
@@ -21,7 +20,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         //private const String DB_FILE_DIR = "rocksdb";
 
         private WriteOptions writeOptions;
-        
+
 
         internal ProcessorContext InternalProcessorContext { get; set; }
 
@@ -130,14 +129,8 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             writeOptions = new WriteOptions();
             writeOptions.DisableWal(1);
 
-             Class<RocksDBConfigSetter> configSetterClass =
-                (Class<RocksDBConfigSetter>)configs.get(StreamsConfig.ROCKSDB_CONFIG_SETTER_CLASS_CONFIG);
+            context.Configuration.RocksDbConfigHandler?.Invoke(Name, rocksDbOptions);
 
-            if (configSetterClass != null)
-            {
-                configSetter = Utils.newInstance(configSetterClass);
-                configSetter.setConfig(name, userSpecifiedOptions, configs);
-            }
 
             dbDir = new File(new File(stateDir, parentDir), name);
 
@@ -146,7 +139,8 @@ namespace Streamiz.Kafka.Net.State.RocksDb
                 Files.createDirectories(dbDir.getParentFile().toPath());
                 Files.createDirectories(dbDir.getAbsoluteFile().toPath());
             }
-            catch ( IOException fatal) {
+            catch (IOException fatal)
+            {
                 throw new ProcessorStateException(fatal);
             }
 
@@ -166,7 +160,9 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         private void CheckStateStoreOpen()
         {
             if (!IsOpen)
+            {
                 throw new InvalidStateStoreException($"Store {Name} is currently closed");
+            }
         }
 
         #endregion
