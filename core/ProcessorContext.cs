@@ -3,6 +3,7 @@ using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
+using System.IO;
 
 namespace Streamiz.Kafka.Net
 {
@@ -49,6 +50,10 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         public virtual TaskId Id => Task.Id;
 
+        /// <summary>
+        /// Returns the state directory for the partition.
+        /// </summary>
+        public string StateDir => $"{Path.Combine(Configuration.StateDir, Configuration.ApplicationId, Id.ToString())}";
 
         internal ProcessorContext(AbstractTask task, IStreamConfig configuration, IStateManager stateManager)
         { 

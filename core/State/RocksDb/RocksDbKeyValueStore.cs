@@ -18,15 +18,18 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         private const long BLOCK_CACHE_SIZE = 50 * 1024 * 1024L;
         private const long BLOCK_SIZE = 4096L;
         private const int MAX_WRITE_BUFFERS = 3;
-        //private const String DB_FILE_DIR = "rocksdb";
+        private const String DB_FILE_DIR = "rocksdb";
 
         private WriteOptions writeOptions;
 
-
+        internal DirectoryInfo DbDir { get; private set; }
+        internal RocksDbSharp.RocksDb Db { get; set; }
+        internal IRocksDbAdapter DbAdapter { get; private set; }
         internal ProcessorContext InternalProcessorContext { get; set; }
 
         public RocksDbKeyValueStore(string name)
         {
+            
             Name = name;
         }
 
@@ -46,27 +49,79 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         public long ApproximateNumEntries()
         {
-            throw new NotImplementedException();
+            CheckStateStoreOpen();
+            long num = 0;
+            try
+            {
+                num = DbAdapter.ApproximateNumEntries();
+            }
+            catch (RocksDbSharp.RocksDbException e)
+            {
+                throw new ProcessorStateException("Error while getting value for key from store {Name}", e);
+            }
+
+            if (num < 0)
+                num = Int64.MaxValue;
+
+            return num;
         }
 
         public void Close()
         {
-            throw new NotImplementedException();
+            if (!IsOpen)
+                return;
+            
+            IsOpen = false;
+            DbAdapter.Close();
+            Db.Dispose();
+
+            DbAdapter = null;
+            Db = null;
         }
 
         public byte[] Delete(Bytes key)
         {
-            throw new NotImplementedException();
+            CheckStateStoreOpen();
+            byte[] oldValue = null;
+
+            try
+            {
+                oldValue = DbAdapter.GetOnly(key.Get);
+            }
+            catch (RocksDbSharp.RocksDbException e){
+                throw new ProcessorStateException("Error while getting value for key from store {Name}", e);
+            }
+
+            Put(key, null);
+            return oldValue;
         }
 
         public void Flush()
         {
-            throw new NotImplementedException();
+            CheckStateStoreOpen();
+            if (Db == null)
+                return;
+            
+            try
+            {
+                DbAdapter.Flush();
+            }
+            catch (RocksDbSharp.RocksDbException e)
+            {
+                throw new ProcessorStateException("Error while getting value for key from store {Name}", e);
+            }
         }
 
         public byte[] Get(Bytes key)
         {
-            throw new NotImplementedException();
+            CheckStateStoreOpen();
+            try
+            {
+                return DbAdapter.Get(key.Get);
+            }
+            catch (RocksDbSharp.RocksDbException e) {
+                throw new ProcessorStateException($"Error while getting value for key from store {Name}", e);
+            }
         }
 
         public void Init(ProcessorContext context, IStateStore root)
@@ -80,17 +135,22 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         public void Put(Bytes key, byte[] value)
         {
-            throw new NotImplementedException();
+            CheckStateStoreOpen();
+            DbAdapter.Put(key.Get, value);
         }
 
         public void PutAll(IEnumerable<KeyValuePair<Bytes, byte[]>> entries)
         {
-            throw new NotImplementedException();
+           
         }
 
         public byte[] PutIfAbsent(Bytes key, byte[] value)
         {
-            throw new NotImplementedException();
+            var originalValue = Get(key);
+            if (originalValue == null)
+                Put(key, value);
+
+            return originalValue;
         }
 
         #endregion
@@ -99,7 +159,6 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         private void OpenDatabase(ProcessorContext context)
         {
-            // TODO : open rocksdb database
             DbOptions dbOptions = new DbOptions();
             ColumnFamilyOptions columnFamilyOptions = new ColumnFamilyOptions();
             BlockBasedTableOptions tableConfig = new BlockBasedTableOptions();
@@ -132,31 +191,37 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
             context.Configuration.RocksDbConfigHandler?.Invoke(Name, rocksDbOptions);
 
-            Directory.CreateDirectory(context.Configuration.)
+            DbDir = new DirectoryInfo(Path.Combine(context.StateDir, DB_FILE_DIR, Name));
 
-            dbDir = new File(new File(stateDir, parentDir), name);
+            Directory.CreateDirectory(DbDir.FullName);
+
+            OpenRocksDB(dbOptions, columnFamilyOptions);
+
+            IsOpen = true;
+        }
+
+        private void OpenRocksDB(DbOptions dbOptions, ColumnFamilyOptions columnFamilyOptions)
+        {
+            var columnFamilyDescriptors = new ColumnFamilies(columnFamilyOptions);
 
             try
             {
-                Files.createDirectories(dbDir.getParentFile().toPath());
-                Files.createDirectories(dbDir.getAbsoluteFile().toPath());
+                Db = RocksDbSharp.RocksDb.Open(
+                    dbOptions,
+                    DbDir.FullName,
+                    columnFamilyDescriptors);
+
+                var columnFamilyHandle = Db.GetDefaultColumnFamily();
+                DbAdapter = new SingleColumnFamilyAdapter(
+                    Name,
+                    Db,
+                    writeOptions,
+                    columnFamilyHandle);
             }
-            catch (IOException fatal)
+            catch (RocksDbException e)
             {
-                throw new ProcessorStateException(fatal);
+                throw new ProcessorStateException("Error opening store " + Name + " at location " + DbDir.ToString(), e);
             }
-
-            // Setup statistics before the database is opened, otherwise the statistics are not updated
-            // with the measurements from Rocks DB
-            maybeSetUpStatistics(configs);
-
-            openRocksDB(dbOptions, columnFamilyOptions);
-            open = true;
-
-            addValueProvidersToMetricsRecorder();
-
-
-            IsOpen = true;
         }
 
         private void CheckStateStoreOpen()

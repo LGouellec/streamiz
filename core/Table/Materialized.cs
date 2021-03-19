@@ -3,6 +3,7 @@ using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.InMemory;
+using Streamiz.Kafka.Net.State.RocksDb;
 using Streamiz.Kafka.Net.State.Supplier;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;
@@ -557,6 +558,53 @@ namespace Streamiz.Kafka.Net.Table
             return m;
         }
 
+    }
+
+    /// <summary>
+    /// <see cref="RocksDb{K, V}"/> is a child class of <see cref="Materialized{K, V, S}"/>. 
+    /// It's a class helper for materialize <see cref="IKTable{K, V}"/> with an <see cref="RocksDbKeyValueBytesStoreSupplier"/>
+    /// </summary>
+    /// <typeparam name="K">Type of key</typeparam>
+    /// <typeparam name="V">type of value</typeparam>
+    public class RocksDb<K, V> : Materialized<K, V, IKeyValueStore<Bytes, byte[]>>
+    {
+        /// <summary>
+        /// Protected constructor with state store name and supplier
+        /// </summary>
+        /// <param name="name">State store name for query it</param>
+        /// <param name="supplier">Supplier use to build the state store</param>
+        protected RocksDb(string name, StoreSupplier<IKeyValueStore<Bytes, byte[]>> supplier)
+            : base(name, supplier)
+        {
+
+        }
+
+        /// <summary>
+        /// Materialize a <see cref="RocksDbKeyValueStore"/> with the given name.
+        /// </summary>
+        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
+        /// <returns>a new <see cref="RocksDb{K, V}"/> instance with the given storeName</returns>
+        public static RocksDb<K, V> @As(string storeName)
+            => new RocksDb<K, V>(storeName, new RocksDbKeyValueBytesStoreSupplier(storeName));
+
+        /// <summary>
+        /// Materialize a <see cref="InMemoryKeyValueStore"/> with the given name.
+        /// </summary>
+        /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
+        /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
+        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
+        /// <returns>a new <see cref="InMemory{K, V}"/> instance with the given storeName</returns>
+        public static RocksDb<K, V> @As<KS, VS>(string storeName)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+        {
+            var m = new RocksDb<K, V>(storeName, new RocksDbKeyValueBytesStoreSupplier(storeName))
+            {
+                KeySerdes = new KS(),
+                ValueSerdes = new VS()
+            };
+            return m;
+        }
     }
 
     #endregion

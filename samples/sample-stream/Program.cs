@@ -2,6 +2,7 @@
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Table;
 using System;
 
 namespace sample_stream
@@ -21,12 +22,7 @@ namespace sample_stream
           
             StreamBuilder builder = new StreamBuilder();
 
-            builder.Stream<string, string>("evenements")
-            .GroupByKey()
-            .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
-            .Aggregate(() => "", (k, v, va) => va += v)
-            .ToStream()
-            .Print(Printed<Windowed<String>, String>.ToOut());
+            builder.Table("topic-test", RocksDb<string, string>.As("state-store"));
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
