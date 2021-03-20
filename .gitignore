@@ -5,3 +5,5 @@ coverage.opencover.xml
 coverage.json
 _build
 TestResults
+
+.idea/
