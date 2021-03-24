@@ -36,8 +36,8 @@ namespace Streamiz.Kafka.Net.State
         /// </summary>
         /// <typeparam name="K">key type of the store</typeparam>
         /// <typeparam name="V">value type of the store</typeparam>
-        /// <returns><see cref="QueryableStoreTypes.IWindowStore{K, V}"/></returns>
-        public static IQueryableStoreType<IReadOnlyWindowStore<K, V>, K, V> IWindowStore<K, V>() => new WindowStoreType<K, V>();
+        /// <returns><see cref="QueryableStoreTypes.WindowStore{K, V}"/></returns>
+        public static IQueryableStoreType<IReadOnlyWindowStore<K, V>, K, V> WindowStore<K, V>() => new WindowStoreType<K, V>();
     }
 
     internal class KeyValueStoreType<K, V> : QueryableStoreTypeMatcher<IReadOnlyKeyValueStore<K, V>, K, V>

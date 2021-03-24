@@ -378,7 +378,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             if (isRunningState)
             {
-                var store = stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.IWindowStore<string, long>()));
+                var store = stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.WindowStore<string, long>()));
                 Assert.IsNotNull(store);
             }
 
@@ -441,7 +441,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                         Timestamp = new Confluent.Kafka.Timestamp(dt)
                     });
                 Thread.Sleep(50);
-                var store = stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.IWindowStore<string, long>()));
+                var store = stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.WindowStore<string, long>()));
                 Assert.IsNotNull(store);
                 var @enum = store.All();
                 Assert.AreEqual(1, store.All().ToList().Count);
@@ -484,7 +484,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 {
                     if (!state)
                     {
-                        Assert.Throws<InvalidStateStoreException>(() => stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.IWindowStore<string, long>())));
+                        Assert.Throws<InvalidStateStoreException>(() => stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.WindowStore<string, long>())));
                         state = true;
                     }
                 }

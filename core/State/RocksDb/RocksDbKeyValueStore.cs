@@ -18,7 +18,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         private const long BLOCK_CACHE_SIZE = 50 * 1024 * 1024L;
         private const long BLOCK_SIZE = 4096L;
         private const int MAX_WRITE_BUFFERS = 3;
-        private const String DB_FILE_DIR = "rocksdb";
+        private const string DB_FILE_DIR = "rocksdb";
 
         private WriteOptions writeOptions;
 
@@ -29,7 +29,6 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         public RocksDbKeyValueStore(string name)
         {
-            
             Name = name;
         }
 
@@ -41,10 +40,10 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         public bool IsOpen { get; private set; }
 
-
         public IEnumerable<KeyValuePair<Bytes, byte[]>> All()
         {
-            throw new NotImplementedException();
+            var enumerator = DbAdapter.All();
+            return new RocksDbEnumerable(Name, enumerator);
         }
 
         public long ApproximateNumEntries()
@@ -141,7 +140,9 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         public void PutAll(IEnumerable<KeyValuePair<Bytes, byte[]>> entries)
         {
-           
+            // Waiting batch
+            foreach (var p in entries)
+                Put(p.Key, p.Value);
         }
 
         public byte[] PutIfAbsent(Bytes key, byte[] value)
@@ -172,6 +173,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             rocksDbOptions.SetOptimizeFiltersForHits(1);
             rocksDbOptions.SetBlockBasedTableFactory(tableConfig);
             rocksDbOptions.SetCompression(COMPRESSION_TYPE);
+            rocksDbOptions.SetWriteBufferSize(WRITE_BUFFER_SIZE);
             rocksDbOptions.SetCompactionStyle(COMPACTION_STYLE);
             rocksDbOptions.SetMaxWriteBufferNumber(MAX_WRITE_BUFFERS);
             rocksDbOptions.SetCreateIfMissing(true);

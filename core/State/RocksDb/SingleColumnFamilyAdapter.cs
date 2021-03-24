@@ -29,7 +29,9 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         public IKeyValueEnumerator<Bytes, byte[]> All()
         {
-            throw new NotImplementedException();
+            var iterator = db.NewIterator(columnFamilyHandle);
+            iterator.SeekToFirst();
+            return new RocksDbEnumerator(iterator, name);
         }
         
         public long ApproximateNumEntries()
