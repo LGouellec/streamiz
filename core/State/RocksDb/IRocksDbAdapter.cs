@@ -9,7 +9,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
     {
         void Put(byte[] key, byte[] value);
 
-        void PrepareBatch(List<KeyValuePair<Bytes, byte[]>> entries,
+        void PrepareBatch(IEnumerable<KeyValuePair<Bytes, byte[]>> entries,
                           WriteBatch batch);
 
         byte[] Get(byte[] key);
@@ -27,7 +27,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         void Flush();
 
         void PrepareBatchForRestore(
-            List<KeyValuePair<byte[], byte[]>> records,
+            IEnumerable<KeyValuePair<byte[], byte[]>> records,
             WriteBatch batch);
 
         void AddToBatch(
@@ -36,7 +36,5 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             WriteBatch batch);
 
         void Close();
-
-        void ToggleDbForBulkLoading();
     }
 }

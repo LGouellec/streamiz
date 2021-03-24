@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using Confluent.Kafka;
+﻿using Confluent.Kafka;
 using Moq;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
-using Streamiz.Kafka.Net.State.InMemory;
 using Streamiz.Kafka.Net.State.RocksDb;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.Tests.Stores
 {
@@ -28,8 +26,9 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         [SetUp]
         public void Begin()
         {
+            Random rd = new Random();
             config = new StreamConfig();
-            config.ApplicationId = "unit-test-rocksdb-kv";
+            config.ApplicationId = $"unit-test-rocksdb-kv-{rd.Next(0, 1000)}";
             config.StateDir = ".";
 
             id = new TaskId { Id = 0, Partition = 0 };
@@ -40,9 +39,6 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             task.Setup(k => k.Id).Returns(id);
 
             context = new ProcessorContext(task.Object, config, stateManager);
-
-            if (Directory.Exists(Path.Combine(config.StateDir, config.ApplicationId)))
-                Directory.Delete(Path.Combine(config.StateDir, config.ApplicationId), true);
 
             store = new RocksDbKeyValueStore("test-store");
             store.Init(context, store);

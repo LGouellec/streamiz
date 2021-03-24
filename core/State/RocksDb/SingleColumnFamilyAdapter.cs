@@ -24,7 +24,10 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         public void AddToBatch(byte[] key, byte[] value, WriteBatch batch)
         {
-            throw new NotImplementedException();
+            if (value == null)
+                batch.Delete(key, columnFamilyHandle);
+            else
+                batch.Put(key, value, columnFamilyHandle);
         }
 
         public IKeyValueEnumerator<Bytes, byte[]> All()
@@ -47,14 +50,16 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         public byte[] GetOnly(byte[] key)
             => db.Get(key, columnFamilyHandle);
 
-        public void PrepareBatch(List<KeyValuePair<Bytes, byte[]>> entries, WriteBatch batch)
+        public void PrepareBatch(IEnumerable<KeyValuePair<Bytes, byte[]>> entries, WriteBatch batch)
         {
-            throw new NotImplementedException();
+            foreach (var entry in entries)
+                AddToBatch(entry.Key.Get, entry.Value, batch);
         }
 
-        public void PrepareBatchForRestore(List<KeyValuePair<byte[], byte[]>> records, WriteBatch batch)
+        public void PrepareBatchForRestore(IEnumerable<KeyValuePair<byte[], byte[]>> records, WriteBatch batch)
         {
-            throw new NotImplementedException();
+            foreach (var entry in records)
+                AddToBatch(entry.Key, entry.Value, batch);
         }
 
         public void Put(byte[] key, byte[] value)
@@ -84,11 +89,6 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         }
 
         public IKeyValueEnumerator<Bytes, byte[]> Range(Bytes from, Bytes to)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ToggleDbForBulkLoading()
         {
             throw new NotImplementedException();
         }

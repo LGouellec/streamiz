@@ -59,10 +59,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
                 throw new ProcessorStateException("Error while getting value for key from store {Name}", e);
             }
 
-            if (num < 0)
-                num = Int64.MaxValue;
-
-            return num;
+            return num > 0 ? num : 0;
         }
 
         public void Close()
@@ -140,9 +137,18 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         public void PutAll(IEnumerable<KeyValuePair<Bytes, byte[]>> entries)
         {
-            // Waiting batch
-            foreach (var p in entries)
-                Put(p.Key, p.Value);
+            try
+            {
+                using (var batch = new WriteBatch())
+                {
+                    DbAdapter.PrepareBatch(entries, batch);
+                    Db.Write(batch, writeOptions);
+                }
+            }
+            catch (RocksDbSharp.RocksDbException e)
+            {
+                throw new ProcessorStateException($"Error while batch writing to store {Name}", e);
+            }
         }
 
         public byte[] PutIfAbsent(Bytes key, byte[] value)
