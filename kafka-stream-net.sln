@@ -31,7 +31,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Producer-Avro", "test\Produ
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro", "serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.csproj", "{2BC1A318-1AE9-4A32-B8B1-D8296FABFF8B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Streamiz.Kafka.Net.SchemaRegistry.Mock", "crosscutting\Streamiz.Kafka.Net.SchemaRegistry.Mock\Streamiz.Kafka.Net.SchemaRegistry.Mock.csproj", "{74CDFBA3-0596-429C-AB65-1E825ED70EB0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streamiz.Kafka.Net.SchemaRegistry.Mock", "crosscutting\Streamiz.Kafka.Net.SchemaRegistry.Mock\Streamiz.Kafka.Net.SchemaRegistry.Mock.csproj", "{74CDFBA3-0596-429C-AB65-1E825ED70EB0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
