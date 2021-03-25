@@ -16,7 +16,7 @@
 </div>
 <br/>
 
-<img src="./resources/logo-kafka-stream-net.png" width="100">
+<img src="./resources/logo-kafka-stream-net.png" width="150">
 
 ----
 
@@ -116,7 +116,6 @@ Owners:
 Maintainers:
 
 - [lgouellec](https://github.com/LGouellec)
-- [mmoron](https://github.com/mmoron)
 
 **Streamiz Kafka .Net** is a community project. We invite your participation through issues and pull requests! You can peruse the [contributing guidelines](CONTRIBUTING.md).
 
