@@ -15,6 +15,7 @@
         - run: apt update
         - run: apt install -y unzip
         - run: apt install -y openjdk-11-jdk
+        - run: apt install -y libc6-dev
         - run: apt install -y libgflags-dev
         - run: apt install -y libsnappy-dev
         - run: apt install -y zlib1g-dev
