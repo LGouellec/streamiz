@@ -15,6 +15,12 @@
         - run: apt update
         - run: apt install -y unzip
         - run: apt install -y openjdk-11-jdk
+        - run: apt install -y libgflags-dev
+        - run: apt install -y libsnappy-dev
+        - run: apt install -y zlib1g-dev
+        - run: apt install -y libbz2-dev
+        - run: apt install -y liblz4-dev
+        - run: apt install -y libzstd-dev
         - run: set JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64/
         - run: export JAVA_HOME
         - run: dotnet sonarscanner begin /k:LGouellec_kafka-streams-dotnet /o:kafka-streams-dotnet /d:sonar.login=${SONAR_TOKEN} /d:sonar.host.url=https://sonarcloud.io /d:sonar.cs.opencover.reportsPaths="**\coverage.opencover.xml" /d:sonar.coverage.exclusions="**sample*/*.cs,**test*/*.cs,**Tests*.cs"
