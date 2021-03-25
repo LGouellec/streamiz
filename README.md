@@ -101,7 +101,8 @@ static async System.Threading.Tasks.Task Main(string[] args)
 - [ ] Repartition topic
 - [ ] Repartition Processor [KAFKA-8611](https://issues.apache.org/jira/browse/KAFKA-8611) | [PR #7170](https://github.com/apache/kafka/pull/7170)
 - [ ] Processor API
-- [ ] Sample projects (Micro-services, console sample, topology implementation, etc ..) which use Streamiz package
+- [ ] Sample projects (Micro-services, console sample, topology implementation, etc ..) which use Streamiz package ([see](https://github.com/LGouellec/kafka-streams-dotnet-samples))
+- [ ] Protobuf & Json SerDes which interact Confluent Schema Registry
 - [ ] Optimizing Kafka Streams Topologies
 - [ ] Standby Replica
 - [ ] Interactive Queries
