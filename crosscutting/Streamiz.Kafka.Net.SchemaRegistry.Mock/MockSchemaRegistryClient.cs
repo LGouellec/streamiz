@@ -18,7 +18,6 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.Mock
             public int Id { get; set; }
         }
 
-        private SchemaRegistryConfig config;
         private int id = 0;
         private readonly List<string> subjects = new List<string>();
         private readonly Dictionary<string, List<RegisterSchema>> schemas = new Dictionary<string, List<RegisterSchema>>();
@@ -28,9 +27,9 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.Mock
         /// The maximum capacity of the local schema cache. 
         /// It's hardcoded to 100.
         /// </summary>
-        public int MaxCachedSchemas => config.MaxCachedSchemas.Value;
+        public int MaxCachedSchemas { get; private set; } = 100;
 
-        public int RequestTimeoutMs => config.RequestTimeoutMs.Value;
+        public int RequestTimeoutMs { get; private set; }
 
         /// <summary>
         /// DEPRECATED. SubjectNameStrategy should now be specified via serializer configuration.
@@ -57,7 +56,7 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.Mock
         /// <summary>
         /// Disposable method.
         /// </summary>
-        public void Dispose() 
+        public void Dispose()
         {
             subjects.Clear();
             schemas.Clear();
@@ -73,7 +72,8 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.Mock
 
         public void UseConfiguration(SchemaRegistryConfig config)
         {
-            this.config = config;
+            MaxCachedSchemas = config.MaxCachedSchemas.HasValue ? config.MaxCachedSchemas.Value : 100;
+            RequestTimeoutMs = config.RequestTimeoutMs.HasValue ? config.RequestTimeoutMs.Value : 30000;
         }
 
         /// <summary>

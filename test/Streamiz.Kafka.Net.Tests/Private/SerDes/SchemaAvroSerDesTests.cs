@@ -495,5 +495,18 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             Assert.AreEqual(1, mockSchemaClient.MaxCachedSchemas);
             Assert.AreEqual(30, mockSchemaClient.RequestTimeoutMs);
         }
+
+        [Test]
+        public void DefaultSchemaRegistryConfig()
+        {
+            var mockSchemaClient = new MockSchemaRegistryClient();
+            var config = new StreamConfig();
+
+            var serdes = new MockAvroSerDes(mockSchemaClient);
+            serdes.Initialize(new Net.SerDes.SerDesContext(config));
+
+            Assert.AreEqual(100, mockSchemaClient.MaxCachedSchemas);
+            Assert.AreEqual(30000, mockSchemaClient.RequestTimeoutMs);
+        }
     }
 }
