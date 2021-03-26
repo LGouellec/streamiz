@@ -134,7 +134,6 @@ namespace Streamiz.Kafka.Net.Mock
                 }
             };
             
-            threadTopology.ThrowException = false;
             threadTopology.Start(token);
             while (!isRunningState)
             {
