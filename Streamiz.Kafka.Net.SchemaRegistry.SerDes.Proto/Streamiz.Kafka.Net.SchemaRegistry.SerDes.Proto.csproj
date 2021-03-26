@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Confluent.SchemaRegistry" Version="1.6.2" />
+    <PackageReference Include="Confluent.SchemaRegistry.Serdes.Protobuf" Version="1.5.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\core\Streamiz.Kafka.Net.csproj" />
+    <ProjectReference Include="..\crosscutting\Streamiz.Kafka.Net.SchemaRegistry.Mock\Streamiz.Kafka.Net.SchemaRegistry.Mock.csproj" />
+    <ProjectReference Include="..\Streamiz.Kafka.Net.SchemaRegistry.SerDes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.csproj" />
+  </ItemGroup>
+
+</Project>

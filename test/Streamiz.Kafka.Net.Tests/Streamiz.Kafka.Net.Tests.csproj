@@ -35,6 +35,11 @@
   <ItemGroup>
     <ProjectReference Include="..\..\core\Streamiz.Kafka.Net.csproj" />
     <ProjectReference Include="..\..\serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.csproj" />
+    <ProjectReference Include="..\..\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Proto\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Proto.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Helpers\Protoc\" />
   </ItemGroup>
 
 </Project>

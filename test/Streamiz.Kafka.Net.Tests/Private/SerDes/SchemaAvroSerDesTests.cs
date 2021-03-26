@@ -22,6 +22,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         public static Avro.Schema _SCHEMA = Avro.Schema.Parse("{\"type\":\"record\",\"name\":\"Person\",\"namespace\":\"Streamiz.Kafka.Net.Tests.Private.SerDes\",\"fields\":[{\"name\":\"f" +
                 "irstName\",\"type\":\"string\"},{\"name\":\"lastName\",\"type\":\"string\"},{\"name\":\"age\",\"ty" +
                 "pe\":\"int\"}]}");
+
         private string _firstName;
         private string _lastName;
         private int _age;
@@ -45,6 +46,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
                 _firstName = value;
             }
         }
+
         public string lastName
         {
             get
@@ -56,6 +58,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
                 _lastName = value;
             }
         }
+
         public int age
         {
             get
@@ -67,6 +70,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
                 _age = value;
             }
         }
+
         public virtual object Get(int fieldPos)
         {
             switch (fieldPos)
@@ -77,6 +81,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
                 default: throw new AvroRuntimeException("Bad index " + fieldPos + " in Get()");
             };
         }
+
         public virtual void Put(int fieldPos, object fieldValue)
         {
             switch (fieldPos)
@@ -96,7 +101,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         private readonly MockSchemaRegistryClient mockClient;
 
         internal MockSchemaRegistryClient Client => mockClient;
-        internal AvroSerializer<Person> AvroSerializer => avroSerializer;
+        internal AvroSerializer<Person> AvroSerializer => (AvroSerializer<Person>)serializer;
 
         public MockAvroSerDes(MockSchemaRegistryClient mockClient)
         {
@@ -110,7 +115,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         }
     }
 
-    #endregion
+    #endregion Mock
 
     public class SchemaAvroSerDesTests
     {
@@ -194,7 +199,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             }
         }
 
-        readonly string topic = "person";
+        private readonly string topic = "person";
 
         [Test]
         public void DeserializeWithoutInit()
@@ -469,7 +474,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
                 }
             });
         }
-    
+
         [Test]
         public void IncorrectConfigurationInterface()
         {
