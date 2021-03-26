@@ -134,8 +134,6 @@ namespace Streamiz.Kafka.Net.Processors
 
         public bool IsDisposable { get; private set; } = false;
 
-        public bool ThrowException { get; set; } = true;
-
         public int Id => thread.ManagedThreadId;
 
         public void Dispose() => Close(true);
@@ -147,14 +145,26 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 while (!token.IsCancellationRequested)
                 {
+                    #region Treat Exception
+                    /*
+                     * exception variable is set in try { ... }catch {..} just after.
+                     * TreatException(..) close consumer, taskManager, flush all state stores and return an enumeration (FAIL if thread must stop, CONTINUE if developer want to continue stream processing).
+                     * IF response == ExceptionHandlerResponse.FAIL, break infinte thread loop.
+                     * ELSE IF response == ExceptionHandlerResponse.CONTINUE, reset exception variable, flush all states, revoked partitions, and re-subscribe source topics to resume processing.
+                     * exception behavior is implemented in the begin of infinite loop to be more readable, catch block just setted exception variable and log content to track it.
+                    */
                     if (exception != null)
                     {
                         ExceptionHandlerResponse response = TreatException(exception);
                         if (response == ExceptionHandlerResponse.FAIL)
                             break;
                         else if (response == ExceptionHandlerResponse.CONTINUE)
+                        {
                             exception = null;
+                            HandleInnerException();
+                        }
                     }
+                    #endregion
 
                     try
                     {
@@ -221,14 +231,14 @@ namespace Streamiz.Kafka.Net.Processors
                     }
                     catch (KafkaException e)
                     {
+                        exception = e;
                         log.Error($"{logPrefix}Encountered the following unexpected Kafka exception during processing, " +
                             $"this usually indicate Streams internal errors:", exception);
-                        exception = e;
                     }
                     catch (Exception e)
                     {
-                        log.Error($"{logPrefix}Encountered the following error during processing:", exception);
                         exception = e;
+                        log.Error($"{logPrefix}Encountered the following error during processing:", exception);
                     }
                 }
 
@@ -294,14 +304,12 @@ namespace Streamiz.Kafka.Net.Processors
             if (exception is DeserializationException || exception is ProductionException)
             {
                 Close(false);
-                if (ThrowException) throw new StreamsException(exception);
                 return ExceptionHandlerResponse.FAIL;
             }
             var response = streamConfig.InnerExceptionHandler(exception);
             if (response == ExceptionHandlerResponse.FAIL)
             {
                 Close(false);
-                if (ThrowException) throw new StreamsException(exception);
             }
             return response;
         }
@@ -331,6 +339,17 @@ namespace Streamiz.Kafka.Net.Processors
             log.Warn($"{logPrefix}Detected that the thread is being fenced. " +
                          "This implies that this thread missed a rebalance and dropped out of the consumer group. " +
                          "Will close out all assigned tasks and rejoin the consumer group.", e);
+
+            manager.HandleLostAll();
+            consumer.Unsubscribe();
+            consumer.Subscribe(builder.GetSourceTopics());
+        }
+
+        private void HandleInnerException()
+        {
+            log.Warn($"{logPrefix}Detected that the thread throw an inner exception. " +
+                $"Your configuration manager has decided to continue running stream processing. " +
+                "So will close out all assigned tasks and rejoin the consumer group.");
 
             manager.HandleLostAll();
             consumer.Unsubscribe();
@@ -373,8 +392,11 @@ namespace Streamiz.Kafka.Net.Processors
                     manager.Close();
                     consumer.Unsubscribe();
                     IsRunning = false;
+
                     if (cleanUp)
                         thread.Join();
+                    else
+                        consumer.Dispose();
 
                     SetState(ThreadState.DEAD);
                     log.Info($"{logPrefix}Shutdown complete");

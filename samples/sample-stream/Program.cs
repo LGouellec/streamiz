@@ -16,23 +16,18 @@ namespace sample_stream
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app";
-            config.BootstrapServers = "localhost:9093";
-            
-          
+            config.BootstrapServers = "localhost:9092";
+
             StreamBuilder builder = new StreamBuilder();
 
-            builder.Stream<string, string>("evenements")
-            .GroupByKey()
-            .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
-            .Aggregate(() => "", (k, v, va) => va += v)
-            .ToStream()
-            .Print(Printed<Windowed<String>, String>.ToOut());
+            builder.Stream<string, string>("test")
+                .To("test2");
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
 
             Console.CancelKeyPress += (o, e) => stream.Dispose();
-
+            
             await stream.StartAsync();
         }
     }
