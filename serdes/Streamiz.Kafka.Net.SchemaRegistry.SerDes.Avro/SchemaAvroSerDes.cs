@@ -18,9 +18,9 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
     /// </typeparam>
     public class SchemaAvroSerDes<T> : AbstractSerDes<T>
     {
-        private ISchemaRegistryClient registryClient;
-        private AvroSerializer<T> avroSerializer;
-        private AvroDeserializer<T> avroDeserializer;
+        protected ISchemaRegistryClient registryClient;
+        protected AvroSerializer<T> avroSerializer;
+        protected AvroDeserializer<T> avroDeserializer;
 
         private Confluent.SchemaRegistry.SchemaRegistryConfig GetConfig(ISchemaRegistryConfig config)
         {
