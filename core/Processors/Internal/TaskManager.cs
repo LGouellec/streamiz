@@ -221,7 +221,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 }
                 catch(Exception e)
                 {
-                    log.Error($"Failed to process stream task {task.Id} due to the following error: {e}");
+                    log.Error($"Failed to process stream task {task.Id} due to the following error:", e);
                     throw;
                 }
             }

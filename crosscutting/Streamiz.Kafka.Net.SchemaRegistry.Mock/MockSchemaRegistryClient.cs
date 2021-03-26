@@ -27,7 +27,9 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.Mock
         /// The maximum capacity of the local schema cache. 
         /// It's hardcoded to 100.
         /// </summary>
-        public int MaxCachedSchemas => 100;
+        public int MaxCachedSchemas { get; private set; } = 100;
+
+        public int RequestTimeoutMs { get; private set; }
 
         /// <summary>
         /// DEPRECATED. SubjectNameStrategy should now be specified via serializer configuration.
@@ -54,7 +56,7 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.Mock
         /// <summary>
         /// Disposable method.
         /// </summary>
-        public void Dispose() 
+        public void Dispose()
         {
             subjects.Clear();
             schemas.Clear();
@@ -67,6 +69,12 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.Mock
         /// <returns>A list of all subjects with registered schemas.</returns>
         public Task<List<string>> GetAllSubjectsAsync()
             => Task.FromResult(subjects);
+
+        public void UseConfiguration(SchemaRegistryConfig config)
+        {
+            MaxCachedSchemas = config.MaxCachedSchemas.HasValue ? config.MaxCachedSchemas.Value : 100;
+            RequestTimeoutMs = config.RequestTimeoutMs.HasValue ? config.RequestTimeoutMs.Value : 30000;
+        }
 
         /// <summary>
         /// Get the latest schema registered against the specified subject.

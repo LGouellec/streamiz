@@ -330,6 +330,7 @@ namespace Streamiz.Kafka.Net
         internal static readonly string schemaRegistryAutoRegisterCst = "schema.registry.auto.register.schema";
         internal static readonly string schemaRegistryRequestTimeoutMsCst = "schema.registry.request.timeout.ms";
         internal static readonly string schemaRegistryMaxCachedSchemasCst = "schema.registry.max.cached.schemas";
+        internal static readonly string avroSerializerSubjectNameStrategyCst= "avro.serializer.subject.name.strategy";
         internal static readonly string applicatonIdCst = "application.id";
         internal static readonly string clientIdCst = "client.id";
         internal static readonly string numStreamThreadsCst = "num.stream.threads";
@@ -2239,6 +2240,15 @@ namespace Streamiz.Kafka.Net
         {
             get => this.ContainsKey(schemaRegistryAutoRegisterCst) ? this[schemaRegistryAutoRegisterCst] : null;
             set => this.AddOrUpdate(schemaRegistryAutoRegisterCst, value);
+        }
+
+        /// <summary>
+        /// The subject name strategy to use for schema registration / lookup. Possible values: <see cref="Streamiz.Kafka.Net.SubjectNameStrategy" />
+        /// </summary>
+        public SubjectNameStrategy? SubjectNameStrategy 
+        { 
+            get => this.ContainsKey(avroSerializerSubjectNameStrategyCst) ? this[avroSerializerSubjectNameStrategyCst] : null;
+            set => this.AddOrUpdate(avroSerializerSubjectNameStrategyCst, value); 
         }
 
         #endregion
