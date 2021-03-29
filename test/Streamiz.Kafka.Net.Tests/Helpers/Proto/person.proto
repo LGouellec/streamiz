@@ -1,0 +1,9 @@
+﻿syntax = "proto3";
+
+package Streamiz.Kafka.Net.Tests.Helpers.Proto;
+
+message Person {
+    string firstName = 1;
+    string lastName= 2;
+    int32 age = 3;
+}
