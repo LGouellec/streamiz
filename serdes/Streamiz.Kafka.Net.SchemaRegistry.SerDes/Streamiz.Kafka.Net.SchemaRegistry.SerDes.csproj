@@ -2,7 +2,26 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <Version>1.1.4</Version>
+    <Company>@LGouellec</Company>
+    <Authors>@LGouellec</Authors>
+    <Copyright>Copyright 2020</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/LGouellec/kafka-streams-dotnet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/LGouellec/kafka-streams-dotnet</RepositoryUrl>
+    <PackageTags>kafka kafka-streams kafka-streams-dotnet event-streaming</PackageTags>
+    <PackageReleaseNotes>https://github.com/LGouellec/kafka-streams-dotnet/releases</PackageReleaseNotes>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>C:\Users\Matthew.Healey\source\repos\kafka-streams-net-fork\serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\key.snk" Link="key.snk" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Confluent.SchemaRegistry" Version="1.6.2" />
@@ -10,7 +29,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\core\Streamiz.Kafka.Net.csproj" />
-    <ProjectReference Include="..\..\crosscutting\Streamiz.Kafka.Net.SchemaRegistry.Mock\Streamiz.Kafka.Net.SchemaRegistry.Mock.csproj" />
   </ItemGroup>
 
 </Project>

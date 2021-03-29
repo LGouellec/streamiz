@@ -29,8 +29,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Producer-Avro", "test\Produ
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro", "serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.csproj", "{2BC1A318-1AE9-4A32-B8B1-D8296FABFF8B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streamiz.Kafka.Net.SchemaRegistry.Mock", "crosscutting\Streamiz.Kafka.Net.SchemaRegistry.Mock\Streamiz.Kafka.Net.SchemaRegistry.Mock.csproj", "{74CDFBA3-0596-429C-AB65-1E825ED70EB0}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streamiz.Kafka.Net.SchemaRegistry.SerDes", "serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.csproj", "{4D0FD00A-D2C5-470A-A808-C23F1448E68E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf", "serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf.csproj", "{21CD1F56-F1AF-42BD-877B-43AC36A43793}"
@@ -153,18 +151,6 @@ Global
 		{2BC1A318-1AE9-4A32-B8B1-D8296FABFF8B}.Release|x64.Build.0 = Release|Any CPU
 		{2BC1A318-1AE9-4A32-B8B1-D8296FABFF8B}.Release|x86.ActiveCfg = Release|Any CPU
 		{2BC1A318-1AE9-4A32-B8B1-D8296FABFF8B}.Release|x86.Build.0 = Release|Any CPU
-		{74CDFBA3-0596-429C-AB65-1E825ED70EB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{74CDFBA3-0596-429C-AB65-1E825ED70EB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{74CDFBA3-0596-429C-AB65-1E825ED70EB0}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{74CDFBA3-0596-429C-AB65-1E825ED70EB0}.Debug|x64.Build.0 = Debug|Any CPU
-		{74CDFBA3-0596-429C-AB65-1E825ED70EB0}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{74CDFBA3-0596-429C-AB65-1E825ED70EB0}.Debug|x86.Build.0 = Debug|Any CPU
-		{74CDFBA3-0596-429C-AB65-1E825ED70EB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{74CDFBA3-0596-429C-AB65-1E825ED70EB0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{74CDFBA3-0596-429C-AB65-1E825ED70EB0}.Release|x64.ActiveCfg = Release|Any CPU
-		{74CDFBA3-0596-429C-AB65-1E825ED70EB0}.Release|x64.Build.0 = Release|Any CPU
-		{74CDFBA3-0596-429C-AB65-1E825ED70EB0}.Release|x86.ActiveCfg = Release|Any CPU
-		{74CDFBA3-0596-429C-AB65-1E825ED70EB0}.Release|x86.Build.0 = Release|Any CPU
 		{4D0FD00A-D2C5-470A-A808-C23F1448E68E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4D0FD00A-D2C5-470A-A808-C23F1448E68E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4D0FD00A-D2C5-470A-A808-C23F1448E68E}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -203,7 +189,6 @@ Global
 		{FFD63973-67BE-4142-AC82-A74D487B22B3} = {FFB1B148-D781-4D08-A1E8-4A7F7147FCD4}
 		{A8D0F9DD-AFC2-42E7-BD5B-8E667EEBBFDA} = {E3C25908-114E-4CD0-BD07-4660152F3A70}
 		{2BC1A318-1AE9-4A32-B8B1-D8296FABFF8B} = {3C748A6C-9316-4507-8FEE-77C684C4F028}
-		{74CDFBA3-0596-429C-AB65-1E825ED70EB0} = {3C748A6C-9316-4507-8FEE-77C684C4F028}
 		{4D0FD00A-D2C5-470A-A808-C23F1448E68E} = {3C748A6C-9316-4507-8FEE-77C684C4F028}
 		{21CD1F56-F1AF-42BD-877B-43AC36A43793} = {3C748A6C-9316-4507-8FEE-77C684C4F028}
 	EndGlobalSection

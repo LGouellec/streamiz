@@ -1,0 +1,200 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Streamiz.Kafka.Net.SchemaRegistry.SerDes</name>
+    </assembly>
+    <members>
+        <member name="T:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistry">
+            <summary>
+            Mock schema registry. Save all current mock registry client by scope.
+            This class is thread-safe.
+            If you want remove mock registry client in cache, you can call <see cref="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistry.DropScope(System.String)"/>.
+            </summary>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistry.GetClientForScope(System.String)">
+            <summary>
+            Get client by scope. If client doesn't not exist, it will be create.
+            </summary>
+            <param name="scope">Client scope</param>
+            <returns>Return a mock schema registry client</returns>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistry.DropScope(System.String)">
+            <summary>
+            Drop scope if exists.
+            </summary>
+            <param name="scope">Client scope</param>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistry.DropAllScope">
+            <summary>
+            Drop all scopes.
+            </summary>
+        </member>
+        <member name="T:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistryClient">
+            <summary>
+            Mock schema registry client. Implements <see cref="T:Confluent.SchemaRegistry.ISchemaRegistryClient"/>.
+            </summary>
+        </member>
+        <member name="P:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistryClient.MaxCachedSchemas">
+            <summary>
+            The maximum capacity of the local schema cache. 
+            It's hardcoded to 100.
+            </summary>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistryClient.ConstructKeySubjectName(System.String,System.String)">
+            <summary>
+            DEPRECATED. SubjectNameStrategy should now be specified via serializer configuration.
+            Returns the schema registry key subject name given a topic name.
+            </summary>
+            <param name="topic">The topic name.</param>
+            <param name="recordType">The fully qualified record type.</param>
+            <returns>The key subject name given a topic name.</returns>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistryClient.ConstructValueSubjectName(System.String,System.String)">
+            <summary>
+            DEPRECATED.SubjectNameStrategy should now be specified via serializer configuration.
+            Returns the schema registry value subject name given a topic name.
+            </summary>
+            <param name="topic">The topic name.</param>
+            <param name="recordType">The fully qualified record type.</param>
+            <returns>The value subject name given a topic name.</returns>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistryClient.Dispose">
+            <summary>
+            Disposable method.
+            </summary>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistryClient.GetAllSubjectsAsync">
+            <summary>
+            Gets a list of all subjects with registered schemas.
+            </summary>
+            <returns>A list of all subjects with registered schemas.</returns>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistryClient.GetLatestSchemaAsync(System.String)">
+            <summary>
+            Get the latest schema registered against the specified subject.
+            </summary>
+            <param name="subject">The subject to get the latest associated schema for.</param>
+            <returns>The latest schema registered against subject.</returns>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistryClient.GetRegisteredSchemaAsync(System.String,System.Int32)">
+            <summary>
+            Gets a schema given a subject and version number.
+            </summary>
+            <param name="subject">The subject to get the schema for.</param>
+            <param name="version">The version number of schema to get.</param>
+            <returns>The schema identified by the specified subject and version.</returns>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistryClient.GetSchemaAsync(System.Int32,System.String)">
+            <summary>
+            Gets the schema uniquely identified by id.
+            </summary>
+            <param name="id">The unique id of schema to get.</param>
+            <param name="format">The format of the schema to get.</param>
+            <returns>The schema identified by id.</returns>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistryClient.GetSchemaAsync(System.String,System.Int32)">
+            <summary>
+            DEPRECATED. Superseded by GetRegisteredSchemaAsync(string subject, int version)
+            Gets a schema given a subject and version number.
+            </summary>
+            <param name="subject">The subject to get the schema for.</param>
+            <param name="version">The version number of schema to get.</param>
+            <returns>The schema identified by the specified subject and version.</returns>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistryClient.GetSchemaIdAsync(System.String,System.String)">
+            <summary>
+            Get the unique id of the specified avro schema registered against the specified subject.
+            </summary>
+            <param name="subject">The subject the schema is registered against.</param>
+            <param name="avroSchema">The schema to get the id for.</param>
+            <returns>The unique id identifying the schema.</returns>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistryClient.GetSchemaIdAsync(System.String,Confluent.SchemaRegistry.Schema)">
+            <summary>
+            Get the unique id of the specified schema registered against the specified subject.
+            </summary>
+            <param name="subject">The subject the schema is registered against.</param>
+            <param name="schema">The schema to get the id for.</param>
+            <returns>The unique id identifying the schema.</returns>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistryClient.GetSubjectVersionsAsync(System.String)">
+            <summary>
+            Gets a list of versions registered under the specified subject.
+            </summary>
+            <param name="subject">The subject to get versions registered under.</param>
+            <returns>A list of versions registered under the specified subject.</returns>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistryClient.IsCompatibleAsync(System.String,System.String)">
+            <summary>
+            Check if an avro schema is compatible with latest version registered against
+            a specified subject.
+            </summary>
+            <param name="subject">The subject to check.</param>
+            <param name="avroSchema">The schema to check.</param>
+            <returns>true if avroSchema is compatible with the latest version registered against a specified subject, false otherwise.</returns>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistryClient.IsCompatibleAsync(System.String,Confluent.SchemaRegistry.Schema)">
+            <summary>
+            Check if an avro schema is compatible with latest version registered against
+            a specified subject.
+            </summary>
+            <param name="subject">The subject to check.</param>
+            <param name="schema">The schema to check.</param>
+            <returns>true if avroSchema is compatible with the latest version registered against a specified subject, false otherwise.</returns>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistryClient.LookupSchemaAsync(System.String,Confluent.SchemaRegistry.Schema,System.Boolean)">
+            <summary>
+            NotImplementedException
+            </summary>
+            <param name="subject"></param>
+            <param name="schema"></param>
+            <param name="ignoreDeletedSchemas"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistryClient.RegisterSchemaAsync(System.String,System.String)">
+            <summary>
+            Register an Avro schema or get the schema id if it's already registered.
+            </summary>
+            <param name="subject">The subject to register the schema against.</param>
+            <param name="avroSchema">The schema to register.</param>
+            <returns>A unique id identifying the schema.</returns>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.Mock.MockSchemaRegistryClient.RegisterSchemaAsync(System.String,Confluent.SchemaRegistry.Schema)">
+            <summary>
+            Register an Avro schema or get the schema id if it's already registered.
+            </summary>
+            <param name="subject">The subject to register the schema against.</param>
+            <param name="schema">The schema to register.</param>
+            <returns>A unique id identifying the schema.</returns>
+        </member>
+        <member name="T:Streamiz.Kafka.Net.SchemaRegistry.SerDes.SchemaSerDes`1">
+            <summary>
+            Abstract SerDes for use with schema registries
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.SerDes.SchemaSerDes`1.Deserialize(System.Byte[],Confluent.Kafka.SerializationContext)">
+            <summary>
+            Deserialize a record value from a byte array into <typeparamref name="T"/> value
+            </summary>
+            <param name="data">serialized bytes.</param>
+            <param name="context">serialization context</param>
+            <returns>deserialized <typeparamref name="T"/> using data; may be null</returns>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.SerDes.SchemaSerDes`1.Serialize(`0,Confluent.Kafka.SerializationContext)">
+            <summary>
+            Convert <typeparamref name="T"/> <code>data</code> into a byte array.
+            </summary>
+            <param name="data"><typeparamref name="T"/> data</param>
+            <param name="context">serialization context</param>
+            <returns>serialized bytes</returns>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.SerDes.SchemaSerDes`1.GetSchemaRegistryClient(Confluent.SchemaRegistry.SchemaRegistryConfig)">
+             <summary>
+            
+             </summary>
+             <param name="config"></param>
+             <returns></returns>
+        </member>
+    </members>
+</doc>

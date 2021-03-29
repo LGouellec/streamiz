@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf</name>
+    </assembly>
+    <members>
+        <member name="T:Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf.SchemaProtobufSerDes`1">
+            <summary>
+            SerDes for Protobuf
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="M:Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf.SchemaProtobufSerDes`1.Initialize(Streamiz.Kafka.Net.SerDes.SerDesContext)">
+            <summary>
+            Initialize method with a current context which contains <see cref="T:Streamiz.Kafka.Net.IStreamConfig"/>.
+            Can be used to initialize the serdes according to some parameters present in the configuration such as the schema.registry.url
+            </summary>
+            <param name="context">SerDesContext with stream configuration</param>
+        </member>
+    </members>
+</doc>
