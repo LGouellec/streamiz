@@ -283,7 +283,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual(100, producerConfig.BatchSize);
             Assert.AreEqual(5, producerConfig.StickyPartitioningLingerMs);
 
-            #endregion
+             #endregion
 
             #region ConsumerConfig
             Assert.AreEqual(Confluent.Kafka.Acks.All, consumerConfig.Acks);
@@ -515,6 +515,114 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual("store1", globalConfig.SslCaCertificateStores);
             Assert.AreEqual(true, globalConfig.EnableRandomSeed);
             Assert.AreEqual(60000, globalConfig.TopicMetadataPropagationMaxMs);
+            #endregion
+
+            #region StreamConfig
+            Assert.AreEqual("test", stream.ApplicationId);
+            Assert.AreEqual(Confluent.Kafka.Acks.All, stream.Acks);
+            Assert.AreEqual(1, stream.ApiVersionFallbackMs);
+            Assert.AreEqual(false, stream.ApiVersionRequest);
+            Assert.AreEqual(100, stream.ApiVersionRequestTimeoutMs);
+            Assert.AreEqual(Confluent.Kafka.AutoOffsetReset.Latest, stream.AutoOffsetReset);
+            Assert.AreEqual(42, stream.BatchNumMessages);
+            Assert.AreEqual("127.0.0.1:9092", stream.BootstrapServers);
+            Assert.AreEqual(Confluent.Kafka.BrokerAddressFamily.V4, stream.BrokerAddressFamily);
+            Assert.AreEqual(100, stream.BrokerAddressTtl);
+            Assert.AreEqual("0.12.0", stream.BrokerVersionFallback);
+            Assert.AreEqual(true, stream.CheckCrcs);
+            Assert.AreEqual("test-client", stream.ClientId);
+            Assert.AreEqual("1", stream.ClientRack);
+            Assert.AreEqual(300, stream.CommitIntervalMs);
+            Assert.AreEqual(2, stream.CompressionLevel);
+            Assert.AreEqual(Confluent.Kafka.CompressionType.Snappy, stream.CompressionType);
+            Assert.AreEqual(300, stream.CoordinatorQueryIntervalMs);
+            Assert.AreEqual("all", stream.Debug);
+            Assert.AreEqual("key", stream.DeliveryReportFields);
+            Assert.AreEqual(false, stream.EnableAutoOffsetStore);
+            Assert.AreEqual(false, stream.EnableBackgroundPoll);
+            Assert.AreEqual(false, stream.EnableDeliveryReports);
+            Assert.AreEqual(false, stream.EnableGaplessGuarantee);
+            Assert.AreEqual(true, stream.EnableIdempotence);
+            Assert.AreEqual(true, stream.EnablePartitionEof);
+            Assert.AreEqual(true, stream.EnableSaslOauthbearerUnsecureJwt);
+            Assert.AreEqual(false, stream.EnableSslCertificateVerification);
+            Assert.AreEqual(10, stream.FetchErrorBackoffMs);
+            Assert.AreEqual(10, stream.FetchMaxBytes);
+            Assert.AreEqual(10, stream.FetchMinBytes);
+            Assert.AreEqual(10, stream.FetchWaitMaxMs);
+            Assert.AreEqual("?", stream.GroupProtocolType);
+            Assert.AreEqual(4000, stream.HeartbeatIntervalMs);
+            Assert.AreEqual(1, stream.InternalTerminationSignal);
+            Assert.AreEqual(Confluent.Kafka.IsolationLevel.ReadCommitted, stream.IsolationLevel);
+            Assert.AreEqual(12, stream.LingerMs);
+            Assert.AreEqual(false, stream.LogConnectionClose);
+            Assert.AreEqual(true, stream.LogQueue);
+            Assert.AreEqual(false, stream.LogThreadName);
+            Assert.AreEqual(12, stream.MaxInFlight);
+            Assert.AreEqual(500, stream.MaxPartitionFetchBytes);
+            Assert.AreEqual(400, stream.MaxPollIntervalMs);
+            Assert.AreEqual(40, stream.MessageCopyMaxBytes);
+            Assert.AreEqual(500, stream.MessageMaxBytes);
+            Assert.AreEqual(4, stream.MessageSendMaxRetries);
+            Assert.AreEqual(600, stream.MessageTimeoutMs);
+            Assert.AreEqual(6, stream.MetadataMaxAgeMs);
+            Assert.AreEqual(83, stream.MetadataRequestTimeoutMs);
+            Assert.AreEqual(Confluent.Kafka.Partitioner.Murmur2Random, stream.Partitioner);
+            Assert.AreEqual("D:", stream.PluginLibraryPaths);
+            Assert.AreEqual(10, stream.QueueBufferingBackpressureThreshold);
+            Assert.AreEqual(400, stream.QueueBufferingMaxKbytes);
+            Assert.AreEqual(5, stream.QueueBufferingMaxMessages);
+            Assert.AreEqual(800, stream.QueuedMaxMessagesKbytes);
+            Assert.AreEqual(1, stream.QueuedMinMessages);
+            Assert.AreEqual(1000, stream.ReceiveMessageMaxBytes);
+            Assert.AreEqual(9000, stream.ReconnectBackoffMaxMs);
+            Assert.AreEqual(8000, stream.ReconnectBackoffMs);
+            Assert.AreEqual(16600, stream.RequestTimeoutMs);
+            Assert.AreEqual(600, stream.RetryBackoffMs);
+            Assert.AreEqual("test", stream.SaslKerberosKeytab);
+            Assert.AreEqual("test", stream.SaslKerberosKinitCmd);
+            Assert.AreEqual(600, stream.SaslKerberosMinTimeBeforeRelogin);
+            Assert.AreEqual("Princiapl", stream.SaslKerberosPrincipal);
+            Assert.AreEqual("kerberos", stream.SaslKerberosServiceName);
+            Assert.AreEqual(Confluent.Kafka.SaslMechanism.ScramSha512, stream.SaslMechanism);
+            Assert.AreEqual("ouath", stream.SaslOauthbearerConfig);
+            Assert.AreEqual("test", stream.SaslPassword);
+            Assert.AreEqual("admin", stream.SaslUsername);
+            Assert.AreEqual(Confluent.Kafka.SecurityProtocol.SaslPlaintext, stream.SecurityProtocol);
+            Assert.AreEqual(1000, stream.SessionTimeoutMs);
+            Assert.AreEqual(true, stream.SocketKeepaliveEnable);
+            Assert.AreEqual(2, stream.SocketMaxFails);
+            Assert.AreEqual(true, stream.SocketNagleDisable);
+            Assert.AreEqual(50000, stream.SocketReceiveBufferBytes);
+            Assert.AreEqual(50000, stream.SocketSendBufferBytes);
+            Assert.AreEqual(6000, stream.SocketTimeoutMs);
+            Assert.AreEqual("D:", stream.SslCaLocation);
+            Assert.AreEqual("D:", stream.SslCertificateLocation);
+            Assert.AreEqual("D:", stream.SslCertificatePem);
+            Assert.AreEqual("ciphers", stream.SslCipherSuites);
+            Assert.AreEqual("D:", stream.SslCrlLocation);
+            Assert.AreEqual("", stream.SslCurvesList);
+            Assert.AreEqual(Confluent.Kafka.SslEndpointIdentificationAlgorithm.Https, stream.SslEndpointIdentificationAlgorithm);
+            Assert.AreEqual("C:", stream.SslKeyLocation);
+            Assert.AreEqual("test", stream.SslKeyPassword);
+            Assert.AreEqual("pem", stream.SslKeyPem);
+            Assert.AreEqual("J:", stream.SslKeystoreLocation);
+            Assert.AreEqual("password", stream.SslKeystorePassword);
+            Assert.AreEqual("oepn", stream.SslSigalgsList);
+            Assert.AreEqual(14, stream.StatisticsIntervalMs);
+            Assert.AreEqual("*", stream.TopicBlacklist);
+            Assert.AreEqual(500, stream.TopicMetadataRefreshFastIntervalMs.Value);
+            Assert.AreEqual(200, stream.TopicMetadataRefreshIntervalMs);
+            Assert.AreEqual(false, stream.TopicMetadataRefreshSparse);
+            Assert.AreEqual("transac", stream.TransactionalId);
+            Assert.AreEqual(TimeSpan.FromSeconds(1), stream.TransactionTimeout);
+            Assert.AreEqual(400, stream.TransactionTimeoutMs);
+            Assert.AreEqual("store1", stream.SslCaCertificateStores);
+            Assert.AreEqual(true, stream.EnableRandomSeed);
+            Assert.AreEqual(60000, stream.TopicMetadataPropagationMaxMs);
+            Assert.AreEqual(true, stream.AllowAutoCreateTopics);
+            Assert.AreEqual(100, stream.BatchSize);
+            Assert.AreEqual(5, stream.StickyPartitioningLingerMs);
             #endregion
         }
     }

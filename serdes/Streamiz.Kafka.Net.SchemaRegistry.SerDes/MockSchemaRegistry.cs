@@ -1,7 +1,7 @@
 ﻿using Confluent.SchemaRegistry;
 using System.Collections.Generic;
 
-namespace Streamiz.Kafka.Net.SchemaRegistry.Mock
+namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
 {
     /// <summary>
     /// Mock schema registry. Save all current mock registry client by scope.
@@ -11,6 +11,7 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.Mock
     public class MockSchemaRegistry
     {
         private readonly static object _lock = new object();
+
         private readonly static IDictionary<string, ISchemaRegistryClient> scopedClients
             = new Dictionary<string, ISchemaRegistryClient>();
 

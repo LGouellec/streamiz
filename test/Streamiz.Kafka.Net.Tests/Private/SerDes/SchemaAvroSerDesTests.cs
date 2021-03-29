@@ -2,10 +2,12 @@
 using Avro.Specific;
 using Confluent.Kafka;
 using Confluent.SchemaRegistry;
+using Confluent.SchemaRegistry.Serdes;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock;
-using Streamiz.Kafka.Net.SchemaRegistry.Mock;
+using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock;
 using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
@@ -20,6 +22,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         public static Avro.Schema _SCHEMA = Avro.Schema.Parse("{\"type\":\"record\",\"name\":\"Person\",\"namespace\":\"Streamiz.Kafka.Net.Tests.Private.SerDes\",\"fields\":[{\"name\":\"f" +
                 "irstName\",\"type\":\"string\"},{\"name\":\"lastName\",\"type\":\"string\"},{\"name\":\"age\",\"ty" +
                 "pe\":\"int\"}]}");
+
         private string _firstName;
         private string _lastName;
         private int _age;
@@ -43,6 +46,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
                 _firstName = value;
             }
         }
+
         public string lastName
         {
             get
@@ -54,6 +58,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
                 _lastName = value;
             }
         }
+
         public int age
         {
             get
@@ -65,6 +70,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
                 _age = value;
             }
         }
+
         public virtual object Get(int fieldPos)
         {
             switch (fieldPos)
@@ -75,6 +81,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
                 default: throw new AvroRuntimeException("Bad index " + fieldPos + " in Get()");
             };
         }
+
         public virtual void Put(int fieldPos, object fieldValue)
         {
             switch (fieldPos)
@@ -93,20 +100,106 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
     {
         private readonly MockSchemaRegistryClient mockClient;
 
+        internal MockSchemaRegistryClient Client => mockClient;
+        internal AvroSerializer<Person> AvroSerializer => (AvroSerializer<Person>)serializer;
+
         public MockAvroSerDes(MockSchemaRegistryClient mockClient)
         {
             this.mockClient = mockClient;
         }
 
         protected override ISchemaRegistryClient GetSchemaRegistryClient(SchemaRegistryConfig config)
-            => mockClient;
+        {
+            mockClient.UseConfiguration(config);
+            return mockClient;
+        }
     }
 
-    #endregion
+    #endregion Mock
 
     public class SchemaAvroSerDesTests
     {
-        readonly string topic = "person";
+        internal class MockConfig : IStreamConfig
+        {
+            public Func<Exception, ExceptionHandlerResponse> InnerExceptionHandler { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public Func<ProcessorContext, ConsumeResult<byte[], byte[]>, Exception, ExceptionHandlerResponse> DeserializationExceptionHandler { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public int? MaxPollIntervalMs { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public long MaxPollRecords { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public long PollMs { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public long CommitIntervalMs { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public int MetadataRequestTimeoutMs { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public TimeSpan TransactionTimeout { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public string TransactionalId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public string ApplicationId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public string ClientId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public int NumStreamThreads { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public ISerDes DefaultKeySerDes { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public ISerDes DefaultValueSerDes { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public ITimestampExtractor DefaultTimestampExtractor { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public ProcessingGuarantee Guarantee { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public string BootstrapServers { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public long MaxTaskIdleMs { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public long BufferedRecordsPerPartition { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public bool FollowMetadata { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+            public void AddAdminConfig(string key, string value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void AddConfig(string key, string value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void AddConsumerConfig(string key, string value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void AddProducerConfig(string key, string value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public IStreamConfig Clone()
+            {
+                throw new NotImplementedException();
+            }
+
+            public AdminClientConfig ToAdminConfig(string clientId)
+            {
+                throw new NotImplementedException();
+            }
+
+            public ConsumerConfig ToConsumerConfig()
+            {
+                throw new NotImplementedException();
+            }
+
+            public ConsumerConfig ToConsumerConfig(string clientId)
+            {
+                throw new NotImplementedException();
+            }
+
+            public ConsumerConfig ToGlobalConsumerConfig(string clientId)
+            {
+                throw new NotImplementedException();
+            }
+
+            public ProducerConfig ToProducerConfig()
+            {
+                throw new NotImplementedException();
+            }
+
+            public ProducerConfig ToProducerConfig(string clientId)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        private readonly string topic = "person";
 
         [Test]
         public void DeserializeWithoutInit()
@@ -380,6 +473,45 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
                         });
                 }
             });
+        }
+
+        [Test]
+        public void IncorrectConfigurationInterface()
+        {
+            var mockSchemaClient = new MockSchemaRegistryClient();
+            var config = new MockConfig();
+            var serdes = new MockAvroSerDes(mockSchemaClient);
+            Assert.Throws<StreamConfigException>(() => serdes.Initialize(new Net.SerDes.SerDesContext(config)));
+        }
+
+        [Test]
+        public void SchemaRegistryConfig()
+        {
+            var mockSchemaClient = new MockSchemaRegistryClient();
+            var config = new StreamConfig();
+            config.AutoRegisterSchemas = true;
+            config.SchemaRegistryMaxCachedSchemas = 1;
+            config.SchemaRegistryRequestTimeoutMs = 30;
+            config.SubjectNameStrategy = SubjectNameStrategy.TopicRecord;
+
+            var serdes = new MockAvroSerDes(mockSchemaClient);
+            serdes.Initialize(new Net.SerDes.SerDesContext(config));
+
+            Assert.AreEqual(1, mockSchemaClient.MaxCachedSchemas);
+            Assert.AreEqual(30, mockSchemaClient.RequestTimeoutMs);
+        }
+
+        [Test]
+        public void DefaultSchemaRegistryConfig()
+        {
+            var mockSchemaClient = new MockSchemaRegistryClient();
+            var config = new StreamConfig();
+
+            var serdes = new MockAvroSerDes(mockSchemaClient);
+            serdes.Initialize(new Net.SerDes.SerDesContext(config));
+
+            Assert.AreEqual(100, mockSchemaClient.MaxCachedSchemas);
+            Assert.AreEqual(30000, mockSchemaClient.RequestTimeoutMs);
         }
     }
 }

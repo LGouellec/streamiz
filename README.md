@@ -16,7 +16,7 @@
 </div>
 <br/>
 
-<img src="./resources/logo-kafka-stream-net.png" width="100">
+<img src="./resources/logo-kafka-stream-net.png" width="150">
 
 ----
 
@@ -101,7 +101,8 @@ static async System.Threading.Tasks.Task Main(string[] args)
 - [ ] Repartition topic
 - [ ] Repartition Processor [KAFKA-8611](https://issues.apache.org/jira/browse/KAFKA-8611) | [PR #7170](https://github.com/apache/kafka/pull/7170)
 - [ ] Processor API
-- [ ] Sample projects (Micro-services, console sample, topology implementation, etc ..) which use Streamiz package
+- [ ] Sample projects (Micro-services, console sample, topology implementation, etc ..) which use Streamiz package ([see](https://github.com/LGouellec/kafka-streams-dotnet-samples))
+- [ ] Protobuf & Json SerDes which interact Confluent Schema Registry
 - [ ] Optimizing Kafka Streams Topologies
 - [ ] Standby Replica
 - [ ] Interactive Queries
@@ -116,7 +117,6 @@ Owners:
 Maintainers:
 
 - [lgouellec](https://github.com/LGouellec)
-- [mmoron](https://github.com/mmoron)
 
 **Streamiz Kafka .Net** is a community project. We invite your participation through issues and pull requests! You can peruse the [contributing guidelines](CONTRIBUTING.md).
 

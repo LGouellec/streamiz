@@ -2,6 +2,7 @@
 using Confluent.Kafka.SyncOverAsync;
 using Confluent.SchemaRegistry;
 using Confluent.SchemaRegistry.Serdes;
+using Google.Protobuf;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock;
 using Streamiz.Kafka.Net.SerDes;
@@ -9,14 +10,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
+namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf
 {
     /// <summary>
-    /// SerDes for avro beans
+    /// SerDes for Protobuf
     /// </summary>
-    /// <typeparam name="T">type of avro bean
-    /// </typeparam>
-    public class SchemaAvroSerDes<T> : SchemaSerDes<T>
+    /// <typeparam name="T"></typeparam>
+    public class SchemaProtobufSerDes<T> : SchemaSerDes<T> where T : class, IMessage<T>, new()
     {
         private Confluent.SchemaRegistry.SchemaRegistryConfig GetConfig(ISchemaRegistryConfig config)
         {
@@ -35,9 +35,9 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
             return c;
         }
 
-        private Confluent.SchemaRegistry.Serdes.AvroSerializerConfig GetSerializerConfig(ISchemaRegistryConfig config)
+        private Confluent.SchemaRegistry.Serdes.ProtobufSerializerConfig GetSerializerConfig(ISchemaRegistryConfig config)
         {
-            Confluent.SchemaRegistry.Serdes.AvroSerializerConfig c = new Confluent.SchemaRegistry.Serdes.AvroSerializerConfig();
+            Confluent.SchemaRegistry.Serdes.ProtobufSerializerConfig c = new Confluent.SchemaRegistry.Serdes.ProtobufSerializerConfig();
             if (config.AutoRegisterSchemas.HasValue)
             {
                 c.AutoRegisterSchemas = config.AutoRegisterSchemas;
@@ -63,14 +63,14 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
                     var schemaConfig = context.Config as ISchemaRegistryConfig;
 
                     registryClient = GetSchemaRegistryClient(GetConfig(schemaConfig));
-                    deserializer = new AvroDeserializer<T>(registryClient);
-                    serializer = new AvroSerializer<T>(registryClient, GetSerializerConfig(schemaConfig));
+                    deserializer = new ProtobufDeserializer<T>(schemaConfig as Config);
+                    serializer = new ProtobufSerializer<T>(registryClient, GetSerializerConfig(schemaConfig));
 
                     isInitialized = true;
                 }
                 else
                 {
-                    throw new StreamConfigException($"Configuration must inherited from ISchemaRegistryConfig for SchemaAvroSerDes<{typeof(T).Name}");
+                    throw new StreamConfigException($"Configuration must inherited from ISchemaRegistryConfig for SchemaProtobufSerDes<{typeof(T).Name}");
                 }
             }
         }
