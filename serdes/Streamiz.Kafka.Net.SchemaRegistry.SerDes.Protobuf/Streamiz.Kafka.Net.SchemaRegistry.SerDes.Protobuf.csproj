@@ -15,7 +15,8 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>C:\Users\Matthew.Healey\source\repos\kafka-streams-net-fork\serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\netstandard2.1\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf.xml</DocumentationFile>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
