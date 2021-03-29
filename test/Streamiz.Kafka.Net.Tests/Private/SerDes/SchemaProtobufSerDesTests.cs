@@ -2,6 +2,7 @@
 using Avro.Specific;
 using Confluent.Kafka;
 using Confluent.SchemaRegistry;
+using Moq;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock;
@@ -27,7 +28,10 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         }
 
         protected override ISchemaRegistryClient GetSchemaRegistryClient(SchemaRegistryConfig config)
-            => mockClient;
+        {
+            mockClient.UseConfiguration(config);
+            return mockClient;
+        }
     }
 
     #endregion Mock
@@ -309,5 +313,45 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
                 }
             });
         }
+
+        [Test]
+        public void IncorrectConfigurationInterface()
+        {
+            var mockSchemaClient = new MockSchemaRegistryClient();
+            var config = new Mock<IStreamConfig>();
+            var serdes = new MockProtoSerDes(mockSchemaClient);
+            Assert.Throws<StreamConfigException>(() => serdes.Initialize(new Net.SerDes.SerDesContext(config.Object)));
+        }
+
+        [Test]
+        public void SchemaRegistryConfig()
+        {
+            var mockSchemaClient = new MockSchemaRegistryClient();
+            var config = new StreamConfig();
+            config.AutoRegisterSchemas = true;
+            config.SchemaRegistryMaxCachedSchemas = 1;
+            config.SchemaRegistryRequestTimeoutMs = 30;
+            config.SubjectNameStrategy = SubjectNameStrategy.TopicRecord;
+
+            var serdes = new MockProtoSerDes(mockSchemaClient);
+            serdes.Initialize(new Net.SerDes.SerDesContext(config));
+
+            Assert.AreEqual(1, mockSchemaClient.MaxCachedSchemas);
+            Assert.AreEqual(30, mockSchemaClient.RequestTimeoutMs);
+        }
+
+        [Test]
+        public void DefaultSchemaRegistryConfig()
+        {
+            var mockSchemaClient = new MockSchemaRegistryClient();
+            var config = new StreamConfig();
+
+            var serdes = new MockProtoSerDes(mockSchemaClient);
+            serdes.Initialize(new Net.SerDes.SerDesContext(config));
+
+            Assert.AreEqual(100, mockSchemaClient.MaxCachedSchemas);
+            Assert.AreEqual(30000, mockSchemaClient.RequestTimeoutMs);
+        }
+
     }
 }

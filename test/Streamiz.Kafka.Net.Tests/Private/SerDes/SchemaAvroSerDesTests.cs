@@ -14,6 +14,7 @@ using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Tests.Helpers.Bean.Avro;
 using System;
 using System.Linq;
+using Moq;
 
 namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 {
@@ -119,86 +120,6 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 
     public class SchemaAvroSerDesTests
     {
-        internal class MockConfig : IStreamConfig
-        {
-            public Func<Exception, ExceptionHandlerResponse> InnerExceptionHandler { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public Func<ProcessorContext, ConsumeResult<byte[], byte[]>, Exception, ExceptionHandlerResponse> DeserializationExceptionHandler { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public int? MaxPollIntervalMs { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public long MaxPollRecords { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public long PollMs { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public long CommitIntervalMs { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public int MetadataRequestTimeoutMs { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public TimeSpan TransactionTimeout { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public string TransactionalId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public string ApplicationId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public string ClientId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public int NumStreamThreads { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public ISerDes DefaultKeySerDes { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public ISerDes DefaultValueSerDes { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public ITimestampExtractor DefaultTimestampExtractor { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public ProcessingGuarantee Guarantee { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public string BootstrapServers { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public long MaxTaskIdleMs { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public long BufferedRecordsPerPartition { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public bool FollowMetadata { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-            public void AddAdminConfig(string key, string value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AddConfig(string key, string value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AddConsumerConfig(string key, string value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AddProducerConfig(string key, string value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IStreamConfig Clone()
-            {
-                throw new NotImplementedException();
-            }
-
-            public AdminClientConfig ToAdminConfig(string clientId)
-            {
-                throw new NotImplementedException();
-            }
-
-            public ConsumerConfig ToConsumerConfig()
-            {
-                throw new NotImplementedException();
-            }
-
-            public ConsumerConfig ToConsumerConfig(string clientId)
-            {
-                throw new NotImplementedException();
-            }
-
-            public ConsumerConfig ToGlobalConsumerConfig(string clientId)
-            {
-                throw new NotImplementedException();
-            }
-
-            public ProducerConfig ToProducerConfig()
-            {
-                throw new NotImplementedException();
-            }
-
-            public ProducerConfig ToProducerConfig(string clientId)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
         private readonly string topic = "person";
 
         [Test]
@@ -479,9 +400,9 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         public void IncorrectConfigurationInterface()
         {
             var mockSchemaClient = new MockSchemaRegistryClient();
-            var config = new MockConfig();
+            var config = new Mock<IStreamConfig>();
             var serdes = new MockAvroSerDes(mockSchemaClient);
-            Assert.Throws<StreamConfigException>(() => serdes.Initialize(new Net.SerDes.SerDesContext(config)));
+            Assert.Throws<StreamConfigException>(() => serdes.Initialize(new Net.SerDes.SerDesContext(config.Object)));
         }
 
         [Test]
