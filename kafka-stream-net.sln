@@ -31,9 +31,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streamiz.Kafka.Net.SchemaRe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streamiz.Kafka.Net.SchemaRegistry.Mock", "crosscutting\Streamiz.Kafka.Net.SchemaRegistry.Mock\Streamiz.Kafka.Net.SchemaRegistry.Mock.csproj", "{74CDFBA3-0596-429C-AB65-1E825ED70EB0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streamiz.Kafka.Net.SchemaRegistry.SerDes.Proto", "Streamiz.Kafka.Net.SchemaRegistry.SerDes.Proto\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Proto.csproj", "{F8514EA9-DBF9-483A-85B9-6D7CCBBEB50D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf", "Streamiz.Kafka.Net.SchemaRegistry.SerDes.Proto\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf.csproj", "{F8514EA9-DBF9-483A-85B9-6D7CCBBEB50D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Streamiz.Kafka.Net.SchemaRegistry.SerDes", "Streamiz.Kafka.Net.SchemaRegistry.SerDes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.csproj", "{DAAEF426-D626-41E1-BD05-EBE3C8C25A7E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streamiz.Kafka.Net.SchemaRegistry.SerDes", "Streamiz.Kafka.Net.SchemaRegistry.SerDes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.csproj", "{DAAEF426-D626-41E1-BD05-EBE3C8C25A7E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

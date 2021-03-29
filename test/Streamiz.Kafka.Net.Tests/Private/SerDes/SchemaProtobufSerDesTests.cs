@@ -6,7 +6,7 @@ using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.SchemaRegistry.Mock;
-using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Proto;
+using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Tests.Helpers.Proto;
@@ -17,7 +17,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 {
     #region Mock
 
-    internal class MockProtoSerDes : SchemaProtoSerDes<Helpers.Proto.Person>
+    internal class MockProtoSerDes : SchemaProtobufSerDes<Helpers.Proto.Person>
     {
         private readonly MockSchemaRegistryClient mockClient;
 
@@ -32,14 +32,14 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 
     #endregion Mock
 
-    public class SchemaProtoSerDesTests
+    public class SchemaProtobufSerDesTests
     {
         private readonly string topic = "person";
 
         [Test]
         public void DeserializeWithoutInit()
         {
-            var serdes = new SchemaProtoSerDes<Helpers.Proto.Person>();
+            var serdes = new SchemaProtobufSerDes<Helpers.Proto.Person>();
             Assert.Throws<StreamsException>(() => serdes.Deserialize(null, new Confluent.Kafka.SerializationContext()));
             Assert.Throws<StreamsException>(() => serdes.DeserializeObject(null, new Confluent.Kafka.SerializationContext()));
         }
@@ -47,7 +47,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         [Test]
         public void SerializeWithoutInit()
         {
-            var serdes = new SchemaProtoSerDes<Helpers.Proto.Person>();
+            var serdes = new SchemaProtobufSerDes<Helpers.Proto.Person>();
             Assert.Throws<StreamsException>(() => serdes.Serialize(null, new Confluent.Kafka.SerializationContext()));
             Assert.Throws<StreamsException>(() => serdes.SerializeObject(null, new Confluent.Kafka.SerializationContext()));
         }
@@ -117,7 +117,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var config = new StreamConfig();
             config.ApplicationId = "test-workflow-avroserdes";
             config.DefaultKeySerDes = new StringSerDes();
-            config.DefaultValueSerDes = new SchemaProtoSerDes<Helpers.Proto.Person>();
+            config.DefaultValueSerDes = new SchemaProtobufSerDes<Helpers.Proto.Person>();
 
             var builder = new StreamBuilder();
             builder
@@ -183,7 +183,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 
             StreamBuilder builder = new StreamBuilder();
 
-            var ss = builder.Stream<string, Order, StringSerDes, SchemaProtoSerDes<Order>>("test-topic")
+            var ss = builder.Stream<string, Order, StringSerDes, SchemaProtobufSerDes<Order>>("test-topic")
             .Peek((k, v) =>
             {
                 Console.WriteLine($"Order #  {v.OrderId }");
@@ -193,7 +193,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 
             using (var driver = new TopologyTestDriver(t, config))
             {
-                var inputTopic = driver.CreateInputTopic<string, Order, StringSerDes, SchemaProtoSerDes<Order>>("test-topic");
+                var inputTopic = driver.CreateInputTopic<string, Order, StringSerDes, SchemaProtobufSerDes<Order>>("test-topic");
                 inputTopic.PipeInput("test",
                     new Order
                     {
@@ -213,7 +213,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         [Test]
         public void TestMockSchemaRegistryInputOutput()
         {
-            var config = new StreamConfig<StringSerDes, SchemaProtoSerDes<Order>>();
+            var config = new StreamConfig<StringSerDes, SchemaProtobufSerDes<Order>>();
             config.ApplicationId = "test-mock-registry";
             config.SchemaRegistryUrl = "mock://test";
 
@@ -253,7 +253,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 
             StreamBuilder builder = new StreamBuilder();
 
-            var ss = builder.Stream<string, Order, StringSerDes, SchemaProtoSerDes<Order>>("test-topic")
+            var ss = builder.Stream<string, Order, StringSerDes, SchemaProtobufSerDes<Order>>("test-topic")
             .Peek((k, v) =>
             {
                 Console.WriteLine($"Order #  {v.OrderId }");
@@ -265,7 +265,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             {
                 using (var driver = new TopologyTestDriver(t, config))
                 {
-                    var inputTopic = driver.CreateInputTopic<string, Order, StringSerDes, SchemaProtoSerDes<Order>>("test-topic");
+                    var inputTopic = driver.CreateInputTopic<string, Order, StringSerDes, SchemaProtobufSerDes<Order>>("test-topic");
                     inputTopic.PipeInput("test",
                         new Order
                         {
@@ -286,7 +286,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 
             StreamBuilder builder = new StreamBuilder();
 
-            var ss = builder.Stream<string, Order, StringSerDes, SchemaProtoSerDes<Order>>("test-topic")
+            var ss = builder.Stream<string, Order, StringSerDes, SchemaProtobufSerDes<Order>>("test-topic")
             .Peek((k, v) =>
             {
                 Console.WriteLine($"Order #  {v.OrderId }");
@@ -298,7 +298,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             {
                 using (var driver = new TopologyTestDriver(t, config))
                 {
-                    var inputTopic = driver.CreateInputTopic<string, Order, StringSerDes, SchemaProtoSerDes<Order>>("test-topic");
+                    var inputTopic = driver.CreateInputTopic<string, Order, StringSerDes, SchemaProtobufSerDes<Order>>("test-topic");
                     inputTopic.PipeInput("test",
                         new Order
                         {

@@ -10,13 +10,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Proto
+namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf
 {
     /// <summary>
     /// SerDes for Protobuf
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class SchemaProtoSerDes<T> : SchemaSerDes<T> where T : class, IMessage<T>, new()
+    public class SchemaProtobufSerDes<T> : SchemaSerDes<T> where T : class, IMessage<T>, new()
     {
         private Confluent.SchemaRegistry.SchemaRegistryConfig GetConfig(ISchemaRegistryConfig config)
         {
@@ -70,7 +70,7 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Proto
                 }
                 else
                 {
-                    throw new StreamConfigException($"Configuration must inherited from ISchemaRegistryConfig for SchemaProtoSerDes<{typeof(T).Name}");
+                    throw new StreamConfigException($"Configuration must inherited from ISchemaRegistryConfig for SchemaProtobufSerDes<{typeof(T).Name}");
                 }
             }
         }
