@@ -5,7 +5,7 @@ using Confluent.SchemaRegistry;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock;
-using Streamiz.Kafka.Net.SchemaRegistry.Mock;
+using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock;
 using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;

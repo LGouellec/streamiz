@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Streamiz.Kafka.Net.SchemaRegistry.Mock
+namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
 {
     /// <summary>
     /// Mock schema registry client. Implements <see cref="ISchemaRegistryClient"/>.
@@ -23,8 +23,9 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.Mock
         private readonly Dictionary<string, List<RegisterSchema>> schemas = new Dictionary<string, List<RegisterSchema>>();
 
         #region ISchemaRegistryClient Impl
+
         /// <summary>
-        /// The maximum capacity of the local schema cache. 
+        /// The maximum capacity of the local schema cache.
         /// It's hardcoded to 100.
         /// </summary>
         public int MaxCachedSchemas { get; private set; } = 100;
@@ -297,6 +298,6 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.Mock
         public Task<int> RegisterSchemaAsync(string subject, Schema schema)
             => RegisterSchemaAsync(subject, schema.SchemaString);
 
-        #endregion
+        #endregion ISchemaRegistryClient Impl
     }
 }

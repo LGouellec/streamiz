@@ -4,7 +4,7 @@ using Confluent.SchemaRegistry;
 using Confluent.SchemaRegistry.Serdes;
 using Google.Protobuf;
 using Streamiz.Kafka.Net.Errors;
-using Streamiz.Kafka.Net.SchemaRegistry.Mock;
+using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
