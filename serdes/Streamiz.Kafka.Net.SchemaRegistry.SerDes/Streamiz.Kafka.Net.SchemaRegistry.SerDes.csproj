@@ -9,8 +9,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\core\Streamiz.Kafka.Net.csproj" />
-    <ProjectReference Include="..\crosscutting\Streamiz.Kafka.Net.SchemaRegistry.Mock\Streamiz.Kafka.Net.SchemaRegistry.Mock.csproj" />
+    <ProjectReference Include="..\..\core\Streamiz.Kafka.Net.csproj" />
+    <ProjectReference Include="..\..\crosscutting\Streamiz.Kafka.Net.SchemaRegistry.Mock\Streamiz.Kafka.Net.SchemaRegistry.Mock.csproj" />
   </ItemGroup>
 
 </Project>
