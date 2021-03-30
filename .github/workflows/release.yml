@@ -19,12 +19,14 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
-      run: dotnet test --no-restore --verbosity normal
+      run: dotnet test --no-build --no-restore --verbosity normal -f net5.0
     - name: Pack Core
       run: dotnet pack core/Streamiz.Kafka.Net.csproj  --configuration Release --include-source --include-symbols --no-build --no-restore
-    - name: Pack Registry Mock
-      run: dotnet pack crosscutting/Streamiz.Kafka.Net.SchemaRegistry.Mock/Streamiz.Kafka.Net.SchemaRegistry.Mock.csproj  --configuration Release --include-source --include-symbols --no-build --no-restore
+    - name: Pack Registry Serdes
+      run: dotnet pack serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.csproj  --configuration Release --include-source --include-symbols --no-build --no-restore
     - name: Pack Registry.Avro
       run: dotnet pack serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.csproj  --configuration Release --include-source --include-symbols --no-build --no-restore
+    - name: Pack Registry.Protobuf
+      run: dotnet pack serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf.csproj  --configuration Release --include-source --include-symbols --no-build --no-restore
     - name: Publish in nuget.org
       run: dotnet nuget push **/*symbols.nupkg -k ${{ secrets.NUGET_PACKAGE_TOKEN }} -s https://api.nuget.org/v3/index.json --no-symbols true      
