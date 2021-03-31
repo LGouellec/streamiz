@@ -97,6 +97,8 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             => Current.HasValue ? Current.Value.Key : null;
 
         public void Reset()
-            => Dispose();
+        {
+            iterator = iterator.SeekToFirst();
+        }
     }
 }

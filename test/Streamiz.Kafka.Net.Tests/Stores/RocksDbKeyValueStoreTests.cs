@@ -2,6 +2,7 @@
 using Moq;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
@@ -49,6 +50,12 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         {
             stateManager.Close();
             Directory.Delete(Path.Combine(config.StateDir, config.ApplicationId), true);
+        }
+
+        [Test]
+        public void TestConfig()
+        {
+            Assert.AreEqual($"{Path.Combine(config.StateDir, config.ApplicationId, id.ToString())}", context.StateDir);
         }
 
         [Test]
@@ -138,6 +145,31 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             store.PutIfAbsent(new Bytes(key3), value3);
 
             Assert.AreEqual(1, store.ApproximateNumEntries());
+        }
+
+        [Test]
+        public void EmptyEnumerator()
+        {
+            var enumerator = store.All().GetEnumerator();
+            Assert.Throws<NotMoreValueException>(() =>
+            {
+                var a = enumerator.Current;
+            });
+        }
+
+        [Test]
+        public void EnumeratorReset()
+        {
+            var serdes = new StringSerDes();
+            byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
+
+            store.Put(new Bytes(key), value);
+
+            var enumerator = store.All().GetEnumerator();
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsFalse(enumerator.MoveNext());
+            enumerator.Reset();
+            Assert.IsTrue(enumerator.MoveNext());
         }
     }
 }
