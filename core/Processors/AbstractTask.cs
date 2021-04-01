@@ -59,6 +59,11 @@ namespace Streamiz.Kafka.Net.Processors
 
         public void RequestCommit() => commitRequested = true;
 
+        public bool IsPersistent
+             => stateMgr.StateStoreNames
+                    .Select(n => stateMgr.GetStore(n))
+                    .Any((s) => s.Persistent);
+
         #region Abstract
 
         public abstract PartitionGrouper Grouper { get; }

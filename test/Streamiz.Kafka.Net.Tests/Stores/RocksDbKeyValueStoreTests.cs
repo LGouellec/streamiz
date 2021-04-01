@@ -48,6 +48,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         [TearDown]
         public void End()
         {
+            store.Flush();
             stateManager.Close();
             Directory.Delete(Path.Combine(config.StateDir, config.ApplicationId), true);
         }
@@ -136,6 +137,21 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         }
 
         [Test]
+        public void PutAllWithValueNull()
+        {
+            var serdes = new StringSerDes();
+            byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
+
+            var items = new List<KeyValuePair<Bytes, byte[]>>();
+            items.Add(KeyValuePair.Create(new Bytes(key), value));
+            items.Add(KeyValuePair.Create(new Bytes(key), (byte[])null));
+
+            store.PutAll(items);
+
+            Assert.AreEqual(0, store.ApproximateNumEntries());
+        }
+
+        [Test]
         public void PutIfAbsent()
         {
             var serdes = new StringSerDes();
@@ -145,6 +161,13 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             store.PutIfAbsent(new Bytes(key3), value3);
 
             Assert.AreEqual(1, store.ApproximateNumEntries());
+        }
+
+        //RocksDbException  
+        [Test]
+        public void PutThrowRocksDbException()
+        {
+
         }
 
         [Test]

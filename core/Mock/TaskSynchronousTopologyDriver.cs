@@ -7,6 +7,7 @@ using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 
@@ -112,7 +113,13 @@ namespace Streamiz.Kafka.Net.Mock
         public void Dispose()
         {
             foreach (var t in tasks.Values)
+            {
                 t.Close();
+
+                // Remove local state store for this task
+                if (t.IsPersistent)
+                    Directory.Delete(t.Context.StateDir, true);
+            }
             
             IsRunning = false;
         }
