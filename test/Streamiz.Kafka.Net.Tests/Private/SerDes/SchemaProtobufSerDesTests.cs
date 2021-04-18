@@ -2,111 +2,27 @@
 using Avro.Specific;
 using Confluent.Kafka;
 using Confluent.SchemaRegistry;
-using Confluent.SchemaRegistry.Serdes;
 using Moq;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock;
-using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock;
-using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro;
+using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf;
 using Streamiz.Kafka.Net.SerDes;
-using Streamiz.Kafka.Net.State.RocksDb;
 using Streamiz.Kafka.Net.Stream;
-using Streamiz.Kafka.Net.Tests.Helpers.Bean.Avro;
+using Streamiz.Kafka.Net.Tests.Helpers.Proto;
 using System;
 using System.Linq;
-using Moq;
 
 namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 {
-    public partial class Person : ISpecificRecord
-    {
-        public static Avro.Schema _SCHEMA = Avro.Schema.Parse("{\"type\":\"record\",\"name\":\"Person\",\"namespace\":\"Streamiz.Kafka.Net.Tests.Private.SerDes\",\"fields\":[{\"name\":\"f" +
-                "irstName\",\"type\":\"string\"},{\"name\":\"lastName\",\"type\":\"string\"},{\"name\":\"age\",\"ty" +
-                "pe\":\"int\"}]}");
-
-        private string _firstName;
-        private string _lastName;
-        private int _age;
-
-        public virtual Avro.Schema Schema
-        {
-            get
-            {
-                return Person._SCHEMA;
-            }
-        }
-
-        public string firstName
-        {
-            get
-            {
-                return _firstName;
-            }
-            set
-            {
-                _firstName = value;
-            }
-        }
-
-        public string lastName
-        {
-            get
-            {
-                return _lastName;
-            }
-            set
-            {
-                _lastName = value;
-            }
-        }
-
-        public int age
-        {
-            get
-            {
-                return _age;
-            }
-            set
-            {
-                _age = value;
-            }
-        }
-
-        public virtual object Get(int fieldPos)
-        {
-            switch (fieldPos)
-            {
-                case 0: return firstName;
-                case 1: return lastName;
-                case 2: return age;
-                default: throw new AvroRuntimeException("Bad index " + fieldPos + " in Get()");
-            };
-        }
-
-        public virtual void Put(int fieldPos, object fieldValue)
-        {
-            switch (fieldPos)
-            {
-                case 0: firstName = (System.String)fieldValue; break;
-                case 1: lastName = (System.String)fieldValue; break;
-                case 2: age = (System.Int32)fieldValue; break;
-                default: throw new AvroRuntimeException("Bad index " + fieldPos + " in Put()");
-            };
-        }
-    }
-
     #region Mock
 
-    internal class MockAvroSerDes : SchemaAvroSerDes<Person>
+    internal class MockProtoSerDes : SchemaProtobufSerDes<Helpers.Proto.Person>
     {
         private readonly MockSchemaRegistryClient mockClient;
 
-        internal MockSchemaRegistryClient Client => mockClient;
-        internal AvroSerializer<Person> AvroSerializer => (AvroSerializer<Person>)serializer;
-
-        public MockAvroSerDes(MockSchemaRegistryClient mockClient)
+        public MockProtoSerDes(MockSchemaRegistryClient mockClient)
         {
             this.mockClient = mockClient;
         }
@@ -120,14 +36,14 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 
     #endregion Mock
 
-    public class SchemaAvroSerDesTests
+    public class SchemaProtobufSerDesTests
     {
-        readonly string topic = "person";
+        private readonly string topic = "person";
 
         [Test]
         public void DeserializeWithoutInit()
         {
-            var serdes = new SchemaAvroSerDes<Person>();
+            var serdes = new SchemaProtobufSerDes<Helpers.Proto.Person>();
             Assert.Throws<StreamsException>(() => serdes.Deserialize(null, new Confluent.Kafka.SerializationContext()));
             Assert.Throws<StreamsException>(() => serdes.DeserializeObject(null, new Confluent.Kafka.SerializationContext()));
         }
@@ -135,7 +51,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         [Test]
         public void SerializeWithoutInit()
         {
-            var serdes = new SchemaAvroSerDes<Person>();
+            var serdes = new SchemaProtobufSerDes<Helpers.Proto.Person>();
             Assert.Throws<StreamsException>(() => serdes.Serialize(null, new Confluent.Kafka.SerializationContext()));
             Assert.Throws<StreamsException>(() => serdes.SerializeObject(null, new Confluent.Kafka.SerializationContext()));
         }
@@ -145,9 +61,9 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         {
             var mockSchemaClient = new MockSchemaRegistryClient();
             var config = new StreamConfig();
-            var serdes = new MockAvroSerDes(mockSchemaClient);
+            var serdes = new MockProtoSerDes(mockSchemaClient);
             serdes.Initialize(new Net.SerDes.SerDesContext(config));
-            var person = new Person { age = 18, firstName = "TEST", lastName = "TEST" };
+            var person = new Helpers.Proto.Person { Age = 18, FirstName = "TEST", LastName = "TEST" };
             var bytes = serdes.Serialize(person, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Value, topic));
             Assert.IsNotNull(bytes);
             Assert.IsTrue(bytes.Length > 0);
@@ -158,14 +74,14 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         {
             var mockSchemaClient = new MockSchemaRegistryClient();
             var config = new StreamConfig();
-            var serdes = new MockAvroSerDes(mockSchemaClient);
+            var serdes = new MockProtoSerDes(mockSchemaClient);
             serdes.Initialize(new Net.SerDes.SerDesContext(config));
-            var person = new Person { age = 18, firstName = "TEST", lastName = "TEST" };
+            var person = new Helpers.Proto.Person { Age = 18, FirstName = "TEST", LastName = "TEST" };
             var bytes = serdes.Serialize(person, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Value, topic));
             var pbis = serdes.Deserialize(bytes, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Value, topic));
-            Assert.AreEqual(18, pbis.age);
-            Assert.AreEqual("TEST", pbis.firstName);
-            Assert.AreEqual("TEST", pbis.lastName);
+            Assert.AreEqual(18, pbis.Age);
+            Assert.AreEqual("TEST", pbis.FirstName);
+            Assert.AreEqual("TEST", pbis.LastName);
         }
 
         [Test]
@@ -175,27 +91,27 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var config = new StreamConfig();
             config.ApplicationId = "test-workflow-avroserdes";
             config.DefaultKeySerDes = new StringSerDes();
-            config.DefaultValueSerDes = new MockAvroSerDes(client);
+            config.DefaultValueSerDes = new MockProtoSerDes(client);
 
             var builder = new StreamBuilder();
             builder
-                .Stream<string, Person>("person")
-                .Filter((k, v) => v.age >= 18)
+                .Stream<string, Helpers.Proto.Person>("person")
+                .Filter((k, v) => v.Age >= 18)
                 .To("person-major");
 
             var topo = builder.Build();
             using (var driver = new TopologyTestDriver(topo, config))
             {
-                var input = driver.CreateInputTopic<string, Person>("person");
-                var output = driver.CreateOuputTopic<string, Person>("person-major");
-                input.PipeInput("test1", new Person { age = 23, firstName = "f", lastName = "l" });
-                input.PipeInput("test2", new Person { age = 12, firstName = "f", lastName = "l" });
+                var input = driver.CreateInputTopic<string, Helpers.Proto.Person>("person");
+                var output = driver.CreateOuputTopic<string, Helpers.Proto.Person>("person-major");
+                input.PipeInput("test1", new Helpers.Proto.Person { Age = 23, FirstName = "f", LastName = "l" });
+                input.PipeInput("test2", new Helpers.Proto.Person { Age = 12, FirstName = "f", LastName = "l" });
                 var records = output.ReadKeyValueList().ToList();
                 Assert.AreEqual(1, records.Count);
                 Assert.AreEqual("test1", records[0].Message.Key);
-                Assert.AreEqual(23, records[0].Message.Value.age);
-                Assert.AreEqual("f", records[0].Message.Value.firstName);
-                Assert.AreEqual("l", records[0].Message.Value.lastName);
+                Assert.AreEqual(23, records[0].Message.Value.Age);
+                Assert.AreEqual("f", records[0].Message.Value.FirstName);
+                Assert.AreEqual("l", records[0].Message.Value.LastName);
             }
         }
 
@@ -205,12 +121,12 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var config = new StreamConfig();
             config.ApplicationId = "test-workflow-avroserdes";
             config.DefaultKeySerDes = new StringSerDes();
-            config.DefaultValueSerDes = new SchemaAvroSerDes<Person>();
+            config.DefaultValueSerDes = new SchemaProtobufSerDes<Helpers.Proto.Person>();
 
             var builder = new StreamBuilder();
             builder
-                .Stream<string, Person>("person")
-                .Filter((k, v) => v.age >= 18)
+                .Stream<string, Helpers.Proto.Person>("person")
+                .Filter((k, v) => v.Age >= 18)
                 .To("person-major");
 
             var topo = builder.Build();
@@ -218,8 +134,8 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             {
                 using (var driver = new TopologyTestDriver(topo, config))
                 {
-                    var input = driver.CreateInputTopic<string, Person>("person");
-                    input.PipeInput("test1", new Person { age = 23, firstName = "f", lastName = "l" });
+                    var input = driver.CreateInputTopic<string, Helpers.Proto.Person>("person");
+                    input.PipeInput("test1", new Helpers.Proto.Person { Age = 23, FirstName = "f", LastName = "l" });
                 }
             });
         }
@@ -229,7 +145,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         {
             var mockSchemaClient = new MockSchemaRegistryClient();
             var config = new StreamConfig();
-            var serdes = new MockAvroSerDes(mockSchemaClient);
+            var serdes = new MockProtoSerDes(mockSchemaClient);
             config.ApplicationId = "test-workflow-avroserdes";
             config.DefaultKeySerDes = new StringSerDes();
             config.DefaultValueSerDes = serdes;
@@ -238,17 +154,17 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 
             var builder = new StreamBuilder();
             builder
-                .Stream<string, Person>("person")
-                .Filter((k, v) => v.age >= 18)
-                .MapValues((v) => v.age)
+                .Stream<string, Helpers.Proto.Person>("person")
+                .Filter((k, v) => v.Age >= 18)
+                .MapValues((v) => v.Age)
                 .To<StringSerDes, Int32SerDes>("person-major");
 
             var topo = builder.Build();
             using (var driver = new TopologyTestDriver(topo, config))
             {
-                var input = driver.CreateInputTopic<string, Person>("person");
+                var input = driver.CreateInputTopic<string, Helpers.Proto.Person>("person");
                 var output = driver.CreateOuputTopic<string, int, StringSerDes, Int32SerDes>("person-major");
-                input.PipeInput("test1", new Person { age = 23, firstName = "f", lastName = "l" });
+                input.PipeInput("test1", new Helpers.Proto.Person { Age = 23, FirstName = "f", LastName = "l" });
                 var record = output.ReadKeyValue();
                 Assert.IsNotNull(record);
                 Assert.AreEqual("test1", record.Message.Key);
@@ -271,23 +187,23 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 
             StreamBuilder builder = new StreamBuilder();
 
-            var ss = builder.Stream<string, Order, StringSerDes, SchemaAvroSerDes<Order>>("test-topic")
+            var ss = builder.Stream<string, Order, StringSerDes, SchemaProtobufSerDes<Order>>("test-topic")
             .Peek((k, v) =>
             {
-                Console.WriteLine($"Order #  {v.order_id }");
+                Console.WriteLine($"Order #  {v.OrderId }");
             });
 
             Topology t = builder.Build();
 
             using (var driver = new TopologyTestDriver(t, config))
             {
-                var inputTopic = driver.CreateInputTopic<string, Order, StringSerDes, SchemaAvroSerDes<Order>>("test-topic");
+                var inputTopic = driver.CreateInputTopic<string, Order, StringSerDes, SchemaProtobufSerDes<Order>>("test-topic");
                 inputTopic.PipeInput("test",
                     new Order
                     {
-                        order_id = 12,
-                        price = 150,
-                        product_id = 1
+                        OrderId = 12,
+                        Price = 150,
+                        ProductId = 1
                     });
             }
 
@@ -301,7 +217,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         [Test]
         public void TestMockSchemaRegistryInputOutput()
         {
-            var config = new StreamConfig<StringSerDes, SchemaAvroSerDes<Order>>();
+            var config = new StreamConfig<StringSerDes, SchemaProtobufSerDes<Order>>();
             config.ApplicationId = "test-mock-registry";
             config.SchemaRegistryUrl = "mock://test";
 
@@ -320,14 +236,14 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
                 inputTopic.PipeInput("test",
                     new Order
                     {
-                        order_id = 12,
-                        price = 150,
-                        product_id = 1
+                        OrderId = 12,
+                        Price = 150,
+                        ProductId = 1
                     });
                 var r = outputTopic.ReadKeyValue();
                 Assert.IsNotNull(r);
                 Assert.AreEqual("test", r.Message.Key);
-                Assert.AreEqual(12, r.Message.Value.order_id);
+                Assert.AreEqual(12, r.Message.Value.OrderId);
             }
             MockSchemaRegistry.DropScope("test");
         }
@@ -341,10 +257,10 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 
             StreamBuilder builder = new StreamBuilder();
 
-            var ss = builder.Stream<string, Order, StringSerDes, SchemaAvroSerDes<Order>>("test-topic")
+            var ss = builder.Stream<string, Order, StringSerDes, SchemaProtobufSerDes<Order>>("test-topic")
             .Peek((k, v) =>
             {
-                Console.WriteLine($"Order #  {v.order_id }");
+                Console.WriteLine($"Order #  {v.OrderId }");
             });
 
             Topology t = builder.Build();
@@ -353,13 +269,13 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             {
                 using (var driver = new TopologyTestDriver(t, config))
                 {
-                    var inputTopic = driver.CreateInputTopic<string, Order, StringSerDes, SchemaAvroSerDes<Order>>("test-topic");
+                    var inputTopic = driver.CreateInputTopic<string, Order, StringSerDes, SchemaProtobufSerDes<Order>>("test-topic");
                     inputTopic.PipeInput("test",
                         new Order
                         {
-                            order_id = 12,
-                            price = 150,
-                            product_id = 1
+                            OrderId = 12,
+                            Price = 150,
+                            ProductId = 1
                         });
                 }
             });
@@ -374,10 +290,10 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 
             StreamBuilder builder = new StreamBuilder();
 
-            var ss = builder.Stream<string, Order, StringSerDes, SchemaAvroSerDes<Order>>("test-topic")
+            var ss = builder.Stream<string, Order, StringSerDes, SchemaProtobufSerDes<Order>>("test-topic")
             .Peek((k, v) =>
             {
-                Console.WriteLine($"Order #  {v.order_id }");
+                Console.WriteLine($"Order #  {v.OrderId }");
             });
 
             Topology t = builder.Build();
@@ -386,13 +302,13 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             {
                 using (var driver = new TopologyTestDriver(t, config))
                 {
-                    var inputTopic = driver.CreateInputTopic<string, Order, StringSerDes, SchemaAvroSerDes<Order>>("test-topic");
+                    var inputTopic = driver.CreateInputTopic<string, Order, StringSerDes, SchemaProtobufSerDes<Order>>("test-topic");
                     inputTopic.PipeInput("test",
                         new Order
                         {
-                            order_id = 12,
-                            price = 150,
-                            product_id = 1
+                            OrderId = 12,
+                            Price = 150,
+                            ProductId = 1
                         });
                 }
             });
@@ -402,9 +318,9 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         public void IncorrectConfigurationInterface()
         {
             var mockSchemaClient = new MockSchemaRegistryClient();
-            var mock = new Mock<IStreamConfig>();
-            var serdes = new MockAvroSerDes(mockSchemaClient);
-            Assert.Throws<StreamConfigException>(() => serdes.Initialize(new Net.SerDes.SerDesContext(mock.Object)));
+            var config = new Mock<IStreamConfig>();
+            var serdes = new MockProtoSerDes(mockSchemaClient);
+            Assert.Throws<StreamConfigException>(() => serdes.Initialize(new Net.SerDes.SerDesContext(config.Object)));
         }
 
         [Test]
@@ -417,7 +333,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             config.SchemaRegistryRequestTimeoutMs = 30;
             config.SubjectNameStrategy = SubjectNameStrategy.TopicRecord;
 
-            var serdes = new MockAvroSerDes(mockSchemaClient);
+            var serdes = new MockProtoSerDes(mockSchemaClient);
             serdes.Initialize(new Net.SerDes.SerDesContext(config));
 
             Assert.AreEqual(1, mockSchemaClient.MaxCachedSchemas);
@@ -430,11 +346,12 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var mockSchemaClient = new MockSchemaRegistryClient();
             var config = new StreamConfig();
 
-            var serdes = new MockAvroSerDes(mockSchemaClient);
+            var serdes = new MockProtoSerDes(mockSchemaClient);
             serdes.Initialize(new Net.SerDes.SerDesContext(config));
 
             Assert.AreEqual(100, mockSchemaClient.MaxCachedSchemas);
             Assert.AreEqual(30000, mockSchemaClient.RequestTimeoutMs);
         }
+
     }
 }

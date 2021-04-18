@@ -1,6 +1,6 @@
 ﻿using Confluent.SchemaRegistry;
 using NUnit.Framework;
-using Streamiz.Kafka.Net.SchemaRegistry.Mock;
+using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock;
 using System;
 using System.Threading.Tasks;
 
@@ -10,6 +10,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
     public class MockSchemaRegistryClientTests
     {
         private MockSchemaRegistryClient client = null;
+
         private readonly string schema = "{\"type\":\"record\",\"name\":\"Order\",\"namespace\":\"Streamiz.Kafka.Net.Tests.Helpers.Bean.Avro\",\"fields\":[{\"name\":\"or" +
                 "der_id\",\"type\":\"int\"},{\"name\":\"price\",\"type\":\"float\"},{\"name\":\"product_id\",\"type" +
                 "\":\"int\"}]}";

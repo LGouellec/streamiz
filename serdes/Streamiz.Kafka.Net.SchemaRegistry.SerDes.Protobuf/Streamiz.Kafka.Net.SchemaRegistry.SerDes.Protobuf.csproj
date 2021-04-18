@@ -1,16 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
-    <RootNamespace>Streamiz.Kafka.Net.SchemaRegistry.Mock</RootNamespace>
-    <AssemblyName>Streamiz.Kafka.Net.SchemaRegistry.Mock</AssemblyName>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TargetFrameworks>netstandard2.1;net5.0</TargetFrameworks>
     <Version>1.1.4</Version>
-    <Authors>@LGouellec</Authors>
-    <PackageId>Streamiz.Kafka.Net.SchemaRegistry.Mock</PackageId>
-    <Product>Streamiz.Kafka.Net.SchemaRegistry.Mock</Product>
-    <Company />
-    <Description>Mock schema registry</Description>
+    <Company>@LGouellec</Company>
     <Copyright>Copyright 2020</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/LGouellec/kafka-streams-dotnet</PackageProjectUrl>
@@ -28,11 +21,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Confluent.SchemaRegistry" Version="1.6.2" />
-  </ItemGroup>
-  
-  <ItemGroup>
     <None Include="..\..\key.snk" Link="key.snk" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Confluent.SchemaRegistry" Version="1.6.2" />
+    <PackageReference Include="Confluent.SchemaRegistry.Serdes.Protobuf" Version="1.5.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\core\Streamiz.Kafka.Net.csproj" />
+    <ProjectReference Include="..\Streamiz.Kafka.Net.SchemaRegistry.SerDes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.csproj" />
   </ItemGroup>
 
 </Project>

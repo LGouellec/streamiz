@@ -6,24 +6,25 @@
   jobs:
     build:
       docker:
-        - image: mcr.microsoft.com/dotnet/core/sdk:3.1
+        - image: mcr.microsoft.com/dotnet/sdk:5.0
       steps:
         - checkout
-        - run: dotnet tool install --global dotnet-sonarscanner --version 4.10.0
+        - run: dotnet tool install --global dotnet-sonarscanner --version 5.1.0
         - run: echo 'export PATH="$PATH:/root/.dotnet/tools"' >> $BASH_ENV
         - run: echo "deb http://ftp.us.debian.org/debian stretch main contrib non-free" >> /etc/apt/sources.list
         - run: apt update
         - run: apt install -y unzip
         # BEGIN Dependencies for RocksDB
+        - run: mkdir -p /usr/share/man/man1 # FIX https://github.com/geerlingguy/ansible-role-java/issues/64
         - run: apt install -y openjdk-11-jdk
         - run: apt install -y libc6-dev libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
         - run: apt install -y bzip2 lz4 librocksdb-dev 
         # END Dependencies for RocksDB
         - run: set JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64/
         - run: export JAVA_HOME
-        - run: dotnet sonarscanner begin /k:LGouellec_kafka-streams-dotnet /o:kafka-streams-dotnet /d:sonar.login=${SONAR_TOKEN} /d:sonar.host.url=https://sonarcloud.io /d:sonar.cs.opencover.reportsPaths="**\coverage.opencover.xml" /d:sonar.coverage.exclusions="**sample*/*.cs,**test*/*.cs,**Tests*.cs"
+        - run: dotnet sonarscanner begin /k:LGouellec_kafka-streams-dotnet /o:kafka-streams-dotnet /d:sonar.login=${SONAR_TOKEN} /d:sonar.host.url=https://sonarcloud.io /d:sonar.cs.opencover.reportsPaths="**\coverage*.opencover.xml" /d:sonar.coverage.exclusions="**sample*/*.cs,**test*/*.cs,**Tests*.cs"
         - run: dotnet build
-        - run: dotnet test --no-restore --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+        - run: dotnet test --no-restore --verbosity normal -f net5.0 /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
         - run: dotnet sonarscanner end /d:sonar.login=${SONAR_TOKEN}
 
   workflows:

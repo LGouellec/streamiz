@@ -304,5 +304,42 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             }
         }
 
+        [Test]
+        public void StreamStreamJoinSpecificSerdes()
+        {
+            var stringSerdes = new StringSerDes();
+            var config = new StreamConfig
+            {
+                ApplicationId = "test-stream-stream-join"
+            };
+
+            StreamBuilder builder = new StreamBuilder();
+
+            var stream = builder.Stream("topic1", stringSerdes, stringSerdes);
+
+            builder
+                .Stream("topic2", stringSerdes, stringSerdes)
+                .Join(
+                    stream,
+                    (s, v) => $"{s}-{v}",
+                    JoinWindowOptions.Of(TimeSpan.FromSeconds(10)),
+                    StreamJoinProps.With(
+                        keySerde: stringSerdes,
+                        valueSerde: stringSerdes,
+                        otherValueSerde: stringSerdes))
+                .To("output-join");
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string, StringSerDes, StringSerDes>("topic1");
+                var outputTopic = driver.CreateOuputTopic<string, string, StringSerDes, StringSerDes>("output-join");
+                inputTopic.PipeInput("test", "test");
+                var record = outputTopic.ReadKeyValue();
+                Assert.IsNull(record);
+            }
+        }
+
     }
 }

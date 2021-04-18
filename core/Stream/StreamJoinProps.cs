@@ -218,7 +218,15 @@ namespace Streamiz.Kafka.Net.Stream
         {
             if (props != null)
             {
-                return new StreamJoinProps<T1, T2, T3>(null, null, null, props.LeftStoreSupplier, props.RightStoreSupplier, props.Name, props.StoreName);
+                bool b = props is StreamJoinProps<T1, T2, T3>;
+                return new StreamJoinProps<T1, T2, T3>(
+                    b ? (props as StreamJoinProps<T1, T2, T3>).KeySerdes : null,
+                    b ? (props as StreamJoinProps<T1, T2, T3>).LeftValueSerdes : null,
+                    b ? (props as StreamJoinProps<T1, T2, T3>).RightValueSerdes : null,
+                    props.LeftStoreSupplier,
+                    props.RightStoreSupplier,
+                    props.Name,
+                    props.StoreName);
             }
             else
             {

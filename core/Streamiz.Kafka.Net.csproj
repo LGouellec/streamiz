@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFrameworks>netstandard2.1;net5.0</TargetFrameworks>
     <RootNamespace>Streamiz.Kafka.Net</RootNamespace>
     <AssemblyName>Streamiz.Kafka.Net</AssemblyName>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>1.1.4</Version>
+    <Version>1.1.5</Version>
     <Authors>@LGouellec</Authors>
     <PackageId>Streamiz.Kafka.Net</PackageId>
     <Product>Streamiz.Kafka.NET</Product>

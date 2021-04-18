@@ -479,16 +479,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         private IKStream<K, VR> Join<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props, ISerDes<V0> valueSerdes)
         {
             props = props ?? StreamJoinProps.From<K, V, V0>(null);
-            props.RightValueSerdes = valueSerdes;
-            if (props.KeySerdes == null)
-            {
-                props.KeySerdes = KeySerdes;
-            }
-
-            if (props.LeftValueSerdes == null)
-            {
-                props.LeftValueSerdes = ValueSerdes;
-            }
+            props.RightValueSerdes = props.RightValueSerdes ?? valueSerdes;
+            props.KeySerdes = props.KeySerdes ?? KeySerdes;
+            props.LeftValueSerdes = props.LeftValueSerdes ?? ValueSerdes;
 
             return DoJoin(stream, valueJoiner, windows, props, new StreamJoinBuilder(builder, false, false));
         }
