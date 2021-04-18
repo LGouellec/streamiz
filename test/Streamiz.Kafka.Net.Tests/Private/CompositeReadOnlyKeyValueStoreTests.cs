@@ -22,7 +22,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             public MockStateProvider(long windowSize, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, params InMemoryKeyValueStore[] stores)
             {
                 this.stores = stores
-                                .Select(s => new TimestampedKeyValueStoreImpl<K, V>(s, keySerdes, new ValueAndTimestampSerDes<V>(valueSerdes)))
+                                .Select(s => new TimestampedKeyValueStore<K, V>(s, keySerdes, new ValueAndTimestampSerDes<V>(valueSerdes)))
                                 .Cast<ITimestampedKeyValueStore<K, V>>()
                                 .ToList();
             }

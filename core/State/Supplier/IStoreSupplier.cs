@@ -6,7 +6,7 @@ namespace Streamiz.Kafka.Net.State.Supplier
     /// A state store supplier which can create one or more <see cref="IStateStore"/> instances.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface StoreSupplier<out T> 
+    public interface IStoreSupplier<out T> 
         where T : IStateStore
     {
         /// <summary>

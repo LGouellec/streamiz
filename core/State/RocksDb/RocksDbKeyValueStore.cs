@@ -19,6 +19,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         private const long BLOCK_SIZE = 4096L;
         private const int MAX_WRITE_BUFFERS = 3;
         private const string DB_FILE_DIR = "rocksdb";
+        private readonly string parentDir;
 
         private WriteOptions writeOptions;
 
@@ -28,8 +29,14 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         internal ProcessorContext InternalProcessorContext { get; set; }
 
         public RocksDbKeyValueStore(string name)
+            : this(name, DB_FILE_DIR)
+        {
+        }
+
+        public RocksDbKeyValueStore(string name, string parentDir)
         {
             Name = name;
+            this.parentDir = parentDir;
         }
 
         #region Store Impl
@@ -199,7 +206,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
             context.Configuration.RocksDbConfigHandler?.Invoke(Name, rocksDbOptions);
 
-            DbDir = new DirectoryInfo(Path.Combine(context.StateDir, DB_FILE_DIR, Name));
+            DbDir = new DirectoryInfo(Path.Combine(context.StateDir, parentDir, Name));
 
             Directory.CreateDirectory(DbDir.FullName);
 

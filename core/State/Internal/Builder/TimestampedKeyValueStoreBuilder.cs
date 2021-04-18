@@ -6,9 +6,9 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
     internal class TimestampedKeyValueStoreBuilder<K, V>
         : AbstractStoreBuilder<K, ValueAndTimestamp<V>, ITimestampedKeyValueStore<K, V>>
     {
-        private readonly KeyValueBytesStoreSupplier storeSupplier;
+        private readonly IKeyValueBytesStoreSupplier storeSupplier;
 
-        public TimestampedKeyValueStoreBuilder(KeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde) :
+        public TimestampedKeyValueStoreBuilder(IKeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde) :
             base(supplier.Name, keySerde, valueSerde != null ? new ValueAndTimestampSerDes<V>(valueSerde) : null)
         {
             storeSupplier = supplier;
@@ -17,7 +17,7 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
         public override ITimestampedKeyValueStore<K, V> Build()
         {
             var store = storeSupplier.Get();
-            return new TimestampedKeyValueStoreImpl<K, V>(store, keySerdes, valueSerdes);
+            return new TimestampedKeyValueStore<K, V>(store, keySerdes, valueSerdes);
         }
     }
 }

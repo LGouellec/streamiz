@@ -7,7 +7,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
     /// <summary>
     /// A store supplier that can be used to create one or more <see cref="InMemoryKeyValueStore"/> instances.
     /// </summary>
-    public class InMemoryKeyValueBytesStoreSupplier : KeyValueBytesStoreSupplier
+    public class InMemoryKeyValueBytesStoreSupplier : IKeyValueBytesStoreSupplier
     {
         /// <summary>
         /// Constructor with the name of this state store supplier.

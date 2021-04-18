@@ -126,7 +126,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Private
 
-        private void AssertWindowSettings(WindowBytesStoreSupplier supplier, JoinWindowOptions joinWindows)
+        private void AssertWindowSettings(IWindowBytesStoreSupplier supplier, JoinWindowOptions joinWindows)
         {
             bool allMatch = supplier.Retention == (joinWindows.Size + joinWindows.GracePeriodMs) &&
                 supplier.WindowSize == joinWindows.Size;
@@ -137,7 +137,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             }
         }
 
-        private void AssertUniqueStoreNames(WindowBytesStoreSupplier supplier, WindowBytesStoreSupplier otherSupplier)
+        private void AssertUniqueStoreNames(IWindowBytesStoreSupplier supplier, IWindowBytesStoreSupplier otherSupplier)
         {
             if (supplier != null
                 && otherSupplier != null

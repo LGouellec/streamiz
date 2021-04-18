@@ -7,7 +7,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
     /// <summary>
     /// A store supplier that can be used to create one or more <see cref="InMemoryWindowStore"/> instances.
     /// </summary>
-    public class InMemoryWindowStoreSupplier : WindowBytesStoreSupplier
+    public class InMemoryWindowStoreSupplier : IWindowBytesStoreSupplier
     {
         private readonly TimeSpan retention;
 

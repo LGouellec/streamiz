@@ -5,13 +5,13 @@ using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
-    internal class TimestampedKeyValueStoreImpl<K, V> :
+    internal class TimestampedKeyValueStore<K, V> :
         WrappedKeyValueStore<K, ValueAndTimestamp<V>>,
         ITimestampedKeyValueStore<K, V>
     {
         private bool initStoreSerdes = false;
 
-        public TimestampedKeyValueStoreImpl(IKeyValueStore<Bytes, byte[]> wrapped, ISerDes<K> keySerdes, ISerDes<ValueAndTimestamp<V>> valueSerdes)
+        public TimestampedKeyValueStore(IKeyValueStore<Bytes, byte[]> wrapped, ISerDes<K> keySerdes, ISerDes<ValueAndTimestamp<V>> valueSerdes)
             : base(wrapped, keySerdes, valueSerdes)
         {
 

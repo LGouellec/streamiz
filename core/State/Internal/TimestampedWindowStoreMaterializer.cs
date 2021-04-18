@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public StoreBuilder<ITimestampedWindowStore<K, V>> Materialize()
         {
-            WindowBytesStoreSupplier supplier = (WindowBytesStoreSupplier)materializedInternal.StoreSupplier;
+            IWindowBytesStoreSupplier supplier = (IWindowBytesStoreSupplier)materializedInternal.StoreSupplier;
             if (supplier == null)
             {
                 if (windowsOptions.Size + windowsOptions.GracePeriodMs > materializedInternal.Retention.TotalMilliseconds)

@@ -4,7 +4,7 @@ using System;
 
 namespace Streamiz.Kafka.Net.State.RocksDb
 {
-    public class RocksDbKeyValueBytesStoreSupplier : KeyValueBytesStoreSupplier
+    public class RocksDbKeyValueBytesStoreSupplier : IKeyValueBytesStoreSupplier
     {
         public RocksDbKeyValueBytesStoreSupplier(string name)
         {

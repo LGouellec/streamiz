@@ -22,7 +22,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             public MockStateProvider(long windowSize, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, params InMemoryWindowStore[] stores)
             {
                 this.stores = stores
-                                .Select(s => new TimestampedWindowStoreImpl<K, V>(s, windowSize, keySerdes, new ValueAndTimestampSerDes<V>(valueSerdes)))
+                                .Select(s => new TimestampedWindowStore<K, V>(s, windowSize, keySerdes, new ValueAndTimestampSerDes<V>(valueSerdes)))
                                 .Cast<ITimestampedWindowStore<K, V>>()
                                 .ToList();
             }

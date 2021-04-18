@@ -10,7 +10,7 @@ namespace Streamiz.Kafka.Net.State.Supplier
     /// 1. Null value bytes in put operations should be treated as delete.
     /// 2. Null value bytes should never be returned in range query results.
     /// </summary>
-    public interface WindowBytesStoreSupplier : StoreSupplier<IWindowStore<Bytes, byte[]>>
+    public interface IWindowBytesStoreSupplier : IStoreSupplier<IWindowStore<Bytes, byte[]>>
     {
         /// <summary>
         /// The size of the windows (in milliseconds) any store created from this supplier is creating.

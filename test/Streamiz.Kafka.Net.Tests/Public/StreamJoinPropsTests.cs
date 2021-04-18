@@ -10,7 +10,7 @@ using System.Text;
 
 namespace Streamiz.Kafka.Net.Tests.Public
 {
-    public class TestSupplier : WindowBytesStoreSupplier
+    public class TestSupplier : IWindowBytesStoreSupplier
     {
         public long? WindowSize { get; set; }
 

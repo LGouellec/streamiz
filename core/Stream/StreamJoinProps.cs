@@ -12,12 +12,12 @@ namespace Streamiz.Kafka.Net.Stream
         /// <summary>
         /// supplier to store value left join
         /// </summary>
-        protected readonly WindowBytesStoreSupplier thisStoreSupplier;
+        protected readonly IWindowBytesStoreSupplier thisStoreSupplier;
 
         /// <summary>
         /// supplier to store value rigth join
         /// </summary>
-        protected readonly WindowBytesStoreSupplier otherStoreSupplier;
+        protected readonly IWindowBytesStoreSupplier otherStoreSupplier;
 
         /// <summary>
         /// name of stream join
@@ -29,7 +29,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// </summary>
         protected readonly string storeName;
 
-        internal StreamJoinProps(WindowBytesStoreSupplier thisStoreSupplier, WindowBytesStoreSupplier otherStoreSupplier, string name, string storeName)
+        internal StreamJoinProps(IWindowBytesStoreSupplier thisStoreSupplier, IWindowBytesStoreSupplier otherStoreSupplier, string name, string storeName)
         {
             this.thisStoreSupplier = thisStoreSupplier;
             this.otherStoreSupplier = otherStoreSupplier;
@@ -50,22 +50,22 @@ namespace Streamiz.Kafka.Net.Stream
         /// <summary>
         /// Supplier to store value left join
         /// </summary>
-        public WindowBytesStoreSupplier LeftStoreSupplier => thisStoreSupplier;
+        public IWindowBytesStoreSupplier LeftStoreSupplier => thisStoreSupplier;
 
         /// <summary>
         /// Supplier to store value rigth join
         /// </summary>
-        public WindowBytesStoreSupplier RightStoreSupplier => otherStoreSupplier;
+        public IWindowBytesStoreSupplier RightStoreSupplier => otherStoreSupplier;
 
         /// <summary>
         /// Creates a StreamJoined instance with the provided store suppliers. The store suppliers must implement
-        /// the <see cref="WindowBytesStoreSupplier"/> interface.  The store suppliers must provide unique names or a
+        /// the <see cref="IWindowBytesStoreSupplier"/> interface.  The store suppliers must provide unique names or a
         /// <see cref="Streamiz.Kafka.Net.Errors.StreamsException"/> is thrown.
         /// </summary>
         /// <param name="storeSupplier">this store supplier</param>
         /// <param name="otherStoreSupplier">other store supplier</param>
         /// <returns>Return <see cref="StreamJoinProps"/> instance</returns>
-        public static StreamJoinProps With(WindowBytesStoreSupplier storeSupplier, WindowBytesStoreSupplier otherStoreSupplier)
+        public static StreamJoinProps With(IWindowBytesStoreSupplier storeSupplier, IWindowBytesStoreSupplier otherStoreSupplier)
         {
             return new StreamJoinProps(
                 storeSupplier,
@@ -78,7 +78,7 @@ namespace Streamiz.Kafka.Net.Stream
 
         /// <summary>
         /// Creates a StreamJoined instance with the provided store suppliers. The store suppliers must implement
-        /// the <see cref="WindowBytesStoreSupplier"/> interface.  The store suppliers must provide unique names or a
+        /// the <see cref="IWindowBytesStoreSupplier"/> interface.  The store suppliers must provide unique names or a
         /// <see cref="Streamiz.Kafka.Net.Errors.StreamsException"/> is thrown.
         /// </summary>
         /// <typeparam name="K">the key type</typeparam>
@@ -87,7 +87,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="storeSupplier">this store supplier</param>
         /// <param name="otherStoreSupplier">other store supplier</param>
         /// <returns>Return <see cref="StreamJoinProps{K, V1, V2}"/> instance</returns>
-        public static StreamJoinProps<K, V1, V2> With<K, V1, V2>(WindowBytesStoreSupplier storeSupplier, WindowBytesStoreSupplier otherStoreSupplier)
+        public static StreamJoinProps<K, V1, V2> With<K, V1, V2>(IWindowBytesStoreSupplier storeSupplier, IWindowBytesStoreSupplier otherStoreSupplier)
         {
             return new StreamJoinProps<K, V1, V2>(
                 null,
@@ -240,8 +240,8 @@ namespace Streamiz.Kafka.Net.Stream
             ISerDes<K> keySerdes,
             ISerDes<V1> valueSerdes,
             ISerDes<V2> otherValueSerdes,
-            WindowBytesStoreSupplier thisStoreSupplier,
-            WindowBytesStoreSupplier otherStoreSupplier,
+            IWindowBytesStoreSupplier thisStoreSupplier,
+            IWindowBytesStoreSupplier otherStoreSupplier,
             string name,
             string storeName)
             : base(thisStoreSupplier, otherStoreSupplier, name, storeName)
