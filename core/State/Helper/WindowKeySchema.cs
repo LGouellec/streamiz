@@ -2,7 +2,7 @@
 
 namespace Streamiz.Kafka.Net.State.Helper
 {
-    internal static class WindowKeySchema
+    internal static class InMemoryWindowKeySchema
     {
         private static readonly int timestampSize = 8;
 

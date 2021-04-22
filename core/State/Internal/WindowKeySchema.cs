@@ -1,6 +1,7 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State.Enumerator;
+using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -53,109 +54,89 @@ namespace Streamiz.Kafka.Net.State.Internal
         }
 
         #region Internal
-        public static Bytes toStoreKeyBinary(Bytes key,
-                                          long timestamp,
-                                          int seqnum)
+        public static Bytes ToStoreKeyBinary(Bytes key, long timestamp, int seqnum)
         {
             byte[] serializedKey = key.Get;
-            return toStoreKeyBinary(serializedKey, timestamp, seqnum);
+            return ToStoreKeyBinary(serializedKey, timestamp, seqnum);
         }
 
-        public static Bytes toStoreKeyBinary<K>(K key,
-                                                  long timestamp,
-                                                  int seqnum,
-                                                  ISerDes<K> keySerdes)
+        public static Bytes ToStoreKeyBinary<K>(K key, long timestamp, int seqnum, ISerDes<K> keySerdes)
         {
             byte[] serializedKey = keySerdes.Serialize(key, new Confluent.Kafka.SerializationContext());
-            return toStoreKeyBinary(serializedKey, timestamp, seqnum);
+            return ToStoreKeyBinary(serializedKey, timestamp, seqnum);
         }
 
-        public static Bytes toStoreKeyBinary(Windowed<Bytes> timeKey,
-                                              int seqnum)
+        public static Bytes ToStoreKeyBinary(Windowed<Bytes> timeKey, int seqnum)
         {
             byte[] bytes = timeKey.Key.Get;
-            return toStoreKeyBinary(bytes, timeKey.Window.StartMs, seqnum);
+            return ToStoreKeyBinary(bytes, timeKey.Window.StartMs, seqnum);
         }
 
-        public static Bytes toStoreKeyBinary<K>(Windowed<K> timeKey,
-                                                  int seqnum,
-                                                   ISerDes<K> keySerdes)
+        public static Bytes ToStoreKeyBinary<K>(Windowed<K> timeKey, int seqnum, ISerDes<K> keySerdes)
         {
             byte[] serializedKey = keySerdes.Serialize(timeKey.Key, new Confluent.Kafka.SerializationContext());
-            return toStoreKeyBinary(serializedKey, timeKey.Window.StartMs, seqnum);
+            return ToStoreKeyBinary(serializedKey, timeKey.Window.StartMs, seqnum);
         }
 
         // package private for testing
-        static Bytes toStoreKeyBinary(byte[] serializedKey,
-                                       long timestamp,
-                                       int seqnum)
+        static Bytes ToStoreKeyBinary(byte[] serializedKey, long timestamp, int seqnum)
         {
-            ByteBuffer buf = ByteBuffer.allocate(serializedKey.length + TIMESTAMP_SIZE + SEQNUM_SIZE);
-            buf.put(serializedKey);
-            buf.putLong(timestamp);
-            buf.putInt(seqnum);
+            ByteBuffer buf = ByteBuffer.Build(serializedKey.Length + TIMESTAMP_SIZE + SEQNUM_SIZE);
+            buf.Put(serializedKey);
+            buf.PutLong(timestamp);
+            buf.PutInt(seqnum);
 
-            return Bytes.wrap(buf.array());
+            return Bytes.Wrap(buf.ToArray());
         }
 
-        static byte[] extractStoreKeyBytes(byte[] binaryKey)
+        static byte[] ExtractStoreKeyBytes(byte[] binaryKey)
         {
-            byte[] bytes = new byte[binaryKey.length - TIMESTAMP_SIZE - SEQNUM_SIZE];
-            System.arraycopy(binaryKey, 0, bytes, 0, bytes.length);
-            return bytes;
+            return binaryKey.AsSpan(0, binaryKey.Length - TIMESTAMP_SIZE - SEQNUM_SIZE).ToArray();
         }
 
-        static <K> K extractStoreKey(byte[] binaryKey,
-                                      StateSerdes<K, ?> serdes)
+        static K ExtractStoreKey<K>(byte[] binaryKey, ISerDes<K> keySerdes)
         {
-            byte[] bytes = new byte[binaryKey.length - TIMESTAMP_SIZE - SEQNUM_SIZE];
-            System.arraycopy(binaryKey, 0, bytes, 0, bytes.length);
-            return serdes.keyFrom(bytes);
+            byte[] bytes = binaryKey.AsSpan(0, binaryKey.Length - TIMESTAMP_SIZE - SEQNUM_SIZE).ToArray();
+            return keySerdes.Deserialize(bytes, new Confluent.Kafka.SerializationContext());
         }
 
-        static long extractStoreTimestamp(byte[] binaryKey)
+        static long ExtractStoreTimestamp(byte[] binaryKey)
         {
-            return ByteBuffer.wrap(binaryKey).getLong(binaryKey.length - TIMESTAMP_SIZE - SEQNUM_SIZE);
+            return ByteBuffer.Build(binaryKey).GetLong(binaryKey.Length - TIMESTAMP_SIZE - SEQNUM_SIZE);
         }
 
-        static int extractStoreSequence(byte[] binaryKey)
+        static int ExtractStoreSequence(byte[] binaryKey)
         {
-            return ByteBuffer.wrap(binaryKey).getInt(binaryKey.length - SEQNUM_SIZE);
+            return ByteBuffer.Build(binaryKey).GetInt(binaryKey.Length - SEQNUM_SIZE);
         }
 
-        public static <K> Windowed<K> fromStoreKey(byte[] binaryKey,
-                                                    long windowSize,
-                                                    Deserializer<K> deserializer,
-                                                    String topic)
+        public static Windowed<K> FromStoreKey<K>(byte[] binaryKey, long windowSize, ISerDes<K> keySerdes, String topic)
         {
-            K key = deserializer.deserialize(topic, extractStoreKeyBytes(binaryKey));
-            Window window = extractStoreWindow(binaryKey, windowSize);
-            return new Windowed<>(key, window);
+            K key = keySerdes.Deserialize(ExtractStoreKeyBytes(binaryKey), new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Key, topic));
+            Window window = ExtractStoreWindow(binaryKey, windowSize);
+            return new Windowed<K>(key, window);
         }
 
-        public static <K> Windowed<K> fromStoreKey(Windowed<Bytes> windowedKey,
-                                                    Deserializer<K> deserializer,
-                                                    String topic)
+        public static Windowed<K> FromStoreKey<K>(Windowed<Bytes> windowedKey, ISerDes<K> keySerdes, String topic)
         {
-            K key = deserializer.deserialize(topic, windowedKey.key().get());
-            return new Windowed<>(key, windowedKey.window());
+            K key = keySerdes.Deserialize(windowedKey.Key.Get, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Key, topic));
+            return new Windowed<K>(key, windowedKey.Window);
         }
 
-        public static Windowed<Bytes> fromStoreBytesKey(byte[] binaryKey,
-                                                         long windowSize)
+        public static Windowed<Bytes> FromStoreBytesKey(byte[] binaryKey, long windowSize)
         {
-            Bytes key = Bytes.wrap(extractStoreKeyBytes(binaryKey));
-            Window window = extractStoreWindow(binaryKey, windowSize);
-            return new Windowed<>(key, window);
+            Bytes key = Bytes.Wrap(ExtractStoreKeyBytes(binaryKey));
+            Window window = ExtractStoreWindow(binaryKey, windowSize);
+            return new Windowed<Bytes>(key, window);
         }
 
-        static Window extractStoreWindow(byte[] binaryKey,
-                                          long windowSize)
+        static Window ExtractStoreWindow(byte[] binaryKey, long windowSize)
         {
-            ByteBuffer buffer = ByteBuffer.wrap(binaryKey);
-            long start = buffer.getLong(binaryKey.length - TIMESTAMP_SIZE - SEQNUM_SIZE);
-            return timeWindowForSize(start, windowSize);
+            ByteBuffer buffer = ByteBuffer.Build(binaryKey);
+            long start = buffer.GetLong(binaryKey.Length - TIMESTAMP_SIZE - SEQNUM_SIZE);
+            return TimeWindowForSize(start, windowSize);
         }
+        
         #endregion
     }
 }

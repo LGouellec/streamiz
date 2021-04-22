@@ -34,7 +34,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
         /// <param name="bytes">This array becomes the backing storage for the object.</param>
         public Bytes(byte[] bytes)
         {
-            this.Get = bytes;
+            Get = bytes;
         }
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
         /// <returns></returns>
         public override int GetHashCode()
         {
-            return new BigInteger(this.Get).GetHashCode();
+            return new BigInteger(Get).GetHashCode();
         }
 
         /// <summary>
@@ -63,7 +63,14 @@ namespace Streamiz.Kafka.Net.Crosscutting
         /// <returns></returns>
         public bool Equals(Bytes other)
         {
-            return this.Get.SequenceEqual(other.Get);
+            return Get.SequenceEqual(other.Get);
+        }
+
+        internal static Bytes Wrap(byte[] bytes)
+        {
+            if (bytes == null)
+                return null;
+            return new Bytes(bytes);
         }
     }
 }
