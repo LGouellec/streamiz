@@ -41,22 +41,32 @@ namespace Streamiz.Kafka.Net.Crosscutting
 
         #region Write Operation
 
-        public void Put(byte[] bytes)
+        public ByteBuffer Put(byte b)
+        {
+            writer.BaseStream.Seek(0, SeekOrigin.End);
+            writer.Write(b);
+            return this;
+        }
+
+        public ByteBuffer Put(byte[] bytes)
         {
             writer.BaseStream.Seek(0, SeekOrigin.End);
             writer.Write(bytes);
+            return this;
         }
 
-        public void PutLong(long @long)
+        public ByteBuffer PutLong(long @long)
         {
             writer.BaseStream.Seek(0, SeekOrigin.End);
             writer.Write(@long);
+            return this;
         }
 
-        public void PutInt(int @int)
+        public ByteBuffer PutInt(int @int)
         {
             writer.BaseStream.Seek(0, SeekOrigin.End);
             writer.Write(@int);
+            return this;
         }
 
         #endregion

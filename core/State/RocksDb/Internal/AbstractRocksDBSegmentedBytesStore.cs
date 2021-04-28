@@ -1,0 +1,167 @@
+﻿using log4net;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.State.Enumerator;
+using Streamiz.Kafka.Net.State.Internal;
+using System;
+
+namespace Streamiz.Kafka.Net.State.RocksDb.Internal
+{
+    internal class AbstractRocksDBSegmentedBytesStore<S> : ISegmentedBytesStore
+        where S : ISegment
+    {
+        protected readonly ILog logger = null;
+
+        private readonly BytesComparer bytesComparer = new BytesComparer();
+        private readonly ISegments<S> segments;
+        private readonly IKeySchema keySchema;
+        private ProcessorContext context;
+
+        private bool isOpen = false;
+        private long observedStreamTime = -1;
+
+        public AbstractRocksDBSegmentedBytesStore(
+            string name,
+            IKeySchema keySchema,
+            ISegments<S> segments)
+        {
+            this.keySchema = keySchema;
+            this.segments = segments;
+            Name = name;
+            logger = Logger.GetLogger(GetType());
+        }
+
+        #region ISegmentedBytesStore Impl
+
+        public string Name { get; }
+
+        public bool Persistent => true;
+
+        public bool IsOpen => isOpen;
+
+        public IKeyValueEnumerator<Bytes, byte[]> All()
+        {
+            var _segments = segments.AllSegments(true);
+            // TODO : return segment enumerator
+            return null;
+        }
+
+        public void Close()
+        {
+            isOpen = false;
+            segments.Close();
+        }
+
+        public IKeyValueEnumerator<Bytes, byte[]> Fetch(Bytes key, long from, long to)
+            => Fetch(key, from, to, true);
+
+        public IKeyValueEnumerator<Bytes, byte[]> Fetch(Bytes fromKey, Bytes toKey, long from, long to)
+            => Fetch(fromKey, toKey, from, to, true);
+
+        public IKeyValueEnumerator<Bytes, byte[]> FetchAll(long from, long to)
+        {
+            var _segments = segments.Segments(from, to, true);
+            // TODO : return segment enumerator
+            return null;
+        }
+
+        public void Flush()
+            => segments.Flush();
+
+        public byte[] Get(Bytes key)
+        {
+            var seg = segments.GetSegmentForTimestamp(keySchema.SegmentTimestamp(key));
+            return seg != null ? seg.Get(key) : null;
+        }
+
+        public void Init(ProcessorContext context, IStateStore root)
+        {
+            this.context = context;
+
+            segments.OpenExisting(context, observedStreamTime);
+            context.Register(root, (k, v) => Put(k, v));
+
+            isOpen = true;
+        }
+
+        public void Put(Bytes key, byte[] value)
+        {
+            long ts = keySchema.SegmentTimestamp(key);
+            observedStreamTime = Math.Max(ts, observedStreamTime);
+            long segId = segments.SegmentId(ts);
+            var segment = segments.GetOrCreateSegmentIfLive(segId, context, observedStreamTime);
+            if (segment == null)
+            {
+                logger.Warn("Skipping record for expired segment.");
+            }
+            else
+            {
+                segment.Put(key, value);
+            }
+        }
+
+        public void Remove(Bytes key)
+        {
+            long ts = keySchema.SegmentTimestamp(key);
+            observedStreamTime = Math.Max(observedStreamTime, ts);
+            var segment = segments.GetSegmentForTimestamp(ts);
+
+            if (segment != null)
+            {
+                segment.Delete(key);
+            }
+        }
+
+        public IKeyValueEnumerator<Bytes, byte[]> ReverseAll()
+        {
+            var _segments = segments.AllSegments(false);
+            // TODO : return segment enumerator
+            return null;
+        }
+
+        public IKeyValueEnumerator<Bytes, byte[]> ReverseFetch(Bytes key, long from, long to)
+            => Fetch(key, from, to, false);
+
+        public IKeyValueEnumerator<Bytes, byte[]> ReverseFetch(Bytes fromKey, Bytes toKey, long from, long to)
+            => Fetch(fromKey, toKey, from, to, false);
+
+        public IKeyValueEnumerator<Bytes, byte[]> ReverseFetchAll(long from, long to)
+        {
+            var _segments = segments.Segments(from, to, false);
+            // TODO : return segment enumerator
+            return null;
+        }
+
+        #endregion
+
+        private IKeyValueEnumerator<Bytes, byte[]> Fetch(Bytes keyFrom, Bytes keyTo, long from, long to, bool forward)
+        {
+            if (bytesComparer.Compare(keyFrom, keyTo) > 0)
+            {
+                logger.Warn("Returning empty iterator for fetch with invalid key range: from > to. " +
+                    "This may be due to range arguments set in the wrong order, " +
+                    "or serdes that don't preserve ordering when lexicographically comparing the serialized bytes. " +
+                    "Note that the built-in numerical serdes do not follow this for negative numbers");
+                return new EmptyKeyValueIterator<Bytes, byte[]>();
+            }
+
+            var _segments = keySchema.SegmentsToSearch(segments, from, to, forward);
+            var binaryFrom = keySchema.LowerRange(keyFrom, from);
+            var upperFrom = keySchema.UpperRange(keyTo, to);
+
+            // TODO : Return segmentenumerator
+            return null;
+        }
+
+        private IKeyValueEnumerator<Bytes, byte[]> Fetch(Bytes key, long from, long to, bool forward)
+        {
+            var _segments = keySchema.SegmentsToSearch(segments, from, to, forward);
+
+            Bytes binaryFrom = keySchema.LowerRangeFixedSize(key, from);
+            Bytes binaryTo = keySchema.UpperRangeFixedSize(key, to);
+
+            // TODO : Return segmentenumerator
+            return null;
+        }
+    }
+}

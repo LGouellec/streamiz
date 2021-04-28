@@ -1,7 +1,5 @@
 ﻿using Streamiz.Kafka.Net.State.Internal;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.State.RocksDb.Internal
 {
@@ -16,14 +14,13 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
             this.id = id;
         }
 
+        internal void OpenDB(ProcessorContext context)
+            => OpenDatabase(context);
+
         public int CompareTo(RocksDbKeyValueSegment other)
-        {
-            throw new NotImplementedException();
-        }
+            => id.CompareTo(other.id);
 
         public void Destroy()
-        {
-            throw new NotImplementedException();
-        }
+            => DbDir.Delete(true);
     }
 }

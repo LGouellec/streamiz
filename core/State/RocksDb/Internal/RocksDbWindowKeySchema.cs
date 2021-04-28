@@ -1,37 +1,49 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State.Enumerator;
+using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace Streamiz.Kafka.Net.State.Internal
+namespace Streamiz.Kafka.Net.State.RocksDb.Internal
 {
     /// <summary>
     /// Like JAVA Implementation, no advantages to rewrite
     /// </summary>
-    internal class WindowKeySchema : IKeySchema
+    internal class RocksDbWindowKeySchema : IKeySchema
     {
         private const int SEQNUM_SIZE = 4;
         private const int TIMESTAMP_SIZE = 8;
         private const int SUFFIX_SIZE = TIMESTAMP_SIZE + SEQNUM_SIZE;
         private static readonly byte[] MIN_SUFFIX = new byte[SUFFIX_SIZE];
+        private static readonly IComparer<Bytes> bytesComparer = new BytesComparer();
 
         public Func<IKeyValueEnumerator<Bytes, byte[]>, bool> HasNextCondition(Bytes binaryKeyFrom, Bytes binaryKeyTo, long from, long to)
         {
-            throw new NotImplementedException();
+            return (enumerator) =>
+            {
+                while (enumerator.MoveNext())
+                {
+                    var bytes = enumerator.PeekNextKey();
+                    Bytes keyBytes = Bytes.Wrap(ExtractStoreKeyBytes(bytes.Get));
+                    long time = ExtractStoreTimestamp(bytes.Get);
+                    if ((binaryKeyFrom == null || bytesComparer.Compare(keyBytes, binaryKeyFrom) >= 0)
+                        && (binaryKeyTo == null || bytesComparer.Compare(keyBytes, binaryKeyTo) <= 0)
+                        && time >= from
+                        && time <= to)
+                        return true;
+                        
+                }
+                return false;
+            };
         }
 
         public Bytes LowerRange(Bytes key, long from)
-        {
-            throw new NotImplementedException();
-        }
+            => OrderedBytes.LowerRange(key, MIN_SUFFIX);
 
         public Bytes LowerRangeFixedSize(Bytes key, long from)
-        {
-            throw new NotImplementedException();
-        }
+            => ToStoreKeyBinary(key, Math.Max(0, from), 0);
 
         public IList<S> SegmentsToSearch<S>(ISegments<S> segments, long from, long to, bool forward) where S : ISegment
         {
@@ -39,21 +51,59 @@ namespace Streamiz.Kafka.Net.State.Internal
         }
 
         public long SegmentTimestamp(Bytes key)
-        {
-            throw new NotImplementedException();
-        }
+            => ExtractStoreTimestamp(key.Get);
 
         public Bytes UpperRange(Bytes key, long to)
         {
-            throw new NotImplementedException();
+            byte[] maxSuffix = ByteBuffer.Build(SUFFIX_SIZE)
+            .PutLong(to)
+            .PutInt(int.MaxValue)
+            .ToArray();
+
+            return OrderedBytes.UpperRange(key, maxSuffix);
         }
 
         public Bytes UpperRangeFixedSize(Bytes key, long to)
+            => ToStoreKeyBinary(key, to, Int32.MaxValue);
+
+        #region Static
+
+        public static TimeWindow TimeWindowForSize(long startMs, long windowSize)
         {
-            throw new NotImplementedException();
+            long endMs = startMs + windowSize;
+
+            if (endMs < 0)
+            {
+                endMs = long.MaxValue;
+            }
+
+            return new TimeWindow(startMs, endMs);
         }
 
-        #region Internal
+        public static byte[] ToBinary<K>(Windowed<K> timeKey, ISerDes<K> serializer, String topic)
+        {
+            byte[] bytes = serializer.Serialize(timeKey.Key, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Key, topic));
+            ByteBuffer buf = ByteBuffer.Build(bytes.Length + TIMESTAMP_SIZE);
+            buf.Put(bytes);
+            buf.PutLong(timeKey.Window.StartMs);
+            return buf.ToArray();
+        }
+
+        public static Windowed<K> From<K>(byte[] binaryKey, long windowSize, ISerDes<K> deserializer, String topic)
+        {
+            byte[] bytes = binaryKey.AsSpan(0, binaryKey.Length - TIMESTAMP_SIZE).ToArray();
+            K key = deserializer.Deserialize(bytes, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Key, topic));
+            Window window = ExtractWindow(binaryKey, windowSize);
+            return new Windowed<K>(key, window);
+        }
+
+        private static Window ExtractWindow( byte[] binaryKey, long windowSize)
+        {
+             ByteBuffer buffer = ByteBuffer.Build(binaryKey);
+             long start = buffer.GetLong(binaryKey.Length - TIMESTAMP_SIZE);
+            return TimeWindowForSize(start, windowSize);
+        }
+
         public static Bytes ToStoreKeyBinary(Bytes key, long timestamp, int seqnum)
         {
             byte[] serializedKey = key.Get;
@@ -78,8 +128,7 @@ namespace Streamiz.Kafka.Net.State.Internal
             return ToStoreKeyBinary(serializedKey, timeKey.Window.StartMs, seqnum);
         }
 
-        // package private for testing
-        static Bytes ToStoreKeyBinary(byte[] serializedKey, long timestamp, int seqnum)
+        public static Bytes ToStoreKeyBinary(byte[] serializedKey, long timestamp, int seqnum)
         {
             ByteBuffer buf = ByteBuffer.Build(serializedKey.Length + TIMESTAMP_SIZE + SEQNUM_SIZE);
             buf.Put(serializedKey);
@@ -89,23 +138,23 @@ namespace Streamiz.Kafka.Net.State.Internal
             return Bytes.Wrap(buf.ToArray());
         }
 
-        static byte[] ExtractStoreKeyBytes(byte[] binaryKey)
+        public static byte[] ExtractStoreKeyBytes(byte[] binaryKey)
         {
             return binaryKey.AsSpan(0, binaryKey.Length - TIMESTAMP_SIZE - SEQNUM_SIZE).ToArray();
         }
 
-        static K ExtractStoreKey<K>(byte[] binaryKey, ISerDes<K> keySerdes)
+        public static K ExtractStoreKey<K>(byte[] binaryKey, ISerDes<K> keySerdes)
         {
             byte[] bytes = binaryKey.AsSpan(0, binaryKey.Length - TIMESTAMP_SIZE - SEQNUM_SIZE).ToArray();
             return keySerdes.Deserialize(bytes, new Confluent.Kafka.SerializationContext());
         }
 
-        static long ExtractStoreTimestamp(byte[] binaryKey)
+        public static long ExtractStoreTimestamp(byte[] binaryKey)
         {
             return ByteBuffer.Build(binaryKey).GetLong(binaryKey.Length - TIMESTAMP_SIZE - SEQNUM_SIZE);
         }
 
-        static int ExtractStoreSequence(byte[] binaryKey)
+        public static int ExtractStoreSequence(byte[] binaryKey)
         {
             return ByteBuffer.Build(binaryKey).GetInt(binaryKey.Length - SEQNUM_SIZE);
         }
@@ -130,7 +179,7 @@ namespace Streamiz.Kafka.Net.State.Internal
             return new Windowed<Bytes>(key, window);
         }
 
-        static Window ExtractStoreWindow(byte[] binaryKey, long windowSize)
+        public static Window ExtractStoreWindow(byte[] binaryKey, long windowSize)
         {
             ByteBuffer buffer = ByteBuffer.Build(binaryKey);
             long start = buffer.GetLong(binaryKey.Length - TIMESTAMP_SIZE - SEQNUM_SIZE);

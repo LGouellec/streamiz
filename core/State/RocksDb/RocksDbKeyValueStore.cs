@@ -171,7 +171,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         #region Private
 
-        private void OpenDatabase(ProcessorContext context)
+        protected void OpenDatabase(ProcessorContext context)
         {
             DbOptions dbOptions = new DbOptions();
             ColumnFamilyOptions columnFamilyOptions = new ColumnFamilyOptions();
