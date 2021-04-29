@@ -24,9 +24,9 @@ namespace Streamiz.Kafka.Net.Crosscutting
                 int rF = sortedDic.Comparer.Compare(keyFrom, k);
                 int rT = sortedDic.Comparer.Compare(keyTo, k);
 
-                if((inclusiveFrom && rF >= 0) || (!inclusiveFrom && rF > 0))
+                if((inclusiveFrom && rF <= 0) || (!inclusiveFrom && rF < 0))
                 {
-                    if ((inclusiveTo && rT <= 0) || (!inclusiveTo && rT < 0))
+                    if ((inclusiveTo && rT >= 0) || (!inclusiveTo && rT > 0))
                     {
                         yield return KeyValuePair.Create(k, sortedDic[k]);
                     }

@@ -25,5 +25,14 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public IKeyValueEnumerator<K, V> Range(K from, K to)
             => innerStore.Range(from, to).Transform((k, v) => KeyValuePair.Create(k, v.Value));
+
+        public IEnumerable<KeyValuePair<K, V>> ReverseAll()
+            => innerStore
+                .ReverseAll()
+                .Select(i => KeyValuePair.Create(i.Key, i.Value != null ? i.Value.Value : default))
+                .ToList();
+
+        public IKeyValueEnumerator<K, V> ReverseRange(K from, K to)
+            => innerStore.ReverseRange(from, to).Transform((k, v) => KeyValuePair.Create(k, v.Value));
     }
 }

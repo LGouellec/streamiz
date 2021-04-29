@@ -5,25 +5,22 @@ namespace Streamiz.Kafka.Net.Crosscutting
 {
     internal class ByteBuffer : IDisposable
     {
-        private readonly byte[] bytes;
         private readonly MemoryStream stream;
         private readonly BinaryWriter writer;
         private readonly BinaryReader reader;
-        private readonly bool isReadMode;
 
         private ByteBuffer(byte[] bytes)
         {
-            this.bytes = bytes;
-            stream = new MemoryStream(this.bytes);
+            stream = new MemoryStream(bytes);
             reader = new BinaryReader(stream);
-            isReadMode = true;
+            writer = new BinaryWriter(stream);
         }
 
         private ByteBuffer(int capacity)
         {
             stream = new MemoryStream(capacity);
+            reader = new BinaryReader(stream);
             writer = new BinaryWriter(stream);
-            isReadMode = false;
         }
 
         internal static ByteBuffer Build(byte[] bytes)

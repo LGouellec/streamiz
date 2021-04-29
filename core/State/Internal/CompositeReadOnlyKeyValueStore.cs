@@ -40,6 +40,26 @@ namespace Streamiz.Kafka.Net.State.Internal
             }
         }
 
+        public IEnumerable<KeyValuePair<K, V>> ReverseAll()
+        {
+            // TODO: implement DelegatingPeekingKeyValueIterator
+
+            IEnumerable<IReadOnlyKeyValueStore<K, V>> stores = GetAllStores();
+            try
+            {
+                return stores.SelectMany(x =>
+                {
+                    return x.ReverseAll();
+                });
+            }
+            catch (InvalidStateStoreException e)
+            {
+                // TODO is there a point in doing this?
+                throw new InvalidStateStoreException("State store is not available anymore and may have " +
+                    "been migrated to another instance; please re-discover its location from the state metadata.", e);
+            }
+        }
+
         public long ApproximateNumEntries()
         {
             IEnumerable<IReadOnlyKeyValueStore<K, V>> stores = GetAllStores();
@@ -85,6 +105,23 @@ namespace Streamiz.Kafka.Net.State.Internal
                     "been migrated to another instance; please re-discover its location from the state metadata.", e);
             }
         }
+
+        public IKeyValueEnumerator<K, V> ReverseRange(K from, K to)
+        {
+            IEnumerable<IReadOnlyKeyValueStore<K, V>> stores = GetAllStores();
+            try
+            {
+                return new CompositeKeyValueEnumerator<K, V>(
+                    stores.Select(x => x.ReverseRange(from, to)));
+            }
+            catch (InvalidStateStoreException e)
+            {
+                // TODO is there a point in doing this?
+                throw new InvalidStateStoreException("State store is not available anymore and may have " +
+                    "been migrated to another instance; please re-discover its location from the state metadata.", e);
+            }
+        }
+
 
         private IEnumerable<IReadOnlyKeyValueStore<K, V>> GetAllStores()
         {

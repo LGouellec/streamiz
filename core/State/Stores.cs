@@ -7,7 +7,7 @@ using System;
 
 namespace Streamiz.Kafka.Net.State
 {
-    internal static class Stores
+    public static class Stores
     {
         public static IKeyValueBytesStoreSupplier DefaultKeyValueStore(string name)
             => InMemoryKeyValueStore(name);
@@ -27,13 +27,13 @@ namespace Streamiz.Kafka.Net.State
         public static IWindowBytesStoreSupplier InMemoryWindowStore(string name, TimeSpan retention, TimeSpan windowSize)
             => new InMemoryWindowStoreSupplier(name, retention, (long)windowSize.TotalMilliseconds);
 
-        public static StoreBuilder<IWindowStore<K, V>> WindowStoreBuilder<K, V>(IWindowBytesStoreSupplier supplier, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+        internal static StoreBuilder<IWindowStore<K, V>> WindowStoreBuilder<K, V>(IWindowBytesStoreSupplier supplier, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
             => new WindowStoreBuilder<K, V>(supplier, keySerdes, valueSerdes);
 
-        public static StoreBuilder<ITimestampedKeyValueStore<K, V>> TimestampedKeyValueStoreBuilder<K, V>(IKeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
+        internal static StoreBuilder<ITimestampedKeyValueStore<K, V>> TimestampedKeyValueStoreBuilder<K, V>(IKeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
             => new TimestampedKeyValueStoreBuilder<K, V>(supplier, keySerde, valueSerde);
 
-        public static StoreBuilder<ITimestampedWindowStore<K, V>> TimestampedWindowStoreBuilder<K, V>(IWindowBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
+        internal static StoreBuilder<ITimestampedWindowStore<K, V>> TimestampedWindowStoreBuilder<K, V>(IWindowBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
             => new TimestampedWindowStoreBuilder<K, V>(supplier, keySerde, valueSerde);
     }
 }

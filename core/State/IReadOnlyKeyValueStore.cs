@@ -43,7 +43,7 @@ namespace Streamiz.Kafka.Net.State
         /// <param name="to">The last key that could be in the range, where iteration ends.</param>
         /// <returns>The reverse enumerator for this range, from smallest to largest bytes.</returns>
         /// <exception cref="InvalidStateStoreException">if the store is not initialized</exception>
-        IKeyValueEnumerator<K, V> ReverseRange(K from, K to) { throw new NotSupportedException(); }
+        IKeyValueEnumerator<K, V> ReverseRange(K from, K to);
 
         /// <summary>
         /// Return an enumerator over all keys in this store. No ordering guarantees are provided.
@@ -57,7 +57,7 @@ namespace Streamiz.Kafka.Net.State
         /// </summary>
         /// <returns>A reverse enumerator of all key/value pairs in the store.</returns>
         /// <exception cref="InvalidStateStoreException">if the store is not initialized</exception>
-        IEnumerable<KeyValuePair<K, V>> ReverseAll() { throw new NotSupportedException(); }
+        IEnumerable<KeyValuePair<K, V>> ReverseAll();
 
         /// <summary>
         /// Return an approximate count of key-value mappings in this store.

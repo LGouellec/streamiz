@@ -68,6 +68,14 @@ namespace Streamiz.Kafka.Net.State.Internal
             }
         }
 
+        public IEnumerable<KeyValuePair<K, ValueAndTimestamp<V>>> ReverseAll()
+        {
+            foreach (var keyValuePair in wrapped.ReverseAll())
+            {
+                yield return new KeyValuePair<K, ValueAndTimestamp<V>>(FromKey(keyValuePair.Key), FromValue(keyValuePair.Value));
+            }
+        }
+
         public void PutAll(IEnumerable<KeyValuePair<K, ValueAndTimestamp<V>>> entries)
         {
             foreach (var kp in entries)
@@ -80,6 +88,15 @@ namespace Streamiz.Kafka.Net.State.Internal
         public IKeyValueEnumerator<K, ValueAndTimestamp<V>> Range(K from, K to)
         {
             var enumerator = wrapped.Range(GetKeyBytes(from), GetKeyBytes(to));
+            return new WrappedKeyValueEnumerator<K, ValueAndTimestamp<V>>(
+                enumerator,
+                keySerdes,
+                valueSerdes);
+        }
+
+        public IKeyValueEnumerator<K, ValueAndTimestamp<V>> ReverseRange(K from, K to)
+        {
+            var enumerator = wrapped.ReverseRange(GetKeyBytes(from), GetKeyBytes(to));
             return new WrappedKeyValueEnumerator<K, ValueAndTimestamp<V>>(
                 enumerator,
                 keySerdes,

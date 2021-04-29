@@ -89,6 +89,34 @@ namespace Streamiz.Kafka.Net.Tests.Private
         }
 
         [Test]
+        public void ReverseAllTest()
+        {
+            InMemoryKeyValueStore store1 = new InMemoryKeyValueStore("store");
+            InMemoryKeyValueStore store2 = new InMemoryKeyValueStore("store");
+            var dt = DateTime.Now.GetMilliseconds();
+            var valueSerdes = new ValueAndTimestampSerDes<string>(new StringSerDes());
+            var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
+            var bytes2 = new Bytes(Encoding.UTF8.GetBytes("test2"));
+            var provider = new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1, store2);
+            var composite = new CompositeReadOnlyKeyValueStore<string, string>(provider, storeType, "store");
+            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt), new SerializationContext()));
+            store1.Put(bytes2, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1bis", dt), new SerializationContext()));
+            store2.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou2", dt), new SerializationContext()));
+            store2.Put(bytes2, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou2bis", dt), new SerializationContext()));
+            var result = composite.ReverseAll().ToList();
+            Assert.IsNotNull(result);
+            Assert.AreEqual(4, result.Count);
+            Assert.AreEqual("test2", result[0].Key);
+            Assert.AreEqual("coucou1bis", result[0].Value);
+            Assert.AreEqual("test", result[1].Key);
+            Assert.AreEqual("coucou1", result[1].Value);
+            Assert.AreEqual("test2", result[2].Key);
+            Assert.AreEqual("coucou2bis", result[2].Value);
+            Assert.AreEqual("test", result[3].Key);
+            Assert.AreEqual("coucou2", result[3].Value);
+        }
+
+        [Test]
         public void CountTest()
         {
             InMemoryKeyValueStore store1 = new InMemoryKeyValueStore("store");
