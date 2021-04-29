@@ -61,6 +61,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         protected Iterator iterator;
         protected readonly string name;
         protected readonly bool forward;
+        private bool firstMoveNext = true;
 
         public RocksDbEnumerator(Iterator iterator, string name, bool forward)
         {
@@ -81,10 +82,14 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         public virtual bool MoveNext()
         {
+            if (!firstMoveNext)
+                iterator = forward ? iterator.Next() : iterator.Prev();
+            else
+                firstMoveNext = false;
+
             if (iterator.Valid())
             {
                 Current = new KeyValuePair<Bytes, byte[]>(new Bytes(iterator.Key()), iterator.Value());
-                iterator = forward ? iterator.Next() : iterator.Prev();
                 return true;
             }
             else
@@ -99,6 +104,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         public void Reset()
         {
+            firstMoveNext = true;
             iterator = forward ? iterator.SeekToFirst() : iterator.SeekToLast();
         }
     }

@@ -4,13 +4,15 @@ using Streamiz.Kafka.Net.State.Internal;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.State.Enumerator
 {
     internal class SegmentEnumerator<S> : IKeyValueEnumerator<Bytes, byte[]>
         where S : ISegment
     {
-        private readonly IEnumerator<S> segmentsEnumerator;
+        private readonly List<S> segmentsEnumerator;
+        private int index = 0;
         private readonly Func<IKeyValueEnumerator<Bytes, byte[]>, bool> nextCondition;
         private readonly Bytes from;
         private readonly Bytes to;
@@ -26,7 +28,7 @@ namespace Streamiz.Kafka.Net.State.Enumerator
             Bytes to, 
             bool forward)
         {
-            segmentsEnumerator = segments.GetEnumerator();
+            segmentsEnumerator = segments.ToList();
             this.nextCondition = nextCondition;
             this.from = from;
             this.to = to;
@@ -44,12 +46,13 @@ namespace Streamiz.Kafka.Net.State.Enumerator
 
         public bool MoveNext()
         {
-            while ((currentEnumerator == null || !nextCondition(currentEnumerator) || !currentSegment.IsOpen)
-                    && segmentsEnumerator.MoveNext())
+            bool hasNext = false;
+            while ((currentEnumerator == null || !(hasNext = nextCondition(currentEnumerator)) || !currentSegment.IsOpen)
+                    && index < segmentsEnumerator.Count)
             {
                 CloseCurrentEnumerator();
-                currentSegment = segmentsEnumerator.Current;
-
+                currentSegment = segmentsEnumerator[index];
+                ++index;
                 try
                 {
                     if (from == null || to == null)
@@ -64,7 +67,7 @@ namespace Streamiz.Kafka.Net.State.Enumerator
                 }
             }
 
-            return currentEnumerator != null && currentEnumerator.MoveNext();
+            return currentEnumerator != null && hasNext;
         }
 
         public Bytes PeekNextKey()
@@ -73,7 +76,7 @@ namespace Streamiz.Kafka.Net.State.Enumerator
         public void Reset()
         {
             CloseCurrentEnumerator();
-            segmentsEnumerator.Reset();
+            index = 0;
         }
 
         #endregion

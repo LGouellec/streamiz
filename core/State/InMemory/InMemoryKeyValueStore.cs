@@ -188,7 +188,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
                     "This may be due to range arguments set in the wrong order, " +
                     "or serdes that don't preserve ordering when lexicographically comparing the serialized bytes. " +
                     "Note that the built-in numerical serdes do not follow this for negative numbers");
-                return new EmptyKeyValueIterator<Bytes, byte[]>();
+                return new EmptyKeyValueEnumerator<Bytes, byte[]>();
             }
 
             var submap = (new SortedDictionary<Bytes, byte[]>(map, new BytesComparer())).SubMap(from, to, true, true);

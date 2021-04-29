@@ -10,7 +10,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
         {
             foreach (K k in sortedDic.Keys) {
                 int r = sortedDic.Comparer.Compare(key, k);
-                if ((inclusive && r <= 0) || (!inclusive && r < 0))
+                if ((inclusive && r >= 0) || (!inclusive && r > 0))
                     yield return KeyValuePair.Create(k, sortedDic[k]);
                 else
                     break;
