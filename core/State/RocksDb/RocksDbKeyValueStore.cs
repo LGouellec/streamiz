@@ -1,7 +1,9 @@
-﻿using RocksDbSharp;
+﻿using log4net;
+using RocksDbSharp;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.State.Enumerator;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +12,9 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 {
     public class RocksDbKeyValueStore : IKeyValueStore<Bytes, byte[]>
     {
+        private static readonly ILog log = Logger.GetLogger(typeof(RocksDbKeyValueStore));
+        private BytesComparer bytesComparer = new BytesComparer();
+
         private RocksDbOptions rocksDbOptions;
 
         private const Compression COMPRESSION_TYPE = Compression.No;
@@ -48,10 +53,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         public bool IsOpen { get; private set; }
 
         public IEnumerable<KeyValuePair<Bytes, byte[]>> All()
-        {
-            var enumerator = DbAdapter.All();
-            return new RocksDbEnumerable(Name, enumerator);
-        }
+            => All(true);
 
         public long ApproximateNumEntries()
         {
@@ -167,6 +169,15 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             return originalValue;
         }
 
+        public IKeyValueEnumerator<Bytes, byte[]> Range(Bytes from, Bytes to)
+            => Range(from, to, true);
+
+        public IKeyValueEnumerator<Bytes, byte[]> ReverseRange(Bytes from, Bytes to)
+            => Range(from, to, false);
+
+        public IEnumerable<KeyValuePair<Bytes, byte[]>> ReverseAll()
+            => All(false);
+
         #endregion
 
         #region Private
@@ -245,6 +256,32 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             {
                 throw new InvalidStateStoreException($"Store {Name} is currently closed");
             }
+        }
+
+        private IKeyValueEnumerator<Bytes, byte[]> Range(Bytes from, Bytes to, bool forward)
+        {
+            if (bytesComparer.Compare(from, to) > 0)
+            {
+                log.Warn("Returning empty iterator for fetch with invalid key range: from > to. "
+                    + "This may be due to range arguments set in the wrong order, " +
+                    "or serdes that don't preserve ordering when lexicographically comparing the serialized bytes. " +
+                    "Note that the built-in numerical serdes do not follow this for negative numbers");
+                return new EmptyKeyValueIterator<Bytes, byte[]>();
+            }
+
+            CheckStateStoreOpen();
+
+            var rocksEnumerator = DbAdapter.Range(from, to, forward);
+            // openIterators.add(rocksDBRangeIterator);
+
+            return rocksEnumerator;
+        }
+        
+        private IEnumerable<KeyValuePair<Bytes, byte[]>> All(bool forward)
+        {
+            var enumerator = DbAdapter.All(forward);
+            // openIterators.add(rocksDBRangeIterator);
+            return new RocksDbEnumerable(Name, enumerator);
         }
 
         #endregion

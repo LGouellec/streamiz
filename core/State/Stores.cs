@@ -18,14 +18,11 @@ namespace Streamiz.Kafka.Net.State
         public static IKeyValueBytesStoreSupplier InMemoryKeyValueStore(string name)
             => new InMemoryKeyValueBytesStoreSupplier(name);
 
-        public static IWindowBytesStoreSupplier DefaultWindowStore(string name, TimeSpan retention, TimeSpan windowSize)
+        public static IWindowBytesStoreSupplier DefaultWindowStore(string name, TimeSpan retention, TimeSpan windowSize, long segmentInterval = 3600000)
             => InMemoryWindowStore(name, retention, windowSize);
 
-        public static IWindowBytesStoreSupplier PersistentWindowStore(string name, TimeSpan retention, TimeSpan windowSize)
-        {
-            // TODO:
-            return null;
-        }
+        public static IWindowBytesStoreSupplier PersistentWindowStore(string name, TimeSpan retention, TimeSpan windowSize, long segmentInterval = 3600000)
+            => new RocksDbWindowBytesStoreSupplier(name, retention, segmentInterval, (long)windowSize.TotalMilliseconds);
 
         public static IWindowBytesStoreSupplier InMemoryWindowStore(string name, TimeSpan retention, TimeSpan windowSize)
             => new InMemoryWindowStoreSupplier(name, retention, (long)windowSize.TotalMilliseconds);

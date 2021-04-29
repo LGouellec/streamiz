@@ -1,6 +1,7 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State.Enumerator;
 using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.State.Internal
@@ -75,6 +76,15 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public ValueAndTimestamp<V> PutIfAbsent(K key, ValueAndTimestamp<V> value)
             => FromValue(wrapped.PutIfAbsent(GetKeyBytes(key), GetValueBytes(value)));
+
+        public IKeyValueEnumerator<K, ValueAndTimestamp<V>> Range(K from, K to)
+        {
+            var enumerator = wrapped.Range(GetKeyBytes(from), GetKeyBytes(to));
+            return new WrappedKeyValueEnumerator<K, ValueAndTimestamp<V>>(
+                enumerator,
+                keySerdes,
+                valueSerdes);
+        }
 
         #endregion
 

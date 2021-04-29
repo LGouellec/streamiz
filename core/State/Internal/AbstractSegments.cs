@@ -12,7 +12,7 @@ namespace Streamiz.Kafka.Net.State.Internal
         where S : ISegment
     {
         protected readonly ILog logger = null;
-        protected readonly SortedDictionary<long, S> segments = new SortedDictionary<long, S>();
+        protected readonly SortedDictionary<long, S> segments = new SortedDictionary<long, S>(new LongComparer());
 
         protected readonly string name;
         private readonly long segmentInterval;
@@ -110,7 +110,7 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public IEnumerable<S> Segments(long timeFrom, long timeTo, bool forward)
         {
-            var _segs = segments.SubMap(SegmentId(timeFrom), SegmentId(timeTo), new LongComparer(), true, true);
+            var _segs = segments.SubMap(SegmentId(timeFrom), SegmentId(timeTo), true, true);
             _segs = forward ? _segs : _segs.Reverse();
             return _segs.Select(s => s.Value).Where(s => s.IsOpen);
         }
@@ -119,7 +119,7 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         private void CleanupEarlierThan(long minLiveSegment)
         {
-            var _segs = segments.HeadMap(minLiveSegment, new LongComparer(), false).ToList();
+            var _segs = segments.HeadMap(minLiveSegment, false).ToList();
 
             foreach(var kv in _segs)
             {
@@ -148,7 +148,7 @@ namespace Streamiz.Kafka.Net.State.Internal
             }
             catch (FormatException)
             {
-                throw new ProcessorStateException($"Unable to parse segment id as long from segmentName: {segmentName});
+                throw new ProcessorStateException($"Unable to parse segment id as long from segmentName: {segmentName}");
             }
 
             return segmentId;

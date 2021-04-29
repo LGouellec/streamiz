@@ -10,7 +10,6 @@ namespace Streamiz.Kafka.Net.State.RocksDb
     public class RocksDbEnumerable : IEnumerable<KeyValuePair<Bytes, byte[]>>
     {
         #region Inner Class
-
         private class RocksDbWrappedEnumerator : IEnumerator<KeyValuePair<Bytes, byte[]>>
         {
             private readonly string stateStoreName;
@@ -59,16 +58,18 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
     internal class RocksDbEnumerator : IKeyValueEnumerator<Bytes, byte[]>
     {
-        private Iterator iterator;
-        private readonly string name;
+        protected Iterator iterator;
+        protected readonly string name;
+        protected readonly bool forward;
 
-        public RocksDbEnumerator(Iterator iterator, string name)
+        public RocksDbEnumerator(Iterator iterator, string name, bool forward)
         {
             this.iterator = iterator;
             this.name = name;
+            this.forward = forward;
         }
 
-        public KeyValuePair<Bytes, byte[]>? Current { get; private set; } = null;
+        public KeyValuePair<Bytes, byte[]>? Current { get; protected set; } = null;
 
         object IEnumerator.Current => Current;
 
@@ -78,12 +79,12 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             iterator.Dispose();
         }
 
-        public bool MoveNext()
+        public virtual bool MoveNext()
         {
             if (iterator.Valid())
             {
                 Current = new KeyValuePair<Bytes, byte[]>(new Bytes(iterator.Key()), iterator.Value());
-                iterator = iterator.Next();
+                iterator = forward ? iterator.Next() : iterator.Prev();
                 return true;
             }
             else
@@ -98,7 +99,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         public void Reset()
         {
-            iterator = iterator.SeekToFirst();
+            iterator = forward ? iterator.SeekToFirst() : iterator.SeekToLast();
         }
     }
 }

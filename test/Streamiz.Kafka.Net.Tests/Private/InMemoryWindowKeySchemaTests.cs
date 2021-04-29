@@ -7,14 +7,14 @@ using System.Text;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
-    public class WindowKeySchemaTests
+    public class InMemoryWindowKeySchemaTests
     {
         [Test]
         public void ExtractStoreKeyBytesTest()
         {
             var bytes = new byte[10] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
             var expected = new byte[2] { 0, 1 };
-            var r = WindowKeySchema.ExtractStoreKeyBytes(bytes);
+            var r = State.Helper.InMemoryWindowKeySchema.ExtractStoreKeyBytes(bytes);
             Assert.AreEqual(expected, r);
         }
 
@@ -26,7 +26,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             List<byte> bytes = new List<byte>();
             bytes.AddRange(Encoding.UTF8.GetBytes(key));
             bytes.AddRange(BitConverter.GetBytes(ts));
-            long r = WindowKeySchema.ExtractStoreTimestamp(bytes.ToArray());
+            long r = State.Helper.InMemoryWindowKeySchema.ExtractStoreTimestamp(bytes.ToArray());
             Assert.AreEqual(ts, r);
         }
     }

@@ -6,6 +6,7 @@ using System.Text;
 namespace Streamiz.Kafka.Net.State
 {
     /// <summary>
+    /// TODO : reverseAll(), reverseFetch() ..
     /// A window store that only supports read operations.
     /// Implementations should be thread-safe as concurrent reads and writes are expected.
     /// </summary>

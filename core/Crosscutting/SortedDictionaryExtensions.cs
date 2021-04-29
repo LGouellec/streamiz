@@ -6,10 +6,10 @@ namespace Streamiz.Kafka.Net.Crosscutting
 {
     internal static class SortedDictionaryExtensions
     {
-        internal static IEnumerable<KeyValuePair<K, V>> HeadMap<K, V>(this SortedDictionary<K, V> sortedDic,  K key, IComparer<K> comparer, bool inclusive)
+        internal static IEnumerable<KeyValuePair<K, V>> HeadMap<K, V>(this SortedDictionary<K, V> sortedDic,  K key, bool inclusive)
         {
             foreach (K k in sortedDic.Keys) {
-                int r = comparer.Compare(key, k);
+                int r = sortedDic.Comparer.Compare(key, k);
                 if ((inclusive && r <= 0) || (!inclusive && r < 0))
                     yield return KeyValuePair.Create(k, sortedDic[k]);
                 else
@@ -17,12 +17,12 @@ namespace Streamiz.Kafka.Net.Crosscutting
             }
         }
 
-        internal static IEnumerable<KeyValuePair<K, V>> SubMap<K, V>(this SortedDictionary<K, V> sortedDic, K keyFrom, K keyTo, IComparer<K> comparer, bool inclusiveFrom, bool inclusiveTo)
+        internal static IEnumerable<KeyValuePair<K, V>> SubMap<K, V>(this SortedDictionary<K, V> sortedDic, K keyFrom, K keyTo , bool inclusiveFrom, bool inclusiveTo)
         {
             foreach (K k in sortedDic.Keys)
             {
-                int rF = comparer.Compare(keyFrom, k);
-                int rT = comparer.Compare(keyTo, k);
+                int rF = sortedDic.Comparer.Compare(keyFrom, k);
+                int rT = sortedDic.Comparer.Compare(keyTo, k);
 
                 if((inclusiveFrom && rF >= 0) || (!inclusiveFrom && rF > 0))
                 {

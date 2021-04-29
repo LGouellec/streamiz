@@ -1,5 +1,7 @@
 ﻿using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.State.Enumerator;
+using System;
 using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.State
@@ -24,15 +26,38 @@ namespace Streamiz.Kafka.Net.State
         /// <returns>The value or null if no value is found.</returns>
         V Get(K key);
 
-        // TODO : 
-        //KeyValueIterator<K, V> range(K from, K to);
+        /// <summary>
+        /// Get an enumerator over a given range of keys. This enumerator must be closed after use.
+        /// Order is not guaranteed as bytes lexicographical ordering might not represent key order.
+        /// </summary>
+        /// <param name="from">The first key that could be in the range, where iteration starts from.</param>
+        /// <param name="to">The last key that could be in the range, where iteration ends.</param>
+        /// <returns>The enumerator for this range, from smallest to largest bytes.</returns>
+        IKeyValueEnumerator<K, V> Range(K from, K to);
 
         /// <summary>
-        /// Return an iterator over all keys in this store. No ordering guarantees are provided.
+        /// Get a reverser enumerator over a given range of keys. This enumerator must be closed after use.
+        /// Order is not guaranteed as bytes lexicographical ordering might not represent key order.
         /// </summary>
-        /// <returns>An iterator of all key/value pairs in the store.</returns>
+        /// <param name="from">The first key that could be in the range, where iteration starts from.</param>
+        /// <param name="to">The last key that could be in the range, where iteration ends.</param>
+        /// <returns>The reverse enumerator for this range, from smallest to largest bytes.</returns>
+        /// <exception cref="InvalidStateStoreException">if the store is not initialized</exception>
+        IKeyValueEnumerator<K, V> ReverseRange(K from, K to) { throw new NotSupportedException(); }
+
+        /// <summary>
+        /// Return an enumerator over all keys in this store. No ordering guarantees are provided.
+        /// </summary>
+        /// <returns>An enumerator of all key/value pairs in the store.</returns>
         /// <exception cref="InvalidStateStoreException">if the store is not initialized</exception>
         IEnumerable<KeyValuePair<K, V>> All();
+
+        /// <summary>
+        /// Return a reverse enumerator over all keys in this store. No ordering guarantees are provided.
+        /// </summary>
+        /// <returns>A reverse enumerator of all key/value pairs in the store.</returns>
+        /// <exception cref="InvalidStateStoreException">if the store is not initialized</exception>
+        IEnumerable<KeyValuePair<K, V>> ReverseAll() { throw new NotSupportedException(); }
 
         /// <summary>
         /// Return an approximate count of key-value mappings in this store.

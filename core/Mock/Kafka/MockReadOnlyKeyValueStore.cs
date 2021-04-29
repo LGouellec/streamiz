@@ -1,5 +1,6 @@
 ﻿using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.Enumerator;
 using Streamiz.Kafka.Net.State.Internal;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,6 +38,8 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public IEnumerable<KeyValuePair<K, V>> All() => GetAllStores().SelectMany(x => x.All());
 
+        public IEnumerable<KeyValuePair<K, V>> ReverseAll() => GetAllStores().SelectMany(x => x.ReverseAll());
+
         public long ApproximateNumEntries() => GetAllStores().Sum(x => x.ApproximateNumEntries());
 
         public V Get(K key)
@@ -60,5 +63,12 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         {
             // NOTHING
         }
+
+        public IKeyValueEnumerator<K, V> Range(K from, K to)
+            => new CompositeKeyValueEnumerator<K, V>(GetAllStores().Select(x => x.Range(from, to)));
+
+        public IKeyValueEnumerator<K, V> ReverseRange(K from, K to)
+            => new CompositeKeyValueEnumerator<K, V>(GetAllStores().Select(x => x.ReverseRange(from, to)));
+
     }
 }

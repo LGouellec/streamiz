@@ -42,8 +42,12 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
         public IKeyValueEnumerator<Bytes, byte[]> All()
         {
             var _segments = segments.AllSegments(true);
-            // TODO : return segment enumerator
-            return null;
+            return new SegmentEnumerator<S>(
+                            _segments,
+                            keySchema.HasNextCondition(null, null, 0, long.MaxValue),
+                            null,
+                            null,
+                            true);
         }
 
         public void Close()
@@ -61,8 +65,12 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
         public IKeyValueEnumerator<Bytes, byte[]> FetchAll(long from, long to)
         {
             var _segments = segments.Segments(from, to, true);
-            // TODO : return segment enumerator
-            return null;
+            return new SegmentEnumerator<S>(
+                                    _segments,
+                                    keySchema.HasNextCondition(null, null, from, to),
+                                    null,
+                                    null,
+                                    true);
         }
 
         public void Flush()
@@ -115,8 +123,12 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
         public IKeyValueEnumerator<Bytes, byte[]> ReverseAll()
         {
             var _segments = segments.AllSegments(false);
-            // TODO : return segment enumerator
-            return null;
+            return new SegmentEnumerator<S>(
+                          _segments,
+                          keySchema.HasNextCondition(null, null, 0, long.MaxValue),
+                          null,
+                          null,
+                          false);
         }
 
         public IKeyValueEnumerator<Bytes, byte[]> ReverseFetch(Bytes key, long from, long to)
@@ -128,8 +140,12 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
         public IKeyValueEnumerator<Bytes, byte[]> ReverseFetchAll(long from, long to)
         {
             var _segments = segments.Segments(from, to, false);
-            // TODO : return segment enumerator
-            return null;
+            return new SegmentEnumerator<S>(
+                                    _segments,
+                                    keySchema.HasNextCondition(null, null, from, to),
+                                    null,
+                                    null,
+                                    false);
         }
 
         #endregion
@@ -147,10 +163,14 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
 
             var _segments = keySchema.SegmentsToSearch(segments, from, to, forward);
             var binaryFrom = keySchema.LowerRange(keyFrom, from);
-            var upperFrom = keySchema.UpperRange(keyTo, to);
+            var binaryTo = keySchema.UpperRange(keyTo, to);
 
-            // TODO : Return segmentenumerator
-            return null;
+            return new SegmentEnumerator<S>(
+                           _segments,
+                           keySchema.HasNextCondition(keyFrom, keyTo, from, to),
+                           binaryFrom,
+                           binaryTo,
+                           forward);
         }
 
         private IKeyValueEnumerator<Bytes, byte[]> Fetch(Bytes key, long from, long to, bool forward)
@@ -160,8 +180,12 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
             Bytes binaryFrom = keySchema.LowerRangeFixedSize(key, from);
             Bytes binaryTo = keySchema.UpperRangeFixedSize(key, to);
 
-            // TODO : Return segmentenumerator
-            return null;
+            return new SegmentEnumerator<S>(
+                            _segments,
+                            keySchema.HasNextCondition(key, key, from, to),
+                            binaryFrom,
+                            binaryTo,
+                            forward);
         }
     }
 }

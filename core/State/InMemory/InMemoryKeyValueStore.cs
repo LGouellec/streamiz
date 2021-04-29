@@ -1,6 +1,11 @@
-﻿using Streamiz.Kafka.Net.Crosscutting;
+﻿using log4net;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.State.Enumerator;
+using Streamiz.Kafka.Net.State.InMemory.Internal;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.State.InMemory
 {
@@ -10,6 +15,8 @@ namespace Streamiz.Kafka.Net.State.InMemory
     /// </summary>
     public class InMemoryKeyValueStore : IKeyValueStore<Bytes, byte[]>
     {
+        private static readonly ILog log = Logger.GetLogger(typeof(InMemoryKeyValueStore));
+        private BytesComparer bytesComparer = new BytesComparer();
         private int size = 0;
         private readonly IDictionary<Bytes, byte[]> map = new Dictionary<Bytes, byte[]>(new BytesComparer());
 
@@ -86,13 +93,36 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// </summary>
         /// <returns>An iterator of all key/value pairs in the store.</returns>
         public IEnumerable<KeyValuePair<Bytes, byte[]>> All()
-        {
-            var enumerator = map.GetEnumerator();
-            while (enumerator.MoveNext())
-            {
-                yield return enumerator.Current;
-            }
-        }
+            => All(true);
+
+        /// <summary>
+        /// Return a reverse enumerator over all keys in this store. No ordering guarantees are provided.
+        /// </summary>
+        /// <returns>A reverse enumerator of all key/value pairs in the store.</returns>
+        /// <exception cref="InvalidStateStoreException">if the store is not initialized</exception>
+        public IEnumerable<KeyValuePair<Bytes, byte[]>> ReverseAll()
+            => All(false);
+
+        /// <summary>
+        /// Get an enumerator over a given range of keys. This enumerator must be closed after use.
+        /// Order is not guaranteed as bytes lexicographical ordering might not represent key order.
+        /// </summary>
+        /// <param name="from">The first key that could be in the range, where iteration starts from.</param>
+        /// <param name="to">The last key that could be in the range, where iteration ends.</param>
+        /// <returns>The enumerator for this range, from smallest to largest bytes.</returns>
+        public IKeyValueEnumerator<Bytes, byte[]> Range(Bytes from, Bytes to)
+            => Range(from, to, true);
+
+        /// <summary>
+        /// Get a reverser enumerator over a given range of keys. This enumerator must be closed after use.
+        /// Order is not guaranteed as bytes lexicographical ordering might not represent key order.
+        /// </summary>
+        /// <param name="from">The first key that could be in the range, where iteration starts from.</param>
+        /// <param name="to">The last key that could be in the range, where iteration ends.</param>
+        /// <returns>The reverse enumerator for this range, from smallest to largest bytes.</returns>
+        /// <exception cref="InvalidStateStoreException">if the store is not initialized</exception>
+        public IKeyValueEnumerator<Bytes, byte[]> ReverseRange(Bytes from, Bytes to)
+            => Range(from, to, false);
 
         /// <summary>
         /// Initialize state store.
@@ -148,6 +178,29 @@ namespace Streamiz.Kafka.Net.State.InMemory
             }
             // TODO : 
             return null;
+        }
+
+        private IKeyValueEnumerator<Bytes, byte[]> Range(Bytes from, Bytes to, bool forward)
+        {
+            if (bytesComparer.Compare(from, to) > 0)
+            {
+                log.Warn("Returning empty iterator for fetch with invalid key range: from > to. " +
+                    "This may be due to range arguments set in the wrong order, " +
+                    "or serdes that don't preserve ordering when lexicographically comparing the serialized bytes. " +
+                    "Note that the built-in numerical serdes do not follow this for negative numbers");
+                return new EmptyKeyValueIterator<Bytes, byte[]>();
+            }
+
+            var submap = (new SortedDictionary<Bytes, byte[]>(map, new BytesComparer())).SubMap(from, to, true, true);
+
+            return new InMemoryKeyValueEnumerator(submap, forward);
+        }
+    
+        private IEnumerable<KeyValuePair<Bytes, byte[]>> All(bool forward)
+        {
+            var enumerator = forward ? map.GetEnumerator() : map.Reverse().GetEnumerator();
+            while (enumerator.MoveNext())
+                yield return enumerator.Current;
         }
     }
 }

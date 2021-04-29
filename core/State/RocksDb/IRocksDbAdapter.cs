@@ -18,9 +18,10 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         IKeyValueEnumerator<Bytes, byte[]> Range(
             Bytes from,
-            Bytes to);
+            Bytes to, 
+            bool forward);
 
-        IKeyValueEnumerator<Bytes, byte[]> All();
+        IKeyValueEnumerator<Bytes, byte[]> All(bool forward);
 
         long ApproximateNumEntries();
 

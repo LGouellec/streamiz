@@ -1,4 +1,5 @@
 ﻿using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.State.Enumerator;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -60,6 +61,22 @@ namespace Streamiz.Kafka.Net.State.Internal
             try
             {
                 return stores.FirstOrDefault(x => x.Get(key) != null).Get(key);
+            }
+            catch (InvalidStateStoreException e)
+            {
+                // TODO is there a point in doing this?
+                throw new InvalidStateStoreException("State store is not available anymore and may have " +
+                    "been migrated to another instance; please re-discover its location from the state metadata.", e);
+            }
+        }
+
+        public IKeyValueEnumerator<K, V> Range(K from, K to)
+        {
+            IEnumerable<IReadOnlyKeyValueStore<K, V>> stores = GetAllStores();
+            try
+            {
+                return new CompositeKeyValueEnumerator<K, V>(
+                    stores.Select(x => x.Range(from, to)));
             }
             catch (InvalidStateStoreException e)
             {

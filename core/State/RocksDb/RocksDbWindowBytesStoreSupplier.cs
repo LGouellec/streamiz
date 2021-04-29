@@ -1,4 +1,5 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.State.RocksDb.Internal;
 using Streamiz.Kafka.Net.State.Supplier;
 using System;
 
@@ -29,7 +30,13 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         public IWindowStore<Bytes, byte[]> Get()
         {
-            throw new NotImplementedException();
+            return new RocksDbWindowStore(
+                new RocksDbSegmentedBytesStore(
+                    Name,
+                    Retention,
+                    segmentInterval,
+                    new RocksDbWindowKeySchema()),
+                WindowSize.HasValue ? WindowSize.Value : (long)TimeSpan.FromMinutes(1).TotalMilliseconds);
         }
     }
 }

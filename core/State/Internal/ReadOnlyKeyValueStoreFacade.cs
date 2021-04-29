@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Streamiz.Kafka.Net.State.Enumerator;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Streamiz.Kafka.Net.State.Internal
@@ -21,5 +22,8 @@ namespace Streamiz.Kafka.Net.State.Internal
         public long ApproximateNumEntries() => innerStore.ApproximateNumEntries();
 
         public V Get(K key) => innerStore.Get(key) != null ? innerStore.Get(key).Value : default;
+
+        public IKeyValueEnumerator<K, V> Range(K from, K to)
+            => innerStore.Range(from, to).Transform((k, v) => KeyValuePair.Create(k, v.Value));
     }
 }

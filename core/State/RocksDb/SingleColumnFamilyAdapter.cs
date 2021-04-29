@@ -30,11 +30,14 @@ namespace Streamiz.Kafka.Net.State.RocksDb
                 batch.Put(key, value, columnFamilyHandle);
         }
 
-        public IKeyValueEnumerator<Bytes, byte[]> All()
+        public IKeyValueEnumerator<Bytes, byte[]> All(bool forward)
         {
             var iterator = db.NewIterator(columnFamilyHandle);
-            iterator.SeekToFirst();
-            return new RocksDbEnumerator(iterator, name);
+            if (forward)
+                iterator.SeekToFirst();
+            else
+                iterator.SeekToLast();
+            return new RocksDbEnumerator(iterator, name, forward);
         }
         
         public long ApproximateNumEntries()
@@ -88,9 +91,12 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             }
         }
 
-        public IKeyValueEnumerator<Bytes, byte[]> Range(Bytes from, Bytes to)
-        {
-            throw new NotImplementedException();
-        }
+        public IKeyValueEnumerator<Bytes, byte[]> Range(Bytes from, Bytes to, bool forward)
+            => new RocksDbRangeEnumerator(
+                    db.NewIterator(columnFamilyHandle),
+                    name,
+                    from,
+                    to,
+                    forward);
     }
 }

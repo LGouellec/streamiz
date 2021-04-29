@@ -20,6 +20,9 @@ namespace Streamiz.Kafka.Net.Crosscutting
         public int Compare(Bytes x, Bytes y)
             => Compare(x.Get, 0, x.Get.Length, y.Get, 0, y.Get.Length);
 
+        internal static int Compare(byte[] buffer1, byte[] buffer2)
+            => Compare(buffer1, 0, buffer1.Length, buffer2, 0, buffer2.Length);
+       
         internal static int Compare(byte[] buffer1, int offset1, int length1,
                             byte[] buffer2, int offset2, int length2)
         {
@@ -49,7 +52,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
     /// <summary>
     /// Utility class that handles immutable byte arrays.
     /// </summary>
-    public sealed class Bytes : IEquatable<Bytes>
+    public sealed class Bytes : IEquatable<Bytes>, IComparable<Bytes>
     {
         /// <summary>
         /// Get the data from the Bytes.
@@ -99,6 +102,12 @@ namespace Streamiz.Kafka.Net.Crosscutting
             if (bytes == null)
                 return null;
             return new Bytes(bytes);
+        }
+
+        public int CompareTo(Bytes other)
+        {
+            BytesComparer comparer = new BytesComparer();
+            return comparer.Compare(this, other);
         }
     }
 }

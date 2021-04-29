@@ -59,4 +59,55 @@ namespace Streamiz.Kafka.Net.State.Enumerator
             index = 0;
         }
     }
+
+    internal class CompositeKeyValueEnumerator<K, V> : IKeyValueEnumerator<K, V>
+    {
+        private IEnumerator<IKeyValueEnumerator<K, V>> enumerator;
+        private IKeyValueEnumerator<K, V> current = null;
+
+        public CompositeKeyValueEnumerator(IEnumerable<IKeyValueEnumerator<K, V>> enumerable)
+        {
+            this.enumerator = enumerable.GetEnumerator();
+        }
+
+        private void CloseCurrentEnumerator()
+        {
+            current.Dispose();
+        }
+
+        public KeyValuePair<K, V>? Current => current.Current;
+
+        object IEnumerator.Current => Current;
+
+        public void Dispose()
+        {
+            CloseCurrentEnumerator();
+            enumerator?.Dispose();
+        }
+
+        public bool MoveNext()
+        {
+            while ((current == null || !current.MoveNext()) && enumerator.MoveNext())
+            {
+                CloseCurrentEnumerator();
+                current = enumerator.Current;
+            }
+
+            return current != null && current.Current.HasValue;
+        }
+
+        public K PeekNextKey()
+        {
+            if (enumerator.Current.Current.HasValue)
+                return enumerator.Current.Current.Value.Key;
+            else
+                return default(K);
+        }
+
+        public void Reset()
+        {
+            enumerator.Current.Reset();
+            enumerator.Reset();
+        }
+    }
 }
