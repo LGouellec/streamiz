@@ -8,6 +8,7 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State.RocksDb;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -1893,7 +1894,7 @@ namespace Streamiz.Kafka.Net
             ProductionExceptionHandler = (report) => ExceptionHandlerResponse.FAIL;
             DeserializationExceptionHandler = (context, record, exception) => ExceptionHandlerResponse.FAIL;
             FollowMetadata = false;
-            StateDir = "/tmp/kafka-streams";
+            StateDir = Path.Combine(Path.GetTempPath(), "kafka-streams");
 
             if (properties != null)
             {
