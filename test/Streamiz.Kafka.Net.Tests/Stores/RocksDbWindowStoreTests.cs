@@ -328,6 +328,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
 
             var enumerator = store.All();
             Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("key", serdes.Deserialize(enumerator.PeekNextKey().Key.Get, new SerializationContext()));
             Assert.IsFalse(enumerator.MoveNext());
             enumerator.Reset();
             Assert.IsTrue(enumerator.MoveNext());

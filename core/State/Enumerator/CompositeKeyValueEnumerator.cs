@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.State.Enumerator
 {
@@ -62,17 +63,18 @@ namespace Streamiz.Kafka.Net.State.Enumerator
 
     internal class CompositeKeyValueEnumerator<K, V> : IKeyValueEnumerator<K, V>
     {
-        private IEnumerator<IKeyValueEnumerator<K, V>> enumerator;
+        private List<IKeyValueEnumerator<K, V>> enumerator;
         private IKeyValueEnumerator<K, V> current = null;
+        private int index = 0;
 
         public CompositeKeyValueEnumerator(IEnumerable<IKeyValueEnumerator<K, V>> enumerable)
         {
-            this.enumerator = enumerable.GetEnumerator();
+            this.enumerator = enumerable.ToList();
         }
 
         private void CloseCurrentEnumerator()
         {
-            current.Dispose();
+            current?.Dispose();
         }
 
         public KeyValuePair<K, V>? Current => current.Current;
@@ -82,32 +84,36 @@ namespace Streamiz.Kafka.Net.State.Enumerator
         public void Dispose()
         {
             CloseCurrentEnumerator();
-            enumerator?.Dispose();
+            index = 0;
+            enumerator.Clear();
         }
 
         public bool MoveNext()
         {
-            while ((current == null || !current.MoveNext()) && enumerator.MoveNext())
+            bool hasNext = false;
+            while ((current == null || !(hasNext = current.MoveNext())) && index < enumerator.Count)
             {
                 CloseCurrentEnumerator();
-                current = enumerator.Current;
+                current = enumerator[index];
+                ++index;
             }
 
-            return current != null && current.Current.HasValue;
+            return current != null && hasNext;
         }
 
         public K PeekNextKey()
         {
-            if (enumerator.Current.Current.HasValue)
-                return enumerator.Current.Current.Value.Key;
+            if (current.Current.HasValue)
+                return current.Current.Value.Key;
             else
                 return default(K);
         }
 
         public void Reset()
         {
-            enumerator.Current.Reset();
-            enumerator.Reset();
+            current?.Reset();
+            current = null;
+            index = 0;
         }
     }
 }

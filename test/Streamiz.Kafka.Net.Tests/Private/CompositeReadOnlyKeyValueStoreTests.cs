@@ -131,5 +131,33 @@ namespace Streamiz.Kafka.Net.Tests.Private
             store2.Put(bytes2, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou2", dt), new SerializationContext()));
             Assert.AreEqual(2, composite.ApproximateNumEntries());
         }
+
+        [Test]
+        public void ResetTest()
+        {
+            InMemoryKeyValueStore store1 = new InMemoryKeyValueStore("store");
+            InMemoryKeyValueStore store2 = new InMemoryKeyValueStore("store");
+            var dt = DateTime.Now.GetMilliseconds();
+            var valueSerdes = new ValueAndTimestampSerDes<string>(new StringSerDes());
+            var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
+            var bytes2 = new Bytes(Encoding.UTF8.GetBytes("test2"));
+            var provider = new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1, store2);
+            var composite = new CompositeReadOnlyKeyValueStore<string, string>(provider, storeType, "store");
+            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt), new SerializationContext()));
+            store2.Put(bytes2, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou2", dt), new SerializationContext()));
+            var enumerator = composite.Range("test", "test2");
+            Assert.IsNotNull(enumerator);
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("test", enumerator.PeekNextKey());
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("test2", enumerator.PeekNextKey());
+            Assert.IsFalse(enumerator.MoveNext());
+            enumerator.Reset();
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("test", enumerator.PeekNextKey());
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("test2", enumerator.PeekNextKey());
+            Assert.IsFalse(enumerator.MoveNext());
+        }
     }
 }

@@ -319,6 +319,70 @@ namespace Streamiz.Kafka.Net.Tests.Public
         }
 
         [Test]
+        public async Task GetRangeKVStateStore()
+        {
+            var timeout = TimeSpan.FromSeconds(10);
+
+            bool isRunningState = false;
+            DateTime dt = DateTime.Now;
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
+            config.BootstrapServers = "127.0.0.1";
+            config.PollMs = 10;
+
+            var supplier = new SyncKafkaSupplier();
+            var producer = supplier.GetProducer(config.ToProducerConfig());
+
+            var builder = new StreamBuilder();
+            builder.Table("topic", InMemory<string, string>.As("store"));
+
+            var t = builder.Build();
+            var stream = new KafkaStream(t, config, supplier);
+
+            stream.StateChanged += (old, @new) =>
+            {
+                if (@new.Equals(KafkaStream.State.RUNNING))
+                {
+                    isRunningState = true;
+                }
+            };
+            await stream.StartAsync();
+            while (!isRunningState)
+            {
+                Thread.Sleep(250);
+                if (DateTime.Now > dt + timeout)
+                {
+                    break;
+                }
+            }
+            Assert.IsTrue(isRunningState);
+
+            if (isRunningState)
+            {
+                var serdes = new StringSerDes();
+                producer.Produce("topic",
+                    new Confluent.Kafka.Message<byte[], byte[]>
+                    {
+                        Key = serdes.Serialize("key1", new SerializationContext()),
+                        Value = serdes.Serialize("coucou", new SerializationContext())
+                    });
+                Thread.Sleep(50);
+                var store = stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.KeyValueStore<string, string>()));
+                Assert.IsNotNull(store);
+                var list = store.Range("key1", "key2").ToList();
+                Assert.AreEqual(1, list.Count);
+                var item = list[0];
+                Assert.IsNotNull(item);
+                Assert.AreEqual("coucou", item.Value);
+                Assert.AreEqual("key1", item.Key);
+            }
+
+            stream.Dispose();
+        }
+
+
+        [Test]
         public void GetStateStoreBeforeRunningState()
         {
             
@@ -548,7 +612,6 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             stream.Dispose();
         }
-
 
         [Test]
         public async Task BuildGlobalStateStore()

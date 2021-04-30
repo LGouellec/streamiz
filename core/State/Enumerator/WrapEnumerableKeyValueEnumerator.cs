@@ -1,32 +1,50 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.State.Enumerator
 {
     internal class WrapEnumerableKeyValueEnumerator<K, V> :
         IKeyValueEnumerator<K, V>
     {
-        private readonly IEnumerator<KeyValuePair<K, V>> wrappedEnumerator;
+        private readonly List<KeyValuePair<K, V>> values;
+        private int index = 0;
+        private KeyValuePair<K, V>? current = null;
 
         public WrapEnumerableKeyValueEnumerator(IEnumerable<KeyValuePair<K, V>> enumerable)
         {
-            wrappedEnumerator = enumerable.GetEnumerator();
+            values = enumerable.ToList();
         }
 
-        public KeyValuePair<K, V>? Current => wrappedEnumerator.Current;
+        public KeyValuePair<K, V>? Current => current;
 
         object IEnumerator.Current => Current;
 
         public void Dispose()
-            => wrappedEnumerator.Dispose();
+        {
+            current = null;
+            index = 0;
+        }
 
         public bool MoveNext()
-            => wrappedEnumerator.MoveNext();
+        {
+            if (values.Count > 0 && index < values.Count)
+            {
+                current = values[index];
+                ++index;
+                return true;
+            }
+            else
+                return false;
+        }
 
         public K PeekNextKey()
-            => wrappedEnumerator.Current.Key;
+            => current != null ? current.Value.Key : default(K);
 
         public void Reset()
-            => wrappedEnumerator.Reset();
+        {
+            index = 0;
+            current = null;
+        }
     }
 }
