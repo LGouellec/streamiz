@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.Enumerator;
 using Streamiz.Kafka.Net.State.RocksDb;
@@ -227,9 +228,10 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         [Test]
         public void TestRetention()
         {
-            var date = DateTime.Now.AddDays(-1);
+            var date = DateTime.Now;
+            store.Put(new Bytes(new byte[1] { 12 }), new byte[0], date.AddDays(-1).GetMilliseconds());
             store.Put(new Bytes(new byte[1] { 13 }), new byte[0], date.GetMilliseconds());
-            Assert.AreEqual(0, store.All().ToList().Count);
+            Assert.AreEqual(1, store.All().ToList().Count);
         }
 
         [Test]
@@ -265,6 +267,71 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             Assert.IsFalse(enumerator.MoveNext());
             enumerator.Reset();
             Assert.AreEqual(0, enumerator.ToList().Count);
+        }
+
+
+        [Test]
+        public void EnumeratorFetchByKeyTest()
+        {
+            var serdes = new StringSerDes();
+
+            string deserialize(byte[] bytes)
+            {
+                return serdes.Deserialize(bytes, new SerializationContext());
+            }
+
+            byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
+            byte[] key2 = serdes.Serialize("key2", new SerializationContext()), value2 = serdes.Serialize("value2", new SerializationContext());
+            byte[] key3 = serdes.Serialize("key3", new SerializationContext()), value3 = serdes.Serialize("value3", new SerializationContext());
+
+            store.Put(new Bytes(key), value, 100);
+            store.Put(new Bytes(key2), value2, 100);
+            store.Put(new Bytes(key3), value3, 100);
+
+            var enumerator = store.Fetch(new Bytes(key), 50, 150);
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("value", deserialize(enumerator.Current.Value.Value));
+            Assert.IsFalse(enumerator.MoveNext());
+            enumerator.Dispose();
+        }
+
+        [Test]
+        public void EnumeratorFetchByKeyNoWindowTest()
+        {
+            var serdes = new StringSerDes();
+
+            string deserialize(byte[] bytes)
+            {
+                return serdes.Deserialize(bytes, new SerializationContext());
+            }
+
+            byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
+            byte[] key2 = serdes.Serialize("key2", new SerializationContext()), value2 = serdes.Serialize("value2", new SerializationContext());
+            byte[] key3 = serdes.Serialize("key3", new SerializationContext()), value3 = serdes.Serialize("value3", new SerializationContext());
+
+            store.Put(new Bytes(key), value, 100);
+            store.Put(new Bytes(key2), value2, 100);
+            store.Put(new Bytes(key3), value3, 100);
+
+            var enumerator = store.Fetch(new Bytes(key), 50, 75);
+            Assert.IsFalse(enumerator.MoveNext());
+            enumerator.Dispose();
+        }
+
+        [Test]
+        public void EnumeratorReset()
+        {
+            var serdes = new StringSerDes();
+            byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
+
+            store.Put(new Bytes(key), value, 100);
+
+            var enumerator = store.All();
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsFalse(enumerator.MoveNext());
+            enumerator.Reset();
+            Assert.IsTrue(enumerator.MoveNext());
+            enumerator.Dispose();
         }
     }
 }

@@ -5,6 +5,7 @@ using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.State.RocksDb.Internal
 {
@@ -46,9 +47,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
             => ToStoreKeyBinary(key, Math.Max(0, from), 0);
 
         public IList<S> SegmentsToSearch<S>(ISegments<S> segments, long from, long to, bool forward) where S : ISegment
-        {
-            throw new NotImplementedException();
-        }
+            => segments.Segments(from, to, forward).ToList();
 
         public long SegmentTimestamp(Bytes key)
             => ExtractStoreTimestamp(key.Get);
@@ -91,6 +90,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
 
         public static Windowed<K> From<K>(byte[] binaryKey, long windowSize, ISerDes<K> deserializer, String topic)
         {
+            binaryKey = binaryKey ?? new byte[0];
             byte[] bytes = binaryKey.AsSpan(0, binaryKey.Length - TIMESTAMP_SIZE).ToArray();
             K key = deserializer.Deserialize(bytes, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Key, topic));
             Window window = ExtractWindow(binaryKey, windowSize);
@@ -99,7 +99,8 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
 
         private static Window ExtractWindow( byte[] binaryKey, long windowSize)
         {
-             ByteBuffer buffer = ByteBuffer.Build(binaryKey);
+            binaryKey = binaryKey ?? new byte[0];
+            ByteBuffer buffer = ByteBuffer.Build(binaryKey);
              long start = buffer.GetLong(binaryKey.Length - TIMESTAMP_SIZE);
             return TimeWindowForSize(start, windowSize);
         }
@@ -130,6 +131,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
 
         public static Bytes ToStoreKeyBinary(byte[] serializedKey, long timestamp, int seqnum)
         {
+            serializedKey = serializedKey ?? new byte[0];
             ByteBuffer buf = ByteBuffer.Build(serializedKey.Length + TIMESTAMP_SIZE + SEQNUM_SIZE);
             buf.Put(serializedKey);
             buf.PutLong(timestamp);
@@ -140,22 +142,26 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
 
         public static byte[] ExtractStoreKeyBytes(byte[] binaryKey)
         {
+            binaryKey = binaryKey ?? new byte[0];
             return binaryKey.AsSpan(0, binaryKey.Length - TIMESTAMP_SIZE - SEQNUM_SIZE).ToArray();
         }
 
         public static K ExtractStoreKey<K>(byte[] binaryKey, ISerDes<K> keySerdes)
         {
+            binaryKey = binaryKey ?? new byte[0];
             byte[] bytes = binaryKey.AsSpan(0, binaryKey.Length - TIMESTAMP_SIZE - SEQNUM_SIZE).ToArray();
             return keySerdes.Deserialize(bytes, new Confluent.Kafka.SerializationContext());
         }
 
         public static long ExtractStoreTimestamp(byte[] binaryKey)
         {
+            binaryKey = binaryKey ?? new byte[0];
             return ByteBuffer.Build(binaryKey).GetLong(binaryKey.Length - TIMESTAMP_SIZE - SEQNUM_SIZE);
         }
 
         public static int ExtractStoreSequence(byte[] binaryKey)
         {
+            binaryKey = binaryKey ?? new byte[0];
             return ByteBuffer.Build(binaryKey).GetInt(binaryKey.Length - SEQNUM_SIZE);
         }
 
