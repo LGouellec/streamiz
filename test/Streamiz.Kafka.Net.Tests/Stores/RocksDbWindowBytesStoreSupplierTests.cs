@@ -65,7 +65,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-rocksdb-window-store";
             config.UseRandomRocksDbConfigForTest();
-
+            
             Topology t = builder.Build();
 
             using (var driver = new TopologyTestDriver(t, config))
