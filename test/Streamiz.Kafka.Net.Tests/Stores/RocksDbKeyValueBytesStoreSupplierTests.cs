@@ -6,6 +6,7 @@ using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using Streamiz.Kafka.Net.Tests.Helpers;
+using System.IO;
 
 namespace Streamiz.Kafka.Net.Tests.Stores
 {
@@ -38,6 +39,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
                 Assert.AreEqual("1", resultK1);
                 Assert.AreEqual("2", resultK2);
             }
+            Directory.Delete(Path.Combine(config.StateDir, config.ApplicationId), true);
         }
     
         [Test]
@@ -71,6 +73,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
                 Assert.AreEqual("1", resultK1);
                 Assert.AreEqual("2", resultK2);
             }
+            Directory.Delete(Path.Combine(config.StateDir, config.ApplicationId), true);
         }
     }
 }

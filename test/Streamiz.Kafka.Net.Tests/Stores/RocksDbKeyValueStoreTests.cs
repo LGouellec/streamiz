@@ -8,6 +8,7 @@ using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State.RocksDb;
 using Streamiz.Kafka.Net.Tests.Helpers;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -47,8 +48,11 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         [TearDown]
         public void End()
         {
-            store.Flush();
-            stateManager.Close();
+            if (store != null)
+            {
+                store.Flush();
+                stateManager.Close();
+            }
             Directory.Delete(Path.Combine(config.StateDir, config.ApplicationId), true);
         }
 
@@ -198,7 +202,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             {
                 return serdes.Deserialize(bytes, new SerializationContext());
             }
-            
+
             byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
             byte[] key2 = serdes.Serialize("key2", new SerializationContext()), value2 = serdes.Serialize("value2", new SerializationContext());
 
@@ -295,6 +299,21 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             var enumerator = store.Range(new Bytes(key2), new Bytes(key));
             Assert.IsFalse(enumerator.MoveNext());
             enumerator.Dispose();
+        }
+
+        [Test]
+        public void EnumeratorAlreadyDispose()
+        {
+            var serdes = new StringSerDes();
+
+            byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
+
+            store.Put(new Bytes(key), value);
+
+            var enumerator = store.Range(new Bytes(key), new Bytes(key));
+            Assert.IsTrue(enumerator.MoveNext());
+            enumerator.Dispose();
+            Assert.Throws<ObjectDisposedException>(() => enumerator.Dispose());
         }
     }
 }

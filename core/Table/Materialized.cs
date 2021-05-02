@@ -607,5 +607,68 @@ namespace Streamiz.Kafka.Net.Table
         }
     }
 
+
+    /// <summary>
+    /// <see cref="RocksDbWindows{K, V}"/> is a child class of <see cref="Materialized{K, V, S}"/>. 
+    /// It's a class helper for materialize <see cref="IKTable{K, V}"/> with an <see cref="RocksDbWindowBytesStoreSupplier"/>
+    /// </summary>
+    /// <typeparam name="K">Type of key</typeparam>
+    /// <typeparam name="V">type of value</typeparam>
+    public class RocksDbWindows<K, V> : Materialized<K, V, IWindowStore<Bytes, byte[]>>
+    {
+        /// <summary>
+        /// Protected constructor with state store name and supplier
+        /// </summary>
+        /// <param name="name">State store name for query it</param>
+        /// <param name="supplier">Supplier use to build the state store</param>
+        protected RocksDbWindows(string name, IStoreSupplier<IWindowStore<Bytes, byte[]>> supplier)
+            : base(name, supplier)
+        {
+
+        }
+
+        /// <summary>
+        /// Materialize a <see cref="RocksDbWindowStore"/> with the given name.
+        /// </summary>
+        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
+        /// <param name="segmentInterval"></param>
+        /// <param name="windowSize">the windows size aggregation</param>
+        /// <returns>a new <see cref="RocksDbWindows{K, V}"/> instance with the given storeName and windows size</returns>
+        public static RocksDbWindows<K, V> @As(string storeName, TimeSpan? segmentInterval = null, TimeSpan ? windowSize = null)
+            => new RocksDbWindows<K, V>(storeName, 
+                new RocksDbWindowBytesStoreSupplier(
+                    storeName,
+                    TimeSpan.FromDays(1),
+                    segmentInterval.HasValue ? (long)segmentInterval.Value.TotalMilliseconds : 60 * 1000 * 60,
+                    windowSize.HasValue ? (long)windowSize.Value.TotalMilliseconds : (long?)null));
+
+        /// <summary>
+        /// Materialize a <see cref="RocksDbWindowStore"/> with the given name.
+        /// </summary>
+        /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
+        /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
+        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
+        /// <param name="segmentInterval"></param>
+        /// <param name="windowSize">the windows size aggregation</param>
+        /// <returns>a new <see cref="RocksDbWindows{K, V}"/> instance with the given storeName</returns>
+        public static RocksDbWindows<K, V> @As<KS, VS>(string storeName, TimeSpan? segmentInterval = null, TimeSpan? windowSize = null)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+        {
+            var m = new RocksDbWindows<K, V>(storeName,
+                new RocksDbWindowBytesStoreSupplier(
+                    storeName,
+                    TimeSpan.FromDays(1),
+                    segmentInterval.HasValue ? (long)segmentInterval.Value.TotalMilliseconds : 60 * 1000 * 60,
+                    windowSize.HasValue ? (long)windowSize.Value.TotalMilliseconds : (long?)null))
+            {
+                KeySerdes = new KS(),
+                ValueSerdes = new VS()
+            };
+            return m;
+        }
+
+    }
+
     #endregion
 }

@@ -31,9 +31,9 @@ namespace Streamiz.Kafka.Net.Crosscutting
 
         public void Dispose()
         {
-            reader?.Dispose();
-            writer?.Dispose();
-            stream?.Dispose();
+            reader.Dispose();
+            writer.Dispose();
+            stream.Dispose();
         }
 
         #region Write Operation
