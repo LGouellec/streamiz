@@ -82,6 +82,12 @@ namespace Streamiz.Kafka.Net.Crosscutting
             return reader.ReadInt32();
         }
 
+        public byte[] GetBytes(int offset, int size)
+        {
+            reader.BaseStream.Seek(offset, SeekOrigin.Begin);
+            return reader.ReadBytes(size);
+        }
+
         #endregion
 
         public byte[] ToArray()

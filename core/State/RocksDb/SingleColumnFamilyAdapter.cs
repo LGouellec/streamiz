@@ -12,13 +12,15 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         private readonly string name;
         private readonly RocksDbSharp.RocksDb db;
         private readonly WriteOptions writeOptions;
+        private readonly Func<byte[], byte[], int> keyComparator;
         private readonly ColumnFamilyHandle columnFamilyHandle;
 
-        public SingleColumnFamilyAdapter(string name, RocksDbSharp.RocksDb db, WriteOptions writeOptions, ColumnFamilyHandle columnFamilyHandle)
+        public SingleColumnFamilyAdapter(string name, RocksDbSharp.RocksDb db, WriteOptions writeOptions, Func<byte[], byte[], int> keyComparator, ColumnFamilyHandle columnFamilyHandle)
         {
             this.name = name;
             this.db = db;
             this.writeOptions = writeOptions;
+            this.keyComparator = keyComparator;
             this.columnFamilyHandle = columnFamilyHandle;
         }
 
@@ -97,6 +99,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
                     name,
                     from,
                     to,
+                    keyComparator,
                     forward);
     }
 }

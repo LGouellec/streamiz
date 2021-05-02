@@ -78,6 +78,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         internal RocksDbSharp.RocksDb Db { get; set; }
         internal IRocksDbAdapter DbAdapter { get; private set; }
         internal ProcessorContext InternalProcessorContext { get; set; }
+        protected Func<byte[], byte[], int> KeyComparator { get; set; }
 
         public RocksDbKeyValueStore(string name)
             : this(name, DB_FILE_DIR)
@@ -88,6 +89,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         {
             Name = name;
             this.parentDir = parentDir;
+            KeyComparator = CompareKey;
         }
 
         #region Store Impl
@@ -295,6 +297,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
                     Name,
                     Db,
                     writeOptions,
+                    KeyComparator,
                     columnFamilyHandle);
             }
             catch (RocksDbException e)
@@ -339,5 +342,14 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         }
 
         #endregion
+
+        /// <summary>
+        /// Use to RocksDbRangeEnumerator to compare two keys
+        /// </summary>
+        /// <param name="key1">From key</param>
+        /// <param name="key2">To key</param>
+        /// <returns></returns>
+        protected int CompareKey(byte[] key1, byte[] key2)
+            => BytesComparer.Compare(key1, key2);
     }
 }

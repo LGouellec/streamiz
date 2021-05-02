@@ -29,7 +29,6 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
             long now = DateTime.Now.GetMilliseconds();
             while (task.CanProcess(now))
                 task.Process();
-            task.Commit();
         }
 
         public void Pipe(byte[] key, byte[] value, DateTime timestamp)

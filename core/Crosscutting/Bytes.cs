@@ -52,17 +52,18 @@ namespace Streamiz.Kafka.Net.Crosscutting
     /// <summary>
     /// Utility class that handles immutable byte arrays.
     /// </summary>
-    public sealed class Bytes : IEquatable<Bytes>, IComparable<Bytes>
+    public class Bytes : IEquatable<Bytes>, IComparable<Bytes>
     {
         /// <summary>
         /// Get the data from the Bytes.
         /// </summary>
-        public byte[] Get { get; }
+        public virtual byte[] Get { get; }
 
         /// <summary>
         /// Create a Bytes using the byte array.
         /// </summary>
         /// <param name="bytes">This array becomes the backing storage for the object.</param>
+        [Obsolete("Will be removed last release version")]
         public Bytes(byte[] bytes)
         {
             Get = bytes;
@@ -104,7 +105,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
             return new Bytes(bytes);
         }
 
-        public int CompareTo(Bytes other)
+        public virtual int CompareTo(Bytes other)
         {
             BytesComparer comparer = new BytesComparer();
             return comparer.Compare(this, other);
