@@ -5,6 +5,20 @@ using System.Numerics;
 
 namespace Streamiz.Kafka.Net.Crosscutting
 {
+    internal class ReverseBytesComparer : IEqualityComparer<Bytes>, IComparer<Bytes>
+    {
+        private readonly BytesComparer sortComparer = new BytesComparer();
+
+        public int Compare(Bytes x, Bytes y)
+            => sortComparer.Compare(y, x);
+
+        public bool Equals(Bytes x, Bytes y)
+            => sortComparer.Equals(x, y);
+
+        public int GetHashCode(Bytes obj)
+            => sortComparer.GetHashCode(obj);
+    }
+
     internal class BytesComparer : IEqualityComparer<Bytes>, IComparer<Bytes>
     {
         public bool Equals(Bytes x, Bytes y)

@@ -6,7 +6,10 @@ using System.Text;
 
 namespace Streamiz.Kafka.Net.State.RocksDb
 {
-    internal class WindowKeyBytesComparer : IEqualityComparer<WindowKeyBytes>, IComparer<WindowKeyBytes>
+    internal class WindowKeyBytesComparer : 
+        IEqualityComparer<WindowKeyBytes>,
+        IComparer<WindowKeyBytes>,
+        IComparer<Bytes>
     {
         public bool Equals(WindowKeyBytes x, WindowKeyBytes y)
         {
@@ -22,13 +25,13 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         public int Compare(WindowKeyBytes x, WindowKeyBytes y)
         {
             var bytes1 = x.Get;
-            var bytes2 = x.Get;
+            var bytes2 = y.Get;
             using (var buffer1 = ByteBuffer.Build(bytes1))
             {
                 using(var buffer2 = ByteBuffer.Build(bytes2))
                 {
                     var key1 = buffer1.GetBytes(0, bytes1.Length - RocksDbWindowKeySchema.SUFFIX_SIZE);
-                    var key2 = buffer1.GetBytes(0, bytes2.Length - RocksDbWindowKeySchema.SUFFIX_SIZE);
+                    var key2 = buffer2.GetBytes(0, bytes2.Length - RocksDbWindowKeySchema.SUFFIX_SIZE);
                     int compareKey = BytesComparer.Compare(key1, key2);
                     if (compareKey == 0)
                     {
@@ -49,6 +52,9 @@ namespace Streamiz.Kafka.Net.State.RocksDb
                 }
             }
         }
+
+        public int Compare(Bytes x, Bytes y)
+            => Compare(WindowKeyBytes.Wrap(x.Get), WindowKeyBytes.Wrap(y.Get));
     }
 
     public class WindowKeyBytes : Bytes

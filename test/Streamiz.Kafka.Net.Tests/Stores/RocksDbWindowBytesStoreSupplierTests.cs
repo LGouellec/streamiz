@@ -8,6 +8,7 @@ using Streamiz.Kafka.Net.Table;
 using Streamiz.Kafka.Net.Tests.Helpers;
 using System;
 using System.IO;
+using System.Threading;
 
 namespace Streamiz.Kafka.Net.Tests.Stores
 {
@@ -73,15 +74,13 @@ namespace Streamiz.Kafka.Net.Tests.Stores
                 DateTime dt = DateTime.Now;
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
                 inputTopic.PipeInput("key1", "1", dt);
-                inputTopic.PipeInput("key2", "2", dt);
-
+                
                 var store = driver.GetWindowStore<string, long>("rocksdb-w-store");
                 Assert.IsNotNull(store);
-                var k1 = store.FetchAll(dt.AddMinutes(-10), dt.AddMinutes(10)).ToList();
+                var k1 = store.Fetch("key1", dt.AddMinutes(-10), dt.AddMinutes(10)).ToList();
 
-                Assert.AreEqual(2, k1.Count);
+                Assert.AreEqual(1, k1.Count);
                 Assert.AreEqual(1L, k1[0].Value);
-                Assert.AreEqual(1L, k1[1].Value);
             }
             Directory.Delete(Path.Combine(config.StateDir, config.ApplicationId), true);
         }

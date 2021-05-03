@@ -16,7 +16,9 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         {
             if (forward)
             {
+                // TODO FIX
                 iterator.Seek(from.Get);
+                // iterator.SeekToFirst();
                 rawLastKey = to.Get;
                 if (rawLastKey == null)
                 {
@@ -25,7 +27,9 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             }
             else
             {
+                // TODO FIX
                 iterator.SeekForPrev(to.Get);
+                // iterator.SeekToLast();
                 rawLastKey = from.Get;
                 if (rawLastKey == null)
                 {

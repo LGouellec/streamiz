@@ -58,8 +58,6 @@ namespace Streamiz.Kafka.Net.State.RocksDb
     public class RocksDbKeyValueStore : IKeyValueStore<Bytes, byte[]>
     {
         private static readonly ILog log = Logger.GetLogger(typeof(RocksDbKeyValueStore));
-        private readonly BytesComparer bytesComparer = new BytesComparer();
-
         private readonly ISet<WrappedRocksRbKeyValueEnumerator> openIterators = new HashSet<WrappedRocksRbKeyValueEnumerator>();
 
 
@@ -316,7 +314,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         private IKeyValueEnumerator<Bytes, byte[]> Range(Bytes from, Bytes to, bool forward)
         {
-            if (bytesComparer.Compare(from, to) > 0)
+            if (KeyComparator.Invoke(from.Get, to.Get) > 0)
             {
                 log.Warn("Returning empty iterator for fetch with invalid key range: from > to. "
                     + "This may be due to range arguments set in the wrong order, " +
