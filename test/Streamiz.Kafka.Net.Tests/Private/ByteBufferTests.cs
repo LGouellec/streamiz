@@ -5,7 +5,6 @@ using System.Linq;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
-    // TODOTEST
     public class ByteBufferTests
     {
         [Test]
@@ -17,7 +16,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var intBytes = BitConverter.GetBytes(i);
             var readArray = longBytes.Concat(intBytes).ToArray();
             var buffer = ByteBuffer.Build(readArray);
-            
+
             long l1 = buffer.GetLong(0);
             int i1 = buffer.GetInt(sizeof(long));
             Assert.AreEqual(l, l1);
@@ -36,12 +35,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var longBytes = BitConverter.GetBytes(l);
             var intBytes = BitConverter.GetBytes(i);
             var totalArray = longBytes.Concat(intBytes).Concat(array).ToArray();
-            
+
             var buffer = ByteBuffer.Build(16);
             buffer.PutLong(l);
             buffer.PutInt(i);
             buffer.Put(array);
-            
+
             Assert.IsTrue(totalArray.SequenceEqual(buffer.ToArray()));
             buffer.Dispose();
         }
@@ -70,6 +69,27 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             Assert.AreEqual(i, i2);
             Assert.IsTrue(totalArray.SequenceEqual(buffer.ToArray()));
+        }
+
+        [Test]
+        public void ByteBufferWriteBytesArray()
+        {
+            byte[] array = new byte[] { 1, 2, 3, 4 };
+
+            var buffer = ByteBuffer.Build(0);
+            buffer.PutInt(array.Length);
+            buffer.Put(array);
+            byte[] array2 = buffer.ToArray();
+            buffer.Dispose();
+
+            var buffer2 = ByteBuffer.Build(array2);
+
+            int sizeArray = buffer2.GetInt(0);
+            byte[] contentArray = buffer2.GetBytes(sizeof(int), sizeArray);
+            buffer2.Dispose();
+
+            Assert.AreEqual(4, sizeArray);
+            Assert.AreEqual(array, contentArray);
         }
     }
 }

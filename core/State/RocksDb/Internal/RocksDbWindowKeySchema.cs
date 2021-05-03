@@ -14,9 +14,9 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
     /// </summary>
     internal class RocksDbWindowKeySchema : IKeySchema
     {
-        private const int SEQNUM_SIZE = 4;
-        private const int TIMESTAMP_SIZE = 8;
-        private const int SUFFIX_SIZE = TIMESTAMP_SIZE + SEQNUM_SIZE;
+        internal const int SEQNUM_SIZE = sizeof(int);
+        internal const int TIMESTAMP_SIZE = sizeof(long);
+        internal const int SUFFIX_SIZE = TIMESTAMP_SIZE + SEQNUM_SIZE;
         private static readonly byte[] MIN_SUFFIX = new byte[SUFFIX_SIZE];
         private static readonly IComparer<Bytes> bytesComparer = new BytesComparer();
 
