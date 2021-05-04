@@ -280,8 +280,8 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             }
 
             byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
-            byte[] key2 = serdes.Serialize("key2", new SerializationContext()), value2 = serdes.Serialize("value2", new SerializationContext());
-            byte[] key3 = serdes.Serialize("key3", new SerializationContext()), value3 = serdes.Serialize("value3", new SerializationContext());
+            byte[] key2 = serdes.Serialize("test", new SerializationContext()), value2 = serdes.Serialize("value2", new SerializationContext());
+            byte[] key3 = serdes.Serialize("toto", new SerializationContext()), value3 = serdes.Serialize("value3", new SerializationContext());
 
             store.Put(new Bytes(key), value, 100);
             store.Put(new Bytes(key2), value2, 100);

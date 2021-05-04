@@ -155,13 +155,14 @@ namespace Streamiz.Kafka.Net.Mock
         public void Dispose()
         {
             tokenSource.Cancel();
-            behavior.Dispose();
 
             foreach (var k in inputs)
                 k.Value.Dispose();
 
             foreach (var k in outputs)
                 k.Value.Dispose();
+            
+            behavior.Dispose();
         }
 
         #region Create Input Topic

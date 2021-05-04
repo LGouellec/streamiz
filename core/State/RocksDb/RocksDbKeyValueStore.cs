@@ -239,6 +239,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         {
             DbOptions dbOptions = new DbOptions();
             ColumnFamilyOptions columnFamilyOptions = new ColumnFamilyOptions();
+            writeOptions = new WriteOptions();
             BlockBasedTableOptions tableConfig = new BlockBasedTableOptions();
 
             RocksDbOptions rocksDbOptions = new RocksDbOptions(dbOptions, columnFamilyOptions);
@@ -264,8 +265,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             // subtracts one from the value passed to determine the number of compaction threads
             // (this could be a bug in the RocksDB code and their devs have been contacted).
             rocksDbOptions.IncreaseParallelism(Math.Max(Environment.ProcessorCount, 2));
-
-            writeOptions = new WriteOptions();
+            
             writeOptions.DisableWal(1);
 
             context.Configuration.RocksDbConfigHandler?.Invoke(Name, rocksDbOptions);
@@ -281,27 +281,40 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         private void OpenRocksDB(DbOptions dbOptions, ColumnFamilyOptions columnFamilyOptions)
         {
+            int maxRetries = 5;
+            int i = 0;
+            bool open = false;
+            RocksDbException rocksDbException = null;
+
             var columnFamilyDescriptors = new ColumnFamilies(columnFamilyOptions);
 
-            try
+            while (!open && i < maxRetries)
             {
-                Db = RocksDbSharp.RocksDb.Open(
-                    dbOptions,
-                    DbDir.FullName,
-                    columnFamilyDescriptors);
+                try
+                {
+                    Db = RocksDbSharp.RocksDb.Open(
+                        dbOptions,
+                        DbDir.FullName,
+                        columnFamilyDescriptors);
 
-                var columnFamilyHandle = Db.GetDefaultColumnFamily();
-                DbAdapter = new SingleColumnFamilyAdapter(
-                    Name,
-                    Db,
-                    writeOptions,
-                    KeyComparator,
-                    columnFamilyHandle);
+                    var columnFamilyHandle = Db.GetDefaultColumnFamily();
+                    DbAdapter = new SingleColumnFamilyAdapter(
+                        Name,
+                        Db,
+                        writeOptions,
+                        KeyComparator,
+                        columnFamilyHandle);
+                    open = true;
+                }
+                catch (RocksDbException e)
+                {
+                    ++i;
+                    rocksDbException = e;
+                }
             }
-            catch (RocksDbException e)
-            {
-                throw new ProcessorStateException("Error opening store " + Name + " at location " + DbDir.ToString(), e);
-            }
+
+            if(!open)
+                throw new ProcessorStateException("Error opening store " + Name + " at location " + DbDir.ToString(), rocksDbException);
         }
 
         private void CheckStateStoreOpen()

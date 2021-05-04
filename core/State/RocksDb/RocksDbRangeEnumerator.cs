@@ -9,7 +9,6 @@ namespace Streamiz.Kafka.Net.State.RocksDb
     {
         private readonly byte[] rawLastKey;
         private readonly Func<byte[], byte[], int> keyComparator;
-        private bool firstMoveNext = true;
 
         public RocksDbRangeEnumerator(Iterator iterator, string name, Bytes from, Bytes to, Func<byte[], byte[], int> keyComparator, bool forward)
             : base(iterator, name, forward)
@@ -42,11 +41,6 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         public override bool MoveNext()
         {
-            if (!firstMoveNext)
-                iterator = forward ? iterator.Next() : iterator.Prev();
-            else
-                firstMoveNext = false;
-
             if (iterator.Valid())
             {
                 if (forward)
@@ -54,7 +48,6 @@ namespace Streamiz.Kafka.Net.State.RocksDb
                     if (keyComparator(iterator.Key(), rawLastKey) <= 0)
                     {
                         Current = new KeyValuePair<Bytes, byte[]>(new Bytes(iterator.Key()), iterator.Value());
-                        return true;
                     }
                     else
                     {
@@ -66,13 +59,15 @@ namespace Streamiz.Kafka.Net.State.RocksDb
                     if (keyComparator(iterator.Key(), rawLastKey) >= 0)
                     {
                         Current = new KeyValuePair<Bytes, byte[]>(new Bytes(iterator.Key()), iterator.Value());
-                        return true;
                     }
                     else
                     {
                         return false;
                     }
                 }
+
+                iterator = forward ? iterator.Next() : iterator.Prev();
+                return true;
             }
             else
             {
