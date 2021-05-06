@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace Streamiz.Kafka.Net.Tests.Helpers
 {
@@ -9,6 +10,12 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
             Guid guid = Guid.NewGuid();
             config.ApplicationId = $"{config.ApplicationId}-{guid}";
             config.StateDir = $".";
+            return config;
+        }
+
+        internal static StreamConfig RemoveRocksDbFolderForTest(this StreamConfig config)
+        {
+            Directory.Delete(Path.Combine(config.StateDir, config.ApplicationId), true);
             return config;
         }
     }

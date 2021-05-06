@@ -44,7 +44,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
                 Assert.AreEqual(1L, k1[0].Value);
                 Assert.AreEqual(1L, k1[1].Value);
             }
-            Directory.Delete(Path.Combine(config.StateDir, config.ApplicationId), true);
+            config.RemoveRocksDbFolderForTest();
         }
 
         [Test]
@@ -82,7 +82,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
 
                 Assert.AreEqual(3, k1.Count);
             }
-            Directory.Delete(Path.Combine(config.StateDir, config.ApplicationId), true);
+            config.RemoveRocksDbFolderForTest();
         }
     }
 }

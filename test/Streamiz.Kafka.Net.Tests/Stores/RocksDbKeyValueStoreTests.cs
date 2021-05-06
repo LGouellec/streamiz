@@ -53,7 +53,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
                 store.Flush();
                 stateManager.Close();
             }
-            Directory.Delete(Path.Combine(config.StateDir, config.ApplicationId), true);
+            config.RemoveRocksDbFolderForTest();
         }
 
         [Test]
