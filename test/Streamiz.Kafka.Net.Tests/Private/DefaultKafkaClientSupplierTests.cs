@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using Streamiz.Kafka.Net.Kafka.Internal;
 using System;
+using System.IO;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {

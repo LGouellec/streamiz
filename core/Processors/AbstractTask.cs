@@ -20,6 +20,9 @@ namespace Streamiz.Kafka.Net.Processors
         protected ILog log;
         protected readonly string logPrefix = "";
 
+        // For testing
+        internal AbstractTask() { }
+
         protected AbstractTask(TaskId id, IEnumerable<TopicPartition> partition, ProcessorTopology topology, IConsumer<byte[], byte[]> consumer, IStreamConfig config)
         {
             log = Logger.GetLogger(GetType());
@@ -39,7 +42,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public ProcessorContext Context { get; protected set; }
 
-        public TaskId Id { get; }
+        public virtual TaskId Id { get; }
 
         public IEnumerable<TopicPartition> Partition { get; }
 
@@ -55,6 +58,11 @@ namespace Streamiz.Kafka.Net.Processors
         public bool IsClosed { get; protected set; }
 
         public void RequestCommit() => commitRequested = true;
+
+        public bool IsPersistent
+             => stateMgr.StateStoreNames
+                    .Select(n => stateMgr.GetStore(n))
+                    .Any((s) => s.Persistent);
 
         #region Abstract
 

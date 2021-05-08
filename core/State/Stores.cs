@@ -1,59 +1,39 @@
 ﻿using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State.InMemory;
 using Streamiz.Kafka.Net.State.Internal.Builder;
+using Streamiz.Kafka.Net.State.RocksDb;
 using Streamiz.Kafka.Net.State.Supplier;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.State
 {
-    internal static class Stores
+    public static class Stores
     {
-        public static KeyValueBytesStoreSupplier DefaultKeyValueStore(string name)
+        public static IKeyValueBytesStoreSupplier DefaultKeyValueStore(string name)
             => InMemoryKeyValueStore(name);
 
-        public static KeyValueBytesStoreSupplier PersistentKeyValueStore(string name)
-        {
-            // TODO : RocksDB IMPLEMENTATION
-            //return new RocksDbKeyValueBytesStoreSupplier(name, true);
-            return null;
-        }
+        public static IKeyValueBytesStoreSupplier PersistentKeyValueStore(string name)
+            => new RocksDbKeyValueBytesStoreSupplier(name);
 
-        public static KeyValueBytesStoreSupplier InMemoryKeyValueStore(string name)
-        {
-            return new InMemoryKeyValueBytesStoreSupplier(name);
-        }
+        public static IKeyValueBytesStoreSupplier InMemoryKeyValueStore(string name)
+            => new InMemoryKeyValueBytesStoreSupplier(name);
 
-
-        public static WindowBytesStoreSupplier DefaultWindowStore(string name, TimeSpan retention, TimeSpan windowSize)
+        public static IWindowBytesStoreSupplier DefaultWindowStore(string name, TimeSpan retention, TimeSpan windowSize, long segmentInterval = 3600000)
             => InMemoryWindowStore(name, retention, windowSize);
 
-        public static WindowBytesStoreSupplier PersistentWindowStore(string name, TimeSpan retention, TimeSpan windowSize)
-        {
-            // TODO:
-            return null;
-        }
+        public static IWindowBytesStoreSupplier PersistentWindowStore(string name, TimeSpan retention, TimeSpan windowSize, long segmentInterval = 3600000)
+            => new RocksDbWindowBytesStoreSupplier(name, retention, segmentInterval, (long)windowSize.TotalMilliseconds);
 
-        public static WindowBytesStoreSupplier InMemoryWindowStore(string name, TimeSpan retention, TimeSpan windowSize)
-        {
-            return new InMemoryWindowStoreSupplier(name, retention, (long)windowSize.TotalMilliseconds);
-        }
+        public static IWindowBytesStoreSupplier InMemoryWindowStore(string name, TimeSpan retention, TimeSpan windowSize)
+            => new InMemoryWindowStoreSupplier(name, retention, (long)windowSize.TotalMilliseconds);
 
+        internal static StoreBuilder<IWindowStore<K, V>> WindowStoreBuilder<K, V>(IWindowBytesStoreSupplier supplier, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+            => new WindowStoreBuilder<K, V>(supplier, keySerdes, valueSerdes);
 
-        public static StoreBuilder<ITimestampedKeyValueStore<K, V>> TimestampedKeyValueStoreBuilder<K, V>(KeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
-        {
-            return new TimestampedKeyValueStoreBuilder<K, V>(supplier, keySerde, valueSerde);
-        } 
-        
-        public static StoreBuilder<ITimestampedWindowStore<K, V>> TimestampedWindowStoreBuilder<K, V>(WindowBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
-        {
-            return new TimestampedWindowStoreBuilder<K, V>(supplier, keySerde, valueSerde);
-        }
+        internal static StoreBuilder<ITimestampedKeyValueStore<K, V>> TimestampedKeyValueStoreBuilder<K, V>(IKeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
+            => new TimestampedKeyValueStoreBuilder<K, V>(supplier, keySerde, valueSerde);
 
-        public static StoreBuilder<IWindowStore<K, V>> WindowStoreBuilder<K, V>(WindowBytesStoreSupplier supplier, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
-        {
-            return new WindowStoreBuilder<K, V>(supplier, keySerdes, valueSerdes);
-        }
+        internal static StoreBuilder<ITimestampedWindowStore<K, V>> TimestampedWindowStoreBuilder<K, V>(IWindowBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
+            => new TimestampedWindowStoreBuilder<K, V>(supplier, keySerde, valueSerde);
     }
 }

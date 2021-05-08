@@ -7,9 +7,9 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
     internal class WindowStoreBuilder<K, V>
         : AbstractStoreBuilder<K, V, IWindowStore<K, V>>
     {
-        private readonly WindowBytesStoreSupplier supplier;
+        private readonly IWindowBytesStoreSupplier supplier;
 
-        public WindowStoreBuilder(WindowBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde) 
+        public WindowStoreBuilder(IWindowBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde) 
             : base(supplier.Name, keySerde, valueSerde)
         {
             this.supplier = supplier;

@@ -220,7 +220,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             var dt = DateTime.Now;
             var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(1), (long)defaultSize.TotalMilliseconds);
             var enumerator = store.FetchAll(dt.AddDays(1), dt);
-            Assert.IsAssignableFrom<EmptyKeyValueIterator<Windowed<Bytes>, byte[]>>(enumerator);
+            Assert.IsAssignableFrom<EmptyKeyValueEnumerator<Windowed<Bytes>, byte[]>>(enumerator);
             Assert.IsFalse(enumerator.MoveNext());
             enumerator.Reset();
             Assert.AreEqual(0, enumerator.ToList().Count);
@@ -232,7 +232,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             var dt = DateTime.Now;
             var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(1), (long)defaultSize.TotalMilliseconds);
             var enumerator = store.Fetch(new Bytes(null), dt.AddDays(1), dt);
-            Assert.IsAssignableFrom<EmptyWindowStoreIterator<byte[]>>(enumerator);
+            Assert.IsAssignableFrom<EmptyWindowStoreEnumerator<byte[]>>(enumerator);
             Assert.IsFalse(enumerator.MoveNext());
             enumerator.Reset();
             Assert.AreEqual(0, enumerator.ToList().Count);

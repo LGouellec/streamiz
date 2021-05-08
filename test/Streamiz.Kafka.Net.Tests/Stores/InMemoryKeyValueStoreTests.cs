@@ -108,5 +108,148 @@ namespace Streamiz.Kafka.Net.Tests.Stores
 
             Assert.AreEqual(1, store.ApproximateNumEntries());
         }
+
+        [Test]
+        public void EmptyEnumerator()
+        {
+            var store = new InMemoryKeyValueStore("store");
+
+            var enumerator = store.All().GetEnumerator();
+            Assert.IsFalse(enumerator.MoveNext());
+            enumerator.Dispose();
+        }
+
+        [Test]
+        public void EnumeratorReset()
+        {
+            var store = new InMemoryKeyValueStore("store");
+
+            var serdes = new StringSerDes();
+            byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
+
+            store.Put(new Bytes(key), value);
+
+            var enumerator = store.All().GetEnumerator();
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsFalse(enumerator.MoveNext());
+            Assert.Throws<NotSupportedException>(() => enumerator.Reset());
+        }
+
+        [Test]
+        public void EnumeratorReverseAll()
+        {
+            var store = new InMemoryKeyValueStore("store");
+
+            var serdes = new StringSerDes();
+
+            string deserialize(byte[] bytes)
+            {
+                return serdes.Deserialize(bytes, new SerializationContext());
+            }
+
+            byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
+            byte[] key2 = serdes.Serialize("key2", new SerializationContext()), value2 = serdes.Serialize("value2", new SerializationContext());
+
+            store.Put(new Bytes(key), value);
+            store.Put(new Bytes(key2), value2);
+
+            var enumerator = store.ReverseAll().GetEnumerator();
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("key2", deserialize(enumerator.Current.Key.Get));
+            Assert.AreEqual("value2", deserialize(enumerator.Current.Value));
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("key", deserialize(enumerator.Current.Key.Get));
+            Assert.AreEqual("value", deserialize(enumerator.Current.Value));
+            Assert.IsFalse(enumerator.MoveNext());
+            enumerator.Dispose();
+        }
+
+        [Test]
+        public void EnumeratorRangeAll()
+        {
+            var store = new InMemoryKeyValueStore("store");
+
+            var serdes = new StringSerDes();
+
+            string deserialize(byte[] bytes)
+            {
+                return serdes.Deserialize(bytes, new SerializationContext());
+            }
+
+            byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
+            byte[] key2 = serdes.Serialize("key2", new SerializationContext()), value2 = serdes.Serialize("value2", new SerializationContext());
+            byte[] key3 = serdes.Serialize("key3", new SerializationContext()), value3 = serdes.Serialize("value3", new SerializationContext());
+
+            store.Put(new Bytes(key), value);
+            store.Put(new Bytes(key2), value2);
+            store.Put(new Bytes(key3), value3);
+
+            var enumerator = store.Range(new Bytes(key), new Bytes(key2));
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("key", deserialize(enumerator.Current.Value.Key.Get));
+            Assert.AreEqual("value", deserialize(enumerator.Current.Value.Value));
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("key2", deserialize(enumerator.Current.Value.Key.Get));
+            Assert.AreEqual("value2", deserialize(enumerator.Current.Value.Value));
+            Assert.IsFalse(enumerator.MoveNext());
+            enumerator.Dispose();
+        }
+
+        [Test]
+        public void EnumeratorIncorrectRange()
+        {
+            var store = new InMemoryKeyValueStore("store");
+
+            var serdes = new StringSerDes();
+
+            string deserialize(byte[] bytes)
+            {
+                return serdes.Deserialize(bytes, new SerializationContext());
+            }
+
+            byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
+            byte[] key2 = serdes.Serialize("key2", new SerializationContext()), value2 = serdes.Serialize("value2", new SerializationContext());
+            byte[] key3 = serdes.Serialize("key3", new SerializationContext()), value3 = serdes.Serialize("value3", new SerializationContext());
+
+            store.Put(new Bytes(key), value);
+            store.Put(new Bytes(key2), value2);
+            store.Put(new Bytes(key3), value3);
+
+            var enumerator = store.Range(new Bytes(key2), new Bytes(key));
+            Assert.IsFalse(enumerator.MoveNext());
+            enumerator.Dispose();
+        }
+
+        [Test]
+        public void EnumeratorReverseRangeAll()
+        {
+            var store = new InMemoryKeyValueStore("store");
+
+            var serdes = new StringSerDes();
+
+            string deserialize(byte[] bytes)
+            {
+                return serdes.Deserialize(bytes, new SerializationContext());
+            }
+
+            byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
+            byte[] key2 = serdes.Serialize("key2", new SerializationContext()), value2 = serdes.Serialize("value2", new SerializationContext());
+            byte[] key3 = serdes.Serialize("key3", new SerializationContext()), value3 = serdes.Serialize("value3", new SerializationContext());
+
+            store.Put(new Bytes(key), value);
+            store.Put(new Bytes(key2), value2);
+            store.Put(new Bytes(key3), value3);
+
+            var enumerator = store.ReverseRange(new Bytes(key), new Bytes(key2));
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("key2", deserialize(enumerator.Current.Value.Key.Get));
+            Assert.AreEqual("value2", deserialize(enumerator.Current.Value.Value));
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("key", deserialize(enumerator.Current.Value.Key.Get));
+            Assert.AreEqual("value", deserialize(enumerator.Current.Value.Value));
+            Assert.IsFalse(enumerator.MoveNext());
+            enumerator.Dispose();
+        }
+
     }
 }

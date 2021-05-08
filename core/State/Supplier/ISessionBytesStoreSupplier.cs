@@ -8,7 +8,7 @@ namespace Streamiz.Kafka.Net.State.Supplier
     /// <summary>
     /// NOT IMPLEMENTED FOR MOMENT
     /// </summary>
-    public interface SessionBytesStoreSupplier : StoreSupplier<ISessionStore<Bytes, byte[]>>
+    public interface ISessionBytesStoreSupplier : IStoreSupplier<ISessionStore<Bytes, byte[]>>
     {
     }
 }

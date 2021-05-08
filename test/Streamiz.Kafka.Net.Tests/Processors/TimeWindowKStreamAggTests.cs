@@ -121,7 +121,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .WindowedBy(TumblingWindowOptions.Of(2000))
+                .WindowedBy(TumblingWindowOptions.Of(20000))
                 .Aggregate<int, Int32SerDes>(
                         () => 0,
                         (k, v, agg) => Math.Max(v.Length, agg))

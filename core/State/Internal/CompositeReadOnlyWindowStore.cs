@@ -67,7 +67,7 @@ namespace Streamiz.Kafka.Net.State.Internal
                         return it;
                     }
                 }
-                return new EmptyWindowStoreIterator<V>();
+                return new EmptyWindowStoreEnumerator<V>();
             }
             catch (InvalidStateStoreException e)
             {
@@ -95,7 +95,7 @@ namespace Streamiz.Kafka.Net.State.Internal
                         return it;
                     }
                 }
-                return new EmptyWindowStoreIterator<V>();
+                return new EmptyWindowStoreEnumerator<V>();
             }
             catch (InvalidStateStoreException e)
             {

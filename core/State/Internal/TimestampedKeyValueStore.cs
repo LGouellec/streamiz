@@ -1,17 +1,18 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State.Enumerator;
 using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
-    internal class TimestampedKeyValueStoreImpl<K, V> :
+    internal class TimestampedKeyValueStore<K, V> :
         WrappedKeyValueStore<K, ValueAndTimestamp<V>>,
         ITimestampedKeyValueStore<K, V>
     {
         private bool initStoreSerdes = false;
 
-        public TimestampedKeyValueStoreImpl(IKeyValueStore<Bytes, byte[]> wrapped, ISerDes<K> keySerdes, ISerDes<ValueAndTimestamp<V>> valueSerdes)
+        public TimestampedKeyValueStore(IKeyValueStore<Bytes, byte[]> wrapped, ISerDes<K> keySerdes, ISerDes<ValueAndTimestamp<V>> valueSerdes)
             : base(wrapped, keySerdes, valueSerdes)
         {
 
@@ -67,6 +68,14 @@ namespace Streamiz.Kafka.Net.State.Internal
             }
         }
 
+        public IEnumerable<KeyValuePair<K, ValueAndTimestamp<V>>> ReverseAll()
+        {
+            foreach (var keyValuePair in wrapped.ReverseAll())
+            {
+                yield return new KeyValuePair<K, ValueAndTimestamp<V>>(FromKey(keyValuePair.Key), FromValue(keyValuePair.Value));
+            }
+        }
+
         public void PutAll(IEnumerable<KeyValuePair<K, ValueAndTimestamp<V>>> entries)
         {
             foreach (var kp in entries)
@@ -75,6 +84,24 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public ValueAndTimestamp<V> PutIfAbsent(K key, ValueAndTimestamp<V> value)
             => FromValue(wrapped.PutIfAbsent(GetKeyBytes(key), GetValueBytes(value)));
+
+        public IKeyValueEnumerator<K, ValueAndTimestamp<V>> Range(K from, K to)
+        {
+            var enumerator = wrapped.Range(GetKeyBytes(from), GetKeyBytes(to));
+            return new WrappedKeyValueEnumerator<K, ValueAndTimestamp<V>>(
+                enumerator,
+                keySerdes,
+                valueSerdes);
+        }
+
+        public IKeyValueEnumerator<K, ValueAndTimestamp<V>> ReverseRange(K from, K to)
+        {
+            var enumerator = wrapped.ReverseRange(GetKeyBytes(from), GetKeyBytes(to));
+            return new WrappedKeyValueEnumerator<K, ValueAndTimestamp<V>>(
+                enumerator,
+                keySerdes,
+                valueSerdes);
+        }
 
         #endregion
 

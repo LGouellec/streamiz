@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Streamiz.Kafka.Net.State;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -341,6 +342,107 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 var inputTopic = driver.CreateInputTopic<string, string>("table-topic");
                 inputTopic.PipeInput("key1", "1");
                 inputTopic.PipeInput("key2", "2");
+            }
+        }
+
+        [Test]
+        public void KTableSourceRangeStateStore()
+        {
+            var builder = new StreamBuilder();
+
+            builder.Table("table-topic", InMemory<string, string>.As("table-topic-store"));
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-map";
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("table-topic");
+                inputTopic.PipeInput("key1", "1");
+                inputTopic.PipeInput("key2", "2");
+                inputTopic.PipeInput("key3", "3");
+
+                var store = driver.GetKeyValueStore<string, string>("table-topic-store");
+                Assert.IsNotNull(store);
+
+                var results = store.Range("key1", "key3").ToList();
+
+                Assert.AreEqual(3, results.Count);
+                Assert.AreEqual("key1", results[0].Key);
+                Assert.AreEqual("1", results[0].Value);
+                Assert.AreEqual("key2", results[1].Key);
+                Assert.AreEqual("2", results[1].Value);
+                Assert.AreEqual("key3", results[2].Key);
+                Assert.AreEqual("3", results[2].Value);
+            }
+        }
+
+        [Test]
+        public void KTableSourceReverseRangeStateStore()
+        {
+            var builder = new StreamBuilder();
+
+            builder.Table("table-topic", InMemory<string, string>.As("table-topic-store"));
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-map";
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("table-topic");
+                inputTopic.PipeInput("key1", "1");
+                inputTopic.PipeInput("key2", "2");
+                inputTopic.PipeInput("key3", "3");
+
+                var store = driver.GetKeyValueStore<string, string>("table-topic-store");
+                Assert.IsNotNull(store);
+
+                var results = store.ReverseRange("key1", "key3").ToList();
+
+                Assert.AreEqual(3, results.Count);
+                Assert.AreEqual("key3", results[0].Key);
+                Assert.AreEqual("3", results[0].Value);
+                Assert.AreEqual("key2", results[1].Key);
+                Assert.AreEqual("2", results[1].Value);
+                Assert.AreEqual("key1", results[2].Key);
+                Assert.AreEqual("1", results[2].Value);
+            }
+        }
+
+        [Test]
+        public void KTableSourceReverseAllStateStore()
+        {
+            var builder = new StreamBuilder();
+
+            builder.Table("table-topic", InMemory<string, string>.As("table-topic-store"));
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-map";
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("table-topic");
+                inputTopic.PipeInput("key1", "1");
+                inputTopic.PipeInput("key3", "2");
+                inputTopic.PipeInput("key2", "2");
+                inputTopic.PipeInput("key4", "2");
+
+                var store = driver.GetKeyValueStore<string, string>("table-topic-store");
+                Assert.IsNotNull(store);
+
+                var results = store.ReverseAll().ToList();
+
+                Assert.AreEqual(4, results.Count);
+                Assert.AreEqual("key4", results[0].Key);
+                Assert.AreEqual("key2", results[1].Key);
+                Assert.AreEqual("key3", results[2].Key);
+                Assert.AreEqual("key1", results[3].Key);
             }
         }
     }

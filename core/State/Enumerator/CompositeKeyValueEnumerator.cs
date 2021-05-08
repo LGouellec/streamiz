@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.State.Enumerator
 {
@@ -56,6 +57,62 @@ namespace Streamiz.Kafka.Net.State.Enumerator
         public void Reset()
         {
             CloseCurrentEnumerator();
+            index = 0;
+        }
+    }
+
+    internal class CompositeKeyValueEnumerator<K, V> : IKeyValueEnumerator<K, V>
+    {
+        private List<IKeyValueEnumerator<K, V>> enumerator;
+        private IKeyValueEnumerator<K, V> current = null;
+        private int index = 0;
+
+        public CompositeKeyValueEnumerator(IEnumerable<IKeyValueEnumerator<K, V>> enumerable)
+        {
+            this.enumerator = enumerable.ToList();
+        }
+
+        private void CloseCurrentEnumerator()
+        {
+            current?.Dispose();
+        }
+
+        public KeyValuePair<K, V>? Current => current.Current;
+
+        object IEnumerator.Current => Current;
+
+        public void Dispose()
+        {
+            CloseCurrentEnumerator();
+            index = 0;
+            enumerator.Clear();
+        }
+
+        public bool MoveNext()
+        {
+            bool hasNext = false;
+            while ((current == null || !(hasNext = current.MoveNext())) && index < enumerator.Count)
+            {
+                CloseCurrentEnumerator();
+                current = enumerator[index];
+                ++index;
+            }
+
+            return current != null && hasNext;
+        }
+
+        public K PeekNextKey()
+        {
+            if (current.Current.HasValue)
+                return current.Current.Value.Key;
+            else
+                return default(K);
+        }
+
+        public void Reset()
+        {
+            current?.Reset();
+            current = null;
             index = 0;
         }
     }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.State.Enumerator
 {
-    internal class EmptyKeyValueIterator<K, V> : IKeyValueEnumerator<K, V>
+    internal class EmptyKeyValueEnumerator<K, V> : IKeyValueEnumerator<K, V>
     {
         public KeyValuePair<K, V>? Current => null;
 
@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.State.Enumerator
         public void Reset() { }
     }
 
-    internal class EmptyWindowStoreIterator<V> : IWindowStoreEnumerator<V>
+    internal class EmptyWindowStoreEnumerator<V> : IWindowStoreEnumerator<V>
     {
         public KeyValuePair<long, V>? Current => null;
 

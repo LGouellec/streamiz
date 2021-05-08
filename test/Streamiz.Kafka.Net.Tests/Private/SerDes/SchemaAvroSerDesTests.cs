@@ -3,6 +3,7 @@ using Avro.Specific;
 using Confluent.Kafka;
 using Confluent.SchemaRegistry;
 using Confluent.SchemaRegistry.Serdes;
+using Moq;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock;
@@ -10,6 +11,7 @@ using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock;
 using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State.RocksDb;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Tests.Helpers.Bean.Avro;
 using System;
@@ -120,7 +122,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 
     public class SchemaAvroSerDesTests
     {
-        private readonly string topic = "person";
+        readonly string topic = "person";
 
         [Test]
         public void DeserializeWithoutInit()
@@ -400,9 +402,9 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         public void IncorrectConfigurationInterface()
         {
             var mockSchemaClient = new MockSchemaRegistryClient();
-            var config = new Mock<IStreamConfig>();
+            var mock = new Mock<IStreamConfig>();
             var serdes = new MockAvroSerDes(mockSchemaClient);
-            Assert.Throws<StreamConfigException>(() => serdes.Initialize(new Net.SerDes.SerDesContext(config.Object)));
+            Assert.Throws<StreamConfigException>(() => serdes.Initialize(new Net.SerDes.SerDesContext(mock.Object)));
         }
 
         [Test]

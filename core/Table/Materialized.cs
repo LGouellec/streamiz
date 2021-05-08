@@ -3,6 +3,7 @@ using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.InMemory;
+using Streamiz.Kafka.Net.State.RocksDb;
 using Streamiz.Kafka.Net.State.Supplier;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;
@@ -48,7 +49,7 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         /// <param name="storeName">State store name for query it</param>
         /// <param name="storeSupplier">Supplier use to build the state store</param>
-        protected Materialized(string storeName, StoreSupplier<S> storeSupplier)
+        protected Materialized(string storeName, IStoreSupplier<S> storeSupplier)
         {
             this.storeName = storeName;
             StoreSupplier = storeSupplier;
@@ -59,7 +60,7 @@ namespace Streamiz.Kafka.Net.Table
         /// Protected constructor with store supplier
         /// </summary>
         /// <param name="storeSupplier">Supplier use to build the state store</param>
-        protected Materialized(StoreSupplier<S> storeSupplier)
+        protected Materialized(IStoreSupplier<S> storeSupplier)
             : this(null, storeSupplier)
         {
         }
@@ -108,37 +109,37 @@ namespace Streamiz.Kafka.Net.Table
         public static Materialized<K, V, S> Create() => new Materialized<K, V, S>(string.Empty);
 
         /// <summary>
-        /// Materialize a <see cref="IWindowStore{K, V}"/> using the provided <see cref="WindowBytesStoreSupplier"/>
+        /// Materialize a <see cref="IWindowStore{K, V}"/> using the provided <see cref="IWindowBytesStoreSupplier"/>
         /// Important: Custom subclasses are allowed here, but they should respect the retention contract:
         /// Window stores are required to retain windows at least as long as (window size + window grace period).
         /// </summary>
-        /// <param name="supplier">the <see cref="WindowBytesStoreSupplier"/> used to materialize the store</param>
+        /// <param name="supplier">the <see cref="IWindowBytesStoreSupplier"/> used to materialize the store</param>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given supplier</returns>
-        public static Materialized<K, V, IWindowStore<Bytes, byte[]>> Create(WindowBytesStoreSupplier supplier)
+        public static Materialized<K, V, IWindowStore<Bytes, byte[]>> Create(IWindowBytesStoreSupplier supplier)
         {
             var m = new Materialized<K, V, IWindowStore<Bytes, byte[]>>(supplier);
             return m;
         }
 
         /// <summary>
-        /// Materialize a <see cref="ISessionStore{K, AGG}"/> using the provided <see cref="SessionBytesStoreSupplier"/>
+        /// Materialize a <see cref="ISessionStore{K, AGG}"/> using the provided <see cref="ISessionBytesStoreSupplier"/>
         /// Important: Custom subclasses are allowed here, but they should respect the retention contract:
         /// Session stores are required to retain windows at least as long as (session inactivity gap + session grace period).
         /// </summary>
-        /// <param name="supplier">the <see cref="SessionBytesStoreSupplier"/> used to materialize the store</param>
+        /// <param name="supplier">the <see cref="ISessionBytesStoreSupplier"/> used to materialize the store</param>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given supplier</returns>
-        public static Materialized<K, V, ISessionStore<Bytes, byte[]>> Create(SessionBytesStoreSupplier supplier)
+        public static Materialized<K, V, ISessionStore<Bytes, byte[]>> Create(ISessionBytesStoreSupplier supplier)
         {
             var m = new Materialized<K, V, ISessionStore<Bytes, byte[]>>(supplier);
             return m;
         }
 
         /// <summary>
-        /// Materialize a <see cref="IKeyValueStore{K, V}"/> using the provided <see cref="KeyValueBytesStoreSupplier"/>
+        /// Materialize a <see cref="IKeyValueStore{K, V}"/> using the provided <see cref="IKeyValueBytesStoreSupplier"/>
         /// </summary>
-        /// <param name="supplier">the <see cref="KeyValueBytesStoreSupplier"/> used to materialize the store</param>
+        /// <param name="supplier">the <see cref="IKeyValueBytesStoreSupplier"/> used to materialize the store</param>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given supplier</returns>
-        public static Materialized<K, V, IKeyValueStore<Bytes, byte[]>> Create(KeyValueBytesStoreSupplier supplier)
+        public static Materialized<K, V, IKeyValueStore<Bytes, byte[]>> Create(IKeyValueBytesStoreSupplier supplier)
         {
             var m = new Materialized<K, V, IKeyValueStore<Bytes, byte[]>>(supplier);
             return m;
@@ -175,15 +176,15 @@ namespace Streamiz.Kafka.Net.Table
         }
 
         /// <summary>
-        /// Materialize a <see cref="IWindowStore{K, V}"/> using the provided <see cref="WindowBytesStoreSupplier"/>
+        /// Materialize a <see cref="IWindowStore{K, V}"/> using the provided <see cref="IWindowBytesStoreSupplier"/>
         /// Important: Custom subclasses are allowed here, but they should respect the retention contract:
         /// Window stores are required to retain windows at least as long as (window size + window grace period).
         /// </summary>
         /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
         /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
-        /// <param name="supplier">the <see cref="WindowBytesStoreSupplier"/> used to materialize the store</param>
+        /// <param name="supplier">the <see cref="IWindowBytesStoreSupplier"/> used to materialize the store</param>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given supplier</returns>
-        public static Materialized<K, V, IWindowStore<Bytes, byte[]>> Create<KS, VS>(WindowBytesStoreSupplier supplier)
+        public static Materialized<K, V, IWindowStore<Bytes, byte[]>> Create<KS, VS>(IWindowBytesStoreSupplier supplier)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
@@ -196,15 +197,15 @@ namespace Streamiz.Kafka.Net.Table
         }
 
         /// <summary>
-        /// Materialize a <see cref="ISessionStore{K, AGG}"/> using the provided <see cref="SessionBytesStoreSupplier"/>
+        /// Materialize a <see cref="ISessionStore{K, AGG}"/> using the provided <see cref="ISessionBytesStoreSupplier"/>
         /// Important: Custom subclasses are allowed here, but they should respect the retention contract:
         /// Session stores are required to retain windows at least as long as (session inactivity gap + session grace period).
         /// </summary>
         /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
         /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
-        /// <param name="supplier">the <see cref="SessionBytesStoreSupplier"/> used to materialize the store</param>
+        /// <param name="supplier">the <see cref="ISessionBytesStoreSupplier"/> used to materialize the store</param>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given supplier</returns>
-        public static Materialized<K, V, ISessionStore<Bytes, byte[]>> Create<KS, VS>(SessionBytesStoreSupplier supplier)
+        public static Materialized<K, V, ISessionStore<Bytes, byte[]>> Create<KS, VS>(ISessionBytesStoreSupplier supplier)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
@@ -217,13 +218,13 @@ namespace Streamiz.Kafka.Net.Table
         }
 
         /// <summary>
-        /// Materialize a <see cref="IKeyValueStore{K, V}"/> using the provided <see cref="KeyValueBytesStoreSupplier"/>
+        /// Materialize a <see cref="IKeyValueStore{K, V}"/> using the provided <see cref="IKeyValueBytesStoreSupplier"/>
         /// </summary>
         /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
         /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
-        /// <param name="supplier">the <see cref="KeyValueBytesStoreSupplier"/> used to materialize the store</param>
+        /// <param name="supplier">the <see cref="IKeyValueBytesStoreSupplier"/> used to materialize the store</param>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given supplier</returns>
-        public static Materialized<K, V, IKeyValueStore<Bytes, byte[]>> Create<KS, VS>(KeyValueBytesStoreSupplier supplier)
+        public static Materialized<K, V, IKeyValueStore<Bytes, byte[]>> Create<KS, VS>(IKeyValueBytesStoreSupplier supplier)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
@@ -262,7 +263,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <summary>
         /// Store suppplier use to build the state store
         /// </summary>
-        public StoreSupplier<S> StoreSupplier { get; protected set; }
+        public IStoreSupplier<S> StoreSupplier { get; protected set; }
 
         /// <summary>
         /// Key serdes
@@ -474,7 +475,7 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         /// <param name="name">State store name for query it</param>
         /// <param name="supplier">Supplier use to build the state store</param>
-        protected InMemory(string name, StoreSupplier<IKeyValueStore<Bytes, byte[]>> supplier)
+        protected InMemory(string name, IStoreSupplier<IKeyValueStore<Bytes, byte[]>> supplier)
             : base(name, supplier)
         {
 
@@ -522,7 +523,7 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         /// <param name="name">State store name for query it</param>
         /// <param name="supplier">Supplier use to build the state store</param>
-        protected InMemoryWindows(string name, StoreSupplier<IWindowStore<Bytes, byte[]>> supplier)
+        protected InMemoryWindows(string name, IStoreSupplier<IWindowStore<Bytes, byte[]>> supplier)
             : base(name, supplier)
         {
 
@@ -550,6 +551,116 @@ namespace Streamiz.Kafka.Net.Table
             where VS : ISerDes<V>, new()
         {
             var m = new InMemoryWindows<K, V>(storeName, new InMemoryWindowStoreSupplier(storeName, TimeSpan.FromDays(1), windowSize.HasValue ? (long)windowSize.Value.TotalMilliseconds : (long?)null))
+            {
+                KeySerdes = new KS(),
+                ValueSerdes = new VS()
+            };
+            return m;
+        }
+
+    }
+
+    /// <summary>
+    /// <see cref="RocksDb{K, V}"/> is a child class of <see cref="Materialized{K, V, S}"/>. 
+    /// It's a class helper for materialize <see cref="IKTable{K, V}"/> with an <see cref="RocksDbKeyValueBytesStoreSupplier"/>
+    /// </summary>
+    /// <typeparam name="K">Type of key</typeparam>
+    /// <typeparam name="V">type of value</typeparam>
+    public class RocksDb<K, V> : Materialized<K, V, IKeyValueStore<Bytes, byte[]>>
+    {
+        /// <summary>
+        /// Protected constructor with state store name and supplier
+        /// </summary>
+        /// <param name="name">State store name for query it</param>
+        /// <param name="supplier">Supplier use to build the state store</param>
+        protected RocksDb(string name, IStoreSupplier<IKeyValueStore<Bytes, byte[]>> supplier)
+            : base(name, supplier)
+        {
+
+        }
+
+        /// <summary>
+        /// Materialize a <see cref="RocksDbKeyValueStore"/> with the given name.
+        /// </summary>
+        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
+        /// <returns>a new <see cref="RocksDb{K, V}"/> instance with the given storeName</returns>
+        public static RocksDb<K, V> @As(string storeName)
+            => new RocksDb<K, V>(storeName, new RocksDbKeyValueBytesStoreSupplier(storeName));
+
+        /// <summary>
+        /// Materialize a <see cref="InMemoryKeyValueStore"/> with the given name.
+        /// </summary>
+        /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
+        /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
+        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
+        /// <returns>a new <see cref="InMemory{K, V}"/> instance with the given storeName</returns>
+        public static RocksDb<K, V> @As<KS, VS>(string storeName)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+        {
+            var m = new RocksDb<K, V>(storeName, new RocksDbKeyValueBytesStoreSupplier(storeName))
+            {
+                KeySerdes = new KS(),
+                ValueSerdes = new VS()
+            };
+            return m;
+        }
+    }
+
+
+    /// <summary>
+    /// <see cref="RocksDbWindows{K, V}"/> is a child class of <see cref="Materialized{K, V, S}"/>. 
+    /// It's a class helper for materialize <see cref="IKTable{K, V}"/> with an <see cref="RocksDbWindowBytesStoreSupplier"/>
+    /// </summary>
+    /// <typeparam name="K">Type of key</typeparam>
+    /// <typeparam name="V">type of value</typeparam>
+    public class RocksDbWindows<K, V> : Materialized<K, V, IWindowStore<Bytes, byte[]>>
+    {
+        /// <summary>
+        /// Protected constructor with state store name and supplier
+        /// </summary>
+        /// <param name="name">State store name for query it</param>
+        /// <param name="supplier">Supplier use to build the state store</param>
+        protected RocksDbWindows(string name, IStoreSupplier<IWindowStore<Bytes, byte[]>> supplier)
+            : base(name, supplier)
+        {
+
+        }
+
+        /// <summary>
+        /// Materialize a <see cref="RocksDbWindowStore"/> with the given name.
+        /// </summary>
+        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
+        /// <param name="segmentInterval"></param>
+        /// <param name="windowSize">the windows size aggregation</param>
+        /// <returns>a new <see cref="RocksDbWindows{K, V}"/> instance with the given storeName and windows size</returns>
+        public static RocksDbWindows<K, V> @As(string storeName, TimeSpan? segmentInterval = null, TimeSpan ? windowSize = null)
+            => new RocksDbWindows<K, V>(storeName, 
+                new RocksDbWindowBytesStoreSupplier(
+                    storeName,
+                    TimeSpan.FromDays(1),
+                    segmentInterval.HasValue ? (long)segmentInterval.Value.TotalMilliseconds : 60 * 1000 * 60,
+                    windowSize.HasValue ? (long)windowSize.Value.TotalMilliseconds : (long?)null));
+
+        /// <summary>
+        /// Materialize a <see cref="RocksDbWindowStore"/> with the given name.
+        /// </summary>
+        /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
+        /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
+        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
+        /// <param name="segmentInterval"></param>
+        /// <param name="windowSize">the windows size aggregation</param>
+        /// <returns>a new <see cref="RocksDbWindows{K, V}"/> instance with the given storeName</returns>
+        public static RocksDbWindows<K, V> @As<KS, VS>(string storeName, TimeSpan? segmentInterval = null, TimeSpan? windowSize = null)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+        {
+            var m = new RocksDbWindows<K, V>(storeName,
+                new RocksDbWindowBytesStoreSupplier(
+                    storeName,
+                    TimeSpan.FromDays(1),
+                    segmentInterval.HasValue ? (long)segmentInterval.Value.TotalMilliseconds : 60 * 1000 * 60,
+                    windowSize.HasValue ? (long)windowSize.Value.TotalMilliseconds : (long?)null))
             {
                 KeySerdes = new KS(),
                 ValueSerdes = new VS()

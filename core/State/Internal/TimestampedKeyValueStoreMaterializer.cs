@@ -15,7 +15,7 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public StoreBuilder<ITimestampedKeyValueStore<K, V>> Materialize()
         {
-            KeyValueBytesStoreSupplier supplier = (KeyValueBytesStoreSupplier)materialized.StoreSupplier;
+            IKeyValueBytesStoreSupplier supplier = (IKeyValueBytesStoreSupplier)materialized.StoreSupplier;
             if (supplier == null)
             {
                 supplier = Stores.DefaultKeyValueStore(materialized.StoreName);

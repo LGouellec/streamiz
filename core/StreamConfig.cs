@@ -5,8 +5,10 @@ using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State.RocksDb;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -116,6 +118,11 @@ namespace Streamiz.Kafka.Net
         #endregion
 
         #region Stream Config Property
+
+        /// <summary>
+        /// A Rocks DB config handler function
+        /// </summary>
+        Action<string, RocksDbOptions> RocksDbConfigHandler { get; set; }
 
         /// <summary>
         /// Inner exception handling function called during processing.
@@ -232,6 +239,11 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         bool FollowMetadata { get; set; }
 
+        /// <summary>
+        /// Directory location for state store. This path must be unique for each streams instance sharing the same underlying filesystem.
+        /// </summary>
+        string StateDir { get; set; }
+
         #endregion
     }
 
@@ -334,6 +346,7 @@ namespace Streamiz.Kafka.Net
         internal static readonly string maxTaskIdleCst = "max.task.idle.ms";
         internal static readonly string bufferedRecordsPerPartitionCst = "buffered.records.per.partition";
         internal static readonly string followMetadataCst = "follow.metadata";
+        internal static readonly string stateDirCst = "state.dir";
 
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -1881,6 +1894,7 @@ namespace Streamiz.Kafka.Net
             ProductionExceptionHandler = (report) => ExceptionHandlerResponse.FAIL;
             DeserializationExceptionHandler = (context, record, exception) => ExceptionHandlerResponse.FAIL;
             FollowMetadata = false;
+            StateDir = Path.Combine(Path.GetTempPath(), "kafka-streams");
 
             if (properties != null)
             {
@@ -2071,6 +2085,22 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
+        /// Directory location for state store. This path must be unique for each streams instance sharing the same underlying filesystem.
+        /// Default value : /tmp/kafka-streams
+        /// </summary>
+        public string StateDir
+        {
+            get => this[stateDirCst];
+            set => this.AddOrUpdate(stateDirCst, value);
+        }
+
+        /// <summary>
+        /// A Rocks DB config handler function
+        /// </summary>
+        public Action<string, RocksDbOptions> RocksDbConfigHandler { get; set; }
+
+
+        /// <summary>
         /// Inner exception handling function called during processing.
         /// </summary>
         public Func<Exception, ExceptionHandlerResponse> InnerExceptionHandler { get; set; }
@@ -2221,6 +2251,7 @@ namespace Streamiz.Kafka.Net
             get => this.ContainsKey(avroSerializerSubjectNameStrategyCst) ? this[avroSerializerSubjectNameStrategyCst] : null;
             set => this.AddOrUpdate(avroSerializerSubjectNameStrategyCst, value); 
         }
+
         #endregion
 
         #region ToString()
