@@ -57,5 +57,12 @@ namespace Streamiz.Kafka.Net.Crosscutting
         {
             return new List<T> { obj };
         }
+    
+        internal static IList<T> AddIfNotNull<T>(this IList<T> list, T data)
+        {
+            if (data != null)
+                list.Add(data);
+            return list;
+        }
     }
 }

@@ -1,3 +1,4 @@
+using Confluent.Kafka;
 using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
@@ -292,7 +293,7 @@ namespace Streamiz.Kafka.Net
 
             // re-write the physical topology according to the config
             topology.Builder.RewriteTopology(configuration);
-
+            
             // sanity check
             var processorTopology = topology.Builder.BuildTopology();
 

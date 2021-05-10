@@ -70,7 +70,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
     
     internal interface ISinkNodeFactory : INodeFactory
     {
-
+        public string Topic { get; }
     }
 
     internal class SinkNodeFactory<K, V> : NodeFactory, ISinkNodeFactory
@@ -78,6 +78,15 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public ITopicNameExtractor<K, V> Extractor { get; }
         public ISerDes<K> KeySerdes { get; }
         public ISerDes<V> ValueSerdes { get; }
+        public string Topic
+        {
+            get
+            {
+                return Extractor is StaticTopicNameExtractor<K, V> ?
+                    ((StaticTopicNameExtractor<K, V>)Extractor).TopicName :
+                     null;
+            }
+        }
 
         public SinkNodeFactory(string name, string[] previous, ITopicNameExtractor<K, V> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
             : base(name, previous)

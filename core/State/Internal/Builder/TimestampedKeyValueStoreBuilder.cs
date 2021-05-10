@@ -1,4 +1,5 @@
-﻿using Streamiz.Kafka.Net.SerDes;
+﻿using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State.Supplier;
 
 namespace Streamiz.Kafka.Net.State.Internal.Builder
@@ -13,6 +14,10 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
         {
             storeSupplier = supplier;
         }
+
+        public override bool IsWindowStore => false;
+
+        public override long RetentionMs => throw new IllegalStateException("RetentionMs is not supported when not a window store");
 
         public override ITimestampedKeyValueStore<K, V> Build()
         {

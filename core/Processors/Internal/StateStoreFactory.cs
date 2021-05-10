@@ -18,6 +18,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public string Name => storeBuilder.Name;
         public bool LoggingEnabled => storeBuilder.LoggingEnabled;
         public IDictionary<string, string> LogConfig => storeBuilder.LogConfig;
+        public bool IsWindowStore => storeBuilder.IsWindowStore;
+        public long RetentionMs => storeBuilder.RetentionMs;
 
         public IStateStore Build(TaskId taskId)
         {

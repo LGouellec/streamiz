@@ -17,6 +17,10 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
             this.supplier = supplier;
         }
 
+        public override bool IsWindowStore => true;
+
+        public override long RetentionMs => supplier.Retention;
+
         public override ITimestampedWindowStore<K, V> Build()
         {
             var store = supplier.Get();

@@ -1,7 +1,7 @@
 ﻿using Confluent.Kafka;
+using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.State;
-using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
@@ -13,6 +13,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal class InternalTopologyBuilder
     {
+        internal class TopologyTopicsInfo
+        {
+            public IEnumerable<string> SinkTopics { get; internal set; }
+            public IEnumerable<string> SourceTopics { get; internal set; }
+            public IDictionary<string, InternalTopicConfig> ChangelogTopics { get; internal set; }
+        }
+
         private readonly IDictionary<string, NodeFactory> nodeFactories = new Dictionary<string, NodeFactory>();
         private readonly IDictionary<string, StateStoreFactory> stateFactories = new Dictionary<string, StateStoreFactory>();
         private readonly IDictionary<string, StoreBuilder> globalStateBuilders = new Dictionary<string, StoreBuilder>();
@@ -20,6 +27,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly ISet<string> globalTopics = new HashSet<string>();
         private readonly QuickUnion<string> nodeGrouper = new QuickUnion<string>();
         private IDictionary<int, ISet<string>> nodeGroups = new Dictionary<int, ISet<string>>();
+        private string applicationId;
         private readonly IList<ISet<string>> copartitionSourceGroups = new List<ISet<string>>();
 
         // map from state store names to this state store's corresponding changelog topic if possible
@@ -66,10 +74,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
                 var stateFactory = stateFactories[stateStoreName];
                 foreach(var u in stateFactory.users)
+                {
                     nodeGrouper.Unite(u, processorName);
+                }
+
                 stateFactory.users.Add(processorName);
-
-
                 var nodeFactory = nodeFactories[processorName];
 
                 if (nodeFactory is IProcessorNodeFactory)
@@ -151,7 +160,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         internal void AddStateStore<S>(StoreBuilder<S> storeBuilder, params string[] processorNames)
             where S : IStateStore
         {
-            AddStateStore<S>(storeBuilder, false, processorNames);
+            AddStateStore(storeBuilder, false, processorNames);
         }
 
         internal void AddStateStore<S>(StoreBuilder<S> storeBuilder, bool allowOverride, params string[] processorNames)
@@ -386,7 +395,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     {
                         StateStoreFactory stateStoreFactory = stateFactories[stateStoreName];
 
-                        // TODO : changelog topic (remember the changelog topic if this state store is change-logging enabled)
+                        if(stateStoreFactory.LoggingEnabled && !storesToTopics.ContainsKey(stateStoreName))
+                        {
+                            string changelogTopic = ProcessorStateManager.StoreChangelogTopic(applicationId, stateStoreName);
+                            storesToTopics.Add(stateStoreName, changelogTopic);
+                        }
+
                         stateStores.Add(stateStoreName, stateStoreFactory.Build(taskId));
                     }
                     else
@@ -403,7 +417,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 GlobalStateStores.Add(storeBuilder.Name, storeBuilder.Build());
             }
-
+            
+            applicationId = config.ApplicationId;
             config.DefaultKeySerDes?.Initialize(new SerDes.SerDesContext(config));
             config.DefaultValueSerDes?.Initialize(new SerDes.SerDesContext(config));
         }
@@ -480,6 +495,60 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             return newNodeGroupId;
         }
 
+        internal IDictionary<int, TopologyTopicsInfo> MakeInternalTopicGroups()
+        {
+            IDictionary<int, TopologyTopicsInfo> topicGroups = new Dictionary<int, TopologyTopicsInfo>();
+
+            var nodeGroups = NodeGroups();
+
+            foreach(var entry in nodeGroups)
+            {
+                List<string> sinkTopics = new List<string>();
+                List<string> sourceTopics = new List<string>();
+                Dictionary<string, InternalTopicConfig> changelogTopics = new Dictionary<string, InternalTopicConfig>();
+
+                foreach(var node in entry.Value)
+                {
+                    var nodeFactory = nodeFactories[node];
+                    switch (nodeFactory)
+                    {
+                        case ISourceNodeFactory sourceNodeFactory:
+                            sourceTopics.Add(sourceNodeFactory.Topic);
+                            break;
+                        case ISinkNodeFactory sinkNodeFactory:
+                            sinkTopics.AddIfNotNull(sinkNodeFactory.Topic);
+                            break;
+                        case IProcessorNodeFactory processorNodeFactory:
+                            foreach(var store in processorNodeFactory.StateStores)
+                            {
+                                if (storesToTopics.ContainsKey(store))
+                                {
+                                    var changelogTopic = storesToTopics[store];
+                                    if (!changelogTopics.ContainsKey(changelogTopic))
+                                    {
+                                        var internalTopicConfig = CreateChangelogTopic(stateFactories[store], changelogTopic);
+                                        changelogTopics.Add(changelogTopic, internalTopicConfig);
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                }
+
+                if (sourceTopics.Any())
+                {
+                    topicGroups.Add(entry.Key, new TopologyTopicsInfo
+                    {
+                        ChangelogTopics = changelogTopics,
+                        SinkTopics = sinkTopics,
+                        SourceTopics = sourceTopics
+                    });
+                }
+            }
+
+            return topicGroups;
+        }
+
         #endregion
 
         #region Describe
@@ -492,9 +561,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 bool containsGlobalStore = kp.Value.Any(v => IsGlobalSource(v));
                 if (!containsGlobalStore)
+                {
                     DescribeSubTopology(topologyDes, kp.Key, kp.Value);
+                }
                 else
+                {
                     DescribeGlobalStore(topologyDes, kp.Value, kp.Key);
+                }
             }
 
             return topologyDes;
@@ -546,6 +619,29 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         #endregion
 
+        private InternalTopicConfig CreateChangelogTopic(StateStoreFactory stateStoreFactory, string changelogTopic)
+        {
+            if (stateStoreFactory.IsWindowStore)
+            {
+                var windowChangelogTopicConfig = new WindowedChangelogTopicConfig()
+                {
+                    Configs = stateStoreFactory.LogConfig,
+                    Name = changelogTopic,
+                    RetentionMs = stateStoreFactory.RetentionMs
+                };
+                return windowChangelogTopicConfig;
+            }
+            else
+            {
+                var unknownChangelogTopicConfig = new UnwindowedChangelogTopicConfig()
+                {
+                    Configs = stateStoreFactory.LogConfig,
+                    Name = changelogTopic,
+                };
+                return unknownChangelogTopicConfig;
+            }
+        }
+
         public TaskId GetTaskIdFromPartition(TopicPartition topicPartition)
         {
             var description = Describe();
@@ -577,7 +673,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     };
                 }
                 else
+                {
                     throw new TopologyException($"Topic {topicPartition.Topic} doesn't exist in this topology !");
+                }
             }
         }
     }

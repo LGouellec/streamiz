@@ -9,6 +9,8 @@ namespace Streamiz.Kafka.Net.State
     /// </summary>
     internal interface StoreBuilder
     {
+        bool IsWindowStore { get; }
+        long RetentionMs { get; }
         IDictionary<string, string> LogConfig { get; }
         bool LoggingEnabled { get; }
         string Name { get; }

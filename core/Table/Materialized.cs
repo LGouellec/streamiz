@@ -478,7 +478,6 @@ namespace Streamiz.Kafka.Net.Table
         protected InMemory(string name, IStoreSupplier<IKeyValueStore<Bytes, byte[]>> supplier)
             : base(name, supplier)
         {
-
         }
 
         /// <summary>
@@ -606,7 +605,6 @@ namespace Streamiz.Kafka.Net.Table
             return m;
         }
     }
-
 
     /// <summary>
     /// <see cref="RocksDbWindows{K, V}"/> is a child class of <see cref="Materialized{K, V, S}"/>. 
