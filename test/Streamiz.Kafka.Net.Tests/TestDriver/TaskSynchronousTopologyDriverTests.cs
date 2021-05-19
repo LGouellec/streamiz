@@ -22,6 +22,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             builder.Stream<string, string>("test").To("test2");
 
             var driver = new TaskSynchronousTopologyDriver("client", builder.Build().Builder, config, config, default);
+            driver.StartDriver();
             var task = driver.GetTask("test");
             // Create the task
             Assert.IsNotNull(task);
@@ -43,6 +44,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             builder.Stream<string, string>("test").To("test2");
 
             var driver = new TaskSynchronousTopologyDriver("client", builder.Build().Builder, config, config, default);
+            driver.StartDriver();
             driver.CreateInputTopic("test", new StringSerDes(), new StringSerDes());
             var store = driver.GetStateStore<string, string>("store");
             Assert.IsNull(store);
@@ -59,6 +61,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             builder.Table<string, string>("test", InMemory<string, string>.As("store"));
 
             var driver = new TaskSynchronousTopologyDriver("client", builder.Build().Builder, config, config, default);
+            driver.StartDriver();
             var input = driver.CreateInputTopic("test", new StringSerDes(), new StringSerDes());
             var store = driver.GetStateStore<string, string>("store");
             Assert.IsNotNull(store);
@@ -80,6 +83,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             builder.Table<string, string>("test", InMemory<string, string>.As("store"));
 
             var driver = new TaskSynchronousTopologyDriver("client", builder.Build().Builder, config, config, default);
+            driver.StartDriver();
             var input = driver.CreateInputTopic("test", new StringSerDes(), new StringSerDes());
             var store = driver.GetStateStore<string, string>("store");
             Assert.IsNotNull(store);
@@ -106,6 +110,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             builder.Table<string, string>("test", InMemory<string, string>.As("store"));
 
             var driver = new TaskSynchronousTopologyDriver("client", builder.Build().Builder, config, config, default);
+            driver.StartDriver();
             var input = driver.CreateInputTopic("test", new StringSerDes(), new StringSerDes());
             var store = driver.GetStateStore<string, string>("store");
             Assert.IsNotNull(store);
@@ -135,6 +140,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
                             .Count(InMemoryWindows<string, long>.As("store"));
 
             var driver = new TaskSynchronousTopologyDriver("client", builder.Build().Builder, config, config, default);
+            driver.StartDriver();
             var input = driver.CreateInputTopic("test", new StringSerDes(), new StringSerDes());
             var store = driver.GetStateStore<string, string>("store");
             Assert.IsNotNull(store);
@@ -162,6 +168,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
                             .Count(InMemoryWindows<string, long>.As("store"));
 
             var driver = new TaskSynchronousTopologyDriver("client", builder.Build().Builder, config, config, default);
+            driver.StartDriver();
             driver.CreateInputTopic("test", new StringSerDes(), new StringSerDes());
             var store = driver.GetStateStore<string, string>("store2");
             Assert.IsNull(store);

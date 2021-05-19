@@ -23,6 +23,7 @@ namespace Streamiz.Kafka.Net.Mock
         private readonly IDictionary<TaskId, StreamTask> tasks = new Dictionary<TaskId, StreamTask>();
         private readonly IDictionary<TaskId, IList<TopicPartition>> partitionsByTaskId = new Dictionary<TaskId, IList<TopicPartition>>();
         private readonly SyncProducer producer = null;
+        private ITopicManager internalTopicManager;
 
         public bool IsRunning { get; private set; }
 
@@ -80,6 +81,18 @@ namespace Streamiz.Kafka.Net.Mock
             return task;
         }
 
+        private void InitializeInternalTopicManager()
+        {
+            // Create internal topics (changelogs) if need
+            var adminClientInternalTopicManager = supplier.GetAdmin(configuration.ToAdminConfig(StreamThread.GetSharedAdminClientId($"{configuration.ApplicationId.ToLower()}-admin-internal-topic-manager")));
+            internalTopicManager = new DefaultTopicManager(configuration, adminClientInternalTopicManager);
+
+            InternalTopicManagerUtils
+                .CreateChangelogTopicsAsync(internalTopicManager, builder)
+                .GetAwaiter()
+                .GetResult();
+        }
+
         #region IBehaviorTopologyTestDriver
 
         public TestMultiInputTopic<K, V> CreateMultiInputTopic<K, V>(string[] topics, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
@@ -112,6 +125,8 @@ namespace Streamiz.Kafka.Net.Mock
 
         public void Dispose()
         {
+            internalTopicManager?.Dispose();
+
             foreach (var t in tasks.Values)
             {
                 t.Close();
@@ -126,7 +141,8 @@ namespace Streamiz.Kafka.Net.Mock
 
         public void StartDriver()
         {
-            // NOTHING
+            InitializeInternalTopicManager();
+
             IsRunning = true;
         }
 

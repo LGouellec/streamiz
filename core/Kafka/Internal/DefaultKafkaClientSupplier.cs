@@ -55,6 +55,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
         public IConsumer<byte[], byte[]> GetGlobalConsumer(ConsumerConfig config)
         {
+            config.AutoOffsetReset = AutoOffsetReset.Earliest;
             ConsumerBuilder<byte[], byte[]> builder = new ConsumerBuilder<byte[], byte[]>(config);
             // TOOD : Finish
             builder.SetLogHandler(loggerAdapter.LogConsume);

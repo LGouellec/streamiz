@@ -302,7 +302,7 @@ namespace Streamiz.Kafka.Net.Table
         public Materialized<K, V, S> WithLoggingEnabled(IDictionary<string, string> config)
         {
             LoggingEnabled = true;
-            TopicConfig = config;
+            TopicConfig = config ?? new Dictionary<string, string>();
             return this;
         }
 

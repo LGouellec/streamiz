@@ -526,8 +526,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                                     var changelogTopic = storesToTopics[store];
                                     if (!changelogTopics.ContainsKey(changelogTopic))
                                     {
-                                        var internalTopicConfig = CreateChangelogTopic(stateFactories[store], changelogTopic);
-                                        changelogTopics.Add(changelogTopic, internalTopicConfig);
+                                        if (stateFactories.ContainsKey(store))
+                                        {
+                                            var internalTopicConfig = CreateChangelogTopic(stateFactories[store], changelogTopic);
+                                            changelogTopics.Add(changelogTopic, internalTopicConfig);
+                                        }
                                     }
                                 }
                             }

@@ -21,7 +21,8 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
             this.token = token;
             topicName = topic;
             timeout = consumeTimeout;
-            consumer = new SyncConsumer(configuration.ToConsumerConfig($"pipe-output-{configuration.ApplicationId}-{topicName}"), producer);
+            consumer = new SyncConsumer(producer);
+            (consumer as SyncConsumer).UseConfig(configuration.ToConsumerConfig($"pipe-output-{configuration.ApplicationId}-{topicName}"));
             consumer.Subscribe(topicName);
         }
 

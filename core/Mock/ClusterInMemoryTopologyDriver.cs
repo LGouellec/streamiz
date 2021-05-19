@@ -20,6 +20,8 @@ namespace Streamiz.Kafka.Net.Mock
         private readonly IKafkaSupplier kafkaSupplier = null;
         private readonly CancellationToken token;
         private readonly TimeSpan startTimeout;
+        private readonly InternalTopologyBuilder internalTopologyBuilder;
+        private ITopicManager internalTopicManager;
 
         public ClusterInMemoryTopologyDriver(string clientId, InternalTopologyBuilder topologyBuilder, IStreamConfig configuration, IStreamConfig topicConfiguration, CancellationToken token)
             : this(clientId, topologyBuilder, configuration, topicConfiguration, TimeSpan.FromSeconds(30), token)
@@ -41,6 +43,7 @@ namespace Streamiz.Kafka.Net.Mock
             this.configuration.ClientId = clientId;
             this.topicConfiguration = topicConfiguration;
             this.token = token;
+            internalTopologyBuilder = topologyBuilder;
 
             pipeBuilder = new KafkaPipeBuilder(kafkaSupplier);
 
@@ -62,6 +65,18 @@ namespace Streamiz.Kafka.Net.Mock
         public bool IsStopped => !IsRunning;
 
         public bool IsError { get; private set; }
+
+        private void InitializeInternalTopicManager()
+        {
+            // Create internal topics (changelogs) if need
+            var adminClientInternalTopicManager = kafkaSupplier.GetAdmin(configuration.ToAdminConfig(StreamThread.GetSharedAdminClientId($"{configuration.ApplicationId.ToLower()}-admin-internal-topic-manager")));
+            internalTopicManager = new DefaultTopicManager(configuration, adminClientInternalTopicManager);
+
+            InternalTopicManagerUtils
+                .CreateChangelogTopicsAsync(internalTopicManager, internalTopologyBuilder)
+                .GetAwaiter()
+                .GetResult();
+        }
 
         #region IBehaviorTopologyTestDriver
 
@@ -104,7 +119,9 @@ namespace Streamiz.Kafka.Net.Mock
             {
                 var store = task.GetStore(name);
                 if (store != null)
+                {
                     stores.Add(store);
+                }
             }
 
             return stores.Count > 0 ? new MockReadOnlyKeyValueStore<K, V>(stores) : null;
@@ -133,13 +150,17 @@ namespace Streamiz.Kafka.Net.Mock
                     IsError = false;
                 }
             };
-            
+
+            InitializeInternalTopicManager();
+
             threadTopology.Start(token);
             while (!isRunningState)
             {
                 Thread.Sleep(250);
                 if (DateTime.Now > dt + startTimeout)
+                {
                     throw new StreamsException($"Test topology driver can't initiliaze state after {startTimeout.TotalSeconds} seconds !");
+                }
             }
         }
 
