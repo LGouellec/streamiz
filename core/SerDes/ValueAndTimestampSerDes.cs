@@ -5,6 +5,21 @@ using System.IO;
 
 namespace Streamiz.Kafka.Net.SerDes
 {
+    internal class ValueAndTimestampSerDes
+    {
+        public static (long, byte[]) Extract(byte[] data)
+        {
+            using (var stream = new MemoryStream(data))
+            using (var reader = new BinaryReader(stream))
+            {
+                long t = reader.ReadInt64();
+                int length = reader.ReadInt32();
+                byte[] d = reader.ReadBytes(length);
+                return (t, d);
+            }
+        }
+    }
+
     internal class ValueAndTimestampSerDes<V> : AbstractSerDes<ValueAndTimestamp<V>>
     {
         public ISerDes<V> InnerSerdes { get; internal set; }
@@ -18,16 +33,10 @@ namespace Streamiz.Kafka.Net.SerDes
         {
             if (data != null)
             {
-                using (var stream = new MemoryStream(data))
-                using (var reader = new BinaryReader(stream))
-                {
-                    long t = reader.ReadInt64();
-                    int length = reader.ReadInt32();
-                    byte[] d = reader.ReadBytes(length);
-                    V v = InnerSerdes.Deserialize(d, context);
-                    ValueAndTimestamp<V> obj = ValueAndTimestamp<V>.Make(v, t);
-                    return obj;
-                }
+                var meta = ValueAndTimestampSerDes.Extract(data);
+                V v = InnerSerdes.Deserialize(meta.Item2, context);
+                ValueAndTimestamp<V> obj = ValueAndTimestamp<V>.Make(v, meta.Item1);
+                return obj;
             }
             else
                 return null;
@@ -52,5 +61,6 @@ namespace Streamiz.Kafka.Net.SerDes
             else
                 return null;
         }
+
     }
 }

@@ -80,10 +80,10 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
         }
 
         public void Send<K, V>(string topic, K key, V value, Headers headers, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer)
-            => Send(topic, key, value, headers, null, timestamp, keySerializer, valueSerializer);
+            => SendInternal(topic, key, value, headers, null, timestamp, keySerializer, valueSerializer);
 
         public void Send<K, V>(string topic, K key, V value, Headers headers, int partition, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer)
-            => Send(topic, key, value, headers, partition, timestamp, keySerializer, valueSerializer);
+            => SendInternal(topic, key, value, headers, partition, timestamp, keySerializer, valueSerializer);
 
         private bool IsFatalError(DeliveryReport<byte[], byte[]> report)
         {
@@ -112,7 +112,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                      error.Code == ErrorCode.OutOfOrderSequenceNumber;
         }
 
-        private void Send<K, V>(string topic, K key, V value, Headers headers, int? partition, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer)
+        private void SendInternal<K, V>(string topic, K key, V value, Headers headers, int? partition, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer)
         {
             var k = key != null ? keySerializer.Serialize(key, new SerializationContext(MessageComponentType.Key, topic, headers)) : null;
             var v = value != null ? valueSerializer.Serialize(value, new SerializationContext(MessageComponentType.Value, topic, headers)) : null;
@@ -174,6 +174,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                             Key = k,
                             Value = v,
                             Headers = headers,
+                            Timestamp = new Timestamp(timestamp, TimestampType.CreateTime)
                         },
                         (report) =>
                         {
@@ -189,6 +190,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                                Key = k,
                                Value = v,
                                Headers = headers,
+                               Timestamp = new Timestamp(timestamp, TimestampType.CreateTime)
                            },
                            (report) =>
                            {

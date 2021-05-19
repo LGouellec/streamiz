@@ -165,6 +165,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
             return ByteBuffer.Build(binaryKey).GetInt(binaryKey.Length - SEQNUM_SIZE);
         }
 
+        // TODO : create a tools class for that
         public static Windowed<K> FromStoreKey<K>(byte[] binaryKey, long windowSize, ISerDes<K> keySerdes, String topic)
         {
             K key = keySerdes.Deserialize(ExtractStoreKeyBytes(binaryKey), new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Key, topic));
