@@ -361,7 +361,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 rootProcessor.AddNextProcessor(sourceProcessor);
             }
 
-            return new ProcessorTopology(rootProcessor, sources, sinks, processors, stateStores, GlobalStateStores, storesToTopics);
+            var storesToChangelog = new Dictionary<string, string>(storesToTopics.Where(e => stateStores.ContainsKey(e.Key)));
+            return new ProcessorTopology(rootProcessor, sources, sinks, processors, stateStores, GlobalStateStores, storesToChangelog);
         }
 
         private void BuildSinkNode(IDictionary<string, IProcessor> processors, IDictionary<string, IProcessor> sinks, ISinkNodeFactory factory, IProcessor processor)

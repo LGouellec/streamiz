@@ -42,7 +42,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 "un-assigned-stream-task",
                 new TaskId { Id = -1, Partition = -1 },
                 new List<TopicPartition>(),
-                null,
+                ProcessorTopology.EMPTY,
                 consumer,
                 config,
                 supplier,

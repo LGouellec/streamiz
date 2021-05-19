@@ -1,8 +1,10 @@
 ﻿using Confluent.Kafka;
+using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.SerDes.Internal;
 using System.IO;
 
 namespace Streamiz.Kafka.Net
@@ -12,6 +14,9 @@ namespace Streamiz.Kafka.Net
     /// </summary>
     public class ProcessorContext
     {
+        internal static readonly ByteArraySerDes BYTEARRAY_VALUE_SERDES = new ByteArraySerDes();
+        internal static readonly BytesSerDes BYTES_KEY_SERDES = new BytesSerDes();
+
         internal AbstractTask Task { get; private set; }
         internal SerDesContext SerDesContext { get; private set; }
         internal IStreamConfig Configuration { get; private set; }
@@ -86,6 +91,21 @@ namespace Streamiz.Kafka.Net
         internal void Register(IStateStore store, StateRestoreCallback callback)
         {
             States.Register(store, callback);
+        }
+
+        internal void Log(string storeName, Bytes key, byte[] value, long timestamp)
+        {
+            var topicPartition = States.GetRegisteredChangelogPartitionFor(storeName);
+
+            RecordCollector.Send(
+                topicPartition.Topic,
+                key,
+                value,
+                null,
+                topicPartition.Partition,
+                timestamp,
+                BYTES_KEY_SERDES,
+                BYTEARRAY_VALUE_SERDES);
         }
 
         /// <summary>

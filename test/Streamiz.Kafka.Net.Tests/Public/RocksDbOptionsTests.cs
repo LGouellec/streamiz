@@ -154,7 +154,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             id = new TaskId { Id = 0, Partition = 0 };
             partition = new TopicPartition("source", 0);
-            stateManager = new ProcessorStateManager(id, new List<TopicPartition> { partition });
+            stateManager = new ProcessorStateManager(id, new List<TopicPartition> { partition }, null);
 
             task = new Mock<AbstractTask>();
             task.Setup(k => k.Id).Returns(id);

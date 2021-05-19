@@ -80,76 +80,10 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
         }
 
         public void Send<K, V>(string topic, K key, V value, Headers headers, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer)
-        {
-            var k = key != null ? keySerializer.Serialize(key, new SerializationContext(MessageComponentType.Key, topic,headers)) : null;
-            var v = value != null ? valueSerializer.Serialize(value, new SerializationContext(MessageComponentType.Value, topic, headers)) : null;
+            => Send(topic, key, value, headers, null, timestamp, keySerializer, valueSerializer);
 
-            try
-            {
-                producer?.Produce(
-                    topic,
-                    new Message<byte[], byte[]> {
-                        Key = k,
-                        Value = v,
-                        Headers = headers
-                    },
-                    (report) =>
-                    {
-                        if (report.Error.IsError)
-                        {
-                            StringBuilder sb = new StringBuilder();
-                            sb.AppendLine($"{logPrefix}Error encountered sending record to topic {topic} for task {id} due to:");
-                            sb.AppendLine($"{logPrefix}Error Code : {report.Error.Code.ToString()}");
-                            sb.AppendLine($"{logPrefix}Message : {report.Error.Reason}");
-
-                            if (IsFatalError(report))
-                            {
-                                sb.AppendLine($"{logPrefix}Written offsets would not be recorded and no more records would be sent since this is a fatal error.");
-                                log.Error(sb.ToString());
-                                throw new StreamsException(sb.ToString());
-                            }
-                            else if (IsRecoverableError(report))
-                            {
-                                sb.AppendLine($"{logPrefix}Written offsets would not be recorded and no more records would be sent since the producer is fenced, indicating the task may be migrated out");
-                                log.Error(sb.ToString());
-                                throw new TaskMigratedException(sb.ToString());
-                            }
-                            else
-                            {
-                                if (configuration.ProductionExceptionHandler(report) == ExceptionHandlerResponse.FAIL)
-                                {
-                                    sb.AppendLine($"{logPrefix}Exception handler choose to FAIL the processing, no more records would be sent.");
-                                    log.Error(sb.ToString());
-                                    throw new ProductionException(sb.ToString());
-                                }
-                                else
-                                {
-                                    sb.AppendLine($"{logPrefix}Exception handler choose to CONTINUE processing in spite of this error but written offsets would not be recorded.");
-                                    log.Error(sb.ToString());
-                                }
-                            }
-                        }
-                        else if (report.Status == PersistenceStatus.NotPersisted || report.Status == PersistenceStatus.PossiblyPersisted)
-                        {
-                            log.Warn($"{logPrefix}Record not persisted or possibly persisted: (timestamp {report.Message.Timestamp.UnixTimestampMs}) topic=[{topic}] partition=[{report.Partition}] offset=[{report.Offset}]. May config Retry configuration, depends your use case.");
-                        }
-                        else if (report.Status == PersistenceStatus.Persisted)
-                        {
-                            log.Debug($"{logPrefix}Record persisted: (timestamp {report.Message.Timestamp.UnixTimestampMs}) topic=[{topic}] partition=[{report.Partition}] offset=[{report.Offset}]");
-                        }
-                    });
-            }catch(ProduceException<byte[], byte[]> produceException)
-            {
-                if(IsRecoverableError(produceException.Error))
-                {
-                    throw new TaskMigratedException($"Producer got fenced trying to send a record [{logPrefix}] : {produceException.Message}");
-                }
-                else
-                {
-                    throw new StreamsException($"Error encountered trying to send record to topic {topic} [{logPrefix}] : {produceException.Message}");
-                }
-            }
-        }
+        public void Send<K, V>(string topic, K key, V value, Headers headers, int partition, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer)
+            => Send(topic, key, value, headers, partition, timestamp, keySerializer, valueSerializer);
 
         private bool IsFatalError(DeliveryReport<byte[], byte[]> report)
         {
@@ -176,6 +110,103 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             return error.Code == ErrorCode.TransactionCoordinatorFenced ||
                      error.Code == ErrorCode.UnknownProducerId ||
                      error.Code == ErrorCode.OutOfOrderSequenceNumber;
+        }
+
+        private void Send<K, V>(string topic, K key, V value, Headers headers, int? partition, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer)
+        {
+            var k = key != null ? keySerializer.Serialize(key, new SerializationContext(MessageComponentType.Key, topic, headers)) : null;
+            var v = value != null ? valueSerializer.Serialize(value, new SerializationContext(MessageComponentType.Value, topic, headers)) : null;
+
+            void HandleError(DeliveryReport<byte[], byte[]> report){
+                if (report.Error.IsError)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine($"{logPrefix}Error encountered sending record to topic {topic} for task {id} due to:");
+                    sb.AppendLine($"{logPrefix}Error Code : {report.Error.Code.ToString()}");
+                    sb.AppendLine($"{logPrefix}Message : {report.Error.Reason}");
+
+                    if (IsFatalError(report))
+                    {
+                        sb.AppendLine($"{logPrefix}Written offsets would not be recorded and no more records would be sent since this is a fatal error.");
+                        log.Error(sb.ToString());
+                        throw new StreamsException(sb.ToString());
+                    }
+                    else if (IsRecoverableError(report))
+                    {
+                        sb.AppendLine($"{logPrefix}Written offsets would not be recorded and no more records would be sent since the producer is fenced, indicating the task may be migrated out");
+                        log.Error(sb.ToString());
+                        throw new TaskMigratedException(sb.ToString());
+                    }
+                    else
+                    {
+                        if (configuration.ProductionExceptionHandler(report) == ExceptionHandlerResponse.FAIL)
+                        {
+                            sb.AppendLine($"{logPrefix}Exception handler choose to FAIL the processing, no more records would be sent.");
+                            log.Error(sb.ToString());
+                            throw new ProductionException(sb.ToString());
+                        }
+                        else
+                        {
+                            sb.AppendLine($"{logPrefix}Exception handler choose to CONTINUE processing in spite of this error but written offsets would not be recorded.");
+                            log.Error(sb.ToString());
+                        }
+                    }
+                }
+                else if (report.Status == PersistenceStatus.NotPersisted || report.Status == PersistenceStatus.PossiblyPersisted)
+                {
+                    log.Warn($"{logPrefix}Record not persisted or possibly persisted: (timestamp {report.Message.Timestamp.UnixTimestampMs}) topic=[{topic}] partition=[{report.Partition}] offset=[{report.Offset}]. May config Retry configuration, depends your use case.");
+                }
+                else if (report.Status == PersistenceStatus.Persisted)
+                {
+                    log.Debug($"{logPrefix}Record persisted: (timestamp {report.Message.Timestamp.UnixTimestampMs}) topic=[{topic}] partition=[{report.Partition}] offset=[{report.Offset}]");
+                }
+
+            }
+
+            try
+            {
+                if (partition.HasValue)
+                {
+                    producer?.Produce(
+                        new TopicPartition(topic, partition.Value),
+                        new Message<byte[], byte[]>
+                        {
+                            Key = k,
+                            Value = v,
+                            Headers = headers,
+                        },
+                        (report) =>
+                        {
+                            HandleError(report);
+                        });
+                }
+                else
+                {
+                    producer?.Produce(
+                           topic,
+                           new Message<byte[], byte[]>
+                           {
+                               Key = k,
+                               Value = v,
+                               Headers = headers,
+                           },
+                           (report) =>
+                           {
+                               HandleError(report);
+                           });
+                }
+            }
+            catch (ProduceException<byte[], byte[]> produceException)
+            {
+                if (IsRecoverableError(produceException.Error))
+                {
+                    throw new TaskMigratedException($"Producer got fenced trying to send a record [{logPrefix}] : {produceException.Message}");
+                }
+                else
+                {
+                    throw new StreamsException($"Error encountered trying to send record to topic {topic} [{logPrefix}] : {produceException.Message}");
+                }
+            }
         }
     }
 }

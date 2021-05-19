@@ -6,6 +6,15 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 {
     internal class ProcessorTopology
     {
+        internal static readonly ProcessorTopology EMPTY = new ProcessorTopology(
+            new RootProcessor(),
+            new Dictionary<string, IProcessor>(),
+            new Dictionary<string, IProcessor>(),
+            new Dictionary<string, IProcessor>(),
+            new Dictionary<string, IStateStore>(),
+            new Dictionary<string, IStateStore>(),
+            new Dictionary<string, string>());
+
         internal IList<string> SourceProcessorNames => new List<string>(SourceOperators.Keys);
         internal IList<string> SinkProcessorNames => new List<string>(SinkOperators.Keys);
         internal IList<string> ProcessorNames => new List<string>(ProcessorOperators.Keys);
