@@ -33,8 +33,8 @@ This project is being written. Thanks for you contribution !
 
 # Timeline
 
-- Begin 2021 - 1.2.0 - Persistent state store (eg: RocksDB Store), Repartition and Changelog topics
-- April 2021 - 1.3.0 - Processor API, Metrics, Interactive Queries, Standby Replica
+- June/July 2021 - 1.2.0 - Persistent state store (eg: RocksDB Store), Repartition and Changelog topics
+- End 2021 - 1.3.0 - Processor API, Metrics, Interactive Queries, Standby Replica
 
 # Documentation
 
