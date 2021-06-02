@@ -1,5 +1,6 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.State.Enumerator;
+using Streamiz.Kafka.Net.State.Helper;
 using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.State.RocksDb.Internal;
 using System;
@@ -36,7 +37,7 @@ namespace Streamiz.Kafka.Net.State.Logging
         public void Put(Bytes key, byte[] value, long windowStartTimestamp)
         {
             wrapped.Put(key, value, windowStartTimestamp);
-            Publish(RocksDbWindowKeySchema.ToStoreKeyBinary(key, windowStartTimestamp, 0), value);
+            Publish(WindowKeyHelper.ToStoreKeyBinary(key, windowStartTimestamp, 0), value);
         }
     }
 }
