@@ -63,6 +63,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
         }
 
+        public TopicPartition GetRegisteredChangelogPartitionFor(string name)
+        {
+            // TODO : maybe
+            throw new NotImplementedException();
+        }
+
         public IStateStore GetStore(string name)
         {
             return globalStores.ContainsKey(name)

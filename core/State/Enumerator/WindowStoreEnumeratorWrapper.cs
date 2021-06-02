@@ -1,4 +1,5 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.State.Helper;
 using Streamiz.Kafka.Net.State.RocksDb.Internal;
 using System.Collections;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ namespace Streamiz.Kafka.Net.State.Enumerator
                     var current = bytesEnumerator.Current;
                     if (current.HasValue)
                     {
-                        long ts = RocksDbWindowKeySchema.ExtractStoreTimestamp(current.Value.Key.Get);
+                        long ts = WindowKeyHelper.ExtractStoreTimestamp(current.Value.Key.Get);
                         return KeyValuePair.Create(ts, current.Value.Value);
                     }
                     else
@@ -40,7 +41,7 @@ namespace Streamiz.Kafka.Net.State.Enumerator
                 => bytesEnumerator.MoveNext();
 
             public long PeekNextKey()
-                => RocksDbWindowKeySchema.ExtractStoreTimestamp(bytesEnumerator.PeekNextKey().Get);
+                => WindowKeyHelper.ExtractStoreTimestamp(bytesEnumerator.PeekNextKey().Get);
 
             public void Reset()
                 => bytesEnumerator.Reset();
@@ -65,7 +66,7 @@ namespace Streamiz.Kafka.Net.State.Enumerator
                     if (bytesEnumerator.Current.HasValue)
                     {
                         var key = bytesEnumerator.Current?.Key.Get;
-                        var k = RocksDbWindowKeySchema.FromStoreBytesKey(key, windowSize);
+                        var k = WindowKeyHelper.FromStoreBytesKey(key, windowSize);
                         return KeyValuePair.Create(k, bytesEnumerator.Current.Value.Value);
                     }
                     else
@@ -86,7 +87,7 @@ namespace Streamiz.Kafka.Net.State.Enumerator
                 if (bytesEnumerator.Current.HasValue)
                 {
                     var key = bytesEnumerator.Current?.Key.Get;
-                    return RocksDbWindowKeySchema.FromStoreBytesKey(key, windowSize);
+                    return WindowKeyHelper.FromStoreBytesKey(key, windowSize);
                 }
                 else
                     return null;

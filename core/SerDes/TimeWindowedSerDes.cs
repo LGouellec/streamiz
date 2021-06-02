@@ -38,10 +38,10 @@ namespace Streamiz.Kafka.Net.SerDes
             if (data == null || data.Length == 0)
                 return null;
 
-            var start = data.ExtractStoreTimestamp();
+            long start = WindowKeyHelper.ExtractStoreTimestamp(data);
 
             return new Windowed<T>(
-                innerSerdes.Deserialize(data.ExtractStoreKeyBytes(), context),
+                innerSerdes.Deserialize(WindowKeyHelper.ExtractStoreKeyBytes(data), context),
                 new TimeWindow(start, start + windowSize));
         }
 
@@ -56,15 +56,9 @@ namespace Streamiz.Kafka.Net.SerDes
             if (data == null)
                 return null;
 
-            using (var mStream = new MemoryStream())
-            {
-                using (var bufferStream = new BufferedStream(mStream))
-                {
-                    bufferStream.Write(innerSerdes.Serialize(data.Key, context));
-                    bufferStream.Write(BitConverter.GetBytes(data.Window.StartMs));
-                }
-                return mStream.ToArray();
-            }
+            var bytesKey = innerSerdes.Serialize(data.Key, context);
+            var bytes = WindowKeyHelper.ToStoreKeyBinary(bytesKey, data.Window.StartMs, 0);
+            return bytes.Get;
         }
     }
 }

@@ -15,6 +15,8 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
         // private bool enableCaching;
         private bool enableLogging = true;
 
+        public abstract bool IsWindowStore { get; }
+        public abstract long RetentionMs { get; }
         public string Name => name;
         public IDictionary<string, string> LogConfig => logConfig;
         public bool LoggingEnabled => enableLogging;
@@ -54,6 +56,6 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
 
         public abstract T Build();
 
-        IStateStore StoreBuilder.Build() => this.Build();
+        IStateStore StoreBuilder.Build() => Build();
     }
 }

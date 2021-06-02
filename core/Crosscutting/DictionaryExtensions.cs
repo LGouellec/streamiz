@@ -44,5 +44,14 @@ namespace Streamiz.Kafka.Net.Crosscutting
                 r.Add(s.Key, s.Value);
             return r;
         }
+
+
+        public static IDictionary<K, V> AddRange<K, V>(this IDictionary<K, V> map, IDictionary<K, V> secondMap)
+        {
+            foreach (var entry in secondMap)
+                map.AddOrUpdate(entry.Key, entry.Value);
+            return map;
+        }
+
     }
 }

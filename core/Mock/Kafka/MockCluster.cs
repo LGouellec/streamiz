@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka;
 using System;
@@ -55,7 +56,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
     internal class MockCluster
     {
         private readonly object rebalanceLock = new object();
-        private readonly int DEFAULT_NUMBER_PARTITIONS;
+        internal readonly int DEFAULT_NUMBER_PARTITIONS;
 
         #region Ctor
 
@@ -79,9 +80,9 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         #region Topic Gesture
 
-        private void CreateTopic(string topic) => CreateTopic(topic, DEFAULT_NUMBER_PARTITIONS);
+        internal void CreateTopic(string topic) => CreateTopic(topic, DEFAULT_NUMBER_PARTITIONS);
 
-        private bool CreateTopic(string topic, int partitions)
+        internal bool CreateTopic(string topic, int partitions)
         {
             lock (rebalanceLock)
             {
@@ -148,6 +149,28 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                 Unassign(mockConsumer);
                 c.Topics.Clear();
             }
+        }
+
+        #endregion
+
+        #region Metadata
+
+        public Metadata GetClusterMetadata()
+        {
+            Metadata metadata = new Metadata(
+                new BrokerMetadata(1, "dummy", 1234).ToSingle().ToList(),
+                topics.Select(t => new TopicMetadata(
+                    t.Key,
+                    t.Value.Partitions.Select(p => 
+                        new PartitionMetadata(
+                            p.Index,
+                            1,
+                            new int[1] { 1 },
+                            new int[1] {1},
+                            new Error(ErrorCode.NoError))).ToList(),
+                    new Error(ErrorCode.NoError))).ToList(),
+                1, "1");
+            return metadata;
         }
 
         #endregion

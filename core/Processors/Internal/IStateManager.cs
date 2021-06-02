@@ -1,6 +1,5 @@
-﻿using System;
+﻿using Confluent.Kafka;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -11,5 +10,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         void Register(IStateStore store, StateRestoreCallback callback);
         void Close();
         IStateStore GetStore(string name);
+        TopicPartition GetRegisteredChangelogPartitionFor(string name);
     }
 }

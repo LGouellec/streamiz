@@ -1,5 +1,6 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.State.Enumerator;
+using Streamiz.Kafka.Net.State.Helper;
 using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.State.RocksDb.Internal;
 using System;
@@ -27,7 +28,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         }
 
         public byte[] Fetch(Bytes key, long time)
-            => wrapped.Get(RocksDbWindowKeySchema.ToStoreKeyBinary(key, time, seqnum));
+            => wrapped.Get(WindowKeyHelper.ToStoreKeyBinary(key, time, seqnum));
 
         public IWindowStoreEnumerator<byte[]> Fetch(Bytes key, DateTime from, DateTime to)
             => Fetch(key, from.GetMilliseconds(), to.GetMilliseconds());
@@ -45,6 +46,6 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         }
 
         public void Put(Bytes key, byte[] value, long windowStartTimestamp)
-            => wrapped.Put(RocksDbWindowKeySchema.ToStoreKeyBinary(key, windowStartTimestamp, seqnum), value);
+            => wrapped.Put(WindowKeyHelper.ToStoreKeyBinary(key, windowStartTimestamp, seqnum), value);
     }
 }

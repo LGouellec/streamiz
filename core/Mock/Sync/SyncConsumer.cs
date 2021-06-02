@@ -32,7 +32,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             }
         }
 
-        private readonly ConsumerConfig config;
+        private ConsumerConfig config;
         private readonly SyncProducer producer;
 
         private readonly IDictionary<string, SyncConsumerOffset> offsets = new Dictionary<string, SyncConsumerOffset>();
@@ -40,10 +40,14 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public IConsumerRebalanceListener Listener { get; private set; }
 
-        public SyncConsumer(ConsumerConfig config, SyncProducer producer)
+        public SyncConsumer(SyncProducer producer)
+        {
+            this.producer = producer;
+        }
+
+        public void UseConfig(ConsumerConfig config)
         {
             this.config = config;
-            this.producer = producer;
         }
 
         #region IConsumer Impl

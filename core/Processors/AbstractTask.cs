@@ -35,7 +35,10 @@ namespace Streamiz.Kafka.Net.Processors
             this.consumer = consumer;
             configuration = config;
 
-            stateMgr = new ProcessorStateManager(id, partition);
+            stateMgr = new ProcessorStateManager(
+                id,
+                partition,
+                topology.StoresToTopics);
         }
 
         public ProcessorTopology Topology { get; }

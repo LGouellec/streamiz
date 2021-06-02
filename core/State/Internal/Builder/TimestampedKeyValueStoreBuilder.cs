@@ -1,4 +1,6 @@
-﻿using Streamiz.Kafka.Net.SerDes;
+﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State.Supplier;
 
 namespace Streamiz.Kafka.Net.State.Internal.Builder
@@ -14,10 +16,26 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
             storeSupplier = supplier;
         }
 
+        public override bool IsWindowStore => false;
+
+        public override long RetentionMs => throw new IllegalStateException("RetentionMs is not supported when not a window store");
+
         public override ITimestampedKeyValueStore<K, V> Build()
         {
             var store = storeSupplier.Get();
-            return new TimestampedKeyValueStore<K, V>(store, keySerdes, valueSerdes);
+            return new TimestampedKeyValueStore<K, V>(
+                WrapLogging(store),
+                keySerdes,
+                valueSerdes);
+        }
+
+        private IKeyValueStore<Bytes, byte[]> WrapLogging(IKeyValueStore<Bytes, byte[]> inner)
+        {
+            if (!LoggingEnabled)
+                return inner;
+
+            // TODO:
+            return inner;
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State.Supplier;
 
@@ -17,10 +18,23 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
             this.supplier = supplier;
         }
 
+        public override bool IsWindowStore => true;
+
+        public override long RetentionMs => supplier.Retention;
+
         public override ITimestampedWindowStore<K, V> Build()
         {
             var store = supplier.Get();
-            return new TimestampedWindowStore<K, V>(store, supplier.WindowSize.Value, keySerdes, valueSerdes);
+            return new TimestampedWindowStore<K, V>(WrapLogging(store), supplier.WindowSize.Value, keySerdes, valueSerdes);
+        }
+
+        private IWindowStore<Bytes, byte[]> WrapLogging(IWindowStore<Bytes, byte[]> inner)
+        {
+            if (!LoggingEnabled)
+                return inner;
+
+            // TODO:
+            return inner;
         }
     }
 }

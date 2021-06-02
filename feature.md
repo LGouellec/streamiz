@@ -5,3 +5,4 @@
 - [ ] Dead letter queue mecanism
 - [ ] External Source Connector
 - [ ] Dynamic Session Windows
+- [ ] Singleton Registered SerDes

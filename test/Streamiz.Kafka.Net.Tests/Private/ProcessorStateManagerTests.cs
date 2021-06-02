@@ -45,7 +45,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             TaskId id = new TaskId { Id = 1, Partition = 0 };
             TopicPartition partition = new TopicPartition("topic", 0);
-            ProcessorStateManager stateMgt = new ProcessorStateManager(id, new List<TopicPartition> { partition });
+            ProcessorStateManager stateMgt = new ProcessorStateManager(id, new List<TopicPartition> { partition }, null);
 
             stateMgt.Register(new TestStateStore("state-store1"), null);
             Assert.Throws<ArgumentException>(() => stateMgt.Register(new TestStateStore("state-store1"), null));
@@ -56,7 +56,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             TaskId id = new TaskId { Id = 1, Partition = 0 };
             TopicPartition partition = new TopicPartition("topic", 0);
-            ProcessorStateManager stateMgt = new ProcessorStateManager(id, new List<TopicPartition> { partition });
+            ProcessorStateManager stateMgt = new ProcessorStateManager(id, new List<TopicPartition> { partition }, null);
 
             stateMgt.Register(new TestStateStore("state-store1"), null);
             var store = stateMgt.GetStore("state-store1");
@@ -69,11 +69,25 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             TaskId id = new TaskId { Id = 1, Partition = 0 };
             TopicPartition partition = new TopicPartition("topic", 0);
-            ProcessorStateManager stateMgt = new ProcessorStateManager(id, new List<TopicPartition> { partition });
+            ProcessorStateManager stateMgt = new ProcessorStateManager(id, new List<TopicPartition> { partition }, null);
 
             stateMgt.Register(new TestStateStore("state-store1"), null);
             var store = stateMgt.GetStore("sdfdfre1");
             Assert.IsNull(store);
+        }
+
+        [Test]
+        public void GetChangelogTopicPartition()
+        {
+            TaskId id = new TaskId { Id = 0, Partition = 2 };
+            TopicPartition partition = new TopicPartition("topic", 0);
+            ProcessorStateManager stateMgt = new ProcessorStateManager(id, new List<TopicPartition> { partition }, new Dictionary<string, string> { { "state-store1", "state-store1-cl" } });
+
+            stateMgt.Register(new TestStateStore("state-store1"), null);
+            var tp = stateMgt.GetRegisteredChangelogPartitionFor("state-store1");
+
+            Assert.AreEqual(2, tp.Partition.Value);
+            Assert.AreEqual("state-store1-cl", tp.Topic);
         }
     }
 }

@@ -34,14 +34,18 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         private SyncTransaction transaction = null;
 
-        private readonly ProducerConfig config;
+        private ProducerConfig config;
 
-        public SyncProducer(ProducerConfig config)
+        public SyncProducer(){}
+        public SyncProducer(ProducerConfig config) { this.config = config; }
+
+        public void UseConfig(ProducerConfig config)
         {
             this.config = config;
         }
 
-        private void CreateTopic(string topicName)
+
+        internal void CreateTopic(string topicName)
         {
             lock (_lock)
             {
@@ -51,6 +55,9 @@ namespace Streamiz.Kafka.Net.Mock.Sync
                 }
             }
         }
+
+        internal IEnumerable<string> GetAllTopics()
+            => topics.Keys;
 
         public bool IsMatch(string topicName)
         {

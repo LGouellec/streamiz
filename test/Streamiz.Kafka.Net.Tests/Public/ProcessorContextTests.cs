@@ -18,7 +18,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.ApplicationId = "test";
             var stateMgt = new ProcessorStateManager(
                 new TaskId() { Id = 0, Partition = 0 },
-                new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) });
+                new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) }, null);
             ProcessorContext context = new ProcessorContext(null, config, stateMgt);
 
             Assert.AreEqual("test", context.ApplicationId);
@@ -32,7 +32,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.ApplicationId = "test";
             var stateMgt = new ProcessorStateManager(
                 new TaskId() { Id = 0, Partition = 0 },
-                new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) });
+                new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) }, null);
             ProcessorContext context = new ProcessorContext(null, config, stateMgt);
             ConsumeResult<byte[], byte[]> result = new ConsumeResult<byte[], byte[]> { Message = new Message<byte[], byte[]>() };
             result.Topic = "topic";
@@ -56,7 +56,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.ApplicationId = "test";
             var stateMgt = new ProcessorStateManager(
                 new TaskId() { Id = 0, Partition = 0 },
-                new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) });
+                new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) }, 
+                null);
             ProcessorContext context = new ProcessorContext(task, config, stateMgt);
 
             Assert.AreEqual(id, context.Id);

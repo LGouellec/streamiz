@@ -172,12 +172,11 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// <returns>The old value or null if there is no such key.</returns>
         public byte[] PutIfAbsent(Bytes key, byte[] value)
         {
-            if (!map.ContainsKey(key))
-            {
+            var old = Get(key);
+            if (old == null)
                 Put(key, value);
-            }
-            // TODO : 
-            return null;
+            
+            return old;
         }
 
         private IKeyValueEnumerator<Bytes, byte[]> Range(Bytes from, Bytes to, bool forward)

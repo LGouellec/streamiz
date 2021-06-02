@@ -4,6 +4,7 @@ using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
@@ -240,6 +241,7 @@ namespace Streamiz.Kafka.Net
         private readonly Topology topology;
         private readonly IKafkaSupplier kafkaSupplier;
         private readonly IThread[] threads;
+        private readonly IStreamConfig configuration;
         private readonly string clientId;
         private readonly ILog logger = Logger.GetLogger(typeof(KafkaStream));
         private readonly string logPrefix = "";
@@ -247,8 +249,9 @@ namespace Streamiz.Kafka.Net
         private readonly QueryableStoreProvider queryableStoreProvider;
         private readonly GlobalStreamThread globalStreamThread;
         private readonly StreamStateManager manager = null;
+        private ITopicManager internalTopicManager = null;
 
-        private CancellationTokenSource _cancelSource = new CancellationTokenSource();
+        private readonly CancellationTokenSource _cancelSource = new CancellationTokenSource();
 
         internal State StreamState { get; private set; }
 
@@ -279,10 +282,13 @@ namespace Streamiz.Kafka.Net
         {
             this.topology = topology;
             this.kafkaSupplier = kafkaSupplier;
+            this.configuration = configuration;
 
             // check if ApplicationId & BootstrapServers has been set
             if (string.IsNullOrEmpty(configuration.ApplicationId) || string.IsNullOrEmpty(configuration.BootstrapServers))
+            {
                 throw new StreamConfigException($"Stream configuration is not correct. Please set ApplicationId and BootstrapServers as minimal.");
+            }
 
             var processID = Guid.NewGuid();
             clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;
@@ -292,7 +298,7 @@ namespace Streamiz.Kafka.Net
 
             // re-write the physical topology according to the config
             topology.Builder.RewriteTopology(configuration);
-
+            
             // sanity check
             var processorTopology = topology.Builder.BuildTopology();
 
@@ -349,7 +355,9 @@ namespace Streamiz.Kafka.Net
                 globalStreamThread.StateChanged += manager.OnGlobalThreadStateChange;
             }
             foreach (var t in threads)
+            {
                 t.StateChanged += manager.OnChange;
+            }
 
             var globalStateStoreProvider = new GlobalStateStoreProvider(topology.Builder.GlobalStateStores);
             queryableStoreProvider = new QueryableStoreProvider(stateStoreProviders, globalStateStoreProvider);
@@ -385,11 +393,13 @@ namespace Streamiz.Kafka.Net
                 });
             }
 
-            await Task.Factory.StartNew(() =>
+            await Task.Factory.StartNew(async () =>
             {
                 if (SetState(State.REBALANCING))
                 {
                     logger.Info($"{logPrefix}Starting Streams client with this topology : {topology.Describe()}");
+
+                    await InitializeInternalTopicManagerAsync();
 
                     if (globalStreamThread != null)
                     {
@@ -397,7 +407,9 @@ namespace Streamiz.Kafka.Net
                     }
 
                     foreach (var t in threads)
+                    {
                         t.Start(_cancelSource.Token);
+                    }
                 }
             }, token.HasValue ? token.Value : _cancelSource.Token);
         }
@@ -409,7 +421,9 @@ namespace Streamiz.Kafka.Net
         public void Dispose()
         {
             if (!_cancelSource.IsCancellationRequested)
+            {
                 _cancelSource.Cancel();
+            }
 
             Close();
         }
@@ -429,8 +443,12 @@ namespace Streamiz.Kafka.Net
             }
             else
             {
+                internalTopicManager?.Dispose();
+
                 foreach (var t in threads)
+                {
                     t.Dispose();
+                }
 
                 if (globalStreamThread != null)
                 {
@@ -524,6 +542,15 @@ namespace Streamiz.Kafka.Net
             {
                 throw new IllegalStateException($"KafkaStreams is not running. State is {StreamState}.");
             }
+        }
+
+        private async Task InitializeInternalTopicManagerAsync()
+        {
+            // Create internal topics (changelogs) if need
+            var adminClientInternalTopicManager = kafkaSupplier.GetAdmin(configuration.ToAdminConfig(StreamThread.GetSharedAdminClientId($"{configuration.ApplicationId.ToLower()}-admin-internal-topic-manager")));
+            internalTopicManager = new DefaultTopicManager(configuration, adminClientInternalTopicManager);
+
+            await InternalTopicManagerUtils.CreateChangelogTopicsAsync(internalTopicManager, topology.Builder);
         }
 
         #endregion

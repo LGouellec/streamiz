@@ -8,6 +8,19 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 {
     internal class SyncAdminClient : IAdminClient
     {
+        private readonly SyncProducer producer;
+        private AdminClientConfig config;
+
+        public SyncAdminClient(SyncProducer producer)
+        {
+            this.producer = producer;
+        }
+
+        internal void UseConfig(AdminClientConfig config)
+        {
+            this.config = config;
+        }
+
         public Handle Handle => throw new NotImplementedException();
 
         public string Name { get; protected set; }
@@ -29,7 +42,11 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public Task CreateTopicsAsync(IEnumerable<TopicSpecification> topics, CreateTopicsOptions options = null)
         {
-            throw new NotImplementedException();
+            return Task.Run(() =>
+            {
+                foreach (var t in topics)
+                    producer.CreateTopic(t.Name);
+            });
         }
 
         public Task<List<DeleteRecordsResult>> DeleteRecordsAsync(IEnumerable<TopicPartitionOffset> topicPartitionOffsets, DeleteRecordsOptions options = null)
@@ -44,12 +61,28 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public Task<List<DescribeConfigsResult>> DescribeConfigsAsync(IEnumerable<ConfigResource> resources, DescribeConfigsOptions options = null)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(new List<DescribeConfigsResult>
+            {
+                new DescribeConfigsResult
+                {
+                    Entries = new Dictionary<string, ConfigEntryResult>
+                    {
+                        {"num.partitions", new ConfigEntryResult{
+                                IsDefault = true,
+                                IsReadOnly = true,
+                                IsSensitive = false,
+                                Name = "num.partitions",
+                                Value = "1",
+                                Source = ConfigSource.DefaultConfig
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
         }
 
         public Metadata GetMetadata(string topic, TimeSpan timeout)
@@ -74,7 +107,24 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public Metadata GetMetadata(TimeSpan timeout)
         {
-            throw new NotImplementedException();
+            var topicsMetadata = new List<TopicMetadata>();
+            var topics = producer.GetAllTopics();
+            var error = new Error(ErrorCode.NoError);
+
+            var brokersMetadata = new List<BrokerMetadata> {
+                new BrokerMetadata(1, "localhost", 9092)
+            };
+
+            foreach(var t in topics)
+            {
+                var partitionsMetadata = new List<PartitionMetadata> {
+                    new PartitionMetadata(0, 0, new int[1]{0}, new int[1]{0}, error)
+                };
+
+                topicsMetadata.Add(new TopicMetadata(t, partitionsMetadata, error));
+            }
+
+            return new Metadata(brokersMetadata, topicsMetadata, 1, "localhost");
         }
 
         public GroupInfo ListGroup(string group, TimeSpan timeout)

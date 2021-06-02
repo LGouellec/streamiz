@@ -9,8 +9,10 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         public MockPartition(int indice)
         {
             Size = 0;
+            Index = indice;
         }
 
+        public int Index { get; }
         public int Size { get; private set; } = 0;
         public long LowOffset { get; private set; } = 0;
         public long HighOffset { get; private set; } = 0;

@@ -244,6 +244,16 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         string StateDir { get; set; }
 
+        /// <summary>
+        /// The replication factor for change log topics topics created by the stream processing application. Default is 1.
+        /// </summary>
+        int ReplicationFactor { get; set; }
+
+        /// <summary>
+        /// Added to a windows maintainMs to ensure data is not deleted from the log prematurely. Allows for clock drift. Default is 1 day.
+        /// </summary>
+        long WindowStoreChangelogAdditionalRetentionMs { get; set; }
+
         #endregion
     }
 
@@ -347,6 +357,8 @@ namespace Streamiz.Kafka.Net
         internal static readonly string bufferedRecordsPerPartitionCst = "buffered.records.per.partition";
         internal static readonly string followMetadataCst = "follow.metadata";
         internal static readonly string stateDirCst = "state.dir";
+        internal static readonly string replicationFactorCst = "replication.factor";
+        internal static readonly string windowstoreChangelogAdditionalRetentionMsCst = "windowstore.changelog.additional.retention.ms";
 
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -1894,7 +1906,9 @@ namespace Streamiz.Kafka.Net
             ProductionExceptionHandler = (report) => ExceptionHandlerResponse.FAIL;
             DeserializationExceptionHandler = (context, record, exception) => ExceptionHandlerResponse.FAIL;
             FollowMetadata = false;
-            StateDir = Path.Combine(Path.GetTempPath(), "kafka-streams");
+            StateDir = Path.Combine(Path.GetTempPath(), "streamiz-kafka-net");
+            ReplicationFactor = 1;
+            WindowStoreChangelogAdditionalRetentionMs = (long)TimeSpan.FromDays(1).TotalMilliseconds;
 
             if (properties != null)
             {
@@ -2086,12 +2100,30 @@ namespace Streamiz.Kafka.Net
 
         /// <summary>
         /// Directory location for state store. This path must be unique for each streams instance sharing the same underlying filesystem.
-        /// Default value : /tmp/kafka-streams
+        /// Default value : $TMP_DIR_ENVIRONMENT$/streamiz-kafka-net
         /// </summary>
         public string StateDir
         {
             get => this[stateDirCst];
             set => this.AddOrUpdate(stateDirCst, value);
+        }
+
+        /// <summary>
+        /// The replication factor for change log topics topics created by the stream processing application. Default is 1.
+        /// </summary>
+        public int ReplicationFactor
+        {
+            get => this[replicationFactorCst];
+            set => this.AddOrUpdate(replicationFactorCst, value);
+        }
+
+        /// <summary>
+        /// Added to a windows maintainMs to ensure data is not deleted from the log prematurely. Allows for clock drift. Default is 1 day.
+        /// </summary>
+        public long WindowStoreChangelogAdditionalRetentionMs
+        {
+            get => this[windowstoreChangelogAdditionalRetentionMsCst];
+            set => this.AddOrUpdate(windowstoreChangelogAdditionalRetentionMsCst, value);
         }
 
         /// <summary>

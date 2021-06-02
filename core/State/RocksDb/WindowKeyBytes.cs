@@ -1,4 +1,5 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.State.Helper;
 using Streamiz.Kafka.Net.State.RocksDb.Internal;
 using System;
 using System.Collections.Generic;
@@ -30,18 +31,18 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             {
                 using(var buffer2 = ByteBuffer.Build(bytes2))
                 {
-                    var key1 = buffer1.GetBytes(0, bytes1.Length - RocksDbWindowKeySchema.SUFFIX_SIZE);
-                    var key2 = buffer2.GetBytes(0, bytes2.Length - RocksDbWindowKeySchema.SUFFIX_SIZE);
+                    var key1 = buffer1.GetBytes(0, bytes1.Length - WindowKeyHelper.SUFFIX_SIZE);
+                    var key2 = buffer2.GetBytes(0, bytes2.Length - WindowKeyHelper.SUFFIX_SIZE);
                     int compareKey = BytesComparer.Compare(key1, key2);
                     if (compareKey == 0)
                     {
-                        long ts1 = buffer1.GetLong(bytes1.Length - RocksDbWindowKeySchema.SUFFIX_SIZE);
-                        long ts2 = buffer2.GetLong(bytes2.Length - RocksDbWindowKeySchema.SUFFIX_SIZE);
+                        long ts1 = buffer1.GetLong(bytes1.Length - WindowKeyHelper.SUFFIX_SIZE);
+                        long ts2 = buffer2.GetLong(bytes2.Length - WindowKeyHelper.SUFFIX_SIZE);
                         int compareTs = ts1.CompareTo(ts2);
                         if (compareTs == 0)
                         {
-                            int seq1 = buffer1.GetInt(bytes1.Length - RocksDbWindowKeySchema.TIMESTAMP_SIZE);
-                            int seq2 = buffer2.GetInt(bytes2.Length - RocksDbWindowKeySchema.TIMESTAMP_SIZE);
+                            int seq1 = buffer1.GetInt(bytes1.Length - WindowKeyHelper.TIMESTAMP_SIZE);
+                            int seq2 = buffer2.GetInt(bytes2.Length - WindowKeyHelper.TIMESTAMP_SIZE);
                             return seq1.CompareTo(seq2);
                         }
                         else

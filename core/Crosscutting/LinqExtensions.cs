@@ -55,7 +55,20 @@ namespace Streamiz.Kafka.Net.Crosscutting
 
         internal static IEnumerable<T> ToSingle<T>(this T obj)
         {
-            return new List<T> { obj };
+            return obj != null ? new List<T> { obj } : new List<T>();
+        }
+    
+        internal static IList<T> AddIfNotNull<T>(this IList<T> list, T data)
+        {
+            if (data != null)
+                list.Add(data);
+            return list;
+        }
+    
+        internal static void ForEach<T>(this ICollection<T> collections, Action<T> action)
+        {
+            foreach (var i in collections)
+                action(i);
         }
     }
 }

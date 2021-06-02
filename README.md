@@ -33,8 +33,8 @@ This project is being written. Thanks for you contribution !
 
 # Timeline
 
-- Begin 2021 - 1.2.0 - Persistent state store (eg: RocksDB Store), Repartition and Changelog topics
-- April 2021 - 1.3.0 - Processor API, Metrics, Interactive Queries, Standby Replica
+- June/July 2021 - 1.2.0 - Persistent state store (eg: RocksDB Store), Repartition and Changelog topics
+- End 2021 - 1.3.0 - Processor API, Metrics, Interactive Queries, Standby Replica
 
 # Documentation
 
@@ -95,14 +95,15 @@ static async System.Threading.Tasks.Task Main(string[] args)
 - [X] Statefull processors impl
 - [ ] Transform and Through Processor
 - [ ] Supress Processor (.suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded())))
-- [ ] Rocks DB state implementation
-- [ ] Changelog Topic
+- [X] Rocks DB state implementation
+- [X] Changelog Topic
 - [ ] Task restoring
 - [ ] Repartition topic
 - [ ] Repartition Processor [KAFKA-8611](https://issues.apache.org/jira/browse/KAFKA-8611) | [PR #7170](https://github.com/apache/kafka/pull/7170)
 - [ ] Processor API
 - [ ] Sample projects (Micro-services, console sample, topology implementation, etc ..) which use Streamiz package ([see](https://github.com/LGouellec/kafka-streams-dotnet-samples))
-- [ ] Protobuf & Json SerDes which interact Confluent Schema Registry
+- [X] Protobuf SerDes which interact Confluent Schema Registry
+- [ ] Json SerDes which interact Confluent Schema Registry
 - [ ] Optimizing Kafka Streams Topologies
 - [ ] Standby Replica
 - [ ] Interactive Queries

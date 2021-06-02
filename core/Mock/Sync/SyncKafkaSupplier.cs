@@ -11,27 +11,48 @@ namespace Streamiz.Kafka.Net.Mock.Sync
     internal class SyncKafkaSupplier : IKafkaSupplier
     {
         protected SyncProducer producer = null;
+        protected SyncAdminClient admin = null;
 
-        public virtual IAdminClient GetAdmin(AdminClientConfig config) => new SyncAdminClient();
+        public SyncKafkaSupplier()
+        {
+            producer = new SyncProducer();
+            admin = new SyncAdminClient(producer);   
+        }
+
+        public virtual IAdminClient GetAdmin(AdminClientConfig config)
+        {
+            admin.UseConfig(config);
+            return admin;
+        }
 
         public virtual IConsumer<byte[], byte[]> GetConsumer(ConsumerConfig config, IConsumerRebalanceListener rebalanceListener)
         {
-            var consumer = new SyncConsumer(config, producer);
+            var consumer = new SyncConsumer(producer);
+            consumer.UseConfig(config);
             consumer.SetRebalanceListener(rebalanceListener);
             return consumer;
         }
 
         public virtual IConsumer<byte[], byte[]> GetGlobalConsumer(ConsumerConfig config)
-            => GetConsumer(config, null);
+        {
+            var globalConsumer = new SyncConsumer(producer);
+            globalConsumer.UseConfig(config);
+            globalConsumer.SetRebalanceListener(null);
+            return globalConsumer;
+        }
 
         public virtual IProducer<byte[], byte[]> GetProducer(ProducerConfig config)
         {
-            if (producer == null)
-                producer = new SyncProducer(config);
+            producer.UseConfig(config);
             return producer;
         }
 
         public virtual IConsumer<byte[], byte[]> GetRestoreConsumer(ConsumerConfig config)
-            => GetConsumer(config, null);
+        {
+            var restoreConsumer = new SyncConsumer(producer);
+            restoreConsumer.UseConfig(config);
+            restoreConsumer.SetRebalanceListener(null);
+            return restoreConsumer;
+        }
     }
 }
