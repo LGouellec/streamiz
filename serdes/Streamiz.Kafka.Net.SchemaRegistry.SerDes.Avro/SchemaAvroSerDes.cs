@@ -31,7 +31,15 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
             {
                 c.RequestTimeoutMs = config.SchemaRegistryRequestTimeoutMs;
             }
+            if (!string.IsNullOrEmpty(config.BasicAuthUserInfo))
+            {
+                c.BasicAuthUserInfo = config.BasicAuthUserInfo;
+            }
 
+            if (config.AuthCredentialsSource.HasValue)
+            {
+                c.BasicAuthCredentialsSource = (AuthCredentialsSource)config.AuthCredentialsSource.Value;
+            }
             return c;
         }
 
@@ -58,10 +66,8 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
         {
             if (!isInitialized)
             {
-                if (context.Config is ISchemaRegistryConfig)
+                if (context.Config is ISchemaRegistryConfig schemaConfig)
                 {
-                    var schemaConfig = context.Config as ISchemaRegistryConfig;
-
                     registryClient = GetSchemaRegistryClient(GetConfig(schemaConfig));
                     deserializer = new AvroDeserializer<T>(registryClient);
                     serializer = new AvroSerializer<T>(registryClient, GetSerializerConfig(schemaConfig));

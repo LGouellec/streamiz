@@ -34,6 +34,16 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes
                 c.RequestTimeoutMs = config.SchemaRegistryRequestTimeoutMs;
             }
 
+            if (!string.IsNullOrEmpty(config.BasicAuthUserInfo))
+            {
+                c.BasicAuthUserInfo = config.BasicAuthUserInfo;
+            }
+
+            if (config.AuthCredentialsSource.HasValue)
+            {
+                c.BasicAuthCredentialsSource = (AuthCredentialsSource)config.AuthCredentialsSource.Value;
+            }
+
             return c;
         }
 

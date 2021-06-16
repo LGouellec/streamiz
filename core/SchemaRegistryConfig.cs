@@ -58,5 +58,18 @@
         /// The subject name strategy to use for schema registration / lookup. Possible values: <see cref="Streamiz.Kafka.Net.SubjectNameStrategy" />
         /// </summary>
         public SubjectNameStrategy? SubjectNameStrategy { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+
+        public string BasicAuthUserInfo { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int? AuthCredentialsSource { get; set; }
+
+
     }
 }

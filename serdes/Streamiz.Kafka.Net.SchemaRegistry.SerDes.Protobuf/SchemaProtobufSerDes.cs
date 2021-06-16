@@ -58,10 +58,8 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf
         {
             if (!isInitialized)
             {
-                if (context.Config is ISchemaRegistryConfig)
+                if (context.Config is ISchemaRegistryConfig schemaConfig)
                 {
-                    var schemaConfig = context.Config as ISchemaRegistryConfig;
-
                     registryClient = GetSchemaRegistryClient(GetConfig(schemaConfig));
                     deserializer = new ProtobufDeserializer<T>(schemaConfig as Config);
                     serializer = new ProtobufSerializer<T>(registryClient, GetSerializerConfig(schemaConfig));
