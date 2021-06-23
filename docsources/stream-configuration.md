@@ -208,6 +208,15 @@ Deserialization exception handling function called when deserialization exceptio
 
 Production exception handling function called when kafka produce exception is raise.
 
+### BasicAuthUserInfo
+
+Credentials for the schema registry
+
+### BasicAuthCredentialsSource
+
+Specifies the source, use 0 for UserInfo or 1 for SaslInherit.
+
+
 ## Kafka consumers and producer configuration parameters
 
 You can specify parameters for the Kafka consumers, producers, and admin client that are used internally. The consumer, producer and admin client settings are defined by wrapper properties on ConsumerConfig, ProducerConfig and AdminConfig.
@@ -245,4 +254,6 @@ In case of the configuration is not wrapped in StreamConfig yet, you can directl
     config.SecurityProtocol = SecurityProtocol.SaslPlaintext;
     config.AutoOffsetReset = AutoOffsetReset.Earliest;
     config.NumStreamThreads = 1;
+    config.BasicAuthUserInfo = "user:password";
+    config.BasicAuthCredentialsSource = 0;
 ```
