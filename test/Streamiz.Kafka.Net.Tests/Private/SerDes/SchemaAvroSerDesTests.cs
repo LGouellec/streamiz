@@ -425,6 +425,42 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         }
 
         [Test]
+        public void SchemaRegistryConfigWithBasicAuth()
+        {
+            var config = new StreamConfig();
+            config.SchemaRegistryUrl = "mock://test";
+            config.BasicAuthUserInfo = "user:password";
+            config.BasicAuthCredentialsSource = (int)AuthCredentialsSource.UserInfo;
+            config.SchemaRegistryMaxCachedSchemas = 1;
+            config.SchemaRegistryRequestTimeoutMs = 30;
+
+            var serdes = new SchemaAvroSerDes<Order>();
+            var schemaConfig = serdes.GetConfig(config);
+
+            Assert.AreEqual(1, schemaConfig.MaxCachedSchemas);
+            Assert.AreEqual(30, schemaConfig.RequestTimeoutMs);
+            Assert.AreEqual("mock://test", schemaConfig.Url);
+            Assert.AreEqual("user:password", schemaConfig.BasicAuthUserInfo);
+            Assert.AreEqual(AuthCredentialsSource.UserInfo, schemaConfig.BasicAuthCredentialsSource);
+        }
+
+
+        [Test]
+        public void SchemaRegistrySerializerConfig()
+        {
+            var config = new StreamConfig();
+            config.SubjectNameStrategy = SubjectNameStrategy.TopicRecord;
+            config.AutoRegisterSchemas = true;
+
+            var serdes = new SchemaAvroSerDes<Order>();
+            var schemaConfig = serdes.GetSerializerConfig(config);
+
+            Assert.AreEqual(Confluent.SchemaRegistry.SubjectNameStrategy.TopicRecord, schemaConfig.SubjectNameStrategy);
+            Assert.AreEqual(true, schemaConfig.AutoRegisterSchemas);
+        }
+
+
+        [Test]
         public void DefaultSchemaRegistryConfig()
         {
             var mockSchemaClient = new MockSchemaRegistryClient();

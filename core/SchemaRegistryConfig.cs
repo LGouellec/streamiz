@@ -68,7 +68,7 @@
         /// <summary>
         /// 
         /// </summary>
-        public int? AuthCredentialsSource { get; set; }
+        public int? BasicAuthCredentialsSource { get; set; }
 
 
     }

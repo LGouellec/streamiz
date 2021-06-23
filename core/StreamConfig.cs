@@ -2292,7 +2292,7 @@ namespace Streamiz.Kafka.Net
             set => this.AddOrUpdate(schemaRegistryBasicAuthUserInfoCst, value);
         }
 
-        public int? AuthCredentialsSource
+        public int? BasicAuthCredentialsSource
         {
             get => this.ContainsKey(schemaRegistryBasicAuthCredentialSourceCst) ? this[schemaRegistryBasicAuthCredentialSourceCst] : null;
             set => this.AddOrUpdate(schemaRegistryBasicAuthCredentialSourceCst, value);
