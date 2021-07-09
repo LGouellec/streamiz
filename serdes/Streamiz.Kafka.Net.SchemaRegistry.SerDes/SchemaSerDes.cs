@@ -20,9 +20,9 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes
         protected IAsyncSerializer<T> serializer;
         protected IAsyncDeserializer<T> deserializer;
 
-        private Confluent.SchemaRegistry.SchemaRegistryConfig GetConfig(ISchemaRegistryConfig config)
+        private SchemaRegistryConfig GetConfig(ISchemaRegistryConfig config)
         {
-            Confluent.SchemaRegistry.SchemaRegistryConfig c = new Confluent.SchemaRegistry.SchemaRegistryConfig();
+            SchemaRegistryConfig c = new SchemaRegistryConfig();
             c.Url = config.SchemaRegistryUrl;
             if (config.SchemaRegistryMaxCachedSchemas.HasValue)
             {
@@ -32,6 +32,16 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes
             if (config.SchemaRegistryRequestTimeoutMs.HasValue)
             {
                 c.RequestTimeoutMs = config.SchemaRegistryRequestTimeoutMs;
+            }
+
+            if (!string.IsNullOrEmpty(config.BasicAuthUserInfo))
+            {
+                c.BasicAuthUserInfo = config.BasicAuthUserInfo;
+            }
+
+            if (config.BasicAuthCredentialsSource.HasValue)
+            {
+                c.BasicAuthCredentialsSource = (AuthCredentialsSource)config.BasicAuthCredentialsSource.Value;
             }
 
             return c;
