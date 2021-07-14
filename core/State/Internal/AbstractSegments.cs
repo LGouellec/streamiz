@@ -1,17 +1,17 @@
-﻿using log4net;
-using Streamiz.Kafka.Net.Crosscutting;
+﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
     internal abstract class AbstractSegments<S> : ISegments<S>
         where S : ISegment
     {
-        protected readonly ILog logger = null;
+        protected readonly ILogger logger = null;
         protected readonly SortedDictionary<long, S> segments = new SortedDictionary<long, S>(new LongComparer());
 
         protected readonly string name;
@@ -130,7 +130,7 @@ namespace Streamiz.Kafka.Net.State.Internal
                     kv.Value.Destroy();
                 }catch (Exception e)
                 {
-                    logger.Error($"Error destroying state store {kv.Value.Name}", e);
+                    logger.LogError($"Error destroying state store {kv.Value.Name}", e);
                 }
             }
         }

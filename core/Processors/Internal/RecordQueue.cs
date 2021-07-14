@@ -1,9 +1,9 @@
 ﻿using Confluent.Kafka;
-using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -13,7 +13,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
     {
         // LOGGER + NAME
         private readonly string logPrefix;
-        private readonly ILog log = Logger.GetLogger(typeof(RecordQueue));
+        private readonly ILogger log = Logger.GetLogger(typeof(RecordQueue));
 
         private readonly List<ConsumeResult<byte[], byte[]>> queue;
         private ConsumeResult<byte[], byte[]> currentRecord = null;
@@ -51,20 +51,20 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public int Queue(ConsumeResult<byte[], byte[]> item)
         {
-            log.Debug($"{logPrefix}Adding new record in queue.");
+            log.LogDebug($"{logPrefix}Adding new record in queue.");
             queue.Add(item);
             UpdateHeadRecord();
-            log.Debug($"{logPrefix}Record added in queue. New size : {Size}");
+            log.LogDebug($"{logPrefix}Record added in queue. New size : {Size}");
             return Size;
         }
 
         public ConsumeResult<byte[], byte[]> Poll()
         {
-            log.Debug($"{logPrefix}Polling record in queue.");
+            log.LogDebug($"{logPrefix}Polling record in queue.");
             var record = currentRecord;
             currentRecord = null;
             UpdateHeadRecord();
-            log.Debug($"{logPrefix}{(record == null ? "No r" : "R")}ecord polled. ({(record != null ? $"Record info [Topic:{record.Topic}|Partition:{record.Partition}|Offset:{record.Offset}]" : "")})");
+            log.LogDebug($"{logPrefix}{(record == null ? "No r" : "R")}ecord polled. ({(record != null ? $"Record info [Topic:{record.Topic}|Partition:{record.Partition}|Offset:{record.Offset}]" : "")})");
             return record;
         }
 
@@ -73,7 +73,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             queue.Clear();
             currentRecord = null;
             partitionTime = -1;
-            log.Debug($"{logPrefix} cleared !");
+            log.LogDebug($"{logPrefix} cleared !");
         }
 
         #endregion
@@ -94,10 +94,10 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     throw new StreamsException("Fatal error in Timestamp extractor callback", e);
                 }
 
-                log.Debug("");
+                log.LogDebug("");
                 if (timestamp < 0)
                 {
-                    log.Warn($"Skipping record due to negative extracted timestamp. topic=[{record.Topic}] partition=[{record.Partition}] offset=[{record.Offset}] extractedTimestamp=[{timestamp}] extractor=[{timestampExtractor.GetType().Name}]");
+                    log.LogWarning($"Skipping record due to negative extracted timestamp. topic=[{record.Topic}] partition=[{record.Partition}] offset=[{record.Offset}] extractedTimestamp=[{timestamp}] extractor=[{timestampExtractor.GetType().Name}]");
                     continue;
                 }
 

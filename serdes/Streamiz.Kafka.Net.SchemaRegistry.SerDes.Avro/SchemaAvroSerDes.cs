@@ -1,13 +1,6 @@
-﻿using Confluent.Kafka;
-using Confluent.Kafka.SyncOverAsync;
-using Confluent.SchemaRegistry;
-using Confluent.SchemaRegistry.Serdes;
+﻿using Confluent.SchemaRegistry.Serdes;
 using Streamiz.Kafka.Net.Errors;
-using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock;
 using Streamiz.Kafka.Net.SerDes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
 {

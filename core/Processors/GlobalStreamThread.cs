@@ -1,5 +1,4 @@
 ﻿using Confluent.Kafka;
-using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -7,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -15,7 +15,7 @@ namespace Streamiz.Kafka.Net.Processors
         private class StateConsumer
         {
             private readonly IConsumer<byte[], byte[]> globalConsumer;
-            private readonly ILog log = Logger.GetLogger(typeof(StateConsumer));
+            private readonly ILogger log = Logger.GetLogger(typeof(StateConsumer));
             private readonly IGlobalStateMaintainer globalStateMaintainer;
             private readonly TimeSpan pollTime;
             private readonly TimeSpan flushInterval;
@@ -63,7 +63,7 @@ namespace Streamiz.Kafka.Net.Processors
                 }
                 catch (Exception e)
                 {
-                    log.Error("Updating global state failed.", e);
+                    log.LogError("Updating global state failed.", e);
                     throw new StreamsException("Updating global state failed.", e);
                 }
             }
@@ -78,7 +78,7 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     // just log an error if the consumer throws an exception during close
                     // so we can always attempt to close the state stores.
-                    log.Error("Failed to close global consumer due to the following error:", e);
+                    log.LogError("Failed to close global consumer due to the following error:", e);
                 }
 
                 globalStateMaintainer.Close();
@@ -89,7 +89,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public event GlobalThreadStateListener StateChanged;
 
-        private readonly ILog log = Logger.GetLogger(typeof(GlobalStreamThread));
+        private readonly ILogger log = Logger.GetLogger(typeof(GlobalStreamThread));
         private readonly Thread thread;
         private readonly string logPrefix;
         private readonly IConsumer<byte[], byte[]> globalConsumer;
@@ -132,7 +132,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public void Start(CancellationToken token)
         {
-            log.Info($"{logPrefix}Starting");
+            log.LogInformation($"{logPrefix}Starting");
 
             try
             {
@@ -143,7 +143,7 @@ namespace Streamiz.Kafka.Net.Processors
                 SetState(GlobalThreadState.PENDING_SHUTDOWN);
                 SetState(GlobalThreadState.DEAD);
 
-                log.Warn($"{logPrefix}Error happened during initialization of the global state store; this thread has shutdown");
+                log.LogWarning($"{logPrefix}Error happened during initialization of the global state store; this thread has shutdown");
 
                 throw;
             }
@@ -199,12 +199,12 @@ namespace Streamiz.Kafka.Net.Processors
                 }
                 else if (!oldState.IsValidTransition(newState))
                 {
-                    log.Error($"{logPrefix}Unexpected state transition from {oldState} to {newState}");
+                    log.LogError($"{logPrefix}Unexpected state transition from {oldState} to {newState}");
                     throw new StreamsException($"Unexpected state transition from {oldState} to {newState}");
                 }
                 else
                 {
-                    log.Info($"{logPrefix}State transition from {oldState} to {newState}");
+                    log.LogInformation($"{logPrefix}State transition from {oldState} to {newState}");
                 }
 
                 State = newState;
@@ -230,7 +230,7 @@ namespace Streamiz.Kafka.Net.Processors
                 // we don't have any unmanaged resources to dispose of so we can ignore value of `disposing`
 
                 SetState(GlobalThreadState.PENDING_SHUTDOWN);
-                log.Info($"{logPrefix}Shutting down");
+                log.LogInformation($"{logPrefix}Shutting down");
 
                 if (waitForThread)
                 {
@@ -243,13 +243,13 @@ namespace Streamiz.Kafka.Net.Processors
                 }
                 catch (Exception e)
                 {
-                    log.Error($"{logPrefix}exception caught during disposing of GlobalStreamThread.", e);
+                    log.LogError($"{logPrefix}exception caught during disposing of GlobalStreamThread.", e);
                     // ignore exception
                     // https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1065
                 }
 
                 SetState(GlobalThreadState.DEAD);
-                log.Info($"{logPrefix}Shutdown complete");
+                log.LogInformation($"{logPrefix}Shutdown complete");
 
                 disposed = true;
             }
