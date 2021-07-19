@@ -22,7 +22,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 T task = CreateTask(consumer, newTaskAndPartitions.Key, newTaskAndPartitions.Value);
                 if (task != null)
                 {
-                    log.LogDebug($"Created task {newTaskAndPartitions.Key} with assigned partition {string.Join(",", newTaskAndPartitions.Value)}");
+                    log.LogDebug("Created task {NewTaskAndPartitionsKey} with assigned partition {PartitionValues}", newTaskAndPartitions.Key,
+                        string.Join(",", newTaskAndPartitions.Value));
                     createdTasks.Add(task);
                 }
 

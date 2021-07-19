@@ -10,10 +10,11 @@ namespace Streamiz.Kafka.Net.Crosscutting
     /// </summary>
     public static class Logger
     {
-        private static ILoggerFactory _factory = null;
+        private static ILoggerFactory _factory;
 
         /// <summary>
-        /// 
+        /// If logger factory is not set by the project using the library
+        /// it will create a factory with console logger configured.
         /// </summary>
         public static ILoggerFactory LoggerFactory
         {
@@ -23,9 +24,6 @@ namespace Streamiz.Kafka.Net.Crosscutting
 
         /// <summary>   
         /// Get logger from type class.
-        /// By default, he search configuration file in root folder and filename 'log4net.config'.
-        /// If configuration doesn't have appenders, a <see cref="ConsoleAppender"/> is added.
-        /// If this file doesn't exist, please use : <see cref="Logger.GetLogger(Type, string)"/>
         /// </summary>
         /// <param name="type">Class type which call logger</param>
         /// <returns>Return logger configured</returns>

@@ -100,7 +100,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
             var segment = segments.GetOrCreateSegmentIfLive(segId, context, observedStreamTime);
             if (segment == null)
             {
-                logger.LogWarning("Skipping record for expired segment.");
+                logger.LogWarning("Skipping record for expired segment");
             }
             else
             {

@@ -221,7 +221,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 }
                 catch(Exception e)
                 {
-                    log.LogError($"Failed to process stream task {task.Id} due to the following error:", e);
+                    log.LogError(
+                        e, "Failed to process stream task {TasksId} due to the following error:", task.Id);
                     throw;
                 }
             }
@@ -231,7 +232,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         internal void HandleLostAll()
         {
-            log.LogDebug($"Closing lost active tasks as zombies.");
+            log.LogDebug("Closing lost active tasks as zombies");
             CurrentTask = null;
             revokedTasks.Clear();
 

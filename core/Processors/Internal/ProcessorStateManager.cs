@@ -52,11 +52,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public void Flush()
         {
-            log.LogDebug($"{logPrefix}Flushing all stores registered in the state manager");
+            log.LogDebug("{LogPrefix}Flushing all stores registered in the state manager", logPrefix);
 
             foreach (var state in registeredStores)
             {
-                log.LogDebug($"{logPrefix}Flushing store {state.Key}");
+                log.LogDebug("{LogPrefix}Flushing store {StateKey}", logPrefix, state.Key);
                 state.Value.Store.Flush();
             }
         }
@@ -64,7 +64,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public void Register(IStateStore store, StateRestoreCallback callback)
         {
             string storeName = store.Name;
-            log.LogDebug($"{logPrefix}Registering state store {storeName} to its state manager");
+            log.LogDebug("{LogPrefix}Registering state store {StoreName} to its state manager", logPrefix, storeName);
 
             if (registeredStores.ContainsKey(storeName))
             {
@@ -84,16 +84,16 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             registeredStores.Add(storeName, metadata);
 
-            log.LogDebug($"{logPrefix}Registered state store {storeName} to its state manager");
+            log.LogDebug("{LogPrefix}Registered state store {StoreName} to its state manager", logPrefix, storeName);
         }
 
         public void Close()
         {
-            log.LogDebug($"{logPrefix}Closing its state manager and all the registered state stores");
+            log.LogDebug("{LogPrefix}Closing its state manager and all the registered state stores", logPrefix);
 
             foreach( var state in registeredStores)
             {
-                log.LogDebug($"{logPrefix}Closing storage engine {state.Key}");
+                log.LogDebug("{LogPrefix}Closing storage engine {StoreKey}", logPrefix, state.Key);
                 state.Value.Store.Close();
             }
         }

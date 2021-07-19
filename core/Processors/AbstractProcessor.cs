@@ -77,7 +77,8 @@ namespace Streamiz.Kafka.Net.Processors
 
         public virtual void Forward<K1, V1>(K1 key, V1 value)
         {
-            log.LogDebug($"{logPrefix}Forward<{typeof(K1).Name},{typeof(V1).Name}> message with key {key} and value {value} to each next processor");
+            log.LogDebug("{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to each next processor",
+                logPrefix, typeof(K1).Name, typeof(V1).Name, key, value);
             foreach (var n in Next)
                 if (n is IProcessor<K1, V1>)
                     (n as IProcessor<K1, V1>).Process(key, value);
@@ -89,7 +90,9 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 if (n is IProcessor<K1, V1> && n.Name.Equals(name))
                 {
-                    log.LogDebug($"{logPrefix}Forward<{typeof(K1).Name},{typeof(V1).Name}> message with key {key} and value {value} to processor {name}");
+                    log.LogDebug(
+                        "{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to processor {Processor}", logPrefix,
+                        typeof(K1).Name, typeof(V1).Name, key, value, name);
                     (n as IProcessor<K1, V1>).Process(key, value);
                 }
             }
@@ -97,7 +100,8 @@ namespace Streamiz.Kafka.Net.Processors
 
         public virtual void Forward(K key, V value)
         {
-            log.LogDebug($"{logPrefix}Forward<{typeof(K).Name},{typeof(V).Name}> message with key {key} and value {value} to each next processor");
+            log.LogDebug("{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to each next processor",
+                logPrefix, typeof(K).Name, typeof(V).Name, key, value);
             foreach (var n in Next)
             {
                 if (n is IProcessor<K, V>)
@@ -113,7 +117,9 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 if (n.Name.Equals(name))
                 {
-                    log.LogDebug($"{logPrefix}Forward<{typeof(K).Name},{typeof(V).Name}> message with key {key} and value {value} to processor {name}");
+                    log.LogDebug(
+                        "{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to processor {Processor}", logPrefix,
+                        typeof(K).Name, typeof(V).Name, key, value, name);
                     if (n is IProcessor<K, V>)
                         (n as IProcessor<K, V>).Process(key, value);
                     else
@@ -126,16 +132,19 @@ namespace Streamiz.Kafka.Net.Processors
 
         public virtual void Init(ProcessorContext context)
         {
-            log.LogDebug($"{logPrefix}Initializing process context");
+            log.LogDebug("{LogPrefix}Initializing process context", logPrefix);
             Context = context;
             foreach (var n in Next)
             {
                 n.Init(context);
             }
-            log.LogDebug($"{logPrefix}Process context initialized");
+            log.LogDebug("{LogPrefix}Process context initialized", logPrefix);
         }
 
-        protected void LogProcessingKeyValue(K key, V value) => log.LogDebug($"{logPrefix}Process<{typeof(K).Name},{typeof(V).Name}> message with key {key} and {value} with record metadata [topic:{Context.RecordContext.Topic}|partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}]");
+        protected void LogProcessingKeyValue(K key, V value) => log.LogDebug(
+            "{LogPrefix}Process<{KeyType},{ValueType}> message with key {Key} and {Value} with record metadata [topic:{Topic}|partition:{Partition}|offset:{Offset}]",
+            logPrefix, typeof(K).Name, typeof(V).Name, key, value, Context.RecordContext.Topic,
+            Context.RecordContext.Partition, Context.RecordContext.Offset);
 
         #region Setter
 
@@ -165,7 +174,10 @@ namespace Streamiz.Kafka.Net.Processors
                 key = DeserializeKey(record);
                 if (key.MustBeSkipped)
                 {
-                    log.LogDebug($"{logPrefix} Message with record metadata [topic:{Context.RecordContext.Topic}|partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}] was skipped !");
+                    log.LogDebug(
+                        "{LogPrefix} Message with record metadata [topic:{Topic}|partition:{Partition}|offset:{Offset}] was skipped !",
+                        logPrefix, Context.RecordContext.Topic, Context.RecordContext.Partition,
+                        Context.RecordContext.Offset);
                     return;
                 }
             }
@@ -177,7 +189,10 @@ namespace Streamiz.Kafka.Net.Processors
                 value = DeserializeValue(record);
                 if (value.MustBeSkipped)
                 {
-                    log.LogDebug($"{logPrefix} Message with record metadata [topic:{Context.RecordContext.Topic}|partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}] was skipped !");
+                    log.LogDebug(
+                        "{LogPrefix} Message with record metadata [topic:{Topic}|partition:{Partition}|offset:{Offset}] was skipped !",
+                        logPrefix, Context.RecordContext.Topic, Context.RecordContext.Partition,
+                        Context.RecordContext.Offset);
                     return;
                 }
             }
@@ -187,7 +202,10 @@ namespace Streamiz.Kafka.Net.Processors
             if (throwException)
             {
                 var s = KeySerDes == null ? "key" : "value";
-                log.LogError($"{logPrefix}Impossible to receive source data because keySerdes and/or valueSerdes is not setted ! KeySerdes : {(KeySerDes != null ? KeySerDes.GetType().Name : "NULL")} | ValueSerdes : {(ValueSerDes != null ? ValueSerDes.GetType().Name : "NULL")}.");
+                log.LogError(
+                    "{LogPrefix}Impossible to receive source data because keySerdes and/or valueSerdes is not setted ! KeySerdes : {KeySerdes} | ValueSerdes : {ValueSerdes}",
+                    logPrefix, KeySerDes != null ? KeySerDes.GetType().Name : "NULL",
+                    ValueSerDes != null ? ValueSerDes.GetType().Name : "NULL");
                 throw new StreamsException($"{logPrefix}The {s} serdes is not compatible to the actual {s} for this processor. Change the default {s} serdes in StreamConfig or provide correct Serdes via method parameters(using the DSL)");
             }
             else

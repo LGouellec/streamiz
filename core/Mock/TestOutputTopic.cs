@@ -82,7 +82,7 @@ namespace Streamiz.Kafka.Net.Mock
                 return new TestRecord<K, V> { Key = key, Value = value };
             }catch(StreamsException e)
             {
-                log.LogWarning($"{e.Message}");
+                log.LogWarning(e, "{Message}", e.Message);
                 return null;
             }
         }

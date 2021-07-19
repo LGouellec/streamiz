@@ -259,7 +259,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         {
             if (openIterators.Count != 0)
             {
-                logger.LogWarning($"Closing {openIterators.Count} open iterators for store {Name}");
+                logger.LogWarning("Closing {OpenIteratorCount} open iterators for store {Name}", openIterators.Count, Name);
                 for (int i = 0; i< openIterators.Count; ++i)
                     openIterators.ElementAt(i).Close();
             }
@@ -337,7 +337,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
             if (windowStartTimestamp <= observedStreamTime - retention.TotalMilliseconds)
             {
-                logger.LogWarning("Skipping record for expired segment.");
+                logger.LogWarning("Skipping record for expired segment");
             }
             else
             {

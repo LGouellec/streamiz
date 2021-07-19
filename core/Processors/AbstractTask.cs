@@ -88,19 +88,19 @@ namespace Streamiz.Kafka.Net.Processors
                 return;
             }
 
-            log.LogDebug($"{logPrefix}Initializing state stores");
+            log.LogDebug("{LogPrefix}Initializing state stores", logPrefix);
 
             foreach (var kv in Topology.StateStores)
             {
                 var store = kv.Value;
-                log.LogDebug($"{logPrefix}Initializing store {kv.Key}");
+                log.LogDebug("{LogPrefix}Initializing store {Key}", logPrefix, kv.Key);
                 store.Init(Context, store);
             }
 
             foreach (var kv in Topology.GlobalStateStores.Where(k => !Topology.StateStores.ContainsKey(k.Key)))
             {
                 var store = kv.Value;
-                log.LogDebug($"{logPrefix}Initializing store {kv.Key}");
+                log.LogDebug("{LogPrefix}Initializing store {Key}", logPrefix, kv.Key);
                 store.Init(Context, store);
             }
         }
@@ -113,21 +113,21 @@ namespace Streamiz.Kafka.Net.Processors
             }
             catch (Exception e)
             {
-                log.LogError($"{logPrefix}Error during flush state store with exception :", e);
+                log.LogError(e, "{LogPrefix}Error during flush state store with exception :", logPrefix);
                 throw;
             }
         }
 
         protected void CloseStateManager()
         {
-            log.LogDebug($"{logPrefix}Closing state manager");
+            log.LogDebug("{LogPrefix}Closing state manager", logPrefix);
             try
             {
                 stateMgr.Close();
             }
             catch (Exception e)
             {
-                log.LogError($"{logPrefix}Error during closing state store with exception :", e);
+                log.LogError(e, "{LogPrefix}Error during closing state store with exception :", logPrefix);
                 throw;
             }
         }

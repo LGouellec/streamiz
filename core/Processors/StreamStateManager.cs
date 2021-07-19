@@ -33,7 +33,7 @@ namespace Streamiz.Kafka.Net.Processors
 
             if (stream.SetState(KafkaStream.State.ERROR))
             {
-                log.LogError("All stream threads have died. The instance will be in error state and should be closed.");
+                log.LogError("All stream threads have died. The instance will be in error state and should be closed");
             }
         }
 
@@ -104,7 +104,7 @@ namespace Streamiz.Kafka.Net.Processors
                     {
                         if (stream.SetState(KafkaStream.State.ERROR))
                         {
-                            log.LogError("Global thread has died. The instance will be in error state and should be closed.");
+                            log.LogError("Global thread has died. The instance will be in error state and should be closed");
                         }
                     }
                 }

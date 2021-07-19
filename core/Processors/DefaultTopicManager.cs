@@ -103,11 +103,12 @@ namespace Streamiz.Kafka.Net.Processors
                     else
                     {
                         topicsNewCreated.AddRange(topicsToCreate);
-                        log.LogDebug($"Internal topics has been created : {string.Join(", ", topicsNewCreated)}");
+                        log.LogDebug("Internal topics has been created : {Topics}",
+                            string.Join(", ", topicsNewCreated));
                     }
                 }
 
-                log.LogDebug($"Complete to apply internal topics in topic manager.");
+                log.LogDebug("Complete to apply internal topics in topic manager");
                 return topicsNewCreated;
             }
 
@@ -124,7 +125,9 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     ++i;
                     _e = e;
-                    log.LogDebug($"Impossible to create all internal topics: {e.Message}. Maybe an another instance of your application just created them. (try: {i + 1}, max retry : {maxRetry})");
+                    log.LogDebug(
+                        "Impossible to create all internal topics: {Message}. Maybe an another instance of your application just created them. (try: {Try}, max retry : {MaxTry})",
+                        e.Message, i + 1, maxRetry);
                 }
             }
 

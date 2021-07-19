@@ -8,7 +8,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 {
     internal class KafkaLoggerAdapter
     {
-        private readonly ILogger log = null;
+        private readonly ILogger log;
 
         public KafkaLoggerAdapter(IStreamConfig configuration)
             : this(configuration, Logger.GetLogger(typeof(KafkaLoggerAdapter)))
@@ -57,13 +57,13 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
         internal void ErrorAdmin(IAdminClient admin, Error error)
         {
             string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
-            log.LogError($"{logPrefix}Error admin {GetName(admin)} - {error.Reason}");
+            log.LogError("{LogPrefix}Error admin {ClientName} - {ErrorReason}", logPrefix, GetName(admin), error.Reason);
         }
 
         internal void LogAdmin(IAdminClient admin, LogMessage message)
         {
             string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
-            log.LogDebug($"{logPrefix}Log admin {GetName(admin)} - {message.Message}");
+            log.LogDebug("{LogPrefix}Log admin {ClientName} - {Message}", logPrefix, GetName(admin), message.Message);
         }
 
         #endregion

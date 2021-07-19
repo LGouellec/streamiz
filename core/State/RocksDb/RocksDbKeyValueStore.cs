@@ -124,7 +124,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
             if (openIterators.Count != 0)
             {
-                log.LogWarning($"Closing {openIterators.Count} open iterators for store {Name}");
+                log.LogWarning("Closing {OpenIteratorsCount} open iterators for store {Name}", openIterators.Count, Name);
                 for (int i = 0; i < openIterators.Count; ++i)
                     openIterators.ElementAt(i).Dispose();
             }

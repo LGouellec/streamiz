@@ -38,12 +38,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 try
                 {
-                    log.LogDebug($"Closing store {entry.Key}");
+                    log.LogDebug("Closing store {EntryKey}", entry.Key);
                     entry.Value.Close();
                 }
                 catch (Exception e)
                 {
-                    log.LogError($"Failed to close global state store {entry.Key}", e);
+                    log.LogError(e, "Failed to close global state store {EntryKey}", entry.Key);
                     closeFailed.AppendLine($"Failed to close global state store {entry.Key}. Reason: {e}");
                 }
             }
@@ -58,7 +58,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             log.LogDebug("Flushing all global globalStores registered in the state manager");
             foreach (var entry in globalStores)
             {
-                log.LogDebug($"Flushing store {entry.Key}");
+                log.LogDebug("Flushing store {EntryKey}", entry.Key);
                 entry.Value.Flush();
             }
         }

@@ -133,7 +133,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         internal void AddGraphNode(StreamGraphNode root, StreamGraphNode node)
         {
-            logger.LogDebug($"Adding node {node} in root node {root}");
+            logger.LogDebug("Adding node {Node} in root node {Root}", node, root);
             root.AppendChild(node);
             nodes.Add(node);
         }

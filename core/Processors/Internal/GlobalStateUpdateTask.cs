@@ -1,4 +1,5 @@
-﻿using Confluent.Kafka;
+﻿using System;
+using Confluent.Kafka;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System.Collections.Generic;
@@ -53,16 +54,16 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             this.context.SetRecordMetaData(record);
 
             var recordInfo = $"Topic:{record.Topic}|Partition:{record.Partition.Value}|Offset:{record.Offset}|Timestamp:{record.Message.Timestamp.UnixTimestampMs}";
-            log.LogDebug($"Start processing one record [{recordInfo}]");
+            log.LogDebug("Start processing one record [{RecordInfo}]", recordInfo);
             processor.Process(record);
-            log.LogDebug($"Completed processing one record [{recordInfo}]");
+            log.LogDebug("Completed processing one record [{RecordInfo}]", recordInfo);
         }
 
         private void InitTopology()
         {
             foreach (var processor in this.topology.ProcessorOperators.Values)
             {
-                log.LogDebug($"Initializing topology with processor source : {processor}.");
+                log.LogDebug("Initializing topology with processor source : {Processor}", processor);
                 processor.Init(this.context);
             }
         }

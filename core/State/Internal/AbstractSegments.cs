@@ -11,7 +11,7 @@ namespace Streamiz.Kafka.Net.State.Internal
     internal abstract class AbstractSegments<S> : ISegments<S>
         where S : ISegment
     {
-        protected readonly ILogger logger = null;
+        protected readonly ILogger logger;
         protected readonly SortedDictionary<long, S> segments = new SortedDictionary<long, S>(new LongComparer());
 
         protected readonly string name;
@@ -130,10 +130,10 @@ namespace Streamiz.Kafka.Net.State.Internal
                     kv.Value.Destroy();
                 }catch (Exception e)
                 {
-                    logger.LogError($"Error destroying state store {kv.Value.Name}", e);
+                    logger.LogError(e, "Error destroying state store {Name}", kv.Value.Name);
                 }
             }
-        }
+        } 
 
         private long SegmentIdFromSegmentName(string segmentName)
         {

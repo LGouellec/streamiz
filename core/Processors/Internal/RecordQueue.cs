@@ -51,20 +51,23 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public int Queue(ConsumeResult<byte[], byte[]> item)
         {
-            log.LogDebug($"{logPrefix}Adding new record in queue.");
+            log.LogDebug("{LogPrefix}Adding new record in queue", logPrefix);
             queue.Add(item);
             UpdateHeadRecord();
-            log.LogDebug($"{logPrefix}Record added in queue. New size : {Size}");
+            log.LogDebug("{LogPrefix}Record added in queue. New size : {Size}", logPrefix, Size);
             return Size;
         }
 
         public ConsumeResult<byte[], byte[]> Poll()
         {
-            log.LogDebug($"{logPrefix}Polling record in queue.");
+            log.LogDebug("{LogPrefix}Polling record in queue", logPrefix);
             var record = currentRecord;
             currentRecord = null;
             UpdateHeadRecord();
-            log.LogDebug($"{logPrefix}{(record == null ? "No r" : "R")}ecord polled. ({(record != null ? $"Record info [Topic:{record.Topic}|Partition:{record.Partition}|Offset:{record.Offset}]" : "")})");
+            log.LogDebug("{LogPrefix}{Record}record polled. ({RecordInfo})", logPrefix, record == null ? "No r" : "R",
+                record != null
+                    ? $"Record info [Topic:{record.Topic}|Partition:{record.Partition}|Offset:{record.Offset}]"
+                    : "");
             return record;
         }
 
@@ -73,7 +76,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             queue.Clear();
             currentRecord = null;
             partitionTime = -1;
-            log.LogDebug($"{logPrefix} cleared !");
+            log.LogDebug("{LogPrefix} cleared !", logPrefix);
         }
 
         #endregion
@@ -97,7 +100,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 log.LogDebug("");
                 if (timestamp < 0)
                 {
-                    log.LogWarning($"Skipping record due to negative extracted timestamp. topic=[{record.Topic}] partition=[{record.Partition}] offset=[{record.Offset}] extractedTimestamp=[{timestamp}] extractor=[{timestampExtractor.GetType().Name}]");
+                    log.LogWarning(
+                        "Skipping record due to negative extracted timestamp. topic=[{Topic}] partition=[{Partition}] offset=[{Offset}] extractedTimestamp=[{Timestamp}] extractor=[{TimestampExtractor}]",
+                        record.Topic, record.Partition, record.Offset, timestamp, timestampExtractor.GetType().Name);
                     continue;
                 }
 
