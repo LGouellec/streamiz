@@ -70,7 +70,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 textWriter.Write(LoglevelPadding + logEntry.Category + '[' + eventId + "]");
                 textWriter.Write(Environment.NewLine);
 
-                WriteMessage(textWriter, message, true);
+                WriteMessage(textWriter, message);
 
                 // Example:
                 // System.InvalidOperationException
@@ -78,34 +78,19 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 if (exception != null)
                 {
                     // exception message
-                    WriteMessage(textWriter, exception.ToString(), true);
+                    WriteMessage(textWriter, exception.ToString());
                 }
                 
                 textWriter.Write(Environment.NewLine);
             }
             
-            private void WriteMessage(TextWriter textWriter, string message, bool singleLine)
+            private void WriteMessage(TextWriter textWriter, string message)
             {
-                if (!string.IsNullOrEmpty(message))
-                {
-                    if (singleLine)
-                    {
-                        textWriter.Write(' ');
-                        WriteReplacing(textWriter, Environment.NewLine, " ", message);
-                    }
-                    else
-                    {
-                        textWriter.Write(MessagePadding);
-                        WriteReplacing(textWriter, Environment.NewLine, NewLineWithMessagePadding, message);
-                        textWriter.Write(Environment.NewLine);
-                    }
-                }
-
-                static void WriteReplacing(TextWriter writer, string oldValue, string newValue, string message)
-                {
-                    string newMessage = message.Replace(oldValue, newValue);
-                    writer.Write(newMessage);
-                }
+                if (string.IsNullOrEmpty(message)) return;
+                textWriter.Write(MessagePadding);
+                string newMessage = message.Replace(Environment.NewLine, NewLineWithMessagePadding);
+                textWriter.Write(newMessage);
+                textWriter.Write(Environment.NewLine);
             }
 
             public bool IsEnabled(LogLevel logLevel)
