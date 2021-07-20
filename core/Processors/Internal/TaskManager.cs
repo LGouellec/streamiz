@@ -60,7 +60,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             CurrentTask = null;
             IDictionary<TaskId, IList<TopicPartition>> tasksToBeCreated = new Dictionary<TaskId, IList<TopicPartition>>();
 
-            foreach (var partition in assignment)
+            foreach (var partition in new List<TopicPartition>(assignment))
             {
                 var taskId = builder.GetTaskIdFromPartition(partition);
                 if (revokedTasks.ContainsKey(taskId))

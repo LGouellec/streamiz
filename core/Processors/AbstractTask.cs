@@ -1,6 +1,7 @@
 ﻿using Confluent.Kafka;
 using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;
@@ -19,6 +20,7 @@ namespace Streamiz.Kafka.Net.Processors
         protected IStateManager stateMgr;
         protected ILog log;
         protected readonly string logPrefix = "";
+        protected TaskState state = TaskState.CREATED;
 
         // For testing
         internal AbstractTask() { }
@@ -40,6 +42,8 @@ namespace Streamiz.Kafka.Net.Processors
                 partition,
                 topology.StoresToTopics);
         }
+
+        public TaskState State => state;
 
         public ProcessorTopology Topology { get; }
 
@@ -80,6 +84,18 @@ namespace Streamiz.Kafka.Net.Processors
         public abstract void Suspend();
 
         #endregion
+
+        protected void TransitTo(TaskState newState)
+        {
+            if (state.IsValidTransition(newState))
+            {
+                state = newState;
+            }
+            else
+            {
+                throw new IllegalStateException($"Invalid transition from {state} to {newState}");
+            }
+        }
 
         protected void RegisterStateStores()
         {

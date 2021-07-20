@@ -8,6 +8,8 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal interface ITask
     {
+        TaskState State { get; }
+
         bool IsClosed { get; }
 
         bool CanProcess(long now);
