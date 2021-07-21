@@ -126,7 +126,19 @@ namespace Streamiz.Kafka.Net.Processors
             }
             finally
             {
-                Dispose(true, false);
+
+                try
+                {
+                    stateConsumer.Close();
+                }
+                catch (Exception e)
+                {
+                    log.Error($"{logPrefix}exception caught during disposing of GlobalStreamThread.", e);
+                    // ignore exception
+                    // https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1065
+                }
+
+                Dispose(false);
             }
         }
 
@@ -219,11 +231,11 @@ namespace Streamiz.Kafka.Net.Processors
 
         public void Dispose()
         {
-            Dispose(true, true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing, bool waitForThread)
+        protected virtual void Dispose(bool waitForThread)
         {
             if (!disposed)
             {
@@ -235,17 +247,6 @@ namespace Streamiz.Kafka.Net.Processors
                 if (waitForThread)
                 {
                     thread.Join();
-                }
-
-                try
-                {
-                    stateConsumer.Close();
-                }
-                catch (Exception e)
-                {
-                    log.Error($"{logPrefix}exception caught during disposing of GlobalStreamThread.", e);
-                    // ignore exception
-                    // https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1065
                 }
 
                 SetState(GlobalThreadState.DEAD);
