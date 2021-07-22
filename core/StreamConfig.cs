@@ -338,6 +338,8 @@ namespace Streamiz.Kafka.Net
         #region Config constants
 
         internal static readonly string schemaRegistryUrlCst = "schema.registry.url";
+        internal static readonly string schemaRegistryBasicAuthUserInfoCst = "schema.registry.basic.auth.user.info";
+        internal static readonly string schemaRegistryBasicAuthCredentialSourceCst = "schema.registry.basic.auth.credentials.source";
         internal static readonly string schemaRegistryAutoRegisterCst = "schema.registry.auto.register.schema";
         internal static readonly string schemaRegistryRequestTimeoutMsCst = "schema.registry.request.timeout.ms";
         internal static readonly string schemaRegistryMaxCachedSchemasCst = "schema.registry.max.cached.schemas";
@@ -2282,6 +2284,18 @@ namespace Streamiz.Kafka.Net
         { 
             get => this.ContainsKey(avroSerializerSubjectNameStrategyCst) ? this[avroSerializerSubjectNameStrategyCst] : null;
             set => this.AddOrUpdate(avroSerializerSubjectNameStrategyCst, value); 
+        }
+
+        public string BasicAuthUserInfo
+        {
+            get => this.ContainsKey(schemaRegistryBasicAuthUserInfoCst) ? this[schemaRegistryBasicAuthUserInfoCst] : null;
+            set => this.AddOrUpdate(schemaRegistryBasicAuthUserInfoCst, value);
+        }
+
+        public int? BasicAuthCredentialsSource
+        {
+            get => this.ContainsKey(schemaRegistryBasicAuthCredentialSourceCst) ? this[schemaRegistryBasicAuthCredentialSourceCst] : null;
+            set => this.AddOrUpdate(schemaRegistryBasicAuthCredentialSourceCst, value);
         }
 
         #endregion
