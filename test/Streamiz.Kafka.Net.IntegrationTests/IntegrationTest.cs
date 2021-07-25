@@ -1,22 +1,31 @@
+using System;
 using System.Text;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Streamiz.Kafka.Net.IntegrationTests.Fixtures;
 using Streamiz.Kafka.Net.SerDes;
-using Xunit;
+using NUnit.Framework;
 
 namespace Streamiz.Kafka.Net.IntegrationTests
 {
-    public class IntegrationTest : IClassFixture<KafkaFixture>
+    public class IntegrationTest
     {
-        private readonly KafkaFixture kafkaFixture;
+        private KafkaFixture kafkaFixture;
 
-        public IntegrationTest(KafkaFixture kafkaFixture)
+        [OneTimeSetUp]
+        public void Setup()
         {
-            this.kafkaFixture = kafkaFixture;
+            kafkaFixture = new KafkaFixture();
+            kafkaFixture.InitializeAsync().Wait(TimeSpan.FromMinutes(5));
+        }
+        
+        [OneTimeTearDown]
+        public void TearDown()
+        {
+            kafkaFixture.DisposeAsync().Wait(TimeSpan.FromMinutes(5));
         }
 
-        [Fact]
+        [Test]
         public async Task TestSimpleTopology()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
@@ -45,10 +54,10 @@ namespace Streamiz.Kafka.Net.IntegrationTests
             
             stream.Dispose();
             
-            Assert.Equal("Hello world!", Encoding.UTF8.GetString(result.Message.Value));
+            Assert.AreEqual("Hello world!", Encoding.UTF8.GetString(result.Message.Value));
         }
         
-        [Fact]
+        [Test]
         public async Task TestFilteredTopology()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
@@ -86,8 +95,8 @@ namespace Streamiz.Kafka.Net.IntegrationTests
             
             stream.Dispose();
             
-            Assert.Equal("a", result.Message.Key);
-            Assert.Equal("a Hello world!", Encoding.UTF8.GetString(result.Message.Value));
+            Assert.AreEqual("a", result.Message.Key);
+            Assert.AreEqual("a Hello world!", Encoding.UTF8.GetString(result.Message.Value));
         }
     }
 }

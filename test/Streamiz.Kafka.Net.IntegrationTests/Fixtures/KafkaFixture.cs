@@ -6,11 +6,10 @@ using Confluent.Kafka;
 using DotNet.Testcontainers.Containers.Builders;
 using DotNet.Testcontainers.Containers.Configurations.MessageBrokers;
 using DotNet.Testcontainers.Containers.Modules.MessageBrokers;
-using Xunit;
 
 namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
 {
-    public class KafkaFixture : IAsyncLifetime
+    public class KafkaFixture
     {
         private readonly KafkaTestcontainer container;
         
@@ -75,9 +74,9 @@ namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
             });
         }
         
-        public async Task DisposeAsync() => await container.DisposeAsync().AsTask();
+        public Task DisposeAsync() => container.DisposeAsync().AsTask();
         
-        public async Task InitializeAsync() => await container.StartAsync();
+        public Task InitializeAsync() => container.StartAsync();
         
     }
 }
