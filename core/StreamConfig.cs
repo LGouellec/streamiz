@@ -169,11 +169,6 @@ namespace Streamiz.Kafka.Net
         long CommitIntervalMs { get; set; }
 
         /// <summary>
-        /// The amount of time to wait for response from cluster when getting matadata.
-        /// </summary>
-        int MetadataRequestTimeoutMs { get; set; }
-
-        /// <summary>
         /// Timeout used for transaction related operations. (Default : 10 seconds).
         /// </summary>
         TimeSpan TransactionTimeout { get; set; }
@@ -261,7 +256,7 @@ namespace Streamiz.Kafka.Net
     /// Implementation of <see cref="IStreamConfig"/>. Contains all configuration for your stream.
     /// By default, Kafka Streams does not allow users to overwrite the following properties (Streams setting shown in parentheses)
     ///    - EnableAutoCommit = (false) - Streams client will always disable/turn off auto committing
-    ///    - PartitionAssignmentStrategy = <see cref="PartitionAssignmentStrategy.Range"/> - Streams application must have a partition assignment stategy to RANGE for join processing
+    ///    - PartitionAssignmentStrategy = <see cref="PartitionAssignmentStrategy.CooperativeSticky"/> - Streams application must have a partition assignment stategy to RANGE for join processing
     /// If <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, Kafka Streams does not allow users to overwrite the following properties (Streams setting shown in parentheses):
     ///    - <see cref="IsolationLevel"/> (<see cref="IsolationLevel.ReadCommitted"/>) - Consumers will always read committed data only
     ///    - <see cref="EnableIdempotence"/> (true) - Producer will always have idempotency enabled
@@ -1042,22 +1037,6 @@ namespace Streamiz.Kafka.Net
                 }
                 else if (!changeGuarantee)
                     throw new StreamsException($"You can't update MaxInFlight because your processing guarantee is exactly-once");
-            }
-        }
-
-        /// <summary>
-        /// Non-topic request timeout in milliseconds. This is for metadata requests, etc.
-        /// default: 60000 importance: low
-        /// </summary>
-        public int MetadataRequestTimeoutMs
-        {
-            get => _config.MetadataRequestTimeoutMs ?? 1000;
-            set
-            {
-                _config.MetadataRequestTimeoutMs = value;
-                _consumerConfig.MetadataRequestTimeoutMs = value;
-                _producerConfig.MetadataRequestTimeoutMs = value;
-                _adminClientConfig.MetadataRequestTimeoutMs = value;
             }
         }
 
@@ -1923,7 +1902,7 @@ namespace Streamiz.Kafka.Net
 
             MaxPollIntervalMs = 300000;
             EnableAutoCommit = false;
-            PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.Range;
+            PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.CooperativeSticky;
         }
 
         #endregion

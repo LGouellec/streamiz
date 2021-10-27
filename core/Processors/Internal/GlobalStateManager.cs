@@ -113,7 +113,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private IEnumerable<TopicPartition> TopicPartitionsForStore(IStateStore store)
         {
             var topic = topology.StoresToTopics[store.Name];
-            var metadata = adminClient.GetMetadata(topic, TimeSpan.FromMilliseconds(config.MetadataRequestTimeoutMs));
+            var metadata = adminClient.GetMetadata(topic, TimeSpan.FromMilliseconds(10000));
 
             if (metadata == null || metadata.Topics.Count == 0)
             {
