@@ -137,7 +137,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Production exception handling function called when kafka produce exception is raise.
         /// </summary>
-        Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler { get; set; } 
+        Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler { get; set; }
 
         /// <summary>
         /// Maximum allowed time between calls to consume messages (e.g., rd_kafka_consumer_poll())
@@ -249,6 +249,11 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         long WindowStoreChangelogAdditionalRetentionMs { get; set; }
 
+        /// <summary>
+        /// Manager which track offset saved in local state store
+        /// </summary>
+        IOffsetCheckpointManager OffsetCheckpointManager { get; set; }
+
         #endregion
     }
 
@@ -336,7 +341,7 @@ namespace Streamiz.Kafka.Net
         internal static readonly string schemaRegistryAutoRegisterCst = "schema.registry.auto.register.schema";
         internal static readonly string schemaRegistryRequestTimeoutMsCst = "schema.registry.request.timeout.ms";
         internal static readonly string schemaRegistryMaxCachedSchemasCst = "schema.registry.max.cached.schemas";
-        internal static readonly string avroSerializerSubjectNameStrategyCst= "avro.serializer.subject.name.strategy";
+        internal static readonly string avroSerializerSubjectNameStrategyCst = "avro.serializer.subject.name.strategy";
         internal static readonly string applicatonIdCst = "application.id";
         internal static readonly string clientIdCst = "client.id";
         internal static readonly string numStreamThreadsCst = "num.stream.threads";
@@ -354,6 +359,7 @@ namespace Streamiz.Kafka.Net
         internal static readonly string stateDirCst = "state.dir";
         internal static readonly string replicationFactorCst = "replication.factor";
         internal static readonly string windowstoreChangelogAdditionalRetentionMsCst = "windowstore.changelog.additional.retention.ms";
+        internal static readonly string offsetCheckpointManagerCst = "offset.checkpoint.manager";
 
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -1888,6 +1894,7 @@ namespace Streamiz.Kafka.Net
             StateDir = Path.Combine(Path.GetTempPath(), "streamiz-kafka-net");
             ReplicationFactor = 1;
             WindowStoreChangelogAdditionalRetentionMs = (long)TimeSpan.FromDays(1).TotalMilliseconds;
+            OffsetCheckpointManager = null;
 
             if (properties != null)
             {
@@ -2106,10 +2113,18 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
+        /// Manager which track offset saved in local state store
+        /// </summary>
+        public IOffsetCheckpointManager OffsetCheckpointManager
+        {
+            get => this[offsetCheckpointManagerCst];
+            set => this.AddOrUpdate(offsetCheckpointManagerCst, value);
+        }
+
+        /// <summary>
         /// A Rocks DB config handler function
         /// </summary>
         public Action<string, RocksDbOptions> RocksDbConfigHandler { get; set; }
-
 
         /// <summary>
         /// Inner exception handling function called during processing.
@@ -2257,10 +2272,10 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// The subject name strategy to use for schema registration / lookup. Possible values: <see cref="Streamiz.Kafka.Net.SubjectNameStrategy" />
         /// </summary>
-        public SubjectNameStrategy? SubjectNameStrategy 
-        { 
+        public SubjectNameStrategy? SubjectNameStrategy
+        {
             get => this.ContainsKey(avroSerializerSubjectNameStrategyCst) ? this[avroSerializerSubjectNameStrategyCst] : null;
-            set => this.AddOrUpdate(avroSerializerSubjectNameStrategyCst, value); 
+            set => this.AddOrUpdate(avroSerializerSubjectNameStrategyCst, value);
         }
 
         #endregion

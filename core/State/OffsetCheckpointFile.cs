@@ -5,6 +5,7 @@ using System.Linq;
 using Confluent.Kafka;
 using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
 
 namespace Streamiz.Kafka.Net.State
 {
@@ -121,19 +122,22 @@ namespace Streamiz.Kafka.Net.State
                     WriteInt(writerStream, data.Count);
                     foreach(KeyValuePair<TopicPartition, long> kv in data){
                         if(IsValid(kv.Value))
-                            WriteEntry(fileStream, kv.Key, kv.Value);
-                        else ;
-                        // throw new 
+                            WriteEntry(writerStream, kv.Key, kv.Value);
+                        else{
+                            logger.Error($"Received offset {kv.Value} to write to checkpoint file for topic:{kv.Key.Topic}|partition:{kv.Key.Partition}");
+                            throw new StreamsException("Unable to write a negative offset to the checkpoint file");
+                        }
                     }
+                    writerStream.Flush();
                     fileStream.Flush();
                 }
 
             }
         }
 
-        private void WriteEntry(FileStream fileStream, TopicPartition key, long value)
+        private void WriteEntry(StreamWriter fileStream, TopicPartition key, long value)
         {
-            throw new NotImplementedException();
+            fileStream.WriteLine($"{key.Topic} {key.Partition} {value}");
         }
 
         #region Private
