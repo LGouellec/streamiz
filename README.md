@@ -22,6 +22,12 @@
 
 Streamiz Kafka .NET is .NET stream processing library for Apache Kafka. 
 
+```
+KAFKA is a registered trademark of The Apache Software Foundation and
+has been licensed for use by Streamiz. Streamiz has no
+affiliation with and is not endorsed by The Apache Software Foundation.
+```
+
 It's allowed to develop .NET applications that transform input Kafka topics into output Kafka topics. 
 It's supported .NET Standard 2.1. 
 
