@@ -24,14 +24,17 @@ namespace Streamiz.Kafka.Net.State
     /// a number giving the total number of offsets. Each successive line gives a topic/partition/offset triple
     /// separated by spaces.
     /// </summary>
-    internal class OffsetCheckpointFile : IOffsetCheckpointManager
+    public class OffsetCheckpointFile : IOffsetCheckpointManager
     {
         private static readonly int VERSION = 0;
 
-        // Use a negative sentinel when we don't know the offset instead of skipping it to distinguish it from dirty state
-        // and use -4 as the -1 sentinel may be taken by some producer errors and -2 in the
-        // subscription means that the state is used by an active task and hence caught-up and
-        // -3 is also used in the subscription.
+        
+        /// <summary>
+        /// Use a negative sentinel when we don't know the offset instead of skipping it to distinguish it from dirty state
+        /// and use -4 as the -1 sentinel may be taken by some producer errors and -2 in the
+        /// subscription means that the state is used by an active task and hence caught-up and
+        /// -3 is also used in the subscription.
+        /// </summary>
         public static readonly long OFFSET_UNKNOWN = -4L;
 
         private readonly String path;
@@ -115,7 +118,8 @@ namespace Streamiz.Kafka.Net.State
 
             lock (_lock)
             {
-                using (var fileStream = File.Create(Path.Combine(path, ".tmp")))
+                String tmpFile = String.Concat(path, ".tmp");
+                using (var fileStream = File.Create(tmpFile))
                 using (var writerStream = new StreamWriter(fileStream))
                 {
                     WriteInt(writerStream, VERSION);
@@ -131,13 +135,13 @@ namespace Streamiz.Kafka.Net.State
                     writerStream.Flush();
                     fileStream.Flush();
                 }
-
+                File.Move(tmpFile, path);
             }
         }
 
         private void WriteEntry(StreamWriter fileStream, TopicPartition key, long value)
         {
-            fileStream.WriteLine($"{key.Topic} {key.Partition} {value}");
+            fileStream.WriteLine($"{key.Topic} {key.Partition.Value} {value}");
         }
 
         #region Private

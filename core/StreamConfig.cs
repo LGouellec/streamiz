@@ -1537,7 +1537,7 @@ namespace Streamiz.Kafka.Net
         /// store is an in-memory store of the next offset to (auto-)commit for each partition.
         /// default: true importance: high
         /// </summary>
-        public bool? EnableAutoOffsetStore { get { return _consumerConfig.EnableAutoOffsetStore; } set { _consumerConfig.EnableAutoOffsetStore = value; } }
+        public bool? EnableAutoOffsetStore { get { return _consumerConfig.EnableAutoOffsetStore; } private set { _consumerConfig.EnableAutoOffsetStore = value; } }
 
         /// <summary>
         /// Automatically and periodically commit offsets in the background. Note: setting
@@ -1676,7 +1676,7 @@ namespace Streamiz.Kafka.Net
         /// before constructing message batches (MessageSets) to transmit to brokers. A higher
         /// value allows larger and more effective (less overhead, improved compression)
         /// batches of messages to accumulate at the expense of increased message delivery
-        /// latency. default: 0.5 importance: high
+        /// latency. default: 5 importance: high
         /// </summary>
         public double? LingerMs { get { return _producerConfig.LingerMs; } set { _producerConfig.LingerMs = value; } }
 
@@ -1909,6 +1909,7 @@ namespace Streamiz.Kafka.Net
 
             MaxPollIntervalMs = 300000;
             EnableAutoCommit = false;
+            EnableAutoOffsetStore = false;
             PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.CooperativeSticky;
         }
 

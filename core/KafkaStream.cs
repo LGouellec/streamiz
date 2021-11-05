@@ -249,7 +249,6 @@ namespace Streamiz.Kafka.Net
         private readonly QueryableStoreProvider queryableStoreProvider;
         private readonly GlobalStreamThread globalStreamThread;
         private readonly StreamStateManager manager = null;
-        private ITopicManager internalTopicManager = null;
 
         private readonly CancellationTokenSource _cancelSource = new CancellationTokenSource();
 
@@ -443,8 +442,6 @@ namespace Streamiz.Kafka.Net
             }
             else
             {
-                internalTopicManager?.Dispose();
-
                 foreach (var t in threads)
                 {
                     t.Dispose();
@@ -548,9 +545,8 @@ namespace Streamiz.Kafka.Net
         {
             // Create internal topics (changelogs) if need
             var adminClientInternalTopicManager = kafkaSupplier.GetAdmin(configuration.ToAdminConfig(StreamThread.GetSharedAdminClientId($"{configuration.ApplicationId.ToLower()}-admin-internal-topic-manager")));
-            internalTopicManager = new DefaultTopicManager(configuration, adminClientInternalTopicManager);
-
-            await InternalTopicManagerUtils.CreateChangelogTopicsAsync(internalTopicManager, topology.Builder);
+            using(var internalTopicManager = new DefaultTopicManager(configuration, adminClientInternalTopicManager))
+                await InternalTopicManagerUtils.CreateChangelogTopicsAsync(internalTopicManager, topology.Builder);
         }
 
         #endregion

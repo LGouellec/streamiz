@@ -109,7 +109,6 @@ namespace Streamiz.Kafka.Net.Tests.Public
             stream.CoordinatorQueryIntervalMs = 300;
             stream.Debug = "all";
             stream.DeliveryReportFields = "key";
-            stream.EnableAutoOffsetStore = false;
             stream.EnableBackgroundPoll = false;
             stream.EnableDeliveryReports = false;
             stream.EnableGaplessGuarantee = false;
