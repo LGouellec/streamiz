@@ -170,6 +170,8 @@ namespace Streamiz.Kafka.Net.Processors
                     {
                         if (!manager.RebalanceInProgress)
                         {
+                            RestorePhase();
+
                             long now = DateTime.Now.GetMilliseconds();
                             var records = PollRequest(GetTimeout());
 
@@ -257,6 +259,15 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     log.Error($"{logPrefix}Failed to close consumer due to the following error:", e);
                 }
+            }
+        }
+
+        private void RestorePhase()
+        {
+            if(State == ThreadState.PARTITIONS_ASSIGNED || State == ThreadState.RUNNING && manager.NeedRestoration())
+            {
+                log.Debug($"{logPrefix} State is {State}, initializing and restoring tasks if necessary");
+                // TODO : 
             }
         }
 

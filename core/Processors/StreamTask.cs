@@ -175,7 +175,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public override bool CanProcess(long now)
         {
-            if (state == TaskState.CLOSED)
+            if (state == TaskState.CLOSED /*|| state == TaskState.RESTORING || state == TaskState.CREATED*/)
                 return false;
 
             if (partitionGrouper.AllPartitionsBuffered)
@@ -250,6 +250,15 @@ namespace Streamiz.Kafka.Net.Processors
             return Context.GetStateStore(name);
         }
 
+        public override void RestorationIfNeeded()
+        {
+            if(state == TaskState.CREATED)
+            {
+                TransitTo(TaskState.RESTORING);
+                log.Info($"{logPrefix}Restoration will start soon.");
+            }
+        }
+
         public override void InitializeTopology()
         {
             log.Debug($"{logPrefix}Initializing topology with theses source processors : {string.Join(", ", processors.Select(p => p.Name))}.");
@@ -271,6 +280,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             log.Debug($"{logPrefix}Initializing state stores.");
             RegisterStateStores();
+            state = TaskState.RESTORING;
             return false;
         }
 
@@ -311,9 +321,9 @@ namespace Streamiz.Kafka.Net.Processors
         {
             log.Debug($"{logPrefix}Suspending");
 
-            if (state == TaskState.CREATED)
+            if (state == TaskState.CREATED || state == TaskState.RESTORING)
             {
-                log.Info($"{logPrefix}Suspended created");
+                log.Info($"{logPrefix}Suspended {(state == TaskState.CREATED ? "created" : "restoring")}");
 
                 // TODO : remove when stream task refactoring is finished
                 if (eosEnabled)

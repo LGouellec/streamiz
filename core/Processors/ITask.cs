@@ -18,6 +18,8 @@ namespace Streamiz.Kafka.Net.Processors
 
         void InitializeTopology();
 
+        void RestorationIfNeeded();
+
         bool InitializeStateStores();
 
         void Commit();

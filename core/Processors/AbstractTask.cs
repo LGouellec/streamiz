@@ -79,6 +79,7 @@ namespace Streamiz.Kafka.Net.Processors
         public abstract void Commit();
         public abstract IStateStore GetStore(string name);
         public abstract void InitializeTopology();
+        public abstract void RestorationIfNeeded();
         public abstract bool InitializeStateStores();
         public abstract void Resume();
         public abstract void Suspend();

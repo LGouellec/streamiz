@@ -3,6 +3,7 @@ using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -248,5 +249,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
             activeTasks.Clear();
         }
+
+        internal bool NeedRestoration()
+            => ActiveTasks.Any(t => t.State == TaskState.CREATED || t.State == TaskState.RESTORING);
     }
 }
