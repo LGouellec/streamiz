@@ -81,7 +81,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             File.WriteAllText(offsetCheckpointPath, sb.ToString());
 
-            Assert.False(_offsetCheckpointFile.Read().Any());
+            Assert.True(_offsetCheckpointFile.Read().Any());
+            Assert.AreEqual(1, _offsetCheckpointFile.Read()[new TopicPartition("topic", 0)]);
         }
 
         [Test]

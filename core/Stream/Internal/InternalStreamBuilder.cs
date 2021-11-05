@@ -119,7 +119,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         internal void Build()
         {
-            internalTopologyBuilder.BuildAndOptimizeTopology(root, nodes);
+            internalTopologyBuilder.BuildTopology(root, nodes);
         }
 
         internal void AddGraphNode(List<StreamGraphNode> rootNodes, StreamGraphNode node)

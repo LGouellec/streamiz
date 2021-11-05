@@ -83,7 +83,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             filter.AppendChild(to);
             nodes.Add(to);
 
-            builder.BuildAndOptimizeTopology(root, nodes);
+            builder.BuildTopology(root, nodes);
 
             Assert.IsTrue(root.AllParentsWrittenToTopology);
             Assert.IsTrue(source.AllParentsWrittenToTopology);
