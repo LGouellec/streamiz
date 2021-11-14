@@ -64,6 +64,15 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #endregion
 
+        #region Merge
+
+        public IKStream<K, V> Merge(IKStream<K, V> stream, string named = null)
+        {
+            return DoMerge(stream, named);
+        } 
+
+        #endregion
+
         #region Filter
 
         public IKStream<K, V> Filter(Func<K, V, bool> predicate, string named = null)
@@ -661,6 +670,33 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             }
 
             return branchChildren;
+        }
+
+        private IKStream<K, V> DoMerge(IKStream<K, V> stream, string named = null)
+        {
+            KStream<K, V> kstream = (KStream<K, V>)stream;
+            string name = new Named(named).OrElseGenerateWithPrefix(builder, KStream.MERGE_NAME);
+
+            ISet<string> sourceNodes = new HashSet<string>();
+            sourceNodes.AddRange(SetSourceNodes);
+            sourceNodes.AddRange(kstream.SetSourceNodes);
+
+            ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(new PassThrough<K, V>(), name);
+            ProcessorGraphNode<K, V> mergeNode = new ProcessorGraphNode<K, V>(name, processorParameters)
+            {
+                MergeNode = true
+            };
+
+            builder.AddGraphNode(new List<StreamGraphNode> { Node, kstream.Node }, mergeNode);
+
+            // drop the serde as we cannot safely use either one to represent both streams
+            return new KStream<K, V>(
+                name,
+                null,
+                null,
+                sourceNodes.ToList(),
+                mergeNode,
+                builder);
         }
 
         private IKGroupedStream<KR, V> DoGroup<KR>(IKeyValueMapper<K, V, KR> keySelector, Grouped<KR, V> grouped)
