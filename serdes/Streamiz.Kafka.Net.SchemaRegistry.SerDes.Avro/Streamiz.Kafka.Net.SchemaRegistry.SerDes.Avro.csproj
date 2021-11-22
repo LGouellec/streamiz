@@ -20,13 +20,16 @@
     <PackageIconUrl>https://raw.githubusercontent.com/LGouellec/kafka-streams-dotnet/master/resources/logo-kafka-stream-net.png</PackageIconUrl>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\key.snk</AssemblyOriginatorKeyFile>
-    <DelaySign>false</DelaySign>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\netstandard2.1\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.xml</DocumentationFile>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
   
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
   <ItemGroup>
     <None Include="..\..\key.snk" Link="key.snk" />
   </ItemGroup>

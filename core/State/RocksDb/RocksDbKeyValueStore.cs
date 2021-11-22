@@ -187,7 +187,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             InternalProcessorContext = context;
             OpenDatabase(context);
 
-            // TODO : batch behavior
+            // TODO : batch restoration behavior
             context.Register(root, (k, v) => Put(k, v));
         }
 

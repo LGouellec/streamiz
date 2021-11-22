@@ -144,6 +144,11 @@ namespace Streamiz.Kafka.Net.State
             fileStream.WriteLine($"{key.Topic} {key.Partition.Value} {value}");
         }
 
+        public void Configure(IStreamConfig config)
+        {
+            // Nothing here
+        }
+
         #region Private
 
         private bool IsValid(long offset)
@@ -166,6 +171,6 @@ namespace Streamiz.Kafka.Net.State
             fileWriter.WriteLine(number.ToString());
         }
 
-    #endregion
-}
+        #endregion
+    }
 }

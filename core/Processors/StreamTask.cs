@@ -254,8 +254,17 @@ namespace Streamiz.Kafka.Net.Processors
         {
             if(state == TaskState.CREATED)
             {
-                TransitTo(TaskState.RESTORING);
-                log.Info($"{logPrefix}Restoration will start soon.");
+                if (Topology.StateStores.Any())
+                {
+                    stateMgr.InitializeOffsetsFromCheckpoint();
+
+                    TransitTo(TaskState.RESTORING);
+                    log.Info($"{logPrefix}Restoration will start soon.");
+                }
+                else
+                {
+                    TransitTo(TaskState.RUNNING);
+                }
             }
         }
 

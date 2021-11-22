@@ -19,6 +19,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         public void Setup()
         {
             _offsetCheckpointFile = new OffsetCheckpointFile(offsetCheckpointPath);
+            _offsetCheckpointFile.Configure(null);
         }
 
         [TearDown]

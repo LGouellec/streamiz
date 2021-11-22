@@ -108,7 +108,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 topic, tableSourceName, sourceName, consumed,
                 materialized, processorParameters, true);
 
-            this.AddGraphNode(root, tableSourceNode);
+            AddGraphNode(root, tableSourceNode);
 
             return new GlobalKTable<K, V>(new KTableSourceValueGetterSupplier<K, V>(storeName), materialized.QueryableStoreName);
         }

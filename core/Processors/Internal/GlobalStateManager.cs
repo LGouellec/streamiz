@@ -100,6 +100,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             return topology.GlobalStateStores.Values.Select(x => x.Name).ToSet();
         }
 
+        public void InitializeOffsetsFromCheckpoint()
+        {
+            throw new NotImplementedException();
+        }
+
         public void Register(IStateStore store, StateRestoreCallback callback)
         {
             // nothing to do here for now. Everything is handled in Initialize method.
@@ -108,6 +113,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public void SetGlobalProcessorContext(ProcessorContext processorContext)
         {
             context = processorContext;
+        }
+
+        public void UpdateChangelogOffsets(IDictionary<TopicPartition, long> writtenOffsets)
+        {
+            throw new NotImplementedException();
         }
 
         private IEnumerable<TopicPartition> TopicPartitionsForStore(IStateStore store)

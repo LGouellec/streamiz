@@ -40,7 +40,8 @@ namespace Streamiz.Kafka.Net.Processors
             stateMgr = new ProcessorStateManager(
                 id,
                 partition,
-                topology.StoresToTopics);
+                topology.StoresToTopics,
+                config.OffsetCheckpointManager);
         }
 
         public TaskState State => state;

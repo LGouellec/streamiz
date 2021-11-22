@@ -2,8 +2,11 @@
 using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.Internal;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -13,6 +16,17 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             internal IStateStore Store { get; set; }
             internal TopicPartition ChangelogTopicPartition { get; set; }
+            internal StateRestoreCallback RestoreCallback { get; set; }
+            internal Func<ConsumeResult<byte[], byte[]>, ConsumeResult<byte[], byte[]>> RecordConverter { get; set; }
+
+            /// <summary>
+            /// indicating the current snapshot of the store as the offset of last changelog record that has been restore in local state store
+            /// offset upsated in three ways :
+            /// 1 - when loading checkpoint file
+            /// 2 - updating with restore records
+            /// 3 - when checkpointing the given written offsets from record collector
+            /// </summary>
+            internal long? Offset;
         }
 
         private static readonly string STATE_CHANGELOG_TOPIC_SUFFIX = "-changelog";
@@ -22,19 +36,26 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly IDictionary<string, StateStoreMetadata> registeredStores = new Dictionary<string, StateStoreMetadata>();
         private readonly TaskId taskId;
         private readonly IDictionary<string, string> changelogTopics;
+        private readonly IOffsetCheckpointManager offsetCheckpointManager;
         private IDictionary<string, IStateStore> globalStateStores = new Dictionary<string, IStateStore>();
 
         public IEnumerable<TopicPartition> Partition { get; private set; }
 
         public IEnumerable<string> StateStoreNames => registeredStores.Keys;
 
-        public ProcessorStateManager(TaskId taskId, IEnumerable<TopicPartition> partition, IDictionary<string, string> changelogTopics)
+        public ProcessorStateManager(
+            TaskId taskId,
+            IEnumerable<TopicPartition> partition,
+            IDictionary<string, string> changelogTopics,
+            IOffsetCheckpointManager offsetCheckpointManager = null)
         {
             log = Logger.GetLogger(typeof(ProcessorStateManager));
             logPrefix = $"stream-task[{taskId.Id}|{taskId.Partition}] ";
             this.taskId = taskId;
             Partition = partition;
+
             this.changelogTopics = changelogTopics ?? new Dictionary<string, string>();
+            //this.offsetCheckpointManager = offsetCheckpointManager ?? new OffsetCheckpointFile()
         }
 
         public static string StoreChangelogTopic(string applicationId, String storeName)
@@ -71,15 +92,42 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 throw new ArgumentException($"{logPrefix} Store {storeName} has already been registered.");
             }
 
+            ConsumeResult<byte[], byte[]> ToTimestampInstance(ConsumeResult<byte[], byte[]> source)
+            {
+                var newValue = source.Message.Value == null ? null : ByteBuffer.Build(8 + source.Message.Value.Length)
+                                                                                .PutLong(source.Message.Timestamp.UnixTimestampMs)
+                                                                                .Put(source.Message.Value)
+                                                                                .ToArray();
+                return new ConsumeResult<byte[], byte[]>
+                {
+                    IsPartitionEOF = source.IsPartitionEOF,
+                    Message = new Message<byte[], byte[]>
+                    {
+                        Headers = source.Message.Headers,
+                        Timestamp = source.Message.Timestamp,
+                        Key = source.Message.Key,
+                        Value = newValue
+                    },
+                    Offset = source.Offset,
+                    TopicPartitionOffset = source.TopicPartitionOffset,
+                    Topic = source.Topic,
+                    Partition = source.Partition
+                };
+            }
+
             var metadata = IsChangelogStateStore(storeName) ?
                 new StateStoreMetadata
                 {
                     Store = store,
-                    ChangelogTopicPartition = GetStorePartition(storeName)
+                    ChangelogTopicPartition = GetStorePartition(storeName),
+                    RestoreCallback = callback,
+                    RecordConverter = WrappedStore.IsTimestamped(store) ? (record) => ToTimestampInstance(record) : (record) => record,
+                    Offset = null
                 } :
                 new StateStoreMetadata
                 {
-                    Store = store
+                    Store = store,
+                    Offset = null
                 };
 
             registeredStores.Add(storeName, metadata);
@@ -136,6 +184,51 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     been registered");
         }
 
+        public void UpdateChangelogOffsets(IDictionary<TopicPartition, long> writtenOffsets)
+        {
+            foreach(var kv in writtenOffsets)
+            {
+                var storeMetadata = GetStoreMetadata(kv.Key);
+                if(storeMetadata != null)
+                {
+                    storeMetadata.Offset = kv.Value;
+                    log.Debug($"State store {storeMetadata.Store.Name} updated to written offset {kv.Value} at changelog {kv.Key}");
+                }
+            }
+        }
+
+        public void InitializeOffsetsFromCheckpoint()
+        {
+
+        }
+
         #endregion
+
+        internal StateStoreMetadata GetStoreMetadata(TopicPartition topicPartition)
+        {
+            foreach (var store in registeredStores)
+                if (store.Value.ChangelogTopicPartition.Equals(topicPartition))
+                    return store.Value;
+            return null;
+        }
+
+        internal void Restore(StateStoreMetadata storeMetadata, IEnumerable<ConsumeResult<byte[], byte[]>> records)
+        {
+            if (!registeredStores.ContainsKey(storeMetadata.Store.Name))
+                throw new IllegalStateException($"Restoring {storeMetadata.Store.Name} store which is not registered in this state manager, this should not happen");
+
+            if (records.Any())
+            {
+                var listRecords = records.ToList();
+                long endOffset = listRecords[listRecords.Count - 1].Offset.Value;
+                var convertedRecords = records.Select(r => storeMetadata.RecordConverter(r));
+
+                // TODO : bach restoration behavior
+                foreach (var _record in convertedRecords)
+                    storeMetadata.RestoreCallback(Bytes.Wrap(_record.Message.Key), _record.Message.Value);
+
+                storeMetadata.Offset = endOffset;
+            }
+        }
     }
 }

@@ -116,6 +116,13 @@ namespace Streamiz.Kafka.Net
         /// <returns>Return <see cref="AdminClientConfig"/> for building <see cref="IAdminClient"/> instance.</returns>
         AdminClientConfig ToAdminConfig(string clientId);
 
+        /// <summary>
+        /// Get the config value of the key. Null if any key found
+        /// </summary>
+        /// <param name="key">Key searched</param>
+        /// <returns>Return the config value of the key, null otherwise</returns>
+        dynamic Get(string key);
+
         #endregion
 
         #region Stream Config Property
@@ -154,9 +161,14 @@ namespace Streamiz.Kafka.Net
         int? MaxPollIntervalMs { get; set; }
 
         /// <summary>
-        /// The maximum number of records returned in a single call to poll(). (Default: 500)
+        /// The maximum number of records returned in a polling phase. (Default: 500)
         /// </summary>
         long MaxPollRecords { get; set; }
+
+        /// <summary>
+        /// The maximum number of records returned in a polling restore phase. (Default: 1000)
+        /// </summary>
+        long MaxPollRestoringRecords { get; set; }
 
         /// <summary>
         /// The amount of time in milliseconds to block waiting for input.
@@ -353,7 +365,8 @@ namespace Streamiz.Kafka.Net
         internal static readonly string transactionTimeoutCst = "transaction.timeout";
         internal static readonly string commitIntervalMsCst = "commit.interval.ms";
         internal static readonly string pollMsCst = "poll.ms";
-        internal static readonly string maxPollRecordsCst = "max.poll.records.ms";
+        internal static readonly string maxPollRecordsCst = "max.poll.records";
+        internal static readonly string maxPollRestoringRecordsCst = "max.poll.restoring.records";
         internal static readonly string maxTaskIdleCst = "max.task.idle.ms";
         internal static readonly string bufferedRecordsPerPartitionCst = "buffered.records.per.partition";
         internal static readonly string followMetadataCst = "follow.metadata";
@@ -395,6 +408,7 @@ namespace Streamiz.Kafka.Net
         /// <param name="value">New value</param>
         public void AddConfig(string key, string value)
         {
+            Add(key, value);
             AddConsumerConfig(key, value);
             AddAdminConfig(key, value);
             AddProducerConfig(key, value);
@@ -1886,6 +1900,7 @@ namespace Streamiz.Kafka.Net
             TransactionTimeout = TimeSpan.FromSeconds(10);
             PollMs = 100;
             MaxPollRecords = 500;
+            MaxPollRestoringRecords = 1000;
             MaxTaskIdleMs = 0;
             BufferedRecordsPerPartition = 1000;
             InnerExceptionHandler = (exception) => ExceptionHandlerResponse.FAIL;
@@ -2069,6 +2084,15 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
+        /// The maximum number of records returned in a polling restore phase. (Default: 1000)
+        /// </summary>
+        public long MaxPollRestoringRecords
+        {
+            get => this[maxPollRestoringRecordsCst];
+            set => this.AddOrUpdate(maxPollRestoringRecordsCst, value);
+        }
+
+        /// <summary>
         /// Maximum amount of time a stream task will stay idle when not all of its partition buffers contain records, to avoid potential out-of-order record processing across multiple input streams. (Default: 0)
         /// </summary>
         public long MaxTaskIdleMs
@@ -2210,6 +2234,30 @@ namespace Streamiz.Kafka.Net
             var config = new AdminClientConfig(c);
             config.ClientId = clientId;
             return config;
+        }
+
+        /// <summary>
+        /// Get the config value of the key. Null if any key found
+        /// </summary>
+        /// <param name="key">Key searched</param>
+        /// <returns>Return the config value of the key, null otherwise</returns>
+        public dynamic Get(string key)
+        {
+            if (ContainsKey(key))
+            {
+                return this[key];
+            }
+            else
+            {
+                var allConfigs = _adminClientConfig
+                    .Union(_internalAdminConfig)
+                    .Union(_consumerConfig)
+                    .Union(_internalConsumerConfig)
+                    .Union(_producerConfig)
+                    .Union(_internalProducerConfig)
+                    .ToDictionary();
+                return allConfigs.ContainsKey(key) ? allConfigs[key] : null;
+            }
         }
 
         /// <summary>

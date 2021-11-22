@@ -3,9 +3,9 @@
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
     /// <summary>
-    /// NOT IMPLEMENTED FOR MOMENT
+    /// Restoration logic for log-backed state stores upon restart, it takes one record at a time from the logs to apply to the restoring state.
     /// </summary>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
+    /// <param name="key">Record's key</param>
+    /// <param name="value">Record's value</param>
     public delegate void StateRestoreCallback(Bytes key, byte[] value);
 }

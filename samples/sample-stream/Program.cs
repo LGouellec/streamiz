@@ -19,17 +19,18 @@ namespace sample_stream
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app-123";
             config.BootstrapServers = "localhost:9092";
+            config.StateDir = "./state-dir";
             config.AutoOffsetReset = AutoOffsetReset.Earliest;
 
             StreamBuilder builder = new StreamBuilder();
-
+            
             builder.GlobalTable("dima-test", InMemory<string, string>.As("dima-test-store"));
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
             await stream.StartAsync();
 
-            await Task.Delay(2000);
+            await Task.Delay(10000000);
 
             stream.Dispose();
         }

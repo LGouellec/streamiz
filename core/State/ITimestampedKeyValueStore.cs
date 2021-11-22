@@ -1,11 +1,13 @@
-﻿namespace Streamiz.Kafka.Net.State
+﻿using Streamiz.Kafka.Net.State.Internal;
+
+namespace Streamiz.Kafka.Net.State
 {
     /// <summary>
     /// A key-(value/timestamp) store that supports put/get/delete and range queries.
     /// </summary>
     /// <typeparam name="K">key type</typeparam>
     /// <typeparam name="V">value type</typeparam>
-    public interface ITimestampedKeyValueStore<K,V> : IKeyValueStore<K, ValueAndTimestamp<V>>
+    public interface ITimestampedKeyValueStore<K,V> : IKeyValueStore<K, ValueAndTimestamp<V>>, ITimestampedStore
     {
     }
 }
