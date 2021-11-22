@@ -47,7 +47,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             TaskId taskId,
             IEnumerable<TopicPartition> partition,
             IDictionary<string, string> changelogTopics,
-            IOffsetCheckpointManager offsetCheckpointManager = null)
+            IOffsetCheckpointManager offsetCheckpointManager)
         {
             log = Logger.GetLogger(typeof(ProcessorStateManager));
             logPrefix = $"stream-task[{taskId.Id}|{taskId.Partition}] ";
@@ -55,7 +55,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             Partition = partition;
 
             this.changelogTopics = changelogTopics ?? new Dictionary<string, string>();
-            //this.offsetCheckpointManager = offsetCheckpointManager ?? new OffsetCheckpointFile()
+            this.offsetCheckpointManager = offsetCheckpointManager;
         }
 
         public static string StoreChangelogTopic(string applicationId, String storeName)
@@ -199,7 +199,46 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public void InitializeOffsetsFromCheckpoint()
         {
+            var loadedCheckpoints = offsetCheckpointManager.Read(taskId);
 
+            log.Debug($"Loaded offsets from checkpoint manager: {string.Join(",", loadedCheckpoints.Select(c => $"[{c.Key.Topic}-{c.Key.Partition}]-{c.Value}"))}");
+
+            foreach(var kvStore in registeredStores)
+            {
+                if(kvStore.Value.ChangelogTopicPartition == null)
+                {
+                    log.Info($"State store {kvStore.Value.Store.Name} is not logged and hence would not be restored");
+                }
+                else if (!kvStore.Value.Store.Persistent)
+                {
+                    log.Info($"Initializing to the starting offset for changelog {kvStore.Value.ChangelogTopicPartition} of in-memory state store {kvStore.Value.Store.Name}");
+                }
+                else if(kvStore.Value.Offset == null)
+                {
+                    if (loadedCheckpoints.ContainsKey(kvStore.Value.ChangelogTopicPartition))
+                    {
+                        long offset = loadedCheckpoints[kvStore.Value.ChangelogTopicPartition];
+                        kvStore.Value.Offset = offset != OffsetCheckpointFile.OFFSET_UNKNOWN ? offset : null;
+                        log.Debug($"State store {kvStore.Value.Store.Name} initialized from checkpoint with offset {offset} at changelog {kvStore.Value.ChangelogTopicPartition}");
+                        loadedCheckpoints.Remove(kvStore.Value.ChangelogTopicPartition);
+                    }
+                    else
+                    {
+                        log.Info($"State store {kvStore.Value.Store.Name} did not find checkpoint offset, hence would " +
+                                $"default to the starting offset at changelog {kvStore.Value.ChangelogTopicPartition}");
+                    }
+                }
+                else
+                {
+                    loadedCheckpoints.Remove(kvStore.Value.ChangelogTopicPartition);
+                    log.Debug($"Skipping re-initialization of offset from checkpoint for recycled store {kvStore.Value.Store.Name}");
+                }
+
+                if (loadedCheckpoints.Any())
+                {
+                    log.Warn($"Some loaded checkpoint offsets cannot find their corresponding state stores: {string.Join(",", loadedCheckpoints.Select(c => $"[{c.Key.Topic}-{c.Key.Partition}]-{c.Value}"))}");
+                }
+            }
         }
 
         #endregion

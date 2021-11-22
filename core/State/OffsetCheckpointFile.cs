@@ -6,6 +6,7 @@ using Confluent.Kafka;
 using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.State
 {
@@ -37,20 +38,19 @@ namespace Streamiz.Kafka.Net.State
         /// </summary>
         public static readonly long OFFSET_UNKNOWN = -4L;
 
-        private readonly String path;
-        private readonly Object _lock = new Object();
+        private readonly string path;
+        private readonly object _lock = new object();
         private readonly ILog logger = Logger.GetLogger(typeof(OffsetCheckpointFile));
 
+        public OffsetCheckpointFile(string path) => this.path = path;
 
-        public OffsetCheckpointFile(String path) => this.path = path;
-
-        public void Destroy()
+        public void Destroy(TaskId taskId)
         {
             if (File.Exists(path))
                 File.Delete(path);
         }
 
-        public IDictionary<TopicPartition, long> Read()
+        public IDictionary<TopicPartition, long> Read(TaskId taskId)
         {
             lock (_lock)
             {
@@ -108,11 +108,11 @@ namespace Streamiz.Kafka.Net.State
             }
         }
 
-        public void Write(IDictionary<TopicPartition, long> data)
+        public void Write(TaskId taskId, IDictionary<TopicPartition, long> data)
         {
             if (!data.Any())
             {
-                Destroy();
+                Destroy(taskId);
                 return;
             }
 
@@ -139,17 +139,17 @@ namespace Streamiz.Kafka.Net.State
             }
         }
 
-        private void WriteEntry(StreamWriter fileStream, TopicPartition key, long value)
-        {
-            fileStream.WriteLine($"{key.Topic} {key.Partition.Value} {value}");
-        }
-
-        public void Configure(IStreamConfig config)
+        public void Configure(IStreamConfig config, TaskId taskId)
         {
             // Nothing here
         }
 
         #region Private
+
+        private void WriteEntry(StreamWriter fileStream, TopicPartition key, long value)
+        {
+            fileStream.WriteLine($"{key.Topic} {key.Partition.Value} {value}");
+        }
 
         private bool IsValid(long offset)
         {

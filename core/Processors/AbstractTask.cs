@@ -3,9 +3,11 @@ using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Streamiz.Kafka.Net.Processors
@@ -37,11 +39,15 @@ namespace Streamiz.Kafka.Net.Processors
             this.consumer = consumer;
             configuration = config;
 
+            var offsetCheckpointMngt = config.OffsetCheckpointManager
+                ?? new OffsetCheckpointFile(Path.Combine(config.StateDir, config.ApplicationId, $"{id.Id}-{id.Partition}"));
+            offsetCheckpointMngt.Configure(config, id);
+
             stateMgr = new ProcessorStateManager(
                 id,
                 partition,
                 topology.StoresToTopics,
-                config.OffsetCheckpointManager);
+                offsetCheckpointMngt);
         }
 
         public TaskState State => state;

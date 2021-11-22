@@ -268,11 +268,21 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             if (!registeredChangelogs.Any())
                 return;
 
-            IDictionary<TopicPartition, Offset> endOffsets = EndOffsetsChangelogs(registeredChangelogs);
+            IDictionary<TopicPartition, (Offset, Offset)> endOffsets = OffsetsChangelogs(registeredChangelogs);
         
             foreach (var metadata in registeredChangelogs) {
                 if (endOffsets.ContainsKey(metadata.StoreMetadata.ChangelogTopicPartition)) {
-                    metadata.RestoreEndOffset = endOffsets[metadata.StoreMetadata.ChangelogTopicPartition];
+                    metadata.RestoreEndOffset = endOffsets[metadata.StoreMetadata.ChangelogTopicPartition].Item2;
+
+                    if(metadata.StoreMetadata.Offset.HasValue && metadata.StoreMetadata.Offset < endOffsets[metadata.StoreMetadata.ChangelogTopicPartition].Item1)
+                    {
+                        log.Info($"State store {metadata.StoreMetadata.Store.Name} initialized from checkpoint " +
+                            $"with offset {metadata.StoreMetadata.Offset} is not longer present " +
+                            $"at changelog {metadata.StoreMetadata.ChangelogTopicPartition}." +
+                            $"Offset is initialized at offset beginning {endOffsets[metadata.StoreMetadata.ChangelogTopicPartition].Item1}");
+
+                        metadata.StoreMetadata.Offset = endOffsets[metadata.StoreMetadata.ChangelogTopicPartition].Item1;
+                    }
                 }
             }
 
@@ -303,16 +313,20 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             // TODO : call trigger onRestoreStart(...)
         }
 
-        private IDictionary<TopicPartition, Offset> EndOffsetsChangelogs(IEnumerable<ChangelogMetadata> registeredChangelogs)
+        private IDictionary<TopicPartition, (Offset, Offset)> OffsetsChangelogs(IEnumerable<ChangelogMetadata> registeredChangelogs)
         {
             return registeredChangelogs
-                .Select(_changelog =>
-                    new
+                .Select(_changelog => {
+                    var offsets = restoreConsumer.GetWatermarkOffsets(_changelog.StoreMetadata.ChangelogTopicPartition);
+                    return new
                     {
                         TopicPartition = _changelog.StoreMetadata.ChangelogTopicPartition,
-                        Offset = restoreConsumer.GetWatermarkOffsets(_changelog.StoreMetadata.ChangelogTopicPartition).High
-                    })
-            .ToDictionary(i => i.TopicPartition, i => i.Offset);
+                        EndOffset = offsets.High,
+                        BeginOffset = offsets.Low
+
+                    };
+                })
+            .ToDictionary(i => i.TopicPartition, i => (i.BeginOffset, i.EndOffset));
         }
 
         #endregion
