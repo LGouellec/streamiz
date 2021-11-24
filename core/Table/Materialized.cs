@@ -251,12 +251,12 @@ namespace Streamiz.Kafka.Net.Table
         public IDictionary<string, string> TopicConfig { get; protected set; }
 
         /// <summary>
-        /// Is logging enabled
+        /// Is logging enabled (default: false), Warning : will be true in next release.
         /// </summary>
         public bool LoggingEnabled { get; protected set; }
 
         /// <summary>
-        /// Is caching enabled
+        /// Is caching enabled. Not use for moment.
         /// </summary>
         public bool CachingEnabled { get; protected set; }
 
@@ -297,7 +297,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <summary>
         /// Enable logging with topic configuration for this <see cref="Materialized{K, V, S}"/>
         /// </summary>
-        /// <param name="config">Topic configuration dictionnary</param>
+        /// <param name="config">Topic configuration dictionnary, can be null</param>
         /// <returns>Itself</returns>
         public Materialized<K, V, S> WithLoggingEnabled(IDictionary<string, string> config)
         {
