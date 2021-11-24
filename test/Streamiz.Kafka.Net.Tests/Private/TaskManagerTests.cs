@@ -10,6 +10,8 @@ using System.Linq;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
+    // TODO : test with changelogs records
+
     public class TaskManagerTests
     {
         [Test]
@@ -40,6 +42,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     new TopicPartition("topic", 2),
                     new TopicPartition("topic", 3),
                 });
+            taskManager.TryToCompleteRestoration();
 
             Assert.AreEqual(4, taskManager.ActiveTasks.Count());
             for (int i = 0; i < 4; ++i)
@@ -106,6 +109,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     new TopicPartition("topic", 2),
                     new TopicPartition("topic", 3),
                 });
+            taskManager.TryToCompleteRestoration();
 
             Assert.AreEqual(4, taskManager.ActiveTasks.Count());
             Assert.AreEqual(0, taskManager.CommitAll());
@@ -144,6 +148,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     new TopicPartition("topic", 2),
                     new TopicPartition("topic", 3),
                 });
+            taskManager.TryToCompleteRestoration();
 
             Assert.AreEqual(4, taskManager.ActiveTasks.Count());
 
@@ -164,8 +169,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     });
 
             task.AddRecords(messages);
-
-            Assert.IsTrue(taskManager.TryToCompleteRestoration());
 
             Assert.IsTrue(task.CanProcess(DateTime.Now.GetMilliseconds()));
 
@@ -249,6 +252,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     new TopicPartition("topic", 0),
                     new TopicPartition("topic", 1)
                 });
+            taskManager.TryToCompleteRestoration();
 
             Assert.AreEqual(2, taskManager.ActiveTasks.Count());
             Assert.AreEqual(0, taskManager.RevokedTasks.Count());
@@ -299,6 +303,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     new TopicPartition("topic", 1),
                     new TopicPartition("topic", 2)
                 });
+
+            taskManager.TryToCompleteRestoration();
 
             Assert.AreEqual(3, taskManager.ActiveTasks.Count());
             Assert.AreEqual(0, taskManager.RevokedTasks.Count());
