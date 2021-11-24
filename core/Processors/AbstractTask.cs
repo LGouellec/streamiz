@@ -27,7 +27,7 @@ namespace Streamiz.Kafka.Net.Processors
         // For testing
         internal AbstractTask() { }
 
-        protected AbstractTask(TaskId id, IEnumerable<TopicPartition> partition, ProcessorTopology topology, IConsumer<byte[], byte[]> consumer, IStreamConfig config)
+        protected AbstractTask(TaskId id, IEnumerable<TopicPartition> partition, ProcessorTopology topology, IConsumer<byte[], byte[]> consumer, IStreamConfig config, IChangelogRegister changelogRegister)
         {
             log = Logger.GetLogger(GetType());
             logPrefix = $"stream-task[{id.Id}|{id.Partition}] ";
@@ -47,6 +47,7 @@ namespace Streamiz.Kafka.Net.Processors
                 id,
                 partition,
                 topology.StoresToTopics,
+                changelogRegister,
                 offsetCheckpointMngt);
         }
 

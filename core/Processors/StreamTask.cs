@@ -29,8 +29,8 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly string threadId;
 
 
-        public StreamTask(string threadId, TaskId id, IEnumerable<TopicPartition> partitions, ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer)
-            : base(id, partitions, processorTopology, consumer, configuration)
+        public StreamTask(string threadId, TaskId id, IEnumerable<TopicPartition> partitions, ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer, IChangelogRegister changelogRegister)
+            : base(id, partitions, processorTopology, consumer, configuration, changelogRegister)
         {
             this.threadId = threadId;
             this.kafkaSupplier = kafkaSupplier;
@@ -175,7 +175,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public override bool CanProcess(long now)
         {
-            if (state == TaskState.CLOSED /*|| state == TaskState.RESTORING || state == TaskState.CREATED*/)
+            if (state == TaskState.CLOSED || state == TaskState.RESTORING || state == TaskState.CREATED)
                 return false;
 
             if (partitionGrouper.AllPartitionsBuffered)
@@ -289,7 +289,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             log.Debug($"{logPrefix}Initializing state stores.");
             RegisterStateStores();
-            state = TaskState.RESTORING;
+            // state = TaskState.RESTORING;
             return false;
         }
 
@@ -449,5 +449,26 @@ namespace Streamiz.Kafka.Net.Processors
                 AddRecord(r);
             }
         }
-    }
+
+        public void CompleteRestoration()
+        {
+            if(state == TaskState.RUNNING)
+            {
+                return;
+            }
+            else if(state == TaskState.RESTORING)
+            {
+                TransitTo(TaskState.RUNNING);
+                log.Info($"{logPrefix}Restored and ready to run");
+            }
+            else if(state == TaskState.CREATED || state == TaskState.SUSPENDED || state == TaskState.CLOSED)
+            {
+                throw new IllegalStateException($"Illegal state {state} while completing restoration for active task {Id}");
+            }
+            else
+            {
+                throw new IllegalStateException($"Illegal state {state} while completing restoration for active task {Id}");
+            }
+        }
+    }   
 }

@@ -28,6 +28,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             this.manager.RebalanceInProgress = true;
             manager.CreateTasks(partitions);
             Thread.SetState(ThreadState.PARTITIONS_ASSIGNED);
+            Thread.LastPartitionAssignedTime = start.GetMilliseconds();
             this.manager.RebalanceInProgress = false;
 
             StringBuilder sb = new StringBuilder();

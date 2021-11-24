@@ -19,6 +19,9 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             public int Partition { get; set; }
             public long OffsetComitted { get; set; }
             public long OffsetConsumed { get; set; }
+            public bool IsPaused { get; set; } = false;
+
+            public TopicPartition TopicPartition => new TopicPartition(Topic, Partition);
 
             public override bool Equals(object obj)
             {
@@ -96,12 +99,72 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             return false;
         }
 
+        internal void Pause(MockConsumer mockConsumer, IEnumerable<TopicPartition> enumerable)
+        {
+            lock (rebalanceLock)
+            {
+                if (consumers.ContainsKey(mockConsumer.Name))
+                {
+                    foreach(var tpo in consumers[mockConsumer.Name].TopicPartitionsOffset)
+                    {
+                        if(enumerable.Contains(tpo.TopicPartition))
+                        {
+                            tpo.IsPaused = true;
+                        }
+                    }
+                }
+            }
+        }
+
         internal void CloseConsumer(string name)
         {
             if (consumers.ContainsKey(name))
             {
                 Unsubscribe(consumers[name].Consumer);
                 consumers.Remove(name);
+            }
+        }
+
+        internal void Resume(MockConsumer mockConsumer, IEnumerable<TopicPartition> enumerable)
+        {
+            lock (rebalanceLock)
+            {
+                if (consumers.ContainsKey(mockConsumer.Name))
+                {
+                    foreach (var tpo in consumers[mockConsumer.Name].TopicPartitionsOffset)
+                    {
+                        if (enumerable.Contains(tpo.TopicPartition))
+                        {
+                            tpo.IsPaused = false;
+                        }
+                    }
+                }
+            }
+        }
+
+        internal void Seek(MockConsumer mockConsumer, TopicPartitionOffset tpo)
+        {
+            lock (rebalanceLock)
+            {
+                if (consumers.ContainsKey(mockConsumer.Name))
+                {
+                    foreach (var tpos in consumers[mockConsumer.Name].TopicPartitionsOffset)
+                    {
+                        if (tpos.TopicPartition.Equals(tpo.TopicPartition))
+                        {
+                            if (tpo.Offset == Offset.Beginning)
+                                tpos.OffsetConsumed = 0;
+                            else if (tpo.Offset == Offset.End)
+                            {
+                                var topic = topics[tpo.Topic];
+                                var part = topic.GetPartition(tpo.Partition);
+                                tpos.OffsetConsumed = part.HighOffset;
+                            }
+                            else
+                              tpos.OffsetConsumed = tpo.Offset;
+                        }
+                    }
+                }
             }
         }
 
@@ -297,8 +360,31 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                 CreateTopic(t.Topic);
             }
 
-            if (consumers.ContainsKey(mockConsumer.Name))
+            if (!consumers.ContainsKey(mockConsumer.Name))
             {
+                var cons = new MockConsumerInformation
+                {
+                    GroupId = mockConsumer.MemberId,
+                    Name = mockConsumer.Name,
+                    Consumer = mockConsumer,
+                    Topics = new List<string>(topicPartitions.Select(tp => tp.Topic)),
+                    RebalanceListener = mockConsumer.Listener,
+                    Partitions = new List<TopicPartition>(),
+                    TopicPartitionsOffset = new List<MockConsumerInformation.MockTopicPartitionOffset>()
+                };
+                consumers.Add(mockConsumer.Name, cons);
+
+                if (consumerGroups.ContainsKey(mockConsumer.MemberId))
+                {
+                    consumerGroups[mockConsumer.MemberId].Add(mockConsumer.Name);
+                }
+                else
+                {
+                    consumerGroups.Add(mockConsumer.MemberId, new List<string> { mockConsumer.Name });
+                }
+            }
+
+           
                 var c = consumers[mockConsumer.Name];
                 if (c.Partitions.Count == 0)
                 {
@@ -351,13 +437,8 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                 }
                 else
                 {
-                    throw new StreamsException($"Consumer {mockConsumer.Name} was already assigned partitions. Please call unassigne before !");
+                    throw new StreamsException($"Consumer {mockConsumer.Name} was already assigned partitions. Please call unassign before !");
                 }
-            }
-            else
-            {
-                throw new StreamsException($"Consumer {mockConsumer.Name} unknown !");
-            }
         }
 
         internal void Unassign(MockConsumer mockConsumer)
@@ -383,11 +464,11 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                             List<TopicPartition> parts = null;
                             if (i == otherConsumers.Count - 1)
                             {
-                                parts = c.Partitions.GetRange(j, j + partEach + modulo);
+                                parts = c.Partitions.GetRange(j, partEach + modulo);
                             }
                             else
                             {
-                                parts = c.Partitions.GetRange(j, j + partEach);
+                                parts = c.Partitions.GetRange(j, partEach);
                             }
 
                             otherConsumers[i].Partitions.AddRange(parts);
@@ -495,18 +576,21 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
                         var topic = topics[p.Topic];
                         var offset = c.TopicPartitionsOffset.FirstOrDefault(t => t.Topic.Equals(p.Topic) && t.Partition.Equals(p.Partition));
-                        var record = topic.GetMessage(p.Partition, offset.OffsetConsumed);
-                        if (record != null)
+                        if (offset != null && !offset.IsPaused)
                         {
-                            result = new ConsumeResult<byte[], byte[]>
+                            var record = topic.GetMessage(p.Partition, offset.OffsetConsumed);
+                            if (record != null)
                             {
-                                Offset = offset.OffsetConsumed,
-                                Topic = p.Topic,
-                                Partition = p.Partition,
-                                Message = new Message<byte[], byte[]> { Key = record.Key, Value = record.Value }
-                            };
-                            ++offset.OffsetConsumed;
-                            break;
+                                result = new ConsumeResult<byte[], byte[]>
+                                {
+                                    Offset = offset.OffsetConsumed,
+                                    Topic = p.Topic,
+                                    Partition = p.Partition,
+                                    Message = new Message<byte[], byte[]> { Key = record.Key, Value = record.Value }
+                                };
+                                ++offset.OffsetConsumed;
+                                break;
+                            }
                         }
                     }
                 }

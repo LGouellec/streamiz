@@ -36,7 +36,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         private readonly ILog log = Logger.GetLogger(typeof(StoreChangelogReader));
         private readonly IConsumer<byte[], byte[]> restoreConsumer;
-        private readonly IConsumer<byte[], byte[]> mainConsumer;
         private readonly IDictionary<TopicPartition, ChangelogMetadata> changelogs;
         private readonly static long DEFAULT_OFFSET_UPDATE_MS = (long)TimeSpan.FromMinutes(5L).TotalMilliseconds;
         private readonly long pollTimeMs;
@@ -46,11 +45,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public StoreChangelogReader(
             IStreamConfig config,
-            IConsumer<byte[], byte[]> restoreConsumer,
-            IConsumer<byte[], byte[]> mainConsumer)
+            IConsumer<byte[], byte[]> restoreConsumer)
         {
             this.restoreConsumer = restoreConsumer;
-            this.mainConsumer = mainConsumer;
 
             pollTimeMs = config.PollMs;
             maxPollRestoringRecords = config.MaxPollRestoringRecords;

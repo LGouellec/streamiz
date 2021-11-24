@@ -13,5 +13,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         IStateStore GetStore(string name);
         TopicPartition GetRegisteredChangelogPartitionFor(string name);
         void InitializeOffsetsFromCheckpoint();
+        // TODO : void Checkpoint();
     }
 }

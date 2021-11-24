@@ -37,6 +37,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly TaskId taskId;
         private readonly IDictionary<string, string> changelogTopics;
         private readonly IOffsetCheckpointManager offsetCheckpointManager;
+        private readonly IChangelogRegister changelogRegister;
         private IDictionary<string, IStateStore> globalStateStores = new Dictionary<string, IStateStore>();
 
         public IEnumerable<TopicPartition> Partition { get; private set; }
@@ -47,6 +48,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             TaskId taskId,
             IEnumerable<TopicPartition> partition,
             IDictionary<string, string> changelogTopics,
+            IChangelogRegister changelogReader,
             IOffsetCheckpointManager offsetCheckpointManager)
         {
             log = Logger.GetLogger(typeof(ProcessorStateManager));
@@ -55,6 +57,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             Partition = partition;
 
             this.changelogTopics = changelogTopics ?? new Dictionary<string, string>();
+            this.changelogRegister = changelogReader;
             this.offsetCheckpointManager = offsetCheckpointManager;
         }
 
@@ -132,12 +135,17 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             registeredStores.Add(storeName, metadata);
 
+            if (IsChangelogStateStore(storeName))
+                changelogRegister.Register(GetStorePartition(storeName), this);
+
             log.Debug($"{logPrefix}Registered state store {storeName} to its state manager");
         }
 
         public void Close()
         {
             log.Debug($"{logPrefix}Closing its state manager and all the registered state stores");
+
+            changelogRegister.Unregister(registeredStores.Values.Where(m => m.ChangelogTopicPartition != null).Select(m => m.ChangelogTopicPartition));
 
             foreach( var state in registeredStores)
             {

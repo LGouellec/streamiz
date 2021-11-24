@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka;
+using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
@@ -71,7 +72,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var state = ThreadState.RUNNING;
             Assert.AreEqual(4, state.Ordinal);
             Assert.AreEqual("RUNNING", state.Name);
-            Assert.AreEqual(new HashSet<int> { 2, 3, 5 }, state.Transitions);
+            Assert.AreEqual(new HashSet<int> { 2, 3, 4, 5 }, state.Transitions);
             Assert.IsTrue(state.IsRunning());
             Assert.IsFalse(state.IsValidTransition(ThreadState.CREATED));
             Assert.IsTrue(state.IsValidTransition(ThreadState.PARTITIONS_ASSIGNED));
@@ -247,6 +248,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config.ApplicationId = "test";
             config.Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
             config.PollMs = 1;
+            config.OffsetCheckpointManager = new MockOffsetCheckpointManager();
 
             var consumeConfig = config.Clone();
             consumeConfig.ApplicationId = "consume-test";

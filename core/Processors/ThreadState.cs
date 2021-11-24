@@ -75,7 +75,7 @@ namespace Streamiz.Kafka.Net.Processors
         public static readonly ThreadState STARTING = new ThreadState(1, "STARTING", 2, 3, 5);
         public static readonly ThreadState PARTITIONS_REVOKED = new ThreadState(2, "PARTITIONS_REVOKED", 2, 3, 5);
         public static readonly ThreadState PARTITIONS_ASSIGNED = new ThreadState(3, "PARTITIONS_ASSIGNED", 2, 3, 4, 5);
-        public static readonly ThreadState RUNNING = new ThreadState(4, "RUNNING", 2, 3, 5);
+        public static readonly ThreadState RUNNING = new ThreadState(4, "RUNNING", 2, 3, 4, 5);
         public static readonly ThreadState PENDING_SHUTDOWN = new ThreadState(5, "PENDING_SHUTDOWN", 6);
         public static readonly ThreadState DEAD = new ThreadState(6, "DEAD");
 

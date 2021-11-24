@@ -6,7 +6,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal sealed class TaskState : TaskStateTransitionValidator, IEquatable<TaskState>
     {
-        public static readonly TaskState CREATED = new TaskState(0, "CREATED", 1, 3);
+        public static readonly TaskState CREATED = new TaskState(0, "CREATED", 1, 2, 3);
         public static readonly TaskState RESTORING = new TaskState(1, "RESTORING", 2, 3);
         public static readonly TaskState RUNNING = new TaskState(2, "RUNNING", 3);
         public static readonly TaskState SUSPENDED = new TaskState(3, "SUSPENDED", 1, 4);

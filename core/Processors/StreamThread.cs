@@ -49,6 +49,7 @@ namespace Streamiz.Kafka.Net.Processors
             var customerID = $"{clientId}-StreamThread-{threadInd}";
             IProducer<byte[], byte[]> producer = null;
 
+            // TODO : remove this limitations depends version of Kafka Cluster
             // Due to limitations outlined in KIP-447 (which KIP-447 overcomes), it is
             // currently necessary to use a separate producer per input partition. The
             // producerState dictionary is used to keep track of these, and the current
@@ -62,8 +63,13 @@ namespace Streamiz.Kafka.Net.Processors
                 producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig(GetThreadProducerClientId(threadId)));
             }
 
-            var taskCreator = new TaskCreator(builder, configuration, threadId, kafkaSupplier, producer);
-            var manager = new TaskManager(builder, taskCreator, adminClient);
+            var restoreConsumer = kafkaSupplier.GetRestoreConsumer(configuration.ToConsumerConfig(GetRestoreConsumerClientId(customerID)));
+            var storeChangelogReader = new StoreChangelogReader(
+                configuration,
+                restoreConsumer);
+
+            var taskCreator = new TaskCreator(builder, configuration, threadId, kafkaSupplier, producer, storeChangelogReader);
+            var manager = new TaskManager(builder, taskCreator, adminClient, storeChangelogReader);
 
             var listener = new StreamsRebalanceListener(manager);
 
@@ -71,7 +77,7 @@ namespace Streamiz.Kafka.Net.Processors
             var consumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig(GetConsumerClientId(customerID)), listener);
             manager.Consumer = consumer;
 
-            var thread = new StreamThread(threadId, customerID, manager, consumer, builder, configuration);
+            var thread = new StreamThread(threadId, customerID, manager, consumer, builder, storeChangelogReader, configuration);
             listener.Thread = thread;
 
             return thread;
@@ -81,6 +87,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public ThreadState State { get; private set; }
 
+        private readonly IChangelogReader changelogReader;
         private readonly IStreamConfig streamConfig;
         private readonly ILog log = Logger.GetLogger(typeof(StreamThread));
         private readonly Thread thread;
@@ -102,13 +109,13 @@ namespace Streamiz.Kafka.Net.Processors
 
         public event ThreadStateListener StateChanged;
 
-        private StreamThread(string threadId, string clientId, TaskManager manager, IConsumer<byte[], byte[]> consumer, InternalTopologyBuilder builder, IStreamConfig configuration)
-            : this(threadId, clientId, manager, consumer, builder, TimeSpan.FromMilliseconds(configuration.PollMs), configuration.CommitIntervalMs)
+        private StreamThread(string threadId, string clientId, TaskManager manager, IConsumer<byte[], byte[]> consumer, InternalTopologyBuilder builder, IChangelogReader storeChangelogReader, IStreamConfig configuration)
+            : this(threadId, clientId, manager, consumer, builder, storeChangelogReader, TimeSpan.FromMilliseconds(configuration.PollMs), configuration.CommitIntervalMs)
         {
             streamConfig = configuration;
         }
 
-        private StreamThread(string threadId, string clientId, TaskManager manager, IConsumer<byte[], byte[]> consumer, InternalTopologyBuilder builder, TimeSpan timeSpan, long commitInterval)
+        private StreamThread(string threadId, string clientId, TaskManager manager, IConsumer<byte[], byte[]> consumer, InternalTopologyBuilder builder, IChangelogReader storeChangelogReader, TimeSpan timeSpan, long commitInterval)
         {
             this.manager = manager;
             this.consumer = consumer;
@@ -118,6 +125,7 @@ namespace Streamiz.Kafka.Net.Processors
             this.clientId = clientId;
             logPrefix = $"stream-thread[{threadId}] ";
             commitTimeMs = commitInterval;
+            changelogReader = storeChangelogReader;
 
             thread = new Thread(Run);
             thread.Name = this.threadId;
@@ -267,7 +275,15 @@ namespace Streamiz.Kafka.Net.Processors
             if(State == ThreadState.PARTITIONS_ASSIGNED || State == ThreadState.RUNNING && manager.NeedRestoration())
             {
                 log.Debug($"{logPrefix} State is {State}, initializing and restoring tasks if necessary");
-                // TODO : 
+
+                if (manager.TryToCompleteRestoration())
+                {
+                    log.Info($"Restoration took {DateTime.Now.GetMilliseconds() - LastPartitionAssignedTime} for all tasks {string.Join(",", manager.ActiveTaskIds)}");
+                    if(State == ThreadState.PARTITIONS_ASSIGNED)
+                        SetState(ThreadState.RUNNING);
+                }
+
+                changelogReader.Restore(manager.Tasks);
             }
         }
 
@@ -343,6 +359,8 @@ namespace Streamiz.Kafka.Net.Processors
 
         public IEnumerable<ITask> ActiveTasks => manager.ActiveTasks;
 
+        public long LastPartitionAssignedTime { get; internal set; }
+
         #endregion
 
         private void HandleTaskMigrated(TaskMigratedException e)
@@ -409,7 +427,6 @@ namespace Streamiz.Kafka.Net.Processors
                     else
                         consumer.Dispose();
 
-                    SetState(ThreadState.DEAD);
                     log.Info($"{logPrefix}Shutdown complete");
                     IsDisposable = true;
                 }
@@ -417,6 +434,10 @@ namespace Streamiz.Kafka.Net.Processors
             catch (Exception e)
             {
                 log.Error($"{logPrefix}Failed to close stream thread due to the following error:", e);
+            }
+            finally
+            {
+                SetState(ThreadState.DEAD);
             }
         }
 

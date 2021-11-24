@@ -41,8 +41,9 @@ namespace Streamiz.Kafka.Net.State
         private readonly string path;
         private readonly object _lock = new object();
         private readonly ILog logger = Logger.GetLogger(typeof(OffsetCheckpointFile));
+        public static readonly string CHECKPOINT_FILE_NAME = ".checkpoint";
 
-        public OffsetCheckpointFile(string path) => this.path = path;
+        public OffsetCheckpointFile(string path) => this.path = Path.Combine(path, CHECKPOINT_FILE_NAME);
 
         public void Destroy(TaskId taskId)
         {

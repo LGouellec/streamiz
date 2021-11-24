@@ -24,7 +24,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         }
 
         UnassignedStreamTask(string threadId, TaskId id, IEnumerable<TopicPartition> partitions, ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer)
-            : base(threadId, id, partitions, processorTopology, consumer, configuration, kafkaSupplier, producer)
+            : base(threadId, id, partitions, processorTopology, consumer, configuration, kafkaSupplier, producer, null)
         {
             config = configuration;
         }

@@ -30,31 +30,34 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly InternalTopologyBuilder builder;
         private readonly TaskCreator taskCreator;
         private readonly IAdminClient adminClient;
-
+        private readonly IChangelogReader changelogReader;
         private readonly IDictionary<TopicPartition, TaskId> partitionsToTaskId = new Dictionary<TopicPartition, TaskId>();
         private readonly IDictionary<TaskId, StreamTask> activeTasks = new Dictionary<TaskId, StreamTask>();
         private readonly IDictionary<TaskId, StreamTask> revokedTasks = new Dictionary<TaskId, StreamTask>();
 
         public IEnumerable<StreamTask> ActiveTasks => activeTasks.Values;
         public IEnumerable<StreamTask> RevokedTasks => revokedTasks.Values;
+        public IDictionary<TaskId, ITask> Tasks => activeTasks.ToDictionary(i => i.Key, i => (ITask)i.Value);
 
         public IConsumer<byte[], byte[]> Consumer { get; internal set; }
         public IEnumerable<TaskId> ActiveTaskIds => activeTasks.Keys;
         public IEnumerable<TaskId> RevokeTaskIds => revokedTasks.Keys;
         public bool RebalanceInProgress { get; internal set; }
 
-        public TaskManager(InternalTopologyBuilder builder, TaskCreator taskCreator, IAdminClient adminClient)
+        internal TaskManager(InternalTopologyBuilder builder, TaskCreator taskCreator, IAdminClient adminClient, IChangelogReader changelogReader)
         {
             this.builder = builder;
             this.taskCreator = taskCreator;
             this.adminClient = adminClient;
+            this.changelogReader = changelogReader;
         }
 
-        public TaskManager(InternalTopologyBuilder builder, TaskCreator taskCreator, IAdminClient adminClient, IConsumer<byte[], byte[]> consumer)
-            : this(builder, taskCreator, adminClient)
+        internal TaskManager(InternalTopologyBuilder builder, TaskCreator taskCreator, IAdminClient adminClient, IConsumer<byte[], byte[]>  consumer, IChangelogReader changelogReader)
+            : this(builder, taskCreator, adminClient, changelogReader)
         {
             Consumer = consumer;
         }
+
 
         public void CreateTasks(ICollection<TopicPartition> assignment)
         {
@@ -252,5 +255,40 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         internal bool NeedRestoration()
             => ActiveTasks.Any(t => t.State == TaskState.CREATED || t.State == TaskState.RESTORING);
+
+        internal bool TryToCompleteRestoration()
+        {
+            bool allRunning = true;
+
+            foreach(var task in ActiveTasks)
+            {
+                try
+                {
+                    task.RestorationIfNeeded();
+                }catch(Exception e)
+                {
+                    log.Debug($"Could not initialize task {task.Id} at {DateTime.Now.GetMilliseconds()}, will retry ({e.Message})");
+                    allRunning = false;
+                }
+            }
+
+            var activeTasksWithStateStore = ActiveTasks.Where(t => t.HasStateStores);
+            if (allRunning && activeTasksWithStateStore.Any())
+            {
+                var restored = changelogReader.CompletedChangelogs;
+                foreach(var task in activeTasksWithStateStore)
+                {
+                    if (restored.All(r => task.ChangelogPartitions.Contains(r)))
+                        task.CompleteRestoration();
+                    else
+                        allRunning = false;
+                }
+            }
+
+            if (allRunning)
+                Consumer.Resume(Consumer.Assignment);
+
+            return allRunning;
+        }
     }
 }

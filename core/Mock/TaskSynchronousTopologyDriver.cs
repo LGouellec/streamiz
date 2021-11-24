@@ -73,9 +73,12 @@ namespace Streamiz.Kafka.Net.Mock
                     supplier.GetConsumer(configuration.ToConsumerConfig(), null),
                     configuration,
                     supplier,
-                    producer);
+                    producer,
+                    new MockChangelogRegister());
                 task.InitializeStateStores();
                 task.InitializeTopology();
+                task.RestorationIfNeeded();
+                task.CompleteRestoration();
                 tasks.Add(id, task);
             }
             return task;

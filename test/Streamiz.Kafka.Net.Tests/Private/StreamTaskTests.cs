@@ -7,6 +7,7 @@ using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
+using Streamiz.Kafka.Net.Mock;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -44,10 +45,13 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 consumer,
                 config,
                 supplier,
-                null);
+                null,
+                new MockChangelogRegister());
             task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
+            task.RestorationIfNeeded();
+            task.CompleteRestoration();
 
             List <ConsumeResult<byte[], byte[]>> messages = new List<ConsumeResult<byte[], byte[]>>();
             int offset = 0;
@@ -131,10 +135,13 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 consumer,
                 config,
                 supplier,
-                null);
+                null,
+                new MockChangelogRegister());
             task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
+            task.RestorationIfNeeded();
+            task.CompleteRestoration();
 
             List<ConsumeResult<byte[], byte[]>> messages = new List<ConsumeResult<byte[], byte[]>>();
             int offset = 0;
@@ -226,10 +233,13 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 consumer,
                 config,
                 supplier,
-                producer);
+                producer,
+                new MockChangelogRegister());
             task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
+            task.RestorationIfNeeded();
+            task.CompleteRestoration();
 
             List<ConsumeResult<byte[], byte[]>> messages = new List<ConsumeResult<byte[], byte[]>>();
             int offset = 0;
