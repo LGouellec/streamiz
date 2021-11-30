@@ -4,6 +4,7 @@ using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,7 @@ namespace Streamiz.Kafka.Net.Processors
         protected ILog log;
         protected readonly string logPrefix = "";
         protected TaskState state = TaskState.CREATED;
+        private Dictionary<TopicPartition, long> offsetLastSnapshotOffset;
 
         // For testing
         internal AbstractTask() { }
@@ -61,7 +63,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public IEnumerable<TopicPartition> Partition { get; }
 
-        public ICollection<TopicPartition> ChangelogPartitions { get; internal set; }
+        public ICollection<TopicPartition> ChangelogPartitions => stateMgr.ChangelogPartitions;
 
         public bool HasStateStores => !(Topology.StateStores.Count == 0);
 
@@ -91,6 +93,7 @@ namespace Streamiz.Kafka.Net.Processors
         public abstract bool InitializeStateStores();
         public abstract void Resume();
         public abstract void Suspend();
+        public abstract void MayWriteCheckpoint(bool force = false);
 
         #endregion
 
@@ -154,6 +157,17 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 log.Error($"{logPrefix}Error during closing state store with exception :", e);
                 throw;
+            }
+        }
+
+        protected void WriteCheckpoint(bool force = false)
+        {
+            var changelogOffsets = stateMgr.ChangelogOffsets;
+            if(StateManagerTools.CheckpointNeed(force, offsetLastSnapshotOffset, changelogOffsets))
+            {
+                stateMgr.Flush();
+                stateMgr.Checkpoint();
+                offsetLastSnapshotOffset = new Dictionary<TopicPartition, long>(changelogOffsets);
             }
         }
     }

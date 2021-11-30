@@ -30,6 +30,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public IEnumerable<string> StateStoreNames => globalStores.Keys;
 
+        public ICollection<TopicPartition> ChangelogPartitions => throw new NotImplementedException();
+
+        public void Checkpoint()
+        {
+            throw new NotImplementedException();
+        }
+
         public void Close()
         {
             log.Debug("Closing global state manager");

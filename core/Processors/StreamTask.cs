@@ -81,6 +81,11 @@ namespace Streamiz.Kafka.Net.Processors
 
         #region Private
 
+        private IDictionary<TopicPartition, long> CheckpointableOffsets
+            => collector.CollectorOffsets
+                        .Union(consumedOffsets.AsEnumerable())
+                        .ToDictionary();
+
         private IEnumerable<TopicPartitionOffset> GetPartitionsWithOffset()
         {
             foreach (var kp in consumedOffsets)
@@ -254,7 +259,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             if(state == TaskState.CREATED)
             {
-                if (Topology.StateStores.Any())
+                if (stateMgr.ChangelogPartitions.Any())
                 {
                     stateMgr.InitializeOffsetsFromCheckpoint();
 
@@ -397,6 +402,14 @@ namespace Streamiz.Kafka.Net.Processors
         {
             base.FlushState();
             collector?.Flush();
+        }
+
+        public override void MayWriteCheckpoint(bool force = false)
+        {
+            if (commitNeeded || force)
+                stateMgr.UpdateChangelogOffsets(CheckpointableOffsets);
+
+            WriteCheckpoint(force);
         }
 
         #endregion

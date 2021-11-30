@@ -62,7 +62,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             => changelogs.Values
                     .Where(c => c.ChangelogState == ChangelogState.COMPLETED)
                     .Select(c => c.StoreMetadata.ChangelogTopicPartition)
-                    .AsEnumerable();
+                    .ToList();
 
         public void Clear()
         {
@@ -157,10 +157,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private IEnumerable<TopicPartition> RestoringChangelogs =>
             changelogs.Values
                 .Where(m => m.ChangelogState == ChangelogState.RESTORING)
-                .Select(m => m.StoreMetadata.ChangelogTopicPartition);
+                .Select(m => m.StoreMetadata.ChangelogTopicPartition)
+                .ToList();
 
         private IEnumerable<ChangelogMetadata> RegisteredChangelogs =>
-            changelogs.Values.Where(m => m.ChangelogState == ChangelogState.REGISTERED);
+            changelogs.Values.Where(m => m.ChangelogState == ChangelogState.REGISTERED).ToList();
 
         private bool AllChangelogsCompleted => changelogs.Values.All(m => m.ChangelogState == ChangelogState.COMPLETED);
 
@@ -287,13 +288,16 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             var newPartitions = registeredChangelogs.Select(c => c.StoreMetadata.ChangelogTopicPartition).ToList();
             var topicPartitions = restoreConsumer.Assignment;
             topicPartitions.AddRange(newPartitions);
-            restoreConsumer.Assign(topicPartitions);
+            restoreConsumer.Assign(topicPartitions.ToList());
 
             log.Debug($"Added partitions {string.Join(",", newPartitions.Select(c => $"{c.Topic}-{c.Partition}"))} " +
                 $"to the restore consumer, current assignment is {topicPartitions.Select(c => $"{c.Topic}-{c.Partition}")}");
 
+            foreach (var r in registeredChangelogs)
+                r.ChangelogState = ChangelogState.RESTORING;
+
             // Seek each changelog to current offset (beginning if not present)
-            foreach(var metadata in registeredChangelogs)
+            foreach (var metadata in registeredChangelogs)
             {
                 var offset = metadata.StoreMetadata.Offset.HasValue ? new Offset(metadata.StoreMetadata.Offset.Value + 1) : Offset.Beginning;
                 restoreConsumer.Seek(

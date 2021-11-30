@@ -6,6 +6,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
     internal interface IStateManager
     {
         IEnumerable<string> StateStoreNames { get; }
+        ICollection<TopicPartition> ChangelogPartitions { get; }
+        IDictionary<TopicPartition, long> ChangelogOffsets { get; }
         void Flush();
         void Register(IStateStore store, StateRestoreCallback callback);
         void UpdateChangelogOffsets(IDictionary<TopicPartition, long> writtenOffsets);
@@ -13,6 +15,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         IStateStore GetStore(string name);
         TopicPartition GetRegisteredChangelogPartitionFor(string name);
         void InitializeOffsetsFromCheckpoint();
-        // TODO : void Checkpoint();
+        void Checkpoint();
     }
 }

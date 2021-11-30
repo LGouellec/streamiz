@@ -44,6 +44,19 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public IEnumerable<string> StateStoreNames => registeredStores.Keys;
 
+        public ICollection<TopicPartition> ChangelogPartitions => ChangelogOffsets.Keys.ToList();
+
+        public IDictionary<TopicPartition, long> ChangelogOffsets =>
+            registeredStores.Values
+                .Where(s => s.ChangelogTopicPartition != null)
+                .ToDictionary(s => s.ChangelogTopicPartition, s =>
+                {
+                    if (s.Offset.HasValue)
+                        return s.Offset.Value + 1;
+                    else
+                        return 0L;
+                });
+
         public ProcessorStateManager(
             TaskId taskId,
             IEnumerable<TopicPartition> partition,
@@ -204,6 +217,26 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 }
             }
         }
+
+        public void Checkpoint()
+        {
+            IDictionary<TopicPartition, long> checkpointOffsets = new Dictionary<TopicPartition, long>();
+            foreach(var store in registeredStores)
+            {
+                if (store.Value.ChangelogTopicPartition != null && store.Value.Store.Persistent)
+                {
+                    checkpointOffsets.Add(store.Value.ChangelogTopicPartition, store.Value.Offset.HasValue ? store.Value.Offset.Value : OffsetCheckpointFile.OFFSET_UNKNOWN);
+                }
+            }
+
+            log.Debug($"{logPrefix}Writting checkpoint");
+            try {
+                offsetCheckpointManager.Write(taskId, checkpointOffsets);
+            }catch(Exception e)
+            {
+                log.Warn($"{logPrefix}Failed to write offset checkpoint. Exception: {e.Message}{Environment.NewLine}{e.StackTrace}");
+            }
+         }
 
         public void InitializeOffsetsFromCheckpoint()
         {

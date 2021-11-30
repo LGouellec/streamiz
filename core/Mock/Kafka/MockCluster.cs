@@ -623,6 +623,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             r.Message = message;
             r.Partition = i;
             r.Topic = topic;
+            r.Offset = topics[topic].GetPartition(i).Size - 1;
             r.Timestamp = new Timestamp(DateTime.Now);
             r.Error = new Error(ErrorCode.NoError);
             r.Status = PersistenceStatus.Persisted;

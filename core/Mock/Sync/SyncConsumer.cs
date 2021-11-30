@@ -183,8 +183,12 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public Offset Position(TopicPartition partition)
         {
-            // TODO
-            throw new NotImplementedException();
+            if (offsets.ContainsKey(partition.Topic))
+            {
+                return offsets[partition.Topic].OffsetConsumed + 1;
+            }
+            else
+                return Offset.Unset;
         }
 
         public WatermarkOffsets QueryWatermarkOffsets(TopicPartition topicPartition, TimeSpan timeout)

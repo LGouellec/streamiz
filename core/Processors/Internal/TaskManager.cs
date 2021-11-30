@@ -108,6 +108,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 {
                     var task = activeTasks[taskId];
                     task.Suspend();
+                    task.MayWriteCheckpoint(false);
                     if (!revokedTasks.ContainsKey(taskId))
                     {
                         revokedTasks.Add(taskId, task);
@@ -136,6 +137,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             foreach (var t in activeTasks)
             {
                 CurrentTask = t.Value;
+                t.Value.MayWriteCheckpoint(true);
                 t.Value.Close();
             }
 
@@ -144,6 +146,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             foreach (var t in revokedTasks)
             {
+                t.Value.MayWriteCheckpoint(true);
                 t.Value.Close();
             }
 
@@ -201,6 +204,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     if (t.CommitNeeded)
                     {
                         t.Commit();
+                        t.MayWriteCheckpoint(false);
                         ++committed;
                     }
                 }
@@ -249,6 +253,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     partitionsToTaskId.Remove(part);
                 }
                 task.Close();
+                task.MayWriteCheckpoint(true);
             }
             activeTasks.Clear();
         }
@@ -278,7 +283,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 var restored = changelogReader.CompletedChangelogs;
                 foreach(var task in activeTasksWithStateStore)
                 {
-                    if (restored.All(r => task.ChangelogPartitions.Contains(r)))
+                    if (restored.Any() && restored.All(r => task.ChangelogPartitions.Contains(r)))
                         task.CompleteRestoration();
                     else
                         allRunning = false;
