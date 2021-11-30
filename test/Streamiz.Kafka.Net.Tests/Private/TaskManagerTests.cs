@@ -367,7 +367,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             tasks.Add(task.Id, task);
 
             taskManager.TryToCompleteRestoration();
-            storeChangelogReader.Restore(tasks);
+            storeChangelogReader.Restore();
             Assert.IsTrue(taskManager.TryToCompleteRestoration());
 
 
@@ -409,7 +409,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             tasks.Add(task.Id, task);
 
             Assert.IsFalse(taskManager.TryToCompleteRestoration());
-            storeChangelogReader.Restore(tasks);
+            storeChangelogReader.Restore();
             Assert.IsTrue(taskManager.TryToCompleteRestoration());
 
             var store = task.GetStore("store");

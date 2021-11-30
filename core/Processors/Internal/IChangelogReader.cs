@@ -5,7 +5,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal interface IChangelogReader : IChangelogRegister
     {
-        void Restore(IDictionary<TaskId, ITask> tasks);
+        void Restore();
         void Clear();
         bool IsEmpty { get; }
         IEnumerable<TopicPartition> CompletedChangelogs { get; }

@@ -283,7 +283,7 @@ namespace Streamiz.Kafka.Net.Processors
                         SetState(ThreadState.RUNNING);
                 }
 
-                changelogReader.Restore(manager.Tasks);
+                changelogReader.Restore();
             }
         }
 

@@ -40,6 +40,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly static long DEFAULT_OFFSET_UPDATE_MS = (long)TimeSpan.FromMinutes(5L).TotalMilliseconds;
         private readonly long pollTimeMs;
         private readonly long maxPollRestoringRecords;
+        // NOT USED AT TIME
         private readonly long updateOffsetTimeMs;
         private long lastUpdateOffsetSend = 0;
 
@@ -100,9 +101,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         // 1 - Init changelogs if new changelogs was added and needs initialization
         // 2 - If all changelogs is restored, return
         // 3 - If any restoring changelogs, read from restore customer and process them
-        public void Restore(IDictionary<TaskId, ITask> tasks)
+        public void Restore()
         {
-            InitChangelogs(tasks, RegisteredChangelogs);
+            InitChangelogs(RegisteredChangelogs);
 
             if (AllChangelogsCompleted)
             {
@@ -261,7 +262,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
         }
 
-        private void InitChangelogs(IDictionary<TaskId, ITask> tasks, IEnumerable<ChangelogMetadata> registeredChangelogs)
+        private void InitChangelogs(IEnumerable<ChangelogMetadata> registeredChangelogs)
         {
             if (!registeredChangelogs.Any())
                 return;
