@@ -4,7 +4,10 @@ using System.Text;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
-    class ThreadStateTests
+    public class ThreadStateTests
     {
+        public ThreadStateTests()
+        {
+        }
     }
 }
