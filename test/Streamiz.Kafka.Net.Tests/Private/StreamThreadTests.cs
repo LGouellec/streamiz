@@ -14,7 +14,7 @@ using System.Linq;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
-    // TODO : add test, topology statefull,  topic 2 parts, 2 threads -> publish data in each parts
+    // TODO : 1.2.0 add test, topology statefull,  topic 2 parts, 2 threads -> publish data in each parts
     // Thread 1 died, Thread 2 restore part 0, process new records, states updated
 
     public class StreamThreadTests

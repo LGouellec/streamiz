@@ -57,7 +57,14 @@ namespace Streamiz.Kafka.Net.State
             {
                 try
                 {
-                    using (StreamReader fileReader = new StreamReader(path))
+                    string checkpointFilePath = path;
+                    if (!File.Exists(path) && File.Exists(RecoveryFileName(path)))
+                    {
+                        checkpointFilePath = RecoveryFileName(path);
+                        logger.Warn($"Read checkpoint offsets from recovery file : {checkpointFilePath}");
+                    }
+
+                    using (StreamReader fileReader = new StreamReader(checkpointFilePath))
                     {
                         int version = ReadInt(fileReader);
                         switch (version)
@@ -119,7 +126,7 @@ namespace Streamiz.Kafka.Net.State
 
             lock (_lock)
             {
-                String tmpFile = String.Concat(path, ".tmp");
+                string tmpFile = string.Concat(path, ".tmp");
                 using (var fileStream = File.Create(tmpFile))
                 using (var writerStream = new StreamWriter(fileStream))
                 {
@@ -136,7 +143,11 @@ namespace Streamiz.Kafka.Net.State
                     writerStream.Flush();
                     fileStream.Flush();
                 }
-                File.Move(tmpFile, path);
+
+                if (File.Exists(path))
+                    File.Replace(tmpFile, path, RecoveryFileName(path));
+                else
+                    File.Move(tmpFile, path);
             }
         }
 
@@ -146,6 +157,8 @@ namespace Streamiz.Kafka.Net.State
         }
 
         #region Private
+
+        private string RecoveryFileName(string path) => string.Concat(path, ".rec");
 
         private void WriteEntry(StreamWriter fileStream, TopicPartition key, long value)
         {

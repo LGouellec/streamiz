@@ -4,18 +4,21 @@ using System.IO;
 using Confluent.Kafka;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.InMemory;
+using static Streamiz.Kafka.Net.Processors.Internal.StoreChangelogReader;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
-    // TODO : finish
+    // TODO : 1.2.0, restore from recovery, restore from scratch, restore from offset invalid ...
     public class StoreChangelogReaderTests
     {
         private string stateDir;
+        private string changelogTopic;
         private IStreamConfig config;
         private SyncKafkaSupplier supplier;
         private InMemoryKeyValueStore store;
@@ -36,8 +39,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
             var topicPart = new TopicPartition("topic", 0);
+            changelogTopic = "store-changelog-topic";
             var changelogsTopics = new Dictionary<string, string>();
-            changelogsTopics.Add("store", "store-changelog-topic");
+            changelogsTopics.Add("store", changelogTopic);
             var id = new TaskId
             {
                 Id = 0,
@@ -54,7 +58,21 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 new OffsetCheckpointFile(Path.Combine(config.StateDir, config.ApplicationId, $"{id.Id}-{id.Partition}"))
             );
 
-            stateMgr.Register(store, (k, v) => Console.WriteLine($"{k}-{v}"));
+            stateMgr.Register(store, (k, v) => store.Put(k, v));
+
+
+            Message<byte[], byte[]> CreateMessage(string topic, string key, string value)
+            {
+                StringSerDes stringSerDes = new StringSerDes();
+                return new Message<byte[], byte[]>
+                {
+                    Key = stringSerDes.Serialize(key, new SerializationContext(MessageComponentType.Key, topic)),
+                    Value = stringSerDes.Serialize(value, new SerializationContext(MessageComponentType.Key, topic))
+                };
+            }
+
+            producer.Produce(changelogTopic, CreateMessage(changelogTopic, "key1", "value1"));
+            producer.Produce(changelogTopic, CreateMessage(changelogTopic, "key2", "value2"));
         }
 
         [TearDown]
@@ -65,9 +83,24 @@ namespace Streamiz.Kafka.Net.Tests.Private
         }
 
         [Test]
-        public void test()
+        public void RestoreComplete()
         {
             storeChangelogReader.Restore();
+
+            Assert.AreEqual(2, store.ApproximateNumEntries());
+
+            var metadata = storeChangelogReader.GetMetadata(new TopicPartition(changelogTopic, 0));
+            Assert.IsNotNull(metadata);
+            Assert.AreEqual(ChangelogState.COMPLETED, metadata.ChangelogState);
+            Assert.AreEqual(2, metadata.RestoreEndOffset);
+            Assert.AreEqual(2, metadata.TotalRestored);
+        }
+
+
+        [Test]
+        public void RegisterFailed()
+        {
+            Assert.Throws<StreamsException>(() => storeChangelogReader.Register(new TopicPartition("test", 0), stateMgr));
         }
     }
 }

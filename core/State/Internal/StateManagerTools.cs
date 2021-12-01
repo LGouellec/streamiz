@@ -4,9 +4,9 @@ using Confluent.Kafka;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
-    public static class StateManagerTools
+    internal static class StateManagerTools
     {
-        static long OFFSET_DELTA_THRESHOLD_FOR_CHECKPOINT = 10_000L;
+        public static long OFFSET_DELTA_THRESHOLD_FOR_CHECKPOINT = 10_000L;
 
         static StateManagerTools()
         {

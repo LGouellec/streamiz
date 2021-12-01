@@ -299,7 +299,7 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         /// <param name="config">Topic configuration dictionnary, can be null</param>
         /// <returns>Itself</returns>
-        public Materialized<K, V, S> WithLoggingEnabled(IDictionary<string, string> config)
+        public Materialized<K, V, S> WithLoggingEnabled(IDictionary<string, string> config = null)
         {
             LoggingEnabled = true;
             TopicConfig = config ?? new Dictionary<string, string>();
