@@ -165,6 +165,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 log.Debug($"{logPrefix}Closing storage engine {state.Key}");
                 state.Value.Store.Close();
             }
+
+            registeredStores.Clear();
         }
 
         public IStateStore GetStore(string name)
