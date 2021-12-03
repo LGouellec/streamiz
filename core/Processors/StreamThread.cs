@@ -281,7 +281,7 @@ namespace Streamiz.Kafka.Net.Processors
 
                 if (manager.TryToCompleteRestoration())
                 {
-                    log.Info($"Restoration took {DateTime.Now.GetMilliseconds() - LastPartitionAssignedTime} for all tasks {string.Join(",", manager.ActiveTaskIds)}");
+                    log.Info($"Restoration took {DateTime.Now.GetMilliseconds() - LastPartitionAssignedTime}ms for all tasks {string.Join(",", manager.ActiveTaskIds)}");
                     if(State == ThreadState.PARTITIONS_ASSIGNED)
                         SetState(ThreadState.RUNNING);
                 }

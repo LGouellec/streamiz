@@ -456,7 +456,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void StreamThreadRestorationPhase()
         {
-            TestContext.Out.WriteLine("djdjkfkjf");
+            var timeout = TimeSpan.FromSeconds(10);
             var source = new System.Threading.CancellationTokenSource();
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-thread-restoration";
@@ -508,11 +508,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 Value = serdes.Serialize("coucou", new SerializationContext())
             });
 
+            var now = DateTime.Now;
             do
             {
                 //WAIT STREAMTHREAD PROCESS MESSAGE
                 System.Threading.Thread.Sleep(100);
-            } while (thread.State != ThreadState.RUNNING && thread.State != ThreadState.RUNNING);
+            } while (now.Add(timeout) > DateTime.Now && thread.State != ThreadState.RUNNING && thread.State != ThreadState.RUNNING);
 
             // 2 CONSUMER FOR THE SAME GROUP ID => TOPIC WITH 2 PARTITIONS
             Assert.AreEqual(1, thread.ActiveTasks.Count());
@@ -522,8 +523,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             {
                 //WAIT STREAMTHREAD PROCESS MESSAGE
                 System.Threading.Thread.Sleep(100);
-            } while (thread.ActiveTasks.ToList()[0].State != TaskState.RUNNING &&
-                    thread2.ActiveTasks.ToList()[0].State != TaskState.RUNNING);
+            } while (now.Add(timeout) > DateTime.Now && thread.ActiveTasks.ToList()[0].State != TaskState.RUNNING &&
+                     thread2.ActiveTasks.ToList()[0].State != TaskState.RUNNING);
 
             var storeThread1 = thread.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
             var storeThread2 = thread2.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
@@ -556,8 +557,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             {
                 //WAIT STREAMTHREAD PROCESS MESSAGE
                 System.Threading.Thread.Sleep(100);
-            } while (thread.ActiveTasks.ToList()[0].State != TaskState.RUNNING &&
-                    thread.ActiveTasks.ToList()[1].State != TaskState.RUNNING);
+            } while (now.Add(timeout) > DateTime.Now && thread.ActiveTasks.ToList()[0].State != TaskState.RUNNING &&
+                     thread.ActiveTasks.ToList()[1].State != TaskState.RUNNING);
 
 
             var storeThreadTask1 = thread.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;

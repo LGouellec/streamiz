@@ -292,7 +292,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             restoreConsumer.Assign(topicPartitions);
 
             log.Debug($"Added partitions {string.Join(",", newPartitions.Select(c => $"{c.Topic}-{c.Partition}"))} " +
-                $"to the restore consumer, current assignment is {topicPartitions.Select(c => $"{c.Topic}-{c.Partition}")}");
+                $"to the restore consumer, current assignment is {string.Join(",", topicPartitions.Select(c => $"{c.Topic}-{c.Partition}"))}");
 
             foreach (var r in registeredChangelogs)
                 r.ChangelogState = ChangelogState.RESTORING;

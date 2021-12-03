@@ -35,8 +35,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly IDictionary<TaskId, StreamTask> activeTasks = new Dictionary<TaskId, StreamTask>();
         private readonly IDictionary<TaskId, StreamTask> revokedTasks = new Dictionary<TaskId, StreamTask>();
 
-        public IEnumerable<StreamTask> ActiveTasks => activeTasks.Values;
-        public IEnumerable<StreamTask> RevokedTasks => revokedTasks.Values;
+        public IEnumerable<StreamTask> ActiveTasks => activeTasks.Values.ToList();
+        public IEnumerable<StreamTask> RevokedTasks => revokedTasks.Values.ToList();
         public IDictionary<TaskId, ITask> Tasks => activeTasks.ToDictionary(i => i.Key, i => (ITask)i.Value);
 
         public IConsumer<byte[], byte[]> Consumer { get; internal set; }
