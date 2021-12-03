@@ -63,7 +63,10 @@ namespace Streamiz.Kafka.Net.Processors
                 producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig(GetThreadProducerClientId(threadId)));
             }
 
-            var restoreConsumer = kafkaSupplier.GetRestoreConsumer(configuration.ToConsumerConfig(GetRestoreConsumerClientId(customerID)));
+            var restoreConfig = configuration.ToConsumerConfig(GetRestoreConsumerClientId(customerID));
+            restoreConfig.GroupId = $"{configuration.ApplicationId}-restore-group";
+            var restoreConsumer = kafkaSupplier.GetRestoreConsumer(restoreConfig);
+
             var storeChangelogReader = new StoreChangelogReader(
                 configuration,
                 restoreConsumer);
@@ -289,7 +292,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         private TimeSpan GetTimeout()
         {
-            if (State == ThreadState.PARTITIONS_ASSIGNED || State == ThreadState.PARTITIONS_REVOKED)
+            if (State == ThreadState.PARTITIONS_ASSIGNED || State == ThreadState.PARTITIONS_REVOKED || State == ThreadState.PENDING_SHUTDOWN)
                 return TimeSpan.Zero;
             if (State == ThreadState.RUNNING || State == ThreadState.STARTING)
                 return consumeTimeout;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.Crosscutting
 {
@@ -69,6 +70,19 @@ namespace Streamiz.Kafka.Net.Crosscutting
         {
             foreach (var i in collections)
                 action(i);
+        }
+
+        internal static bool ContainsAll<T>(this IEnumerable<T> source, IEnumerable<T> sink)
+        {
+            bool res = true;
+            foreach (var t in source)
+            {
+                res = sink.Contains(t);
+                if (!res)
+                    return false;
+            }
+
+            return true;
         }
     }
 }

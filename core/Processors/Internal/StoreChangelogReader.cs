@@ -287,9 +287,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             // Assign new set of partitions
             var newPartitions = registeredChangelogs.Select(c => c.StoreMetadata.ChangelogTopicPartition).ToList();
-            var topicPartitions = restoreConsumer.Assignment;
+            var topicPartitions = new List<TopicPartition>(restoreConsumer.Assignment);
             topicPartitions.AddRange(newPartitions);
-            restoreConsumer.Assign(topicPartitions.ToList());
+            restoreConsumer.Assign(topicPartitions);
 
             log.Debug($"Added partitions {string.Join(",", newPartitions.Select(c => $"{c.Topic}-{c.Partition}"))} " +
                 $"to the restore consumer, current assignment is {topicPartitions.Select(c => $"{c.Topic}-{c.Partition}")}");

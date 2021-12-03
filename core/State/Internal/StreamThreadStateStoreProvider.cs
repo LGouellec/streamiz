@@ -58,6 +58,5 @@ namespace Streamiz.Kafka.Net.State.Internal
             }
             return stores;
         }
-
     }
 }

@@ -283,7 +283,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 var restored = changelogReader.CompletedChangelogs;
                 foreach(var task in activeTasksWithStateStore)
                 {
-                    if (restored.Any() && restored.All(r => task.ChangelogPartitions.Contains(r)))
+                    if (restored.Any() && task.ChangelogPartitions.ContainsAll(restored))
                         task.CompleteRestoration();
                     else
                         allRunning = false;

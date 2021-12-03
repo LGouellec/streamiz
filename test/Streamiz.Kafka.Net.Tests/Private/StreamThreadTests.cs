@@ -1,22 +1,21 @@
 ﻿using Confluent.Kafka;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
-using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State.Internal;
+using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
-    // TODO : 1.2.0 add test, topology statefull,  topic 2 parts, 2 threads -> publish data in each parts
-    // Thread 1 died, Thread 2 restore part 0, process new records, states updated
-
     public class StreamThreadTests
     {
         #region State Test
@@ -447,6 +446,140 @@ namespace Streamiz.Kafka.Net.Tests.Private
         #endregion
 
         #region StreamThread Commit Requested TODO
+
+        // TODO:
+
+        #endregion
+
+        #region StreamThread restore statefull topology
+
+        [Test]
+        public void StreamThreadRestorationPhase()
+        {
+            TestContext.Out.WriteLine("djdjkfkjf");
+            var source = new System.Threading.CancellationTokenSource();
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-thread-restoration";
+            config.Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
+            config.PollMs = 1;
+            config.StateDir = Path.Combine(".", Guid.NewGuid().ToString());
+
+            var consumeConfig = config.Clone();
+            consumeConfig.ApplicationId = "consume-test";
+
+            var serdes = new StringSerDes();
+            var builder = new StreamBuilder();
+            builder.Table("topic", RocksDb<string, string>.As("store").WithLoggingEnabled());
+
+            var topo = builder.Build();
+            topo.Builder.RewriteTopology(config);
+            topo.Builder.BuildTopology();
+
+            var supplier = new MockKafkaSupplier(2);
+            var producer = supplier.GetProducer(consumeConfig.ToProducerConfig());
+            var consumer = supplier.GetConsumer(consumeConfig.ToConsumerConfig("test-consum"), null);
+
+            var internalTopicManager = new DefaultTopicManager(config, supplier.GetAdmin(config.ToAdminConfig("admin")));
+            InternalTopicManagerUtils.CreateChangelogTopicsAsync(internalTopicManager, topo.Builder).GetAwaiter();
+
+            var thread = StreamThread.Create(
+                "thread-0", "c0",
+                topo.Builder, config,
+                supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                0) as StreamThread;
+
+            var thread2 = StreamThread.Create(
+                "thread-1", "c1",
+                topo.Builder, config,
+                supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                1) as StreamThread;
+
+            thread.Start(source.Token);
+            thread2.Start(source.Token);
+
+            producer.Produce(new TopicPartition("topic", 0), new Confluent.Kafka.Message<byte[], byte[]>
+            {
+                Key = serdes.Serialize("key1", new SerializationContext()),
+                Value = serdes.Serialize("coucou", new SerializationContext())
+            });
+            producer.Produce(new TopicPartition("topic", 1), new Confluent.Kafka.Message<byte[], byte[]>
+            {
+                Key = serdes.Serialize("key2", new SerializationContext()),
+                Value = serdes.Serialize("coucou", new SerializationContext())
+            });
+
+            do
+            {
+                //WAIT STREAMTHREAD PROCESS MESSAGE
+                System.Threading.Thread.Sleep(100);
+            } while (thread.State != ThreadState.RUNNING && thread.State != ThreadState.RUNNING);
+
+            // 2 CONSUMER FOR THE SAME GROUP ID => TOPIC WITH 2 PARTITIONS
+            Assert.AreEqual(1, thread.ActiveTasks.Count());
+            Assert.AreEqual(1, thread2.ActiveTasks.Count());
+
+            do
+            {
+                //WAIT STREAMTHREAD PROCESS MESSAGE
+                System.Threading.Thread.Sleep(100);
+            } while (thread.ActiveTasks.ToList()[0].State != TaskState.RUNNING &&
+                    thread2.ActiveTasks.ToList()[0].State != TaskState.RUNNING);
+
+            var storeThread1 = thread.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+            var storeThread2 = thread2.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+
+            Assert.IsNotNull(storeThread1);
+            Assert.IsNotNull(storeThread2);
+
+            var totalItemsSt1 = storeThread1.All().ToList();
+            var totalItemsSt2 = storeThread2.All().ToList();
+
+            Assert.AreEqual(1, totalItemsSt1.Count);
+            Assert.AreEqual(1, totalItemsSt2.Count);
+
+            // Thread2 closed, partitions assigned from thread2 rebalance to thread1
+            // Thread1 need to restore state store
+            thread2.Dispose();
+
+            producer.Produce(new TopicPartition("topic", 1), new Confluent.Kafka.Message<byte[], byte[]>
+            {
+                Key = serdes.Serialize("key3", new SerializationContext()),
+                Value = serdes.Serialize("coucou", new SerializationContext())
+            });
+
+            //WAIT STREAMTHREAD PROCESS MESSAGE
+            System.Threading.Thread.Sleep(500);
+
+            Assert.AreEqual(2, thread.ActiveTasks.Count());
+
+            do
+            {
+                //WAIT STREAMTHREAD PROCESS MESSAGE
+                System.Threading.Thread.Sleep(100);
+            } while (thread.ActiveTasks.ToList()[0].State != TaskState.RUNNING &&
+                    thread.ActiveTasks.ToList()[1].State != TaskState.RUNNING);
+
+
+            var storeThreadTask1 = thread.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+            var storeThreadTask2 = thread.ActiveTasks.ToList()[1].GetStore("store") as TimestampedKeyValueStore<string, string>;
+
+            Assert.IsNotNull(storeThreadTask1);
+            Assert.IsNotNull(storeThreadTask2);
+
+            var totalItemsSt1_0 = storeThreadTask1.All().ToList();
+            var totalItemsSt1_1 = storeThreadTask2.All().ToList();
+
+            Assert.AreEqual(1, totalItemsSt1_0.Count);
+            Assert.AreEqual(2, totalItemsSt1_1.Count);
+
+            source.Cancel();
+            thread.Dispose();
+
+            // Destroy in memory cluster
+            supplier.Destroy();
+
+            Directory.Delete(Path.Combine(config.StateDir), true);
+        }
 
         #endregion
     }

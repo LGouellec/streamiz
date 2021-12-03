@@ -57,6 +57,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         public void Assign(IEnumerable<TopicPartition> partitions)
         {
             cluster.Assign(this, partitions);
+            Assignment = partitions.ToList();
         }
 
         public void Close()
@@ -113,8 +114,10 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public Offset Position(TopicPartition partition)
         {
-            // TODO
-            throw new NotImplementedException();
+            var info = cluster.GetConsumerInformation(Name);
+            return info != null ?
+                info.TopicPartitionsOffset.FirstOrDefault(t => t.TopicPartition.Equals(partition)).OffsetConsumed :
+                Offset.Unset;
         }
 
         public WatermarkOffsets QueryWatermarkOffsets(TopicPartition topicPartition, TimeSpan timeout)
