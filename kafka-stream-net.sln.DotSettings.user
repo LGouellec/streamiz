@@ -1,6 +1,0 @@
-﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=fa92e210_002D44ea_002D48a9_002Daf1c_002Ddbca8404f387/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="StreamThreadRestorationPhase" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;TestAncestor&gt;
-    &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::.NETCoreApp,Version=v3.1::Streamiz.Kafka.Net.Tests.Private.StreamThreadTests.StreamThreadRestorationPhase&lt;/TestId&gt;
-  &lt;/TestAncestor&gt;
-&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
