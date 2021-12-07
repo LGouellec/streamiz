@@ -30,6 +30,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             c2.Subscribe(new List<string> { "topic1", "topic2" });
 
             c1.Consume();
+            c2.Consume();
             Assert.AreEqual(2, c1.Assignment.Count);
             Assert.AreEqual(2, c2.Assignment.Count);
         }

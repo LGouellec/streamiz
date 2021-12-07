@@ -1,9 +1,7 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=fff3d8a1_002D3538_002D4e47_002D85a2_002D1a1c00184c38/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Session" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=1fb0e074_002D4dde_002D4c9f_002Dabb6_002De0cd06efab4b/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Session" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;And&gt;
-    &lt;TestAncestor&gt;
-      &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::.NETCoreApp,Version=v3.1::Streamiz.Kafka.Net.Tests.Private.StreamThreadTests.StreamThreadRestorationPhase&lt;/TestId&gt;
-    &lt;/TestAncestor&gt;
+    &lt;Project Location="/Users/slegouellec/Repos/kafka-streams-dotnet/test/Streamiz.Kafka.Net.Tests" Presentation="&amp;lt;Test&amp;gt;\&amp;lt;Streamiz.Kafka.Net.Tests&amp;gt;" /&gt;
     &lt;Not&gt;
       &lt;TestAncestor&gt;
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.TestDriver.ClusterInMemoryTopologyDriverTests&lt;/TestId&gt;
@@ -822,6 +820,7 @@
     &lt;/Not&gt;
   &lt;/And&gt;
 &lt;/SessionState&gt;</s:String>
+	
 	
 	
 	
