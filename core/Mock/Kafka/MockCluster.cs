@@ -43,9 +43,14 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         public List<string> Topics { get; set; }
         public MockConsumer Consumer { get; set; }
         public IConsumerRebalanceListener RebalanceListener { get; set; }
-        public bool Assigned { get; set; } = false;
+        public bool Assigned { get; set; }
+        
         public List<MockTopicPartitionOffset> TopicPartitionsOffset { get; set; }
-
+        
+        public bool NeedRebalanceTriggered { get; set; }
+        public List<TopicPartitionOffset> PartitionsToRevoked { get; set; }
+        public List<TopicPartition> PartitionsToAssigned { get; set; }
+        
         public override int GetHashCode()
         {
             return Name.GetHashCode();
@@ -286,7 +291,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             }
         }
 
-        private void NeedRebalance2(string groupId)
+        private void NeedRebalance2(string groupId, string consumerName)
         {
             var partitionsToRevoked =
                 new Dictionary<MockConsumerInformation, List<TopicPartitionOffset>>();
@@ -411,70 +416,18 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             }
 
             // remove from metadata topicPartition & offsets
-            /*foreach (var consumerToRevoke in partitionsToRevoked)
+            foreach (var consumerToRevoke in partitionsToRevoked)
             {
-                foreach (var tpo in consumerToRevoke.Value)
-                {
-                    consumerToRevoke.Key.Partitions.Remove(tpo.TopicPartition);
-                    consumerToRevoke.Key.TopicPartitionsOffset.Remove(new MockTopicPartitionOffset
-                    {
-                        Partition = tpo.Partition.Value,
-                        Topic = tpo.Topic
-                    });
-                }
-            }*/
+                consumerToRevoke.Key.NeedRebalanceTriggered = true;
+                consumerToRevoke.Key.PartitionsToRevoked = consumerToRevoke.Value;
+            }
 
             // add to metadata topicPartition & offsets
-            /*foreach (var consumerToAssigned in partitionsToAssigned)
+            foreach (var consumerToAssigned in partitionsToAssigned)
             {
-                foreach (var tp in consumerToAssigned.Value)
-                {
-                    var groupOffset = GetGroupOffset(consumerToAssigned.Key.GroupId, tp);
-                    consumerToAssigned.Key.Partitions.Add(tp);
-                    consumerToAssigned.Key.TopicPartitionsOffset.Add(new MockTopicPartitionOffset
-                    {
-                        Partition = tp.Partition.Value,
-                        Topic = tp.Topic,
-                        IsPaused = false,
-                        OffsetComitted = groupOffset.Offset,
-                        OffsetConsumed = groupOffset.Offset
-                    });
-                    consumerToAssigned.Key.Assigned = true;
-                }
-            }*/
-
-            partitionsToRevoked.ForEach(c =>
-            {
-                c.Key.RebalanceListener?.PartitionsRevoked(c.Key.Consumer, c.Value);
-                foreach (var tpo in c.Value)
-                {
-                    c.Key.Partitions.Remove(tpo.TopicPartition);
-                    c.Key.TopicPartitionsOffset.Remove(new MockTopicPartitionOffset
-                    {
-                        Partition = tpo.Partition.Value,
-                        Topic = tpo.Topic
-                    });
-                }
-            });
-            
-            partitionsToAssigned.ForEach(c =>
-            {
-                c.Key.RebalanceListener?.PartitionsAssigned(c.Key.Consumer, c.Value);
-                foreach (var tp in c.Value)
-                {
-                    var groupOffset = GetGroupOffset(c.Key.GroupId, tp);
-                    c.Key.Partitions.Add(tp);
-                    c.Key.TopicPartitionsOffset.Add(new MockTopicPartitionOffset
-                    {
-                        Partition = tp.Partition.Value,
-                        Topic = tp.Topic,
-                        IsPaused = false,
-                        OffsetComitted = groupOffset.Offset,
-                        OffsetConsumed = groupOffset.Offset
-                    });
-                    c.Key.Assigned = true;
-                }
-            });
+                consumerToAssigned.Key.NeedRebalanceTriggered = true;
+                consumerToAssigned.Key.PartitionsToAssigned = consumerToAssigned.Value;
+            }
         }
         
         internal void Assign2(MockConsumer mockConsumer, IEnumerable<TopicPartition> topicPartitions)
@@ -604,13 +557,52 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             {
                 var c = consumers[mockConsumer.Name];
                 if (!c.Assigned) 
-                    NeedRebalance2(c.GroupId);
-                
+                    NeedRebalance2(c.GroupId, c.Name);
+
+                if (c.NeedRebalanceTriggered)
+                {
+                    if (c.PartitionsToRevoked != null && c.PartitionsToRevoked.Any())
+                    {
+                        foreach (var tp in c.PartitionsToRevoked)
+                        {
+                            c.Partitions.Remove(tp.TopicPartition);
+                            c.TopicPartitionsOffset.Remove(new MockTopicPartitionOffset
+                            {
+                                Partition = tp.Partition.Value,
+                                Topic = tp.Topic
+                            });
+                        }
+                        
+                        c.RebalanceListener?.PartitionsRevoked(c.Consumer, c.PartitionsToRevoked);
+                    }
+
+                    if (c.PartitionsToAssigned != null && c.PartitionsToAssigned.Any())
+                    {
+                        foreach (var tp in c.PartitionsToAssigned)
+                        {
+                            var groupOffset = GetGroupOffset(c.GroupId, tp);
+                            c.Partitions.Add(tp);
+                            c.TopicPartitionsOffset.Add(new MockTopicPartitionOffset
+                            {
+                                Partition = tp.Partition.Value,
+                                Topic = tp.Topic,
+                                IsPaused = false,
+                                OffsetComitted = groupOffset.Offset,
+                                OffsetConsumed = groupOffset.Offset
+                            });
+                        }
+
+                        c.Assigned = true;
+                        c.RebalanceListener?.PartitionsAssigned(c.Consumer, c.PartitionsToAssigned);
+                    }
+
+                    c.PartitionsToRevoked?.Clear();
+                    c.PartitionsToAssigned?.Clear();
+                }
                 
                 bool stop = false;
                 while (result == null && !stop)
                 {
-                    var topicPartitions = c.Partitions.ToList();
                     foreach (var p in c.Partitions)
                     {
                         if (timeout != TimeSpan.Zero && (dt + timeout) < DateTime.Now)
