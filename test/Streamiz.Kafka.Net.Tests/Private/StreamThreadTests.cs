@@ -457,7 +457,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
         public void StreamThreadRestorationPhase()
         {
             var timeout = TimeSpan.FromSeconds(2);
-            var source = new System.Threading.CancellationTokenSource();
+            var source1 = new System.Threading.CancellationTokenSource();
+            var source2 = new System.Threading.CancellationTokenSource();
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-thread-restoration";
             config.Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
@@ -494,8 +495,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 1) as StreamThread;
 
-            thread.Start(source.Token);
-            thread2.Start(source.Token);
+            thread.Start(source1.Token);
+            thread2.Start(source2.Token);
 
             producer.Produce(new TopicPartition("topic", 0), new Confluent.Kafka.Message<byte[], byte[]>
             {
@@ -509,24 +510,24 @@ namespace Streamiz.Kafka.Net.Tests.Private
             });
 
             var now = DateTime.Now;
+            
             do
             {
                 //WAIT STREAMTHREAD PROCESS MESSAGE
                 System.Threading.Thread.Sleep(100);
             } while (now.Add(timeout) > DateTime.Now && thread.State != ThreadState.RUNNING && thread2.State != ThreadState.RUNNING);
-
+            
+            
             // 2 CONSUMER FOR THE SAME GROUP ID => TOPIC WITH 2 PARTITIONS
             Assert.AreEqual(1, thread.ActiveTasks.Count());
             Assert.AreEqual(1, thread2.ActiveTasks.Count());
-
-            System.Threading.Thread.Sleep(300);
             
-            /*do
+            do
             {
                 //WAIT STREAMTHREAD PROCESS MESSAGE
                 System.Threading.Thread.Sleep(100);
             } while (now.Add(timeout) > DateTime.Now && thread.ActiveTasks.ToList()[0].State != TaskState.RUNNING &&
-                     thread2.ActiveTasks.ToList()[0].State != TaskState.RUNNING);*/
+                     thread2.ActiveTasks.ToList()[0].State != TaskState.RUNNING);
 
             var storeThread1 = thread.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
             var storeThread2 = thread2.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
@@ -542,6 +543,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             // Thread2 closed, partitions assigned from thread2 rebalance to thread1
             // Thread1 need to restore state store
+            source2.Cancel();
             thread2.Dispose();
 
             producer.Produce(new TopicPartition("topic", 1), new Confluent.Kafka.Message<byte[], byte[]>
@@ -555,13 +557,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             Assert.AreEqual(2, thread.ActiveTasks.Count());
 
-            /*do
+            do
             {
                 //WAIT STREAMTHREAD PROCESS MESSAGE
                 System.Threading.Thread.Sleep(100);
             } while (now.Add(timeout) > DateTime.Now && thread.ActiveTasks.ToList()[0].State != TaskState.RUNNING &&
                      thread.ActiveTasks.ToList()[1].State != TaskState.RUNNING);
-            */
 
             var storeThreadTask1 = thread.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
             var storeThreadTask2 = thread.ActiveTasks.ToList()[1].GetStore("store") as TimestampedKeyValueStore<string, string>;
@@ -575,7 +576,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.AreEqual(1, totalItemsSt1_0.Count);
             Assert.AreEqual(2, totalItemsSt1_1.Count);
 
-            source.Cancel();
+            source1.Cancel();
             thread.Dispose();
 
             // Destroy in memory cluster
