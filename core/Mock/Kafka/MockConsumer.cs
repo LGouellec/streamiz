@@ -41,7 +41,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void Assign(TopicPartition partition)
         {
-            cluster.Assign(this, new List<TopicPartition> { partition });
+            cluster.Assign2(this, new List<TopicPartition> { partition });
         }
 
         public void Assign(TopicPartitionOffset partition)
@@ -56,7 +56,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void Assign(IEnumerable<TopicPartition> partitions)
         {
-            cluster.Assign(this, partitions);
+            cluster.Assign2(this, partitions);
             Assignment = partitions.ToList();
         }
 
@@ -64,7 +64,6 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         {
             cluster.CloseConsumer(Name);
             Assignment.Clear();
-            Subscription.Clear();
         }
 
         public List<TopicPartitionOffset> Commit()
@@ -162,7 +161,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void Unassign()
         {
-            cluster.Unassign(this);
+            cluster.Unassign2(this);
             Assignment.Clear();
         }
 
