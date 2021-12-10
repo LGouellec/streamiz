@@ -2,6 +2,7 @@
 using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -31,9 +32,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly TaskCreator taskCreator;
         private readonly IAdminClient adminClient;
         private readonly IChangelogReader changelogReader;
-        private readonly IDictionary<TopicPartition, TaskId> partitionsToTaskId = new Dictionary<TopicPartition, TaskId>();
-        private readonly IDictionary<TaskId, StreamTask> activeTasks = new Dictionary<TaskId, StreamTask>();
-        private readonly IDictionary<TaskId, StreamTask> revokedTasks = new Dictionary<TaskId, StreamTask>();
+        private readonly ConcurrentDictionary<TopicPartition, TaskId> partitionsToTaskId = new ConcurrentDictionary<TopicPartition, TaskId>();
+        private readonly ConcurrentDictionary<TaskId, StreamTask> activeTasks = new ConcurrentDictionary<TaskId, StreamTask>();
+        private readonly ConcurrentDictionary<TaskId, StreamTask> revokedTasks = new ConcurrentDictionary<TaskId, StreamTask>();
 
         public IEnumerable<StreamTask> ActiveTasks => activeTasks.Values.ToList();
         public IEnumerable<StreamTask> RevokedTasks => revokedTasks.Values.ToList();
@@ -71,9 +72,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 {
                     var t = revokedTasks[taskId];
                     t.Resume();
-                    activeTasks.Add(taskId, t);
-                    revokedTasks.Remove(taskId);
-                    partitionsToTaskId.Add(partition, taskId);
+                    activeTasks.TryAdd(taskId, t);
+                    revokedTasks.TryRemove(taskId, out StreamTask removeTask);
+                    partitionsToTaskId.TryAdd(partition, taskId);
                 }
                 else if (!activeTasks.ContainsKey(taskId))
                 {
@@ -81,7 +82,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                         tasksToBeCreated[taskId].Add(partition);
                     else
                         tasksToBeCreated.Add(taskId, new List<TopicPartition> { partition });
-                    partitionsToTaskId.Add(partition, taskId);
+                    partitionsToTaskId.TryAdd(partition, taskId);
                 }
             }
 
@@ -93,7 +94,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     task.GroupMetadata = Consumer.ConsumerGroupMetadata;
                     task.InitializeStateStores();
                     task.InitializeTopology();
-                    activeTasks.Add(task.Id, task);
+                    activeTasks.TryAdd(task.Id, task);
                 }
             }
         }
@@ -111,10 +112,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     task.MayWriteCheckpoint(false);
                     if (!revokedTasks.ContainsKey(taskId))
                     {
-                        revokedTasks.Add(taskId, task);
+                        revokedTasks.TryAdd(taskId, task);
                     }
-                    partitionsToTaskId.Remove(p);
-                    activeTasks.Remove(taskId);
+                    
+                    partitionsToTaskId.TryRemove(p, out TaskId removeId);
+                    activeTasks.TryRemove(taskId, out StreamTask removeTask);
                 }
             }
         }
@@ -250,7 +252,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 task.Suspend();
                 foreach(var part in task.Partition)
                 {
-                    partitionsToTaskId.Remove(part);
+                    partitionsToTaskId.Remove(part, out TaskId taskId);
                 }
                 task.Close();
                 task.MayWriteCheckpoint(true);

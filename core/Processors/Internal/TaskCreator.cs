@@ -26,7 +26,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public override StreamTask CreateTask(IConsumer<byte[], byte[]> consumer, TaskId id, IEnumerable<TopicPartition> partitions)
         {
-            log.Debug($"Created task {id} with assigned partition {string.Join(",", partitions)}");
+            log.Debug($"Creating task {id} with assigned partition {string.Join(",", partitions)}");
             return new StreamTask(
                 threadId,
                 id,

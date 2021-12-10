@@ -237,6 +237,8 @@ namespace Streamiz.Kafka.Net.Processors
                             if (records.Any())
                                 log.Debug($"Processing {count} records in {DateTime.Now - n}");
                         }
+                        else
+                            Thread.Sleep((int)consumeTimeout.TotalMilliseconds);
                     }
                     catch (TaskMigratedException e)
                     {
