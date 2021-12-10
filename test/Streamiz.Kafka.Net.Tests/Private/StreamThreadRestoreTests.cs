@@ -40,7 +40,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             mockKafkaSupplier = new MockKafkaSupplier(2, 200);
             
             var builder = new StreamBuilder();
-            builder.Table("topic", RocksDb<string, string>.As("store").WithLoggingEnabled());
+            builder.Table("topic", InMemory<string, string>.As("store").WithLoggingEnabled());
 
             var topo = builder.Build();
             topo.Builder.RewriteTopology(config);
@@ -76,7 +76,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             token1.Cancel();
             thread1.Dispose();
             mockKafkaSupplier.Destroy();
-            Directory.Delete(Path.Combine(config.StateDir), true);
+            //Directory.Delete(Path.Combine(config.StateDir), true);
         }
 
         
