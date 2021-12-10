@@ -97,6 +97,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                             }
 
                             consumer.Key.RebalanceListener?.PartitionsAssigned(consumer.Key.Consumer, consumer.Key.PartitionsToAssigned);
+                            consumer.Key.PartitionsToAssigned?.Clear();
                         }
                         
                         consumer.Key.Assigned = true;

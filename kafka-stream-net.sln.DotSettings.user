@@ -1,9 +1,7 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=c8e2de8e_002Da709_002D40db_002Dbdff_002D29a2a2cb77fa/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Session" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=5e00efb6_002Db502_002D4a5f_002D8f66_002D1d8527f9d4ab/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Session" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;And&gt;
-    &lt;TestAncestor&gt;
-      &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::.NETCoreApp,Version=v3.1::Streamiz.Kafka.Net.Tests.Private.StreamThreadRestoreTests.StreamThreadRestorationPhase&lt;/TestId&gt;
-    &lt;/TestAncestor&gt;
+    &lt;Project Location="/Users/slegouellec/Repos/kafka-streams-dotnet/test/Streamiz.Kafka.Net.Tests" Presentation="&amp;lt;Test&amp;gt;\&amp;lt;Streamiz.Kafka.Net.Tests&amp;gt;" /&gt;
     &lt;Not&gt;
       &lt;TestAncestor&gt;
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.SerDes.ValueAndTimestampSerdesTests.InnerSerdesNull&lt;/TestId&gt;
@@ -821,10 +819,13 @@
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.SerDes.ValueAndTimestampSerdesTests.SerializeData&lt;/TestId&gt;
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.SerDes.ValueAndTimestampSerdesTests.DeserializeNullData&lt;/TestId&gt;
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.SerDes.ValueAndTimestampSerdesTests.DeserializeData&lt;/TestId&gt;
+        &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.TestDriver.MockClusterTests.TestConsumeRebalance2&lt;/TestId&gt;
       &lt;/TestAncestor&gt;
     &lt;/Not&gt;
   &lt;/And&gt;
 &lt;/SessionState&gt;</s:String>
+	
+	
 	
 	
 	

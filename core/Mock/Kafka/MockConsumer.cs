@@ -169,6 +169,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         {
             cluster.Unsubscribe(this);
             Subscription.Clear();
+            Assignment.Clear();
         }
 
         public ConsumeResult<byte[], byte[]> Consume(int millisecondsTimeout)

@@ -247,8 +247,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                     consumersGroup.Remove(c.Name);
 
                     // 2. remove consumer metadata
-                    MockConsumerInformation m = null;
-                    consumers.TryRemove(mockConsumer.Name, out m);
+                    consumers.TryRemove(mockConsumer.Name, out MockConsumerInformation m);
 
                     // 3. set flag assigned = false, other consumer in group for rebalance next time
                     foreach (var _c in consumersGroup)
@@ -659,7 +658,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         }
 
         internal ConsumeResult<byte[], byte[]> Consume(MockConsumer mockConsumer, CancellationToken cancellationToken)
-            => Consume(mockConsumer, TimeSpan.FromSeconds(10));
+            => Consume(mockConsumer, TimeSpan.FromSeconds(1));
 
         #endregion
 
