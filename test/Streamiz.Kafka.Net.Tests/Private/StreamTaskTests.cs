@@ -215,9 +215,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var serdes = new StringSerDes();
             var builder = new StreamBuilder();
 
-            builder.Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()))
+            builder.Table<string, string>("topic", InMemory<string, string>.As("store"))
+                .MapValues((k, v) => v.ToUpper())
+                .ToStream()
                 .To("topic2");
+
 
             TaskId id = new TaskId { Id = 0, Partition = 0 };
             var topology = builder.Build();
@@ -271,8 +273,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 task.Commit();
             }
 
+            Assert.IsNotNull(task.GetStore("store"));
             task.Suspend();
+            Assert.IsNull(task.GetStore("store"));
             task.Resume();
+            Assert.IsNotNull(task.GetStore("store"));
             task.AddRecords(messages);
 
             Assert.IsTrue(task.CanProcess(DateTime.Now.GetMilliseconds()));

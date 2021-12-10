@@ -532,6 +532,8 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                         });
                     }
                 }
+
+                c.Assigned = true;
             }
         }
 

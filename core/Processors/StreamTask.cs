@@ -294,7 +294,6 @@ namespace Streamiz.Kafka.Net.Processors
         {
             log.Debug($"{logPrefix}Initializing state stores.");
             RegisterStateStores();
-            // state = TaskState.RESTORING;
             return false;
         }
 
@@ -309,6 +308,7 @@ namespace Streamiz.Kafka.Net.Processors
             else if (state == TaskState.SUSPENDED)
             {
                 log.Debug($"{logPrefix}Resuming");
+                InitializeStateStores();
                 if (eosEnabled)
                 {
                     if (producer != null)
@@ -350,12 +350,10 @@ namespace Streamiz.Kafka.Net.Processors
                     collector.Close();
                     producer = null;
                 }
+                
+                FlushState();
+                CloseStateManager();
 
-                TransitTo(TaskState.SUSPENDED);
-            }
-            else if (state == TaskState.RESTORING)
-            {
-                log.Info($"{logPrefix}Suspended restoring");
                 TransitTo(TaskState.SUSPENDED);
             }
             else if (state == TaskState.RUNNING)
@@ -378,6 +376,9 @@ namespace Streamiz.Kafka.Net.Processors
                         collector.Close();
                         producer = null;
                     }
+                    
+                    FlushState();
+                    CloseStateManager();
                 }
 
                 log.Info($"{logPrefix}Suspended running");
