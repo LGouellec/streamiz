@@ -131,12 +131,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             AssertExtensions.WaitUntil(
                 () => storeThread1.All().ToList().Count == 1,
-                TimeSpan.FromSeconds(1),
+                TimeSpan.FromSeconds(5),
                 TimeSpan.FromMilliseconds(20));
             
             AssertExtensions.WaitUntil(
                 () => storeThread2.All().ToList().Count == 1,
-                TimeSpan.FromSeconds(1),
+                TimeSpan.FromSeconds(5),
                 TimeSpan.FromMilliseconds(20));
             
             var totalItemsSt1 = storeThread1.All().ToList();
