@@ -1,7 +1,8 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=5e00efb6_002Db502_002D4a5f_002D8f66_002D1d8527f9d4ab/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Session" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=f63f05e3_002D44b5_002D4bac_002D96bd_002Ddef8aeff4de2/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Session" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;And&gt;
     &lt;Project Location="/Users/slegouellec/Repos/kafka-streams-dotnet/test/Streamiz.Kafka.Net.Tests" Presentation="&amp;lt;Test&amp;gt;\&amp;lt;Streamiz.Kafka.Net.Tests&amp;gt;" /&gt;
+    &lt;Namespace&gt;Streamiz.Kafka.Net.Tests&lt;/Namespace&gt;
     &lt;Not&gt;
       &lt;TestAncestor&gt;
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.SerDes.ValueAndTimestampSerdesTests.InnerSerdesNull&lt;/TestId&gt;
@@ -111,8 +112,6 @@
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.StreamThreadTests.TestStartingState&lt;/TestId&gt;
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.StreamThreadTests.TestCreatedState&lt;/TestId&gt;
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.StreamThreadTests&lt;/TestId&gt;
-        &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.StreamThreadRestoreTests.StreamThreadRestorationPhase&lt;/TestId&gt;
-        &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.StreamThreadRestoreTests&lt;/TestId&gt;
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.StreamThreadRebalanceTests.StreamThreadNormalWorkflowWithRebalancing&lt;/TestId&gt;
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.StreamThreadRebalanceTests&lt;/TestId&gt;
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.StreamTaskTests.StreamTaskWrittingCheckpoint&lt;/TestId&gt;
@@ -814,16 +813,28 @@
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Public.FunctionWrapperTests.FunctionKeyValueMapper&lt;/TestId&gt;
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Public.FunctionWrapperTests.FunctionValueMapperWithKey&lt;/TestId&gt;
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Public.FunctionWrapperTests.FunctionInitializerMapper&lt;/TestId&gt;
+        &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.StreamThreadRestoreInMemoryTests&lt;/TestId&gt;
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Public.FunctionWrapperTests.FunctionAggregatorMapper&lt;/TestId&gt;
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.SerDes.ValueAndTimestampSerdesTests.SerializeNullData&lt;/TestId&gt;
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.SerDes.ValueAndTimestampSerdesTests.SerializeData&lt;/TestId&gt;
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.SerDes.ValueAndTimestampSerdesTests.DeserializeNullData&lt;/TestId&gt;
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.SerDes.ValueAndTimestampSerdesTests.DeserializeData&lt;/TestId&gt;
         &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.TestDriver.MockClusterTests.TestConsumeRebalance2&lt;/TestId&gt;
+        &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.TestDriver.MockClusterTests.TestConsumeSaveOffset&lt;/TestId&gt;
+        &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.TestDriver.MockClusterTests.TestPauseResumeAssign&lt;/TestId&gt;
+        &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.StreamThreadRestoreInMemoryTests.StreamThreadRestorationPhaseStartDifferent&lt;/TestId&gt;
+        &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.StreamThreadRestoreInMemoryTests.StreamThreadRestorationPhaseStartParallel&lt;/TestId&gt;
+        &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.StreamThreadRestoreRocksDbTests&lt;/TestId&gt;
+        &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.StreamThreadRestoreRocksDbTests.StreamThreadRestorationPhaseStartDifferent&lt;/TestId&gt;
+        &lt;TestId&gt;NUnit3x::6AE2D31F-20D4-4A9B-8B90-62DE180C7E5C::net5.0::Streamiz.Kafka.Net.Tests.Private.StreamThreadRestoreRocksDbTests.StreamThreadRestorationPhaseStartParallel&lt;/TestId&gt;
       &lt;/TestAncestor&gt;
     &lt;/Not&gt;
   &lt;/And&gt;
 &lt;/SessionState&gt;</s:String>
+	
+	
+	
+	
 	
 	
 	

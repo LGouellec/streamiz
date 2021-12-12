@@ -72,6 +72,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         public TopicPartition TopicPartition { get; set; }
     }
 
+    // TODO : refactor all metadata from mock cluster, pause, resume, offsets ...
     internal class MockCluster
     {
         internal readonly int DEFAULT_NUMBER_PARTITIONS;
@@ -114,6 +115,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             {
                 var t = new MockTopic(topic, partitions);
                 topics.TryAddOrUpdate(topic, t);
+                log.Debug($"Created topic {topic} with {partitions} partitions");
             }
         }
 
@@ -129,6 +131,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                         if (partitions.Contains(tpo.TopicPartition))
                         {
                             tpo.IsPaused = true;
+                            log.Debug($"Consumer {mockConsumer.Name} pause partition {tpo.TopicPartition}");
                         }
                     }
                 }
@@ -139,8 +142,11 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         {
             if (consumers.ContainsKey(name))
             {
+                log.Debug($"Closing consumer {name}");
                 Unsubscribe(consumers[name].Consumer);
                 consumers[name].Consumer.Subscription.Clear();
+                log.Debug($"Consumer {name} close");
+
             }
         }
 
@@ -156,6 +162,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                         if (partitions.Contains(tpo.TopicPartition))
                         {
                             tpo.IsPaused = false;
+                            log.Debug($"Consumer {mockConsumer.Name} resume partition {tpo.TopicPartition}");
                         }
                     }
                 }
@@ -182,6 +189,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                             }
                             else
                                 tpos.OffsetConsumed = tpo.Offset;
+                            log.Debug($"Consumer {mockConsumer.Name} seek offset {tpos.OffsetConsumed} to topic/partition {tpo.TopicPartition}");
                         }
                     }
                 }
@@ -522,17 +530,29 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                     foreach (var tp in c.Partitions)
                     {
                         var offset = GetGroupOffset(c.GroupId, tp);
-                        c.TopicPartitionsOffset.Add(new MockTopicPartitionOffset()
-                        {
-                            Partition = tp.Partition.Value,
-                            IsPaused = false,
-                            OffsetComitted = offset.Offset,
-                            OffsetConsumed = offset.Offset,
-                            Topic = tp.Topic
-                        });
+                         if (c.TopicPartitionsOffset.Contains(new MockTopicPartitionOffset()
+                             {Partition = tp.Partition.Value, Topic = tp.Topic}))
+                         {
+                             var tpo = c.TopicPartitionsOffset.FirstOrDefault(t =>
+                                 t.Partition.Equals(tp.Partition.Value) && t.Topic.Equals(tp.Topic));
+                             tpo.OffsetComitted = offset.Offset;
+                             tpo.OffsetConsumed = offset.Offset;
+                             if (!copyPartitions.Contains(tp))
+                                 tpo.IsPaused = false;
+                         }
+                        else
+                            c.TopicPartitionsOffset.Add(new MockTopicPartitionOffset()
+                            {
+                                Partition = tp.Partition.Value,
+                                IsPaused = false,
+                                OffsetComitted = offset.Offset,
+                                OffsetConsumed = offset.Offset,
+                                Topic = tp.Topic
+                            });
                     }
                 }
 
+                log.Debug($"Consumer {mockConsumer.Name} assigned partitions list : {string.Join(",", c.Partitions)}");
                 c.Assigned = true;
             }
         }
@@ -546,6 +566,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                     consumers[mockConsumer.Name].Partitions.Clear();
                     consumers[mockConsumer.Name].Topics.Clear();
                     consumers[mockConsumer.Name].TopicPartitionsOffset.Clear();
+                    log.Debug($"Consumer {mockConsumer.Name} unassigned partitions");
                 }
             }
         }
@@ -588,6 +609,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                         p.OffsetConsumed = o.Offset.Value;
                         p.OffsetComitted = o.Offset.Value;
                         groupOffset.Offset = o.Offset.Value;
+                        log.Debug($"Consumer {mockConsumer.Name} commit topic/partition {o.TopicPartition}, offset {o.Offset.Value}");
                     }
                 }
             }
@@ -644,15 +666,17 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                                         {Key = record.Key, Value = record.Value}
                                 };
                                 ++offset.OffsetConsumed;
+                                log.Debug($"Consumer {mockConsumer.Name} consume message from topic/partition {p}, offset {offset.OffsetConsumed}");
                                 break;
                             }
+
                         }
                     }
 
                     if (timeout == TimeSpan.Zero)
                         stop = true;
                 }
-
+                
                 return result;
             }
 

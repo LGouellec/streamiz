@@ -320,6 +320,7 @@ namespace Streamiz.Kafka.Net.Processors
                     InitializeTransaction();
                     collector.Init(ref producer);
                 }
+                TransitTo(TaskState.CREATED);
             }
             else if (state == TaskState.CLOSED)
             {

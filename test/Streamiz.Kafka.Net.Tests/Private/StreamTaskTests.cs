@@ -175,6 +175,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             task.Suspend();
             task.Resume();
+            task.RestorationIfNeeded();
+            
             task.AddRecords(messages);
 
             Assert.IsTrue(task.CanProcess(DateTime.Now.GetMilliseconds()));
@@ -277,9 +279,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
             task.Suspend();
             Assert.IsNull(task.GetStore("store"));
             task.Resume();
+            task.RestorationIfNeeded();
+            
             Assert.IsNotNull(task.GetStore("store"));
             task.AddRecords(messages);
-
+            
             Assert.IsTrue(task.CanProcess(DateTime.Now.GetMilliseconds()));
 
             while (task.CanProcess(DateTime.Now.GetMilliseconds()))

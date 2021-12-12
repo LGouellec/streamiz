@@ -59,7 +59,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.IsTrue(TaskState.RUNNING.IsValidTransition(TaskState.SUSPENDED));
 
             Assert.IsTrue(TaskState.SUSPENDED.IsValidTransition(TaskState.CLOSED));
-            Assert.IsTrue(TaskState.SUSPENDED.IsValidTransition(TaskState.RESTORING));
+            Assert.IsTrue(TaskState.SUSPENDED.IsValidTransition(TaskState.CREATED));
 
             Assert.IsTrue(TaskState.CLOSED.IsValidTransition(TaskState.CREATED));
         }
@@ -76,7 +76,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.IsFalse(TaskState.RUNNING.IsValidTransition(TaskState.CREATED));
             Assert.IsFalse(TaskState.RUNNING.IsValidTransition(TaskState.RESTORING));
 
-            Assert.IsFalse(TaskState.SUSPENDED.IsValidTransition(TaskState.CREATED));
+            Assert.IsFalse(TaskState.SUSPENDED.IsValidTransition(TaskState.RESTORING));
             Assert.IsFalse(TaskState.SUSPENDED.IsValidTransition(TaskState.RUNNING));
 
             Assert.IsFalse(TaskState.CLOSED.IsValidTransition(TaskState.RUNNING));

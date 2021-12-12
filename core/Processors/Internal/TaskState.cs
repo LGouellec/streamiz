@@ -9,7 +9,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public static readonly TaskState CREATED = new TaskState(0, "CREATED", 1, 2, 3);
         public static readonly TaskState RESTORING = new TaskState(1, "RESTORING", 2, 3);
         public static readonly TaskState RUNNING = new TaskState(2, "RUNNING", 3);
-        public static readonly TaskState SUSPENDED = new TaskState(3, "SUSPENDED", 1, 4);
+        public static readonly TaskState SUSPENDED = new TaskState(3, "SUSPENDED", 0, 4);
         public static readonly TaskState CLOSED = new TaskState(4, "CLOSED", 0);
 
         /// <summary>
