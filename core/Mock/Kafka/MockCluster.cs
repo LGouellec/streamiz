@@ -41,7 +41,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public string GroupId { get; set; }
         public string Name { get; set; }
-        public List<TopicPartition> Partitions { get; set; }
+        public ThreadSafeList<TopicPartition> Partitions { get; set; }
         public List<string> Topics { get; set; }
         public MockConsumer Consumer { get; set; }
         public IConsumerRebalanceListener RebalanceListener { get; set; }
@@ -214,9 +214,9 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                         Consumer = consumer,
                         Topics = new List<string>(topics),
                         RebalanceListener = consumer.Listener,
-                        Partitions = new List<TopicPartition>(),
+                        Partitions = new(),
                         Assigned = false,
-                        TopicPartitionsOffset = new List<MockConsumerInformation.MockTopicPartitionOffset>()
+                        TopicPartitionsOffset = new ()
                     };
                     consumers.TryAddOrUpdate(consumer.Name, cons);
 
@@ -501,10 +501,10 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                         GroupId = mockConsumer.MemberId,
                         Name = mockConsumer.Name,
                         Consumer = mockConsumer,
-                        Topics = new List<string>(),
+                        Topics = new (),
                         RebalanceListener = mockConsumer.Listener,
-                        Partitions = new List<TopicPartition>(),
-                        TopicPartitionsOffset = new List<MockConsumerInformation.MockTopicPartitionOffset>()
+                        Partitions = new(),
+                        TopicPartitionsOffset = new ()
                     };
                     consumers.TryAddOrUpdate(mockConsumer.Name, cons);
 
@@ -523,10 +523,11 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                 c.Partitions.Clear();
                 bool r = CheckConsumerAlreadyAssign(c.GroupId, c.Name, topicPartitions);
                 if (r)
-                    c.Partitions = copyPartitions;
+                    c.Partitions = new ThreadSafeList<TopicPartition>(copyPartitions);
                 else
                 {
-                    c.Partitions.AddRange(topicPartitions);
+                    foreach(var tp in topicPartitions)
+                        c.Partitions.Add(tp);
                     foreach (var tp in c.Partitions)
                     {
                         var offset = GetGroupOffset(c.GroupId, tp);
@@ -641,7 +642,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                 bool stop = false;
                 while (result == null && !stop)
                 {
-                    foreach (var p in c.Partitions)
+                    foreach (var p in c.Partitions.ToList())
                     {
                         if (timeout != TimeSpan.Zero && (dt + timeout) < DateTime.Now)
                         {

@@ -99,7 +99,10 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                             consumer.Key.RebalanceListener?.PartitionsAssigned(consumer.Key.Consumer, consumer.Key.PartitionsToAssigned);
                             consumer.Key.PartitionsToAssigned?.Clear();
                         }
-                        
+                        else
+                            // for testing, set PARTITION_ASSIGNED even if empty, just to can switch to  RUNNING Thread for restoring completly
+                            consumer.Key.RebalanceListener?.PartitionsAssigned(consumer.Key.Consumer, new ()); 
+
                         consumer.Key.Assigned = true;
                         consumer.Key.NeedRebalanceTriggered = false;
                         consumer.Value.RebalanceAssignedPartititons = true;

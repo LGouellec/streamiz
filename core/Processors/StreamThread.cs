@@ -192,15 +192,20 @@ namespace Streamiz.Kafka.Net.Processors
                                 log.Debug($"Add {count} records in tasks in {DateTime.Now - n}");
 
                             n = DateTime.Now;
-                            int processed = 0;
+                            int processed = 0, totalProcessed = 0;
                             long timeSinceLastPoll = 0;
                             do
                             {
                                 processed = 0;
                                 for (int i = 0; i < numIterations; ++i)
                                 {
-                                    processed = manager.Process(now);
-
+                                    if (!manager.RebalanceInProgress)
+                                        processed = manager.Process(now);
+                                    else
+                                        processed = 0;
+                                    
+                                    totalProcessed += processed;
+                                    
                                     if (processed == 0)
                                         break;
                                     // NOT AVAILABLE NOW, NEED PROCESSOR API
@@ -234,8 +239,8 @@ namespace Streamiz.Kafka.Net.Processors
                             if (State == ThreadState.PARTITIONS_ASSIGNED)
                                 SetState(ThreadState.RUNNING);
 
-                            if (records.Any())
-                                log.Debug($"Processing {count} records in {DateTime.Now - n}");
+                            if (totalProcessed > 0)
+                                log.Debug($"Processing {totalProcessed} records in {DateTime.Now - n}");
                         }
                         else
                             Thread.Sleep((int)consumeTimeout.TotalMilliseconds);

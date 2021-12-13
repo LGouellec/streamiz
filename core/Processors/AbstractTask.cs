@@ -101,6 +101,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             if (state.IsValidTransition(newState))
             {
+                log.Info($"{logPrefix}Task {Id} state transition from {state} to {newState}");
                 state = newState;
             }
             else

@@ -454,7 +454,7 @@ namespace Streamiz.Kafka.Net.Processors
                 consumer.Pause(record.TopicPartition.ToSingle());
             }
 
-            log.Debug($"{logPrefix}Added record into the buffered queue of partition {Partition}, new queue size is {newQueueSize}");
+            log.Debug($"{logPrefix}Added record into the buffered queue of partition {record.TopicPartition}, new queue size is {newQueueSize}");
         }
 
         public void AddRecords(IEnumerable<ConsumeResult<byte[], byte[]>> records)
