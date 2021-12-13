@@ -89,6 +89,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.BootstrapServers = "127.0.0.1";
             config.PollMs = 10;
             config.DeserializationExceptionHandler += (c, r, e) => ExceptionHandlerResponse.CONTINUE;
+            config.OffsetCheckpointManager = new MockOffsetCheckpointManager();
 
             var supplier = new SyncKafkaSupplier();
             var producer = supplier.GetProducer(config.ToProducerConfig());

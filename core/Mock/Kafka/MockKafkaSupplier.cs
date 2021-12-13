@@ -13,9 +13,9 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
     {
         private readonly MockCluster cluster = null;
 
-        public MockKafkaSupplier(int defaultNumberPartitions = 1)
+        public MockKafkaSupplier(int defaultNumberPartitions = 1, long waitBeforeRebalanceMs = 0)
         {
-            cluster = new MockCluster(defaultNumberPartitions);
+            cluster = new MockCluster(defaultNumberPartitions, waitBeforeRebalanceMs);
         }
 
         public IAdminClient GetAdmin(AdminClientConfig config)

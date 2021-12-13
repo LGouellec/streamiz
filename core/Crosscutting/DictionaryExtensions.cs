@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Crosscutting
 {
@@ -46,6 +47,14 @@ namespace Streamiz.Kafka.Net.Crosscutting
         }
 
 
+        /// <summary>
+        /// Merge an other dictionary into map dictionary
+        /// </summary>
+        /// <param name="map">source dictionary</param>
+        /// <param name="secondMap">dictionary to merge</param>
+        /// <typeparam name="K">key type</typeparam>
+        /// <typeparam name="V">value type</typeparam>
+        /// <returns>Return map dictionary merged with secondMap</returns>
         public static IDictionary<K, V> AddRange<K, V>(this IDictionary<K, V> map, IDictionary<K, V> secondMap)
         {
             foreach (var entry in secondMap)
@@ -53,5 +62,21 @@ namespace Streamiz.Kafka.Net.Crosscutting
             return map;
         }
 
+        public static bool TryAddOrUpdate<K, V>(this ConcurrentDictionary<K, V> source, K key, V value)
+        {
+            V valueTmp;
+            if (source.ContainsKey(key))
+            {
+                if (source.TryGetValue(key, out valueTmp))
+                    return source.TryUpdate(key, value, valueTmp);
+                else
+                    return false;
+            }   
+            else
+            {
+                return source.TryAdd(key, value);
+            }
+        }
+        
     }
 }

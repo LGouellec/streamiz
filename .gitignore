@@ -1,10 +1,11 @@
 bin
 obj
 .vs
-coverage.opencover.xml
+coverage.*opencover.xml
 coverage.json
 kafka-stream-net.sln.DotSettings.user
 _build
 TestResults
 
 .idea/
+.vscode/

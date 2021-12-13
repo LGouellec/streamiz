@@ -47,6 +47,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
                 }
                 else
                 {
+                    // TODO : make log(N) to increse progressivly timeout consumption
                     ts = (dt.Add(timeout) - DateTime.Now);
                 }
 

@@ -1,6 +1,6 @@
-﻿using Streamiz.Kafka.Net;
+﻿using Confluent.Kafka;
+using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
-using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using System;
@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
+using System.Threading.Tasks;
 
 namespace sample_stream
 {
@@ -17,7 +18,7 @@ namespace sample_stream
     /// </summary>
     internal class Program
     {
-        static async System.Threading.Tasks.Task Main(string[] args)
+        static async Task Main(string[] args)
         {
             ConfigureLog4Net();
             var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -26,44 +27,16 @@ namespace sample_stream
             config.AutoOffsetReset = Confluent.Kafka.AutoOffsetReset.Earliest;
           
             StreamBuilder builder = new StreamBuilder();
-
-            builder.Table("topic-test", RocksDb<string, string>.As("state-store"));
+            
+            builder.GlobalTable("dima-test", InMemory<string, string>.As("dima-test-store"));
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
-
-            Console.CancelKeyPress += (o, e) => stream.Dispose();
-
-            bool isRunningState = false;
-            DateTime dt = DateTime.Now;
-            var timeout = TimeSpan.FromSeconds(100);
-            stream.StateChanged += (old, @new) =>
-            {
-                if (@new.Equals(KafkaStream.State.RUNNING))
-                {
-                    isRunningState = true;
-                }
-            };
-
             await stream.StartAsync();
 
-            while (!isRunningState)
-            {
-                Thread.Sleep(100);
-                if (DateTime.Now > dt + timeout)
-                {
-                    break;
-                }
-            }
+            await Task.Delay(10000000);
 
-            while (true)
-            {
-                var store = stream.Store(StoreQueryParameters.FromNameAndType("state-store", QueryableStoreTypes.KeyValueStore<string, string>()));
-                var elements = store.All().ToList();
-                foreach (var s in elements)
-                    Console.WriteLine($"{s.Key}|{s.Value}");
-                Thread.Sleep(5000);
-            }
+            stream.Dispose();
         }
 
         private static void ConfigureLog4Net()

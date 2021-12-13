@@ -11,6 +11,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         IRecordQueue<ConsumeResult<byte[], byte[]>>,
         IComparable<RecordQueue>
     {
+        // TODO : add config to treat unorder event into one recordqueue, but impossible to combine with EOS
+
         // LOGGER + NAME
         private readonly string logPrefix;
         private readonly ILogger log = Logger.GetLogger(typeof(RecordQueue));

@@ -182,8 +182,12 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public Offset Position(TopicPartition partition)
         {
-            // TODO
-            throw new NotImplementedException();
+            if (offsets.ContainsKey(partition.Topic))
+            {
+                return offsets[partition.Topic].OffsetConsumed + 1;
+            }
+            else
+                return Offset.Unset;
         }
 
         public WatermarkOffsets QueryWatermarkOffsets(TopicPartition topicPartition, TimeSpan timeout)
@@ -205,8 +209,15 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public void Seek(TopicPartitionOffset tpo)
         {
-            // TODO
-            throw new NotImplementedException();
+            if (offsets.ContainsKey(tpo.Topic))
+            {
+                if (tpo.Offset == Offset.Beginning)
+                    offsets[tpo.Topic] = new SyncConsumerOffset(0L);
+                else if(tpo.Offset == Offset.End)
+                    offsets[tpo.Topic] = new SyncConsumerOffset(producer.GetHistory(tpo.Topic).Count());
+                else
+                    offsets[tpo.Topic] = new SyncConsumerOffset(tpo.Offset.Value);
+            }
         }
 
         public void StoreOffset(TopicPartitionOffset offset)
@@ -265,7 +276,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public ConsumeResult<byte[], byte[]> Consume(CancellationToken cancellationToken = default)
         {
-            if (Subscription.Count == 0)
+            if (Subscription.Count == 0 && Assignment.Count == 0)
                 throw new StreamsException("No subscription have been done !");
 
             return ConsumeInternal(TimeSpan.FromSeconds(10));

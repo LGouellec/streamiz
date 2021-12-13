@@ -1,33 +1,55 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 
 namespace Streamiz.Kafka.Net.Tests.Helpers
 {
-    internal class ExecutorService
+    internal class ExecutorService : IDisposable
     {
-        private Func<Task> action;
+        private Action action;
+        private readonly TimeSpan timeout;
         private Thread _thread;
+        private bool disposed = false;
 
-        public ExecutorService(Func<Task> action)
+        private ExecutorService(Action action, TimeSpan timeout)
         {
             this.action = action;
+            this.timeout = timeout;
             _thread = new Thread(() =>
             {
+                DateTime dt = DateTime.Now;
+                bool @continue = true;
                 try
                 {
-                    action().GetAwaiter().GetResult();
+                    while (@continue)
+                    {
+                        try
+                        {
+                            action();
+                            @continue = false;
+                        }
+                        catch (AssertionException e)
+                        {
+                            if (dt.Add(timeout) < DateTime.Now)
+                            {
+                                @continue = false;
+                                throw;
+                            }
+                        }
+                    }
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e.Message);
+                    throw;
                 }
             });
         }
 
-        public static ExecutorService NewSingleThreadExecutor(Func<Task> action)
+        public static ExecutorService NewSingleThreadExecutor(Action action, TimeSpan timeout)
         {
-            return new ExecutorService(action);
+            return new ExecutorService(action, timeout);
         }
 
         public void Start()
@@ -38,6 +60,13 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
         public void Stop()
         {
             _thread.Join();
+            disposed = true;
+        }
+
+        public void Dispose()
+        {
+            if(!disposed)
+                Stop();
         }
     }
 }

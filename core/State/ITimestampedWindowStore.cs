@@ -1,4 +1,6 @@
-﻿namespace Streamiz.Kafka.Net.State
+﻿using Streamiz.Kafka.Net.State.Internal;
+
+namespace Streamiz.Kafka.Net.State
 {
     /// <summary>
     /// Interface for storing the aggregated values of fixed-size time windows.
@@ -11,7 +13,7 @@
     /// </summary>
     /// <typeparam name="K">Type of keys</typeparam>
     /// <typeparam name="V">Type of values</typeparam>
-    public interface ITimestampedWindowStore<K, V> : IWindowStore<K, ValueAndTimestamp<V>>
+    public interface ITimestampedWindowStore<K, V> : IWindowStore<K, ValueAndTimestamp<V>>, ITimestampedStore
     {
     }
 }

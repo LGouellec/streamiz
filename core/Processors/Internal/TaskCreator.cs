@@ -12,8 +12,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly string threadId;
         private readonly IKafkaSupplier kafkaSupplier;
         private readonly IProducer<byte[], byte[]> producer;
+        private readonly StoreChangelogReader storeChangelogReader;
 
-        public TaskCreator(InternalTopologyBuilder builder, IStreamConfig configuration, string threadId, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer)
+        public TaskCreator(InternalTopologyBuilder builder, IStreamConfig configuration, string threadId, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer, StoreChangelogReader storeChangelogReader)
             : base()
         {
             this.builder = builder;
@@ -21,6 +22,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             this.threadId = threadId;
             this.kafkaSupplier = kafkaSupplier;
             this.producer = producer;
+            this.storeChangelogReader = storeChangelogReader;
         }
 
         public override StreamTask CreateTask(IConsumer<byte[], byte[]> consumer, TaskId id, IEnumerable<TopicPartition> partitions)
@@ -34,7 +36,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 consumer,
                 configuration,
                 kafkaSupplier,
-                producer);
+                producer,
+                storeChangelogReader);
         }
     }
 }

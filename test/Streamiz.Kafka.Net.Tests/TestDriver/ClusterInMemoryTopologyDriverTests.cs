@@ -8,6 +8,7 @@ using Streamiz.Kafka.Net.Table;
 using System;
 using System.Linq;
 using System.Threading;
+using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.TestDriver
 {
@@ -95,7 +96,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             Assert.IsNotNull(store);
             Assert.IsInstanceOf<MockReadOnlyKeyValueStore<string, string>>(store);
             input.PipeInput("coucou", "1");
-            Thread.Sleep(100);
+            Thread.Sleep(300);
 
             Assert.AreEqual(1, ((MockReadOnlyKeyValueStore<string, string>)store).All().Count());
             Assert.AreEqual("1", ((MockReadOnlyKeyValueStore<string, string>)store).Get("coucou"));
@@ -125,7 +126,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             input.PipeInput("coucou", "1");
             Thread.Sleep(100);
 
-            Assert.AreEqual(1, ((MockReadOnlyKeyValueStore<string, string>)store).All().Count());
+            Assert.AreEqual(1, ((MockReadOnlyKeyValueStore<string, string>) store).All().Count());
             Assert.AreEqual("1", ((MockReadOnlyKeyValueStore<string, string>)store).Get("coucou"));
 
             input.PipeInput("coucou", "2");
@@ -157,7 +158,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             Assert.IsNotNull(store);
             Assert.IsInstanceOf<MockReadOnlyKeyValueStore<string, string>>(store);
             input.PipeInput("coucou", "1");
-            Thread.Sleep(100);
+            Thread.Sleep(1000);
 
             Assert.AreEqual(1, ((MockReadOnlyKeyValueStore<string, string>)store).All().Count());
             Assert.AreEqual("1", ((MockReadOnlyKeyValueStore<string, string>)store).Get("coucou"));

@@ -55,6 +55,14 @@ namespace Streamiz.Kafka.Net.Stream
         IKStream<K, V>[] Branch(string named, params Func<K, V, bool>[] predicates);
 
         /// <summary>
+        /// Merge this stream and the given stream into one larger stream.
+        /// </summary>
+        /// <param name="stream">a stream which is to be merged into this stream</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A merged <see cref="IKStream{K, V}"/> containing all records from this and the provided <see cref="IKStream{K, V}"/> streams</returns>
+        IKStream<K, V> Merge(IKStream<K, V> stream, string named = null);
+
+        /// <summary>
         /// Create a new <see cref="IKStream{K, V}"/>
         /// that consists of all records of this stream which satisfy the given predicate.
         /// All records that DO NOT satisfy the predicate are dropped.

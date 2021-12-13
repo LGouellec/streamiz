@@ -1,8 +1,10 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net.Crosscutting;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -29,47 +31,50 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly InternalTopologyBuilder builder;
         private readonly TaskCreator taskCreator;
         private readonly IAdminClient adminClient;
+        private readonly IChangelogReader changelogReader;
+        private readonly ConcurrentDictionary<TopicPartition, TaskId> partitionsToTaskId = new ConcurrentDictionary<TopicPartition, TaskId>();
+        private readonly ConcurrentDictionary<TaskId, StreamTask> activeTasks = new ConcurrentDictionary<TaskId, StreamTask>();
+        private readonly ConcurrentDictionary<TaskId, StreamTask> revokedTasks = new ConcurrentDictionary<TaskId, StreamTask>();
 
-        private readonly IDictionary<TopicPartition, TaskId> partitionsToTaskId = new Dictionary<TopicPartition, TaskId>();
-        private readonly IDictionary<TaskId, StreamTask> activeTasks = new Dictionary<TaskId, StreamTask>();
-        private readonly IDictionary<TaskId, StreamTask> revokedTasks = new Dictionary<TaskId, StreamTask>();
-
-        public IEnumerable<StreamTask> ActiveTasks => activeTasks.Values;
-        public IEnumerable<StreamTask> RevokedTasks => revokedTasks.Values;
+        public IEnumerable<StreamTask> ActiveTasks => activeTasks.Values.ToList();
+        public IEnumerable<StreamTask> RevokedTasks => revokedTasks.Values.ToList();
+        public IDictionary<TaskId, ITask> Tasks => activeTasks.ToDictionary(i => i.Key, i => (ITask)i.Value);
 
         public IConsumer<byte[], byte[]> Consumer { get; internal set; }
         public IEnumerable<TaskId> ActiveTaskIds => activeTasks.Keys;
         public IEnumerable<TaskId> RevokeTaskIds => revokedTasks.Keys;
         public bool RebalanceInProgress { get; internal set; }
 
-        public TaskManager(InternalTopologyBuilder builder, TaskCreator taskCreator, IAdminClient adminClient)
+        internal TaskManager(InternalTopologyBuilder builder, TaskCreator taskCreator, IAdminClient adminClient, IChangelogReader changelogReader)
         {
             this.builder = builder;
             this.taskCreator = taskCreator;
             this.adminClient = adminClient;
+            this.changelogReader = changelogReader;
         }
 
-        public TaskManager(InternalTopologyBuilder builder, TaskCreator taskCreator, IAdminClient adminClient, IConsumer<byte[], byte[]> consumer)
-            : this(builder, taskCreator, adminClient)
+        internal TaskManager(InternalTopologyBuilder builder, TaskCreator taskCreator, IAdminClient adminClient, IConsumer<byte[], byte[]>  consumer, IChangelogReader changelogReader)
+            : this(builder, taskCreator, adminClient, changelogReader)
         {
             Consumer = consumer;
         }
+
 
         public void CreateTasks(ICollection<TopicPartition> assignment)
         {
             CurrentTask = null;
             IDictionary<TaskId, IList<TopicPartition>> tasksToBeCreated = new Dictionary<TaskId, IList<TopicPartition>>();
 
-            foreach (var partition in assignment)
+            foreach (var partition in new List<TopicPartition>(assignment))
             {
                 var taskId = builder.GetTaskIdFromPartition(partition);
                 if (revokedTasks.ContainsKey(taskId))
                 {
                     var t = revokedTasks[taskId];
                     t.Resume();
-                    activeTasks.Add(taskId, t);
-                    revokedTasks.Remove(taskId);
-                    partitionsToTaskId.Add(partition, taskId);
+                    activeTasks.TryAdd(taskId, t);
+                    revokedTasks.TryRemove(taskId, out StreamTask removeTask);
+                    partitionsToTaskId.TryAdd(partition, taskId);
                 }
                 else if (!activeTasks.ContainsKey(taskId))
                 {
@@ -77,7 +82,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                         tasksToBeCreated[taskId].Add(partition);
                     else
                         tasksToBeCreated.Add(taskId, new List<TopicPartition> { partition });
-                    partitionsToTaskId.Add(partition, taskId);
+                    partitionsToTaskId.TryAdd(partition, taskId);
                 }
             }
 
@@ -89,7 +94,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     task.GroupMetadata = Consumer.ConsumerGroupMetadata;
                     task.InitializeStateStores();
                     task.InitializeTopology();
-                    activeTasks.Add(task.Id, task);
+                    activeTasks.TryAdd(task.Id, task);
                 }
             }
         }
@@ -104,12 +109,14 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 {
                     var task = activeTasks[taskId];
                     task.Suspend();
+                    task.MayWriteCheckpoint(true);
                     if (!revokedTasks.ContainsKey(taskId))
                     {
-                        revokedTasks.Add(taskId, task);
+                        revokedTasks.TryAdd(taskId, task);
                     }
-                    partitionsToTaskId.Remove(p);
-                    activeTasks.Remove(taskId);
+                    
+                    partitionsToTaskId.TryRemove(p, out TaskId removeId);
+                    activeTasks.TryRemove(taskId, out StreamTask removeTask);
                 }
             }
         }
@@ -132,6 +139,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             foreach (var t in activeTasks)
             {
                 CurrentTask = t.Value;
+                t.Value.MayWriteCheckpoint(true);
                 t.Value.Close();
             }
 
@@ -140,6 +148,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             foreach (var t in revokedTasks)
             {
+                t.Value.MayWriteCheckpoint(true);
                 t.Value.Close();
             }
 
@@ -197,6 +206,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     if (t.CommitNeeded)
                     {
                         t.Commit();
+                        t.MayWriteCheckpoint(false);
                         ++committed;
                     }
                 }
@@ -243,11 +253,50 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 task.Suspend();
                 foreach(var part in task.Partition)
                 {
-                    partitionsToTaskId.Remove(part);
+                    partitionsToTaskId.Remove(part, out TaskId taskId);
                 }
                 task.Close();
+                task.MayWriteCheckpoint(true);
             }
             activeTasks.Clear();
+        }
+
+        internal bool NeedRestoration()
+            => ActiveTasks.Any(t => t.State == TaskState.CREATED || t.State == TaskState.RESTORING);
+
+        internal bool TryToCompleteRestoration()
+        {
+            bool allRunning = true;
+
+            foreach(var task in ActiveTasks)
+            {
+                try
+                {
+                    task.RestorationIfNeeded();
+                }catch(Exception e)
+                {
+                    log.LogDebug($"Could not initialize task {task.Id} at {DateTime.Now.GetMilliseconds()}, will retry ({e.Message})");
+                    allRunning = false;
+                }
+            }
+
+            var activeTasksWithStateStore = ActiveTasks.Where(t => t.HasStateStores);
+            if (allRunning && activeTasksWithStateStore.Any())
+            {
+                var restored = changelogReader.CompletedChangelogs;
+                foreach(var task in activeTasksWithStateStore)
+                {
+                    if (restored.Any() && task.ChangelogPartitions.ContainsAll(restored))
+                        task.CompleteRestoration();
+                    else
+                        allRunning = false;
+                }
+            }
+
+            if (allRunning)
+                Consumer.Resume(Consumer.Assignment);
+
+            return allRunning;
         }
     }
 }
