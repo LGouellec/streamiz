@@ -1,10 +1,14 @@
 ﻿using Confluent.Kafka;
 using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Streamiz.Kafka.Net.Processors
@@ -19,11 +23,13 @@ namespace Streamiz.Kafka.Net.Processors
         protected IStateManager stateMgr;
         protected ILog log;
         protected readonly string logPrefix = "";
+        protected TaskState state = TaskState.CREATED;
+        private Dictionary<TopicPartition, long> offsetLastSnapshotOffset;
 
         // For testing
         internal AbstractTask() { }
 
-        protected AbstractTask(TaskId id, IEnumerable<TopicPartition> partition, ProcessorTopology topology, IConsumer<byte[], byte[]> consumer, IStreamConfig config)
+        protected AbstractTask(TaskId id, IEnumerable<TopicPartition> partition, ProcessorTopology topology, IConsumer<byte[], byte[]> consumer, IStreamConfig config, IChangelogRegister changelogRegister)
         {
             log = Logger.GetLogger(GetType());
             logPrefix = $"stream-task[{id.Id}|{id.Partition}] ";
@@ -35,11 +41,19 @@ namespace Streamiz.Kafka.Net.Processors
             this.consumer = consumer;
             configuration = config;
 
+            var offsetCheckpointMngt = config.OffsetCheckpointManager
+                ?? new OffsetCheckpointFile(Path.Combine(config.StateDir, config.ApplicationId, $"{id.Id}-{id.Partition}"));
+            offsetCheckpointMngt.Configure(config, id);
+
             stateMgr = new ProcessorStateManager(
                 id,
                 partition,
-                topology.StoresToTopics);
+                topology.StoresToTopics,
+                changelogRegister,
+                offsetCheckpointMngt);
         }
+
+        public TaskState State => state;
 
         public ProcessorTopology Topology { get; }
 
@@ -49,7 +63,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public IEnumerable<TopicPartition> Partition { get; }
 
-        public ICollection<TopicPartition> ChangelogPartitions { get; internal set; }
+        public ICollection<TopicPartition> ChangelogPartitions => stateMgr.ChangelogPartitions;
 
         public bool HasStateStores => !(Topology.StateStores.Count == 0);
 
@@ -75,11 +89,26 @@ namespace Streamiz.Kafka.Net.Processors
         public abstract void Commit();
         public abstract IStateStore GetStore(string name);
         public abstract void InitializeTopology();
+        public abstract void RestorationIfNeeded();
         public abstract bool InitializeStateStores();
         public abstract void Resume();
         public abstract void Suspend();
+        public abstract void MayWriteCheckpoint(bool force = false);
 
         #endregion
+
+        protected void TransitTo(TaskState newState)
+        {
+            if (state.IsValidTransition(newState))
+            {
+                log.Info($"{logPrefix}Task {Id} state transition from {state} to {newState}");
+                state = newState;
+            }
+            else
+            {
+                throw new IllegalStateException($"Invalid transition from {state} to {newState}");
+            }
+        }
 
         protected void RegisterStateStores()
         {
@@ -129,6 +158,17 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 log.Error($"{logPrefix}Error during closing state store with exception :", e);
                 throw;
+            }
+        }
+
+        protected void WriteCheckpoint(bool force = false)
+        {
+            var changelogOffsets = stateMgr.ChangelogOffsets;
+            if(StateManagerTools.CheckpointNeed(force, offsetLastSnapshotOffset, changelogOffsets))
+            {
+                stateMgr.Flush();
+                stateMgr.Checkpoint();
+                offsetLastSnapshotOffset = new Dictionary<TopicPartition, long>(changelogOffsets);
             }
         }
     }

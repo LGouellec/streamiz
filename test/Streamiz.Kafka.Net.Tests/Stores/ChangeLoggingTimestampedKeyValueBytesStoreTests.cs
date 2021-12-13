@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Kafka.Internal;
+using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -54,7 +55,12 @@ namespace Streamiz.Kafka.Net.Tests.Stores
                 { "test-store", "test-store-changelog"}
             };
 
-            stateManager = new ProcessorStateManager(id, new List<TopicPartition> { partition }, changelogsTopics);
+            stateManager = new ProcessorStateManager(
+                id,
+                new List<TopicPartition> { partition },
+                changelogsTopics,
+                new MockChangelogRegister(),
+                new MockOffsetCheckpointManager());
 
             task = new Mock<AbstractTask>();
             task.Setup(k => k.Id).Returns(id);

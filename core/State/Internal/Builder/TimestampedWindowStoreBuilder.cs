@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State.Logging;
 using Streamiz.Kafka.Net.State.Supplier;
 
 namespace Streamiz.Kafka.Net.State.Internal.Builder
@@ -33,8 +34,7 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
             if (!LoggingEnabled)
                 return inner;
 
-            // TODO:
-            return inner;
+            return new ChangeLoggingTimestampedWindowBytesStore(inner);
         }
     }
 }

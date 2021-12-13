@@ -30,7 +30,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
         public void SetUp()
         {
             streamConfigMock = new Mock<IStreamConfig>();
-            streamConfigMock.Setup(x => x.MetadataRequestTimeoutMs).Returns(1);
 
             kvStoreMock = CreateMockStore<IKeyValueStore<object, object>>(kvStoreName);
             otherStoreMock = CreateMockStore<IKeyValueStore<object, object>>(otherStoreName);

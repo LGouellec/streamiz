@@ -5,11 +5,13 @@ using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Streamiz.Kafka.Net.Kafka.Internal
 {
+    // TODO : Need to refactor, not necessary now to have one producer by thread if EOS is enable
     internal class RecordCollector : IRecordCollector
     {
         // IF EOS DISABLED, ONE PRODUCER BY TASK BUT ONE INSTANCE RECORD COLLECTOR BY TASK
@@ -24,7 +26,9 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
         private readonly string logPrefix;
         private readonly ILog log = Logger.GetLogger(typeof(RecordCollector));
+        private readonly ConcurrentDictionary<TopicPartition, long> collectorsOffsets = new ConcurrentDictionary<TopicPartition, long>();
 
+        public IDictionary<TopicPartition, long> CollectorOffsets => collectorsOffsets.ToDictionary();
 
         public RecordCollector(string logPrefix, IStreamConfig configuration, TaskId id) 
         {
@@ -158,6 +162,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 }
                 else if (report.Status == PersistenceStatus.Persisted)
                 {
+                    collectorsOffsets.AddOrUpdate(report.TopicPartition, report.Offset.Value);
                     log.Debug($"{logPrefix}Record persisted: (timestamp {report.Message.Timestamp.UnixTimestampMs}) topic=[{topic}] partition=[{report.Partition}] offset=[{report.Offset}]");
                 }
 

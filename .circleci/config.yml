@@ -9,7 +9,7 @@
         - image: mcr.microsoft.com/dotnet/sdk:5.0
       steps:
         - checkout
-        - run: dotnet tool install --global dotnet-sonarscanner --version 5.1.0
+        - run: dotnet tool install --global dotnet-sonarscanner --version 5.4.0
         - run: echo 'export PATH="$PATH:/root/.dotnet/tools"' >> $BASH_ENV
         - run: echo "deb http://ftp.us.debian.org/debian stretch main contrib non-free" >> /etc/apt/sources.list
         - run: apt update
@@ -25,7 +25,7 @@
         - run: export JAVA_HOME
         - run: dotnet sonarscanner begin /k:LGouellec_kafka-streams-dotnet /o:kafka-streams-dotnet /d:sonar.login=${SONAR_TOKEN} /d:sonar.host.url=https://sonarcloud.io /d:sonar.cs.opencover.reportsPaths="**\coverage*.opencover.xml" /d:sonar.coverage.exclusions="**sample*/*.cs,**test*/*.cs,**Tests*.cs"
         - run: dotnet build
-        - run: dotnet test --no-restore --verbosity normal -f net5.0 /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+        - run: dotnet test --no-restore --no-build --verbosity normal -f net5.0 --collect:"XPlat Code Coverage" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
         - run: dotnet sonarscanner end /d:sonar.login=${SONAR_TOKEN}
 
   workflows:

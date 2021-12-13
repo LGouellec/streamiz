@@ -51,10 +51,13 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 consumer,
                 config,
                 supplier,
-                null);
+                null,
+                new MockChangelogRegister());
             task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
+            task.RestorationIfNeeded();
+            task.CompleteRestoration();
 
             Assert.AreEqual(2, task.Context.States.StateStoreNames.Count());
             var nameStore1 = task.Context.States.StateStoreNames.ElementAt(0);

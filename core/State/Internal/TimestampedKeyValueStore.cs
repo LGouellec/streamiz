@@ -6,6 +6,7 @@ using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
+
     internal class TimestampedKeyValueStore<K, V> :
         WrappedKeyValueStore<K, ValueAndTimestamp<V>>,
         ITimestampedKeyValueStore<K, V>

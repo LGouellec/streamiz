@@ -424,7 +424,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             config.DefaultValueSerDes?.Initialize(new SerDes.SerDesContext(config));
         }
 
-        internal void BuildAndOptimizeTopology(RootNode root, IList<StreamGraphNode> nodes)
+        internal void BuildTopology(RootNode root, IList<StreamGraphNode> nodes)
         {
             foreach (var node in nodes)
             {

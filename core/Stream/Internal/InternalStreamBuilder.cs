@@ -108,7 +108,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 topic, tableSourceName, sourceName, consumed,
                 materialized, processorParameters, true);
 
-            this.AddGraphNode(root, tableSourceNode);
+            AddGraphNode(root, tableSourceNode);
 
             return new GlobalKTable<K, V>(new KTableSourceValueGetterSupplier<K, V>(storeName), materialized.QueryableStoreName);
         }
@@ -119,7 +119,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         internal void Build()
         {
-            internalTopologyBuilder.BuildAndOptimizeTopology(root, nodes);
+            internalTopologyBuilder.BuildTopology(root, nodes);
         }
 
         internal void AddGraphNode(List<StreamGraphNode> rootNodes, StreamGraphNode node)

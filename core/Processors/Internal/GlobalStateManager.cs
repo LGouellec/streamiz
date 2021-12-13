@@ -30,6 +30,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public IEnumerable<string> StateStoreNames => globalStores.Keys;
 
+        public ICollection<TopicPartition> ChangelogPartitions => throw new NotImplementedException();
+
+        public void Checkpoint()
+        {
+            throw new NotImplementedException();
+        }
+
         public void Close()
         {
             log.Debug("Closing global state manager");
@@ -100,6 +107,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             return topology.GlobalStateStores.Values.Select(x => x.Name).ToSet();
         }
 
+        public void InitializeOffsetsFromCheckpoint()
+        {
+            throw new NotImplementedException();
+        }
+
         public void Register(IStateStore store, StateRestoreCallback callback)
         {
             // nothing to do here for now. Everything is handled in Initialize method.
@@ -110,10 +122,15 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             context = processorContext;
         }
 
+        public void UpdateChangelogOffsets(IDictionary<TopicPartition, long> writtenOffsets)
+        {
+            throw new NotImplementedException();
+        }
+
         private IEnumerable<TopicPartition> TopicPartitionsForStore(IStateStore store)
         {
             var topic = topology.StoresToTopics[store.Name];
-            var metadata = adminClient.GetMetadata(topic, TimeSpan.FromMilliseconds(config.MetadataRequestTimeoutMs));
+            var metadata = adminClient.GetMetadata(topic, TimeSpan.FromMilliseconds(10000));
 
             if (metadata == null || metadata.Topics.Count == 0)
             {

@@ -74,7 +74,16 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                                 Value = cluster.DEFAULT_NUMBER_PARTITIONS.ToString(),
                                 Source = ConfigSource.DefaultConfig
                             }
-                        }
+                        },
+                        {"replication.factor", new ConfigEntryResult{
+                                IsDefault = true,
+                                IsReadOnly = true,
+                                IsSensitive = false,
+                                Name = "replication.factor",
+                                Value = "1",
+                                Source = ConfigSource.DefaultConfig
+                            }
+                        },
                     }
                 }
             });

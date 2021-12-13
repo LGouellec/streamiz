@@ -1,10 +1,12 @@
-﻿using Confluent.Kafka;
+﻿using System.Collections.Generic;
+using Confluent.Kafka;
 using Streamiz.Kafka.Net.SerDes;
 
 namespace Streamiz.Kafka.Net.Kafka
 {
     internal interface IRecordCollector
     {
+        IDictionary<TopicPartition, long> CollectorOffsets { get; }
         void Init(ref IProducer<byte[], byte[]> producer);
         void Flush();
         void Close();

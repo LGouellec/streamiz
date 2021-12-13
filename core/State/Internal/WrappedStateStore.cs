@@ -1,12 +1,27 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net.Processors;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
-    internal class WrappedStateStore<S> : IStateStore
+    internal interface IWrappedStateStore
+    {
+        IStateStore Wrapped { get; }
+    }
+
+    internal class WrappedStore
+    {
+        internal static bool IsTimestamped(IStateStore stateStore)
+        {
+            if (stateStore is ITimestampedStore)
+                return true;
+            else if (stateStore is IWrappedStateStore)
+                return IsTimestamped(((IWrappedStateStore)stateStore).Wrapped);
+            else
+                return false;
+        }
+    }
+
+    internal class WrappedStateStore<S> : IStateStore, IWrappedStateStore
         where S : IStateStore
     {
         protected ProcessorContext context;
@@ -36,6 +51,8 @@ namespace Streamiz.Kafka.Net.State.Internal
         }
 
         #endregion
+
+        public IStateStore Wrapped => wrapped;
 
         protected SerializationContext GetSerializationContext(bool isKey)
         {

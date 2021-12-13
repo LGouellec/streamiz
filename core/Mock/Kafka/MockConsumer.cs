@@ -3,6 +3,7 @@ using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace Streamiz.Kafka.Net.Mock.Kafka
@@ -40,7 +41,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void Assign(TopicPartition partition)
         {
-            cluster.Assign(this, new List<TopicPartition> { partition });
+            cluster.Assign2(this, new List<TopicPartition> { partition });
         }
 
         public void Assign(TopicPartitionOffset partition)
@@ -55,14 +56,14 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void Assign(IEnumerable<TopicPartition> partitions)
         {
-            cluster.Assign(this, partitions);
+            cluster.Assign2(this, partitions);
+            Assignment = partitions.ToList();
         }
 
         public void Close()
         {
             cluster.CloseConsumer(Name);
             Assignment.Clear();
-            Subscription.Clear();
         }
 
         public List<TopicPartitionOffset> Commit()
@@ -107,13 +108,15 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void Pause(IEnumerable<TopicPartition> partitions)
         {
-            // TODO : 
+            cluster.Pause(this, partitions.Where(p => Assignment.Contains(p)));
         }
 
         public Offset Position(TopicPartition partition)
         {
-            // TODO
-            throw new NotImplementedException();
+            var info = cluster.GetConsumerInformation(Name);
+            return info != null ?
+                info.TopicPartitionsOffset.FirstOrDefault(t => t.TopicPartition.Equals(partition)).OffsetConsumed :
+                Offset.Unset;
         }
 
         public WatermarkOffsets QueryWatermarkOffsets(TopicPartition topicPartition, TimeSpan timeout)
@@ -124,14 +127,12 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void Resume(IEnumerable<TopicPartition> partitions)
         {
-            // TODO
-            throw new NotImplementedException();
+            cluster.Resume(this, partitions.Where(p => Assignment.Contains(p)));
         }
 
         public void Seek(TopicPartitionOffset tpo)
         {
-            // TODO
-            throw new NotImplementedException();
+            cluster.Seek(this, tpo);
         }
 
         public void StoreOffset(TopicPartitionOffset offset)
@@ -160,7 +161,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void Unassign()
         {
-            cluster.Unassign(this);
+            cluster.Unassign2(this);
             Assignment.Clear();
         }
 
@@ -168,6 +169,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         {
             cluster.Unsubscribe(this);
             Subscription.Clear();
+            Assignment.Clear();
         }
 
         public ConsumeResult<byte[], byte[]> Consume(int millisecondsTimeout)
@@ -175,7 +177,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public ConsumeResult<byte[], byte[]> Consume(CancellationToken cancellationToken = default)
         {
-            if (Subscription.Count == 0)
+            if (Subscription.Count == 0 && Assignment.Count == 0)
                 throw new StreamsException("No subscription have been done !");
 
             return cluster.Consume(this, cancellationToken);
@@ -183,7 +185,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public ConsumeResult<byte[], byte[]> Consume(TimeSpan timeout)
         {
-            if (Subscription.Count == 0)
+            if (Subscription.Count == 0 && Assignment.Count == 0)
                 throw new StreamsException("No subscription have been done !");
 
             return cluster.Consume(this, timeout);
