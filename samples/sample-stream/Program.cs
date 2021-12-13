@@ -20,12 +20,12 @@ namespace sample_stream
     {
         static async Task Main(string[] args)
         {
-            ConfigureLog4Net();
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app";
             config.BootstrapServers = "localhost:9092";
             config.AutoOffsetReset = Confluent.Kafka.AutoOffsetReset.Earliest;
-          
+            config.UseLogger(() => LoggerFactory.Create(builder => builder.AddLog4Net()));
+            
             StreamBuilder builder = new StreamBuilder();
             
             builder.GlobalTable("dima-test", InMemory<string, string>.As("dima-test-store"));
@@ -37,12 +37,6 @@ namespace sample_stream
             await Task.Delay(10000000);
 
             stream.Dispose();
-        }
-
-        private static void ConfigureLog4Net()
-        {
-            var loggerFactory =  LoggerFactory.Create(builder => builder.AddLog4Net());
-            Logger.LoggerFactory = loggerFactory;
         }
     }
 }

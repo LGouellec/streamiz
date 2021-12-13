@@ -9,9 +9,11 @@ using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.RocksDb;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace Streamiz.Kafka.Net
 {
@@ -1929,6 +1931,13 @@ namespace Streamiz.Kafka.Net
             EnableAutoCommit = false;
             EnableAutoOffsetStore = false;
             PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.CooperativeSticky;
+            
+            var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.SetMinimumLevel(LogLevel.Information);
+                builder.AddConsole();
+            });
+            UseLogger(loggerFactory);
         }
 
         #endregion
@@ -2353,9 +2362,10 @@ namespace Streamiz.Kafka.Net
         public override string ToString()
         {
             string replaceValue = "********";
-            // todo
             List<string> keysToNotDisplay = new List<string> {
-                "sasl.password"
+                "sasl.password",
+                "ssl.key.password",
+                "ssl.keystore.password"
             };
 
             List<string> keysAlreadyPrint = new List<string>();
@@ -2422,6 +2432,18 @@ namespace Streamiz.Kafka.Net
 
             return sb.ToString();
         }
+
+        #endregion
+        
+        #region Logger Configuration
+        
+        public void UseLogger(ILoggerFactory loggerFactory)
+        {
+            Logger.LoggerFactory = loggerFactory;
+        }
+
+        public void UseLogger(Func<ILoggerFactory> funcLoggerFactory)
+            => UseLogger(funcLoggerFactory());
 
         #endregion
     }

@@ -14,11 +14,15 @@ namespace Streamiz.Kafka.Net.Crosscutting
 
         /// <summary>
         /// If logger factory is not set by the project using the library
-        /// it will create a factory with console logger configured.
+        /// it will create a factory with console logger configured and minimum log level to Information.
         /// </summary>
-        public static ILoggerFactory LoggerFactory
+        internal static ILoggerFactory LoggerFactory
         {
-            get => _factory ??= Microsoft.Extensions.Logging.LoggerFactory.Create(builder => builder.AddConsole());
+            get => _factory ??= Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
+            {
+                builder.SetMinimumLevel(LogLevel.Information);
+                builder.AddConsole();
+            });
             set => _factory = value;
         }
 
