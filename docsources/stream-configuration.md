@@ -217,6 +217,40 @@ Credentials for the schema registry
 Specifies the source, use 0 for UserInfo or 1 for SaslInherit.
 
 
+### Logging
+
+This library uses Microsoft.Extensions.Logging.Abstractions for logging. To set logging for this library you need to set LoggerFactory in static Logger class. If this is not set, LoggerFactory with Microsoft.Extensions.Logging.Console will be set automatically.
+
+## Configuring log4net 
+
+To configure log4net you need to install Microsoft.Extensions.Logging.Log4Net.AspNetCore nuget package in your project and add log4net.config.
+``` bash
+dotnet add package Microsoft.Extensions.Logging.Log4Net.AspNetCore
+```
+
+Configure your logger inside your streams config instance :
+``` csharp
+var config = new StreamsConfig();
+// .... //
+config.Logger = LoggerFactory.Create(builder => builder.AddLog4Net());
+```
+
+Add a log4net.config resources in your project :
+``` xml
+<log4net debug="true">
+    <appender name="ConsoleAppender" type="log4net.Appender.ConsoleAppender">
+        <param name="Threshold" value="DEBUG" />
+        <layout type="log4net.Layout.PatternLayout">
+            <param name="ConversionPattern" value="%d [%t] %-5p %c - %m%n" />
+        </layout>
+    </appender>
+    <root>
+        <level value="DEBUG" />
+        <appender-ref ref="ConsoleAppender" />
+    </root>
+</log4net>
+```
+
 ## Kafka consumers and producer configuration parameters
 
 You can specify parameters for the Kafka consumers, producers, and admin client that are used internally. The consumer, producer and admin client settings are defined by wrapper properties on ConsumerConfig, ProducerConfig and AdminConfig.
