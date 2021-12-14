@@ -20,14 +20,7 @@ namespace Consumer
             var builder = new ConsumerBuilder<string, string>(config);
             using (var consumer = builder.Build())
             {
-                var water = consumer.GetWatermarkOffsets(new TopicPartition("test", 0));
-                consumer.Assign(new TopicPartition("test", 0));
-                //Thread.Sleep(5000);
-                consumer.Seek(new TopicPartitionOffset("test", 0, water.Low));
-                while (true)
-                {
-                    var r = consumer.Consume(1000);
-                }
+                
             }
         }
     }
