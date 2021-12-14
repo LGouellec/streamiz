@@ -268,6 +268,11 @@ namespace Streamiz.Kafka.Net
         /// Manager which track offset saved in local state store
         /// </summary>
         IOffsetCheckpointManager OffsetCheckpointManager { get; set; }
+        
+        /// <summary>
+        /// Logger factory which will be used for logging 
+        /// </summary>
+        ILoggerFactory Logger { get; set; }
 
         #endregion
     }
@@ -1932,12 +1937,11 @@ namespace Streamiz.Kafka.Net
             EnableAutoOffsetStore = false;
             PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.CooperativeSticky;
             
-            var loggerFactory = LoggerFactory.Create(builder =>
+            Logger = LoggerFactory.Create(builder =>
             {
                 builder.SetMinimumLevel(LogLevel.Information);
                 builder.AddConsole();
-            });
-            UseLogger(loggerFactory);
+            });;
         }
 
         #endregion
@@ -2436,14 +2440,11 @@ namespace Streamiz.Kafka.Net
         #endregion
         
         #region Logger Configuration
-        
-        public void UseLogger(ILoggerFactory loggerFactory)
-        {
-            Logger.LoggerFactory = loggerFactory;
-        }
 
-        public void UseLogger(Func<ILoggerFactory> funcLoggerFactory)
-            => UseLogger(funcLoggerFactory());
+        /// <summary>
+        /// Logger factory which will be used for logging
+        /// </summary>
+        public ILoggerFactory Logger { get; set; }
 
         #endregion
     }

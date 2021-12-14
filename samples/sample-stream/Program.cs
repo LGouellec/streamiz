@@ -24,7 +24,7 @@ namespace sample_stream
             config.ApplicationId = "test-app";
             config.BootstrapServers = "localhost:9092";
             config.AutoOffsetReset = Confluent.Kafka.AutoOffsetReset.Earliest;
-            config.UseLogger(() => LoggerFactory.Create(builder => builder.AddLog4Net()));
+            config.Logger = LoggerFactory.Create(builder => builder.AddLog4Net());
             
             StreamBuilder builder = new StreamBuilder();
             
