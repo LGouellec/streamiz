@@ -1,10 +1,9 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Confluent.Kafka;
+using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Stream.Internal;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Extensions.Logging;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -25,33 +24,36 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public void Close()
         {
-            this.globalStateManager.Close();
+            globalStateManager.Close();
         }
 
         public void FlushState()
         {
-            this.globalStateManager.Flush();
+            globalStateManager.Flush();
         }
 
         public IDictionary<TopicPartition, long> Initialize()
         {
-            this.topicToProcessor =
-                this.globalStateManager
+            topicToProcessor =
+                globalStateManager
                 .Initialize()
-                .Select(storeName => this.topology.StoresToTopics[storeName])
+                .Select(storeName => topology.StoresToTopics[storeName])
                 .ToDictionary(
                     topic => topic,
-                    topic => this.topology.SourceOperators.Single(x => (x.Value as ISourceProcessor).TopicName == topic).Value);
+                    topic => topology.SourceOperators.Single(x => (x.Value as ISourceProcessor).TopicName == topic).Value);
 
             InitTopology();
-            return this.globalStateManager.ChangelogOffsets;
+            
+            globalStateManager.InitializeOffsetsFromCheckpoint();
+            
+            return globalStateManager.ChangelogOffsets;
         }
 
         public void Update(ConsumeResult<byte[], byte[]> record)
         {
-            var processor = this.topicToProcessor[record.Topic];
+            var processor = topicToProcessor[record.Topic];
 
-            this.context.SetRecordMetaData(record);
+            context.SetRecordMetaData(record);
 
             var recordInfo = $"Topic:{record.Topic}|Partition:{record.Partition.Value}|Offset:{record.Offset}|Timestamp:{record.Message.Timestamp.UnixTimestampMs}";
             log.LogDebug("Start processing one record [{RecordInfo}]", recordInfo);
@@ -61,10 +63,10 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         private void InitTopology()
         {
-            foreach (var processor in this.topology.ProcessorOperators.Values)
+            foreach (var processor in topology.ProcessorOperators.Values)
             {
                 log.LogDebug("Initializing topology with processor source : {Processor}", processor);
-                processor.Init(this.context);
+                processor.Init(context);
             }
         }
     }

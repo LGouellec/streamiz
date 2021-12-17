@@ -1,12 +1,12 @@
-﻿using Confluent.Kafka;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Confluent.Kafka;
+using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.Internal;
-using System;
-using System.Collections.Generic;
-using Microsoft.Extensions.Logging;
-using System.Linq;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -53,8 +53,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 {
                     if (s.Offset.HasValue)
                         return s.Offset.Value + 1;
-                    else
-                        return 0L;
+                    return 0L;
                 });
 
         public ProcessorStateManager(
@@ -70,7 +69,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             Partition = partition;
 
             this.changelogTopics = changelogTopics ?? new Dictionary<string, string>();
-            this.changelogRegister = changelogReader;
+            changelogRegister = changelogReader;
             this.offsetCheckpointManager = offsetCheckpointManager;
         }
 
@@ -137,7 +136,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     Store = store,
                     ChangelogTopicPartition = GetStorePartition(storeName),
                     RestoreCallback = callback,
-                    RecordConverter = WrappedStore.IsTimestamped(store) ? (record) => ToTimestampInstance(record) : (record) => record,
+                    RecordConverter = WrappedStore.IsTimestamped(store) ? record => ToTimestampInstance(record) : record => record,
                     Offset = null
                 } :
                 new StateStoreMetadata
@@ -175,10 +174,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 return registeredStores[name].Store;
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
 
         public void RegisterGlobalStateStores(IDictionary<string, IStateStore> globalStateStores)
@@ -193,16 +190,15 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 var metadata = registeredStores[storeName];
                 if (metadata.ChangelogTopicPartition != null)
                     return metadata.ChangelogTopicPartition;
-                else
-                    throw new IllegalStateException(
-                        @$"Registered state store {storeName} does not have a registered 
+                throw new IllegalStateException(
+                    @$"Registered state store {storeName} does not have a registered 
                         changelog partition. 
                         This may happen if logging is disabled for 
                         the state store.");
             }
-            else
-                throw new IllegalStateException(
-                    @$"State store {storeName} for which the registered
+
+            throw new IllegalStateException(
+                @$"State store {storeName} for which the registered
                     changelog partition should be retrieved has not
                     been registered");
         }

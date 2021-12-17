@@ -1,4 +1,5 @@
-﻿using Streamiz.Kafka.Net.State;
+﻿using System.Net.Mime;
+using Streamiz.Kafka.Net.State;
 
 namespace Streamiz.Kafka.Net.Processors
 {

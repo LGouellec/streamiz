@@ -174,13 +174,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 {
                     throw new IllegalStateException($"The corresponding changelog restorer for {topicPartition} has already transited to completed state, this should not happen.");
                 }
-                else
-                    return changelogs[topicPartition];
+
+                return changelogs[topicPartition];
             }
-            else
-            {
-                throw new IllegalStateException($"The corresponding changelog restorer for {topicPartition} does not exist, this should not happen.");
-            }
+
+            throw new IllegalStateException($"The corresponding changelog restorer for {topicPartition} does not exist, this should not happen.");
         }
 
         private void RestoreChangelog(ChangelogMetadata changelogMetadata)
@@ -233,15 +231,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             long? endOffset = changelogMetadata.RestoreEndOffset;
             if (endOffset == null || endOffset == 0)
                 return true;
-            else if (!changelogMetadata.BufferedRecords.Any())
+            if (!changelogMetadata.BufferedRecords.Any())
             {
                 var offset = restoreConsumer.Position(changelogMetadata.StoreMetadata.ChangelogTopicPartition);
                 return offset == Offset.Unset || offset >= endOffset;
             }
-            else
-            {
-                return changelogMetadata.BufferedRecords[0].Offset >= endOffset;
-            }
+
+            return changelogMetadata.BufferedRecords[0].Offset >= endOffset;
         }
 
         private void BufferedRecords(IEnumerable<ConsumeResult<byte[], byte[]>> records)

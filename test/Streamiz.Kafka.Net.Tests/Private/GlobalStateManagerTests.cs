@@ -27,7 +27,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         private readonly string otherStoreTopic = "other-store-topic";
 
         [SetUp]
-        public void SetUp()
+        public void SetUp(IConsumer<byte[], byte[]> globalConsumer)
         {
             streamConfigMock = new Mock<IStreamConfig>();
 
@@ -55,8 +55,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             RegisterPartitionInAdminClient(kvStoreTopic);
             RegisterPartitionInAdminClient(otherStoreTopic);
 
-            stateManager = new GlobalStateManager(
-                    topology,
+            stateManager = new GlobalStateManager(globalConsumer, topology,
                     adminClientMock.Object,
                     streamConfigMock.Object
                 );

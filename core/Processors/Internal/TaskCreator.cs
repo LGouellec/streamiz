@@ -1,7 +1,7 @@
-﻿using Confluent.Kafka;
-using Streamiz.Kafka.Net.Kafka;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Kafka;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -15,7 +15,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly StoreChangelogReader storeChangelogReader;
 
         public TaskCreator(InternalTopologyBuilder builder, IStreamConfig configuration, string threadId, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer, StoreChangelogReader storeChangelogReader)
-            : base()
         {
             this.builder = builder;
             this.configuration = configuration;

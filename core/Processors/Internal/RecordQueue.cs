@@ -1,9 +1,9 @@
-﻿using Confluent.Kafka;
+﻿using System;
+using System.Collections.Generic;
+using Confluent.Kafka;
+using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
-using System;
-using System.Collections.Generic;
-using Microsoft.Extensions.Logging;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -18,7 +18,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly ILogger log = Logger.GetLogger(typeof(RecordQueue));
 
         private readonly List<ConsumeResult<byte[], byte[]>> queue;
-        private ConsumeResult<byte[], byte[]> currentRecord = null;
+        private ConsumeResult<byte[], byte[]> currentRecord;
         private long partitionTime = -1;
 
         private readonly ITimestampExtractor timestampExtractor;

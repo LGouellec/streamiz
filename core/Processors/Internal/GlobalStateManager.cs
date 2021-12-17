@@ -1,12 +1,14 @@
-﻿using Confluent.Kafka;
-using Streamiz.Kafka.Net.Crosscutting;
-using Streamiz.Kafka.Net.Errors;
-using Streamiz.Kafka.Net.Stream.Internal;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.Stream.Internal;
+using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -14,19 +16,36 @@ namespace Streamiz.Kafka.Net.Processors.Internal
     {
         private readonly IDictionary<string, IStateStore> globalStores = new Dictionary<string, IStateStore>();
         private readonly ILogger log = Logger.GetLogger(typeof(GlobalStateManager));
+        private readonly IConsumer<byte[], byte[]> globalConsumer;
         private readonly ProcessorTopology topology;
         private readonly IAdminClient adminClient;
         private readonly IStreamConfig config;
+        private IOffsetCheckpointManager offsetCheckpointManager;
+        private readonly IList<string> globalNonPersistentStateStores = new List<string>();
+        private readonly IDictionary<string, string> storesToTopic = new Dictionary<string, string>();
+        private readonly List<string> changelogTopics = new();
+        
+        
         private ProcessorContext context;
 
-        public GlobalStateManager(ProcessorTopology topology, IAdminClient adminClient, IStreamConfig config)
+        public GlobalStateManager(
+            IConsumer<byte[], byte[]> globalConsumer,
+            ProcessorTopology topology,
+            IAdminClient adminClient,
+            IStreamConfig config)
         {
+            this.globalConsumer = globalConsumer;
             this.topology = topology;
             this.adminClient = adminClient;
             this.config = config;
+            storesToTopic = this.topology.StoresToTopics;
+            
+            foreach(var store in this.topology.GlobalStateStores.Values)
+                if (!store.Persistent)
+                    globalNonPersistentStateStores.Add(storesToTopic[store.Name]);
         }
 
-        public IDictionary<TopicPartition, long> ChangelogOffsets { get; } = new Dictionary<TopicPartition, long>();
+        public IDictionary<TopicPartition, long> ChangelogOffsets { get; private set; }
 
         public IEnumerable<string> StateStoreNames => globalStores.Keys;
 
@@ -34,7 +53,16 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public void Checkpoint()
         {
-            throw new NotImplementedException();
+            try
+            {
+                offsetCheckpointManager.Write(context.Id,
+                    ChangelogOffsets.Where(kv =>
+                        !globalNonPersistentStateStores.Contains(kv.Key.Topic)).ToDictionary());
+            }
+            catch (Exception e)
+            {
+                log.LogWarning($"Failed to write offset checkpoint for global stores: {e.Message}");
+            }
         }
 
         public void Close()
@@ -45,12 +73,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 try
                 {
-                    log.LogDebug("Closing store {EntryKey}", entry.Key);
+                    log.LogDebug($"Closing store {entry.Key}");
                     entry.Value.Close();
                 }
                 catch (Exception e)
                 {
-                    log.LogError(e, "Failed to close global state store {EntryKey}", entry.Key);
+                    log.LogError(e, $"Failed to close global state store {entry.Key}");
                     closeFailed.AppendLine($"Failed to close global state store {entry.Key}. Reason: {e}");
                 }
             }
@@ -65,14 +93,14 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             log.LogDebug("Flushing all global globalStores registered in the state manager");
             foreach (var entry in globalStores)
             {
-                log.LogDebug("Flushing store {EntryKey}", entry.Key);
+                log.LogDebug($"Flushing store {entry.Key}");
                 entry.Value.Flush();
             }
         }
 
         public TopicPartition GetRegisteredChangelogPartitionFor(string name)
         {
-            // TODO : maybe
+            // Not used for global state store
             throw new NotImplementedException();
         }
 
@@ -85,48 +113,88 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public ISet<string> Initialize()
         {
+            List<String> changelogTopics = new();
+            this.changelogTopics.Clear();
             foreach (var store in topology.GlobalStateStores.Values)
             {
-                store.Init(context, store);
                 string storeName = store.Name;
+                string sourceTopic = storesToTopic[storeName];
 
                 if (globalStores.ContainsKey(store.Name))
                 {
                     throw new ArgumentException($" Store {storeName} has already been registered.");
                 }
-
-                var topicPartitions = TopicPartitionsForStore(store);
-                foreach (var partition in topicPartitions)
-                {
-                    ChangelogOffsets[partition] = 0;
-                }
-
+                
+                store.Init(context, store);
                 globalStores[storeName] = store;
+                changelogTopics.Add(sourceTopic);
             }
 
+            this.changelogTopics.AddRange(changelogTopics);
             return topology.GlobalStateStores.Values.Select(x => x.Name).ToSet();
         }
 
         public void InitializeOffsetsFromCheckpoint()
         {
-            throw new NotImplementedException();
+            try
+            {
+                ChangelogOffsets = offsetCheckpointManager.Read(context.Id);
+            }
+            catch (Exception e)
+            {
+                throw new StreamsException("Failed to read checkpoints for global state stores", e);
+            }
+            
+            ChangelogOffsets.Keys.ForEach(tp =>
+            {
+                if (!changelogTopics.Contains(tp.Topic))
+                {
+                    log.LogError("Encountered a topic-partition in the global checkpoint manager not associated with any global" +
+                                 $" state store, topic-partition: {tp}. If this topic-partition is no longer valid," +
+                                 " an application reset and state store directory cleanup will be required.");
+                    throw new StreamsException(
+                        $"Encountered a topic-partition not associated with any global state store");
+                }
+            });
         }
 
         public void Register(IStateStore store, StateRestoreCallback callback)
         {
-            // nothing to do here for now. Everything is handled in Initialize method.
+            log.LogInformation($"Restoring state for global store {store.Name}");
+            var topicPartitions = TopicPartitionsForStore(store).ToList();
+            var highWatermarks = OffsetsChangelogs(topicPartitions);
+
+            try
+            {
+                RestoreState(
+                    topicPartitions,
+                    highWatermarks,
+                    store.Name);
+            }
+            finally
+            {
+                globalConsumer.Unassign();
+            }
         }
 
         public void SetGlobalProcessorContext(ProcessorContext processorContext)
         {
             context = processorContext;
+            
+            var offsetCheckpointMngt = config.OffsetCheckpointManager
+                                       ?? new OffsetCheckpointFile(
+                                           context.StateDir);
+            
+            offsetCheckpointMngt.Configure(config, context.Id);
+
+            offsetCheckpointManager = offsetCheckpointMngt;
         }
 
         public void UpdateChangelogOffsets(IDictionary<TopicPartition, long> writtenOffsets)
-        {
-            throw new NotImplementedException();
-        }
-
+            => ChangelogOffsets.AddRange(writtenOffsets);
+        
+        #region Private
+        
         private IEnumerable<TopicPartition> TopicPartitionsForStore(IStateStore store)
         {
             var topic = topology.StoresToTopics[store.Name];
@@ -140,5 +208,46 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             var result = metadata.Topics.Single().Partitions.Select(partition => new TopicPartition(topic, partition.PartitionId));
             return result;
         }
+        
+        private IDictionary<TopicPartition, (Offset, Offset)> OffsetsChangelogs(IEnumerable<TopicPartition> topicPartitions)
+        {
+            return topicPartitions
+                .Select(tp => {
+                    var offsets = globalConsumer.GetWatermarkOffsets(tp);
+                    return new
+                    {
+                        TopicPartition = tp,
+                        EndOffset = offsets.High,
+                        BeginOffset = offsets.Low
+
+                    };
+                })
+                .ToDictionary(i => i.TopicPartition, i => (i.BeginOffset, i.EndOffset));
+        }
+        
+        private void RestoreState(List<TopicPartition> topicPartitions, IDictionary<TopicPartition, (Offset, Offset)> highWatermarks, string storeName)
+        {
+            foreach (var topicPartition in topicPartitions)
+            {
+                globalConsumer.Assign(topicPartition.ToSingle());
+                long offset, checkpoint, highWM;
+                
+                if (ChangelogOffsets.ContainsKey(topicPartition)) 
+                    checkpoint = ChangelogOffsets[topicPartition];
+                else
+                    checkpoint = Offset.Beginning.Value;
+                
+                globalConsumer.Seek(new TopicPartitionOffset(topicPartition, new Offset(checkpoint)));
+                offset = checkpoint;
+                highWM = highWatermarks[topicPartition].Item2;
+
+                while (offset < highWM)
+                {
+                    // TODO : finish
+                }
+            }
+        }
+        
+        #endregion
     }
 }

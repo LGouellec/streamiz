@@ -27,7 +27,7 @@ namespace sample_stream
             config.Logger = LoggerFactory.Create(builder => builder.AddLog4Net());
             
             StreamBuilder builder = new StreamBuilder();
-            
+
             builder.GlobalTable("dima-test", InMemory<string, string>.As("dima-test-store"));
 
             Topology t = builder.Build();

@@ -66,7 +66,7 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph.Nodes
             }
             else
             {
-                builder.AddSourceOperator(this.topicName, sourceName, consumed);
+                builder.AddSourceOperator(topicName, sourceName, consumed);
                 builder.AddProcessor(processorParameters.ProcessorName, processorParameters.Processor, sourceName);
 
                 //// only add state store if the source KTable should be materialized
@@ -75,13 +75,11 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph.Nodes
                 {
                     builder.AddStateStore(storeBuilder, this.streamGraphNode);
 
-                    // TODO :
-
-                    //if (shouldReuseSourceTopicForChangelog)
-                    //{
-                    //    storeBuilder.withLoggingDisabled();
-                    //    topologyBuilder.connectSourceStoreAndTopic(storeBuilder.name(), topicName);
-                    //}
+                    if (shouldReuseSourceTopicForChangelog)
+                    {
+                        storeBuilder.WithLoggingDisabled();
+                        builder.ConnectSourceStoreAndTopic(storeBuilder.Name, topicName);
+                    }
                 }
             }
         }

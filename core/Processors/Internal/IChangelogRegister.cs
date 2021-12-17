@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Confluent.Kafka;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
