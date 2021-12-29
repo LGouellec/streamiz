@@ -114,6 +114,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public ISet<string> Initialize()
         {
+            InitializeOffsetsFromCheckpoint();
+            
             List<String> changelogTopics = new();
             this.changelogTopics.Clear();
             foreach (var store in topology.GlobalStateStores.Values)
@@ -126,10 +128,22 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     throw new ArgumentException($" Store {storeName} has already been registered.");
                 }
                 
+                changelogTopics.Add(sourceTopic);
                 store.Init(context, store);
                 globalStores[storeName] = store;
-                changelogTopics.Add(sourceTopic);
             }
+            
+            ChangelogOffsets.Keys.ForEach(tp =>
+            {
+                if (!changelogTopics.Contains(tp.Topic))
+                {
+                    log.LogError("Encountered a topic-partition in the global checkpoint manager not associated with any global" +
+                                 $" state store, topic-partition: {tp}. If this topic-partition is no longer valid," +
+                                 " an application reset and state store directory cleanup will be required.");
+                    throw new StreamsException(
+                        $"Encountered a topic-partition not associated with any global state store");
+                }
+            });
 
             this.changelogTopics.AddRange(changelogTopics);
             return topology.GlobalStateStores.Values.Select(x => x.Name).ToSet();
@@ -145,18 +159,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 throw new StreamsException("Failed to read checkpoints for global state stores", e);
             }
-            
-            ChangelogOffsets.Keys.ForEach(tp =>
-            {
-                if (!changelogTopics.Contains(tp.Topic))
-                {
-                    log.LogError("Encountered a topic-partition in the global checkpoint manager not associated with any global" +
-                                 $" state store, topic-partition: {tp}. If this topic-partition is no longer valid," +
-                                 " an application reset and state store directory cleanup will be required.");
-                    throw new StreamsException(
-                        $"Encountered a topic-partition not associated with any global state store");
-                }
-            });
         }
 
         public void Register(IStateStore store, StateRestoreCallback callback)
@@ -228,9 +230,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     
                     foreach(var record in records)
                         restoreCallback?.Invoke(Bytes.Wrap(record.Message.Key), record.Message.Value);
-                    
-                    offset = records.Last().Offset;
+
+                    if (records.Any())
+                        offset = records.Last().Offset;
                 }
+
+                ChangelogOffsets.AddOrUpdate(topicPartition, offset);
             }
         }
 

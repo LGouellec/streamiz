@@ -13,6 +13,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly ProcessorTopology topology;
         private readonly ILogger log = Logger.GetLogger(typeof(GlobalStateUpdateTask));
         private readonly ProcessorContext context;
+        private readonly Dictionary<TopicPartition, long> offsets = new ();
         private IDictionary<string, IProcessor> topicToProcessor = new Dictionary<string, IProcessor>();
 
         public GlobalStateUpdateTask(IGlobalStateManager globalStateManager, ProcessorTopology topology, ProcessorContext context)
@@ -30,6 +31,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public void FlushState()
         {
             globalStateManager.Flush();
+            globalStateManager.UpdateChangelogOffsets(offsets);
+            globalStateManager.Checkpoint();
         }
 
         public IDictionary<TopicPartition, long> Initialize()
@@ -44,8 +47,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             InitTopology();
             
-            globalStateManager.InitializeOffsetsFromCheckpoint();
-            
             return globalStateManager.ChangelogOffsets;
         }
 
@@ -59,6 +60,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             log.LogDebug("Start processing one record [{RecordInfo}]", recordInfo);
             processor.Process(record);
             log.LogDebug("Completed processing one record [{RecordInfo}]", recordInfo);
+            
+            offsets.AddOrUpdate(record.TopicPartition, record.Offset + 1);
         }
 
         private void InitTopology()

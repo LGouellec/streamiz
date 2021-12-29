@@ -39,7 +39,7 @@ namespace Streamiz.Kafka.Net.Processors
             public void Initialize()
             {
                 IDictionary<TopicPartition, long> partitionOffsets = globalStateMaintainer.Initialize();
-                globalConsumer.Assign(partitionOffsets.Keys.Select(x => new TopicPartitionOffset(x, Offset.Beginning)));
+                globalConsumer.Assign(partitionOffsets.Keys.Select(x => new TopicPartitionOffset(x, partitionOffsets[x])));
 
                 lastFlush = DateTime.Now;
             }
@@ -81,6 +81,7 @@ namespace Streamiz.Kafka.Net.Processors
                     log.LogError(e, "Failed to close global consumer due to the following error:");
                 }
 
+                globalStateMaintainer.FlushState();
                 globalStateMaintainer.Close();
             }
         }

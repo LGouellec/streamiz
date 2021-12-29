@@ -160,7 +160,11 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public WatermarkOffsets GetWatermarkOffsets(TopicPartition topicPartition)
         {
-            return new WatermarkOffsets(0L, producer.GetHistory(topicPartition.Topic).Count());
+            long size = producer.GetHistory(topicPartition.Topic).Count();
+            if (size > 0)
+                return new WatermarkOffsets(0L, producer.GetHistory(topicPartition.Topic).Count());
+            else
+                return new WatermarkOffsets(Offset.Beginning, Offset.Beginning);
         }
 
         public List<TopicPartitionOffset> OffsetsForTimes(IEnumerable<TopicPartitionTimestamp> timestampsToSearch, TimeSpan timeout)

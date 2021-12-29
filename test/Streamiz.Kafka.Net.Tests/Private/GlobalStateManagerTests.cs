@@ -9,6 +9,7 @@ using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Streamiz.Kafka.Net.Mock.Sync;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -20,6 +21,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         private Mock<IAdminClient> adminClientMock;
         private ProcessorTopology topology;
         private Mock<IStreamConfig> streamConfigMock;
+        private ProcessorContext context;
 
         private readonly string kvStoreName = "kv-store";
         private readonly string kvStoreTopic = "kv-store-topic";
@@ -27,9 +29,16 @@ namespace Streamiz.Kafka.Net.Tests.Private
         private readonly string otherStoreTopic = "other-store-topic";
 
         [SetUp]
-        public void SetUp(IConsumer<byte[], byte[]> globalConsumer)
+        public void SetUp()
         {
+            var mockSupplier = new SyncKafkaSupplier();
+            var consumerConfig = new ConsumerConfig();
+            consumerConfig.GroupId = "global-consulmer";
+            var globalConsumer = mockSupplier.GetConsumer(consumerConfig, null);
+            
             streamConfigMock = new Mock<IStreamConfig>();
+            streamConfigMock.Setup(c => c.StateDir).Returns(".");
+            streamConfigMock.Setup(c => c.ApplicationId).Returns("app");
 
             kvStoreMock = CreateMockStore<IKeyValueStore<object, object>>(kvStoreName);
             otherStoreMock = CreateMockStore<IKeyValueStore<object, object>>(otherStoreName);
@@ -59,6 +68,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     adminClientMock.Object,
                     streamConfigMock.Object
                 );
+
+            context = new GlobalProcessorContext(
+                streamConfigMock.Object,
+                stateManager);
+            
+            stateManager.SetGlobalProcessorContext(context);
         }
 
         [Test]
@@ -72,12 +87,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void ShouldInitializeWithGlobalContext()
         {
-            var processorContext = new ProcessorContext(null, null, null);
-            stateManager.SetGlobalProcessorContext(processorContext);
-
             stateManager.Initialize();
 
-            kvStoreMock.Verify(store => store.Init(processorContext, It.IsAny<IStateStore>()), Times.Once);
+            kvStoreMock.Verify(store => store.Init(context, It.IsAny<IStateStore>()), Times.Once);
         }
 
         [Test]
@@ -100,6 +112,13 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void ShouldThrowIfNoPartitionsFoundForStore()
         {
+            kvStoreMock
+                .Setup(s => s.Init(context, It.IsAny<IStateStore>()))
+                .Callback((ProcessorContext c, IStateStore store) =>
+                {
+                    stateManager.Register(store, (k, v) => { });
+                });
+            
             adminClientMock.Setup(client => client.GetMetadata(kvStoreTopic, It.IsAny<TimeSpan>())).Returns((Metadata)null);
             Assert.Throws<StreamsException>(() => stateManager.Initialize());
         }
@@ -110,7 +129,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             stateManager.Initialize();
             stateManager.Register(kvStoreMock.Object, null);
 
-            Assert.AreEqual(0, stateManager.ChangelogOffsets.Single(x => x.Key.Topic == kvStoreTopic).Value);
+            Assert.AreEqual(-2, stateManager.ChangelogOffsets.Single(x => x.Key.Topic == kvStoreTopic).Value);
         }
 
         [Test]
@@ -197,7 +216,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var store = new Mock<T>();
             store.Setup(kvStore => kvStore.Name).Returns(name);
             store.Setup(kvStore => kvStore.IsOpen).Returns(isOpen);
-
             return store;
         }
 
