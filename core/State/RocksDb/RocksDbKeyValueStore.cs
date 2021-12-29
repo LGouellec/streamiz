@@ -269,7 +269,8 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             writeOptions.DisableWal(1);
 
             context.Configuration.RocksDbConfigHandler?.Invoke(Name, rocksDbOptions);
-
+            rocksDbOptions.SetMinWriteBufferNumberToMerge(2);
+            
             DbDir = new DirectoryInfo(Path.Combine(context.StateDir, parentDir, Name));
 
             Directory.CreateDirectory(DbDir.FullName);
