@@ -106,37 +106,14 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 throw new ArgumentException($"{logPrefix} Store {storeName} has already been registered.");
             }
-
-            ConsumeResult<byte[], byte[]> ToTimestampInstance(ConsumeResult<byte[], byte[]> source)
-            {
-                var newValue = source.Message.Value == null ? null : ByteBuffer.Build(8 + source.Message.Value.Length)
-                                                                                .PutLong(source.Message.Timestamp.UnixTimestampMs)
-                                                                                .Put(source.Message.Value)
-                                                                                .ToArray();
-                return new ConsumeResult<byte[], byte[]>
-                {
-                    IsPartitionEOF = source.IsPartitionEOF,
-                    Message = new Message<byte[], byte[]>
-                    {
-                        Headers = source.Message.Headers,
-                        Timestamp = source.Message.Timestamp,
-                        Key = source.Message.Key,
-                        Value = newValue
-                    },
-                    Offset = source.Offset,
-                    TopicPartitionOffset = source.TopicPartitionOffset,
-                    Topic = source.Topic,
-                    Partition = source.Partition
-                };
-            }
-
+            
             var metadata = IsChangelogStateStore(storeName) ?
                 new StateStoreMetadata
                 {
                     Store = store,
                     ChangelogTopicPartition = GetStorePartition(storeName),
                     RestoreCallback = callback,
-                    RecordConverter = WrappedStore.IsTimestamped(store) ? record => ToTimestampInstance(record) : record => record,
+                    RecordConverter = StateManagerTools.ConverterForStore(store),
                     Offset = null
                 } :
                 new StateStoreMetadata

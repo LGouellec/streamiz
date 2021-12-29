@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Stream.Internal;
 using Streamiz.Kafka.Net.Table.Internal;
 
@@ -21,8 +22,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly IAdminClient adminClient;
         private readonly IStreamConfig config;
         private IOffsetCheckpointManager offsetCheckpointManager;
-        private readonly IList<string> globalNonPersistentStateStores = new List<string>();
-        private readonly IDictionary<string, string> storesToTopic = new Dictionary<string, string>();
+        private readonly List<string> globalNonPersistentStateStores = new();
+        private readonly IDictionary<string, string> storesToTopic;
         private readonly List<string> changelogTopics = new();
         
         
@@ -39,7 +40,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             this.adminClient = adminClient;
             this.config = config;
             storesToTopic = this.topology.StoresToTopics;
-            
+                            
             foreach(var store in this.topology.GlobalStateStores.Values)
                 if (!store.Persistent)
                     globalNonPersistentStateStores.Add(storesToTopic[store.Name]);
@@ -167,9 +168,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             try
             {
                 RestoreState(
+                    callback,
                     topicPartitions,
                     highWatermarks,
-                    store.Name);
+                    store.Name,
+                    StateManagerTools.ConverterForStore(store));
             }
             finally
             {
@@ -194,38 +197,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             => ChangelogOffsets.AddRange(writtenOffsets);
         
         #region Private
-        
-        private IEnumerable<TopicPartition> TopicPartitionsForStore(IStateStore store)
-        {
-            var topic = topology.StoresToTopics[store.Name];
-            var metadata = adminClient.GetMetadata(topic, TimeSpan.FromMilliseconds(10000));
 
-            if (metadata == null || metadata.Topics.Count == 0)
-            {
-                throw new StreamsException($"There are no partitions available for topic {topic} when initializing global store {store.Name}");
-            }
-
-            var result = metadata.Topics.Single().Partitions.Select(partition => new TopicPartition(topic, partition.PartitionId));
-            return result;
-        }
-        
-        private IDictionary<TopicPartition, (Offset, Offset)> OffsetsChangelogs(IEnumerable<TopicPartition> topicPartitions)
-        {
-            return topicPartitions
-                .Select(tp => {
-                    var offsets = globalConsumer.GetWatermarkOffsets(tp);
-                    return new
-                    {
-                        TopicPartition = tp,
-                        EndOffset = offsets.High,
-                        BeginOffset = offsets.Low
-
-                    };
-                })
-                .ToDictionary(i => i.TopicPartition, i => (i.BeginOffset, i.EndOffset));
-        }
-        
-        private void RestoreState(List<TopicPartition> topicPartitions, IDictionary<TopicPartition, (Offset, Offset)> highWatermarks, string storeName)
+        private void RestoreState(
+            StateRestoreCallback restoreCallback,
+            List<TopicPartition> topicPartitions,
+            IDictionary<TopicPartition, (Offset, Offset)> highWatermarks,
+            string storeName,
+            Func<ConsumeResult<byte[], byte[]>, ConsumeResult<byte[], byte[]>> recordConverter)
         {
             foreach (var topicPartition in topicPartitions)
             {
@@ -243,11 +221,49 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
                 while (offset < highWM)
                 {
-                    // TODO : finish
+                    var records = globalConsumer.ConsumeRecords(TimeSpan.FromMilliseconds(config.PollMs),
+                        config.MaxPollRestoringRecords).ToList();
+
+                    var convertedRecords = records.Select(r => recordConverter(r)).ToList();
+                    
+                    foreach(var record in records)
+                        restoreCallback?.Invoke(Bytes.Wrap(record.Message.Key), record.Message.Value);
+                    
+                    offset = records.Last().Offset;
                 }
             }
         }
-        
+
+        private IEnumerable<TopicPartition> TopicPartitionsForStore(IStateStore store)
+        {
+            var topic = topology.StoresToTopics[store.Name];
+            var metadata = adminClient.GetMetadata(topic, TimeSpan.FromMilliseconds(10000));
+
+            if (metadata == null || metadata.Topics.Count == 0)
+            {
+                throw new StreamsException($"There are no partitions available for topic {topic} when initializing global store {store.Name}");
+            }
+
+            var result = metadata.Topics.Single().Partitions.Select(partition => new TopicPartition(topic, partition.PartitionId));
+            return result;
+        }
+
+        private IDictionary<TopicPartition, (Offset, Offset)> OffsetsChangelogs(IEnumerable<TopicPartition> topicPartitions)
+        {
+            return topicPartitions
+                .Select(tp => {
+                    var offsets = globalConsumer.GetWatermarkOffsets(tp);
+                    return new
+                    {
+                        TopicPartition = tp,
+                        EndOffset = offsets.High,
+                        BeginOffset = offsets.Low
+
+                    };
+                })
+                .ToDictionary(i => i.TopicPartition, i => (i.BeginOffset, i.EndOffset));
+        }
+
         #endregion
     }
 }
