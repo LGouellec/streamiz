@@ -162,7 +162,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         {
             long size = producer.GetHistory(topicPartition.Topic).Count();
             if (size > 0)
-                return new WatermarkOffsets(0L, producer.GetHistory(topicPartition.Topic).Count());
+                return new WatermarkOffsets(0L, producer.GetHistory(topicPartition.Topic).Count() - 1);
             else
                 return new WatermarkOffsets(Offset.Beginning, Offset.Beginning);
         }

@@ -51,7 +51,6 @@ namespace Streamiz.Kafka.Net.State
                 File.Delete(path);
         }
 
-        // TODO : use recovery file if present instead of return empty dic
         public IDictionary<TopicPartition, long> Read(TaskId taskId)
         {
             lock (_lock)

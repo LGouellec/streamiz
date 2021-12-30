@@ -173,7 +173,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     callback,
                     topicPartitions,
                     highWatermarks,
-                    store.Name,
                     StateManagerTools.ConverterForStore(store));
             }
             finally
@@ -200,11 +199,24 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         
         #region Private
 
+        private IEnumerable<TopicPartition> TopicPartitionsForStore(IStateStore store)
+        {
+            var topic = topology.StoresToTopics[store.Name];
+            var metadata = adminClient.GetMetadata(topic, TimeSpan.FromMilliseconds(10000));
+
+            if (metadata == null || metadata.Topics.Count == 0)
+            {
+                throw new StreamsException($"There are no partitions available for topic {topic} when initializing global store {store.Name}");
+            }
+
+            var result = metadata.Topics.Single().Partitions.Select(partition => new TopicPartition(topic, partition.PartitionId));
+            return result;
+        }
+
         private void RestoreState(
             StateRestoreCallback restoreCallback,
             List<TopicPartition> topicPartitions,
             IDictionary<TopicPartition, (Offset, Offset)> highWatermarks,
-            string storeName,
             Func<ConsumeResult<byte[], byte[]>, ConsumeResult<byte[], byte[]>> recordConverter)
         {
             foreach (var topicPartition in topicPartitions)
@@ -237,20 +249,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
                 ChangelogOffsets.AddOrUpdate(topicPartition, offset);
             }
-        }
-
-        private IEnumerable<TopicPartition> TopicPartitionsForStore(IStateStore store)
-        {
-            var topic = topology.StoresToTopics[store.Name];
-            var metadata = adminClient.GetMetadata(topic, TimeSpan.FromMilliseconds(10000));
-
-            if (metadata == null || metadata.Topics.Count == 0)
-            {
-                throw new StreamsException($"There are no partitions available for topic {topic} when initializing global store {store.Name}");
-            }
-
-            var result = metadata.Topics.Single().Partitions.Select(partition => new TopicPartition(topic, partition.PartitionId));
-            return result;
         }
 
         private IDictionary<TopicPartition, (Offset, Offset)> OffsetsChangelogs(IEnumerable<TopicPartition> topicPartitions)

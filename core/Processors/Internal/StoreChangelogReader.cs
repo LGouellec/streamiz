@@ -252,7 +252,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 else
                 {
                     metadata.BufferedRecords.Add(record);
-                    if (metadata.RestoreEndOffset == null || record.Offset < metadata.RestoreEndOffset.Value)
+                    if (metadata.RestoreEndOffset == null || record.Offset <= metadata.RestoreEndOffset.Value)
                         metadata.BufferedLimit = metadata.BufferedRecords.Count;
                 }
             }
