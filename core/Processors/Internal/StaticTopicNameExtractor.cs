@@ -6,9 +6,9 @@
 
         public StaticTopicNameExtractor(string topicName)
         {
-            this.TopicName = topicName;
+            TopicName = topicName;
         }
 
-        public string Extract(K key, V value, IRecordContext recordContext) => this.TopicName;
+        public string Extract(K key, V value, IRecordContext recordContext) => TopicName;
     }
 }

@@ -115,7 +115,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         public void ShouldAssignTopicsToConsumer()
         {
             var partitionOffsetDictionary = new Dictionary<TopicPartition, long>() {
-                { new TopicPartition("topic", 0), 0L }
+                { new TopicPartition("topic", 0), Offset.Beginning }
             };
             globalStateMaintainerMock.Setup(x => x.Initialize()).Returns(partitionOffsetDictionary);
 

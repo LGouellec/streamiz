@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using Confluent.Kafka;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Processors;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
@@ -28,5 +30,35 @@ namespace Streamiz.Kafka.Net.State.Internal
 
             return totalOffsetDelta > OFFSET_DELTA_THRESHOLD_FOR_CHECKPOINT;
         }
+
+        public static Func<ConsumeResult<byte[], byte[]>, ConsumeResult<byte[], byte[]>> ConverterForStore(
+            IStateStore store)
+            => WrappedStore.IsTimestamped(store) ? record => ToTimestampInstance(record) : record => record;
+        
+        
+        private static ConsumeResult<byte[], byte[]> ToTimestampInstance(ConsumeResult<byte[], byte[]> source)
+        {
+            var newValue = source.Message.Value == null ? null : ByteBuffer.Build(8 + source.Message.Value.Length)
+                .PutLong(source.Message.Timestamp.UnixTimestampMs)
+                .Put(source.Message.Value)
+                .ToArray();
+            
+            return new ConsumeResult<byte[], byte[]>
+            {
+                IsPartitionEOF = source.IsPartitionEOF,
+                Message = new Message<byte[], byte[]>
+                {
+                    Headers = source.Message.Headers,
+                    Timestamp = source.Message.Timestamp,
+                    Key = source.Message.Key,
+                    Value = newValue
+                },
+                Offset = source.Offset,
+                TopicPartitionOffset = source.TopicPartitionOffset,
+                Topic = source.Topic,
+                Partition = source.Partition
+            };
+        }
+
     }
 }

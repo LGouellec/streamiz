@@ -1,7 +1,7 @@
 ﻿using Confluent.Kafka;
+using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
-using Microsoft.Extensions.Logging;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {

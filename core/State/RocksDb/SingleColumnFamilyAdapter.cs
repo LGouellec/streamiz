@@ -12,6 +12,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         private readonly string name;
         private readonly RocksDbSharp.RocksDb db;
         private readonly WriteOptions writeOptions;
+        private readonly FlushOptions flushOptions;
         private readonly Func<byte[], byte[], int> keyComparator;
         private readonly ColumnFamilyHandle columnFamilyHandle;
 
@@ -22,6 +23,8 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             this.writeOptions = writeOptions;
             this.keyComparator = keyComparator;
             this.columnFamilyHandle = columnFamilyHandle;
+            flushOptions = new();
+            flushOptions.SetWaitForFlush(true);
         }
 
         public void AddToBatch(byte[] key, byte[] value, WriteBatch batch)
@@ -47,7 +50,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         public void Close() { }
 
-        public void Flush() { }
+        public void Flush() => db.Flush(flushOptions);
 
         public byte[] Get(byte[] key)
             => db.Get(key, columnFamilyHandle);

@@ -1,12 +1,13 @@
-﻿using Confluent.Kafka;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Confluent.Kafka;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -34,10 +35,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         // map from changelog topic name to its corresponding state store.
         private readonly IDictionary<string, string> topicsToStores = new Dictionary<string, string>();
 
-        internal InternalTopologyBuilder()
-        {
-        }
-
         internal IEnumerable<string> GetSourceTopics() => sourceTopics;
 
         internal IEnumerable<string> GetGlobalTopics() => globalTopics;
@@ -60,7 +57,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 if (globalStateBuilders.ContainsKey(stateStoreName))
                 {
                     throw new TopologyException($"Global StateStore {stateStoreName} can be used by a " +
-                        $"Processor without being specified; it should not be explicitly passed.");
+                        "Processor without being specified; it should not be explicitly passed.");
                 }
                 if (!stateFactories.ContainsKey(stateStoreName))
                 {
@@ -91,14 +88,15 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
         }
 
-        private void ConnectSourceStoreAndTopic(string sourceStoreName, string topic)
+        internal void ConnectSourceStoreAndTopic(string sourceStoreName, string topic)
         {
             if (storesToTopics.ContainsKey(sourceStoreName))
             {
                 throw new TopologyException($"Source store {sourceStoreName} is already added.");
             }
-            storesToTopics[sourceStoreName] = topic;
-            topicsToStores[topic] = sourceStoreName;
+
+            storesToTopics.AddOrUpdate(sourceStoreName, topic);
+            topicsToStores.AddOrUpdate(topic, sourceStoreName);
         }
 
         #endregion
@@ -360,7 +358,10 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 rootProcessor.AddNextProcessor(sourceProcessor);
             }
 
-            var storesToChangelog = new Dictionary<string, string>(storesToTopics.Where(e => stateStores.ContainsKey(e.Key)));
+            var storesToChangelog = new Dictionary<string, string>(
+                storesToTopics
+                            .Where(e => stateStores.ContainsKey(e.Key) 
+                                                                || GlobalStateStores.ContainsKey(e.Key)));
             return new ProcessorTopology(rootProcessor, sources, sinks, processors, stateStores, GlobalStateStores, storesToChangelog);
         }
 
@@ -419,8 +420,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
             
             applicationId = config.ApplicationId;
-            config.DefaultKeySerDes?.Initialize(new SerDes.SerDesContext(config));
-            config.DefaultValueSerDes?.Initialize(new SerDes.SerDesContext(config));
+            config.DefaultKeySerDes?.Initialize(new SerDesContext(config));
+            config.DefaultValueSerDes?.Initialize(new SerDesContext(config));
         }
 
         internal void BuildTopology(RootNode root, IList<StreamGraphNode> nodes)
@@ -626,7 +627,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             if (stateStoreFactory.IsWindowStore)
             {
-                var windowChangelogTopicConfig = new WindowedChangelogTopicConfig()
+                var windowChangelogTopicConfig = new WindowedChangelogTopicConfig
                 {
                     Configs = stateStoreFactory.LogConfig,
                     Name = changelogTopic,
@@ -634,15 +635,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 };
                 return windowChangelogTopicConfig;
             }
-            else
+
+            var unknownChangelogTopicConfig = new UnwindowedChangelogTopicConfig
             {
-                var unknownChangelogTopicConfig = new UnwindowedChangelogTopicConfig()
-                {
-                    Configs = stateStoreFactory.LogConfig,
-                    Name = changelogTopic,
-                };
-                return unknownChangelogTopicConfig;
-            }
+                Configs = stateStoreFactory.LogConfig,
+                Name = changelogTopic,
+            };
+            return unknownChangelogTopicConfig;
         }
 
         public TaskId GetTaskIdFromPartition(TopicPartition topicPartition)
@@ -661,25 +660,21 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     Partition = topicPartition.Partition
                 };
             }
-            else
+
+            var global =
+                description
+                    .GlobalStores
+                    .FirstOrDefault(g => g.Source.Topics.Contains(topicPartition.Topic));
+            if (global != null)
             {
-                var global =
-                    description
-                        .GlobalStores
-                        .FirstOrDefault(g => g.Source.Topics.Contains(topicPartition.Topic));
-                if (global != null)
+                return new TaskId
                 {
-                    return new TaskId
-                    {
-                        Id = global.Id,
-                        Partition = topicPartition.Partition
-                    };
-                }
-                else
-                {
-                    throw new TopologyException($"Topic {topicPartition.Topic} doesn't exist in this topology !");
-                }
+                    Id = global.Id,
+                    Partition = topicPartition.Partition
+                };
             }
+
+            throw new TopologyException($"Topic {topicPartition.Topic} doesn't exist in this topology !");
         }
     }
 }

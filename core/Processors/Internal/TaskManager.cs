@@ -1,10 +1,10 @@
-﻿using Confluent.Kafka;
-using Streamiz.Kafka.Net.Crosscutting;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using Microsoft.Extensions.Logging;
 using System.Linq;
+using Confluent.Kafka;
+using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Crosscutting;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -18,8 +18,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 if (_currentTask == null)
                     return UnassignedStreamTask.Create();
-                else
-                    return _currentTask;
+                return _currentTask;
             }
             set
             {
@@ -127,10 +126,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 return activeTasks[partitionsToTaskId[partition]];
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
 
         public void Close()
@@ -198,21 +195,19 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 return -1;
             }
-            else
+
+            foreach (var t in ActiveTasks)
             {
-                foreach (var t in ActiveTasks)
+                CurrentTask = t;
+                if (t.CommitNeeded)
                 {
-                    CurrentTask = t;
-                    if (t.CommitNeeded)
-                    {
-                        t.Commit();
-                        t.MayWriteCheckpoint(false);
-                        ++committed;
-                    }
+                    t.Commit();
+                    t.MayWriteCheckpoint();
+                    ++committed;
                 }
-                CurrentTask = null;
-                return committed;
             }
+            CurrentTask = null;
+            return committed;
         }
 
         internal int Process(long now)

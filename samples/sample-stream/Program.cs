@@ -4,6 +4,7 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.Extensions.Logging;
@@ -24,19 +25,28 @@ namespace sample_stream
             config.ApplicationId = "test-app";
             config.BootstrapServers = "localhost:9092";
             config.AutoOffsetReset = Confluent.Kafka.AutoOffsetReset.Earliest;
-            config.Logger = LoggerFactory.Create(builder => builder.AddLog4Net());
+            config.StateDir = Path.Combine(".", Guid.NewGuid().ToString());
+            config.Logger = LoggerFactory.Create(builder =>
+            {
+                builder.SetMinimumLevel(LogLevel.Debug);
+                builder.AddLog4Net();
+            });
             
             StreamBuilder builder = new StreamBuilder();
-            
-            builder.GlobalTable("dima-test", InMemory<string, string>.As("dima-test-store"));
+
+            builder
+                .Table("table", RocksDb<string, string>.As("table-store").WithLoggingEnabled())
+                .ToStream()
+                .Print(Printed<string, string>.ToOut());
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
+            
+            Console.CancelKeyPress += (o, e) => stream.Dispose();
+
             await stream.StartAsync();
 
             await Task.Delay(10000000);
-
-            stream.Dispose();
         }
     }
 }

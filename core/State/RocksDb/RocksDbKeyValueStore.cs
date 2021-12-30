@@ -266,6 +266,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             // (this could be a bug in the RocksDB code and their devs have been contacted).
             rocksDbOptions.IncreaseParallelism(Math.Max(Environment.ProcessorCount, 2));
             
+            // TODO : wrap writeOptions in rocksDbOptions too
             writeOptions.DisableWal(1);
 
             context.Configuration.RocksDbConfigHandler?.Invoke(Name, rocksDbOptions);

@@ -1,11 +1,11 @@
-﻿using Confluent.Kafka.Admin;
-using Streamiz.Kafka.Net.Crosscutting;
-using Streamiz.Kafka.Net.Errors;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Confluent.Kafka.Admin;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -61,8 +61,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             string numPartitionsCst = "num.partitions";
             if (configsResults.First().Entries.ContainsKey(numPartitionsCst))
                 return int.Parse(configsResults.First().Entries[numPartitionsCst].Value);
-            else
-                throw new StreamsException($"Default number partitions unavailable !");
+            throw new StreamsException("Default number partitions unavailable !");
         }
     }
 }

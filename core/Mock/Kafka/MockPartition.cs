@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Confluent.Kafka;
 
 namespace Streamiz.Kafka.Net.Mock.Kafka
 {
@@ -14,14 +15,23 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public int Index { get; }
         public int Size { get; private set; } = 0;
-        public long LowOffset { get; private set; } = 0;
-        public long HighOffset { get; private set; } = 0;
+        public long LowOffset { get; private set; } = Offset.Unset;
+        public long HighOffset { get; private set; } = Offset.Unset;
 
         internal void AddMessageInLog(byte[] key, byte[] value)
         {
             log.Add((key, value));
             ++Size;
-            ++HighOffset;
+            UpdateOffset();
+        }
+
+        private void UpdateOffset()
+        {
+            if (Size > 0)
+            {
+                LowOffset = 0;
+                HighOffset = Size - 1;
+            }
         }
 
         internal TestRecord<byte[], byte[]> GetMessage(long offset) =>

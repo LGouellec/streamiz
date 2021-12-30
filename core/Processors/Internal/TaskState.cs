@@ -1,6 +1,6 @@
-﻿using Streamiz.Kafka.Net.Crosscutting;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Streamiz.Kafka.Net.Crosscutting;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {

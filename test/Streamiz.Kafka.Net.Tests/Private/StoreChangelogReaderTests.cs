@@ -101,7 +101,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var metadata = storeChangelogReader.GetMetadata(new TopicPartition(changelogTopic, 0));
             Assert.IsNotNull(metadata);
             Assert.AreEqual(ChangelogState.COMPLETED, metadata.ChangelogState);
-            Assert.AreEqual(2, metadata.RestoreEndOffset);
+            Assert.AreEqual(1, metadata.RestoreEndOffset);
             Assert.AreEqual(2, metadata.TotalRestored);
         }
 
@@ -138,7 +138,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var metadata = storeChangelogReader.GetMetadata(new TopicPartition(changelogTopic, 0));
             Assert.IsNotNull(metadata);
             Assert.AreEqual(ChangelogState.COMPLETED, metadata.ChangelogState);
-            Assert.AreEqual(4, metadata.RestoreEndOffset);
+            Assert.AreEqual(3, metadata.RestoreEndOffset);
             Assert.AreEqual(2, metadata.TotalRestored);
         }
 
@@ -167,7 +167,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var metadata = storeChangelogReader.GetMetadata(new TopicPartition(changelogTopic, 0));
             Assert.IsNotNull(metadata);
             Assert.AreEqual(ChangelogState.COMPLETED, metadata.ChangelogState);
-            Assert.AreEqual(4, metadata.RestoreEndOffset);
+            Assert.AreEqual(3, metadata.RestoreEndOffset);
             Assert.AreEqual(4, metadata.TotalRestored);
         }
 
@@ -194,7 +194,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var metadata = storeChangelogReader.GetMetadata(new TopicPartition(changelogTopic, 0));
             Assert.IsNotNull(metadata);
             Assert.AreEqual(ChangelogState.COMPLETED, metadata.ChangelogState);
-            Assert.AreEqual(2, metadata.RestoreEndOffset);
+            Assert.AreEqual(1, metadata.RestoreEndOffset);
             Assert.AreEqual(2, metadata.TotalRestored);
         }
 

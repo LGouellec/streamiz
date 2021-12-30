@@ -1,8 +1,8 @@
-﻿using Confluent.Kafka;
+﻿using System.Collections.Generic;
+using Confluent.Kafka;
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Stream.Internal;
-using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
