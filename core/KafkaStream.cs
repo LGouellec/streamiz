@@ -243,7 +243,7 @@ namespace Streamiz.Kafka.Net
         private readonly IThread[] threads;
         private readonly IStreamConfig configuration;
         private readonly string clientId;
-        private readonly ILogger logger = Logger.GetLogger(typeof(KafkaStream));
+        private readonly ILogger logger;
         private readonly string logPrefix = "";
         private readonly object stateLock = new object();
         private readonly QueryableStoreProvider queryableStoreProvider;
@@ -282,7 +282,10 @@ namespace Streamiz.Kafka.Net
             this.topology = topology;
             this.kafkaSupplier = kafkaSupplier;
             this.configuration = configuration;
-
+            Logger.LoggerFactory = configuration.Logger;
+            
+            logger = Logger.GetLogger(typeof(KafkaStream));
+            
             // check if ApplicationId & BootstrapServers has been set
             if (string.IsNullOrEmpty(configuration.ApplicationId) || string.IsNullOrEmpty(configuration.BootstrapServers))
             {
@@ -293,7 +296,7 @@ namespace Streamiz.Kafka.Net
             clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;
             logPrefix = $"stream-application[{configuration.ApplicationId}] ";
 
-            logger.LogInformation("{LogPrefix} Start creation of the stream application with this configuration: {Configuration}", logPrefix, configuration);
+            logger.LogInformation($"{logPrefix} Start creation of the stream application with this configuration: {configuration}");
 
             // re-write the physical topology according to the config
             topology.Builder.RewriteTopology(configuration);
@@ -373,7 +376,7 @@ namespace Streamiz.Kafka.Net
         [Obsolete("This method is deprecated, please use StartAsync(...) instead. It will be removed in next release version.")]
         public void Start(CancellationToken? token = null)
         {
-            StartAsync(token).RunSynchronously();
+            StartAsync(token).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -438,7 +441,7 @@ namespace Streamiz.Kafka.Net
             {
                 // if transition failed, it means it was either in PENDING_SHUTDOWN
                 // or NOT_RUNNING already; just check that all threads have been stopped
-                logger.LogInformation("{LogPrefix}Already in the pending shutdown state, wait to complete shutdown", logPrefix);
+                logger.LogInformation($"{logPrefix}Already in the pending shutdown state, wait to complete shutdown");
             }
             else
             {
@@ -453,7 +456,7 @@ namespace Streamiz.Kafka.Net
                 }
 
                 SetState(State.NOT_RUNNING);
-                logger.LogInformation("{LogPrefix}Streams client stopped completely", logPrefix);
+                logger.LogInformation($"{logPrefix}Streams client stopped completely");
             }
         }
 
@@ -518,7 +521,7 @@ namespace Streamiz.Kafka.Net
                 }
                 else
                 {
-                    logger.LogInformation("{LogPrefix}State transition from {OldState} to {NewState}", logPrefix, oldState, newState);
+                    logger.LogInformation($"{logPrefix}State transition from {oldState} to {newState}");
                 }
                 StreamState = newState;
             }

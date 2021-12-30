@@ -120,10 +120,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         }
 
         public WatermarkOffsets QueryWatermarkOffsets(TopicPartition topicPartition, TimeSpan timeout)
-        {
-            // TODO
-            throw new NotImplementedException();
-        }
+            => GetWatermarkOffsets(topicPartition);
 
         public void Resume(IEnumerable<TopicPartition> partitions)
         {
