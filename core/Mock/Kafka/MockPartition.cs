@@ -34,7 +34,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             }
         }
 
-        internal TestRecord<byte[], byte[]> GetMessage(long offset) =>
-            offset <= Size - 1 ? new TestRecord<byte[], byte[]> { Key = log[(int)offset].Item1, Value = log[(int)offset].Item2 } : null;
+        internal TestRecord<byte[], byte[]> GetMessage(long offset)
+            => offset <= Size - 1 ? new TestRecord<byte[], byte[]> { Key = log[(int)offset].Item1, Value = log[(int)offset].Item2 } : null;
     }
 }

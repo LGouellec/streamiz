@@ -485,7 +485,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             log.LogInformation(sb.ToString());
         }
 
-        internal void Assign2(MockConsumer mockConsumer, IEnumerable<TopicPartition> topicPartitions)
+        internal void Assign(MockConsumer mockConsumer, IEnumerable<TopicPartition> topicPartitions)
         {
             lock (_lock)
             {
@@ -558,7 +558,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             }
         }
 
-        internal void Unassign2(MockConsumer mockConsumer)
+        internal void Unassign(MockConsumer mockConsumer)
         {
             lock (_lock)
             {
@@ -572,6 +572,167 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             }
         }
 
+        internal void IncrementalAssign(MockConsumer mockConsumer, IEnumerable<TopicPartition> partitions)
+        {
+            lock (_lock)
+            {
+                if (!consumers.ContainsKey(mockConsumer.Name))
+                {
+                    var cons = new MockConsumerInformation
+                    {
+                        GroupId = mockConsumer.MemberId,
+                        Name = mockConsumer.Name,
+                        Consumer = mockConsumer,
+                        Topics = new (),
+                        RebalanceListener = mockConsumer.Listener,
+                        Partitions = new(),
+                        TopicPartitionsOffset = new ()
+                    };
+                    consumers.TryAddOrUpdate(mockConsumer.Name, cons);
+
+                    if (consumerGroups.ContainsKey(mockConsumer.MemberId))
+                    {
+                        consumerGroups[mockConsumer.MemberId].Add(mockConsumer.Name);
+                    }
+                    else
+                    {
+                        consumerGroups.TryAddOrUpdate(mockConsumer.MemberId, new List<string> {mockConsumer.Name});
+                    }
+                }
+
+                var c = consumers[mockConsumer.Name];
+                bool r = CheckConsumerAlreadyAssign(c.GroupId, c.Name, partitions);
+                if (!r)
+                {
+                    foreach (var tp in partitions)
+                    {
+                        c.Partitions.Add(tp);
+                        var offset = GetGroupOffset(c.GroupId, tp);
+                         if (c.TopicPartitionsOffset.Contains(new MockTopicPartitionOffset()
+                             {Partition = tp.Partition.Value, Topic = tp.Topic}))
+                         {
+                             var tpo = c.TopicPartitionsOffset.FirstOrDefault(t =>
+                                 t.Partition.Equals(tp.Partition.Value) && t.Topic.Equals(tp.Topic));
+                             tpo.OffsetComitted = offset.Offset;
+                             tpo.OffsetConsumed = offset.Offset;
+                         }
+                        else
+                            c.TopicPartitionsOffset.Add(new MockTopicPartitionOffset()
+                            {
+                                Partition = tp.Partition.Value,
+                                IsPaused = false,
+                                OffsetComitted = offset.Offset,
+                                OffsetConsumed = offset.Offset,
+                                Topic = tp.Topic
+                            });
+                    }
+                }
+
+                log.LogDebug($"Consumer {mockConsumer.Name} assigned partitions list : {string.Join(",", c.Partitions)}");
+                c.Assigned = true;
+            }
+        }
+        
+        internal void IncrementalAssign(MockConsumer mockConsumer, IEnumerable<TopicPartitionOffset> partitions)
+        { 
+            /*if (tpo.Offset == Offset.Beginning)
+                tpos.OffsetConsumed = 0;
+            else if (tpo.Offset == Offset.End)
+            {
+                var topic = topics[tpo.Topic];
+                var part = topic.GetPartition(tpo.Partition);
+                tpos.OffsetConsumed = part.HighOffset;
+            }
+            else
+                tpos.OffsetConsumed = tpo.Offset;*/
+            
+            lock (_lock)
+            {
+                if (!consumers.ContainsKey(mockConsumer.Name))
+                {
+                    var cons = new MockConsumerInformation
+                    {
+                        GroupId = mockConsumer.MemberId,
+                        Name = mockConsumer.Name,
+                        Consumer = mockConsumer,
+                        Topics = new (),
+                        RebalanceListener = mockConsumer.Listener,
+                        Partitions = new(),
+                        TopicPartitionsOffset = new ()
+                    };
+                    consumers.TryAddOrUpdate(mockConsumer.Name, cons);
+
+                    if (consumerGroups.ContainsKey(mockConsumer.MemberId))
+                    {
+                        consumerGroups[mockConsumer.MemberId].Add(mockConsumer.Name);
+                    }
+                    else
+                    {
+                        consumerGroups.TryAddOrUpdate(mockConsumer.MemberId, new List<string> {mockConsumer.Name});
+                    }
+                }
+
+                var c = consumers[mockConsumer.Name];
+                bool r = CheckConsumerAlreadyAssign(c.GroupId, c.Name, partitions.Select(t => t.TopicPartition));
+                if (!r)
+                {
+                    foreach (var tp in partitions)
+                    {
+                        Offset offset;
+                        
+                        if (tp.Offset == Offset.Beginning)
+                            offset = 0;
+                        else if (tp.Offset == Offset.End)
+                        {
+                            var topic = topics[tp.Topic];
+                            var part = topic.GetPartition(tp.Partition);
+                            offset = part.HighOffset;
+                        }
+                        else
+                            offset = tp.Offset;
+                        
+                        c.Partitions.Add(tp.TopicPartition);
+                         if (c.TopicPartitionsOffset.Contains(new MockTopicPartitionOffset()
+                             {Partition = tp.Partition.Value, Topic = tp.Topic}))
+                         {
+                             var tpo = c.TopicPartitionsOffset.FirstOrDefault(t =>
+                                 t.Partition.Equals(tp.Partition.Value) && t.Topic.Equals(tp.Topic));
+                             tpo.OffsetComitted = offset;
+                             tpo.OffsetConsumed = offset;
+                         }
+                        else
+                            c.TopicPartitionsOffset.Add(new MockTopicPartitionOffset()
+                            {
+                                Partition = tp.Partition.Value,
+                                IsPaused = false,
+                                OffsetComitted = offset,
+                                OffsetConsumed = offset,
+                                Topic = tp.Topic
+                            });
+                    }
+                }
+
+                log.LogDebug($"Consumer {mockConsumer.Name} assigned partitions list : {string.Join(",", c.Partitions)}");
+                c.Assigned = true;
+            }
+        }
+
+        internal void IncrementalUnassign(MockConsumer mockConsumer, IEnumerable<TopicPartition> partitions)
+        {
+            lock (_lock)
+            {
+                if (consumers.ContainsKey(mockConsumer.Name))
+                {
+                    foreach (var tp in partitions)
+                    {
+                        consumers[mockConsumer.Name].Partitions.Remove(tp);
+                        consumers[mockConsumer.Name].TopicPartitionsOffset.RemoveAll(t => t.TopicPartition.Equals(tp));
+                    }
+                    log.LogDebug($"Consumer {mockConsumer.Name} unassigned partitions");
+                }
+            }
+        }
+        
         #endregion
 
         #region Consumer (Read + Commit) Gesture
@@ -828,5 +989,6 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                 }
             }
         }
+        
     }
 }

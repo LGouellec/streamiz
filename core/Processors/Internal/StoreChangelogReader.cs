@@ -148,10 +148,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                                 " of task corruption and never restore again");
             }
 
-            // Assign old partitions less revoke partitions
-            assigmentPartitions.AddRange(restoreConsumer.Assignment);
-            assigmentPartitions.RemoveAll(t => revokedPartitions.Contains(t));
-            restoreConsumer.Assign(assigmentPartitions);
+            // Unassign revoke partitions
+            restoreConsumer.IncrementalUnassign(revokedPartitions);
         }
 
         #region Private
@@ -284,20 +282,22 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 }
             }
 
-            // Assign new set of partitions
-            var newPartitions = registeredChangelogs.Select(c => c.StoreMetadata.ChangelogTopicPartition).ToList();
-            var topicPartitions = new List<TopicPartition>(restoreConsumer.Assignment);
-            topicPartitions.AddRange(newPartitions);
-            restoreConsumer.Assign(topicPartitions);
-
-            log.LogDebug($"Added partitions {string.Join(",", newPartitions.Select(c => $"{c.Topic}-{c.Partition}"))} " +
-                $"to the restore consumer, current assignment is {string.Join(",", topicPartitions.Select(c => $"{c.Topic}-{c.Partition}"))}");
-
             foreach (var r in registeredChangelogs)
                 r.ChangelogState = ChangelogState.RESTORING;
+            
+            // Assign new set of partitions with offsets
+            var newPartitionsOffsets = registeredChangelogs.Select(
+                c => new TopicPartitionOffset(
+                    c.StoreMetadata.ChangelogTopicPartition, 
+                    c.StoreMetadata.Offset.HasValue
+                        ? new Offset(c.StoreMetadata.Offset.Value + 1) : Offset.Beginning)).ToList();
+            restoreConsumer.IncrementalAssign(newPartitionsOffsets);
+            
+            log.LogDebug($"Added partitions with offsets {string.Join(",", newPartitionsOffsets.Select(c => $"{c.Topic}-{c.Partition}#{c.Offset}"))} " +
+                $"to the restore consumer, current assignment is {string.Join(",", restoreConsumer.Assignment.Select(c => $"{c.Topic}-{c.Partition}"))}");
 
             // Seek each changelog to current offset (beginning if not present)
-            foreach (var metadata in registeredChangelogs)
+            /*foreach (var metadata in registeredChangelogs)
             {
                 if (metadata.RestoreEndOffset != Offset.Unset)
                 {
@@ -317,7 +317,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                         log.LogDebug(
                             $"Start restoring changelog partition {metadata.StoreMetadata.ChangelogTopicPartition} from current offset {offset.Value} to end offset {metadata.RestoreEndOffset}.");
                 }
-            }
+            }*/
 
             // TODO : call trigger onRestoreStart(...)
         }

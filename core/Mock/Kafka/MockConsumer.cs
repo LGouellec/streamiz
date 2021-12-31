@@ -41,7 +41,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void Assign(TopicPartition partition)
         {
-            cluster.Assign2(this, new List<TopicPartition> { partition });
+            cluster.Assign(this, new List<TopicPartition> { partition });
         }
 
         public void Assign(TopicPartitionOffset partition)
@@ -56,7 +56,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void Assign(IEnumerable<TopicPartition> partitions)
         {
-            cluster.Assign2(this, partitions);
+            cluster.Assign(this, partitions);
             Assignment = partitions.ToList();
         }
 
@@ -158,7 +158,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void Unassign()
         {
-            cluster.Unassign2(this);
+            cluster.Unassign(this);
             Assignment.Clear();
         }
 
@@ -210,17 +210,24 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void IncrementalAssign(IEnumerable<TopicPartitionOffset> partitions)
         {
-            throw new NotImplementedException();
+            cluster.IncrementalAssign(this, partitions);
+            foreach(var tp in partitions)
+                if(!Assignment.Contains(tp.TopicPartition))
+                    Assignment.Add(tp.TopicPartition);
         }
 
         public void IncrementalAssign(IEnumerable<TopicPartition> partitions)
         {
-            throw new NotImplementedException();
+            cluster.IncrementalAssign(this, partitions);
+            foreach(var tp in partitions)
+                if(!Assignment.Contains(tp))
+                    Assignment.Add(tp);
         }
 
         public void IncrementalUnassign(IEnumerable<TopicPartition> partitions)
         {
-            throw new NotImplementedException();
+            cluster.IncrementalUnassign(this, partitions);
+            Assignment.RemoveAll(t => partitions.Contains(t));
         }
     }
 }

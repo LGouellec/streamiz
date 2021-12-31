@@ -396,7 +396,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             // Simulate Close + new open 
             taskManager.Close();
 
-            restoreConsumer.Resume(restoreConsumer.Assignment);
+            restoreConsumer.Resume(new TopicPartition("test-restoration-changelog-app-store-changelog", 0).ToSingle());
 
             taskManager.CreateTasks(
                         new List<TopicPartition>

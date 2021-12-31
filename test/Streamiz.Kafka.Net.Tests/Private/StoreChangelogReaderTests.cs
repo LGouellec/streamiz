@@ -118,7 +118,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             producer.Produce(changelogTopic, CreateMessage(changelogTopic, "key3", "value3"));
             producer.Produce(changelogTopic, CreateMessage(changelogTopic, "key4", "value4"));
 
-            restoreConsumer.Resume(restoreConsumer.Assignment);
+            restoreConsumer.Resume(new TopicPartition(changelogTopic, 0).ToSingle());
 
             storeChangelogReader.Restore();
             stateMgr.Checkpoint();
@@ -129,7 +129,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             store.Init(context, store);
             stateMgr.InitializeOffsetsFromCheckpoint();
 
-            restoreConsumer.Resume(restoreConsumer.Assignment);
+            restoreConsumer.Resume(new TopicPartition(changelogTopic, 0).ToSingle());
 
             storeChangelogReader.Restore();
 
@@ -156,7 +156,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             // delete state dir rocksdb
             Directory.Delete(Path.Combine(config.StateDir), true);
 
-            restoreConsumer.Resume(restoreConsumer.Assignment);
+            restoreConsumer.Resume(new TopicPartition(changelogTopic, 0).ToSingle());
             store.Init(context, store);
             stateMgr.InitializeOffsetsFromCheckpoint();
 
@@ -183,7 +183,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             sb.AppendLine("0").AppendLine("1").AppendLine("store-changelog-topic 0 -100");
             File.WriteAllText(Path.Combine(config.StateDir, config.ApplicationId, "0-0", ".checkpoint"), sb.ToString());
 
-            restoreConsumer.Resume(restoreConsumer.Assignment);
+            restoreConsumer.Resume(new TopicPartition(changelogTopic, 0).ToSingle());
             store.Init(context, store);
             stateMgr.InitializeOffsetsFromCheckpoint();
 
