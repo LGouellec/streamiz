@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>State stores &mdash; Streamiz.Kafka.Net  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Test topology driver" href="tology-test-driver.html" />
+    <link rel="prev" title="Statefull processors" href="statefull-processors.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> Streamiz.Kafka.Net
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Streamiz.Kafka.Net</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stream-configuration.html">Configuring a Stream Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stateless-processors.html">Stateless processors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="statefull-processors.html">Statefull processors</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">State stores</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#in-memory">In Memory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#in-memory-windows">In Memory Windows</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tology-test-driver.html">Test topology driver</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Streamiz.Kafka.Net</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>State stores</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/stores.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="state-stores">
+<h1>State stores<a class="headerlink" href="#state-stores" title="Permalink to this headline">¶</a></h1>
+<p>⚠️ <span style="color:red"><strong>Only no persistent store are supported !</strong></span> =&gt; RocksDB implementation will arrive soon. ⚠️</p>
+<p><strong>No changelog topics are created with In Memory store for moment !</strong></p>
+<section id="in-memory">
+<h2>In Memory<a class="headerlink" href="#in-memory" title="Permalink to this headline">¶</a></h2>
+<p>As his name, this is an inmemory key value state store which is supplied by InMemoryKeyValueBytesStoreSupplier.
+You have an child materialized class to help you to use it.</p>
+<p>It can be use in statefull operation like Count, Aggregate, Reduce but also to materialized IKTable&lt;K, V&gt; or IGlobalKTable&lt;K, V&gt;</p>
+<p>Example :</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">builder</span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">&quot;test-ktable&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">InMemory</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;.</span><span class="n">As</span><span class="p">(</span><span class="s">&quot;test-store&quot;</span><span class="p">));</span><span class="w"></span>
+
+<span class="n">builder</span><span class="w"></span>
+<span class="w">        </span><span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">.</span><span class="n">GroupBy</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">())</span><span class="w"></span>
+<span class="w">        </span><span class="p">.</span><span class="n">Aggregate</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="m">0L</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">agg</span><span class="w"> </span><span class="p">+</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">InMemory</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="p">&gt;.</span><span class="n">As</span><span class="p">(</span><span class="s">&quot;agg-store&quot;</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="p">&lt;</span><span class="n">Int64SerDes</span><span class="p">&gt;()</span><span class="w"></span>
+<span class="w">        </span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p><strong>Be carefull, this state store is not persistent ! So after each application restart, you loose the state of your state store.</strong></p>
+</section>
+<section id="in-memory-windows">
+<h2>In Memory Windows<a class="headerlink" href="#in-memory-windows" title="Permalink to this headline">¶</a></h2>
+<p>As his name, this is an inmemory windows state store which is supplied by InMemoryWindowStoreSupplier.
+You have an child materialized class to help you to use it.</p>
+<p>It can be use in windowing statefull operation like Count, Aggregate, Reduce in ITimeWindowedKStream&lt;K, V&gt;</p>
+<p>Example :</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">builder</span><span class="w"></span>
+<span class="w">        </span><span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">.</span><span class="n">GroupByKey</span><span class="p">()</span><span class="w"></span>
+<span class="w">        </span><span class="p">.</span><span class="n">WindowedBy</span><span class="p">(</span><span class="n">TumblingWindowOptions</span><span class="p">.</span><span class="n">Of</span><span class="p">(</span><span class="m">2000</span><span class="p">))</span><span class="w"></span>
+<span class="w">        </span><span class="p">.</span><span class="n">Aggregate</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">Math</span><span class="p">.</span><span class="n">Max</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">),</span><span class="w"></span>
+<span class="w">            </span><span class="n">InMemoryWindows</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="p">&gt;.</span><span class="n">As</span><span class="p">(</span><span class="s">&quot;store&quot;</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="p">&lt;</span><span class="n">Int32SerDes</span><span class="p">&gt;()</span><span class="w"></span>
+<span class="w">        </span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">.</span><span class="n">ToStream</span><span class="p">()</span><span class="w"></span>
+<span class="w">        </span><span class="p">.</span><span class="n">To</span><span class="p">&lt;</span><span class="n">StringTimeWindowedSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">Int32SerDes</span><span class="p">&gt;(</span><span class="s">&quot;output&quot;</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p><strong>Be carefull, this state store is not persistent ! So after each application restart, you loose the state of your state store.</strong></p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="statefull-processors.html" class="btn btn-neutral float-left" title="Statefull processors" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tology-test-driver.html" class="btn btn-neutral float-right" title="Test topology driver" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, @LGouellec.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
