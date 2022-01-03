@@ -260,10 +260,8 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public void Unassign()
         {
-            var offsets = this.Committed(TimeSpan.FromSeconds(1));
             Assignment.Clear();
-            Listener?.PartitionsRevoked(this, offsets);
-            this.offsets.Clear();
+            offsets.Clear();
         }
 
         public void Unsubscribe()
@@ -333,17 +331,19 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public void IncrementalAssign(IEnumerable<TopicPartitionOffset> partitions)
         {
-            throw new NotImplementedException();
+            Assign(partitions);
         }
 
         public void IncrementalAssign(IEnumerable<TopicPartition> partitions)
         {
-            throw new NotImplementedException();
+            Assign(partitions);
         }
 
         public void IncrementalUnassign(IEnumerable<TopicPartition> partitions)
         {
-            throw new NotImplementedException();
+            Assignment.RemoveAll(t => partitions.Contains(t));
+            foreach (var tp in partitions)
+                offsets.Remove(tp.Topic);
         }
     }
 }
