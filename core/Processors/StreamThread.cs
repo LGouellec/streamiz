@@ -148,8 +148,6 @@ namespace Streamiz.Kafka.Net.Processors
         public int Id => thread.ManagedThreadId;
 
         public void Dispose() => Close(true);
-
-        public void Wait() => thread?.Join();
         
         public void Run()
         {
