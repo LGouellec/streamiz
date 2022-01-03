@@ -494,31 +494,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
                 var copyPartitions = new List<TopicPartition>();
 
-                if (!consumers.ContainsKey(mockConsumer.Name))
-                {
-                    var cons = new MockConsumerInformation
-                    {
-                        GroupId = mockConsumer.MemberId,
-                        Name = mockConsumer.Name,
-                        Consumer = mockConsumer,
-                        Topics = new (),
-                        RebalanceListener = mockConsumer.Listener,
-                        Partitions = new(),
-                        TopicPartitionsOffset = new ()
-                    };
-                    consumers.TryAddOrUpdate(mockConsumer.Name, cons);
-
-                    if (consumerGroups.ContainsKey(mockConsumer.MemberId))
-                    {
-                        consumerGroups[mockConsumer.MemberId].Add(mockConsumer.Name);
-                    }
-                    else
-                    {
-                        consumerGroups.TryAddOrUpdate(mockConsumer.MemberId, new List<string> {mockConsumer.Name});
-                    }
-                }
-
-                var c = consumers[mockConsumer.Name];
+                var c = GetMetadataConsumer(mockConsumer);
                 copyPartitions.AddRange(c.Partitions);
                 c.Partitions.Clear();
                 bool r = CheckConsumerAlreadyAssign(c.GroupId, c.Name, topicPartitions);
@@ -576,31 +552,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         {
             lock (_lock)
             {
-                if (!consumers.ContainsKey(mockConsumer.Name))
-                {
-                    var cons = new MockConsumerInformation
-                    {
-                        GroupId = mockConsumer.MemberId,
-                        Name = mockConsumer.Name,
-                        Consumer = mockConsumer,
-                        Topics = new (),
-                        RebalanceListener = mockConsumer.Listener,
-                        Partitions = new(),
-                        TopicPartitionsOffset = new ()
-                    };
-                    consumers.TryAddOrUpdate(mockConsumer.Name, cons);
-
-                    if (consumerGroups.ContainsKey(mockConsumer.MemberId))
-                    {
-                        consumerGroups[mockConsumer.MemberId].Add(mockConsumer.Name);
-                    }
-                    else
-                    {
-                        consumerGroups.TryAddOrUpdate(mockConsumer.MemberId, new List<string> {mockConsumer.Name});
-                    }
-                }
-
-                var c = consumers[mockConsumer.Name];
+                var c = GetMetadataConsumer(mockConsumer);
                 bool r = CheckConsumerAlreadyAssign(c.GroupId, c.Name, partitions);
                 if (!r)
                 {
@@ -634,45 +586,10 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         }
         
         internal void IncrementalAssign(MockConsumer mockConsumer, IEnumerable<TopicPartitionOffset> partitions)
-        { 
-            /*if (tpo.Offset == Offset.Beginning)
-                tpos.OffsetConsumed = 0;
-            else if (tpo.Offset == Offset.End)
-            {
-                var topic = topics[tpo.Topic];
-                var part = topic.GetPartition(tpo.Partition);
-                tpos.OffsetConsumed = part.HighOffset;
-            }
-            else
-                tpos.OffsetConsumed = tpo.Offset;*/
-            
+        {
             lock (_lock)
             {
-                if (!consumers.ContainsKey(mockConsumer.Name))
-                {
-                    var cons = new MockConsumerInformation
-                    {
-                        GroupId = mockConsumer.MemberId,
-                        Name = mockConsumer.Name,
-                        Consumer = mockConsumer,
-                        Topics = new (),
-                        RebalanceListener = mockConsumer.Listener,
-                        Partitions = new(),
-                        TopicPartitionsOffset = new ()
-                    };
-                    consumers.TryAddOrUpdate(mockConsumer.Name, cons);
-
-                    if (consumerGroups.ContainsKey(mockConsumer.MemberId))
-                    {
-                        consumerGroups[mockConsumer.MemberId].Add(mockConsumer.Name);
-                    }
-                    else
-                    {
-                        consumerGroups.TryAddOrUpdate(mockConsumer.MemberId, new List<string> {mockConsumer.Name});
-                    }
-                }
-
-                var c = consumers[mockConsumer.Name];
+                var c = GetMetadataConsumer(mockConsumer);
                 bool r = CheckConsumerAlreadyAssign(c.GroupId, c.Name, partitions.Select(t => t.TopicPartition));
                 if (!r)
                 {
@@ -989,6 +906,34 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                 }
             }
         }
-        
+
+        private MockConsumerInformation GetMetadataConsumer(MockConsumer mockConsumer)
+        {
+            if (!consumers.ContainsKey(mockConsumer.Name))
+            {
+                var cons = new MockConsumerInformation
+                {
+                    GroupId = mockConsumer.MemberId,
+                    Name = mockConsumer.Name,
+                    Consumer = mockConsumer,
+                    Topics = new (),
+                    RebalanceListener = mockConsumer.Listener,
+                    Partitions = new(),
+                    TopicPartitionsOffset = new ()
+                };
+                consumers.TryAddOrUpdate(mockConsumer.Name, cons);
+
+                if (consumerGroups.ContainsKey(mockConsumer.MemberId))
+                {
+                    consumerGroups[mockConsumer.MemberId].Add(mockConsumer.Name);
+                }
+                else
+                {
+                    consumerGroups.TryAddOrUpdate(mockConsumer.MemberId, new List<string> {mockConsumer.Name});
+                }
+            }
+
+            return consumers[mockConsumer.Name];
+        }
     }
 }
