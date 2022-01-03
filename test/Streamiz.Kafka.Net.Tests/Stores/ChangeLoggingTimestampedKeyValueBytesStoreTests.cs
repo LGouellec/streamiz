@@ -31,11 +31,14 @@ namespace Streamiz.Kafka.Net.Tests.Stores
 
         private SyncKafkaSupplier kafkaSupplier = null;
         private IRecordCollector recordCollector = null;
+
         private StringSerDes stringSerDes = new StringSerDes();
+        private ValueAndTimestampSerDes<string> valueAndTimestampSerDes;
 
         [SetUp]
         public void Begin()
         {
+            valueAndTimestampSerDes = new ValueAndTimestampSerDes<string>(stringSerDes);
             config = new StreamConfig();
             config.ApplicationId = $"unit-test-changelogging-tkv";
 
@@ -77,10 +80,10 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             => Bytes.Wrap(stringSerDes.Serialize(key, new SerializationContext()));
 
         private byte[] CreateValue(string value)
-            => stringSerDes.Serialize(value, new SerializationContext());
+            => valueAndTimestampSerDes.Serialize(ValueAndTimestamp<string>.Make(value, DateTime.Now.GetMilliseconds()), new SerializationContext());
 
         private string FromValue(byte[] valueBytes)
-            => stringSerDes.Deserialize(valueBytes, new SerializationContext());
+            => valueAndTimestampSerDes.Deserialize(valueBytes, new SerializationContext()).Value;
 
         private string FromKey(byte[] keyBytes)
             => stringSerDes.Deserialize(keyBytes, new SerializationContext());
@@ -126,7 +129,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             var r = consumer.Consume();
 
             Assert.AreEqual("test", FromKey(r.Message.Key));
-            Assert.AreEqual("value", FromValue(r.Message.Value));
+            Assert.AreEqual("value", FromKey(r.Message.Value));
 
             var list = store.All().ToList();
 

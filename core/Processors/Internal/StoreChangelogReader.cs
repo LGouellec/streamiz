@@ -30,6 +30,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             internal long TotalRestored { get; set; }
             internal long? RestoreEndOffset { get; set; }
             internal long? BeginOffset { get; set; }
+            internal long? CurrentOffset { get; set; }
             internal int BufferedLimit { get; set; }
             internal ChangelogState ChangelogState { get; set; }
             internal List<ConsumeResult<byte[], byte[]>> BufferedRecords { get; set; }
@@ -90,6 +91,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 StateManager = processorStateManager,
                 ChangelogState = ChangelogState.REGISTERED,
                 RestoreEndOffset = null,
+                BeginOffset = null,
+                CurrentOffset = null,
                 TotalRestored = 0,
                 BufferedLimit = 0,
                 BufferedRecords = new List<ConsumeResult<byte[], byte[]>>()
@@ -188,16 +191,17 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 var records = changelogMetadata.BufferedRecords.Take(numRecords);
                 changelogMetadata.StateManager.Restore(changelogMetadata.StoreMetadata, records);
-
+                
                 if (numRecords >= changelogMetadata.BufferedRecords.Count)
                     changelogMetadata.BufferedRecords.Clear();
 
                 long currentOffset = changelogMetadata.StoreMetadata.Offset.Value;
+                changelogMetadata.CurrentOffset = currentOffset;
                 log.LogDebug($"Restored {numRecords} records from " +
-                    $"changelog {changelogMetadata.StoreMetadata.Store.Name} " +
-                    $"to store {changelogMetadata.StoreMetadata.ChangelogTopicPartition}, " +
-                    $"end offset is {(changelogMetadata.RestoreEndOffset.HasValue ? changelogMetadata.RestoreEndOffset.Value : "unknown")}, " +
-                    $"current offset is {currentOffset}");
+                             $"changelog {changelogMetadata.StoreMetadata.Store.Name} " +
+                             $"to store {changelogMetadata.StoreMetadata.ChangelogTopicPartition}, " +
+                             $"end offset is {(changelogMetadata.RestoreEndOffset.HasValue ? changelogMetadata.RestoreEndOffset.Value : "unknown")}, " +
+                             $"current offset is {currentOffset}");
 
                 changelogMetadata.BufferedLimit = 0;
                 changelogMetadata.TotalRestored += numRecords;
@@ -233,10 +237,10 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             if (!changelogMetadata.BufferedRecords.Any())
             {
                 var offset = restoreConsumer.Position(changelogMetadata.StoreMetadata.ChangelogTopicPartition);
-                return offset == Offset.Unset || offset >= endOffset;
+                return offset != Offset.Unset && offset >= endOffset;
             }
 
-            return changelogMetadata.BufferedRecords[0].Offset >= endOffset;
+            return changelogMetadata.CurrentOffset >= endOffset;
         }
 
         private void BufferedRecords(IEnumerable<ConsumeResult<byte[], byte[]>> records)
@@ -257,7 +261,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
         }
 
-        // TODO : use  Assign with offset topic/partition, remove Seek(..), cause internal exception with librdkafka
         private void InitChangelogs(IEnumerable<ChangelogMetadata> registeredChangelogs)
         {
             if (!registeredChangelogs.Any())
@@ -269,6 +272,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 if (endOffsets.ContainsKey(metadata.StoreMetadata.ChangelogTopicPartition)) {
                     metadata.RestoreEndOffset = endOffsets[metadata.StoreMetadata.ChangelogTopicPartition].Item2;
                     metadata.BeginOffset = endOffsets[metadata.StoreMetadata.ChangelogTopicPartition].Item1;
+                    log.LogDebug($"State store {metadata.StoreMetadata.ChangelogTopicPartition} metadata found (begin offset: {metadata.BeginOffset} / end offset : {metadata.RestoreEndOffset})");
                     
                     if(metadata.StoreMetadata.Offset.HasValue && metadata.StoreMetadata.Offset < endOffsets[metadata.StoreMetadata.ChangelogTopicPartition].Item1)
                     {

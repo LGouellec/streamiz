@@ -26,6 +26,7 @@ namespace sample_stream
             config.BootstrapServers = "localhost:9092";
             config.AutoOffsetReset = Confluent.Kafka.AutoOffsetReset.Earliest;
             config.StateDir = Path.Combine(".", Guid.NewGuid().ToString());
+
             config.Logger = LoggerFactory.Create(builder =>
             {
                 builder.SetMinimumLevel(LogLevel.Debug);
@@ -45,7 +46,6 @@ namespace sample_stream
             Console.CancelKeyPress += (o, e) => stream.Dispose();
 
             await stream.StartAsync();
-
             await Task.Delay(10000000);
         }
     }

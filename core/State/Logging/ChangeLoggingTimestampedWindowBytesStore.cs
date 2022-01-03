@@ -15,8 +15,8 @@ namespace Streamiz.Kafka.Net.State.Logging
         {
             if (valueAndTs != null)
             {
-                var data = ValueAndTimestampSerDes.Extract(valueAndTs);
-                context.Log(Name, key, data.Item2, data.Item1);
+                (long ts, byte[] data) = ValueAndTimestampSerDes.Extract(valueAndTs);
+                context.Log(Name, key, data, ts);
             }
             else
             {
