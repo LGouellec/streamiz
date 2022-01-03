@@ -46,7 +46,6 @@ namespace sample_stream
             Console.CancelKeyPress += (o, e) => stream.Dispose();
 
             await stream.StartAsync();
-            await Task.Delay(10000000);
         }
     }
 }

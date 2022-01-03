@@ -412,8 +412,13 @@ namespace Streamiz.Kafka.Net
                     {
                         t.Start(_cancelSource.Token);
                     }
+
+                    foreach (var t in threads)
+                        t.Wait();
                 }
             }, token.HasValue ? token.Value : _cancelSource.Token);
+
+            await Task.Delay(1000);
         }
 
         /// <summary>

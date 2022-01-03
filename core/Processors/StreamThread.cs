@@ -149,6 +149,8 @@ namespace Streamiz.Kafka.Net.Processors
 
         public void Dispose() => Close(true);
 
+        public void Wait() => thread?.Join();
+        
         public void Run()
         {
             Exception exception = null;
