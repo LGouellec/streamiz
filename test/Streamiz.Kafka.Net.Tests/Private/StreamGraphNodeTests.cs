@@ -88,9 +88,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.IsTrue(to.AllParentsWrittenToTopology);
 
             var topology = builder.BuildTopology();
-            Assert.IsTrue(topology.SourceOperators.ContainsKey("source-01"));
+            Assert.IsTrue(topology.SourceOperators.ContainsKey("topic"));
             Assert.IsTrue(topology.ProcessorOperators.ContainsKey("filter-02"));
-            Assert.IsTrue(topology.SinkOperators.ContainsKey("to-03"));
+            Assert.IsTrue(topology.SinkOperators.ContainsKey("topic2"));
         }
     }
 }

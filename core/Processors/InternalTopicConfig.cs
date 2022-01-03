@@ -7,6 +7,7 @@ namespace Streamiz.Kafka.Net.Processors
         public static readonly string RETENTION_MS_CONFIG = "retention.ms";
         public static readonly string MESSAGE_TIMESTAMP_TYPE_CONFIG = "message.timestamp.type";
         public static readonly string CLEANUP_POLICY_CONFIG = "cleanup.policy";
+        public static readonly string SEGMENT_BYTES_CONFIG = "segment.bytes";
     }
 
     public abstract class InternalTopicConfig

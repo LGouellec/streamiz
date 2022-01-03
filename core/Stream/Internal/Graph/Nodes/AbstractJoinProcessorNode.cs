@@ -9,9 +9,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
     /// <typeparam name="V1"></typeparam>
     /// <typeparam name="V2"></typeparam>
     /// <typeparam name="VR"></typeparam>
-    internal abstract class BaseJoinProcessorNode<K, V1, V2, VR> : StreamGraphNode
+    internal abstract class AbstractJoinProcessorNode<K, V1, V2, VR> : StreamGraphNode
     {
-        public BaseJoinProcessorNode(
+        public AbstractJoinProcessorNode(
             string name,
             IValueJoiner<V1, V2, VR> valueJoiner,
             ProcessorParameters<K, V1> joinLeftParams,

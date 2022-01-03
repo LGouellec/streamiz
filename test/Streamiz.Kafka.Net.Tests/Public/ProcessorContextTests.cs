@@ -82,7 +82,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 "thread",
                 taskId,
                 new List<TopicPartition>(),
-                new Stream.Internal.ProcessorTopology(null, null, null, null, null, null, null),
+                new Stream.Internal.ProcessorTopology(null, null, null, null, null, null, null, null),
                 null, config , null, new SyncProducer(config.ToProducerConfig()), new MockChangelogRegister());
 
             return streamTask;

@@ -18,6 +18,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             public IEnumerable<string> SinkTopics { get; internal set; }
             public IEnumerable<string> SourceTopics { get; internal set; }
             public IDictionary<string, InternalTopicConfig> ChangelogTopics { get; internal set; }
+            public IDictionary<string, InternalTopicConfig> RepartitionTopics { get; internal set; }
         }
 
         private readonly IDictionary<string, NodeFactory> nodeFactories = new Dictionary<string, NodeFactory>();
@@ -25,6 +26,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly IDictionary<string, StoreBuilder> globalStateBuilders = new Dictionary<string, StoreBuilder>();
         private readonly IList<string> sourceTopics = new List<string>();
         private readonly ISet<string> globalTopics = new HashSet<string>();
+        private readonly IList<string> internalTopics = new List<string>();
+
         private readonly QuickUnion<string> nodeGrouper = new QuickUnion<string>();
         private IDictionary<int, ISet<string>> nodeGroups = new Dictionary<int, ISet<string>>();
         private string applicationId;
@@ -209,6 +212,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             nodeGroups = null;
         }
 
+        internal void AddInternalTopic(string repartitionTopic)
+        {
+            if(!internalTopics.Contains(repartitionTopic)) 
+                internalTopics.Add(repartitionTopic);
+        }
+        
         private void ValidateTopicNotAlreadyRegistered(string topicName)
         {
             if (sourceTopics.Contains(topicName) || globalTopics.Contains(topicName))
@@ -326,7 +335,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             IDictionary<string, IProcessor> sinks = new Dictionary<string, IProcessor>();
             IDictionary<string, IProcessor> processors = new Dictionary<string, IProcessor>();
             IDictionary<string, IStateStore> stateStores = new Dictionary<string, IStateStore>();
-
+            IList<string> repartitionTopics = new List<string>();
+            
             foreach (var nodeFactory in nodeFactories.Values)
             {
                 if (nodeGroup == null || nodeGroup.Contains(nodeFactory.Name))
@@ -340,11 +350,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     }
                     else if (nodeFactory is ISourceNodeFactory)
                     {
-                        BuildSourceNode(sources, nodeFactory as ISourceNodeFactory, processor);
+                        BuildSourceNode(sources, repartitionTopics, nodeFactory as ISourceNodeFactory, processor);
                     }
                     else if (nodeFactory is ISinkNodeFactory)
                     {
-                        BuildSinkNode(processors, sinks, nodeFactory as ISinkNodeFactory, processor);
+                        BuildSinkNode(processors, repartitionTopics, sinks, nodeFactory as ISinkNodeFactory, processor);
                     }
                     else
                     {
@@ -362,22 +372,59 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 storesToTopics
                             .Where(e => stateStores.ContainsKey(e.Key) 
                                                                 || GlobalStateStores.ContainsKey(e.Key)));
-            return new ProcessorTopology(rootProcessor, sources, sinks, processors, stateStores, GlobalStateStores, storesToChangelog);
+            
+            return new ProcessorTopology(
+                rootProcessor,
+                sources,
+                sinks,
+                processors,
+                stateStores,
+                GlobalStateStores,
+                storesToChangelog,
+                repartitionTopics);
         }
 
-        private void BuildSinkNode(IDictionary<string, IProcessor> processors, IDictionary<string, IProcessor> sinks, ISinkNodeFactory factory, IProcessor processor)
+        private void BuildSinkNode(
+            IDictionary<string, IProcessor> processors,
+            IList<string> repartitionTopics,
+            IDictionary<string, IProcessor> sinks,
+            ISinkNodeFactory factory,
+            IProcessor processor)
         {
             foreach (var predecessor in factory.Previous)
             {
                 processors[predecessor].AddNextProcessor(processor);
             }
-
-            sinks.Add(factory.Name, processor);
+            
+            if (factory.Topic != null)
+            {
+                if (internalTopics.Contains(factory.Topic))
+                {
+                    var repartitionTopic = DecorateTopic(factory.Topic);
+                    repartitionTopics.Add(repartitionTopic);
+                    sinks.Add(repartitionTopic, processor);
+                }
+                else
+                    sinks.Add(factory.Topic, processor);
+            }
+            else
+                sinks.Add(factory.Name, processor);
         }
 
-        private void BuildSourceNode(IDictionary<string, IProcessor> sources, ISourceNodeFactory factory, IProcessor processor)
+        private void BuildSourceNode(
+            IDictionary<string, IProcessor> sources,
+            IList<string> repartitionTopics,
+            ISourceNodeFactory factory,
+            IProcessor processor)
         {
-            sources.Add(factory.Name, processor);
+            if (internalTopics.Contains(factory.Topic))
+            {
+                var repartitionTopic = DecorateTopic(factory.Topic);
+                repartitionTopics.Add(repartitionTopic);
+                sources.Add(repartitionTopic, processor);
+            }
+            else
+                sources.Add(factory.Topic, processor);
         }
 
         private void BuildProcessorNode(IDictionary<string, IProcessor> processors, IDictionary<string, IStateStore> stateStores, IProcessorNodeFactory factory, IProcessor processor, TaskId taskId)
@@ -437,9 +484,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         }
 
         private ISet<string> GlobalNodeGroups => nodeGroups
-        .Where(group => group.Value.Any(IsGlobalSource))
-        .SelectMany(group => group.Value)
-        .ToHashSet();
+                                                    .Where(group => group.Value.Any(IsGlobalSource))
+                                                    .SelectMany(group => group.Value)
+                                                    .ToHashSet();
 
         private bool IsGlobalSource(string node)
         {
@@ -507,6 +554,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 List<string> sinkTopics = new List<string>();
                 List<string> sourceTopics = new List<string>();
                 Dictionary<string, InternalTopicConfig> changelogTopics = new Dictionary<string, InternalTopicConfig>();
+                Dictionary<string, InternalTopicConfig> repartitionTopics = new Dictionary<string, InternalTopicConfig>();
 
                 foreach(var node in entry.Value)
                 {
@@ -514,10 +562,20 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     switch (nodeFactory)
                     {
                         case ISourceNodeFactory sourceNodeFactory:
-                            sourceTopics.Add(sourceNodeFactory.Topic);
+                            if (internalTopics.Contains(sourceNodeFactory.Topic))
+                            {
+                                var internalTopic = DecorateTopic(sourceNodeFactory.Topic);
+                                repartitionTopics.Add(internalTopic, new RepartitionTopicConfig(){Name = internalTopic});
+                                sourceTopics.Add(internalTopic);
+                            }
+                            else
+                                sourceTopics.Add(sourceNodeFactory.Topic);
                             break;
                         case ISinkNodeFactory sinkNodeFactory:
-                            sinkTopics.AddIfNotNull(sinkNodeFactory.Topic);
+                            if(internalTopics.Contains(sinkNodeFactory.Topic))
+                                sinkTopics.Add(DecorateTopic(sinkNodeFactory.Topic));
+                            else
+                                sinkTopics.AddIfNotNull(sinkNodeFactory.Topic);
                             break;
                         case IProcessorNodeFactory processorNodeFactory:
                             foreach(var store in processorNodeFactory.StateStores)
@@ -544,6 +602,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     topicGroups.Add(entry.Key, new TopologyTopicsInfo
                     {
                         ChangelogTopics = changelogTopics,
+                        RepartitionTopics = repartitionTopics,
                         SinkTopics = sinkTopics,
                         SourceTopics = sourceTopics
                     });
@@ -644,7 +703,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             return unknownChangelogTopicConfig;
         }
 
-        public TaskId GetTaskIdFromPartition(TopicPartition topicPartition)
+        internal TaskId GetTaskIdFromPartition(TopicPartition topicPartition)
         {
             var description = Describe();
             var subTopo =
@@ -676,5 +735,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             throw new TopologyException($"Topic {topicPartition.Topic} doesn't exist in this topology !");
         }
+
+        internal string DecorateTopic(string topic) => $"{applicationId}-{topic}";
     }
 }

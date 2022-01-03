@@ -13,7 +13,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             new Dictionary<string, IProcessor>(),
             new Dictionary<string, IStateStore>(),
             new Dictionary<string, IStateStore>(),
-            new Dictionary<string, string>());
+            new Dictionary<string, string>(),
+            new List<string>());
 
         internal IList<string> SourceProcessorNames => new List<string>(SourceOperators.Keys);
         internal IList<string> SinkProcessorNames => new List<string>(SinkOperators.Keys);
@@ -28,15 +29,16 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         internal IDictionary<string, IStateStore> GlobalStateStores { get; }
         internal IDictionary<string, string> StoresToTopics { get; }
+        internal IList<string> RepartitionTopics { get; }
 
-        internal ProcessorTopology(
-            IProcessor rootProcessor,
+        internal ProcessorTopology(IProcessor rootProcessor,
             IDictionary<string, IProcessor> sources,
             IDictionary<string, IProcessor> sinks,
             IDictionary<string, IProcessor> processors,
             IDictionary<string, IStateStore> stateStores,
             IDictionary<string, IStateStore> globalStateStores,
-            IDictionary<string, string> storesToTopics)
+            IDictionary<string, string> storesToTopics,
+            IList<string> repartitionTopics)
         {
             Root = rootProcessor;
             SourceOperators = sources;
@@ -45,12 +47,19 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             StateStores = stateStores;
             GlobalStateStores = globalStateStores;
             StoresToTopics = storesToTopics;
+            RepartitionTopics = repartitionTopics;
         }
 
         internal ISourceProcessor GetSourceProcessor(string name)
         {
-            var processor = SourceOperators.FirstOrDefault(kp => kp.Value is ISourceProcessor && (kp.Value as ISourceProcessor).TopicName.Equals(name));
-            return processor.Value as ISourceProcessor;
+            if (SourceOperators.ContainsKey(name))
+                return SourceOperators[name] as ISourceProcessor;
+            else
+            {
+                var processor = SourceOperators.FirstOrDefault(kp =>
+                    kp.Value is ISourceProcessor && (kp.Value as ISourceProcessor).TopicName.Equals(name));
+                return processor.Value as ISourceProcessor;
+            }
         }
 
         internal IEnumerable<string> GetSourceTopics() => SourceOperators.Select(o => (o.Value as ISourceProcessor).TopicName);
