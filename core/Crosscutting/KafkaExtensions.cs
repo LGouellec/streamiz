@@ -1,6 +1,7 @@
 ﻿using Confluent.Kafka;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.Crosscutting
 {
@@ -17,6 +18,12 @@ namespace Streamiz.Kafka.Net.Crosscutting
             return l;
         }
 
+        internal static int? PartitionCountForTopic(this Metadata metadata, string topic)
+        {
+            var topicInfo = metadata.Topics.FirstOrDefault(t => t.Topic.Equals(topic));
+            return topicInfo?.Partitions.Count;
+        }
+        
         // NOT USED FOR MOMENT
         //internal static IEnumerable<PartitionMetadata> PartitionsForTopic(this Metadata clusterMetadata, string topic)
         //{

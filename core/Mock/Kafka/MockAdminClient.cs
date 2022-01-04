@@ -43,7 +43,10 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             {
                 foreach (var specs in topics)
                 {
-                    cluster.CreateTopic(specs.Name, specs.NumPartitions);
+                    if(specs.NumPartitions > 0)
+                        cluster.CreateTopic(specs.Name, specs.NumPartitions);
+                    else
+                        cluster.CreateTopic(specs.Name);
                 }
             });
         }

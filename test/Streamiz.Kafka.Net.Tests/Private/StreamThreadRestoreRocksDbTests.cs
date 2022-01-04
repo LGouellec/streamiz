@@ -63,7 +63,10 @@ namespace Streamiz.Kafka.Net.Tests.Private
             
             var internalTopicManager =
                 new DefaultTopicManager(config, mockKafkaSupplier.GetAdmin(config.ToAdminConfig("admin")));
-            InternalTopicManagerUtils.CreateChangelogTopicsAsync(internalTopicManager, topo.Builder).GetAwaiter();
+            
+            InternalTopicManagerUtils
+                .New()
+                .CreateInternalTopicsAsync(internalTopicManager, topo.Builder).GetAwaiter();
 
         }
 
