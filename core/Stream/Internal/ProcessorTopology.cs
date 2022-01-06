@@ -15,12 +15,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             new Dictionary<string, IStateStore>(),
             new Dictionary<string, string>(),
             new List<string>());
-
-        internal IList<string> SourceProcessorNames => new List<string>(SourceOperators.Keys);
-        internal IList<string> SinkProcessorNames => new List<string>(SinkOperators.Keys);
-        internal IList<string> ProcessorNames => new List<string>(ProcessorOperators.Keys);
-
-
+        
         internal IProcessor Root { get; }
         internal IDictionary<string, IProcessor> SourceOperators { get; } = new Dictionary<string, IProcessor>();
         internal IDictionary<string, IProcessor> SinkOperators { get; } = new Dictionary<string, IProcessor>();
@@ -50,18 +45,19 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             RepartitionTopics = repartitionTopics;
         }
 
-        internal ISourceProcessor GetSourceProcessor(string name)
+        internal ISourceProcessor GetSourceProcessor(string topicName)
         {
-            if (SourceOperators.ContainsKey(name))
-                return SourceOperators[name] as ISourceProcessor;
+            if (SourceOperators.ContainsKey(topicName))
+                return SourceOperators[topicName] as ISourceProcessor;
             else
             {
                 var processor = SourceOperators.FirstOrDefault(kp =>
-                    kp.Value is ISourceProcessor && (kp.Value as ISourceProcessor).TopicName.Equals(name));
+                    kp.Value is ISourceProcessor && (kp.Value as ISourceProcessor).TopicName.Equals(topicName));
                 return processor.Value as ISourceProcessor;
             }
         }
 
-        internal IEnumerable<string> GetSourceTopics() => SourceOperators.Select(o => (o.Value as ISourceProcessor).TopicName);
+        internal IEnumerable<string> GetSourceTopics() => 
+            SourceOperators.Select(o => (o.Value as ISourceProcessor).TopicName);
     }
 }

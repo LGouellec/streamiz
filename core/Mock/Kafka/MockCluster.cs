@@ -774,7 +774,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             DeliveryReport<byte[], byte[]> r = new DeliveryReport<byte[], byte[]>();
 
             CreateTopic(topic);
-
+            
             // TODO : implement hashpartitionumber
             var i = RandomNumberGenerator.GetInt32(0, topics[topic].PartitionNumber);
             topics[topic].AddMessage(message.Key, message.Value, i);

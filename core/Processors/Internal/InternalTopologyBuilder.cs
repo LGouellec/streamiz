@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Confluent.Kafka;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
@@ -38,7 +40,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         // map from changelog topic name to its corresponding state store.
         private readonly IDictionary<string, string> topicsToStores = new Dictionary<string, string>();
 
-        internal IEnumerable<string> GetSourceTopics() => sourceTopics;
+        internal IEnumerable<string> GetSourceTopics()
+        {
+            var sourceTopicsTmp = new List<string>();
+            foreach(var s in sourceTopics)
+                sourceTopicsTmp.Add(internalTopics.Contains(s) ? DecorateTopic(s) : s);
+            return sourceTopicsTmp;
+        }
 
         internal IEnumerable<string> GetGlobalTopics() => globalTopics;
 
@@ -330,6 +338,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         private ProcessorTopology BuildTopology(ISet<string> nodeGroup, TaskId taskId)
         {
+            // need refactor a little for repartition topic/processor source & sink etc .. change topic name
             IProcessor rootProcessor = new RootProcessor();
             IDictionary<string, IProcessor> sources = new Dictionary<string, IProcessor>();
             IDictionary<string, IProcessor> sinks = new Dictionary<string, IProcessor>();
@@ -381,7 +390,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 stateStores,
                 GlobalStateStores,
                 storesToChangelog,
-                repartitionTopics);
+                repartitionTopics.Distinct().ToList());
         }
 
         private void BuildSinkNode(
@@ -403,6 +412,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     var repartitionTopic = DecorateTopic(factory.Topic);
                     repartitionTopics.Add(repartitionTopic);
                     sinks.Add(repartitionTopic, processor);
+                    ((ISinkProcessor) processor).UseRepartitionTopic(repartitionTopic);
                 }
                 else
                     sinks.Add(factory.Topic, processor);
@@ -422,6 +432,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 var repartitionTopic = DecorateTopic(factory.Topic);
                 repartitionTopics.Add(repartitionTopic);
                 sources.Add(repartitionTopic, processor);
+                ((ISourceProcessor) processor).TopicName = repartitionTopic;
             }
             else
                 sources.Add(factory.Topic, processor);
@@ -705,11 +716,25 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         internal TaskId GetTaskIdFromPartition(TopicPartition topicPartition)
         {
+            Func<ISourceNodeDescription, bool> predicate = (source) =>
+            {
+                bool isRepartitionTopic = Regex.IsMatch(topicPartition.Topic, $"{applicationId}-(.*)");
+                if (source.Topics.Contains(topicPartition.Topic))
+                    return true;
+                if (isRepartitionTopic)
+                    return source.Topics.Contains(topicPartition.Topic.Replace($"{applicationId}-", ""));
+                return false;
+            };
+            
             var description = Describe();
             var subTopo =
                 description
                     .SubTopologies
-                    .FirstOrDefault(sub => sub.Nodes.OfType<ISourceNodeDescription>().FirstOrDefault(source => source.Topics.Contains(topicPartition.Topic)) != null);
+                    .FirstOrDefault(sub =>
+                        sub
+                            .Nodes
+                            .OfType<ISourceNodeDescription>()
+                            .FirstOrDefault(predicate) != null);
 
             if (subTopo != null)
             {

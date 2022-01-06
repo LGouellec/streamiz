@@ -21,14 +21,15 @@ namespace Streamiz.Kafka.Net.Stream.Internal
     {
         private readonly GroupedStreamAggregateBuilder<K, V> aggregateBuilder;
 
-        public KGroupedStream(string name, Grouped<K, V> grouped, List<string> sourceNodes, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder)
-            : base(name, grouped.Key, grouped.Value, sourceNodes, streamsGraphNode, builder)
+        public KGroupedStream(string name, Grouped<K, V> grouped, List<string> sourceNodes, StreamGraphNode streamsGraphNode, bool repartitionRequired, InternalStreamBuilder builder)
+            : base(name, grouped.Key, grouped.Value, sourceNodes, repartitionRequired, streamsGraphNode, builder)
         {
             aggregateBuilder = new GroupedStreamAggregateBuilder<K, V>(
                 builder,
                 grouped,
                 sourceNodes,
                 name,
+                repartitionRequired,
                 Node);
         }
 

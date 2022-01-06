@@ -1,12 +1,18 @@
 ﻿using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    internal class SinkProcessor<K, V> : AbstractProcessor<K, V>
+    internal interface ISinkProcessor
     {
-        private readonly ITopicNameExtractor<K, V> topicNameExtractor;
+        void UseRepartitionTopic(string repartitionTopic);
+    }
+    
+    internal class SinkProcessor<K, V> : AbstractProcessor<K, V>, ISinkProcessor
+    {
+        private ITopicNameExtractor<K, V> topicNameExtractor;
 
         internal SinkProcessor(string name, ITopicNameExtractor<K, V> topicNameExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
             : base(name, keySerdes, valueSerdes)
@@ -52,5 +58,8 @@ namespace Streamiz.Kafka.Net.Processors
             var topicName = topicNameExtractor.Extract(key, value, Context.RecordContext);
             Context.RecordCollector.Send(topicName, key, value, Context.RecordContext.Headers, timestamp, KeySerDes, ValueSerDes);
         }
+
+        public void UseRepartitionTopic(string repartitionTopic)
+            => topicNameExtractor = new StaticTopicNameExtractor<K, V>(repartitionTopic);
     }
 }

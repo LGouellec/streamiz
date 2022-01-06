@@ -302,6 +302,7 @@ namespace Streamiz.Kafka.Net
             topology.Builder.RewriteTopology(configuration);
             
             // sanity check
+            // TODO : warning important check state store is open or not
             var processorTopology = topology.Builder.BuildTopology();
 
             int numStreamThreads = topology.Builder.HasNoNonGlobalTopology ? 0 : configuration.NumStreamThreads;

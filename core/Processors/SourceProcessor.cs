@@ -7,7 +7,7 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal interface ISourceProcessor : IProcessor
     {
-        string TopicName { get; }
+        string TopicName { get; set; }
         ITimestampExtractor Extractor { get; }
         ObjectDeserialized DeserializeKey(ConsumeResult<byte[], byte[]> record);
         ObjectDeserialized DeserializeValue(ConsumeResult<byte[], byte[]> record);
@@ -15,16 +15,14 @@ namespace Streamiz.Kafka.Net.Processors
 
     internal class SourceProcessor<K, V> : AbstractProcessor<K, V>, ISourceProcessor
     {
-        private readonly string topicName;
-
         internal SourceProcessor(string name, string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, ITimestampExtractor extractor)
             : base(name, keySerdes, valueSerdes)
         {
-            this.topicName = topicName;
+            TopicName = topicName;
             Extractor = extractor;
         }
 
-        public string TopicName => topicName;
+        public string TopicName { get; set; }
 
         public ITimestampExtractor Extractor { get; }
 

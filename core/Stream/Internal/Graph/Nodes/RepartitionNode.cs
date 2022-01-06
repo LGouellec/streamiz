@@ -13,17 +13,34 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
 
         public override void WriteToTopology(InternalTopologyBuilder builder)
         {
-            builder.AddInternalTopic(RepartitionTopic);
-            builder.AddProcessor(ProcessorParameters.ProcessorName, ProcessorParameters.Processor, ParentNodeNames());
-            builder.AddSinkOperator(
-                new StaticTopicNameExtractor<K, V>(RepartitionTopic),
-                SinkName,
-                Produced<K, V>.Create(KeySerdes, ValueSerdes),
-                ProcessorParameters.ProcessorName);
-            builder.AddSourceOperator(
-                RepartitionTopic,
-                SourceName,
-                new ConsumedInternal<K, V>(SourceName, KeySerdes, ValueSerdes, new FailOnInvalidTimestamp()));
+            if (ProcessorParameters != null)
+            {
+                builder.AddInternalTopic(RepartitionTopic);
+                builder.AddProcessor(ProcessorParameters.ProcessorName, ProcessorParameters.Processor,
+                    ParentNodeNames());
+                builder.AddSinkOperator(
+                    new StaticTopicNameExtractor<K, V>(RepartitionTopic),
+                    SinkName,
+                    Produced<K, V>.Create(KeySerdes, ValueSerdes),
+                    ProcessorParameters.ProcessorName);
+                builder.AddSourceOperator(
+                    RepartitionTopic,
+                    SourceName,
+                    new ConsumedInternal<K, V>(SourceName, KeySerdes, ValueSerdes, new FailOnInvalidTimestamp()));
+            }
+            else
+            {
+                builder.AddInternalTopic(RepartitionTopic);
+                builder.AddSinkOperator(
+                    new StaticTopicNameExtractor<K, V>(RepartitionTopic),
+                    SinkName,
+                    Produced<K, V>.Create(KeySerdes, ValueSerdes),
+                    ParentNodeNames());
+                builder.AddSourceOperator(
+                    RepartitionTopic,
+                    SourceName,
+                    new ConsumedInternal<K, V>(SourceName, KeySerdes, ValueSerdes, new FailOnInvalidTimestamp()));
+            }
         }
     }
 }
