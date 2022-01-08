@@ -17,8 +17,11 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf
     {
         internal SchemaRegistryConfig GetConfig(ISchemaRegistryConfig config)
         {
-            SchemaRegistryConfig c = new SchemaRegistryConfig();
-            c.Url = config.SchemaRegistryUrl;
+            var c = new SchemaRegistryConfig
+            {
+                Url = config.SchemaRegistryUrl
+            };
+
             if (config.SchemaRegistryMaxCachedSchemas.HasValue)
             {
                 c.MaxCachedSchemas = config.SchemaRegistryMaxCachedSchemas;
@@ -44,15 +47,43 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf
 
         internal ProtobufSerializerConfig GetSerializerConfig(ISchemaRegistryConfig config)
         {
-            ProtobufSerializerConfig c = new ProtobufSerializerConfig();
+            var c = new ProtobufSerializerConfig();
+
             if (config.AutoRegisterSchemas.HasValue)
             {
                 c.AutoRegisterSchemas = config.AutoRegisterSchemas;
             }
+
+            if (config.BufferBytes.HasValue)
+            {
+                c.BufferBytes = config.BufferBytes.Value;
+            }
+
+            if (config.UseDeprecatedFormat.HasValue)
+            {
+                c.UseDeprecatedFormat = config.UseDeprecatedFormat.Value;
+            }
+
+            if (config.SkipKnownTypes.HasValue)
+            {
+                c.SkipKnownTypes = config.SkipKnownTypes.Value;
+            }
+
             if (config.SubjectNameStrategy.HasValue)
             {
                 c.SubjectNameStrategy = (Confluent.SchemaRegistry.SubjectNameStrategy)config.SubjectNameStrategy.Value;
             }
+
+            if (config.ReferenceSubjectNameStrategy.HasValue)
+            {
+                c.ReferenceSubjectNameStrategy = (Confluent.SchemaRegistry.ReferenceSubjectNameStrategy)config.ReferenceSubjectNameStrategy.Value;
+            }
+
+            if (config.UseLatestVersion.HasValue)
+            {
+                c.UseLatestVersion = config.UseLatestVersion.Value;
+            }
+
             return c;
         }
 

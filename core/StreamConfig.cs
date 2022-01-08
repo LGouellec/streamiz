@@ -360,10 +360,19 @@ namespace Streamiz.Kafka.Net
         internal static readonly string schemaRegistryUrlCst = "schema.registry.url";
         internal static readonly string schemaRegistryBasicAuthUserInfoCst = "schema.registry.basic.auth.user.info";
         internal static readonly string schemaRegistryBasicAuthCredentialSourceCst = "schema.registry.basic.auth.credentials.source";
-        internal static readonly string schemaRegistryAutoRegisterCst = "schema.registry.auto.register.schema";
         internal static readonly string schemaRegistryRequestTimeoutMsCst = "schema.registry.request.timeout.ms";
         internal static readonly string schemaRegistryMaxCachedSchemasCst = "schema.registry.max.cached.schemas";
+        internal static readonly string avroSerializerAutoRegisterSchemasCst = "avro.serializer.auto.register.schemas";
         internal static readonly string avroSerializerSubjectNameStrategyCst = "avro.serializer.subject.name.strategy";
+        internal static readonly string avroSerializerUseLatestVersionCst = "avro.serializer.use.latest.version";
+        internal static readonly string avroSerializerBufferBytesCst = "avro.serializer.buffer.bytes";
+        internal static readonly string protobufAutoRegisterSchemasCst = "protobuf.serializer.auto.register.schemas";
+        internal static readonly string protobufSerializerBufferBytesCst = "protobuf.serializer.buffer.bytes";
+        internal static readonly string protobufSerializerUseLatestVersionCst = "protobuf.serializer.use.latest.version";
+        internal static readonly string protobufSerializerSkipKnownTypesCst = "protobuf.serializer.skip.known.types";
+        internal static readonly string protobufSerializerUseDeprecatedFormatCst = "protobuf.serializer.use.deprecated.format";
+        internal static readonly string protobufSerializerSubjectNameStrategyCst = "protobuf.serializer.subject.name.strategy";
+        internal static readonly string protobufSerializerReferenceSubjectNameStrategyCst = "protobuf.serializer.reference.subject.name.strategy";
         internal static readonly string applicatonIdCst = "application.id";
         internal static readonly string clientIdCst = "client.id";
         internal static readonly string numStreamThreadsCst = "num.stream.threads";
@@ -1882,11 +1891,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Constructor empty
         /// </summary>
-        public StreamConfig()
-            : this(null)
-        {
-
-        }
+        public StreamConfig() : this(null) { }
 
         /// <summary>
         /// Constructor with a dictionary of properties.
@@ -1936,12 +1941,12 @@ namespace Streamiz.Kafka.Net
             EnableAutoCommit = false;
             EnableAutoOffsetStore = false;
             PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.CooperativeSticky;
-            
+
             Logger = LoggerFactory.Create(builder =>
             {
                 builder.SetMinimumLevel(LogLevel.Information);
                 builder.AddConsole();
-            });;
+            });
         }
 
         #endregion
@@ -2326,12 +2331,34 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
-        /// Specifies whether or not the Avro serializer should attempt to auto-register unrecognized schemas with Confluent Schema Registry. default: true
+        ///    BasicAuthUserInfo
+        /// </summary>
+        public string BasicAuthUserInfo
+        {
+            get => this.ContainsKey(schemaRegistryBasicAuthUserInfoCst) ? this[schemaRegistryBasicAuthUserInfoCst] : null;
+            set => this.AddOrUpdate(schemaRegistryBasicAuthUserInfoCst, value);
+        }
+
+        /// <summary>
+        ///    BasicAuthCredentialsSource
+        /// </summary>
+        public int? BasicAuthCredentialsSource
+        {
+            get => this.ContainsKey(schemaRegistryBasicAuthCredentialSourceCst) ? this[schemaRegistryBasicAuthCredentialSourceCst] : null;
+            set => this.AddOrUpdate(schemaRegistryBasicAuthCredentialSourceCst, value);
+        }
+
+        /// <summary>
+        /// Specifies whether or not the serializer should attempt to auto-register unrecognized schemas with Confluent Schema Registry. default: true
         /// </summary>
         public bool? AutoRegisterSchemas
         {
-            get => this.ContainsKey(schemaRegistryAutoRegisterCst) ? this[schemaRegistryAutoRegisterCst] : null;
-            set => this.AddOrUpdate(schemaRegistryAutoRegisterCst, value);
+            get => this.ContainsKey(avroSerializerAutoRegisterSchemasCst) ? this[avroSerializerAutoRegisterSchemasCst] : null;
+            set
+            {
+                this.AddOrUpdate(avroSerializerAutoRegisterSchemasCst, value);
+                this.AddOrUpdate(protobufAutoRegisterSchemasCst, value);
+            }
         }
 
         /// <summary>
@@ -2340,19 +2367,73 @@ namespace Streamiz.Kafka.Net
         public SubjectNameStrategy? SubjectNameStrategy
         {
             get => this.ContainsKey(avroSerializerSubjectNameStrategyCst) ? this[avroSerializerSubjectNameStrategyCst] : null;
-            set => this.AddOrUpdate(avroSerializerSubjectNameStrategyCst, value);
+            set
+            {
+                this.AddOrUpdate(avroSerializerSubjectNameStrategyCst, value);
+                this.AddOrUpdate(protobufSerializerSubjectNameStrategyCst, value);
+            }
         }
 
-        public string BasicAuthUserInfo
+        /// <summary>
+        ///    Specifies the initial size (in bytes) of the buffer used for message
+        ///    serialization. Use a value high enough to avoid resizing the buffer, but small
+        ///    enough to avoid excessive memory use. Inspect the size of the byte array returned
+        ///    by the Serialize method to estimate an appropriate value. Note: each call to
+        ///    serialize creates a new buffer. default: 1024
+        /// </summary>
+        public int? BufferBytes
         {
-            get => this.ContainsKey(schemaRegistryBasicAuthUserInfoCst) ? this[schemaRegistryBasicAuthUserInfoCst] : null;
-            set => this.AddOrUpdate(schemaRegistryBasicAuthUserInfoCst, value);
+            get => this.ContainsKey(avroSerializerBufferBytesCst) ? this[avroSerializerBufferBytesCst] : null;
+            set
+            {
+                this.AddOrUpdate(avroSerializerBufferBytesCst, value);
+                this.AddOrUpdate(protobufSerializerBufferBytesCst, value);
+            }
         }
 
-        public int? BasicAuthCredentialsSource
+        /// <summary>
+        ///    Specifies whether or not the serializer should use the latest subject
+        ///    version for serialization. WARNING: There is no check that the latest schema
+        ///    is backwards compatible with the schema of the object being serialized. default:
+        ///    false
+        /// </summary>
+        public bool? UseLatestVersion
         {
-            get => this.ContainsKey(schemaRegistryBasicAuthCredentialSourceCst) ? this[schemaRegistryBasicAuthCredentialSourceCst] : null;
-            set => this.AddOrUpdate(schemaRegistryBasicAuthCredentialSourceCst, value);
+            get => this.ContainsKey(avroSerializerUseLatestVersionCst) ? this[avroSerializerUseLatestVersionCst] : null;
+            set
+            {
+                this.AddOrUpdate(avroSerializerUseLatestVersionCst, value);
+                this.AddOrUpdate(protobufSerializerUseLatestVersionCst, value);
+            }
+        }
+
+        /// <summary>
+        ///    Specifies whether or not the Protobuf serializer should skip known types when
+        ///    resolving dependencies. default: false
+        /// </summary>
+        public bool? SkipKnownTypes
+        {
+            get => this.ContainsKey(protobufSerializerSkipKnownTypesCst) ? this[protobufSerializerSkipKnownTypesCst] : null;
+            set => this.AddOrUpdate(protobufSerializerSkipKnownTypesCst, value);
+        }
+
+        /// <summary>
+        ///    Specifies whether the Protobuf serializer should serialize message indexes without
+        ///    zig-zag encoding. default: false
+        /// </summary>
+        public bool? UseDeprecatedFormat
+        {
+            get => this.ContainsKey(protobufSerializerUseDeprecatedFormatCst) ? this[protobufSerializerUseDeprecatedFormatCst] : null;
+            set => this.AddOrUpdate(protobufSerializerUseDeprecatedFormatCst, value);
+        }
+
+        /// <summary>
+        ///    Reference subject name strategy. default: ReferenceSubjectNameStrategy.ReferenceName
+        /// </summary>
+        public ReferenceSubjectNameStrategy? ReferenceSubjectNameStrategy
+        {
+            get => this.ContainsKey(protobufSerializerReferenceSubjectNameStrategyCst) ? this[protobufSerializerReferenceSubjectNameStrategyCst] : null;
+            set => this.AddOrUpdate(protobufSerializerReferenceSubjectNameStrategyCst, value);
         }
 
         #endregion
@@ -2438,7 +2519,7 @@ namespace Streamiz.Kafka.Net
         }
 
         #endregion
-        
+
         #region Logger Configuration
 
         /// <summary>
@@ -2476,14 +2557,10 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Constructor empty
         /// </summary>
-        public StreamConfig()
-            : this(null)
-        {
-
-        }
+        public StreamConfig() : this(null) { }
 
         /// <summary>
-        /// Constructor with properties. 
+        /// Constructor with properties.
         /// See <see cref="StreamConfig.StreamConfig(IDictionary{string, dynamic})"/>
         /// <para>
         /// <see cref="IStreamConfig.DefaultKeySerDes"/> is set to <code>new KS();</code>
