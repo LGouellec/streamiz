@@ -63,6 +63,7 @@ namespace Streamiz.Kafka.Net.Processors
             foreach (var p in partitions)
             {
                 var sourceProcessor = processorTopology.GetSourceProcessor(p.Topic);
+                sourceProcessor.SetTaskId(id);
                 var sourceTimestampExtractor = sourceProcessor.Extractor ?? configuration.DefaultTimestampExtractor;
                 var queue = new RecordQueue(
                     logPrefix,

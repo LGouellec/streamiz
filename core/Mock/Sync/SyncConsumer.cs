@@ -3,6 +3,7 @@ using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 
@@ -70,8 +71,10 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             if (!offsets.ContainsKey(partition.Topic))
             {
                 offsets.Add(partition.Topic, new SyncConsumerOffset());
-                Assignment.Add(partition);
             }
+            
+            if(!Assignment.Contains(partition))
+                Assignment.Add(partition);
         }
 
         public void Assign(TopicPartitionOffset partition)
@@ -81,12 +84,12 @@ namespace Streamiz.Kafka.Net.Mock.Sync
                 offset = partition.Offset.Value;
 
             if (!offsets.ContainsKey(partition.Topic))
-            {
                 offsets.Add(partition.Topic, new SyncConsumerOffset(offset));
-                Assignment.Add(partition.TopicPartition);
-            }
             else
                 offsets[partition.Topic] = new SyncConsumerOffset(offset);
+            
+            if(!Assignment.Contains(partition.TopicPartition))
+                Assignment.Add(partition.TopicPartition);
         }
 
         public void Assign(IEnumerable<TopicPartitionOffset> partitions)
@@ -241,8 +244,8 @@ namespace Streamiz.Kafka.Net.Mock.Sync
                 if (!offsets.ContainsKey(t))
                 {
                     offsets.Add(t, new SyncConsumerOffset(0L));
-                    Assignment.Add(new TopicPartition(t, 0));
                 }
+                Assignment.Add(new TopicPartition(t, 0));
             }
             Listener?.PartitionsAssigned(this, Assignment);
         }
@@ -261,7 +264,8 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         public void Unassign()
         {
             Assignment.Clear();
-            // TO TEST offsets.Clear();
+            foreach (var kp in offsets)
+                kp.Value.OffsetConsumed = kp.Value.OffsetCommitted;
         }
 
         public void Unsubscribe()

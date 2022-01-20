@@ -84,8 +84,6 @@ namespace Streamiz.Kafka.Net.Processors
             foreach (var n in Next)
                 if (n is IProcessor<K1, V1>)
                     (n as IProcessor<K1, V1>).Process(key, value);
-                        /*     else if (value is IChange)
-                    n.Process(key, ((IChange) value).New);*/
         }
 
         public virtual void Forward<K1, V1>(K1 key, V1 value, string name)
@@ -146,15 +144,17 @@ namespace Streamiz.Kafka.Net.Processors
         }
 
         protected void LogProcessingKeyValue(K key, V value) => log.LogDebug(
-            "{LogPrefix}Process<{KeyType},{ValueType}> message with key {Key} and {Value} with record metadata [topic:{Topic}|partition:{Partition}|offset:{Offset}]",
-            logPrefix, typeof(K).Name, typeof(V).Name, key, value, Context.RecordContext.Topic,
-            Context.RecordContext.Partition, Context.RecordContext.Offset);
+            $"{logPrefix}Process<{typeof(K).Name},{typeof(V).Name}> message with key {key} and {value}" +
+            $" with record metadata [topic:{Context.RecordContext.Topic}|" +
+            $"partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}]");
 
         #region Setter
 
-        internal void SetTaskId(TaskId id)
+        public void SetTaskId(TaskId id)
         {
             logPrefix = $"stream-task[{id.Id}|{id.Partition}]|processor[{Name}]- ";
+            foreach(var n in Next)
+                n.SetTaskId(id);
         }
 
         public void AddNextProcessor(IProcessor next)
