@@ -32,15 +32,14 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
-                var outputTopic = driver.CreateOuputTopic<string, string>("output");
+                var outputTopic = driver.CreateOuputTopic<string, long, StringSerDes, Int64SerDes>("output");
                 inputTopic.PipeInput("test", "test1");
                 inputTopic.PipeInput("test", "test2");
                 inputTopic.PipeInput("test", "test3");
                 var records = outputTopic.ReadKeyValuesToMap();
                 Assert.IsNotNull(records);
-                Assert.AreEqual(3, records.Count);
-                Assert.AreEqual("test-coucou", records["test"]);
-                Assert.AreEqual("test2-", records["test2"]);
+                Assert.AreEqual(1, records.Count);
+                Assert.AreEqual(3, records["TEST"]);
             }
         }
 

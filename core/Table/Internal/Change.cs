@@ -7,8 +7,8 @@
 
         public Change(T old, T @new)
         {
-            this.OldValue = old;
-            this.NewValue = @new;
+            OldValue = old;
+            NewValue = @new;
         }
 
         public override string ToString() => $"OldValue:{OldValue}|NewValue:{NewValue}";

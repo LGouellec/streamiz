@@ -49,7 +49,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         }
 
         internal IEnumerable<string> GetGlobalTopics() => globalTopics;
-
+        
         internal IDictionary<string, IStateStore> GlobalStateStores { get; } = new Dictionary<string, IStateStore>();
 
         internal bool HasNoNonGlobalTopology => !sourceTopics.Any();
@@ -598,7 +598,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                                     {
                                         if (stateFactories.ContainsKey(store))
                                         {
-                                            var internalTopicConfig = CreateChangelogTopic(stateFactories[store], changelogTopic);
+                                            var internalTopicConfig = CreateChangelogTopicConfig(stateFactories[store], changelogTopic);
                                             changelogTopics.Add(changelogTopic, internalTopicConfig);
                                         }
                                     }
@@ -693,7 +693,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         #endregion
 
-        private InternalTopicConfig CreateChangelogTopic(StateStoreFactory stateStoreFactory, string changelogTopic)
+        private InternalTopicConfig CreateChangelogTopicConfig(StateStoreFactory stateStoreFactory, string changelogTopic)
         {
             if (stateStoreFactory.IsWindowStore)
             {
@@ -714,15 +714,15 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             return unknownChangelogTopicConfig;
         }
 
-        internal TaskId GetTaskIdFromPartition(TopicPartition topicPartition)
+        private ISubTopologyDescription GetSubTopologyDescription(string topic)
         {
             Func<ISourceNodeDescription, bool> predicate = (source) =>
             {
-                bool isRepartitionTopic = Regex.IsMatch(topicPartition.Topic, $"{applicationId}-(.*)");
-                if (source.Topics.Contains(topicPartition.Topic))
+                bool isRepartitionTopic = Regex.IsMatch(topic, $"{applicationId}-(.*)");
+                if (source.Topics.Contains(topic))
                     return true;
                 if (isRepartitionTopic)
-                    return source.Topics.Contains(topicPartition.Topic.Replace($"{applicationId}-", ""));
+                    return source.Topics.Contains(topic.Replace($"{applicationId}-", ""));
                 return false;
             };
             
@@ -735,6 +735,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                             .Nodes
                             .OfType<ISourceNodeDescription>()
                             .FirstOrDefault(predicate) != null);
+            return subTopo;
+        }
+        
+        internal TaskId GetTaskIdFromPartition(TopicPartition topicPartition)
+        {
+            var description = Describe();
+            var subTopo = GetSubTopologyDescription(topicPartition.Topic);
 
             if (subTopo != null)
             {
@@ -761,6 +768,33 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             throw new TopologyException($"Topic {topicPartition.Topic} doesn't exist in this topology !");
         }
 
-        internal string DecorateTopic(string topic) => $"{applicationId}-{topic}";
+        private string DecorateTopic(string topic) => $"{applicationId}-{topic}";
+
+        // FOR TESTING
+        internal bool IsRepartitionTopology() => internalTopics.Any();
+
+        internal void GetRepartitionLinkTopics(string topic, IList<string> repartitionLinkTopics)
+        {
+            var subTopo = GetSubTopologyDescription(topic);
+            if (subTopo != null)
+            {
+                var sinkNodes = subTopo
+                    .Nodes
+                    .OfType<ISinkNodeDescription>();
+
+                foreach (var sinkNode in sinkNodes)
+                {
+                    if (GetSubTopologyDescription(sinkNode.Topic) != null)
+                    {
+                        var sinkTopic = internalTopics.Contains(sinkNode.Topic)
+                            ? DecorateTopic(sinkNode.Topic)
+                            : sinkNode.Topic;
+                        repartitionLinkTopics.Add(sinkTopic);
+                        GetRepartitionLinkTopics(sinkTopic, repartitionLinkTopics);
+                    }
+                }
+            }
+        }
+        
     }
 }

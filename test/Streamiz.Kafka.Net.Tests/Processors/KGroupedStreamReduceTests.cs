@@ -113,7 +113,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var stream = builder
                .Stream<string, string>("topic")
                .MapValues(v => v.Length)
-               .GroupBy((k, v) => k.ToUpper());
+               .GroupBy<string, StringSerDes, Int32SerDes>((k, v) => k.ToUpper());
 
             stream.Count(InMemory<string, long>.As("count-store"));
             stream.Reduce(

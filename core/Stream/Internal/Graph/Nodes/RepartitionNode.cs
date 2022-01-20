@@ -1,4 +1,3 @@
-using System.Xml.Linq;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 

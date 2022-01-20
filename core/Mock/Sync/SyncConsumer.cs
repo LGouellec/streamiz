@@ -253,15 +253,15 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             if (!offsets.ContainsKey(topic))
             {
                 offsets.Add(topic, new SyncConsumerOffset(0L));
-                Assignment.Add(new TopicPartition(topic, 0));
             }
+            Assignment.Add(new TopicPartition(topic, 0));
             Listener?.PartitionsAssigned(this, Assignment);
         }
 
         public void Unassign()
         {
             Assignment.Clear();
-            offsets.Clear();
+            // TO TEST offsets.Clear();
         }
 
         public void Unsubscribe()
@@ -296,26 +296,29 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
             foreach (var kp in offsets)
             {
-                if (timeout != TimeSpan.Zero && (dt + timeout) < DateTime.Now)
-                    break;
-
-                var tp = new TopicPartition(kp.Key, 0);
-                if (producer != null && 
-                    ((partitionsState.ContainsKey(tp) && !partitionsState[tp]) || 
-                    !partitionsState.ContainsKey(tp)))
+                if (Assignment.Select(a => a.Topic).Contains(kp.Key))
                 {
-                    var messages = producer.GetHistory(kp.Key).ToArray();
-                    if (messages.Length > kp.Value.OffsetConsumed)
+                    if (timeout != TimeSpan.Zero && (dt + timeout) < DateTime.Now)
+                        break;
+
+                    var tp = new TopicPartition(kp.Key, 0);
+                    if (producer != null &&
+                        ((partitionsState.ContainsKey(tp) && !partitionsState[tp]) ||
+                         !partitionsState.ContainsKey(tp)))
                     {
-                        result = new ConsumeResult<byte[], byte[]>
+                        var messages = producer.GetHistory(kp.Key).ToArray();
+                        if (messages.Length > kp.Value.OffsetConsumed)
                         {
-                            Offset = kp.Value.OffsetConsumed,
-                            Topic = kp.Key,
-                            Partition = 0,
-                            Message = messages[kp.Value.OffsetConsumed]
-                        };
-                        ++kp.Value.OffsetConsumed;
-                        return result;
+                            result = new ConsumeResult<byte[], byte[]>
+                            {
+                                Offset = kp.Value.OffsetConsumed,
+                                Topic = kp.Key,
+                                Partition = 0,
+                                Message = messages[kp.Value.OffsetConsumed]
+                            };
+                            ++kp.Value.OffsetConsumed;
+                            return result;
+                        }
                     }
                 }
             }

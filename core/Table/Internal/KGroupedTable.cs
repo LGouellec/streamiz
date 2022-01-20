@@ -167,10 +167,9 @@ namespace Streamiz.Kafka.Net.Table.Internal
                 $"{grouped.Named ?? materializedInternal.StoreName}{KStream.REPARTITION_TOPIC_SUFFIX}";
             
             if(repartitionNode == null || grouped.Named == null)
-                repartitionNode = new RepartitionNode<K, V>(
+                repartitionNode = new GroupedTableRepartitionNode<K, V>(
                     sourceName,
                     sourceName,
-                    null,
                     KeySerdes,
                     ValueSerdes,
                     sinkName,

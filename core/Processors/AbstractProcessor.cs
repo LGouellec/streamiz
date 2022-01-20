@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -79,9 +80,12 @@ namespace Streamiz.Kafka.Net.Processors
         {
             log.LogDebug("{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to each next processor",
                 logPrefix, typeof(K1).Name, typeof(V1).Name, key, value);
+            
             foreach (var n in Next)
                 if (n is IProcessor<K1, V1>)
                     (n as IProcessor<K1, V1>).Process(key, value);
+                        /*     else if (value is IChange)
+                    n.Process(key, ((IChange) value).New);*/
         }
 
         public virtual void Forward<K1, V1>(K1 key, V1 value, string name)

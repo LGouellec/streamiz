@@ -47,8 +47,12 @@ namespace Streamiz.Kafka.Net.Crosscutting
 
         public ByteBuffer Put(byte[] bytes)
         {
-            writer.BaseStream.Seek(0, SeekOrigin.End);
-            writer.Write(bytes);
+            if (bytes != null)
+            {
+                writer.BaseStream.Seek(0, SeekOrigin.End);
+                writer.Write(bytes);
+            }
+
             return this;
         }
 

@@ -12,7 +12,6 @@ using Streamiz.Kafka.Net.Table.Internal.Graph;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
@@ -371,10 +370,20 @@ namespace Streamiz.Kafka.Net.Stream.Internal
              where KS : ISerDes<KR>, new()
             => DoGroup(keySelector, Grouped<KR, V>.Create<KS>(named, ValueSerdes));
 
+        public IKGroupedStream<KR, V> GroupBy<KR, KRS, VS>(IKeyValueMapper<K, V, KR> keySelector, string named = null)
+            where KRS : ISerDes<KR>, new()
+            where VS : ISerDes<V>, new()
+            => DoGroup(keySelector, Grouped<KR, V>.Create<KRS, VS>(named));
+
         public IKGroupedStream<KR, V> GroupBy<KR, KS>(Func<K, V, KR> keySelector, string named = null)
              where KS : ISerDes<KR>, new()
             => GroupBy<KR, KS>(new WrappedKeyValueMapper<K, V, KR>(keySelector), named);
 
+        public IKGroupedStream<KR, V> GroupBy<KR, KRS, VS>(Func<K, V, KR> keySelector, string named = null)
+            where KRS : ISerDes<KR>, new() 
+            where VS : ISerDes<V>, new()
+            => GroupBy<KR, KRS, VS>(new WrappedKeyValueMapper<K, V, KR>(keySelector), named);
+        
         public IKGroupedStream<K, V> GroupByKey(string named = null)
         {
             return new KGroupedStream<K, V>(
