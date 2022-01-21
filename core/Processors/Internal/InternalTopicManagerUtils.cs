@@ -87,8 +87,10 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             sourcesTopics.RemoveAll(clusterMetadata.Topics.Select(t => t.Topic));
             if (sourcesTopics.Any())
             {
-                log.LogError("The following source topics are missing/unknown. Please make sure all sources topics have been-created before starting the streams application.");
-                throw new StreamsException("Missing source topics.");
+                log.LogError($"Topology use one (or multiple) repartition topic(s)." +
+                             $" The following source topics ({string.Join(",", sourcesTopics)}) are missing/unknown." +
+                             $" Please make sure all sources topics have been-created before starting the streams application.");
+                throw new StreamsException($"Missing source topics : {string.Join(",", sourcesTopics)}.");
             }
         }
 

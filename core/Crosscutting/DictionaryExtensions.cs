@@ -1,5 +1,7 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Confluent.Kafka;
 
 namespace Streamiz.Kafka.Net.Crosscutting
 {
@@ -46,6 +48,35 @@ namespace Streamiz.Kafka.Net.Crosscutting
             return r;
         }
 
+        
+        /// <summary>
+        /// Convert enumerable of <see cref="IEnumerable{T}"/> to <see cref="IDictionary{K, V}"/>.
+        /// If a key already exists, value will be replace.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="keySelector"></param>
+        /// <param name="elementSelector"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="K"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <returns></returns>
+        public static IDictionary<K, V> ToUpdateDictionary<T, K, V>(
+            this IEnumerable<T> source,
+            Func<T, K> keySelector,
+            Func<T, V> elementSelector)
+        {
+            var dictonary = new Dictionary<K, V>();
+            foreach (var element in source)
+            {
+                var key = keySelector(element);
+                if (dictonary.ContainsKey(key))
+                    dictonary[key] = elementSelector(element);
+                else
+                    dictonary.Add(key, elementSelector(element));
+            }
+
+            return dictonary;
+        }
 
         /// <summary>
         /// Merge an other dictionary into map dictionary
