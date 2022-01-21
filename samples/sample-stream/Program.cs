@@ -4,6 +4,7 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -22,23 +23,27 @@ namespace sample_stream
         static async Task Main(string[] args)
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-app";
+            config.ApplicationId = "test-app2";
             config.BootstrapServers = "localhost:9092";
+            config.CommitIntervalMs = (long)TimeSpan.FromSeconds(5).TotalMilliseconds;
             config.AutoOffsetReset = Confluent.Kafka.AutoOffsetReset.Earliest;
             config.StateDir = Path.Combine(".", Guid.NewGuid().ToString());
 
             config.Logger = LoggerFactory.Create(builder =>
             {
-                builder.SetMinimumLevel(LogLevel.Debug);
+                builder.SetMinimumLevel(LogLevel.Information);
                 builder.AddLog4Net();
             });
             
             StreamBuilder builder = new StreamBuilder();
 
-            builder
-                .Table("table", RocksDb<string, string>.As("table-store").WithLoggingEnabled())
+            builder.Stream<string, string>("test")
+                .Map((k, v) => KeyValuePair.Create(
+                    v.Length > 15 ? v.Substring(0, 10).ToUpper() : v, v))
+                .GroupByKey()
+                .Count()
                 .ToStream()
-                .Print(Printed<string, string>.ToOut());
+                .Print(Printed<string, long>.ToOut());
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
