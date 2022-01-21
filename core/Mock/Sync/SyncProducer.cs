@@ -122,7 +122,6 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             r.Partition = 0;
             r.Topic = topic;
             r.Offset = topics[topic].Count - 1;
-            r.Timestamp = new Timestamp(DateTime.Now);
             r.Error = new Error(ErrorCode.NoError);
             r.Status = PersistenceStatus.Persisted;
             deliveryHandler?.Invoke(r);

@@ -6,6 +6,12 @@ namespace Streamiz.Kafka.Net.Crosscutting
 {
     internal static class LinqExtensions
     {
+        internal static void RemoveAll<T>(this IList<T> list, IEnumerable<T> toRemove)
+        {
+            foreach (var t in toRemove)
+                list.Remove(t);
+        }
+        
         internal static void AddRange<T>(this ISet<T> set, IEnumerable<T> values)
         {
             foreach (var v in values)

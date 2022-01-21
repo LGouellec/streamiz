@@ -10,6 +10,8 @@ using Streamiz.Kafka.Net.Table.Internal.Graph;
 using Streamiz.Kafka.Net.Table.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Streamiz.Kafka.Net.Stream.Internal.Graph;
 
 namespace Streamiz.Kafka.Net.Table.Internal
 {
@@ -22,9 +24,13 @@ namespace Streamiz.Kafka.Net.Table.Internal
 
     internal class KGroupedTable<K, V> : AbstractStream<K, V>, IKGroupedTable<K, V>
     {
+        private readonly Grouped<K, V> grouped;
+        private StreamGraphNode repartitionNode = null;
+        
         public KGroupedTable(string name, Grouped<K, V> grouped, List<string> sourceNodes, StreamGraphNode streamsGraphNode, InternalStreamBuilder builder)
             : base(name, grouped.Key, grouped.Value, sourceNodes, streamsGraphNode, builder)
         {
+            this.grouped = grouped;
         }
 
         #region  IKGroupedTable Impl
@@ -66,7 +72,8 @@ namespace Streamiz.Kafka.Net.Table.Internal
             if (materialized.ValueSerdes == null)
                 materialized.WithValueSerdes(ValueSerdes);
 
-            var funcName = new Named(named).OrElseGenerateWithPrefix(builder, KGroupedTable.REDUCE_NAME);
+            var _named = new Named(named);
+            var funcName = _named.OrElseGenerateWithPrefix(builder, KGroupedTable.REDUCE_NAME);
             materialized.UseProvider(builder, KGroupedTable.REDUCE_NAME);
 
             var aggregateSupplier = new KTableReduce<K, V>(
@@ -74,7 +81,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
                 adder,
                 substractor);
 
-            return DoAggregate(aggregateSupplier, funcName, materialized);
+            return DoAggregate(aggregateSupplier, funcName, _named, materialized);
         }
 
         public IKTable<K, V> Reduce(Func<V, V, V> adder, Func<V, V, V> substractor, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
@@ -110,7 +117,8 @@ namespace Streamiz.Kafka.Net.Table.Internal
             if (materialized.KeySerdes == null)
                 materialized.WithKeySerdes(KeySerdes);
 
-            var funcName = new Named(named).OrElseGenerateWithPrefix(builder, KGroupedTable.AGGREGATE_NAME);
+            var _named = new Named(named);
+            var funcName = _named.OrElseGenerateWithPrefix(builder, KGroupedTable.AGGREGATE_NAME);
             materialized.UseProvider(builder, KGroupedTable.AGGREGATE_NAME);
 
             var aggregateSupplier = new KTableAggregate<K, V, VR>(
@@ -118,7 +126,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
                                         initializer,
                                         adder,
                                         subtractor);
-            return DoAggregate(aggregateSupplier, funcName, materialized);
+            return DoAggregate(aggregateSupplier, funcName, _named, materialized);
         }
 
 
@@ -136,7 +144,8 @@ namespace Streamiz.Kafka.Net.Table.Internal
             if (materialized.ValueSerdes == null)
                 materialized.WithValueSerdes(new Int64SerDes());
 
-            var funcName = new Named(named).OrElseGenerateWithPrefix(builder, KGroupedTable.AGGREGATE_NAME);
+            var _named = new Named(named);
+            var funcName = _named.OrElseGenerateWithPrefix(builder, KGroupedTable.AGGREGATE_NAME);
             materialized.UseProvider(builder, KGroupedTable.AGGREGATE_NAME);
 
             return DoAggregate(
@@ -146,11 +155,28 @@ namespace Streamiz.Kafka.Net.Table.Internal
                         (aggKey, value, aggregate) => aggregate + 1,
                         (aggKey, value, aggregate) => aggregate - 1),
                     funcName,
+                    _named,
                     materialized);
         }
 
-        private IKTable<K, T> DoAggregate<T>(IProcessorSupplier<K, Change<V>> aggregateSupplier, string functionName, Materialized<K, T, IKeyValueStore<Bytes, byte[]>> materializedInternal)
+        private IKTable<K, T> DoAggregate<T>(IProcessorSupplier<K, Change<V>> aggregateSupplier, string functionName, Named named, Materialized<K, T, IKeyValueStore<Bytes, byte[]>> materializedInternal)
         {
+            var sinkName = named.SuffixWithOrElseGet("-sink", builder, KStream.SINK_NAME);
+            var sourceName = named.SuffixWithOrElseGet("-source", builder, KStream.SOURCE_NAME);
+            var repartitionTopic =
+                $"{grouped.Named ?? materializedInternal.StoreName}{KStream.REPARTITION_TOPIC_SUFFIX}";
+            
+            if(repartitionNode == null || grouped.Named == null)
+                repartitionNode = new GroupedTableRepartitionNode<K, V>(
+                    sourceName,
+                    sourceName,
+                    KeySerdes,
+                    ValueSerdes,
+                    sinkName,
+                    repartitionTopic);
+            
+            builder.AddGraphNode(Node, repartitionNode);
+            
             var processorParameters = new TableProcessorParameters<K, V>(aggregateSupplier, functionName);
 
             var statefulProcessorNode = new TableProcessorNode<K, V, K, T>(
@@ -160,13 +186,13 @@ namespace Streamiz.Kafka.Net.Table.Internal
             );
 
             // now the repartition node must be the parent of the StateProcessorNode
-            builder.AddGraphNode(Node, statefulProcessorNode);
+            builder.AddGraphNode(repartitionNode, statefulProcessorNode);
 
             // return the KTable representation with the intermediate topic as the sources
             return new KTable<K, V, T>(functionName,
                                     materializedInternal.KeySerdes,
                                     materializedInternal.ValueSerdes,
-                                    SetSourceNodes,
+                                    sourceName.ToSingle().ToList(),
                                     materializedInternal.QueryableStoreName,
                                     aggregateSupplier,
                                     statefulProcessorNode,

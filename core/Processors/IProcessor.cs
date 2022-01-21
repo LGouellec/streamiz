@@ -1,6 +1,7 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net.SerDes;
 using System.Collections.Generic;
+using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -11,6 +12,7 @@ namespace Streamiz.Kafka.Net.Processors
         ISerDes Key { get; }
         ISerDes Value { get; }
         void Init(ProcessorContext context);
+        void SetTaskId(TaskId id);
         IList<IProcessor> Next { get; }
         void AddNextProcessor(IProcessor next);
         void Close();

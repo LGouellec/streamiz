@@ -285,10 +285,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void ProduceExceptionRecoverableHandlerFailTest()
         {
+            bool errorState = false;
             var _return = new List<KeyValuePair<string, string>>();
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             var dt = DateTime.Now;
-            var timeout = TimeSpan.FromSeconds(10);
+            var timeout = TimeSpan.FromSeconds(100000);
 
             config.ApplicationId = "test";
             config.BootstrapServers = "127.0.0.1";
@@ -313,7 +314,14 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
                 var outputTopic = driver.CreateOuputTopic<string, string>("test-output");
                 inputtopic.PipeInput("coucou");
-                while (_return.Count == 0) ;
+                while (_return.Count == 0)
+                {
+                    Thread.Sleep(100);
+                    if (DateTime.Now > dt + timeout)
+                    {
+                        break;
+                    }
+                }
                 var expected = new List<KeyValuePair<string, string>>();
                 expected.Add(KeyValuePair.Create<string, string>(null, "coucou"));
                 Assert.AreEqual(expected, _return);

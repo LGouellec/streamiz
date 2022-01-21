@@ -45,16 +45,21 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         internal static readonly string TRANSFORMVALUES_NAME = "KSTREAM-TRANSFORMVALUES-";
         internal static readonly string FOREACH_NAME = "KSTREAM-FOREACH-";
         internal static readonly string TO_KTABLE_NAME = "KSTREAM-TOTABLE-";
-
+        
         #endregion
     }
 
     internal class KStream<K, V> : AbstractStream<K, V>, IKStream<K, V>
     {
+        internal RepartitionNode<K, V> RepartitionNode { get; private set; }
+        
         internal KStream(string name, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, List<string> setSourceNodes, StreamGraphNode node, InternalStreamBuilder builder)
             : base(name, keySerdes, valueSerdes, setSourceNodes, node, builder)
-        {
-        }
+        { }
+        
+        internal KStream(string name, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, List<string> setSourceNodes, bool repartitionRequired, StreamGraphNode node, InternalStreamBuilder builder)
+            : base(name, keySerdes, valueSerdes, setSourceNodes, repartitionRequired, node, builder)
+        { }
 
         #region Branch
 
@@ -145,7 +150,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             builder.AddGraphNode(Node, flatMapNode);
 
             // key and value serde cannot be preserved
-            return new KStream<KR, VR>(name, null, null, SetSourceNodes, flatMapNode, builder);
+            return new KStream<KR, VR>(name, null, null, SetSourceNodes, true, flatMapNode, builder);
         }
 
         #endregion
@@ -182,6 +187,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 KeySerdes,
                 null,
                 SetSourceNodes,
+                RepartitionRequired,
                 flatMapValuesNode,
                 builder);
         }
@@ -226,6 +232,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 KeySerdes,
                 ValueSerdes,
                 SetSourceNodes,
+                RepartitionRequired,
                 peekNode,
                 builder);
         }
@@ -257,6 +264,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                     null,
                     null,
                     SetSourceNodes,
+                    true,
                     mapProcessorNode,
                     builder);
         }
@@ -295,6 +303,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                     KeySerdes,
                     null,
                     SetSourceNodes,
+                    RepartitionRequired,
                     mapValuesProcessorNode,
                     builder);
         }
@@ -342,6 +351,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 null,
                 ValueSerdes,
                 SetSourceNodes,
+                true,
                 selectKeyProcessorNode,
                 builder);
         }
@@ -360,10 +370,20 @@ namespace Streamiz.Kafka.Net.Stream.Internal
              where KS : ISerDes<KR>, new()
             => DoGroup(keySelector, Grouped<KR, V>.Create<KS>(named, ValueSerdes));
 
+        public IKGroupedStream<KR, V> GroupBy<KR, KRS, VS>(IKeyValueMapper<K, V, KR> keySelector, string named = null)
+            where KRS : ISerDes<KR>, new()
+            where VS : ISerDes<V>, new()
+            => DoGroup(keySelector, Grouped<KR, V>.Create<KRS, VS>(named));
+
         public IKGroupedStream<KR, V> GroupBy<KR, KS>(Func<K, V, KR> keySelector, string named = null)
              where KS : ISerDes<KR>, new()
             => GroupBy<KR, KS>(new WrappedKeyValueMapper<K, V, KR>(keySelector), named);
 
+        public IKGroupedStream<KR, V> GroupBy<KR, KRS, VS>(Func<K, V, KR> keySelector, string named = null)
+            where KRS : ISerDes<KR>, new() 
+            where VS : ISerDes<V>, new()
+            => GroupBy<KR, KRS, VS>(new WrappedKeyValueMapper<K, V, KR>(keySelector), named);
+        
         public IKGroupedStream<K, V> GroupByKey(string named = null)
         {
             return new KGroupedStream<K, V>(
@@ -371,6 +391,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 Grouped<K, V>.Create(named, KeySerdes, ValueSerdes),
                 SetSourceNodes,
                 Node,
+                RepartitionRequired,
                 builder);
         }
 
@@ -383,6 +404,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 Grouped<K, V>.Create<KS, VS>(named),
                 SetSourceNodes,
                 Node,
+                RepartitionRequired,
                 builder);
         }
 
@@ -411,10 +433,16 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         private IKStream<K, VR> Join<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner, ISerDes<V0> valueSerdes, string named = null)
         {
             var joined = new Joined<K, V, V0>(KeySerdes, ValueSerdes, valueSerdes, named);
+
+            if (RepartitionRequired)
+            {
+                var streamRepartitioned = RepartitionForJoin(named ?? NameNode, joined.KeySerdes, joined.ValueSerdes);
+                return streamRepartitioned.DoStreamTableJoin(table, valueJoiner, joined, false);
+            }
+            
             return DoStreamTableJoin(table, valueJoiner, joined, false);
         }
-
-
+        
         #endregion
 
         #region LeftJoin Table
@@ -440,6 +468,13 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         private IKStream<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, ISerDes<VT> valueSerdes, string named = null)
         {
             var joined = new Joined<K, V, VT>(KeySerdes, ValueSerdes, valueSerdes, named);
+            
+            if (RepartitionRequired)
+            {
+                var streamRepartitioned = RepartitionForJoin(named ?? NameNode, joined.KeySerdes, joined.ValueSerdes);
+                return streamRepartitioned.DoStreamTableJoin(table, valueJoiner, joined, true);
+            }
+            
             return DoStreamTableJoin(table, valueJoiner, joined, true);
         }
 
@@ -589,18 +624,34 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             ISerDes<K> keySerdesOv = materialized.KeySerdes == null ? KeySerdes : materialized.KeySerdes;
             ISerDes<V> valueSerdesOv = materialized.ValueSerdes == null ? ValueSerdes : materialized.ValueSerdes;
 
+            StreamGraphNode tableParentNode = null;
+            IEnumerable<string> subTopologySourceNodes = null;
+            
+            if (RepartitionRequired)
+            {
+                (string sourceName, RepartitionNode<K, V> parentNode) = CreateRepartitionSource(name, keySerdesOv, valueSerdesOv, builder);
+                tableParentNode = parentNode;
+                builder.AddGraphNode(Node, tableParentNode);
+                subTopologySourceNodes = sourceName.ToSingle();
+            }
+            else
+            {
+                tableParentNode = Node;
+                subTopologySourceNodes = this.SetSourceNodes;
+            }
+            
             var tableSource = new KTableSource<K, V>(materialized.StoreName, materialized.QueryableStoreName);
             var parameters = new ProcessorParameters<K, V>(tableSource, name);
 
             var storeBuilder = new TimestampedKeyValueStoreMaterializer<K, V>(materialized).Materialize();
             var tableNode = new StatefulProcessorNode<K, V, ITimestampedKeyValueStore<K, V>>(name, parameters, storeBuilder);
-            builder.AddGraphNode(Node, tableNode);
+            builder.AddGraphNode(tableParentNode, tableNode);
 
             return new KTable<K, V, V>(
                 name,
                 keySerdesOv,
                 valueSerdesOv,
-                SetSourceNodes,
+                subTopologySourceNodes.ToList(),
                 materialized.QueryableStoreName,
                 tableSource,
                 tableNode,
@@ -623,7 +674,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             ProcessorGraphNode<K, V> filterProcessorNode = new ProcessorGraphNode<K, V>(name, processorParameters);
 
             builder.AddGraphNode(Node, filterProcessorNode);
-            return new KStream<K, V>(name, KeySerdes, ValueSerdes, SetSourceNodes, filterProcessorNode, builder);
+            return new KStream<K, V>(name, KeySerdes, ValueSerdes, SetSourceNodes, RepartitionRequired, filterProcessorNode, builder);
         }
 
         private void DoTo(ITopicNameExtractor<K, V> topicExtractor, Produced<K, V> produced)
@@ -666,7 +717,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 ProcessorGraphNode<K, V> branchChildNode = new ProcessorGraphNode<K, V>(childNames[i], innerProcessorParameters);
 
                 builder.AddGraphNode(branchNode, branchChildNode);
-                branchChildren[i] = new KStream<K, V>(childNames[i], KeySerdes, ValueSerdes, SetSourceNodes, branchChildNode, builder);
+                branchChildren[i] = new KStream<K, V>(childNames[i], KeySerdes, ValueSerdes, SetSourceNodes, RepartitionRequired, branchChildNode, builder);
             }
 
             return branchChildren;
@@ -676,7 +727,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         {
             KStream<K, V> kstream = (KStream<K, V>)stream;
             string name = new Named(named).OrElseGenerateWithPrefix(builder, KStream.MERGE_NAME);
-
+            bool requireRepartitioning = RepartitionRequired || ((KStream<K, V>) stream).RepartitionRequired;
             ISet<string> sourceNodes = new HashSet<string>();
             sourceNodes.AddRange(SetSourceNodes);
             sourceNodes.AddRange(kstream.SetSourceNodes);
@@ -695,6 +746,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 null,
                 null,
                 sourceNodes.ToList(),
+                requireRepartitioning,
                 mergeNode,
                 builder);
         }
@@ -716,6 +768,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 grouped,
                 SetSourceNodes,
                 selectKeyMapNode,
+                true,
                 builder);
         }
 
@@ -735,7 +788,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         private KStream<K, VR> DoStreamTableJoin<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner, Joined<K, V, V0> joined, bool leftJoin)
         {
-            var allSourceNodes = EnsureJoinableWith((AbstractStream<K, V0>)table);
+            var allSourceNodes = EnsureCopartitionWith((AbstractStream<K, V0>)table);
 
             string name = new Named(joined.Name).OrElseGenerateWithPrefix(builder, leftJoin ? KStream.LEFTJOIN_NAME : KStream.JOIN_NAME);
             var processorSupplier = new KStreamKTableJoin<K, VR, V, V0>(
@@ -775,7 +828,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
             builder.AddGraphNode(Node, joinNode);
 
-            return new KStream<K, VR>(name, KeySerdes, null, SetSourceNodes, joinNode, builder);
+            return new KStream<K, VR>(name, KeySerdes, null, SetSourceNodes, RepartitionRequired, joinNode, builder);
         }
 
         private KStream<K, VR> DoJoin<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> joinedProps, StreamJoinBuilder builder)
@@ -783,12 +836,88 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             CheckIfParamNull(stream, "stream");
             CheckIfParamNull(valueJoiner, "valueJoiner");
 
+            KStream<K, V> joinThis = this;
             KStream<K, V0> joinOther = (KStream<K, V0>)stream;
+            var name = new Named(joinedProps.Name);
+            
+            if (joinThis.RepartitionRequired)
+            {
+                string leftJoinRepartitinTopicName = name.SuffixWithOrElseGet("-left", NameNode);
+                joinThis = joinThis.RepartitionForJoin(leftJoinRepartitinTopicName, joinedProps.KeySerdes,
+                    joinedProps.LeftValueSerdes);
+            }
 
-            return builder.Join(this, joinOther, valueJoiner, windows, joinedProps);
+            if (joinOther.RepartitionRequired)
+            {
+                string rightJoinRepartitinTopicName = name.SuffixWithOrElseGet("-right", joinOther.NameNode);
+                joinOther = joinOther.RepartitionForJoin(rightJoinRepartitinTopicName, joinedProps.KeySerdes,
+                    joinedProps.RightValueSerdes);
+            }
+
+            joinThis.EnsureCopartitionWith(joinOther);
+            
+            return builder.Join(joinThis, joinOther, valueJoiner, windows, joinedProps);
         }
 
-        #endregion
+        private KStream<K, V> RepartitionForJoin(
+            string repartitionName,
+            ISerDes<K> keySerdesOverride,
+            ISerDes<V> valueSerdesOverride)
+        {
+            keySerdesOverride = keySerdesOverride ?? KeySerdes;
+            valueSerdesOverride = valueSerdesOverride ?? ValueSerdes;
 
+            (string repartitionSourceName, RepartitionNode<K, V> node) = CreateRepartitionSource(
+                repartitionName,
+                keySerdesOverride,
+                valueSerdesOverride,
+                builder);
+
+            if (RepartitionNode == null || !NameNode.Equals(repartitionName))
+            {
+                RepartitionNode = node;
+                builder.AddGraphNode(Node, RepartitionNode);
+            }
+
+            return new KStream<K, V>(
+                repartitionSourceName,
+                keySerdesOverride,
+                valueSerdesOverride,
+                repartitionSourceName.ToSingle().ToList(),
+                false,
+                RepartitionNode,
+                builder);
+        }
+        
+        internal static (string, RepartitionNode<K, V>) CreateRepartitionSource(
+            string repartitionTopicNameSuffix,
+            ISerDes<K> keySerdes,
+            ISerDes<V> valueSerdes,
+            InternalStreamBuilder builder)
+        {
+            string repartitionTopicName = repartitionTopicNameSuffix.EndsWith(KStream.REPARTITION_TOPIC_SUFFIX)
+                ? repartitionTopicNameSuffix
+                : $"{repartitionTopicNameSuffix}{KStream.REPARTITION_TOPIC_SUFFIX}";
+
+            var sinkName = builder.NewProcessorName(KStream.SINK_NAME);
+            var nullKeyFilterName = builder.NewProcessorName(KStream.FILTER_NAME);
+            var sourceName = builder.NewProcessorName(KStream.SOURCE_NAME);
+
+            var processorParameters = new ProcessorParameters<K, V>(
+                new KStreamFilter<K, V>((k, v) => k != null), nullKeyFilterName);
+
+            var repartitionNode = new RepartitionNode<K, V>(
+                sourceName,
+                sourceName,
+                processorParameters,
+                keySerdes,
+                valueSerdes,
+                sinkName,
+                repartitionTopicName);
+            
+            return (sourceName, repartitionNode);
+        }
+        
+        #endregion
     }
 }

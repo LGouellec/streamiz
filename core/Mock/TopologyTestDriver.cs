@@ -117,10 +117,10 @@ namespace Streamiz.Kafka.Net.Mock
 
             var clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{configuration.ApplicationId.ToLower()}-{Guid.NewGuid()}" : configuration.ClientId;
 
+            topologyBuilder.RewriteTopology(configuration);
+            
             // sanity check
             topologyBuilder.BuildTopology();
-
-            topologyBuilder.RewriteTopology(configuration);
 
             switch (mode)
             {

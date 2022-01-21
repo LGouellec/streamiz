@@ -126,7 +126,7 @@ namespace Streamiz.Kafka.Net.Processors
                     ++i;
                     _e = e;
                     log.LogDebug(
-                        "Impossible to create all internal topics: {Message}. Maybe an another instance of your application just created them. (try: {Try}, max retry : {MaxTry})",
+                        "Error when creating all internal topics: {Message}. Maybe an another instance of your application just created them. (try: {Try}, max retry : {MaxTry})",
                         e.Message, i + 1, maxRetry);
                 }
             }

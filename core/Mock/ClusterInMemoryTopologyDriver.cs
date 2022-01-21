@@ -68,12 +68,14 @@ namespace Streamiz.Kafka.Net.Mock
 
         private void InitializeInternalTopicManager()
         {
-            // Create internal topics (changelogs) if need
+            // Create internal topics (changelogs & repartition) if need
             var adminClientInternalTopicManager = kafkaSupplier.GetAdmin(configuration.ToAdminConfig(StreamThread.GetSharedAdminClientId($"{configuration.ApplicationId.ToLower()}-admin-internal-topic-manager")));
             internalTopicManager = new DefaultTopicManager(configuration, adminClientInternalTopicManager);
 
             InternalTopicManagerUtils
-                .CreateChangelogTopicsAsync(internalTopicManager, internalTopologyBuilder)
+                .New()
+                .CreateSourceTopics(internalTopologyBuilder, kafkaSupplier)
+                .CreateInternalTopicsAsync(internalTopicManager, internalTopologyBuilder)
                 .GetAwaiter()
                 .GetResult();
         }

@@ -31,8 +31,6 @@ affiliation with and is not endorsed by The Apache Software Foundation.
 It's allowed to develop .NET applications that transform input Kafka topics into output Kafka topics. 
 It's supported .NET Standard 2.1. 
 
-**So this library can be used by >= .NET Core 3.0 and/or .NET 5.0 applications.**
-
 It's a rewriting inspired by [Kafka Streams](https://github.com/apache/kafka). Finally it will provide the same functionality as [Kafka Streams](https://github.com/apache/kafka).
 
 This project is being written. Thanks for you contribution !
@@ -97,8 +95,9 @@ static async System.Threading.Tasks.Task Main(string[] args)
 # TODO implementation
 
 - [ ] Transform and Through Processor
+- [ ] Consumer Incremental Rebalance Protocol #KIP-429
 - [ ] Supress Processor (.suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded())))
-- [ ] Repartition topic
+- [X] Repartition topic
 - [ ] Repartition Processor [KAFKA-8611](https://issues.apache.org/jira/browse/KAFKA-8611) | [PR #7170](https://github.com/apache/kafka/pull/7170)
 - [ ] Processor API
 - [ ] Sample projects (Micro-services, console sample, topology implementation, etc ..) which use Streamiz package ([see](https://github.com/LGouellec/kafka-streams-dotnet-samples))

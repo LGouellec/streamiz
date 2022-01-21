@@ -262,7 +262,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         internal StateStoreMetadata GetStoreMetadata(TopicPartition topicPartition)
         {
             foreach (var store in registeredStores)
-                if (store.Value.ChangelogTopicPartition.Equals(topicPartition))
+                if (store.Value.ChangelogTopicPartition != null && store.Value.ChangelogTopicPartition.Equals(topicPartition))
                     return store.Value;
             return null;
         }

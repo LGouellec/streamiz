@@ -52,7 +52,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     processors,
                     null,
                     null,
-                    storesToTopics);
+                    storesToTopics,
+                    null);
 
             globalStateUpdateTask = new GlobalStateUpdateTask(stateManagerMock.Object, topology, contextMock.Object); ;
         }
