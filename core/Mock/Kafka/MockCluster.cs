@@ -5,12 +5,14 @@ using Streamiz.Kafka.Net.Kafka;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using static Streamiz.Kafka.Net.Mock.Kafka.MockConsumerInformation;
 using Microsoft.Extensions.Logging;
+using RocksDbSharp;
 
 namespace Streamiz.Kafka.Net.Mock.Kafka
 {
@@ -775,14 +777,18 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
             CreateTopic(topic);
 
-            // TODO : implement hashpartitionumber
-            var i = RandomNumberGenerator.GetInt32(0, topics[topic].PartitionNumber);
-            topics[topic].AddMessage(message.Key, message.Value, i);
+            int partition;
+            if (message.Key == null)
+                partition = RandomNumberGenerator.GetInt32(0, topics[topic].PartitionNumber);
+            else
+                partition = Math.Abs(MurMurHash3.Hash(new MemoryStream(message.Key))) % topics[topic].PartitionNumber;
+            
+            topics[topic].AddMessage(message.Key, message.Value, partition);
 
             r.Message = message;
-            r.Partition = i;
+            r.Partition = partition;
             r.Topic = topic;
-            r.Offset = topics[topic].GetPartition(i).Size - 1;
+            r.Offset = topics[topic].GetPartition(partition).Size - 1;
             r.Timestamp = new Timestamp(DateTime.Now);
             r.Error = new Error(ErrorCode.NoError);
             r.Status = PersistenceStatus.Persisted;

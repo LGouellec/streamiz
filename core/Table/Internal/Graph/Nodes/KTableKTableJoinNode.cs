@@ -6,7 +6,7 @@ using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 namespace Streamiz.Kafka.Net.Table.Internal.Graph.Nodes
 {
     internal class KTableKTableJoinNode<K, V1, V2, VR> :
-        BaseJoinProcessorNode<K, Change<V1>, Change<V2>, Change<VR>>
+        AbstractJoinProcessorNode<K, Change<V1>, Change<V2>, Change<VR>>
     {
         private readonly string[] leftStoreNames;
         private readonly string[] rightStoreNames;

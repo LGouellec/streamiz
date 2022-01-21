@@ -19,6 +19,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         }
 
         public string TopicName => topicName;
+        public event PipeFlushed Flushed;
 
         public void Dispose()
         {
@@ -37,6 +38,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
                     new Message<byte[], byte[]> { Key = record.Item1, Value = record.Item2, Timestamp = new Timestamp(record.Item3) });
             }
             producer.Flush();
+            Flushed?.Invoke();
         }
 
         public void Pipe(byte[] key, byte[] value, DateTime timestamp)

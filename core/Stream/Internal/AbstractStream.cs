@@ -13,6 +13,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         public ISerDes<V> ValueSerdes { get; protected set; }
         public List<string> SetSourceNodes { get; protected set; }
         public StreamGraphNode Node { get; protected set; }
+        public bool RepartitionRequired { get; protected set; }
 
         protected readonly InternalStreamBuilder builder;
 
@@ -24,13 +25,24 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             KeySerdes = stream.KeySerdes;
             ValueSerdes = stream.ValueSerdes;
             SetSourceNodes = stream.SetSourceNodes;
+            RepartitionRequired = stream.RepartitionRequired;
             Node = stream.Node;
         }
 
         protected AbstractStream(String name,
+            ISerDes<K> keySerde,
+            ISerDes<V> valSerde,
+            List<String> sourceNodes,
+            StreamGraphNode streamsGraphNode,
+            InternalStreamBuilder builder) 
+            : this(name, keySerde, valSerde, sourceNodes, false, streamsGraphNode, builder)
+        { }
+            
+        protected AbstractStream(String name,
                ISerDes<K> keySerde,
                ISerDes<V> valSerde,
                List<String> sourceNodes,
+               bool repartitionRequired,
                StreamGraphNode streamsGraphNode,
                InternalStreamBuilder builder)
         {
@@ -45,9 +57,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             ValueSerdes = valSerde;
             SetSourceNodes = sourceNodes;
             Node = streamsGraphNode;
+            RepartitionRequired = repartitionRequired;
         }
 
-        protected ISet<string> EnsureJoinableWith<K1, V1>(AbstractStream<K1, V1> other)
+        protected ISet<string> EnsureCopartitionWith<K1, V1>(AbstractStream<K1, V1> other)
         {
             ISet<string> allSourceNodes = new HashSet<string>();
             allSourceNodes.AddRange(SetSourceNodes);

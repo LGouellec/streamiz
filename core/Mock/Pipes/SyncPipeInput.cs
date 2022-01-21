@@ -17,6 +17,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         }
 
         public string TopicName => topic;
+        public event PipeFlushed Flushed;
 
         public void Dispose()
         {
@@ -28,6 +29,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
             long now = DateTime.Now.GetMilliseconds();
             while (task.CanProcess(now))
                 task.Process();
+            Flushed?.Invoke();
         }
 
         public void Pipe(byte[] key, byte[] value, DateTime timestamp)

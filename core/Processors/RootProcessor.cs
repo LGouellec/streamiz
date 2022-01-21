@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Confluent.Kafka;
+using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 
 namespace Streamiz.Kafka.Net.Processors
@@ -13,6 +14,8 @@ namespace Streamiz.Kafka.Net.Processors
         }
 
         public IList<IProcessor> Previous { get; } = new List<IProcessor>();
+
+        public void SetTaskId(TaskId id) { }
 
         public IList<IProcessor> Next { get; } = new List<IProcessor>();
 

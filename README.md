@@ -95,8 +95,9 @@ static async System.Threading.Tasks.Task Main(string[] args)
 # TODO implementation
 
 - [ ] Transform and Through Processor
+- [ ] Consumer Incremental Rebalance Protocol #KIP-429
 - [ ] Supress Processor (.suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded())))
-- [ ] Repartition topic
+- [X] Repartition topic
 - [ ] Repartition Processor [KAFKA-8611](https://issues.apache.org/jira/browse/KAFKA-8611) | [PR #7170](https://github.com/apache/kafka/pull/7170)
 - [ ] Processor API
 - [ ] Sample projects (Micro-services, console sample, topology implementation, etc ..) which use Streamiz package ([see](https://github.com/LGouellec/kafka-streams-dotnet-samples))

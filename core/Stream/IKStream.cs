@@ -511,6 +511,33 @@ namespace Streamiz.Kafka.Net.Stream
         IKGroupedStream<KR, V> GroupBy<KR, KRS>(IKeyValueMapper<K, V, KR> keySelector, string named = null) where KRS : ISerDes<KR>, new();
 
         /// <summary>
+        /// Group the records of this <see cref="IKStream{K, V}"/> on a new key that is selected using the provided <see cref="IKeyValueMapper{K, V, VR}"/> and default serializers and deserializers.
+        /// Grouping a stream on the record key is required before an aggregation operator can be applied to the data <see cref="IKGroupedStream{KR, V}"/>
+        /// The provider <see cref="IKeyValueMapper{K, V, VR}"/> selects a new key (which may or may not be of the same type) while preserving the
+        /// original values.
+        /// If the new record key is null the record will not be included in the resulting.
+        /// Because a new key is selected, an internal repartitioning topic may need to be created in Kafka if a
+        /// later operator depends on the newly selected key.
+        /// This topic will be named "${applicationId}-&lt;name&gt;-repartition", where "applicationId" is user-specified in
+        /// <see cref="IStreamConfig"/> via parameter <see cref="IStreamConfig.ApplicationId"/>.
+        /// "&lt;name&gt;" is an internally generated name, and "-repartition" is a fixed suffix.
+        /// All data of this stream will be redistributed through the repartitioning topic by writing all records to it,
+        /// and rereading all records from it, such that the resulting <see cref="IKGroupedStream{KR, V}"/> is partitioned on the new key.
+        /// This operation is equivalent to calling <see cref="IKStream{K, V}.SelectKey{KR}(Func{K, V, KR}, string)"/> followed by <see cref="IKStream{K, V}.GroupByKey(string)"/>.
+        /// If the key type is changed, it is recommended to use <see cref="IKStream{K, V}.GroupBy{KR}(Func{K, V, KR}, string)"/> instead.
+        /// </summary>
+        /// <typeparam name="KR">the key type of the result</typeparam>
+        /// <typeparam name="KRS">New serializer for <typeparamref name="KR"/> type</typeparam>
+        /// <typeparam name="VS">New serializer for <typeparam name="V"/> type</typeparam>
+        /// <param name="keySelector">A <see cref="IKeyValueMapper{K, V, VR}"/> selector that computes a new key for grouping</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKGroupedStream{KR, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
+        IKGroupedStream<KR, V> GroupBy<KR, KRS, VS>(IKeyValueMapper<K, V, KR> keySelector, string named = null)
+            where KRS : ISerDes<KR>, new()
+            where VS : ISerDes<V>, new();
+
+        /// <summary>
         /// Group the records of this <see cref="IKStream{K, V}"/> on a new key that is selected using the provided <code>Func&lt;K, V, VR&gt;</code> and default serializers and deserializers.
         /// Grouping a stream on the record key is required before an aggregation operator can be applied to the data <see cref="IKGroupedStream{KR, V}"/>
         /// The provider <code>Func&lt;K, V, VR&gt;</code> selects a new key (which may or may not be of the same type) while preserving the
@@ -534,6 +561,34 @@ namespace Streamiz.Kafka.Net.Stream
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
         IKGroupedStream<KR, V> GroupBy<KR, KRS>(Func<K, V, KR> keySelector, string named = null) where KRS : ISerDes<KR>, new();
 
+                /// <summary>
+        /// Group the records of this <see cref="IKStream{K, V}"/> on a new key that is selected using the provided <code>Func&lt;K, V, VR&gt;</code> and default serializers and deserializers.
+        /// Grouping a stream on the record key is required before an aggregation operator can be applied to the data <see cref="IKGroupedStream{KR, V}"/>
+        /// The provider <code>Func&lt;K, V, VR&gt;</code> selects a new key (which may or may not be of the same type) while preserving the
+        /// original values.
+        /// If the new record key is null the record will not be included in the resulting.
+        /// Because a new key is selected, an internal repartitioning topic may need to be created in Kafka if a
+        /// later operator depends on the newly selected key.
+        /// This topic will be named "${applicationId}-&lt;name&gt;-repartition", where "applicationId" is user-specified in
+        /// <see cref="IStreamConfig"/> via parameter <see cref="IStreamConfig.ApplicationId"/>.
+        /// "&lt;name&gt;" is an internally generated name, and "-repartition" is a fixed suffix.
+        /// All data of this stream will be redistributed through the repartitioning topic by writing all records to it,
+        /// and rereading all records from it, such that the resulting <see cref="IKGroupedStream{KR, V}"/> is partitioned on the new key.
+        /// This operation is equivalent to calling <see cref="IKStream{K, V}.SelectKey{KR}(Func{K, V, KR}, string)"/> followed by <see cref="IKStream{K, V}.GroupByKey(string)"/>.
+        /// If the key type is changed, it is recommended to use <see cref="IKStream{K, V}.GroupBy{KR}(Func{K, V, KR}, string)"/> instead.
+        /// </summary>
+        /// <typeparam name="KR">the key type of the result</typeparam>
+        /// <typeparam name="KRS">New serializer for <typeparamref name="KR"/> type</typeparam>
+        /// <typeparam name="V">the value type of the result</typeparam>
+        /// <typeparam name="VS">New serializer for <typeparam name="V"/> type</typeparam>
+        /// <param name="keySelector">A function selector that computes a new key for grouping</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKGroupedStream{KR, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
+        IKGroupedStream<KR, V> GroupBy<KR, KRS, VS>(Func<K, V, KR> keySelector, string named = null) 
+                    where KRS : ISerDes<KR>, new()
+                    where VS : ISerDes<V>, new();
+        
         /// <summary>
         /// Group the records by their current key into a <see cref="IKGroupedStream{K, V}"/> while preserving the original values
         /// and default serializers and deserializers.

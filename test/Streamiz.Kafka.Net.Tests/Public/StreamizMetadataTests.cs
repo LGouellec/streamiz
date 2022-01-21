@@ -589,7 +589,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
             producer.Produce("topic", new Confluent.Kafka.Message<byte[], byte[]>
             {
                 Key = serdes.Serialize("key1", new SerializationContext()),
-                Value = serdes.Serialize("coucou", new SerializationContext())
+                Value = serdes.Serialize("coucou", new SerializationContext()),
+                Timestamp = new Timestamp(DateTime.Now)
             });
 
             consumer.Subscribe("output");

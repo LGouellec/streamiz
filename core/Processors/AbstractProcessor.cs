@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -79,6 +80,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             log.LogDebug("{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to each next processor",
                 logPrefix, typeof(K1).Name, typeof(V1).Name, key, value);
+            
             foreach (var n in Next)
                 if (n is IProcessor<K1, V1>)
                     (n as IProcessor<K1, V1>).Process(key, value);
@@ -142,15 +144,17 @@ namespace Streamiz.Kafka.Net.Processors
         }
 
         protected void LogProcessingKeyValue(K key, V value) => log.LogDebug(
-            "{LogPrefix}Process<{KeyType},{ValueType}> message with key {Key} and {Value} with record metadata [topic:{Topic}|partition:{Partition}|offset:{Offset}]",
-            logPrefix, typeof(K).Name, typeof(V).Name, key, value, Context.RecordContext.Topic,
-            Context.RecordContext.Partition, Context.RecordContext.Offset);
+            $"{logPrefix}Process<{typeof(K).Name},{typeof(V).Name}> message with key {key} and {value}" +
+            $" with record metadata [topic:{Context.RecordContext.Topic}|" +
+            $"partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}]");
 
         #region Setter
 
-        internal void SetTaskId(TaskId id)
+        public void SetTaskId(TaskId id)
         {
             logPrefix = $"stream-task[{id.Id}|{id.Partition}]|processor[{Name}]- ";
+            foreach(var n in Next)
+                n.SetTaskId(id);
         }
 
         public void AddNextProcessor(IProcessor next)

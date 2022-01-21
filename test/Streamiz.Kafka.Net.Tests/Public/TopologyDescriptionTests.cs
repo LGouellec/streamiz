@@ -9,6 +9,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Confluent.Kafka.Admin;
+using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.Tests.Public
 {
@@ -227,6 +229,141 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var description = topology.Describe();
 
             Assert.AreEqual(stringBuilder.ToString(), description.ToString());
+        }
+
+        [Test]
+        public void TopologyDescriptionRepartitionTopology()
+        {
+            var builder = new StreamBuilder();
+            builder.Stream<string, string>("topic")
+                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .ToTable()
+                .ToStream()
+                .To("return");
+            
+            var topology = builder.Build();
+            var description = topology.Describe();
+
+            Assert.AreEqual(2, description.SubTopologies.Count());
+            Assert.AreEqual(0, description.SubTopologies.ToArray()[0].Id);
+            Assert.AreEqual(4, description.SubTopologies.ToArray()[0].Nodes.Count());
+            Assert.AreEqual(1, description.SubTopologies.ToArray()[1].Id);
+            Assert.AreEqual(4, description.SubTopologies.ToArray()[1].Nodes.Count());
+
+            var sourceNode1 = description.SubTopologies.ToArray()[0].Nodes.FirstOrDefault(n => n is ISourceNodeDescription) as ISourceNodeDescription;
+            var sourceNode2 = description.SubTopologies.ToArray()[1].Nodes.FirstOrDefault(n => n is ISourceNodeDescription) as ISourceNodeDescription;
+
+            Assert.IsTrue(sourceNode1.Name.StartsWith(KStream.SOURCE_NAME));
+            Assert.AreEqual(null, sourceNode1.TimestampExtractorType);
+            Assert.AreEqual(new List<string> { "topic" }, sourceNode1.Topics);
+
+            Assert.IsTrue(sourceNode2.Name.StartsWith(KStream.SOURCE_NAME));
+            Assert.AreEqual(typeof(FailOnInvalidTimestamp), sourceNode2.TimestampExtractorType);
+            Assert.AreEqual(new List<string> { "KSTREAM-TOTABLE-0000000002-repartition" }, sourceNode2.Topics);
+        }
+
+        [Test]
+        public void TopologyDescriptionRepartitionJoinStreamStreamTopology()
+        {
+            var builder = new StreamBuilder();
+            var streamJoin = builder.Stream<String, String>("topic-to-join");
+            
+            builder.Stream<string, string>("topic")
+                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .Join(streamJoin,
+                    (s, s1) => $"{s}-{s1}",
+                    JoinWindowOptions.Of(TimeSpan.FromSeconds(1)))
+                .To("return");
+            
+            var topology = builder.Build();
+            var description = topology.Describe();
+
+            Assert.AreEqual(2, description.SubTopologies.Count());
+            Assert.AreEqual(0, description.SubTopologies.ToArray()[0].Id);
+            Assert.AreEqual(8, description.SubTopologies.ToArray()[0].Nodes.Count());
+            Assert.AreEqual(1, description.SubTopologies.ToArray()[1].Id);
+            Assert.AreEqual(4, description.SubTopologies.ToArray()[1].Nodes.Count());
+
+            var sourceNode1 = description.SubTopologies.ToArray()[0].Nodes.ToArray()[0] as ISourceNodeDescription;
+            var sourceNode1bis = description.SubTopologies.ToArray()[0].Nodes.ToArray()[1] as ISourceNodeDescription;
+            var sourceNode2 = description.SubTopologies.ToArray()[1].Nodes.ToArray()[0] as ISourceNodeDescription;
+
+            Assert.IsNotNull(sourceNode1);
+            Assert.IsTrue(sourceNode1.Name.StartsWith(KStream.SOURCE_NAME));
+            Assert.AreEqual(null, sourceNode1.TimestampExtractorType);
+            Assert.AreEqual(new List<string> { "topic-to-join" }, sourceNode1.Topics);
+
+            Assert.IsNotNull(sourceNode1bis);
+            Assert.IsTrue(sourceNode1bis.Name.StartsWith(KStream.SOURCE_NAME));
+            Assert.AreEqual(typeof(FailOnInvalidTimestamp), sourceNode1bis.TimestampExtractorType);
+            Assert.AreEqual(new List<string> { "KSTREAM-MAP-0000000002-repartition" }, sourceNode1bis.Topics);
+            
+            Assert.IsTrue(sourceNode2.Name.StartsWith(KStream.SOURCE_NAME));
+            Assert.AreEqual(null, sourceNode2.TimestampExtractorType);
+            Assert.AreEqual(new List<string> { "topic" }, sourceNode2.Topics);
+        }
+
+        [Test]
+        public void TopologyDescriptionRepartitionGroupByAggTopology()
+        {
+            var builder = new StreamBuilder();
+            builder.Stream<string, string>("topic")
+                .GroupBy((k,v)=> KeyValuePair.Create(k.ToUpper(),v))
+                .Count()
+                .ToStream()
+                .To("return");
+            
+            var topology = builder.Build();
+            var description = topology.Describe();
+
+            Assert.AreEqual(2, description.SubTopologies.Count());
+            Assert.AreEqual(0, description.SubTopologies.ToArray()[0].Id);
+            Assert.AreEqual(4, description.SubTopologies.ToArray()[0].Nodes.Count());
+            Assert.AreEqual(1, description.SubTopologies.ToArray()[1].Id);
+            Assert.AreEqual(4, description.SubTopologies.ToArray()[1].Nodes.Count());
+
+            var sourceNode1 = description.SubTopologies.ToArray()[0].Nodes.FirstOrDefault(n => n is ISourceNodeDescription) as ISourceNodeDescription;
+            var sourceNode2 = description.SubTopologies.ToArray()[1].Nodes.FirstOrDefault(n => n is ISourceNodeDescription) as ISourceNodeDescription;
+
+            Assert.IsTrue(sourceNode1.Name.StartsWith(KStream.SOURCE_NAME));
+            Assert.AreEqual(null, sourceNode1.TimestampExtractorType);
+            Assert.AreEqual(new List<string> { "topic" }, sourceNode1.Topics);
+
+            Assert.IsTrue(sourceNode2.Name.StartsWith(KStream.SOURCE_NAME));
+            Assert.AreEqual(typeof(FailOnInvalidTimestamp), sourceNode2.TimestampExtractorType);
+            Assert.AreEqual(new List<string> { "KSTREAM-AGGREGATE-STATE-STORE-0000000003-repartition" }, sourceNode2.Topics);
+        }
+
+        [Test]
+        public void TopologyDescriptionRepartitionTableGroupByAggTopology()
+        {
+            var builder = new StreamBuilder();
+            builder
+                .Table<string, string>("topic")
+                .GroupBy((k,v)=> KeyValuePair.Create(k.ToUpper(),v))
+                .Count()
+                .ToStream()
+                .To("return");
+            
+            var topology = builder.Build();
+            var description = topology.Describe();
+
+            Assert.AreEqual(2, description.SubTopologies.Count());
+            Assert.AreEqual(0, description.SubTopologies.ToArray()[0].Id);
+            Assert.AreEqual(4, description.SubTopologies.ToArray()[0].Nodes.Count());
+            Assert.AreEqual(1, description.SubTopologies.ToArray()[1].Id);
+            Assert.AreEqual(4, description.SubTopologies.ToArray()[1].Nodes.Count());
+
+            var sourceNode1 = description.SubTopologies.ToArray()[0].Nodes.FirstOrDefault(n => n is ISourceNodeDescription) as ISourceNodeDescription;
+            var sourceNode2 = description.SubTopologies.ToArray()[1].Nodes.FirstOrDefault(n => n is ISourceNodeDescription) as ISourceNodeDescription;
+
+            Assert.IsTrue(sourceNode1.Name.StartsWith(KStream.SOURCE_NAME));
+            Assert.AreEqual(null, sourceNode1.TimestampExtractorType);
+            Assert.AreEqual(new List<string> { "topic" }, sourceNode1.Topics);
+
+            Assert.IsTrue(sourceNode2.Name.StartsWith(KStream.SOURCE_NAME));
+            Assert.AreEqual(typeof(FailOnInvalidTimestamp), sourceNode2.TimestampExtractorType);
+            Assert.AreEqual(new List<string> { "KTABLE-AGGREGATE-STATE-STORE-0000000005-repartition" }, sourceNode2.Topics);
         }
 
     }

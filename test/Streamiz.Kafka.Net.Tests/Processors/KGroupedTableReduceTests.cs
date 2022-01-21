@@ -8,6 +8,7 @@ using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections.Generic;
+using Microsoft.VisualBasic;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -120,7 +121,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var table = builder
                 .Table<string, string>("topic")
                 .MapValues(v => v.Length)
-                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v));
+                .GroupBy<string, int, StringSerDes, Int32SerDes>((k, v) => KeyValuePair.Create(k.ToUpper(), v));
 
             table.Count(InMemory<string, long>.As("count-store"));
             table.Reduce(

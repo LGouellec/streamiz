@@ -64,7 +64,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     new Dictionary<string, IProcessor>(),
                     new Dictionary<string, IStateStore>(),
                     globalStateStores,
-                    storesToTopics);
+                    storesToTopics,
+                    new List<string>());
 
             adminClientMock = new Mock<IAdminClient>();
             RegisterPartitionInAdminClient(kvStoreTopic);

@@ -3,7 +3,7 @@ using Streamiz.Kafka.Net.State;
 
 namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
 {
-    internal class StreamStreamJoinNode<K, V1, V2, VR> : BaseJoinProcessorNode<K, V1, V2, VR>
+    internal class StreamStreamJoinNode<K, V1, V2, VR> : AbstractJoinProcessorNode<K, V1, V2, VR>
     {
         private readonly ProcessorParameters<K, V1> windowedLeftParams;
         private readonly ProcessorParameters<K, V2> windowedRightParams;

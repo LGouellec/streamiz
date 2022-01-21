@@ -121,7 +121,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
         {
             string name = new Named(named).OrElseGenerateWithPrefix(builder, KTable.TOSTREAM_NAME);
 
-            var p = new WrappedValueMapperWithKey<K, Change<V>, V>((k, v) => v.NewValue);
+            var p = new WrappedValueMapperWithKey<K, Change<V>, V>((_, v) => v.NewValue);
             IProcessorSupplier<K, Change<V>> processorMapValues = new KStreamMapValues<K, Change<V>, V>(p);
             ProcessorParameters<K, Change<V>> processorParameters = new ProcessorParameters<K, Change<V>>(processorMapValues, name);
 
@@ -183,7 +183,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
         public IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(Func<K, V, KeyValuePair<KR, VR>> keySelector, string named = null)
             where KRS : ISerDes<KR>, new()
             where VRS : ISerDes<VR>, new()
-            => GroupBy(new WrappedKeyValueMapper<K, V, KeyValuePair<KR, VR>>(keySelector), named);
+            => GroupBy<KR, VR, KRS, VRS>(new WrappedKeyValueMapper<K, V, KeyValuePair<KR, VR>>(keySelector), named);
 
         #endregion
 

@@ -7,6 +7,7 @@ using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Tests.Helpers;
 using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -77,7 +78,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             builder.Stream<string, ObjectA, StringSerDes, JSONSerDes<ObjectA>>("source")
                 .Map((key, value) => new KeyValuePair<string, ObjectA>(value.Symbol, value))
-                .GroupByKey()
+                .GroupByKey<StringSerDes, JSONSerDes<ObjectA>>()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(5)))
                 .Aggregate<ObjectB, JSONSerDes<ObjectB>>(
                     () => new ObjectB(),
