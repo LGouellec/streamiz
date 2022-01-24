@@ -3,17 +3,46 @@ using System;
 
 namespace Streamiz.Kafka.Net.State.RocksDb
 {
+    /// <summary>
+    /// RocksDB log levels.
+    /// </summary>
     public enum RocksLogLevel
     {
+        /// <summary>
+        /// Debug level
+        /// </summary>
         DEBUG = 0,
+        /// <summary>
+        /// Info level
+        /// </summary>
         INFO = 1,
+        /// <summary>
+        /// Warning level
+        /// </summary>
         WARN = 2,
+        /// <summary>
+        /// Error level
+        /// </summary>
         ERROR = 3,
+        /// <summary>
+        /// Fatal level
+        /// </summary>
         FATAL = 4,
+        /// <summary>
+        /// Header level
+        /// </summary>
         HEADER = 5,
+        /// <summary>
+        /// Num info level
+        /// </summary>
         NUM_INFO_LOG = 6
     }
 
+    /// <summary>
+    /// Rocksdb class config adapter.
+    /// This class adapt <see cref="DbOptions"/> and <see cref="ColumnFamilyOptions"/>,
+    /// allow users to custom the configuration of RocksDb state store using <see cref="IStreamConfig.RocksDbConfigHandler" />
+    /// </summary>
     public class RocksDbOptions
     {
         private readonly DbOptions dbOptions;
