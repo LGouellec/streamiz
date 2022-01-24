@@ -2343,12 +2343,18 @@ namespace Streamiz.Kafka.Net
             set => this.AddOrUpdate(avroSerializerSubjectNameStrategyCst, value);
         }
 
+        /// <summary>
+        /// Basic auth credentials in the form {username}:{password} to interact with Confluent Schema Registry.
+        /// </summary>
         public string BasicAuthUserInfo
         {
             get => this.ContainsKey(schemaRegistryBasicAuthUserInfoCst) ? this[schemaRegistryBasicAuthUserInfoCst] : null;
             set => this.AddOrUpdate(schemaRegistryBasicAuthUserInfoCst, value);
         }
 
+        /// <summary>
+        /// Provide the basic authentication credentials (0 = UserInfo, 1 = SaslInherit) to interact with Confluent Schema Registry.
+        /// </summary>
         public int? BasicAuthCredentialsSource
         {
             get => this.ContainsKey(schemaRegistryBasicAuthCredentialSourceCst) ? this[schemaRegistryBasicAuthCredentialSourceCst] : null;

@@ -528,7 +528,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// </summary>
         /// <typeparam name="KR">the key type of the result</typeparam>
         /// <typeparam name="KRS">New serializer for <typeparamref name="KR"/> type</typeparam>
-        /// <typeparam name="VS">New serializer for <typeparam name="V"/> type</typeparam>
+        /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
         /// <param name="keySelector">A <see cref="IKeyValueMapper{K, V, VR}"/> selector that computes a new key for grouping</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKGroupedStream{KR, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>
@@ -579,8 +579,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// </summary>
         /// <typeparam name="KR">the key type of the result</typeparam>
         /// <typeparam name="KRS">New serializer for <typeparamref name="KR"/> type</typeparam>
-        /// <typeparam name="V">the value type of the result</typeparam>
-        /// <typeparam name="VS">New serializer for <typeparam name="V"/> type</typeparam>
+        /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
         /// <param name="keySelector">A function selector that computes a new key for grouping</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKGroupedStream{KR, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>

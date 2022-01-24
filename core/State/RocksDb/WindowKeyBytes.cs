@@ -55,6 +55,9 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             => Compare(WindowKeyBytes.Wrap(x.Get), WindowKeyBytes.Wrap(y.Get));
     }
 
+    /// <summary>
+    /// Utility class that handles immutable window key byte arrays.
+    /// </summary>
     public class WindowKeyBytes : Bytes
     {
         private WindowKeyBytes(byte[] bytes)
@@ -63,19 +66,11 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         }
 
-        //public static WindowKeyBytes Wrap(byte[] key, long time, int seqnum)
-        //{
-        //    int totalSize = key.Length + sizeof(long) + sizeof(int);
-        //    using (var buffer = ByteBuffer.Build(totalSize))
-        //    {
-        //        buffer.PutInt(key.Length);
-        //        buffer.Put(key);
-        //        buffer.PutLong(time);
-        //        buffer.PutInt(seqnum);
-        //        return new WindowKeyBytes(buffer.ToArray());
-        //    }
-        //}
-
+        /// <summary>
+        /// Wrap windowkey bytes
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public new static WindowKeyBytes Wrap(byte[] key)
         {
             if (key == null)
