@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.State.RocksDb
 {
-    public class RocksDbEnumerable : IEnumerable<KeyValuePair<Bytes, byte[]>>
+    internal class RocksDbEnumerable : IEnumerable<KeyValuePair<Bytes, byte[]>>
     {
         #region Inner Class
         private class RocksDbWrappedEnumerator : IEnumerator<KeyValuePair<Bytes, byte[]>>

@@ -41,16 +41,35 @@ namespace Streamiz.Kafka.Net.State
         private readonly string path;
         private readonly object _lock = new object();
         private readonly ILogger logger = Logger.GetLogger(typeof(OffsetCheckpointFile));
+        
+        /// <summary>
+        /// Checkpoint file name (can't be override).
+        /// </summary>
         public static readonly string CHECKPOINT_FILE_NAME = ".checkpoint";
 
+        /// <summary>
+        /// Constructor with base folder's checkpoint file
+        /// </summary>
+        /// <param name="path">parent folder on checkpoint file</param>
         public OffsetCheckpointFile(string path) => this.path = Path.Combine(path, CHECKPOINT_FILE_NAME);
 
+        /// <summary>
+        /// Delete the parent folder.
+        /// </summary>
+        /// <param name="taskId">current task</param>
         public void Destroy(TaskId taskId)
         {
             if (File.Exists(path))
                 File.Delete(path);
         }
 
+        /// <summary>
+        /// Read the offsets from the local checkpoint file, skipping any negative offsets it finds.
+        /// </summary>
+        /// <param name="taskId">current task</param>
+        /// <returns>dictionary {TopicPartition, long}</returns>
+        /// <exception cref="IOException">throws if an error appeared during reading process file</exception>
+        /// <exception cref="ArgumentException">throws if version in checkpoint file is incorrect</exception>
         public IDictionary<TopicPartition, long> Read(TaskId taskId)
         {
             lock (_lock)
@@ -116,6 +135,12 @@ namespace Streamiz.Kafka.Net.State
             }
         }
 
+        /// <summary>
+        /// Write the given offsets to the checkpoint file. All offsets should be non-negative.
+        /// </summary>
+        /// <param name="taskId">current task</param>
+        /// <param name="data">topic/partition offsets</param>
+        /// <exception cref="StreamsException">throws if an offset is invalid</exception>
         public void Write(TaskId taskId, IDictionary<TopicPartition, long> data)
         {
             if (!data.Any())
@@ -151,6 +176,11 @@ namespace Streamiz.Kafka.Net.State
             }
         }
 
+        /// <summary>
+        /// Not used in this implementation
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="taskId"></param>
         public void Configure(IStreamConfig config, TaskId taskId)
         {
             // Nothing here
