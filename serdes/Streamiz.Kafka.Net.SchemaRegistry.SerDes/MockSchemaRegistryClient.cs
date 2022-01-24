@@ -30,6 +30,9 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
         /// </summary>
         public int MaxCachedSchemas { get; private set; } = 100;
 
+        /// <summary>
+        /// Request timeout
+        /// </summary>
         public int RequestTimeoutMs { get; private set; }
 
         /// <summary>
@@ -71,6 +74,10 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
         public Task<List<string>> GetAllSubjectsAsync()
             => Task.FromResult(subjects);
 
+        /// <summary>
+        /// Set the current <seealso cref="SchemaRegistryConfig"/> instance.
+        /// </summary>
+        /// <param name="config">the current <seealso cref="SchemaRegistryConfig"/> instance</param>
         public void UseConfiguration(SchemaRegistryConfig config)
         {
             MaxCachedSchemas = config.MaxCachedSchemas.HasValue ? config.MaxCachedSchemas.Value : 100;

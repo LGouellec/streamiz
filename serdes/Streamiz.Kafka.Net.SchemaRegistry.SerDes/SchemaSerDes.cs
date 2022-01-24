@@ -16,8 +16,19 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes
     /// <typeparam name="T"></typeparam>
     public abstract class SchemaSerDes<T> : AbstractSerDes<T>
     {
+        /// <summary>
+        /// Schema registry client
+        /// </summary>
         protected ISchemaRegistryClient registryClient;
+        
+        /// <summary>
+        /// Serializer 
+        /// </summary>
         protected IAsyncSerializer<T> serializer;
+        
+        /// <summary>
+        /// Deserializer
+        /// </summary>
         protected IAsyncDeserializer<T> deserializer;
 
         private SchemaRegistryConfig GetConfig(ISchemaRegistryConfig config)
