@@ -94,7 +94,7 @@ namespace Streamiz.Kafka.Net.State.Internal
                     .ToList()
                     .ForEach(segId => GetOrCreateSegment(segId, context));
             }
-            catch (Exception ex) {
+            catch (Exception) {
                 throw new ProcessorStateException($"{Path.Combine(context.StateDir, name)}  doesn't exist and cannot be created for segments {name}");
             }
 

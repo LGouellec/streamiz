@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    public class DefaultTopicManager : ITopicManager
+    internal class DefaultTopicManager : ITopicManager
     {
         private readonly ILogger log = Logger.GetLogger(typeof(DefaultTopicManager));
         private readonly IStreamConfig config;

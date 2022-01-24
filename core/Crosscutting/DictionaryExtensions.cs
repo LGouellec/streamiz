@@ -93,6 +93,15 @@ namespace Streamiz.Kafka.Net.Crosscutting
             return map;
         }
 
+        /// <summary>
+        /// Try add or update a key/value on a <see cref="ConcurrentDictionary{K,V}"/>
+        /// </summary>
+        /// <param name="key">key to add or update</param>
+        /// <param name="value">new value</param>
+        /// <typeparam name="K">Key type</typeparam>
+        /// <typeparam name="V">Value type</typeparam>
+        /// <param name="source">Collection source</param>
+        /// <returns>Return true if the value is added/updated, false otherwise</returns>
         public static bool TryAddOrUpdate<K, V>(this ConcurrentDictionary<K, V> source, K key, V value)
         {
             V valueTmp;

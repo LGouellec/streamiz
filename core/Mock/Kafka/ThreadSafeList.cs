@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Mock.Kafka
 {
-    public class ThreadSafeList<T> : IList<T>
+    internal class ThreadSafeList<T> : IList<T>
     {
         protected readonly List<T> _internalList = null;
         protected static object _lock = new ();

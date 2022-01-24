@@ -42,10 +42,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly static long DEFAULT_OFFSET_UPDATE_MS = (long)TimeSpan.FromMinutes(5L).TotalMilliseconds;
         private readonly long pollTimeMs;
         private readonly long maxPollRestoringRecords;
-        // NOT USED AT TIME
-        private readonly long updateOffsetTimeMs;
-        private long lastUpdateOffsetSend = 0;
-
+        
         public StoreChangelogReader(
             IStreamConfig config,
             IConsumer<byte[], byte[]> restoreConsumer)
@@ -54,8 +51,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             pollTimeMs = config.PollMs;
             maxPollRestoringRecords = config.MaxPollRestoringRecords;
-            updateOffsetTimeMs = config.CommitIntervalMs == int.MaxValue ? DEFAULT_OFFSET_UPDATE_MS : config.CommitIntervalMs;
-
             changelogs = new Dictionary<TopicPartition, ChangelogMetadata>();
         }
 

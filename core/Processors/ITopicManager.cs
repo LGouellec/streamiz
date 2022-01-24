@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    public interface ITopicManager : IDisposable
+    internal interface ITopicManager : IDisposable
     {
         IAdminClient AdminClient { get; }
 

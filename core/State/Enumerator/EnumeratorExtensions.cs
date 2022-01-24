@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.State.Enumerator
 {
-    public static class EnumeratorExtensions
+    internal static class EnumeratorExtensions
     {
         public static IKeyValueEnumerator<K, V> ToWrap<K, V>(this IEnumerable<KeyValuePair<K, V>> enumerable)
             => new WrapEnumerableKeyValueEnumerator<K, V>(enumerable);

@@ -6,7 +6,7 @@ using Streamiz.Kafka.Net.State;
 
 namespace Streamiz.Kafka.Net.Mock
 {
-    public class MockOffsetCheckpointManager :  IOffsetCheckpointManager
+    internal class MockOffsetCheckpointManager :  IOffsetCheckpointManager
     {
         public MockOffsetCheckpointManager()
         {

@@ -3,7 +3,7 @@ using Streamiz.Kafka.Net.Crosscutting;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    public class RepartitionTopicConfig : InternalTopicConfig
+    internal class RepartitionTopicConfig : InternalTopicConfig
     {
         public static IDictionary<string, string> REPARTITION_TOPIC_DEFAULT_OVERRIDES = new Dictionary<string, string>(INTERNAL_TOPIC_DEFAULT_OVERRIDES)
         {

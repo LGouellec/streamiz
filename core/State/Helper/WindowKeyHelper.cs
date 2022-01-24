@@ -5,7 +5,7 @@ using System;
 
 namespace Streamiz.Kafka.Net.State.Helper
 {
-    public static class WindowKeyHelper
+    internal static class WindowKeyHelper
     {
         internal const int SEQNUM_SIZE = sizeof(int);
         internal const int TIMESTAMP_SIZE = sizeof(long);

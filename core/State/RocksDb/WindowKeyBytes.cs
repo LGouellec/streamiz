@@ -76,7 +76,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         //    }
         //}
 
-        public static WindowKeyBytes Wrap(byte[] key)
+        public new static WindowKeyBytes Wrap(byte[] key)
         {
             if (key == null)
                 return null;

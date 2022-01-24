@@ -2,7 +2,7 @@
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    public static class InternalTopicConfigCst
+    internal static class InternalTopicConfigCst
     {
         public static readonly string RETENTION_MS_CONFIG = "retention.ms";
         public static readonly string MESSAGE_TIMESTAMP_TYPE_CONFIG = "message.timestamp.type";
@@ -10,7 +10,7 @@ namespace Streamiz.Kafka.Net.Processors
         public static readonly string SEGMENT_BYTES_CONFIG = "segment.bytes";
     }
 
-    public abstract class InternalTopicConfig
+    internal abstract class InternalTopicConfig
     {
         public static IDictionary<string, string> INTERNAL_TOPIC_DEFAULT_OVERRIDES = new Dictionary<string, string>()
         {

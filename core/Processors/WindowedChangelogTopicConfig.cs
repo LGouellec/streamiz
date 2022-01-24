@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    public class WindowedChangelogTopicConfig : InternalTopicConfig
+    internal class WindowedChangelogTopicConfig : InternalTopicConfig
     {
         public static IDictionary<string, string> WINDOWED_STORE_CHANGELOG_TOPIC_DEFAULT_OVERRIDES = new Dictionary<string, string>(INTERNAL_TOPIC_DEFAULT_OVERRIDES)
         {
