@@ -253,7 +253,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <summary>
         /// Is logging enabled (default: false), Warning : will be true in next release.
         /// </summary>
-        public bool LoggingEnabled { get; protected set; }
+        public bool LoggingEnabled { get; protected set; } = true;
 
         /// <summary>
         /// Is caching enabled. Not use for moment.

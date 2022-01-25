@@ -1,10 +1,12 @@
 # State stores
 
-⚠️ <span style="color:red">**Only no persistent store are supported !**</span> => RocksDB implementation will arrive soon. ⚠️
+⚠️ <span style="color:red">**Some things you need to know**</span>
 
-**No changelog topics are created with In Memory store for moment !**
+- Default state store behavior still in memory store (change to rocksdb in 1.3.0 release)
+- RocksDb state store is available since 1.2.0 release.
+- By default, a state store is tracked by a changelog topic since 1.2.0 release (If you don't need, you have to make it explicit).
 
-## In Memory
+## In Memory key/value store
 
 As his name, this is an inmemory key value state store which is supplied by InMemoryKeyValueBytesStoreSupplier.
 You have an child materialized class to help you to use it.
@@ -28,7 +30,7 @@ builder
 
 **Be carefull, this state store is not persistent ! So after each application restart, you loose the state of your state store.**
 
-## In Memory Windows
+## In Memory window store
 
 As his name, this is an inmemory windows state store which is supplied by InMemoryWindowStoreSupplier.
 You have an child materialized class to help you to use it.
@@ -51,3 +53,9 @@ builder
 ```
 
 **Be carefull, this state store is not persistent ! So after each application restart, you loose the state of your state store.**
+
+## RocksDb key/value store
+
+## RocksDb window store
+
+## Changelog store

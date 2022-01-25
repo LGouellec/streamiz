@@ -65,19 +65,13 @@ static async System.Threading.Tasks.Task Main(string[] args)
     var config = new StreamConfig<StringSerDes, StringSerDes>();
     config.ApplicationId = "test-app";
     config.BootstrapServers = "192.168.56.1:9092";
-    config.SaslMechanism = SaslMechanism.Plain;
-    config.SaslUsername = "admin";
-    config.SaslPassword = "admin";
-    config.SecurityProtocol = SecurityProtocol.SaslPlaintext;
-    config.AutoOffsetReset = AutoOffsetReset.Earliest;
-    config.NumStreamThreads = 2;
     
     StreamBuilder builder = new StreamBuilder();
 
     var kstream = builder.Stream<string, string>("stream");
     var ktable = builder.Table("table", InMemory<string, string>.As("table-store"));
 
-    kstream.Join<string, string, StringSerDes, StringSerDes>(ktable, (v, v1) => $"{v}-{v1}")
+    kstream.Join(ktable, (v, v1) => $"{v}-{v1}")
            .To("join-topic");
 
     Topology t = builder.Build();

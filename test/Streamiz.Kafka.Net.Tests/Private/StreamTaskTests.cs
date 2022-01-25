@@ -217,7 +217,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var serdes = new StringSerDes();
             var builder = new StreamBuilder();
 
-            builder.Table<string, string>("topic", InMemory<string, string>.As("store"))
+            builder.Table<string, string>("topic", InMemory<string, string>.As("store").WithLoggingDisabled())
                 .MapValues((k, v) => v.ToUpper())
                 .ToStream()
                 .To("topic2");

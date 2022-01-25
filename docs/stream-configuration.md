@@ -181,6 +181,8 @@ The amount of time in milliseconds to block waiting for input. (Default : 100)
 
 The maximum number of records returned in consumption processing by thread. (Default: 500)
 
+### MaxPollRestoringRecords
+
 ### MaxTaskIdleMs
 
 Maximum amount of time a stream task will stay idle when not all of its partition buffers contain records, to avoid potential out-of-order record processing across multiple input streams. (Default: 0)
@@ -208,20 +210,11 @@ Deserialization exception handling function called when deserialization exceptio
 
 Production exception handling function called when kafka produce exception is raise.
 
-### BasicAuthUserInfo
+### Logger
 
-Credentials for the schema registry
+This library uses Microsoft.Extensions.Logging.Abstractions for logging. To set logging for this library you need to set Logger property in your stream config instance.
 
-### BasicAuthCredentialsSource
-
-Specifies the source, use 0 for UserInfo or 1 for SaslInherit.
-
-
-### Logging
-
-This library uses Microsoft.Extensions.Logging.Abstractions for logging. To set logging for this library you need to set LoggerFactory in static Logger class. If this is not set, LoggerFactory with Microsoft.Extensions.Logging.Console will be set automatically.
-
-## Configuring log4net 
+### Configuring log4net 
 
 To configure log4net you need to install Microsoft.Extensions.Logging.Log4Net.AspNetCore nuget package in your project and add log4net.config.
 ``` bash
@@ -250,6 +243,63 @@ Add a log4net.config resources in your project :
     </root>
 </log4net>
 ```
+
+### FollowMetadata
+
+Authorize your streams application to follow metadata (timestamp, topic, partition, offset and headers) during processing record. You can use ``` StreamizMetadata ``` to get these metadatas. (Default : false)
+
+### StateDir
+
+Directory location for state store. This path must be unique for each streams instance sharing the same underlying filesystem.
+
+### ReplicationFactor
+
+The replication factor for change log topics topics created by the stream processing application. Default is 1.
+
+### WindowStoreChangelogAdditionalRetentionMs
+
+Added to a windows maintainMs to ensure data is not deleted from the log prematurely. Allows for clock drift. 
+Default is 1 day.
+
+### OffsetCheckpointManager
+
+Manager which track offset saved in local state store.
+
+### RocksDbConfigHandler
+
+A Rocks DB config handler function called just before openning a rocksdb state store.
+
+### BasicAuthUserInfo
+
+Credentials for the schema registry
+
+### BasicAuthCredentialsSource
+
+Specifies the source, use 0 for UserInfo or 1 for SaslInherit.
+
+### SchemaRegistryRequestTimeoutMs
+
+Specifies the timeout for requests to Confluent Schema Registry. 
+Default: 30000
+
+### SchemaRegistryMaxCachedSchemas
+
+Specifies the maximum number of schemas CachedSchemaRegistryClient should cache locally. 
+Default: 1000
+
+### SchemaRegistryUrl
+
+A comma-separated list of URLs for schema registry instances that are used register or lookup schemas.
+
+### AutoRegisterSchemas
+
+Specifies whether or not the Avro serializer should attempt to auto-register unrecognized schemas with Confluent Schema Registry. 
+Default: true
+
+### SubjectNameStrategy
+
+The subject name strategy to use for schema registration / lookup. 
+Possible values: ``` Streamiz.Kafka.Net.SubjectNameStrategy ```
 
 ## Kafka consumers and producer configuration parameters
 

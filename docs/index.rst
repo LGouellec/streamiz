@@ -38,12 +38,6 @@ Add this code ::
       var config = new StreamConfig<StringSerDes, StringSerDes>();
       config.ApplicationId = "test-app";
       config.BootstrapServers = "192.168.56.1:9092";
-      /** => PLEASE SET CREDENTIALS SETTINGS */
-      config.SaslMechanism = SaslMechanism.Plain;
-      config.SaslUsername = "admin";
-      config.SaslPassword = "admin";
-      config.SecurityProtocol = SecurityProtocol.SaslPlaintext;
-      /** => PLEASE SET CREDENTIALS SETTINGS */
       
       StreamBuilder builder = new StreamBuilder();
 

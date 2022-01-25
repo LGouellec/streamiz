@@ -31,7 +31,6 @@ This tutorial will describe all the steps required to create a first streamiz ap
         var config = new StreamConfig<StringSerDes, StringSerDes>();
         config.ApplicationId = "test-app";
         config.BootstrapServers = "192.168.56.1:9092";
-        config.NumStreamThreads = 2;
 
         StreamBuilder builder = new StreamBuilder();
 

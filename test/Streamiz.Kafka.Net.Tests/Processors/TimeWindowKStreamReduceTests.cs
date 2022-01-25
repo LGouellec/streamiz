@@ -62,7 +62,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 config,
                 supplier,
                 null,
-                null);
+                new MockChangelogRegister());
             task.GroupMetadata = consumer as SyncConsumer;
             Assert.Throws<StreamsException>(() => task.InitializeStateStores());
         }

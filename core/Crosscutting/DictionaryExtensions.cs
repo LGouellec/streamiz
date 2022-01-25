@@ -88,8 +88,9 @@ namespace Streamiz.Kafka.Net.Crosscutting
         /// <returns>Return map dictionary merged with secondMap</returns>
         public static IDictionary<K, V> AddRange<K, V>(this IDictionary<K, V> map, IDictionary<K, V> secondMap)
         {
-            foreach (var entry in secondMap)
-                map.AddOrUpdate(entry.Key, entry.Value);
+            if(secondMap != null)
+                foreach (var entry in secondMap)
+                    map.AddOrUpdate(entry.Key, entry.Value);
             return map;
         }
 
