@@ -117,7 +117,7 @@ TopologyTestDriver is disposable so you should ‘using’ keyword in your unit 
 <p>Sample code :</p>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">&gt;();</span><span class="w"></span>
 <span class="n">config</span><span class="p">.</span><span class="n">ApplicationId</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;test-test-driver-app&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span>
+
 <span class="n">StreamBuilder</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamBuilder</span><span class="p">();</span><span class="w"></span>
 
 <span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test&quot;</span><span class="p">)</span><span class="w"></span>

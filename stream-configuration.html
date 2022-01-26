@@ -59,18 +59,32 @@
 <li class="toctree-l3"><a class="reference internal" href="#commitintervalms">CommitIntervalMs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pollms">PollMs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#maxpollrecords">MaxPollRecords</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#maxpollrestoringrecords">MaxPollRestoringRecords</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#maxtaskidlems">MaxTaskIdleMs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#maxpollintervalms">MaxPollIntervalMs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#bufferedrecordsperpartition">BufferedRecordsPerPartition</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#innerexceptionhandler">InnerExceptionHandler</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#deserializationexceptionhandler">DeserializationExceptionHandler</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#productionexceptionhandler">ProductionExceptionHandler</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#basicauthuserinfo">BasicAuthUserInfo</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#basicauthcredentialssource">BasicAuthCredentialsSource</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#logging">Logging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logger">Logger</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-log4net">Configuring log4net</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#configuring-log4net">Configuring log4net</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#followmetadata">FollowMetadata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#statedir">StateDir</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#replicationfactor">ReplicationFactor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#windowstorechangelogadditionalretentionms">WindowStoreChangelogAdditionalRetentionMs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#offsetcheckpointmanager">OffsetCheckpointManager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rocksdbconfighandler">RocksDbConfigHandler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#basicauthuserinfo">BasicAuthUserInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#basicauthcredentialssource">BasicAuthCredentialsSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#schemaregistryrequesttimeoutms">SchemaRegistryRequestTimeoutMs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#schemaregistrymaxcachedschemas">SchemaRegistryMaxCachedSchemas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#schemaregistryurl">SchemaRegistryUrl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#autoregisterschemas">AutoRegisterSchemas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#subjectnamestrategy">SubjectNameStrategy</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#kafka-consumers-and-producer-configuration-parameters">Kafka consumers and producer configuration parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#sample-configuration-implementation">Sample configuration implementation</a></li>
 </ul>
@@ -268,6 +282,10 @@ otherwise the default value is <code class="docutils literal notranslate"><span 
 <h3>MaxPollRecords<a class="headerlink" href="#maxpollrecords" title="Permalink to this headline">¶</a></h3>
 <p>The maximum number of records returned in consumption processing by thread. (Default: 500)</p>
 </section>
+<section id="maxpollrestoringrecords">
+<h3>MaxPollRestoringRecords<a class="headerlink" href="#maxpollrestoringrecords" title="Permalink to this headline">¶</a></h3>
+<p>The maximum number of records processed for each restoration step. Only use when application needs to restore state store from changelog topics. (Default: 1000)</p>
+</section>
 <section id="maxtaskidlems">
 <h3>MaxTaskIdleMs<a class="headerlink" href="#maxtaskidlems" title="Permalink to this headline">¶</a></h3>
 <p>Maximum amount of time a stream task will stay idle when not all of its partition buffers contain records, to avoid potential out-of-order record processing across multiple input streams. (Default: 0)</p>
@@ -293,21 +311,11 @@ If this number is exceeded, the consumer pauses for this partition until stream 
 <h3>ProductionExceptionHandler<a class="headerlink" href="#productionexceptionhandler" title="Permalink to this headline">¶</a></h3>
 <p>Production exception handling function called when kafka produce exception is raise.</p>
 </section>
-<section id="basicauthuserinfo">
-<h3>BasicAuthUserInfo<a class="headerlink" href="#basicauthuserinfo" title="Permalink to this headline">¶</a></h3>
-<p>Credentials for the schema registry</p>
-</section>
-<section id="basicauthcredentialssource">
-<h3>BasicAuthCredentialsSource<a class="headerlink" href="#basicauthcredentialssource" title="Permalink to this headline">¶</a></h3>
-<p>Specifies the source, use 0 for UserInfo or 1 for SaslInherit.</p>
-</section>
-<section id="logging">
-<h3>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
-<p>This library uses Microsoft.Extensions.Logging.Abstractions for logging. To set logging for this library you need to set LoggerFactory in static Logger class. If this is not set, LoggerFactory with Microsoft.Extensions.Logging.Console will be set automatically.</p>
-</section>
-</section>
+<section id="logger">
+<h3>Logger<a class="headerlink" href="#logger" title="Permalink to this headline">¶</a></h3>
+<p>This library uses Microsoft.Extensions.Logging.Abstractions for logging. To set logging for this library you need to set Logger property in your stream config instance.</p>
 <section id="configuring-log4net">
-<h2>Configuring log4net<a class="headerlink" href="#configuring-log4net" title="Permalink to this headline">¶</a></h2>
+<h4>Configuring log4net<a class="headerlink" href="#configuring-log4net" title="Permalink to this headline">¶</a></h4>
 <p>To configure log4net you need to install Microsoft.Extensions.Logging.Log4Net.AspNetCore nuget package in your project and add log4net.config.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>dotnet add package Microsoft.Extensions.Logging.Log4Net.AspNetCore
 </pre></div>
@@ -333,6 +341,65 @@ If this number is exceeded, the consumer pauses for this partition until stream 
 <span class="nt">&lt;/log4net&gt;</span>
 </pre></div>
 </div>
+</section>
+</section>
+<section id="followmetadata">
+<h3>FollowMetadata<a class="headerlink" href="#followmetadata" title="Permalink to this headline">¶</a></h3>
+<p>Authorize your streams application to follow metadata (timestamp, topic, partition, offset and headers) during processing record. You can use <code class="docutils literal notranslate"><span class="pre">StreamizMetadata</span></code> to get these metadatas. (Default : false)</p>
+</section>
+<section id="statedir">
+<h3>StateDir<a class="headerlink" href="#statedir" title="Permalink to this headline">¶</a></h3>
+<p>Directory location for state store. This path must be unique for each streams instance sharing the same underlying filesystem. (Default : <code class="docutils literal notranslate"><span class="pre">Path.Combine(Path.GetTempPath(),</span> <span class="pre">&quot;streamiz-kafka-net&quot;)</span></code>)</p>
+</section>
+<section id="replicationfactor">
+<h3>ReplicationFactor<a class="headerlink" href="#replicationfactor" title="Permalink to this headline">¶</a></h3>
+<p>The replication factor for change log topics topics created by the stream processing application. Default is 1.</p>
+</section>
+<section id="windowstorechangelogadditionalretentionms">
+<h3>WindowStoreChangelogAdditionalRetentionMs<a class="headerlink" href="#windowstorechangelogadditionalretentionms" title="Permalink to this headline">¶</a></h3>
+<p>Added to a windows maintainMs to ensure data is not deleted from the log prematurely. Allows for clock drift.
+Default is 1 day.</p>
+</section>
+<section id="offsetcheckpointmanager">
+<h3>OffsetCheckpointManager<a class="headerlink" href="#offsetcheckpointmanager" title="Permalink to this headline">¶</a></h3>
+<p>Manager which track offset saved in local state store.</p>
+</section>
+<section id="rocksdbconfighandler">
+<h3>RocksDbConfigHandler<a class="headerlink" href="#rocksdbconfighandler" title="Permalink to this headline">¶</a></h3>
+<p>A Rocks DB config handler function called just before openning a rocksdb state store.</p>
+</section>
+<section id="basicauthuserinfo">
+<h3>BasicAuthUserInfo<a class="headerlink" href="#basicauthuserinfo" title="Permalink to this headline">¶</a></h3>
+<p>Credentials for the schema registry</p>
+</section>
+<section id="basicauthcredentialssource">
+<h3>BasicAuthCredentialsSource<a class="headerlink" href="#basicauthcredentialssource" title="Permalink to this headline">¶</a></h3>
+<p>Specifies the source, use 0 for UserInfo or 1 for SaslInherit.</p>
+</section>
+<section id="schemaregistryrequesttimeoutms">
+<h3>SchemaRegistryRequestTimeoutMs<a class="headerlink" href="#schemaregistryrequesttimeoutms" title="Permalink to this headline">¶</a></h3>
+<p>Specifies the timeout for requests to Confluent Schema Registry.
+Default: 30000</p>
+</section>
+<section id="schemaregistrymaxcachedschemas">
+<h3>SchemaRegistryMaxCachedSchemas<a class="headerlink" href="#schemaregistrymaxcachedschemas" title="Permalink to this headline">¶</a></h3>
+<p>Specifies the maximum number of schemas CachedSchemaRegistryClient should cache locally.
+Default: 1000</p>
+</section>
+<section id="schemaregistryurl">
+<h3>SchemaRegistryUrl<a class="headerlink" href="#schemaregistryurl" title="Permalink to this headline">¶</a></h3>
+<p>A comma-separated list of URLs for schema registry instances that are used register or lookup schemas.</p>
+</section>
+<section id="autoregisterschemas">
+<h3>AutoRegisterSchemas<a class="headerlink" href="#autoregisterschemas" title="Permalink to this headline">¶</a></h3>
+<p>Specifies whether or not the Avro serializer should attempt to auto-register unrecognized schemas with Confluent Schema Registry.
+Default: true</p>
+</section>
+<section id="subjectnamestrategy">
+<h3>SubjectNameStrategy<a class="headerlink" href="#subjectnamestrategy" title="Permalink to this headline">¶</a></h3>
+<p>The subject name strategy to use for schema registration / lookup.
+Possible values: <code class="docutils literal notranslate"><span class="pre">Topic,</span> <span class="pre">Record,</span> <span class="pre">TopicRecord</span></code></p>
+</section>
 </section>
 <section id="kafka-consumers-and-producer-configuration-parameters">
 <h2>Kafka consumers and producer configuration parameters<a class="headerlink" href="#kafka-consumers-and-producer-configuration-parameters" title="Permalink to this headline">¶</a></h2>
@@ -367,6 +434,7 @@ If this number is exceeded, the consumer pauses for this partition until stream 
 <span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">SecurityProtocol</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">SecurityProtocol</span><span class="p">.</span><span class="n">SaslPlaintext</span><span class="p">;</span><span class="w"></span>
 <span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">AutoOffsetReset</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">AutoOffsetReset</span><span class="p">.</span><span class="n">Earliest</span><span class="p">;</span><span class="w"></span>
 <span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">NumStreamThreads</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">SchemaRegistryUrl</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;http://localhost:8081&quot;</span><span class="p">;</span><span class="w"></span>
 <span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">BasicAuthUserInfo</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;user:password&quot;</span><span class="p">;</span><span class="w"></span>
 <span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">BasicAuthCredentialsSource</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="m">0</span><span class="p">;</span><span class="w"></span>
 </pre></div>

@@ -53,7 +53,7 @@ Sample code :
 ``` csharp
 var config = new StreamConfig<StringSerDes, StringSerDes>();
 config.ApplicationId = "test-test-driver-app";
-    
+
 StreamBuilder builder = new StreamBuilder();
 
 builder.Stream<string, string>("test")
