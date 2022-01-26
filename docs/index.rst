@@ -37,7 +37,7 @@ Add this code ::
    {     
       var config = new StreamConfig<StringSerDes, StringSerDes>();
       config.ApplicationId = "test-app";
-      config.BootstrapServers = "192.168.56.1:9092";
+      config.BootstrapServers = "localhost:9092";
       
       StreamBuilder builder = new StreamBuilder();
 

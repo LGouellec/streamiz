@@ -183,6 +183,8 @@ The maximum number of records returned in consumption processing by thread. (Def
 
 ### MaxPollRestoringRecords
 
+The maximum number of records processed for each restoration step. Only use when application needs to restore state store from changelog topics. (Default: 1000)
+
 ### MaxTaskIdleMs
 
 Maximum amount of time a stream task will stay idle when not all of its partition buffers contain records, to avoid potential out-of-order record processing across multiple input streams. (Default: 0)
@@ -214,7 +216,7 @@ Production exception handling function called when kafka produce exception is ra
 
 This library uses Microsoft.Extensions.Logging.Abstractions for logging. To set logging for this library you need to set Logger property in your stream config instance.
 
-### Configuring log4net 
+#### Configuring log4net 
 
 To configure log4net you need to install Microsoft.Extensions.Logging.Log4Net.AspNetCore nuget package in your project and add log4net.config.
 ``` bash
@@ -250,7 +252,7 @@ Authorize your streams application to follow metadata (timestamp, topic, partiti
 
 ### StateDir
 
-Directory location for state store. This path must be unique for each streams instance sharing the same underlying filesystem.
+Directory location for state store. This path must be unique for each streams instance sharing the same underlying filesystem. (Default : ``` Path.Combine(Path.GetTempPath(), "streamiz-kafka-net") ```)
 
 ### ReplicationFactor
 
@@ -299,7 +301,7 @@ Default: true
 ### SubjectNameStrategy
 
 The subject name strategy to use for schema registration / lookup. 
-Possible values: ``` Streamiz.Kafka.Net.SubjectNameStrategy ```
+Possible values: ``` Topic, Record, TopicRecord ```
 
 ## Kafka consumers and producer configuration parameters
 
@@ -338,6 +340,7 @@ In case of the configuration is not wrapped in StreamConfig yet, you can directl
     config.SecurityProtocol = SecurityProtocol.SaslPlaintext;
     config.AutoOffsetReset = AutoOffsetReset.Earliest;
     config.NumStreamThreads = 1;
+    config.SchemaRegistryUrl = "http://localhost:8081";
     config.BasicAuthUserInfo = "user:password";
     config.BasicAuthCredentialsSource = 0;
 ```
