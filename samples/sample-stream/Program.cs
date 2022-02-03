@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Intrinsics;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
@@ -27,23 +28,31 @@ namespace sample_stream
             config.BootstrapServers = "localhost:9092";
             config.CommitIntervalMs = (long)TimeSpan.FromSeconds(5).TotalMilliseconds;
             config.AutoOffsetReset = Confluent.Kafka.AutoOffsetReset.Earliest;
-            config.StateDir = Path.Combine(".", Guid.NewGuid().ToString());
+            config.StateDir = Path.Combine(".");
 
             config.Logger = LoggerFactory.Create(builder =>
             {
-                builder.SetMinimumLevel(LogLevel.Information);
+                builder.SetMinimumLevel(LogLevel.Debug);
                 builder.AddLog4Net();
             });
             
             StreamBuilder builder = new StreamBuilder();
 
-            builder.Stream<string, string>("test")
-                .Map((k, v) => KeyValuePair.Create(
-                    v.Length > 15 ? v.Substring(0, 10).ToUpper() : v, v))
+            builder
+                .Stream<string, string>("topic")
+                .Filter((key, value) =>
+                {
+                    return key == "1";
+                })
+                .To("tempTopic");
+
+            builder.Stream<string, string>("tempTopic")
                 .GroupByKey()
-                .Count()
+                .Reduce(
+                    (v1,v2) => $"{v1}-{v2}",
+                    RocksDb<string,string>.As("reduce-store"))
                 .ToStream()
-                .Print(Printed<string, long>.ToOut());
+                .To("finalTopic");
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
