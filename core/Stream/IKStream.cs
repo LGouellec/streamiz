@@ -1522,5 +1522,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">a name config used to name the processor in the topology</param>
         /// <returns>a <see cref="IKTable{K, V}"/> that contains the same records as this <see cref="IKStream{K, V}"/></returns>>
         IKTable<K, V> ToTable(Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        
+        IKStream<K, V> Repartition(Repartitioned<K, V> repartitioned = null);
     }
 }

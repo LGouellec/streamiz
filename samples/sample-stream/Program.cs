@@ -23,28 +23,31 @@ namespace sample_stream
         static async Task Main(string[] args)
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-app2";
-            config.BootstrapServers = "localhost:9092";
+            config.ApplicationId = "test-reducer";
+            config.BootstrapServers = "localhost:19092";
             config.CommitIntervalMs = (long)TimeSpan.FromSeconds(5).TotalMilliseconds;
-            config.AutoOffsetReset = Confluent.Kafka.AutoOffsetReset.Earliest;
+            config.AutoOffsetReset = AutoOffsetReset.Latest;
             config.StateDir = Path.Combine(".", Guid.NewGuid().ToString());
 
             config.Logger = LoggerFactory.Create(builder =>
             {
-                builder.SetMinimumLevel(LogLevel.Information);
+                builder.SetMinimumLevel(LogLevel.Debug);
                 builder.AddLog4Net();
             });
             
             StreamBuilder builder = new StreamBuilder();
 
-            builder.Stream<string, string>("test")
-                .Map((k, v) => KeyValuePair.Create(
-                    v.Length > 15 ? v.Substring(0, 10).ToUpper() : v, v))
-                .GroupByKey()
-                .Count()
-                .ToStream()
-                .Print(Printed<string, long>.ToOut());
+            builder
+                .Stream<string, string>("topic")
+                .Filter((key, value) => key == "1")
+                .To("tempTopic");
 
+            builder.Stream<string, string>("tempTopic")
+                .GroupByKey()
+                .Reduce((v1,v2) => v1 + " " + v2)
+                .ToStream()
+                .To("finalTopic");
+            
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
             

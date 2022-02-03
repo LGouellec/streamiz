@@ -100,13 +100,13 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given storeName</returns>
-        public static Materialized<K, V, S> Create(string storeName) => new Materialized<K, V, S>(storeName);
+        public static Materialized<K, V, S> Create(string storeName) => new(storeName);
 
         /// <summary>
         /// Materialize a <see cref="IStateStore"/>. The store name will be a empty string (so, it's not queryable).
         /// </summary>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance</returns>
-        public static Materialized<K, V, S> Create() => new Materialized<K, V, S>(string.Empty);
+        public static Materialized<K, V, S> Create() => new(string.Empty);
 
         /// <summary>
         /// Materialize a <see cref="IWindowStore{K, V}"/> using the provided <see cref="IWindowBytesStoreSupplier"/>

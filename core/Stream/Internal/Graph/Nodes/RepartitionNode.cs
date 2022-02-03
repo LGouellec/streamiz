@@ -1,3 +1,4 @@
+using System;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 
@@ -9,6 +10,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
             : base(streamGraphNode, sourceName, processorParameters, keySerdes, valueSerdes, sinkName, repartitionTopic)
         {
         }
+
+        public int? NumberOfPartition { get; set; }
+        public Func<string, K, V, int> StreamPartitioner { get; set; }
 
         public override void WriteToTopology(InternalTopologyBuilder builder)
         {
