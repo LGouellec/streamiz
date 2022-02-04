@@ -315,7 +315,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         {
             var topic = topics[topicPartition.Topic];
             var p = topic.GetPartition(topicPartition.Partition);
-            return new WatermarkOffsets(new Offset(p.LowOffset), new Offset(p.HighOffset));
+            return new WatermarkOffsets(new Offset(p.LowOffset), new Offset(p.Size));
         }
 
         private IEnumerable<TopicPartition> Generate(string topic, int start, int number)

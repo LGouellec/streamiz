@@ -233,7 +233,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 offset = checkpoint;
                 highWM = highWatermarks[topicPartition].Item2;
 
-                while (offset < highWM)
+                while (offset < highWM - 1)
                 {
                     var records = globalConsumer.ConsumeRecords(TimeSpan.FromMilliseconds(config.PollMs),
                         config.MaxPollRestoringRecords).ToList();
