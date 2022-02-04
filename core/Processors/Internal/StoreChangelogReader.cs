@@ -178,6 +178,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             throw new IllegalStateException($"The corresponding changelog restorer for {topicPartition} does not exist, this should not happen.");
         }
 
+        
         private void RestoreChangelog(ChangelogMetadata changelogMetadata)
         {
             var numRecords = changelogMetadata.BufferedLimit;
@@ -228,7 +229,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
         }
 
-        private bool HasRestoredToEnd(ChangelogMetadata changelogMetadata)
+        // internal for testing
+        internal bool HasRestoredToEnd(ChangelogMetadata changelogMetadata)
         {
             long? endOffset = changelogMetadata.RestoreEndOffset;
             if (endOffset == null || endOffset == Offset.Unset || endOffset == 0)
