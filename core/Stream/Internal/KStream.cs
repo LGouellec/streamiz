@@ -108,6 +108,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             repartitionNode.NumberOfPartition = repartitioned.NumberOfPartition;
             repartitionNode.StreamPartitioner = repartitioned.StreamPartitioner;
             
+            builder.AddGraphNode(Node, repartitionNode);
+            
             return new KStream<K, V>(
                 repartitionName,
                 keySerdes,

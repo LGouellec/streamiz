@@ -57,7 +57,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             }
         }
 
-        internal IEnumerable<string> GetSourceTopics() => 
-            SourceOperators.Select(o => (o.Value as ISourceProcessor).TopicName);
+        internal IEnumerable<string> GetSourceTopics() => SourceOperators
+            .Select(o => (o.Value as ISourceProcessor).TopicName)
+            .Except(RepartitionTopics);
     }
 }

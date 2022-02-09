@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream.Internal;
@@ -78,6 +79,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public ITopicNameExtractor<K, V> Extractor { get; }
         public ISerDes<K> KeySerdes { get; }
         public ISerDes<V> ValueSerdes { get; }
+        public Func<string, K, V, int> ProducedPartitioner { get; }
+
         public string Topic
         {
             get
@@ -88,16 +91,18 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
         }
 
-        public SinkNodeFactory(string name, string[] previous, ITopicNameExtractor<K, V> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+        public SinkNodeFactory(string name, string[] previous, ITopicNameExtractor<K, V> topicExtractor,
+            ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Func<string, K, V, int> producedPartitioner)
             : base(name, previous)
         {
             Extractor = topicExtractor;
             KeySerdes = keySerdes;
             ValueSerdes = valueSerdes;
+            ProducedPartitioner = producedPartitioner;
         }
 
         public override IProcessor Build()
-            => new SinkProcessor<K, V>(Name, Extractor, KeySerdes, ValueSerdes);
+            => new SinkProcessor<K, V>(Name, Extractor, KeySerdes, ValueSerdes, ProducedPartitioner);
 
         public override NodeDescription Describe()
             => Extractor is StaticTopicNameExtractor<K, V> ?

@@ -137,14 +137,18 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             
             foreach (var repartitionTopic in repartitionTopics)
             {
-                var numberPartition = ComputePartitionCount(repartitionTopic.Key);
-                if (!numberPartition.HasValue)
+                if (repartitionTopic.Value.NumberPartitions == 0)
                 {
-                    log.LogWarning(
-                        $"Unable to determine number of partitions for {repartitionTopic}.");
-                    throw new StreamsException($"Unable to determine number of partitions for {repartitionTopic}.");
+                    var numberPartition = ComputePartitionCount(repartitionTopic.Key);
+                    if (!numberPartition.HasValue)
+                    {
+                        log.LogWarning(
+                            $"Unable to determine number of partitions for {repartitionTopic}.");
+                        throw new StreamsException($"Unable to determine number of partitions for {repartitionTopic}.");
+                    }
+
+                    repartitionTopic.Value.NumberPartitions = numberPartition.Value;
                 }
-                repartitionTopic.Value.NumberPartitions = numberPartition.Value;
             }
         }
         

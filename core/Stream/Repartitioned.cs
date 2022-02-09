@@ -1,4 +1,5 @@
 using System;
+using System.IO.MemoryMappedFiles;
 using Streamiz.Kafka.Net.SerDes;
 
 namespace Streamiz.Kafka.Net.Stream
@@ -35,6 +36,11 @@ namespace Streamiz.Kafka.Net.Stream
         internal static Repartitioned<K, V> Empty() => new(null, null, null, null, null);
         public static Repartitioned<K, V> As(string name) => new(name, null, null, null, null);
         public static Repartitioned<K, V> With(ISerDes<K> keySerdes, ISerDes<V> valueSerdes) => new(null, keySerdes, valueSerdes, null, null);
+        public static Repartitioned<K, V> Create<KS, VS>()
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => new(null, new KS(), new VS(), null, null);
+
         public static Repartitioned<K, V> NumberOfPartitions(int numberPartitions) => new(null, null, null, numberPartitions, null);
         public static Repartitioned<K, V> Partitioner(Func<string, K, V, int> streamPartitioner) => new(null, null, null, null, streamPartitioner);
         
