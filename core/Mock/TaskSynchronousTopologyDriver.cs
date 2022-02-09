@@ -22,7 +22,10 @@ namespace Streamiz.Kafka.Net.Mock
         private readonly CancellationToken token;
         private readonly IKafkaSupplier supplier;
         private readonly IDictionary<TaskId, StreamTask> tasks = new Dictionary<TaskId, StreamTask>();
-        private readonly IDictionary<TaskId, IList<TopicPartition>> partitionsByTaskId = new Dictionary<TaskId, IList<TopicPartition>>();
+
+        private readonly IDictionary<TaskId, IList<TopicPartition>> partitionsByTaskId =
+            new Dictionary<TaskId, IList<TopicPartition>>();
+
         private readonly SyncProducer producer = null;
         private ITopicManager internalTopicManager;
 
@@ -32,12 +35,15 @@ namespace Streamiz.Kafka.Net.Mock
 
         public bool IsError { get; private set; } = false;
 
-        public TaskSynchronousTopologyDriver(string clientId, InternalTopologyBuilder topologyBuilder, IStreamConfig configuration, IStreamConfig topicConfiguration, CancellationToken token)
+        public TaskSynchronousTopologyDriver(string clientId, InternalTopologyBuilder topologyBuilder,
+            IStreamConfig configuration, IStreamConfig topicConfiguration, CancellationToken token)
             : this(clientId, topologyBuilder, configuration, topicConfiguration, null, token)
         {
         }
 
-        public TaskSynchronousTopologyDriver(string clientId, InternalTopologyBuilder topologyBuilder, IStreamConfig configuration, IStreamConfig topicConfiguration, IKafkaSupplier supplier, CancellationToken token)
+        public TaskSynchronousTopologyDriver(string clientId, InternalTopologyBuilder topologyBuilder,
+            IStreamConfig configuration, IStreamConfig topicConfiguration, IKafkaSupplier supplier,
+            CancellationToken token)
         {
             this.configuration = configuration;
             this.configuration.ClientId = clientId;
@@ -57,7 +63,7 @@ namespace Streamiz.Kafka.Net.Mock
                 if (partitionsByTaskId.ContainsKey(taskId))
                     partitionsByTaskId[taskId].Add(part);
                 else
-                    partitionsByTaskId.Add(taskId, new List<TopicPartition> { part });
+                    partitionsByTaskId.Add(taskId, new List<TopicPartition> {part});
             }
         }
 
@@ -84,13 +90,16 @@ namespace Streamiz.Kafka.Net.Mock
                 task.CompleteRestoration();
                 tasks.Add(id, task);
             }
+
             return task;
         }
 
         private void InitializeInternalTopicManager()
         {
             // Create internal topics (changelogs & repartition) if need
-            var adminClientInternalTopicManager = supplier.GetAdmin(configuration.ToAdminConfig(StreamThread.GetSharedAdminClientId($"{configuration.ApplicationId.ToLower()}-admin-internal-topic-manager")));
+            var adminClientInternalTopicManager = supplier.GetAdmin(configuration.ToAdminConfig(
+                StreamThread.GetSharedAdminClientId(
+                    $"{configuration.ApplicationId.ToLower()}-admin-internal-topic-manager")));
             internalTopicManager = new DefaultTopicManager(configuration, adminClientInternalTopicManager);
 
             InternalTopicManagerUtils
@@ -109,10 +118,10 @@ namespace Streamiz.Kafka.Net.Mock
             do
             {
                 record = consumer.Consume();
-                if(record != null)
+                if (record != null)
                     records.Add(record);
             } while (record != null);
-                    
+
 
             if (records.Any())
             {
@@ -124,56 +133,56 @@ namespace Streamiz.Kafka.Net.Mock
 
                 consumer.Commit(records.Last());
             }
-            
+
             consumer.Unsubscribe();
         }
-        
+
         #region IBehaviorTopologyTestDriver
 
-        public TestMultiInputTopic<K, V> CreateMultiInputTopic<K, V>(string[] topics, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
+        public TestMultiInputTopic<K, V> CreateMultiInputTopic<K, V>(string[] topics, ISerDes<K> keySerdes = null,
+            ISerDes<V> valueSerdes = null)
         {
             Dictionary<string, IPipeInput> pipes = new Dictionary<string, IPipeInput>();
-            
-            foreach(var topic in topics)
+
+            foreach (var topic in topics)
             {
                 var builder = new SyncPipeBuilder(GetTask(topic));
                 var pipeInput = builder.Input(topic, configuration);
-                
-                if (this.builder.IsRepartitionTopology())
-                {
-                    var topicsLink = new List<string>();
-                    this.builder.GetRepartitionLinkTopics(topic, topicsLink);
-                    var consumer = supplier.GetConsumer(topicConfiguration.ToConsumerConfig("consumer-repartition-forwarder"), null);
-                
-                    foreach (var topicLink in topicsLink)
-                        pipeInput.Flushed += () => ForwardRepartitionTopic(consumer, topicLink);
-                }
-                
+
+                var topicsLink = new List<string>();
+                this.builder.GetLinkTopics(topic, topicsLink);
+                var consumer =
+                    supplier.GetConsumer(topicConfiguration.ToConsumerConfig("consumer-repartition-forwarder"),
+                        null);
+
+                foreach (var topicLink in topicsLink)
+                    pipeInput.Flushed += () => ForwardRepartitionTopic(consumer, topicLink);
+
                 pipes.Add(topic, pipeInput);
             }
 
             return new TestMultiInputTopic<K, V>(pipes, configuration, keySerdes, valueSerdes);
         }
 
-        public TestInputTopic<K, V> CreateInputTopic<K, V>(string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+        public TestInputTopic<K, V> CreateInputTopic<K, V>(string topicName, ISerDes<K> keySerdes,
+            ISerDes<V> valueSerdes)
         {
             var pipeBuilder = new SyncPipeBuilder(GetTask(topicName));
             var pipeInput = pipeBuilder.Input(topicName, configuration);
-            
-            if (builder.IsRepartitionTopology())
-            {
-                var topicsLink = new List<string>();
-                builder.GetRepartitionLinkTopics(topicName, topicsLink);
-                var consumer = supplier.GetConsumer(topicConfiguration.ToConsumerConfig("consumer-repartition-forwarder"), null);
-                
-                foreach (var topic in topicsLink)
-                    pipeInput.Flushed += () => ForwardRepartitionTopic(consumer, topic);
-            }
-            
+
+            var topicsLink = new List<string>();
+            builder.GetLinkTopics(topicName, topicsLink);
+            var consumer = supplier.GetConsumer(topicConfiguration.ToConsumerConfig("consumer-repartition-forwarder"),
+                null);
+
+            foreach (var topic in topicsLink)
+                pipeInput.Flushed += () => ForwardRepartitionTopic(consumer, topic);
+
             return new TestInputTopic<K, V>(pipeInput, configuration, keySerdes, valueSerdes);
         }
 
-        public TestOutputTopic<K, V> CreateOutputTopic<K, V>(string topicName, TimeSpan consumeTimeout, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
+        public TestOutputTopic<K, V> CreateOutputTopic<K, V>(string topicName, TimeSpan consumeTimeout,
+            ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
         {
             var pipeBuilder = new SyncPipeBuilder(null, producer);
             var pipeOutput = pipeBuilder.Output(topicName, consumeTimeout, configuration, token);
@@ -192,7 +201,7 @@ namespace Streamiz.Kafka.Net.Mock
                 if (t.IsPersistent)
                     Directory.Delete(t.Context.StateDir, true);
             }
-            
+
             IsRunning = false;
         }
 

@@ -718,6 +718,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             Func<ISourceNodeDescription, bool> predicate = (source) =>
             {
+                if (topic == null)
+                    return false;
                 bool isRepartitionTopic = Regex.IsMatch(topic, $"{applicationId}-(.*)");
                 if (source.Topics.Contains(topic))
                     return true;
@@ -771,9 +773,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private string DecorateTopic(string topic) => $"{applicationId}-{topic}";
 
         // FOR TESTING
-        internal bool IsRepartitionTopology() => internalTopics.Any();
-
-        internal void GetRepartitionLinkTopics(string topic, IList<string> repartitionLinkTopics)
+        internal void GetLinkTopics(string topic, IList<string> linkTopics)
         {
             var subTopo = GetSubTopologyDescription(topic);
             if (subTopo != null)
@@ -789,12 +789,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                         var sinkTopic = internalTopics.Contains(sinkNode.Topic)
                             ? DecorateTopic(sinkNode.Topic)
                             : sinkNode.Topic;
-                        repartitionLinkTopics.Add(sinkTopic);
-                        GetRepartitionLinkTopics(sinkTopic, repartitionLinkTopics);
+                        linkTopics.Add(sinkTopic);
+                        GetLinkTopics(sinkTopic, linkTopics);
                     }
                 }
             }
         }
-        
     }
 }

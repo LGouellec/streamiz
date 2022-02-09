@@ -203,5 +203,31 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             Assert.Throws<StreamsException>(() => storeChangelogReader.Register(new TopicPartition("test", 0), stateMgr));
         }
+
+        [Test]
+        public void TestHasRestoredEnd()
+        {
+            ChangelogMetadata metadata = new ChangelogMetadata {
+                RestoreEndOffset = null
+            };
+            Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
+            
+            metadata = new ChangelogMetadata {
+                RestoreEndOffset = 0
+            };
+            Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
+            
+            metadata = new ChangelogMetadata {
+                RestoreEndOffset = Offset.Unset
+            };
+            Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
+
+            metadata = new ChangelogMetadata {
+                RestoreEndOffset = 10,
+                CurrentOffset = 12
+            };
+            Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
+
+        }
     }
 }

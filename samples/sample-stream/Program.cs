@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Intrinsics;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
@@ -36,12 +37,7 @@ namespace sample_stream
             });
             
             StreamBuilder builder = new StreamBuilder();
-
-            builder
-                .Stream<string, string>("topic")
-                .Filter((key, value) => key == "1")
-                .To("tempTopic");
-
+            
             builder.Stream<string, string>("tempTopic")
                 .GroupByKey()
                 .Reduce((v1,v2) => v1 + " " + v2)
