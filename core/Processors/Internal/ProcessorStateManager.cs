@@ -280,7 +280,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
                 // TODO : bach restoration behavior
                 foreach (var _record in convertedRecords)
-                    storeMetadata.RestoreCallback(Bytes.Wrap(_record.Message.Key), _record.Message.Value);
+                    storeMetadata.RestoreCallback(Bytes.Wrap(_record.Message.Key), _record.Message.Value, _record.Message.Timestamp.UnixTimestampMs);
 
                 storeMetadata.Offset = endOffset;
             }
