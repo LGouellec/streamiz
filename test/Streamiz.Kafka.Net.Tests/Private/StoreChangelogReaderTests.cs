@@ -207,26 +207,39 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void TestHasRestoredEnd()
         {
+            var configBis = new StreamConfig<StringSerDes, StringSerDes>();
+            var tp = new TopicPartition("topic", 0);
+            Mock<IConsumer<byte[], byte[]>> consumer = new Mock<IConsumer<byte[], byte[]>>();
+            consumer.Setup(x => x.Position(tp)).Returns(12);
+
+            var storeChangelogReaderBis = new StoreChangelogReader(config, consumer.Object);
+
             ChangelogMetadata metadata = new ChangelogMetadata {
                 RestoreEndOffset = null
             };
-            Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
+            Assert.IsTrue(storeChangelogReaderBis.HasRestoredToEnd(metadata));
             
             metadata = new ChangelogMetadata {
                 RestoreEndOffset = 0
             };
-            Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
+            Assert.IsTrue(storeChangelogReaderBis.HasRestoredToEnd(metadata));
             
             metadata = new ChangelogMetadata {
                 RestoreEndOffset = Offset.Unset
             };
-            Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
+            Assert.IsTrue(storeChangelogReaderBis.HasRestoredToEnd(metadata));
 
             metadata = new ChangelogMetadata {
                 RestoreEndOffset = 10,
-                CurrentOffset = 12
+                CurrentOffset = 12,
+                BufferedRecords = new List<ConsumeResult<byte[], byte[]>>(),
+                StoreMetadata = new ProcessorStateManager.StateStoreMetadata()
+                {
+                    ChangelogTopicPartition = tp
+                }
             };
-            Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
+            
+            Assert.IsTrue(storeChangelogReaderBis.HasRestoredToEnd(metadata));
 
         }
     }
