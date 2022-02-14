@@ -120,6 +120,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                             {
                                 var count = clusterMetadata.PartitionCountForTopic(upstreamSourceTopic);
                                 if (count == null)
+                                    count = ComputePartitionCount(upstreamSourceTopic);
+                                // always null ?
+                                if(count == null)
                                     throw new StreamsException(
                                         $"No partition count found for source topic {upstreamSourceTopic}, but I should have been.");
                                 numPartitionCandidate = count;
