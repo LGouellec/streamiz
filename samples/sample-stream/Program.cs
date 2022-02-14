@@ -12,6 +12,7 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using System.Threading.Tasks;
+using Streamiz.Kafka.Net.Metrics.Internal;
 
 namespace sample_stream
 {
@@ -29,7 +30,7 @@ namespace sample_stream
             config.CommitIntervalMs = (long)TimeSpan.FromSeconds(5).TotalMilliseconds;
             config.AutoOffsetReset = Confluent.Kafka.AutoOffsetReset.Earliest;
             config.StateDir = Path.Combine(".");
-
+            
             config.Logger = LoggerFactory.Create(builder =>
             {
                 builder.SetMinimumLevel(LogLevel.Debug);

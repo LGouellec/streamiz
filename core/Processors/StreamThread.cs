@@ -104,6 +104,8 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly long commitTimeMs = 0;
         private CancellationToken token;
         private DateTime lastCommit = DateTime.Now;
+        // TODO:
+        private DateTime lastMetrics = DateTime.Now;
 
         private int numIterations = 1;
         private long lastPollMs;

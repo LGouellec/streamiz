@@ -8,12 +8,13 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.RocksDb;
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net
 {
@@ -37,7 +38,7 @@ namespace Streamiz.Kafka.Net
     /// See <see cref="StreamConfig"/> to obtain implementation about this interface.
     /// You could develop your own implementation and get it in your <see cref="KafkaStream"/> instance.
     /// </summary>
-    public interface IStreamConfig : ICloneable<IStreamConfig>
+    public interface IStreamConfig : ICloneable<IStreamConfig>, ICollection<IStreamMiddleware>
     {
         #region AddConfig
 
@@ -273,6 +274,12 @@ namespace Streamiz.Kafka.Net
         /// Logger factory which will be used for logging 
         /// </summary>
         ILoggerFactory Logger { get; set; }
+        
+        /// <summary>
+        /// Minimum : 30 seconds
+        /// </summary>
+        long MetricsIntervalMs { get; set; }
+        Action<IEnumerable<Sensor>> MetricsReporter { get; set; }
 
         #endregion
     }
@@ -383,6 +390,8 @@ namespace Streamiz.Kafka.Net
         internal static readonly string replicationFactorCst = "replication.factor";
         internal static readonly string windowstoreChangelogAdditionalRetentionMsCst = "windowstore.changelog.additional.retention.ms";
         internal static readonly string offsetCheckpointManagerCst = "offset.checkpoint.manager";
+        internal static readonly string metricsReportCst = "metrics.reporter";
+        internal static readonly string metricsIntervalMsCst = "metrics.interval.ms";
 
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -405,7 +414,29 @@ namespace Streamiz.Kafka.Net
         private IDictionary<string, string> _internalProducerConfig = new Dictionary<string, string>();
         private IDictionary<string, string> _internalAdminConfig = new Dictionary<string, string>();
 
+        private readonly List<IStreamMiddleware> middlewares = new();
+
         private bool changeGuarantee = false;
+        
+        #region Middleware's collections
+
+        public int Count => middlewares.Count;
+
+        public bool IsReadOnly => false;
+
+        public void Add(IStreamMiddleware item) => middlewares.Add(item);
+
+        public void Clear() => middlewares.Clear();
+
+        public bool Contains(IStreamMiddleware item) => middlewares.Contains(item);
+
+        public void CopyTo(IStreamMiddleware[] array, int arrayIndex) => middlewares.CopyTo(array, arrayIndex);
+
+        public bool Remove(IStreamMiddleware item) => middlewares.Remove(item);
+
+        public IEnumerator<IStreamMiddleware> GetEnumerator() => middlewares.GetEnumerator();
+        
+        #endregion
 
         #region ClientConfig
 
@@ -2162,6 +2193,8 @@ namespace Streamiz.Kafka.Net
             set => this.AddOrUpdate(offsetCheckpointManagerCst, value);
         }
 
+        // TODO : set real config into dictionary ...
+        
         /// <summary>
         /// A Rocks DB config handler function
         /// </summary>
@@ -2181,7 +2214,24 @@ namespace Streamiz.Kafka.Net
         /// Production exception handling function called when kafka produce exception is raise.
         /// </summary>
         public Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler { get; set; }
-
+        
+        public long MetricsIntervalMs
+        {
+            get => this[metricsIntervalMsCst];
+            set
+            {
+                if (value < 30000)
+                    value = 30000;
+                this.AddOrUpdate(metricsIntervalMsCst, value);
+            }
+        }
+        
+        public Action<IEnumerable<Sensor>> MetricsReporter
+        {
+            get => this[metricsReportCst];
+            set => this.AddOrUpdate(metricsReportCst, value);
+        }
+        
         /// <summary>
         /// Get the configs to the <see cref="IProducer{TKey, TValue}"/>
         /// </summary>
@@ -2385,8 +2435,8 @@ namespace Streamiz.Kafka.Net
             // stream config property
             sb.AppendLine();
             sb.AppendLine("\tStream property:");
-            foreach (var kp in this)
-                sb.AppendLine($"\t\t{kp.Key}: \t{kp.Value}");
+            foreach (var kp in this.Keys)
+                sb.AppendLine($"\t\t{kp}: \t{this[kp]}");
 
             // client config property
             sb.AppendLine("\tClient property:");
@@ -2490,7 +2540,7 @@ namespace Streamiz.Kafka.Net
 
         /// <summary>
         /// Constructor with properties. 
-        /// See <see cref="StreamConfig.StreamConfig(IDictionary{string, dynamic})"/>
+        /// See <see cref="StreamConfig"/>
         /// <para>
         /// <see cref="IStreamConfig.DefaultKeySerDes"/> is set to <code>new KS();</code>
         /// <see cref="IStreamConfig.DefaultValueSerDes"/> is set to <code>new VS();</code>

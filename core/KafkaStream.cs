@@ -9,6 +9,7 @@ using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -402,6 +403,8 @@ namespace Streamiz.Kafka.Net
                     logger.LogInformation("{LogPrefix}Starting Streams client with this topology : {Topology}", logPrefix, topology.Describe());
 
                     await InitializeInternalTopicManagerAsync();
+                    
+                    RunMiddleware(true, true);
 
                     if (globalStreamThread != null)
                     {
@@ -412,6 +415,8 @@ namespace Streamiz.Kafka.Net
                     {
                         t.Start(_cancelSource.Token);
                     }
+                    
+                    RunMiddleware(false, true);
                 }
             }, token.HasValue ? token.Value : _cancelSource.Token);
 
@@ -447,6 +452,8 @@ namespace Streamiz.Kafka.Net
             }
             else
             {
+                RunMiddleware(true, false);
+                
                 foreach (var t in threads)
                 {
                     t.Dispose();
@@ -457,6 +464,8 @@ namespace Streamiz.Kafka.Net
                     globalStreamThread.Dispose();
                 }
 
+                RunMiddleware(false, false);
+                
                 SetState(State.NOT_RUNNING);
                 logger.LogInformation($"{logPrefix}Streams client stopped completely");
             }
@@ -554,6 +563,15 @@ namespace Streamiz.Kafka.Net
                 await InternalTopicManagerUtils.New().CreateInternalTopicsAsync(internalTopicManager, topology.Builder);
         }
 
+        private void RunMiddleware(bool before, bool start)
+        {
+            int index = start ? (before ? 0 : 1) : (before ? 2 : 3);
+            var methods = typeof(IStreamMiddleware).GetMethods();
+            logger.LogInformation($"{logPrefix}Starting middleware (${methods[index].Name}) ....");
+            foreach(var middleware in configuration)
+                methods[index].Invoke(middleware, new object[] {configuration});
+        }
+        
         #endregion
     }
 }
