@@ -38,21 +38,16 @@ namespace sample_stream
             
             StreamBuilder builder = new StreamBuilder();
 
-            builder
-                .Stream<string, string>("topic")
-                .Filter((key, value) =>
-                {
-                    return key == "1";
-                })
-                .To("tempTopic");
+            var stream1 = builder
+                .Stream<string, string>("topic1");
 
-            builder.Stream<string, string>("tempTopic")
-                .GroupByKey()
-                .Reduce(
-                    (v1,v2) => $"{v1}-{v2}",
-                    RocksDb<string,string>.As("reduce-store"))
-                .ToStream()
-                .To("finalTopic");
+            builder
+                .Stream<string, string>("topic2")
+                .Join(
+                    stream1,
+                    (s, v) => $"{s}-{v}",
+                    JoinWindowOptions.Of(TimeSpan.FromHours(1)))
+                .To("output-join");
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
