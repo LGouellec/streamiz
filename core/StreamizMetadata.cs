@@ -4,6 +4,7 @@ using Streamiz.Kafka.Net.Processors.Internal;
 namespace Streamiz.Kafka.Net
 {
     /// <summary>
+    /// Warning : Will change the name of this class on next release.
     /// <para>
     /// This helper class permit to follow metadata during record processing.
     /// Sometimes, project need to known current timestamp, headers, offset, partition and topic about records. 

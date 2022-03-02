@@ -37,7 +37,6 @@ This project is being written. Thanks for you contribution !
 
 # ROADMAP
 
-- 1.2.0 - Persistent state store (eg: RocksDB Store), Repartition and Changelog topics
 - 1.3.0 - Processor API, Metrics
 - 1.4.0 - Standby Replica
 - 1.5.0 - Interactive Queries

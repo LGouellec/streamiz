@@ -6,6 +6,7 @@ using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.SerDes.Internal;
 using System.IO;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net
 {
@@ -17,13 +18,16 @@ namespace Streamiz.Kafka.Net
         internal static readonly ByteArraySerDes BYTEARRAY_VALUE_SERDES = new ByteArraySerDes();
         internal static readonly BytesSerDes BYTES_KEY_SERDES = new BytesSerDes();
 
-        internal AbstractTask Task { get; private set; }
-        internal SerDesContext SerDesContext { get; private set; }
-        internal IStreamConfig Configuration { get; private set; }
+        internal AbstractTask Task { get; }
+        internal SerDesContext SerDesContext { get; }
+        internal IStreamConfig Configuration { get; }
         internal IRecordContext RecordContext { get; private set; }
         internal IRecordCollector RecordCollector { get; private set; }
-        internal IStateManager States { get; private set; }
+        internal IStateManager States { get; }
         internal bool FollowMetadata { get; set; }
+        
+        
+        public StreamMetricsRegistry Metrics { get; private set; }
 
         /// <summary>
         /// Current application id

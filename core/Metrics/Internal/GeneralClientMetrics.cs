@@ -4,7 +4,7 @@ using Streamiz.Kafka.Net.Crosscutting;
 
 namespace Streamiz.Kafka.Net.Metrics.Internal
 {
-    public class GeneralClientMetrics
+    internal class GeneralClientMetrics
     {
         private static readonly ILogger log = Logger.GetLogger(typeof(GeneralClientMetrics));
         private static readonly string VERSION = "version";

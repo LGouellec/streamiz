@@ -276,10 +276,20 @@ namespace Streamiz.Kafka.Net
         ILoggerFactory Logger { get; set; }
         
         /// <summary>
-        /// Minimum : 30 seconds
+        /// Minimum & default : 30 seconds
         /// </summary>
         long MetricsIntervalMs { get; set; }
         Action<IEnumerable<Sensor>> MetricsReporter { get; set; }
+        /// <summary>
+        /// Default false (principal consumer & producer)
+        /// </summary>
+        bool ExposeLibrdKafkaStats { get; set; }
+        /// <summary>
+        /// Default INFO
+        /// </summary>
+        MetricsRecordingLevel MetricsRecording { get; set; }
+        
+        
 
         #endregion
     }
@@ -392,6 +402,8 @@ namespace Streamiz.Kafka.Net
         internal static readonly string offsetCheckpointManagerCst = "offset.checkpoint.manager";
         internal static readonly string metricsReportCst = "metrics.reporter";
         internal static readonly string metricsIntervalMsCst = "metrics.interval.ms";
+        internal static readonly string exposeLibrdKafkaCst = "expose.librdkafka.stats";
+        internal static readonly string metricsRecordingLevelCst = "metrics.recording.level";
 
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -1951,6 +1963,9 @@ namespace Streamiz.Kafka.Net
             ReplicationFactor = 1;
             WindowStoreChangelogAdditionalRetentionMs = (long)TimeSpan.FromDays(1).TotalMilliseconds;
             OffsetCheckpointManager = null;
+            MetricsIntervalMs = (long)TimeSpan.FromSeconds(30).TotalMilliseconds;
+            MetricsRecording = MetricsRecordingLevel.INFO;
+            ExposeLibrdKafkaStats = false;
 
             if (properties != null)
             {
@@ -2230,6 +2245,18 @@ namespace Streamiz.Kafka.Net
         {
             get => this[metricsReportCst];
             set => this.AddOrUpdate(metricsReportCst, value);
+        }
+        
+        public bool ExposeLibrdKafkaStats 
+        {
+            get => this[exposeLibrdKafkaCst];
+            set => this.AddOrUpdate(exposeLibrdKafkaCst, value);
+        }
+        
+        public MetricsRecordingLevel MetricsRecording 
+        {
+            get => this[metricsRecordingLevelCst];
+            set => this.AddOrUpdate(metricsRecordingLevelCst, value);
         }
         
         /// <summary>
