@@ -5,6 +5,5 @@ namespace Streamiz.Kafka.Net.Metrics.Stats
     /// </summary>
     internal interface IMetricValueProvider
     {
-        
     }
 }

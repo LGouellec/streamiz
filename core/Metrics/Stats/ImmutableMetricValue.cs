@@ -11,5 +11,8 @@ namespace Streamiz.Kafka.Net.Metrics.Stats
 
         public T Value(MetricConfig config, long now)
             => value;
+
+        object IGauge.Value(MetricConfig config, long now)
+            => Value(config, now);
     }
 }

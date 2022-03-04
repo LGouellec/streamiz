@@ -31,7 +31,7 @@ namespace Streamiz.Kafka.Net.Metrics
         
         #region Add
 
-        internal bool AddStatMetric(MetricName name, IMeasurableStat stat, MetricConfig config = null)
+        internal virtual bool AddStatMetric(MetricName name, IMeasurableStat stat, MetricConfig config = null)
         {
             if(!metrics.ContainsKey(name))
             {
@@ -43,11 +43,23 @@ namespace Streamiz.Kafka.Net.Metrics
             return false;
         }
 
-        internal bool AddImmutableMetric<T>(MetricName name, T value, MetricConfig config = null)
+        internal virtual bool AddImmutableMetric<T>(MetricName name, T value, MetricConfig config = null)
         {
             if (!metrics.ContainsKey(name))
             {
                 StreamMetric metric = new StreamMetric(name, new ImmutableMetricValue<T>(value), config);
+                metrics.Add(name, metric);
+                return true;
+            }
+
+            return false;
+        }
+        
+        internal virtual bool AddProviderMetric<T>(MetricName name, Func<T> provider, MetricConfig config = null)
+        {
+            if (!metrics.ContainsKey(name))
+            {
+                StreamMetric metric = new StreamMetric(name, new ProviderMetricValue<T>(provider), config);
                 metrics.Add(name, metric);
                 return true;
             }
@@ -73,6 +85,7 @@ namespace Streamiz.Kafka.Net.Metrics
                     stat.Record(null, value, timeMs);
             }
         }
+        
         #endregion
 
         public bool Equals(Sensor? other)
@@ -80,5 +93,6 @@ namespace Streamiz.Kafka.Net.Metrics
 
         public int CompareTo(Sensor? other)
             => other != null ? other.Name.CompareTo(Name) : 1;
+        
     }
 }

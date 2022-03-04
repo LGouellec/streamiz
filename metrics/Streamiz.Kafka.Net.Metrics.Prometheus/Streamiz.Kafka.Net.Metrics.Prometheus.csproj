@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <PackageVersion>1.2.1</PackageVersion>
+        <AssemblyVersion>1.2.1</AssemblyVersion>
+        <FileVersion>1.2.1</FileVersion>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>..\..\key.snk</AssemblyOriginatorKeyFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\core\Streamiz.Kafka.Net.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="..\..\key.snk">
+        <Link>key.snk</Link>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="prometheus-net" Version="6.0.0" />
+    </ItemGroup>
+
+</Project>

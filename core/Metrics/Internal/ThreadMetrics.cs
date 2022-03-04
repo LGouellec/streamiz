@@ -8,8 +8,6 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
         private static readonly string PUNCTUATE = "punctuate";
         private static readonly string CREATE_TASK = "task-created";
         private static readonly string CLOSE_TASK = "task-closed";
-        private static readonly string SKIP_RECORD = "skipped-records";
-        private static readonly string BLOCKED_TIME = "blocked-time-ns-total";
         private static readonly string THREAD_START_TIME = "thread-start-time";
 
         private static readonly string COMMIT_DESCRIPTION = "calls to commit";
@@ -42,23 +40,16 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
         private static readonly string PUNCTUATE_RATE_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION + PUNCTUATE_DESCRIPTION;
         private static readonly string PUNCTUATE_AVG_LATENCY_DESCRIPTION = "The average punctuate latency";
         private static readonly string PUNCTUATE_MAX_LATENCY_DESCRIPTION = "The maximum punctuate latency";
-        private static readonly string SKIP_RECORDS_DESCRIPTION = "skipped records";
-        private static readonly string SKIP_RECORD_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + SKIP_RECORDS_DESCRIPTION;
-        private static readonly string SKIP_RECORD_RATE_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION + SKIP_RECORDS_DESCRIPTION;
         private static readonly string COMMIT_OVER_TASKS_DESCRIPTION =
             "calls to commit over all tasks assigned to one stream thread";
         private static readonly string COMMIT_OVER_TASKS_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + COMMIT_OVER_TASKS_DESCRIPTION;
         private static readonly string COMMIT_OVER_TASKS_RATE_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION + COMMIT_OVER_TASKS_DESCRIPTION;
         private static readonly string PROCESS_RATIO_DESCRIPTION =
             "The fraction of time the thread spent on processing active tasks";
-        private static readonly string PUNCTUATE_RATIO_DESCRIPTION =
-            "The fraction of time the thread spent on punctuating active tasks";
         private static readonly string POLL_RATIO_DESCRIPTION =
             "The fraction of time the thread spent on polling records from consumer";
         private static readonly string COMMIT_RATIO_DESCRIPTION =
             "The fraction of time the thread spent on committing all tasks";
-        private static readonly string BLOCKED_TIME_DESCRIPTION =
-            "The total time the thread spent blocked on kafka in nanoseconds";
         private static readonly string THREAD_START_TIME_DESCRIPTION =
             "The time that the thread was started";
         

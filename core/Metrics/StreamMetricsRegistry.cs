@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
 
@@ -12,6 +14,8 @@ namespace Streamiz.Kafka.Net.Metrics
         private IDictionary<string, IList<string>> taskLevelSensors = new Dictionary<string, IList<string>>();
         private IDictionary<string, IList<string>> nodeLevelSensors = new Dictionary<string, IList<string>>();
         private IDictionary<string, IList<string>> storeLevelSensors = new Dictionary<string, IList<string>>();
+
+        private IDictionary<string, IList<string>> threadScopeSensors = new Dictionary<string, IList<string>>();
 
         private readonly string clientId;
         private readonly MetricsRecordingLevel recordingLevel;
@@ -28,6 +32,7 @@ namespace Streamiz.Kafka.Net.Metrics
         private static readonly string SENSOR_INTERNAL_LABEL = "internal";
         
         public static readonly string CLIENT_ID_TAG = "client-id";
+        public static readonly string APPLICATION_ID_TAG = "application-id";
         public static readonly string THREAD_ID_TAG = "thread-id";
         public static readonly string TASK_ID_TAG = "task-id";
         public static readonly string PROCESSOR_NODE_ID_TAG = "processor-node-id";
@@ -87,6 +92,13 @@ namespace Streamiz.Kafka.Net.Metrics
                 return sensor;
             }
         }
+        
+        internal IDictionary<string, string> ClientTags()
+        {
+            var tagDic = new Dictionary<string, string>();
+            tagDic.Add(CLIENT_ID_TAG, clientId);
+            return tagDic;
+        }
 
         #endregion
         
@@ -102,7 +114,9 @@ namespace Streamiz.Kafka.Net.Metrics
             lock (threadLevelSensors)
             {
                 string key = ThreadSensorPrefix(threadId);
-                return GetSensor(threadLevelSensors, sensorName, key, description, metricsRecordingLevel, parents);
+                var sensor = GetSensor(threadLevelSensors, sensorName, key, description, metricsRecordingLevel, parents);
+                AddSensorThreadScope(threadId, sensor.Name);
+                return sensor;
             }
         }
 
@@ -131,7 +145,9 @@ namespace Streamiz.Kafka.Net.Metrics
             lock (taskLevelSensors)
             {
                 string key = TaskSensorPrefix(threadId, taskId.ToString());
-                return GetSensor(taskLevelSensors, sensorName, key, description, metricsRecordingLevel, parents);
+                var sensor = GetSensor(taskLevelSensors, sensorName, key, description, metricsRecordingLevel, parents);
+                AddSensorThreadScope(threadId, sensor.Name);
+                return sensor;
             }    
         }
 
@@ -161,7 +177,9 @@ namespace Streamiz.Kafka.Net.Metrics
             lock (nodeLevelSensors)
             {
                 string key = NodeSensorPrefix(threadId, taskId.ToString(), processorName);
-                return GetSensor(nodeLevelSensors, sensorName, key, description, metricsRecordingLevel, parents);
+                var sensor = GetSensor(nodeLevelSensors, sensorName, key, description, metricsRecordingLevel, parents);
+                AddSensorThreadScope(threadId, sensor.Name);
+                return sensor;
             }   
         }
 
@@ -191,7 +209,9 @@ namespace Streamiz.Kafka.Net.Metrics
             lock (storeLevelSensors)
             {
                 string key = StoreSensorPrefix(threadId, taskId.ToString(), storeName);
-                return GetSensor(storeLevelSensors, sensorName, key, description, metricsRecordingLevel, parents);
+                var sensor = GetSensor(storeLevelSensors, sensorName, key, description, metricsRecordingLevel, parents);
+                AddSensorThreadScope(threadId, sensor.Name);
+                return sensor;
             }   
         }
 
@@ -251,13 +271,40 @@ namespace Streamiz.Kafka.Net.Metrics
             }
         }
 
+        private void AddSensorThreadScope(string threadId, string fullSensorName)
+        {
+            if (!threadScopeSensors.ContainsKey(threadId))
+                threadScopeSensors.Add(threadId, new List<string> { fullSensorName});
+            else if(!threadScopeSensors[threadId].Contains(fullSensorName))
+                threadScopeSensors[threadId].Add(fullSensorName);
+        }
+        
         #endregion
         
         #region Public API
         
-        // get metrics
-        
-        // add sensor
+        /*** GET METRICS ***/
+        public IEnumerable<Sensor> GetFullScope()
+            => new ReadOnlyCollection<Sensor>(sensors.Values.ToList());
+
+        public IEnumerable<Sensor> GetThreadScopeSensor(string threadId)
+        {
+            var sensors = new List<Sensor>();
+            
+            foreach (var s in clientLevelSensors)
+                sensors.Add(this.sensors[s]);
+
+            if (threadScopeSensors.ContainsKey(threadId))
+            {
+                foreach (var s in threadScopeSensors[threadId])
+                    sensors.Add(this.sensors[s]);
+            }
+
+            return sensors;
+        }
+        /*** GET METRICS ***/
+
+        // TODO: add sensor
         
         #endregion
     }

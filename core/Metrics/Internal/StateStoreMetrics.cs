@@ -81,21 +81,8 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
         private static string RANGE_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + RANGE_DESCRIPTION;
         private static string RANGE_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + RANGE_DESCRIPTION;
 
-        private static string PREFIX_SCAN = "prefix-scan";
-        private static string PREFIX_SCAN_DESCRIPTION = "calls to prefix-scan";
-
-        private static string PREFIX_SCAN_RATE_DESCRIPTION =
-            RATE_DESCRIPTION_PREFIX + PREFIX_SCAN_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
-
-        private static string PREFIX_SCAN_AVG_LATENCY_DESCRIPTION =
-            AVG_LATENCY_DESCRIPTION_PREFIX + PREFIX_SCAN_DESCRIPTION;
-
-        private static string PREFIX_SCAN_MAX_LATENCY_DESCRIPTION =
-            MAX_LATENCY_DESCRIPTION_PREFIX + PREFIX_SCAN_DESCRIPTION;
-
         private static string FLUSH = "flush";
         private static string FLUSH_DESCRIPTION = "calls to flush";
-
         private static string FLUSH_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + FLUSH_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
 

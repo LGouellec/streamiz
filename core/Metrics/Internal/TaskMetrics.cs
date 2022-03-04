@@ -16,19 +16,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 
         private static string COMMIT_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + COMMIT_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
-
-        private static string PUNCTUATE = "punctuate";
-        private static string PUNCTUATE_DESCRIPTION = "calls to punctuate";
-
-        private static string PUNCTUATE_TOTAL_DESCRIPTION =
-            StreamMetricsRegistry.TOTAL_DESCRIPTION + PUNCTUATE_DESCRIPTION;
-
-        private static string PUNCTUATE_RATE_DESCRIPTION =
-            RATE_DESCRIPTION_PREFIX + PUNCTUATE_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
-
-        private static string PUNCTUATE_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION + PUNCTUATE_DESCRIPTION;
-        private static string PUNCTUATE_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION + PUNCTUATE_DESCRIPTION;
-
+        
         private static string ENFORCED_PROCESSING = "enforced-processing";
 
         private static string ENFORCED_PROCESSING_TOTAL_DESCRIPTION =
@@ -36,16 +24,6 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 
         private static string ENFORCED_PROCESSING_RATE_DESCRIPTION =
             "The average number of occurrences of enforced-processing operations per second";
-
-        private static string RECORD_LATENESS = "record-lateness";
-
-        private static string RECORD_LATENESS_MAX_DESCRIPTION =
-            "The observed maximum lateness of records in milliseconds, measured by comparing the record timestamp with the "
-            + "current stream time";
-
-        private static string RECORD_LATENESS_AVG_DESCRIPTION =
-            "The observed average lateness of records in milliseconds, measured by comparing the record timestamp with the "
-            + "current stream time";
 
         private static string DROPPED_RECORDS = "dropped-records";
         private static string DROPPED_RECORDS_DESCRIPTION = "dropped records";

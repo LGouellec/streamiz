@@ -279,14 +279,9 @@ namespace Streamiz.Kafka.Net
         /// Minimum & default : 30 seconds
         /// </summary>
         long MetricsIntervalMs { get; set; }
+        
         Action<IEnumerable<Sensor>> MetricsReporter { get; set; }
-        /// <summary>
-        /// Default false (principal consumer & producer)
-        /// </summary>
         bool ExposeLibrdKafkaStats { get; set; }
-        /// <summary>
-        /// Default INFO
-        /// </summary>
         MetricsRecordingLevel MetricsRecording { get; set; }
         
         
