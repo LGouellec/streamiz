@@ -58,10 +58,14 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 
         private static string PROCESS = "process";
         private static string PROCESS_LATENCY = PROCESS + StreamMetricsRegistry.LATENCY_SUFFIX;
-        private static string PROCESS_DESCRIPTION = "calls to process";
         private static string PROCESS_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION + PROCESS_DESCRIPTION;
         private static string PROCESS_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION + PROCESS_DESCRIPTION;
+        private static string PROCESS_DESCRIPTION = "calls to process";
+        private static string PROCESS_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + PROCESS_DESCRIPTION;
+        private static string PROCESS_RATE_DESCRIPTION =
+        RATE_DESCRIPTION_PREFIX + PROCESS_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
 
+        
         private static string PROCESS_RATIO_DESCRIPTION = "The fraction of time the thread spent " +
                                                           "on processing this task among all assigned active tasks";
 
@@ -108,6 +112,20 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             );
         }
 
+        public static Sensor ProcessSensor(string threadId, TaskId taskId, StreamMetricsRegistry metricsRegistry)
+        {
+            Sensor sensor = metricsRegistry.TaskLevelSensor(threadId, taskId, PROCESS, PROCESS_DESCRIPTION, MetricsRecordingLevel.DEBUG);
+            SensorHelper.AddInvocationRateAndCountToSensor(
+                sensor,
+                StreamMetricsRegistry.TASK_LEVEL_GROUP,
+                metricsRegistry.TaskLevelTags(threadId, taskId.ToString()),
+                PROCESS,
+                PROCESS_RATE_DESCRIPTION,
+                PROCESS_TOTAL_DESCRIPTION
+            );
+            return sensor;
+        }
+        
         #endregion
 
         #region Commit
