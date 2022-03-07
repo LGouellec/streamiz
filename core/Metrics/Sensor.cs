@@ -11,6 +11,8 @@ namespace Streamiz.Kafka.Net.Metrics
         private readonly Dictionary<MetricName, StreamMetric> metrics;
         private readonly IList<IMeasurableStat> stats;
         protected readonly object @lock = new object();
+        private MetricConfig config = new MetricConfig();
+        
         public string Name { get; private set; }
         public string Description { get; private set; }
         public MetricsRecordingLevel MetricsRecording { get; private set; }
@@ -27,6 +29,7 @@ namespace Streamiz.Kafka.Net.Metrics
             MetricsRecording = metricsRecording;
             metrics = new Dictionary<MetricName, StreamMetric>();
             stats = new List<IMeasurableStat>();
+            config.SetRecordingLevel(MetricsRecording);
         }
         
         #region Add
@@ -35,8 +38,9 @@ namespace Streamiz.Kafka.Net.Metrics
         {
             if(!metrics.ContainsKey(name))
             {
-                StreamMetric metric = new StreamMetric(name, stat, config);
+                StreamMetric metric = new StreamMetric(name, stat, config ?? this.config);
                 metrics.Add(name, metric);
+                stats.Add(stat);
                 return true;
             }
 
@@ -47,8 +51,10 @@ namespace Streamiz.Kafka.Net.Metrics
         {
             if (!metrics.ContainsKey(name))
             {
-                StreamMetric metric = new StreamMetric(name, new ImmutableMetricValue<T>(value), config);
+                StreamMetric metric = new StreamMetric(name, new ImmutableMetricValue<T>(value), config?? this.config);
                 metrics.Add(name, metric);
+                if(value is IMeasurableStat)
+                    stats.Add((IMeasurableStat)value);
                 return true;
             }
 
@@ -59,7 +65,7 @@ namespace Streamiz.Kafka.Net.Metrics
         {
             if (!metrics.ContainsKey(name))
             {
-                StreamMetric metric = new StreamMetric(name, new ProviderMetricValue<T>(provider), config);
+                StreamMetric metric = new StreamMetric(name, new ProviderMetricValue<T>(provider), config?? this.config);
                 metrics.Add(name, metric);
                 return true;
             }
@@ -82,12 +88,21 @@ namespace Streamiz.Kafka.Net.Metrics
             lock (@lock)
             {
                 foreach (var stat in stats)
-                    stat.Record(null, value, timeMs);
+                    stat.Record(config, value, timeMs);
             }
         }
         
         #endregion
 
+        internal void Refresh(long now)
+        {
+            lock (@lock)
+            { 
+                foreach(var metric in metrics.Values)
+                    metric.Measure(now);
+            }
+        }
+        
         public bool Equals(Sensor? other)
             => other != null && other.Name.Equals(Name);
 

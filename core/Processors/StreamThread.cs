@@ -8,7 +8,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -104,7 +106,6 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly long commitTimeMs = 0;
         private CancellationToken token;
         private DateTime lastCommit = DateTime.Now;
-        // TODO:
         private DateTime lastMetrics = DateTime.Now;
 
         private int numIterations = 1;
@@ -243,6 +244,13 @@ namespace Streamiz.Kafka.Net.Processors
 
                             if (totalProcessed > 0)
                                 log.LogDebug($"Processing {totalProcessed} records in {DateTime.Now - n}");
+                            
+                            if (lastMetrics.Add(TimeSpan.FromMilliseconds(streamConfig.MetricsIntervalMs)) <
+                                DateTime.Now)
+                            {
+                                ExportMetrics(DateTime.Now.GetMilliseconds());
+                                lastMetrics = DateTime.Now;
+                            }
                         }
                         else
                             Thread.Sleep((int)consumeTimeout.TotalMilliseconds);
@@ -283,6 +291,7 @@ namespace Streamiz.Kafka.Net.Processors
                 }
             }
         }
+        
 
         private void RestorePhase()
         {
@@ -518,6 +527,17 @@ namespace Streamiz.Kafka.Net.Processors
             StateChanged?.Invoke(this, oldState, State);
 
             return oldState;
+        }
+        
+        private void ExportMetrics(long now)
+        {
+            // todo :
+            StreamMetricsRegistry s1 = null;
+            var sensors = s1.GetThreadScopeSensor(threadId);
+            foreach (var s in sensors)
+                s.Refresh(now);
+
+            Task.Factory.StartNew(() => streamConfig.MetricsReporter(sensors));
         }
 
         // FOR TEST
