@@ -9,7 +9,7 @@ using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -314,7 +314,7 @@ namespace Streamiz.Kafka.Net
             GeneralClientMetrics.StreamsAppSensor(
                 configuration.ApplicationId,
                 topology.Describe().ToString(),
-                () => StreamState,
+                () => StreamState != null && StreamState.IsRunning() ? 1 : 0,
                 () => threads.Length, // todo : remove thread from array if one crash or die
                 metricsRegistry);
                 
@@ -333,11 +333,13 @@ namespace Streamiz.Kafka.Net
             if (hasGlobalTopology)
             {
                 string globalThreadId = $"{clientId}-GlobalStreamThread";
-                GlobalStreamThreadFactory globalStreamThreadFactory = new GlobalStreamThreadFactory(globalTaskTopology,
+                GlobalStreamThreadFactory globalStreamThreadFactory = new GlobalStreamThreadFactory(
+                    globalTaskTopology,
                     globalThreadId,
                     kafkaSupplier.GetGlobalConsumer(configuration.ToGlobalConsumerConfig(globalThreadId)),
                     configuration,
-                    kafkaSupplier.GetAdmin(configuration.ToAdminConfig(clientId)));
+                    kafkaSupplier.GetAdmin(configuration.ToAdminConfig(clientId)),
+                    metricsRegistry);
                 globalStreamThread = globalStreamThreadFactory.GetGlobalStreamThread();
                 globalThreadState = globalStreamThread.State;
             }
@@ -345,7 +347,7 @@ namespace Streamiz.Kafka.Net
             List<StreamThreadStateStoreProvider> stateStoreProviders = new List<StreamThreadStateStoreProvider>();
             for (int i = 0; i < numStreamThreads; ++i)
             {
-                var threadId = $"{configuration.ApplicationId.ToLower()}-stream-thread-{i}";
+                var threadId = $"{clientId}-stream-thread-{i}";
 
                 var adminClient = this.kafkaSupplier.GetAdmin(configuration.ToAdminConfig(StreamThread.GetSharedAdminClientId(clientId)));
 
@@ -353,6 +355,7 @@ namespace Streamiz.Kafka.Net
                     threadId,
                     clientId,
                     this.topology.Builder,
+                    metricsRegistry,
                     configuration,
                     this.kafkaSupplier,
                     adminClient,
@@ -576,11 +579,14 @@ namespace Streamiz.Kafka.Net
 
         private void RunMiddleware(bool before, bool start)
         {
-            int index = start ? (before ? 0 : 1) : (before ? 2 : 3);
-            var methods = typeof(IStreamMiddleware).GetMethods();
-            logger.LogInformation($"{logPrefix}Starting middleware (${methods[index].Name}) ....");
-            foreach(var middleware in configuration)
-                methods[index].Invoke(middleware, new object[] {configuration});
+            if (configuration.Any())
+            {
+                int index = start ? (before ? 0 : 1) : (before ? 2 : 3);
+                var methods = typeof(IStreamMiddleware).GetMethods();
+                logger.LogInformation($"{logPrefix}Starting middleware (${methods[index].Name}) ....");
+                foreach (var middleware in configuration)
+                    methods[index].Invoke(middleware, new object[] {configuration});
+            }
         }
         
         #endregion

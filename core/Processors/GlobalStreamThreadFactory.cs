@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.Stream.Internal;
 
@@ -7,6 +8,7 @@ namespace Streamiz.Kafka.Net.Processors
     internal class GlobalStreamThreadFactory
     {
         private readonly IAdminClient adminClient;
+        private readonly StreamMetricsRegistry streamMetricsRegistry;
         private readonly ProcessorTopology topology;
         private readonly IStreamConfig configuration;
         private readonly string threadClientId;
@@ -16,9 +18,11 @@ namespace Streamiz.Kafka.Net.Processors
             string threadClientId,
             IConsumer<byte[], byte[]> globalConsumer,
             IStreamConfig configuration,
-            IAdminClient adminClient)
+            IAdminClient adminClient,
+            StreamMetricsRegistry streamMetricsRegistry)
         {
             this.adminClient = adminClient;
+            this.streamMetricsRegistry = streamMetricsRegistry;
             this.topology = topology;
             this.threadClientId = threadClientId;
             this.configuration = configuration;
@@ -28,7 +32,7 @@ namespace Streamiz.Kafka.Net.Processors
         public GlobalStreamThread GetGlobalStreamThread()
         {
             var stateManager = new GlobalStateManager(globalConsumer, topology, adminClient, configuration);
-            var context = new GlobalProcessorContext(configuration, stateManager);
+            var context = new GlobalProcessorContext(configuration, stateManager, streamMetricsRegistry);
             stateManager.SetGlobalProcessorContext(context);
             var globalStateUpdateTask = new GlobalStateUpdateTask(stateManager, topology, context);
 

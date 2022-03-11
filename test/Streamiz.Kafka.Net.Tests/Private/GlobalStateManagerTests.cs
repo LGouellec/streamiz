@@ -13,6 +13,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.SerDes;
 
@@ -78,7 +79,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             context = new GlobalProcessorContext(
                 streamConfigMock.Object,
-                stateManager);
+                stateManager,
+                new StreamMetricsRegistry());
             
             stateManager.SetGlobalProcessorContext(context);
         }

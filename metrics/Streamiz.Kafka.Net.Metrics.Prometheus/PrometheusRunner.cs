@@ -5,12 +5,10 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
 {
     public class PrometheusRunner : IStreamMiddleware
     {
-        private readonly int prometheusExporterEndpointPort;
         private readonly MetricServer metricsServer;
 
         public PrometheusRunner(int prometheusExporterEndpointPort)
         {
-            this.prometheusExporterEndpointPort = prometheusExporterEndpointPort;
             metricsServer = new MetricServer(prometheusExporterEndpointPort);
         }
 

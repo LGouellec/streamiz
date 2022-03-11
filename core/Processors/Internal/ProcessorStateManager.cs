@@ -28,13 +28,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             /// </summary>
             internal long? Offset;
         }
-
+        internal readonly TaskId taskId;
+        
         private static readonly string STATE_CHANGELOG_TOPIC_SUFFIX = "-changelog";
 
         private readonly ILogger log;
         private readonly string logPrefix;
         private readonly IDictionary<string, StateStoreMetadata> registeredStores = new Dictionary<string, StateStoreMetadata>();
-        private readonly TaskId taskId;
         private readonly IDictionary<string, string> changelogTopics;
         private readonly IOffsetCheckpointManager offsetCheckpointManager;
         private readonly IChangelogRegister changelogRegister;

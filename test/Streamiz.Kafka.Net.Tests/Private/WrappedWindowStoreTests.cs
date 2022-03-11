@@ -9,6 +9,7 @@ using System;
 using Streamiz.Kafka.Net.State;
 using System.Text;
 using System.Collections.Generic;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -30,7 +31,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             wrapped = new WrappedWindowStore<string, int>(inmemorystore, 1000 * 2, null,  null);
             var id = new TaskId { Id = 0,  Partition = 0 };
             var stateManager = new ProcessorStateManager(id, new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) }, null, null, null);
-            var context = new ProcessorContext(null, new StreamConfig(), stateManager);
+            var context = new ProcessorContext(UnassignedStreamTask.Create(), new StreamConfig(), stateManager, new StreamMetricsRegistry());
             wrapped.Init(context, inmemorystore);
             Assert.Throws<StreamsException>(() => wrapped.Put("coucou", 120, 1300));
         }
@@ -41,7 +42,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             wrapped = new WrappedWindowStore<string, int>(inmemorystore, 1000 * 2, null, null);
             var id = new TaskId { Id = 0,  Partition = 0 };
             var stateManager = new ProcessorStateManager(id, new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) }, null, null, null);
-            var context = new ProcessorContext(null, new StreamConfig(), stateManager);
+            var context = new ProcessorContext(UnassignedStreamTask.Create(), new StreamConfig(), stateManager, new StreamMetricsRegistry());
             wrapped.Init(context, inmemorystore);
             inmemorystore.Put(new Bytes(Encoding.UTF8.GetBytes("test")), BitConverter.GetBytes(100), 300);
             Assert.Throws<StreamsException>(() => wrapped.Fetch("test", 300));
@@ -52,7 +53,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             var id = new TaskId { Id = 0,  Partition = 0 };
             var stateManager = new ProcessorStateManager(id, new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) }, null, null, null);
-            var context = new ProcessorContext(null, new StreamConfig(), stateManager);
+            var context = new ProcessorContext(UnassignedStreamTask.Create(), new StreamConfig(), stateManager, new StreamMetricsRegistry());
             wrapped.Init(context, inmemorystore);
             wrapped.Put("coucou", 120, 1300);
             Assert.AreEqual(120, wrapped.Fetch("coucou", 1300));
@@ -64,7 +65,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var dt = DateTime.Now;
             var id = new TaskId { Id = 0,  Partition = 0 };
             var stateManager = new ProcessorStateManager(id, new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) }, null, null, null);
-            var context = new ProcessorContext(null, new StreamConfig(), stateManager);
+            var context = new ProcessorContext(UnassignedStreamTask.Create(), new StreamConfig(), stateManager, new StreamMetricsRegistry());
             wrapped.Init(context, inmemorystore);
             wrapped.Put("coucou", 120, dt.GetMilliseconds());
             var list = wrapped.Fetch("coucou", dt.AddSeconds(-1), dt.AddSeconds(2)).ToList();
@@ -79,7 +80,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var dt = DateTime.Now;
             var id = new TaskId { Id = 0,  Partition = 0 };
             var stateManager = new ProcessorStateManager(id, new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) }, null, null, null);
-            var context = new ProcessorContext(null, new StreamConfig(), stateManager);
+            var context = new ProcessorContext(UnassignedStreamTask.Create(), new StreamConfig(), stateManager, new StreamMetricsRegistry());
             wrapped.Init(context, inmemorystore);
             wrapped.Put("coucou", 120, dt.GetMilliseconds());
             var list = wrapped.FetchAll(dt.AddSeconds(-1), dt.AddSeconds(2)).ToList();
@@ -95,7 +96,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var dt = DateTime.Now;
             var id = new TaskId { Id = 0,  Partition = 0 };
             var stateManager = new ProcessorStateManager(id, new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) }, null, null, null);
-            var context = new ProcessorContext(null, new StreamConfig(), stateManager);
+            var context = new ProcessorContext(UnassignedStreamTask.Create(), new StreamConfig(), stateManager, new StreamMetricsRegistry());
             wrapped.Init(context, inmemorystore);
             wrapped.Put("coucou", 120, dt.GetMilliseconds());
             wrapped.Put("coucou-toto", 5, dt.GetMilliseconds());

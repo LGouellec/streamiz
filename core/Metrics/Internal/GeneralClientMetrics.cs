@@ -9,10 +9,10 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
         private static readonly string APP_INFO = "app-info";
         private static readonly string APP_INFO_DESCRIPTION = "The application information metrics";
         private static readonly string VERSION = "version";
-        private static readonly string APPLICATION_ID = "application-id";
-        private static readonly string TOPOLOGY_DESCRIPTION = "topology-description";
+        private static readonly string APPLICATION_ID = "application_id";
+        private static readonly string TOPOLOGY_DESCRIPTION = "topology_description";
         private static readonly string STATE = "state";
-        private static readonly string STREAM_THREADS = "stream-threads";
+        private static readonly string STREAM_THREADS = "stream_threads";
         private static readonly string VERSION_FROM_ASSEMBLY;
         private static readonly string DEFAULT_VALUE = "unknown";
 
@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
         private static readonly string APPLICATION_ID_DESCRIPTION = "The application ID of the Kafka Streams client";
         private static readonly string TOPOLOGY_DESCRIPTION_DESCRIPTION =
         "The description of the topology executed in the Kafka Streams client";
-        private static readonly string STATE_DESCRIPTION = "The state of the Kafka Streams client";
+        private static readonly string STATE_DESCRIPTION = "The state of the Kafka Streams client (1 = running, 0 = stopped)";
         private static readonly string STREAM_THREADS_DESCRIPTION = "The number of stream threads that are running or participating in rebalance";
 
         static GeneralClientMetrics()
@@ -38,7 +38,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
         public static Sensor StreamsAppSensor(
             string applicationId,
             string topologyDescription,
-            Func<KafkaStream.State> stateStreamFunc,
+            Func<int> stateStreamFunc,
             Func<int> streamThreadsFunc,
             StreamMetricsRegistry metricsRegistry)
         {
@@ -47,6 +47,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
                 APP_INFO_DESCRIPTION,
                 MetricsRecordingLevel.INFO);
             var tags = metricsRegistry.ClientTags();
+            tags.Add(APPLICATION_ID, applicationId);
 
             var tagsVersion = new Dictionary<string, string>(tags);
             tagsVersion.Add(VERSION, VERSION_FROM_ASSEMBLY);
@@ -57,23 +58,21 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
                     VERSION_DESCRIPTION,
                     tagsVersion), VERSION_FROM_ASSEMBLY);
             
-            var tagsApp = new Dictionary<string, string>(tags);
-            tagsApp.Add(APPLICATION_ID, applicationId);
             sensor.AddImmutableMetric(
                 new MetricName(
                     APPLICATION_ID,
                     StreamMetricsRegistry.CLIENT_LEVEL_GROUP,
                     APPLICATION_ID_DESCRIPTION,
-                    tagsApp), applicationId);
+                    tags), applicationId);
             
             var tagsTopo = new Dictionary<string, string>(tags);
-            tagsApp.Add(TOPOLOGY_DESCRIPTION, topologyDescription);
+            tagsTopo.Add(TOPOLOGY_DESCRIPTION, topologyDescription);
             sensor.AddImmutableMetric(
                 new MetricName(
                     TOPOLOGY_DESCRIPTION,
                     StreamMetricsRegistry.CLIENT_LEVEL_GROUP,
                     TOPOLOGY_DESCRIPTION_DESCRIPTION,
-                    tagsApp), topologyDescription);
+                    tagsTopo), topologyDescription);
             
             sensor.AddProviderMetric(
                 new MetricName(

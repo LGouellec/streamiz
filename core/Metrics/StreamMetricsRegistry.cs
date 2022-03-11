@@ -30,13 +30,15 @@ namespace Streamiz.Kafka.Net.Metrics
         private static readonly string SENSOR_ENTITY_LABEL = "entity";
         private static readonly string SENSOR_EXTERNAL_LABEL = "external";
         private static readonly string SENSOR_INTERNAL_LABEL = "internal";
+        // FOR TESTING
+        private static readonly string UNKNOWN_THREAD = "unknown-thread";
         
-        public static readonly string CLIENT_ID_TAG = "client-id";
-        public static readonly string APPLICATION_ID_TAG = "application-id";
-        public static readonly string THREAD_ID_TAG = "thread-id";
-        public static readonly string TASK_ID_TAG = "task-id";
-        public static readonly string PROCESSOR_NODE_ID_TAG = "processor-node-id";
-        public static readonly string STORE_ID_TAG = "state-id";
+        public static readonly string CLIENT_ID_TAG = "client_id";
+        public static readonly string APPLICATION_ID_TAG = "application_id";
+        public static readonly string THREAD_ID_TAG = "thread_id";
+        public static readonly string TASK_ID_TAG = "task_id";
+        public static readonly string PROCESSOR_NODE_ID_TAG = "processor_node_id";
+        public static readonly string STORE_ID_TAG = "state_id";
         
         
         public static readonly string LATENCY_SUFFIX = "-latency";
@@ -66,6 +68,11 @@ namespace Streamiz.Kafka.Net.Metrics
         public static readonly string RATE_DESCRIPTION_SUFFIX = " per second";
         
         #endregion
+
+        public StreamMetricsRegistry() 
+            : this(string.Empty, MetricsRecordingLevel.INFO)
+        {
+        }
 
         public StreamMetricsRegistry(
             string clientId,
@@ -113,6 +120,7 @@ namespace Streamiz.Kafka.Net.Metrics
         {
             lock (threadLevelSensors)
             {
+                threadId ??= UNKNOWN_THREAD;
                 string key = ThreadSensorPrefix(threadId);
                 var sensor = GetSensor(threadLevelSensors, sensorName, key, description, metricsRecordingLevel, parents);
                 AddSensorThreadScope(threadId, sensor.Name);
@@ -122,14 +130,18 @@ namespace Streamiz.Kafka.Net.Metrics
 
         internal IDictionary<string, string> ThreadLevelTags(string threadId)
         {
+            threadId ??= UNKNOWN_THREAD;
             var tagDic = new Dictionary<string, string>();
             tagDic.Add(THREAD_ID_TAG, threadId);
             return tagDic;
         }
 
         private string ThreadSensorPrefix(string threadId)
-            => $"{SENSOR_INTERNAL_LABEL}{SENSOR_PREFIX_DELIMITER}{threadId}";
-        
+        {
+            threadId ??= UNKNOWN_THREAD;
+            return $"{SENSOR_INTERNAL_LABEL}{SENSOR_PREFIX_DELIMITER}{threadId}";
+        }
+
         #endregion
         
         #region Task Level Metrics
@@ -144,6 +156,7 @@ namespace Streamiz.Kafka.Net.Metrics
         {
             lock (taskLevelSensors)
             {
+                threadId ??= UNKNOWN_THREAD;
                 string key = TaskSensorPrefix(threadId, taskId.ToString());
                 var sensor = GetSensor(taskLevelSensors, sensorName, key, description, metricsRecordingLevel, parents);
                 AddSensorThreadScope(threadId, sensor.Name);
@@ -153,14 +166,18 @@ namespace Streamiz.Kafka.Net.Metrics
 
         internal IDictionary<string, string> TaskLevelTags(string threadId, string taskId)
         {
+            threadId ??= UNKNOWN_THREAD;
             var tagDic = ThreadLevelTags(threadId);
             tagDic.Add(TASK_ID_TAG, taskId);
             return tagDic;
         }
-        
+
         private string TaskSensorPrefix(string threadId, string taskId)
-            => $"{ThreadSensorPrefix(threadId)}{SENSOR_PREFIX_DELIMITER}{SENSOR_TASK_LABEL}{SENSOR_PREFIX_DELIMITER}{taskId}";
-        
+        {
+            threadId ??= UNKNOWN_THREAD;
+            return $"{ThreadSensorPrefix(threadId)}{SENSOR_PREFIX_DELIMITER}{SENSOR_TASK_LABEL}{SENSOR_PREFIX_DELIMITER}{taskId}";
+        }
+
         #endregion
         
         #region Node Level metrics
@@ -176,6 +193,7 @@ namespace Streamiz.Kafka.Net.Metrics
         {
             lock (nodeLevelSensors)
             {
+                threadId ??= UNKNOWN_THREAD;
                 string key = NodeSensorPrefix(threadId, taskId.ToString(), processorName);
                 var sensor = GetSensor(nodeLevelSensors, sensorName, key, description, metricsRecordingLevel, parents);
                 AddSensorThreadScope(threadId, sensor.Name);
@@ -185,14 +203,18 @@ namespace Streamiz.Kafka.Net.Metrics
 
         internal IDictionary<string, string> NodeLevelTags(string threadId, string taskId, string processorName)
         {
+            threadId ??= UNKNOWN_THREAD;
             var tagDic = TaskLevelTags(threadId, taskId);
             tagDic.Add(PROCESSOR_NODE_ID_TAG, processorName);
             return tagDic;
         }
-        
+
         private string NodeSensorPrefix(string threadId, string taskId, string processorName)
-            => $"{TaskSensorPrefix(threadId, taskId)}{SENSOR_PREFIX_DELIMITER}{SENSOR_NODE_LABEL}{SENSOR_PREFIX_DELIMITER}{processorName}";
-        
+        {
+            threadId ??= UNKNOWN_THREAD;
+            return $"{TaskSensorPrefix(threadId, taskId)}{SENSOR_PREFIX_DELIMITER}{SENSOR_NODE_LABEL}{SENSOR_PREFIX_DELIMITER}{processorName}";
+        }
+
         #endregion
         
         #region State Level Metrics
@@ -208,6 +230,7 @@ namespace Streamiz.Kafka.Net.Metrics
         {
             lock (storeLevelSensors)
             {
+                threadId ??= UNKNOWN_THREAD;
                 string key = StoreSensorPrefix(threadId, taskId.ToString(), storeName);
                 var sensor = GetSensor(storeLevelSensors, sensorName, key, description, metricsRecordingLevel, parents);
                 AddSensorThreadScope(threadId, sensor.Name);
@@ -217,14 +240,18 @@ namespace Streamiz.Kafka.Net.Metrics
 
         internal IDictionary<string, string> StoreLevelTags(string threadId, string taskId, string storeName, string storeType)
         {
+            threadId ??= UNKNOWN_THREAD;
             var tagDic = TaskLevelTags(threadId, taskId);
             tagDic.Add($"{storeType}-{STORE_ID_TAG}", storeName);
             return tagDic;
         }
-        
+
         private string StoreSensorPrefix(string threadId, string taskId, string storeName)
-            => $"{TaskSensorPrefix(threadId, taskId)}{SENSOR_PREFIX_DELIMITER}{SENSOR_STORE_LABEL}{SENSOR_PREFIX_DELIMITER}{storeName}";
-        
+        {
+            threadId ??= UNKNOWN_THREAD;
+            return $"{TaskSensorPrefix(threadId, taskId)}{SENSOR_PREFIX_DELIMITER}{SENSOR_STORE_LABEL}{SENSOR_PREFIX_DELIMITER}{storeName}";
+        }
+
         #endregion
         
         #region Helpers
@@ -285,19 +312,27 @@ namespace Streamiz.Kafka.Net.Metrics
         
         /*** GET METRICS ***/
         public IEnumerable<Sensor> GetFullScope()
-            => new ReadOnlyCollection<Sensor>(sensors.Values.ToList());
+            => new ReadOnlyCollection<Sensor>(sensors.Values.Where(s => TestMetricsRecordingLevel(s.MetricsRecording)).ToList());
 
         public IEnumerable<Sensor> GetThreadScopeSensor(string threadId)
         {
             var sensors = new List<Sensor>();
-            
+
             foreach (var s in clientLevelSensors)
-                sensors.Add(this.sensors[s]);
+            {
+                var sensor = this.sensors[s];
+                if(TestMetricsRecordingLevel(sensor.MetricsRecording)) 
+                    sensors.Add(sensor);
+            }
 
             if (threadScopeSensors.ContainsKey(threadId))
             {
                 foreach (var s in threadScopeSensors[threadId])
-                    sensors.Add(this.sensors[s]);
+                {
+                    var sensor = this.sensors[s];
+                    if(TestMetricsRecordingLevel(sensor.MetricsRecording)) 
+                        sensors.Add(sensor);
+                }
             }
 
             return sensors;

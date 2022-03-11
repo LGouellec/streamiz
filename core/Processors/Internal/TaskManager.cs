@@ -5,6 +5,7 @@ using System.Linq;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -44,7 +45,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public IEnumerable<TaskId> RevokeTaskIds => revokedTasks.Keys;
         public bool RebalanceInProgress { get; internal set; }
 
-        internal TaskManager(InternalTopologyBuilder builder, TaskCreator taskCreator, IAdminClient adminClient, IChangelogReader changelogReader)
+        internal TaskManager(InternalTopologyBuilder builder, TaskCreator taskCreator, IAdminClient adminClient,
+            IChangelogReader changelogReader)
         {
             this.builder = builder;
             this.taskCreator = taskCreator;

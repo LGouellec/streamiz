@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Streamiz.Kafka.Net.Metrics;
 using ThreadState = Streamiz.Kafka.Net.Processors.ThreadState;
 
 namespace Streamiz.Kafka.Net.Tests.Private
@@ -163,7 +164,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var supplier = new SyncKafkaSupplier();
             var thread = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 
@@ -202,7 +203,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             consumer.Subscribe("topic2");
             var thread = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
             allStates.Add(thread.State);
@@ -252,7 +253,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             consumer.Subscribe("topic2");
             var thread = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 
@@ -297,7 +298,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var supplier = new SyncKafkaSupplier();
             var thread = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 
@@ -320,7 +321,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var supplier = new SyncKafkaSupplier();
             var thread = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 
@@ -345,7 +346,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var supplier = new SyncKafkaSupplier();
             var thread = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 

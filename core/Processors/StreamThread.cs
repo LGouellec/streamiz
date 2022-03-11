@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -44,7 +45,9 @@ namespace Streamiz.Kafka.Net.Processors
             return clientId + "-admin";
         }
 
-        internal static IThread Create(string threadId, string clientId, InternalTopologyBuilder builder, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IAdminClient adminClient, int threadInd)
+        internal static IThread Create(string threadId, string clientId, InternalTopologyBuilder builder,
+            StreamMetricsRegistry streamMetricsRegistry, IStreamConfig configuration, IKafkaSupplier kafkaSupplier,
+            IAdminClient adminClient, int threadInd)
         {
             string logPrefix = $"stream-thread[{threadId}] ";
             var log = Logger.GetLogger(typeof(StreamThread));
@@ -71,9 +74,11 @@ namespace Streamiz.Kafka.Net.Processors
 
             var storeChangelogReader = new StoreChangelogReader(
                 configuration,
-                restoreConsumer);
+                restoreConsumer,
+                threadId,
+                streamMetricsRegistry);
 
-            var taskCreator = new TaskCreator(builder, configuration, threadId, kafkaSupplier, producer, storeChangelogReader);
+            var taskCreator = new TaskCreator(builder, configuration, threadId, kafkaSupplier, producer, storeChangelogReader, streamMetricsRegistry);
             var manager = new TaskManager(builder, taskCreator, adminClient, storeChangelogReader);
 
             var listener = new StreamsRebalanceListener(manager);
@@ -82,7 +87,7 @@ namespace Streamiz.Kafka.Net.Processors
             var consumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig(GetConsumerClientId(customerID)), listener);
             manager.Consumer = consumer;
 
-            var thread = new StreamThread(threadId, customerID, manager, consumer, builder, storeChangelogReader, configuration);
+            var thread = new StreamThread(threadId, customerID, manager, consumer, builder, storeChangelogReader, streamMetricsRegistry, configuration);
             listener.Thread = thread;
 
             return thread;
@@ -93,6 +98,7 @@ namespace Streamiz.Kafka.Net.Processors
         public ThreadState State { get; private set; }
 
         private readonly IChangelogReader changelogReader;
+        private readonly StreamMetricsRegistry streamMetricsRegistry;
         private readonly IStreamConfig streamConfig;
         private readonly ILogger log = Logger.GetLogger(typeof(StreamThread));
         private readonly Thread thread;
@@ -102,7 +108,7 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly TimeSpan consumeTimeout;
         private readonly string threadId;
         private readonly string clientId;
-        private readonly string logPrefix = "";
+        private readonly string logPrefix;
         private readonly long commitTimeMs = 0;
         private CancellationToken token;
         private DateTime lastCommit = DateTime.Now;
@@ -112,16 +118,28 @@ namespace Streamiz.Kafka.Net.Processors
         private long lastPollMs;
 
         private readonly object stateLock = new object();
+        
+        private readonly Sensor commitSensor;
+        private readonly Sensor pollSensor;
+        private readonly Sensor pollRecordsSensor;
+        private readonly Sensor pollRatioSensor;
+        private readonly Sensor processLatencySensor;
+        private readonly Sensor processRecordsSensor;
+        private readonly Sensor processRateSensor;
+        private readonly Sensor processRatioSensor;
+        private readonly Sensor commitRatioSensor;
 
         public event ThreadStateListener StateChanged;
 
-        private StreamThread(string threadId, string clientId, TaskManager manager, IConsumer<byte[], byte[]> consumer, InternalTopologyBuilder builder, IChangelogReader storeChangelogReader, IStreamConfig configuration)
-            : this(threadId, clientId, manager, consumer, builder, storeChangelogReader, TimeSpan.FromMilliseconds(configuration.PollMs), configuration.CommitIntervalMs)
+        private StreamThread(string threadId, string clientId, TaskManager manager, IConsumer<byte[], byte[]> consumer,
+            InternalTopologyBuilder builder, IChangelogReader storeChangelogReader,
+            StreamMetricsRegistry streamMetricsRegistry, IStreamConfig configuration)
+            : this(threadId, clientId, manager, consumer, builder, storeChangelogReader, streamMetricsRegistry, TimeSpan.FromMilliseconds(configuration.PollMs), configuration.CommitIntervalMs)
         {
             streamConfig = configuration;
         }
 
-        private StreamThread(string threadId, string clientId, TaskManager manager, IConsumer<byte[], byte[]> consumer, InternalTopologyBuilder builder, IChangelogReader storeChangelogReader, TimeSpan timeSpan, long commitInterval)
+        private StreamThread(string threadId, string clientId, TaskManager manager, IConsumer<byte[], byte[]> consumer, InternalTopologyBuilder builder, IChangelogReader storeChangelogReader, StreamMetricsRegistry streamMetricsRegistry, TimeSpan timeSpan, long commitInterval)
         {
             this.manager = manager;
             this.consumer = consumer;
@@ -132,12 +150,23 @@ namespace Streamiz.Kafka.Net.Processors
             logPrefix = $"stream-thread[{threadId}] ";
             commitTimeMs = commitInterval;
             changelogReader = storeChangelogReader;
+            this.streamMetricsRegistry = streamMetricsRegistry;
 
             thread = new Thread(Run);
             thread.Name = this.threadId;
             Name = this.threadId;
 
             State = ThreadState.CREATED;
+
+            commitSensor = ThreadMetrics.CommitSensor(threadId, streamMetricsRegistry);
+            pollSensor = ThreadMetrics.PollSensor(threadId, streamMetricsRegistry);
+            pollRecordsSensor = ThreadMetrics.PollRecordsSensor(threadId, streamMetricsRegistry);
+            pollRatioSensor = ThreadMetrics.PollRatioSensor(threadId, streamMetricsRegistry);
+            processLatencySensor = ThreadMetrics.ProcessLatencySensor(threadId, streamMetricsRegistry);
+            processRecordsSensor = ThreadMetrics.ProcessRecordsSensor(threadId, streamMetricsRegistry);
+            processRateSensor = ThreadMetrics.ProcessRateSensor(threadId, streamMetricsRegistry);
+            processRatioSensor = ThreadMetrics.ProcessRatioSensor(threadId, streamMetricsRegistry);
+            commitRatioSensor = ThreadMetrics.CommitRatioSensor(threadId, streamMetricsRegistry);
         }
 
         #region IThread Impl
@@ -155,6 +184,8 @@ namespace Streamiz.Kafka.Net.Processors
         public void Run()
         {
             Exception exception = null;
+            long totalProcessLatency = 0, totalCommitLatency = 0;
+            
             if (IsRunning)
             {
                 while (!token.IsCancellationRequested)
@@ -185,14 +216,24 @@ namespace Streamiz.Kafka.Net.Processors
                         if (!manager.RebalanceInProgress)
                         {
                             RestorePhase();
-
+                            
                             long now = DateTime.Now.GetMilliseconds();
-                            var records = PollRequest(GetTimeout());
+                            long startMs = now;
+                            IEnumerable<ConsumeResult<byte[], byte[]>> records = new List<ConsumeResult<byte[], byte[]>>();
+                            
+                            long pollLatency =  ActionHelper.MeasureLatency(() =>
+                            {
+                                records = PollRequest(GetTimeout());
+                            });
+                            pollSensor.Record(pollLatency, now);
 
                             DateTime n = DateTime.Now;
                             var count = AddToTasks(records);
                             if (count > 0)
-                                log.LogDebug("Add {Count} records in tasks in {DateTime}", count, DateTime.Now - n);
+                            {
+                                log.LogDebug($"Add {count} records in tasks in {DateTime.Now - n}");
+                                pollRecordsSensor.Record(count, now);
+                            }
 
                             n = DateTime.Now;
                             int processed = 0, totalProcessed = 0;
@@ -200,17 +241,29 @@ namespace Streamiz.Kafka.Net.Processors
                             do
                             {
                                 processed = 0;
+                                now = DateTime.Now.GetMilliseconds();
                                 for (int i = 0; i < numIterations; ++i)
                                 {
+                                    long processLatency = 0;
+                                    
                                     if (!manager.RebalanceInProgress)
-                                        processed = manager.Process(now);
+                                        processLatency = ActionHelper.MeasureLatency(() =>
+                                        {
+                                            processed = manager.Process(now);
+                                            now = DateTime.Now.GetMilliseconds();
+                                        });
                                     else
                                         processed = 0;
                                     
                                     totalProcessed += processed;
+                                    totalProcessLatency += processLatency;
                                     
                                     if (processed == 0)
                                         break;
+                                    
+                                    processLatencySensor.Record((double) processLatency / processed, now);
+                                    processRateSensor.Record(processed, now);
+                                    
                                     // NOT AVAILABLE NOW, NEED PROCESSOR API
                                     //if (processed > 0)
                                     //    manager.MaybeCommitPerUserRequested();
@@ -220,8 +273,12 @@ namespace Streamiz.Kafka.Net.Processors
 
                                 timeSinceLastPoll = Math.Max(DateTime.Now.GetMilliseconds() - lastPollMs, 0);
 
-                                if (MaybeCommit())
+                                int commited = 0;
+                                long commitLatency = ActionHelper.MeasureLatency(() => commited = MaybeCommit());
+                                totalCommitLatency += commitLatency;
+                                if (commited > 0)
                                 {
+                                    commitSensor.Record(commitLatency / (double)commited, now);
                                     numIterations = numIterations > 1 ? numIterations / 2 : numIterations;
                                 }
                                 else if (timeSinceLastPoll > streamConfig.MaxPollIntervalMs.Value / 2)
@@ -237,13 +294,23 @@ namespace Streamiz.Kafka.Net.Processors
                             } while (processed > 0);
 
                             if (State == ThreadState.RUNNING)
-                                MaybeCommit();
+                                totalCommitLatency += ActionHelper.MeasureLatency(() => MaybeCommit());
 
                             if (State == ThreadState.PARTITIONS_ASSIGNED)
                                 SetState(ThreadState.RUNNING);
 
+                            now = DateTime.Now.GetMilliseconds();
+                            double runOnceLatency = (double)now - startMs;
+                            
                             if (totalProcessed > 0)
                                 log.LogDebug($"Processing {totalProcessed} records in {DateTime.Now - n}");
+
+                            processRecordsSensor.Record(totalProcessed, now);
+                            processRatioSensor.Record( totalProcessLatency / runOnceLatency, now);
+                            pollRatioSensor.Record(pollLatency / runOnceLatency, now);
+                            commitRatioSensor.Record(totalCommitLatency / runOnceLatency, now);
+                            totalProcessLatency = 0;
+                            totalCommitLatency = 0;
                             
                             if (lastMetrics.Add(TimeSpan.FromMilliseconds(streamConfig.MetricsIntervalMs)) <
                                 DateTime.Now)
@@ -292,7 +359,6 @@ namespace Streamiz.Kafka.Net.Processors
             }
         }
         
-
         private void RestorePhase()
         {
             if(State == ThreadState.PARTITIONS_ASSIGNED || State == ThreadState.RUNNING && manager.NeedRestoration())
@@ -383,6 +449,8 @@ namespace Streamiz.Kafka.Net.Processors
             IsRunning = true;
             consumer.Subscribe(builder.GetSourceTopics());
             thread.Start();
+            
+            ThreadMetrics.CreateStartThreadSensor(threadId, DateTime.Now.GetMilliseconds(), streamMetricsRegistry);
         }
 
         public IEnumerable<ITask> ActiveTasks => manager.ActiveTasks;
@@ -415,7 +483,7 @@ namespace Streamiz.Kafka.Net.Processors
             consumer.Subscribe(builder.GetSourceTopics());
         }
 
-        private bool MaybeCommit()
+        private int MaybeCommit()
         {
             int committed = 0;
             if (DateTime.Now - lastCommit > TimeSpan.FromMilliseconds(commitTimeMs))
@@ -439,7 +507,8 @@ namespace Streamiz.Kafka.Net.Processors
                     lastCommit = DateTime.Now;
                 }
             }
-            return committed > 0;
+
+            return committed;
         }
 
         private void Close(bool cleanUp = true)
@@ -531,13 +600,11 @@ namespace Streamiz.Kafka.Net.Processors
         
         private void ExportMetrics(long now)
         {
-            // todo :
-            StreamMetricsRegistry s1 = null;
-            var sensors = s1.GetThreadScopeSensor(threadId);
+            var sensors = streamMetricsRegistry.GetThreadScopeSensor(threadId);
             foreach (var s in sensors)
                 s.Refresh(now);
 
-            Task.Factory.StartNew(() => streamConfig.MetricsReporter(sensors));
+            Task.Factory.StartNew(() => streamConfig.MetricsReporter?.Invoke(sensors));
         }
 
         // FOR TEST

@@ -27,7 +27,7 @@ namespace Streamiz.Kafka.Net
         internal bool FollowMetadata { get; set; }
         
         
-        public StreamMetricsRegistry Metrics { get; private set; }
+        public virtual StreamMetricsRegistry Metrics { get; private set; }
 
         /// <summary>
         /// Current application id
@@ -37,7 +37,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Current timestamp of record processing
         /// </summary>
-        public long Timestamp => RecordContext.Timestamp;
+        public virtual long Timestamp => RecordContext.Timestamp;
 
         /// <summary>
         /// Current topic of record processing
@@ -64,12 +64,19 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         public virtual string StateDir => $"{Path.Combine(Configuration.StateDir, Configuration.ApplicationId, Id.ToString())}";
 
-        internal ProcessorContext(AbstractTask task, IStreamConfig configuration, IStateManager stateManager)
+        // FOR TESTING
+        internal ProcessorContext()
+        {
+        }
+
+        internal ProcessorContext(AbstractTask task, IStreamConfig configuration, IStateManager stateManager,
+            StreamMetricsRegistry streamMetricsRegistry)
         { 
             Task = task;
             Configuration = configuration;
             States = stateManager;
-
+            Metrics = streamMetricsRegistry;
+            
             SerDesContext = new SerDesContext(configuration);
         }
 

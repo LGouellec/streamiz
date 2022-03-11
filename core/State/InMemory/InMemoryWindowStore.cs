@@ -7,7 +7,10 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 
 namespace Streamiz.Kafka.Net.State.InMemory
 {
@@ -225,6 +228,8 @@ namespace Streamiz.Kafka.Net.State.InMemory
     {
         private readonly TimeSpan retention;
         private readonly long size;
+        private Sensor expiredRecordSensor;
+        private ProcessorContext context;
 
         private long observedStreamTime = -1;
 
@@ -319,6 +324,12 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
         public void Init(ProcessorContext context, IStateStore root)
         {
+            expiredRecordSensor = TaskMetrics.DroppedRecordsSensor(
+                Thread.CurrentThread.Name,
+                context.Id,
+                context.Metrics);
+            this.context = context;
+            
             if (root != null)
             {
                 // register the store
@@ -337,6 +348,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
             if (windowStartTimestamp <= observedStreamTime - retention.TotalMilliseconds)
             {
+                expiredRecordSensor.Record(1.0, context.Timestamp);
                 logger.LogWarning("Skipping record for expired segment");
             }
             else

@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Mock
 {
@@ -22,7 +23,8 @@ namespace Streamiz.Kafka.Net.Mock
         private readonly CancellationToken token;
         private readonly IKafkaSupplier supplier;
         private readonly IDictionary<TaskId, StreamTask> tasks = new Dictionary<TaskId, StreamTask>();
-
+        private readonly StreamMetricsRegistry metricsRegistry;
+        
         private readonly IDictionary<TaskId, IList<TopicPartition>> partitionsByTaskId =
             new Dictionary<TaskId, IList<TopicPartition>>();
 
@@ -48,7 +50,8 @@ namespace Streamiz.Kafka.Net.Mock
             this.configuration = configuration;
             this.configuration.ClientId = clientId;
             this.topicConfiguration = topicConfiguration;
-
+            metricsRegistry = new StreamMetricsRegistry(clientId, MetricsRecordingLevel.DEBUG);
+            
             this.token = token;
             builder = topologyBuilder;
             this.supplier = supplier ?? new SyncKafkaSupplier();
@@ -83,7 +86,8 @@ namespace Streamiz.Kafka.Net.Mock
                     configuration,
                     supplier,
                     producer,
-                    new MockChangelogRegister());
+                    new MockChangelogRegister(),
+                    metricsRegistry);
                 task.InitializeStateStores();
                 task.InitializeTopology();
                 task.RestorationIfNeeded();

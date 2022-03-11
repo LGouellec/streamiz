@@ -5,6 +5,8 @@ using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 using static Streamiz.Kafka.Net.Processors.Internal.ProcessorStateManager;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
@@ -38,6 +40,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         private readonly ILogger log = Logger.GetLogger(typeof(StoreChangelogReader));
         private readonly IConsumer<byte[], byte[]> restoreConsumer;
+        private readonly string threadId;
+        private readonly StreamMetricsRegistry metricsRegistry;
         private readonly IDictionary<TopicPartition, ChangelogMetadata> changelogs;
         private readonly static long DEFAULT_OFFSET_UPDATE_MS = (long)TimeSpan.FromMinutes(5L).TotalMilliseconds;
         private readonly long pollTimeMs;
@@ -45,9 +49,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         
         public StoreChangelogReader(
             IStreamConfig config,
-            IConsumer<byte[], byte[]> restoreConsumer)
+            IConsumer<byte[], byte[]> restoreConsumer,
+            string threadId,
+            StreamMetricsRegistry metricsRegistry)
         {
             this.restoreConsumer = restoreConsumer;
+            this.threadId = threadId;
+            this.metricsRegistry = metricsRegistry;
 
             pollTimeMs = config.PollMs;
             maxPollRestoringRecords = config.MaxPollRestoringRecords;
@@ -204,6 +212,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 changelogMetadata.TotalRestored += numRecords;
 
                 // TODO : call trigger batchRestored
+
+                var restorationRecordSensor = TaskMetrics.RestorationRecordsSensor(
+                    threadId,
+                    changelogMetadata.StateManager.taskId,
+                    metricsRegistry);
+                restorationRecordSensor.Record(Math.Max(changelogMetadata.RestoreEndOffset.Value - currentOffset, 0));
             }
             else if (changelogMetadata.StoreMetadata.Offset.HasValue)
                 changelogMetadata.CurrentOffset = changelogMetadata.StoreMetadata.Offset.Value;

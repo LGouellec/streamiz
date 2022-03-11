@@ -6,7 +6,10 @@ using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
@@ -15,6 +18,8 @@ namespace Streamiz.Kafka.Net.Processors
     {
         protected ILogger log = null;
         protected string logPrefix = "";
+        protected Sensor droppedRecordsSensor;
+
 
         public ProcessorContext Context { get; protected set; }
 
@@ -136,6 +141,11 @@ namespace Streamiz.Kafka.Net.Processors
         {
             log.LogDebug("{LogPrefix}Initializing process context", logPrefix);
             Context = context;
+            droppedRecordsSensor = TaskMetrics.DroppedRecordsSensor(
+                Thread.CurrentThread.Name,
+                Context.Id,
+                Context.Metrics);
+            
             foreach (var n in Next)
             {
                 n.Init(context);
@@ -182,6 +192,7 @@ namespace Streamiz.Kafka.Net.Processors
                         "{LogPrefix} Message with record metadata [topic:{Topic}|partition:{Partition}|offset:{Offset}] was skipped !",
                         logPrefix, Context.RecordContext.Topic, Context.RecordContext.Partition,
                         Context.RecordContext.Offset);
+                    droppedRecordsSensor.Record();
                     return;
                 }
             }
@@ -197,6 +208,7 @@ namespace Streamiz.Kafka.Net.Processors
                         "{LogPrefix} Message with record metadata [topic:{Topic}|partition:{Partition}|offset:{Offset}] was skipped !",
                         logPrefix, Context.RecordContext.Topic, Context.RecordContext.Partition,
                         Context.RecordContext.Offset);
+                    droppedRecordsSensor.Record();
                     return;
                 }
             }

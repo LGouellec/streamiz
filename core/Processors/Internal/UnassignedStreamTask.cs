@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Confluent.Kafka;
 using Streamiz.Kafka.Net.Kafka;
+using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Stream.Internal;
 
@@ -13,7 +14,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         internal class UnassignedProcessorContext : ProcessorContext
         {
             internal UnassignedProcessorContext(AbstractTask task, IStreamConfig configuration)
-                : base(task, configuration, null)
+                : base(task, configuration, null, null)
             {
                 FollowMetadata = false;
             }
@@ -24,7 +25,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         }
 
         UnassignedStreamTask(string threadId, TaskId id, IEnumerable<TopicPartition> partitions, ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer)
-            : base(threadId, id, partitions, processorTopology, consumer, configuration, kafkaSupplier, producer, null)
+            : base(threadId, id, partitions, processorTopology, consumer, configuration, kafkaSupplier, producer, null, new StreamMetricsRegistry())
         {
             config = configuration;
         }

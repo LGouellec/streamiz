@@ -23,6 +23,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
         private static string PROCESS_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + PROCESS_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
         
+        // NOT USE FOR MOMENT
         public static Sensor SuppressionEmitSensor(string threadId,
             TaskId taskId,
             string processorNodeId,

@@ -13,6 +13,7 @@ using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Streamiz.Kafka.Net.Metrics;
 
 
 namespace Streamiz.Kafka.Net.Tests.Processors
@@ -67,7 +68,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 consumer,
                 config,
                 supplier,
-                null, new MockChangelogRegister());
+                null, new MockChangelogRegister(), new StreamMetricsRegistry());
             task.GroupMetadata = consumer as SyncConsumer;
             Assert.Throws<StreamsException>(() => task.InitializeStateStores());
         }

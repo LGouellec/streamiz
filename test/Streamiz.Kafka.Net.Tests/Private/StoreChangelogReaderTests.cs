@@ -8,6 +8,7 @@ using Moq;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -64,7 +65,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             };
 
             store = new RocksDbKeyValueStore("store");
-            storeChangelogReader = new StoreChangelogReader(config, restoreConsumer);
+            storeChangelogReader = new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
             stateMgr = new ProcessorStateManager(
                 id,
                 topicPart.ToSingle(),
@@ -76,7 +77,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Mock<AbstractTask> moq = new Mock<AbstractTask>();
             moq.Setup(t => t.Id).Returns(new TaskId { Id = 0, Partition = 0 });
 
-            context = new ProcessorContext(moq.Object, config, stateMgr);
+            context = new ProcessorContext(moq.Object, config, stateMgr, new StreamMetricsRegistry());
             store.Init(context, store);
 
             producer.Produce(changelogTopic, CreateMessage(changelogTopic, "key1", "value1"));

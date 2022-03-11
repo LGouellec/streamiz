@@ -6,6 +6,8 @@ using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -14,6 +16,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         private readonly TopicPartition topicPart1 = new TopicPartition("test", 0);
         private readonly TopicPartition topicPart2 = new TopicPartition("test2", 0);
         private readonly StringSerDes serdes = new StringSerDes();
+        private readonly Sensor droppedSensor = new NoRunnableSensor("s", "s", MetricsRecordingLevel.DEBUG);
 
         private Dictionary<TopicPartition, RecordQueue> GetPartitions()
         {
@@ -21,8 +24,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var partitions = new Dictionary<TopicPartition, RecordQueue>();
             var sourceProcessor = new SourceProcessor<string, string>("source1", "test", serdes, serdes, timestampEx);
             var sourceProcessor2 = new SourceProcessor<string, string>("source2", "test2", serdes, serdes, timestampEx);
-            var recordQueue = new RecordQueue("", "source_queue", timestampEx, topicPart1, sourceProcessor);
-            var recordQueue2 = new RecordQueue("", "source2_queue", timestampEx, topicPart2, sourceProcessor2);
+            var recordQueue = new RecordQueue("", "source_queue", timestampEx, topicPart1, sourceProcessor, droppedSensor);
+            var recordQueue2 = new RecordQueue("", "source2_queue", timestampEx, topicPart2, sourceProcessor2, droppedSensor);
             partitions.Add(topicPart1, recordQueue);
             partitions.Add(topicPart2, recordQueue2);
             return partitions;

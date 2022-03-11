@@ -2,6 +2,8 @@
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Kafka;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -13,8 +15,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly IKafkaSupplier kafkaSupplier;
         private readonly IProducer<byte[], byte[]> producer;
         private readonly StoreChangelogReader storeChangelogReader;
+        private readonly StreamMetricsRegistry streamMetricsRegistry;
+        private readonly Sensor createTaskSensor;
 
-        public TaskCreator(InternalTopologyBuilder builder, IStreamConfig configuration, string threadId, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer, StoreChangelogReader storeChangelogReader)
+        public TaskCreator(InternalTopologyBuilder builder, IStreamConfig configuration, string threadId,
+            IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer, StoreChangelogReader storeChangelogReader,
+            StreamMetricsRegistry streamMetricsRegistry)
         {
             this.builder = builder;
             this.configuration = configuration;
@@ -22,12 +28,15 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             this.kafkaSupplier = kafkaSupplier;
             this.producer = producer;
             this.storeChangelogReader = storeChangelogReader;
+            this.streamMetricsRegistry = streamMetricsRegistry;
+
+            createTaskSensor = ThreadMetrics.CreateTaskSensor(threadId, streamMetricsRegistry);
         }
 
         public override StreamTask CreateTask(IConsumer<byte[], byte[]> consumer, TaskId id, IEnumerable<TopicPartition> partitions)
         {
             log.LogDebug($"Created task {id} with assigned partition {string.Join(",", partitions)}");
-            return new StreamTask(
+            var task = new StreamTask(
                 threadId,
                 id,
                 partitions,
@@ -36,7 +45,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 configuration,
                 kafkaSupplier,
                 producer,
-                storeChangelogReader);
+                storeChangelogReader,
+                streamMetricsRegistry);
+            
+            createTaskSensor.Record();
+            
+            return task;
         }
     }
 }

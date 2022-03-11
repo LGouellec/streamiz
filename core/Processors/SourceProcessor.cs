@@ -1,5 +1,8 @@
 ﻿
+using System.Threading;
 using Confluent.Kafka;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 
@@ -15,6 +18,8 @@ namespace Streamiz.Kafka.Net.Processors
 
     internal class SourceProcessor<K, V> : AbstractProcessor<K, V>, ISourceProcessor
     {
+        private Sensor processSensor;
+        
         internal SourceProcessor(string name, string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, ITimestampExtractor extractor)
             : base(name, keySerdes, valueSerdes)
         {
@@ -41,20 +46,19 @@ namespace Streamiz.Kafka.Net.Processors
             Key?.Initialize(context.SerDesContext);
             Value?.Initialize(context.SerDesContext);
 
+            processSensor = ProcessorNodeMetrics.ProcessNodeSensor(
+                Thread.CurrentThread.Name,
+                context.Id,
+                Name,
+                context.Metrics);
+                
             base.Init(context);
         }
 
         public override void Process(K key, V value)
         {
-            LogProcessingKeyValue(key, value);
-
-            foreach (var n in Next)
-            {
-                if (n is IProcessor<K, V>)
-                {
-                    ((IProcessor<K, V>)n).Process(key, value);
-                }
-            }
+            Forward(key, value);
+            processSensor.Record(1.0, Context.Timestamp);
         }
     }
 }

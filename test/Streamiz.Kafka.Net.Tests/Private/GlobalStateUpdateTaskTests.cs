@@ -6,6 +6,7 @@ using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System.Collections.Generic;
 using System.Text;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -26,7 +27,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [SetUp]
         public void Setup()
         {
-            contextMock = new Mock<GlobalProcessorContext>(null, null);
+            contextMock = new Mock<GlobalProcessorContext>(null, null, new StreamMetricsRegistry());
             stateManagerMock = new Mock<IGlobalStateManager>();
             processorMock = new Mock<IProcessor>();
             sourceProcessorMock = new Mock<ISourceProcessor>();
@@ -55,7 +56,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     storesToTopics,
                     null);
 
-            globalStateUpdateTask = new GlobalStateUpdateTask(stateManagerMock.Object, topology, contextMock.Object); ;
+            globalStateUpdateTask = new GlobalStateUpdateTask(stateManagerMock.Object, topology, contextMock.Object);
         }
 
         [Test]

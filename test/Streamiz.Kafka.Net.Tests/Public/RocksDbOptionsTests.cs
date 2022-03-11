@@ -12,6 +12,7 @@ using Streamiz.Kafka.Net.Tests.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Streamiz.Kafka.Net.Metrics;
 
 
 namespace Streamiz.Kafka.Net.Tests.Public
@@ -163,7 +164,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             task = new Mock<AbstractTask>();
             task.Setup(k => k.Id).Returns(id);
 
-            context = new ProcessorContext(task.Object, config, stateManager);
+            context = new ProcessorContext(task.Object, config, stateManager, new StreamMetricsRegistry());
 
             store = new RocksDbKeyValueStore("test-store");
             store.Init(context, store);

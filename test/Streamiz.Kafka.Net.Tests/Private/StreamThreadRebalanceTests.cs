@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Avro.Util;
+using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Tests.Helpers;
 using ThreadState = Streamiz.Kafka.Net.Processors.ThreadState;
 
@@ -46,13 +47,13 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             thread1 = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 mockKafkaSupplier, mockKafkaSupplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 
             thread2 = StreamThread.Create(
                 "thread-1", "c1",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 mockKafkaSupplier, mockKafkaSupplier.GetAdmin(config.ToAdminConfig("admin")),
                 1) as StreamThread;
         }

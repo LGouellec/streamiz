@@ -77,6 +77,9 @@ namespace Streamiz.Kafka.Net.Metrics
 
         #region Record
 
+        internal void Record() 
+            => Record(1);
+        
         internal void Record(long value)
             => Record(value, DateTime.Now.GetMilliseconds());
         

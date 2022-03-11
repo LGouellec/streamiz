@@ -8,12 +8,15 @@ using Streamiz.Kafka.Net.Stream.Internal;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
 {
     internal class StreamTask : AbstractTask
     {
         private readonly IKafkaSupplier kafkaSupplier;
+        private readonly StreamMetricsRegistry streamMetricsRegistry;
         private readonly IRecordCollector collector;
         private readonly IDictionary<TopicPartition, long> consumedOffsets;
         private readonly PartitionGrouper partitionGrouper;
@@ -27,13 +30,26 @@ namespace Streamiz.Kafka.Net.Processors
         private IProducer<byte[], byte[]> producer;
         private bool transactionInFlight = false;
         private readonly string threadId;
+        
+        private readonly Sensor closeTaskSensor;
+        private readonly Sensor activeBufferedRecordSensor;
+        private readonly Sensor processSensor;
+        private readonly Sensor processLatencySensor;
+        private readonly Sensor enforcedProcessingSensor;
+        private readonly Sensor commitSensor;
+        private readonly Sensor activeRestorationSensor;
+        private readonly Sensor restorationRecordsSendsor;
 
 
-        public StreamTask(string threadId, TaskId id, IEnumerable<TopicPartition> partitions, ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer, IChangelogRegister changelogRegister)
+        public StreamTask(string threadId, TaskId id, IEnumerable<TopicPartition> partitions,
+            ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration,
+            IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer, IChangelogRegister changelogRegister,
+            StreamMetricsRegistry streamMetricsRegistry)
             : base(id, partitions, processorTopology, consumer, configuration, changelogRegister)
         {
             this.threadId = threadId;
             this.kafkaSupplier = kafkaSupplier;
+            this.streamMetricsRegistry = streamMetricsRegistry;
             consumedOffsets = new Dictionary<TopicPartition, long>();
             maxTaskIdleMs = configuration.MaxTaskIdleMs;
             maxBufferedSize = configuration.BufferedRecordsPerPartition;
@@ -52,10 +68,12 @@ namespace Streamiz.Kafka.Net.Processors
                 this.producer = producer;
             }
 
-            collector = new RecordCollector(logPrefix, configuration, id);
+            var droppedRecordsSensor = TaskMetrics.DroppedRecordsSensor(this.threadId, Id, this.streamMetricsRegistry);
+            collector = new RecordCollector(logPrefix, configuration, id, droppedRecordsSensor);
             collector.Init(ref this.producer);
 
-            Context = new ProcessorContext(this, configuration, stateMgr).UseRecordCollector(collector);
+            Context = new ProcessorContext(this, configuration, stateMgr, streamMetricsRegistry)
+                .UseRecordCollector(collector);
             Context.FollowMetadata = followMetadata;
 
             var partitionsQueue = new Dictionary<TopicPartition, RecordQueue>();
@@ -70,12 +88,22 @@ namespace Streamiz.Kafka.Net.Processors
                     $"record-queue-{p.Topic}-{id.Id}-{id.Partition}",
                     sourceTimestampExtractor,
                     p,
-                    sourceProcessor);
+                    sourceProcessor,
+                    droppedRecordsSensor);
                 partitionsQueue.Add(p, queue);
                 processors.Add(sourceProcessor);
             }
 
             partitionGrouper = new PartitionGrouper(partitionsQueue);
+
+            closeTaskSensor = ThreadMetrics.ClosedTaskSensor(this.threadId, streamMetricsRegistry); 
+            activeBufferedRecordSensor = TaskMetrics.ActiveBufferedRecordsSensor(this.threadId, Id, streamMetricsRegistry);
+            processSensor = TaskMetrics.ProcessSensor(this.threadId, Id, streamMetricsRegistry);
+            processLatencySensor = TaskMetrics.ProcessLatencySensor(this.threadId, Id, streamMetricsRegistry);
+            enforcedProcessingSensor = TaskMetrics.EnforcedProcessingSensor(this.threadId, Id, streamMetricsRegistry);
+            commitSensor = TaskMetrics.CommitSensor(this.threadId, Id, streamMetricsRegistry);
+            activeRestorationSensor = TaskMetrics.ActiveRestorationSensor(this.threadId, Id, streamMetricsRegistry);
+            restorationRecordsSendsor = TaskMetrics.RestorationRecordsSensor(this.threadId, Id, streamMetricsRegistry);
         }
 
         internal IConsumerGroupMetadata GroupMetadata { get; set; }
@@ -136,6 +164,7 @@ namespace Streamiz.Kafka.Net.Processors
                 }
                 commitNeeded = false;
                 commitRequested = false;
+                commitSensor.Record();
             }
             else
                 throw new IllegalStateException($"Unknown state {state} while committing active task {Id}");
@@ -198,6 +227,7 @@ namespace Streamiz.Kafka.Net.Processors
 
                 if (now - idleStartTime >= maxTaskIdleMs)
                 {
+                    enforcedProcessingSensor.Record();
                     return true;
                 }
                 else
@@ -240,6 +270,8 @@ namespace Streamiz.Kafka.Net.Processors
                 CloseStateManager();
 
                 TransitTo(TaskState.CLOSED);
+                
+                closeTaskSensor.Record();
                 log.LogInformation($"{logPrefix}Closed");
                 IsClosed = true;
             }
@@ -265,6 +297,7 @@ namespace Streamiz.Kafka.Net.Processors
                     stateMgr.InitializeOffsetsFromCheckpoint();
 
                     TransitTo(TaskState.RESTORING);
+                    activeRestorationSensor.Record();
                     log.LogInformation($"{logPrefix}Restoration will start soon.");
                 }
                 else
@@ -431,7 +464,7 @@ namespace Streamiz.Kafka.Net.Processors
                 var recordInfo = $"Topic:{record.Record.Topic}|Partition:{record.Record.Partition.Value}|Offset:{record.Record.Offset}|Timestamp:{record.Record.Message.Timestamp.UnixTimestampMs}";
 
                 log.LogDebug($"{logPrefix}Start processing one record [{recordInfo}]");
-                record.Processor.Process(record.Record);
+                long latency = ActionHelper.MeasureLatency(() => record.Processor.Process(record.Record));
                 log.LogDebug($"{logPrefix}Completed processing one record [{recordInfo}]");
 
                 consumedOffsets.AddOrUpdate(record.Record.TopicPartition, record.Record.Offset);
@@ -441,7 +474,10 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     consumer.Resume(record.Record.TopicPartition.ToSingle());
                 }
-
+                
+                processSensor.Record();
+                processLatencySensor.Record(latency);
+                activeBufferedRecordSensor.Record(Grouper.NumBuffered());
                 return true;
             }
         }
@@ -470,11 +506,13 @@ namespace Streamiz.Kafka.Net.Processors
         {
             if(state == TaskState.RUNNING)
             {
-                return;
+                activeRestorationSensor.Record(0);
+                restorationRecordsSendsor.Record(0);
             }
             else if(state == TaskState.RESTORING)
             {
                 TransitTo(TaskState.RUNNING);
+                activeRestorationSensor.Record(0);
                 log.LogInformation($"{logPrefix}Restored and ready to run");
             }
             else if(state == TaskState.CREATED || state == TaskState.SUSPENDED || state == TaskState.CLOSED)

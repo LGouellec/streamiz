@@ -1,11 +1,15 @@
 ﻿using System.IO;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal class GlobalProcessorContext : ProcessorContext
     {
-        internal GlobalProcessorContext(IStreamConfig configuration, IStateManager stateManager)
-            : base(null, configuration, stateManager)
+        internal GlobalProcessorContext(
+            IStreamConfig configuration,
+            IStateManager stateManager,
+            StreamMetricsRegistry streamMetricsRegistry)
+            : base(null, configuration, stateManager, streamMetricsRegistry) 
         {
         }
 

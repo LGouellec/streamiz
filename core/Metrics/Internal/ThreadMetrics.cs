@@ -200,6 +200,29 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             return sensor;
         }
         
+        public static Sensor ProcessLatencySensor(string threadId, StreamMetricsRegistry metricsRegistry) {
+            
+             Sensor sensor =
+                 metricsRegistry.ThreadLevelSensor(
+                     threadId, 
+                     PROCESS + StreamMetricsRegistry.LATENCY_SUFFIX,
+                     PROCESS_DESCRIPTION,
+                     MetricsRecordingLevel.INFO);
+             
+            var tags = metricsRegistry.ThreadLevelTags(threadId);
+            
+            SensorHelper.AddAvgAndMaxToSensor(
+                sensor,
+                StreamMetricsRegistry.THREAD_LEVEL_GROUP,
+                tags,
+                PROCESS + StreamMetricsRegistry.LATENCY_SUFFIX,
+                PROCESS_AVG_LATENCY_DESCRIPTION,
+                PROCESS_MAX_LATENCY_DESCRIPTION
+            );
+            
+            return sensor;
+        }
+            
         #endregion
         
         #region Ratio

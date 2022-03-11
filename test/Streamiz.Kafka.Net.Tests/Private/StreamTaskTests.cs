@@ -11,6 +11,7 @@ using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Table;
 using Streamiz.Kafka.Net.State.Internal;
 using System.IO;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -49,7 +50,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 config,
                 supplier,
                 null,
-                new MockChangelogRegister());
+                new MockChangelogRegister()
+                , new StreamMetricsRegistry());
             task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
@@ -139,7 +141,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 config,
                 supplier,
                 null,
-                new MockChangelogRegister());
+                new MockChangelogRegister()
+                , new StreamMetricsRegistry());
             task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
@@ -241,7 +244,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 config,
                 supplier,
                 producer,
-                new MockChangelogRegister());
+                new MockChangelogRegister()
+                , new StreamMetricsRegistry());
             task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
@@ -345,7 +349,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 config,
                 supplier,
                 producer,
-                new MockChangelogRegister());
+                new MockChangelogRegister()
+                , new StreamMetricsRegistry());
             task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
