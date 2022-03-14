@@ -368,7 +368,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             SensorHelper.AddInvocationRateAndCountToSensor(
                 sensor,
                 "stream-" + storeType + "-metrics",
-                streamsMetrics.StoreLevelTags(GetThreadId(), taskId.ToString(), storeType, storeName),
+                streamsMetrics.StoreLevelTags(GetThreadId(), taskId.ToString(), storeName, storeType),
                 EXPIRED_WINDOW_RECORD_DROP,
                 EXPIRED_WINDOW_RECORD_DROP_RATE_DESCRIPTION,
                 EXPIRED_WINDOW_RECORD_DROP_TOTAL_DESCRIPTION
@@ -432,7 +432,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             string group;
             IDictionary<string, string> tags;
             group = StreamMetricsRegistry.STATE_STORE_LEVEL_GROUP;
-            tags = streamsMetrics.StoreLevelTags(GetThreadId(), taskId.ToString(), storeType, storeName);
+            tags = streamsMetrics.StoreLevelTags(GetThreadId(), taskId.ToString(), storeName, storeType);
 
             SensorHelper.AddAvgAndMaxToSensor(sensor, group, tags, metricName, descriptionOfAvg, descriptionOfMax);
             
@@ -453,7 +453,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             Sensor sensor;
             string latencyMetricName = metricName + StreamMetricsRegistry.LATENCY_SUFFIX;
             IDictionary<string, string> tags =
-                streamsMetrics.StoreLevelTags(GetThreadId(), taskId.ToString(), storeType, storeName);
+                streamsMetrics.StoreLevelTags(GetThreadId(), taskId.ToString(), storeName, storeType);
 
             sensor = streamsMetrics.StoreLevelSensor(GetThreadId(), taskId, storeName, metricName, metricDescription, recordingLevel);
             SensorHelper.AddInvocationRateToSensor(sensor, StreamMetricsRegistry.STATE_STORE_LEVEL_GROUP, tags, metricName,

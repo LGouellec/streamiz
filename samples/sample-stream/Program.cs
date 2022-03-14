@@ -29,7 +29,6 @@ namespace sample_stream
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app2";
             config.BootstrapServers = "localhost:9092";
-            config.CommitIntervalMs = (long)TimeSpan.FromSeconds(5).TotalMilliseconds;
             config.AutoOffsetReset = Confluent.Kafka.AutoOffsetReset.Earliest;
             config.StateDir = Path.Combine(".");
             config.MetricsRecording = MetricsRecordingLevel.DEBUG;
@@ -42,22 +41,14 @@ namespace sample_stream
             });
             
             StreamBuilder builder = new StreamBuilder();
-
-            builder
-                .Stream<string, string>("topic")
-                .Filter((key, value) =>
-                {
-                    return key == "1";
-                })
-                .To("tempTopic");
-
-            builder.Stream<string, string>("tempTopic")
+            
+            builder.Stream<string, string>("input")
                 .GroupByKey()
                 .Reduce(
                     (v1,v2) => $"{v1}-{v2}",
                     RocksDb<string,string>.As("reduce-store"))
                 .ToStream()
-                .To("finalTopic");
+                .To("output");
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
