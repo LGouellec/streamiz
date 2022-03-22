@@ -414,7 +414,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.IsTrue(taskManager.TryToCompleteRestoration());
 
             var store = task.GetStore("store");
-            var items = (store as TimestampedKeyValueStore<string, string>).All().ToList();
+            var items = (store as ITimestampedKeyValueStore<string, string>).All().ToList();
 
             Assert.AreEqual(5, items.Count);
 

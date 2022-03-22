@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Metrics.Prometheus;
+using Streamiz.Kafka.Net.State;
 
 namespace sample_stream
 {
@@ -33,6 +34,7 @@ namespace sample_stream
             config.StateDir = Path.Combine(".");
             config.MetricsRecording = MetricsRecordingLevel.DEBUG;
             config.UsePrometheusExporter(9090);
+            config.Debug = "";
             
             config.Logger = LoggerFactory.Create(builder =>
             {
@@ -52,6 +54,7 @@ namespace sample_stream
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
+            stream.Store(StoreQueryParameters.FromNameAndType("", QueryableStoreTypes.KeyValueStore<string, string>()));
             
             Console.CancelKeyPress += (o, e) => stream.Dispose();
 

@@ -8,13 +8,13 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
             this IStreamConfig config, 
             TimeSpan metricInterval,
             int prometheusExporterEndpointPort = 9090,
-            bool exposeLibrdkafka = false)
+            bool exposeLibrdkafkaStatistics = false)
         {
             var prometheusRunner = new PrometheusRunner(prometheusExporterEndpointPort);
             var prometheusMetricsExporter = new PrometheusMetricsExporter(prometheusRunner); 
             
             config.MetricsIntervalMs = (long) metricInterval.TotalMilliseconds;
-            config.ExposeLibrdKafkaStats = exposeLibrdkafka;
+            config.ExposeLibrdKafkaStats = exposeLibrdkafkaStatistics;
             config.MetricsReporter = prometheusMetricsExporter.ExposeMetrics;
             config.Add(prometheusRunner);
             
@@ -24,7 +24,7 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
         public static IStreamConfig UsePrometheusExporter(
             this IStreamConfig config,
             int prometheusExporterEndpointPort,
-            bool exposeLibrdkafka = false)
-            => UsePrometheusExporter(config, TimeSpan.FromSeconds(30), prometheusExporterEndpointPort, exposeLibrdkafka);
+            bool exposeLibrdkafkaStatistics = false)
+            => UsePrometheusExporter(config, TimeSpan.FromSeconds(30), prometheusExporterEndpointPort, exposeLibrdkafkaStatistics);
     }
 }

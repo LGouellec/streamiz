@@ -11,7 +11,10 @@ namespace Streamiz.Kafka.Net.State.Enumerator
         private readonly ISerDes<K> keySerdes;
         private readonly ISerDes<V> valueSerdes;
 
-        public WindowedKeyValueEnumerator(IKeyValueEnumerator<Windowed<Bytes>, byte[]> keyValueEnumerator, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+        public WindowedKeyValueEnumerator(
+            IKeyValueEnumerator<Windowed<Bytes>, byte[]> keyValueEnumerator,
+            ISerDes<K> keySerdes,
+            ISerDes<V> valueSerdes)
         {
             innerEnumerator = keyValueEnumerator;
             this.keySerdes = keySerdes;

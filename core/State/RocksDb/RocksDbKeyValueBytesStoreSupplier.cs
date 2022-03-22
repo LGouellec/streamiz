@@ -18,6 +18,11 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         }
 
         /// <summary>
+        /// Return a String that is used as the scope for metrics recorded by Metered stores.
+        /// </summary>
+        public string MetricsScope => "rocksdb";
+        
+        /// <summary>
         /// State store name
         /// </summary>
         public string Name { get; }

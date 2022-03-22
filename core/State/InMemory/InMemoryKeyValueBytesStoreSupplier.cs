@@ -17,6 +17,11 @@ namespace Streamiz.Kafka.Net.State.InMemory
         {
             Name = name;
         }
+        
+        /// <summary>
+        /// Return a String that is used as the scope for metrics recorded by Metered stores.
+        /// </summary>
+        public string MetricsScope => "in-memory";
 
         /// <summary>
         /// Name of this state store supplier. This must be a valid Kafka topic name; valid characters are ASCII alphanumerics, '.', '_' and '-'.
@@ -27,6 +32,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// Return a new <see cref="IStateStore"/> instance.
         /// </summary>
         /// <returns>Return a new <see cref="InMemoryKeyValueStore"/>instance.</returns>
-        public IKeyValueStore<Bytes, byte[]> Get() => new InMemoryKeyValueStore(Name);
+        public IKeyValueStore<Bytes, byte[]> Get() 
+            => new InMemoryKeyValueStore(Name);
     }
 }

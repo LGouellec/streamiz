@@ -15,9 +15,7 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public TimestampedKeyValueStore(IKeyValueStore<Bytes, byte[]> wrapped, ISerDes<K> keySerdes, ISerDes<ValueAndTimestamp<V>> valueSerdes)
             : base(wrapped, keySerdes, valueSerdes)
-        {
-
-        }
+        { }
 
         private Bytes GetKeyBytes(K key)
         {

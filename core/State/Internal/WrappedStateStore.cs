@@ -34,15 +34,15 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         #region StateStore Impl
 
-        public string Name => wrapped.Name;
+        public virtual string Name => wrapped.Name;
 
-        public bool Persistent => wrapped.Persistent;
+        public virtual bool Persistent => wrapped.Persistent;
 
-        public bool IsOpen => wrapped.IsOpen;
+        public virtual bool IsOpen => wrapped.IsOpen;
 
-        public void Close() => wrapped.Close();
+        public virtual void Close() => wrapped.Close();
 
-        public void Flush() => wrapped.Flush();
+        public virtual void Flush() => wrapped.Flush();
 
         public virtual void Init(ProcessorContext context, IStateStore root)
         {

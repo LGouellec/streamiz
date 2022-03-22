@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Tests.Helpers;
 using ThreadState = Streamiz.Kafka.Net.Processors.ThreadState;
 
@@ -128,9 +129,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 TimeSpan.FromMilliseconds(20));
 
             var storeThread1 =
-                thread1.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread1.ActiveTasks.ToList()[0].GetStore("store") as ITimestampedKeyValueStore<string, string>;
             var storeThread2 =
-                thread2.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread2.ActiveTasks.ToList()[0].GetStore("store") as ITimestampedKeyValueStore<string, string>;
 
             Assert.IsNotNull(storeThread1);
             Assert.IsNotNull(storeThread2);
@@ -178,9 +179,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 TimeSpan.FromMilliseconds(20));
 
             var storeThreadTask1 =
-                thread1.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread1.ActiveTasks.ToList()[0].GetStore("store") as ITimestampedKeyValueStore<string, string>;
             var storeThreadTask2 =
-                thread1.ActiveTasks.ToList()[1].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread1.ActiveTasks.ToList()[1].GetStore("store") as ITimestampedKeyValueStore<string, string>;
 
             Assert.IsNotNull(storeThreadTask1);
             Assert.IsNotNull(storeThreadTask2);
@@ -245,9 +246,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 TimeSpan.FromMilliseconds(20));
 
             var storeThread1 =
-                thread1.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread1.ActiveTasks.ToList()[0].GetStore("store") as ITimestampedKeyValueStore<string, string>;
             var storeThread2 =
-                thread2.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread2.ActiveTasks.ToList()[0].GetStore("store") as ITimestampedKeyValueStore<string, string>;
 
             Assert.IsNotNull(storeThread1);
             Assert.IsNotNull(storeThread2);
@@ -295,9 +296,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 TimeSpan.FromMilliseconds(20));
 
             var storeThreadTask1 =
-                thread1.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread1.ActiveTasks.ToList()[0].GetStore("store") as ITimestampedKeyValueStore<string, string>;
             var storeThreadTask2 =
-                thread1.ActiveTasks.ToList()[1].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread1.ActiveTasks.ToList()[1].GetStore("store") as ITimestampedKeyValueStore<string, string>;
 
             Assert.IsNotNull(storeThreadTask1);
             Assert.IsNotNull(storeThreadTask2);
@@ -361,9 +362,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 TimeSpan.FromMilliseconds(20));
 
             var storeThread1 =
-                thread1.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread1.ActiveTasks.ToList()[0].GetStore("store") as ITimestampedKeyValueStore<string, string>;
             var storeThread2 =
-                thread2.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread2.ActiveTasks.ToList()[0].GetStore("store") as ITimestampedKeyValueStore<string, string>;
 
             Assert.IsNotNull(storeThread1);
             Assert.IsNotNull(storeThread2);
@@ -411,9 +412,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 TimeSpan.FromMilliseconds(20));
 
             var storeThreadTask1 =
-                thread1.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread1.ActiveTasks.ToList()[0].GetStore("store") as ITimestampedKeyValueStore<string, string>;
             var storeThreadTask2 =
-                thread1.ActiveTasks.ToList()[1].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread1.ActiveTasks.ToList()[1].GetStore("store") as ITimestampedKeyValueStore<string, string>;
 
             Assert.IsNotNull(storeThreadTask1);
             Assert.IsNotNull(storeThreadTask2);

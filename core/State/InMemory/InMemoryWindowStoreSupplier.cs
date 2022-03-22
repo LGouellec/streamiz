@@ -23,6 +23,11 @@ namespace Streamiz.Kafka.Net.State.InMemory
             this.retention = retention;
             WindowSize = size;
         }
+        
+        /// <summary>
+        /// Return a String that is used as the scope for metrics recorded by Metered stores.
+        /// </summary>
+        public string MetricsScope => "in-memory-window";
 
         /// <summary>
         /// Name of state store
@@ -45,5 +50,6 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// <returns>Return a new <see cref="IWindowStore{K, V}"/> instance.</returns>
         public IWindowStore<Bytes, byte[]> Get()
             => new InMemoryWindowStore(Name, retention, WindowSize.Value);
+
     }
 }
