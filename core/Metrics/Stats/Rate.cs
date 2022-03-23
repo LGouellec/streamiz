@@ -8,6 +8,10 @@ namespace Streamiz.Kafka.Net.Metrics.Stats
         private readonly TimeUnit timeUnit;
         private readonly SampledStat internalStat;
 
+        // FOR TESTING
+        internal TimeUnit TimeUnit => timeUnit;
+        internal SampledStat InternalState => internalStat;
+        
         public Rate() : this(TimeUnits.SECONDS)
         { }
         public Rate(TimeUnit timeUnit) : this(timeUnit, new WindowedSum())
