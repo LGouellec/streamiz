@@ -12,7 +12,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 
         private static string COMMIT = "commit";
         private static string COMMIT_DESCRIPTION = "calls to commit";
-        private static string COMMIT_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + COMMIT_DESCRIPTION;
+        private static readonly string COMMIT_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + COMMIT_DESCRIPTION;
 
         private static string COMMIT_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + COMMIT_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
@@ -28,19 +28,19 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
         private static string DROPPED_RECORDS = "dropped-records";
         private static string DROPPED_RECORDS_DESCRIPTION = "dropped records";
 
-        private static string DROPPED_RECORDS_TOTAL_DESCRIPTION =
+        private static readonly string DROPPED_RECORDS_TOTAL_DESCRIPTION =
             StreamMetricsRegistry.TOTAL_DESCRIPTION + DROPPED_RECORDS_DESCRIPTION;
 
-        private static string DROPPED_RECORDS_RATE_DESCRIPTION =
+        private static readonly string DROPPED_RECORDS_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + DROPPED_RECORDS_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
 
         private static string PROCESS = "process";
-        private static string PROCESS_LATENCY = PROCESS + StreamMetricsRegistry.LATENCY_SUFFIX;
-        private static string PROCESS_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION + PROCESS_DESCRIPTION;
-        private static string PROCESS_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION + PROCESS_DESCRIPTION;
         private static string PROCESS_DESCRIPTION = "calls to process";
-        private static string PROCESS_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + PROCESS_DESCRIPTION;
-        private static string PROCESS_RATE_DESCRIPTION =
+        private static readonly string PROCESS_LATENCY = PROCESS + StreamMetricsRegistry.LATENCY_SUFFIX;
+        private static readonly string PROCESS_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION + PROCESS_DESCRIPTION;
+        private static readonly string PROCESS_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION + PROCESS_DESCRIPTION;
+        private static readonly string PROCESS_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + PROCESS_DESCRIPTION;
+        private static readonly string PROCESS_RATE_DESCRIPTION =
         RATE_DESCRIPTION_PREFIX + PROCESS_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
 
         
