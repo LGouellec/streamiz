@@ -65,7 +65,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             };
 
             store = new RocksDbKeyValueStore("store");
-            storeChangelogReader = new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
+            storeChangelogReader =
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
             stateMgr = new ProcessorStateManager(
                 id,
                 topicPart.ToSingle(),
@@ -75,7 +76,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             );
 
             Mock<AbstractTask> moq = new Mock<AbstractTask>();
-            moq.Setup(t => t.Id).Returns(new TaskId { Id = 0, Partition = 0 });
+            moq.Setup(t => t.Id).Returns(new TaskId {Id = 0, Partition = 0});
 
             context = new ProcessorContext(moq.Object, config, stateMgr, new StreamMetricsRegistry());
             store.Init(context, store);
@@ -202,33 +203,37 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void RegisterFailed()
         {
-            Assert.Throws<StreamsException>(() => storeChangelogReader.Register(new TopicPartition("test", 0), stateMgr));
+            Assert.Throws<StreamsException>(
+                () => storeChangelogReader.Register(new TopicPartition("test", 0), stateMgr));
         }
 
         [Test]
         public void TestHasRestoredEnd()
         {
-            ChangelogMetadata metadata = new ChangelogMetadata {
+            ChangelogMetadata metadata = new ChangelogMetadata
+            {
                 RestoreEndOffset = null
             };
             Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
-            
-            metadata = new ChangelogMetadata {
+
+            metadata = new ChangelogMetadata
+            {
                 RestoreEndOffset = 0
             };
             Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
-            
-            metadata = new ChangelogMetadata {
+
+            metadata = new ChangelogMetadata
+            {
                 RestoreEndOffset = Offset.Unset
             };
             Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
 
-            metadata = new ChangelogMetadata {
+            metadata = new ChangelogMetadata
+            {
                 RestoreEndOffset = 10,
                 CurrentOffset = 12
             };
             Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
-
         }
     }
 }

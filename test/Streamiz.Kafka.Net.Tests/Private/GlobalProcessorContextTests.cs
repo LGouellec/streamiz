@@ -16,26 +16,27 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var streamConfig = new StreamConfig();
             streamConfig.ApplicationId = "test-global-processor-context";
             streamConfig.StateDir = Path.Combine(".", Guid.NewGuid().ToString());
-            
-            var context = new GlobalProcessorContext(streamConfig, 
+
+            var context = new GlobalProcessorContext(streamConfig,
                 new GlobalStateManager(null, ProcessorTopology.EMPTY, null, null),
                 new StreamMetricsRegistry());
-            
-            Assert.AreEqual(Path.Combine(streamConfig.StateDir, streamConfig.ApplicationId, "global"), context.StateDir);
+
+            Assert.AreEqual(Path.Combine(streamConfig.StateDir, streamConfig.ApplicationId, "global"),
+                context.StateDir);
         }
-        
+
         [Test]
         public void TestGlobalProcessorContextTaskId()
         {
             var streamConfig = new StreamConfig();
             streamConfig.ApplicationId = "test-global-processor-context";
             streamConfig.StateDir = Path.Combine(".", Guid.NewGuid().ToString());
-            
+
             var context = new GlobalProcessorContext(streamConfig,
                 new GlobalStateManager(null, ProcessorTopology.EMPTY, null, null),
                 new StreamMetricsRegistry());
-            
-            Assert.AreEqual(new TaskId{Id = -1, Partition = -1}, context.Id);
+
+            Assert.AreEqual(new TaskId {Id = -1, Partition = -1}, context.Id);
             Assert.IsNull(context.Task);
         }
     }

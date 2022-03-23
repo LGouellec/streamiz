@@ -18,14 +18,14 @@ namespace Streamiz.Kafka.Net.State.Metered
         IKeyValueStore<K, V>
     {
         private readonly string metricScope;
-        private Sensor putSensor;
-        private Sensor putIfAbsentSensor;
-        private Sensor putAllSensor;
-        private Sensor getSensor;
-        private Sensor allSensor;
-        private Sensor rangeSensor;
-        private Sensor flushSensor;
-        private Sensor deleteSensor;
+        private Sensor putSensor = NoRunnableSensor.Empty;
+        private Sensor putIfAbsentSensor= NoRunnableSensor.Empty;
+        private Sensor putAllSensor= NoRunnableSensor.Empty;
+        private Sensor getSensor= NoRunnableSensor.Empty;
+        private Sensor allSensor= NoRunnableSensor.Empty;
+        private Sensor rangeSensor= NoRunnableSensor.Empty;
+        private Sensor flushSensor= NoRunnableSensor.Empty;
+        private Sensor deleteSensor= NoRunnableSensor.Empty;
 
         public MeteredKeyValueStore(
             IKeyValueStore<Bytes, byte[]> wrapped,

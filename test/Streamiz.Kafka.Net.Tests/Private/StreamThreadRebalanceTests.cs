@@ -83,7 +83,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var producer = mockKafkaSupplier.GetProducer(consumeConfig.ToProducerConfig());
             var consumer = mockKafkaSupplier.GetConsumer(consumeConfig.ToConsumerConfig("test-consum"), null);
             consumer.Subscribe("topic2");
-            
+
             thread1.Start(token1.Token);
             thread2.Start(token2.Token);
 
@@ -93,20 +93,21 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 Value = serdes.Serialize("coucou", new SerializationContext())
             });
             //WAIT STREAMTHREAD PROCESS MESSAGE
-            
-            AssertExtensions.WaitUntil(() => thread1.ActiveTasks.Count() == 2, TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(10));
-            AssertExtensions.WaitUntil(() => thread2.ActiveTasks.Count() == 2, TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(10));
-            
+
+            AssertExtensions.WaitUntil(() => thread1.ActiveTasks.Count() == 2, TimeSpan.FromSeconds(5),
+                TimeSpan.FromMilliseconds(10));
+            AssertExtensions.WaitUntil(() => thread2.ActiveTasks.Count() == 2, TimeSpan.FromSeconds(5),
+                TimeSpan.FromMilliseconds(10));
+
             // 2 CONSUMER FOR THE SAME GROUP ID => TOPIC WITH 4 PARTITIONS
             Assert.AreEqual(2, thread1.ActiveTasks.Count());
             Assert.AreEqual(2, thread2.ActiveTasks.Count());
 
             var message = consumer.Consume(100);
-            
+
             Assert.AreEqual("key1", serdes.Deserialize(message.Message.Key, new SerializationContext()));
             Assert.AreEqual("coucou", serdes.Deserialize(message.Message.Value, new SerializationContext()));
             // TODO : Finish test with a real cluster Assert.AreEqual(expectedStates, allStates);
         }
-
     }
 }

@@ -34,7 +34,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.AreEqual(3, values.Count);
             Assert.AreEqual(1, values[0].Key);
             Assert.AreEqual(2, values[1].Key);
-            Assert.AreEqual(3, values[2].Key);   
+            Assert.AreEqual(3, values[2].Key);
         }
 
         [Test]

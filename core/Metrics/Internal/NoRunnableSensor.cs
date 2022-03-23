@@ -10,6 +10,9 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
         {
         }
 
+        internal static NoRunnableSensor Empty =>
+            new NoRunnableSensor("unknown", "unknown", MetricsRecordingLevel.INFO);
+
         protected override void RecordInternal(double value, long timeMs)
         {
             // nothing, this sensor is not runnable because the metris recording level is not compatible with this one passed on configuration

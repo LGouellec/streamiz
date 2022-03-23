@@ -15,11 +15,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var source = new StreamSourceNode<string, string>(
                 "topic",
                 "source-01",
-                new Stream.Internal.ConsumedInternal<string, string>("source-01", new StringSerDes(), new StringSerDes(), null));
+                new Stream.Internal.ConsumedInternal<string, string>("source-01", new StringSerDes(),
+                    new StringSerDes(), null));
             root.AppendChild(source);
-            
+
             Assert.IsFalse(root.IsEmpty);
-            Assert.AreEqual(new string[] { "ROOT-NODE" }, source.ParentNodeNames());
+            Assert.AreEqual(new string[] {"ROOT-NODE"}, source.ParentNodeNames());
         }
 
         [Test]
@@ -29,7 +30,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var source = new StreamSourceNode<string, string>(
                 "topic",
                 "source-01",
-                new Stream.Internal.ConsumedInternal<string, string>("source-01", new StringSerDes(), new StringSerDes(), null));
+                new Stream.Internal.ConsumedInternal<string, string>("source-01", new StringSerDes(),
+                    new StringSerDes(), null));
             root.AppendChild(source);
             root.RemoveChild(source);
 
@@ -43,15 +45,16 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var source = new StreamSourceNode<string, string>(
                 "topic",
                 "source-01",
-                new Stream.Internal.ConsumedInternal<string, string>("source-01", new StringSerDes(), new StringSerDes(), null));
+                new Stream.Internal.ConsumedInternal<string, string>("source-01", new StringSerDes(),
+                    new StringSerDes(), null));
             root.AppendChild(source);
             root.ClearChildren();
 
             Assert.IsTrue(root.IsEmpty);
         }
-        
+
         [Test]
-        public void WriteTopologyTest() 
+        public void WriteTopologyTest()
         {
             var builder = new InternalTopologyBuilder();
             List<StreamGraphNode> nodes = new List<StreamGraphNode>();
@@ -60,7 +63,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var source = new StreamSourceNode<string, string>(
                 "topic",
                 "source-01",
-                new Stream.Internal.ConsumedInternal<string, string>("source-01", new StringSerDes(), new StringSerDes(), null));
+                new Stream.Internal.ConsumedInternal<string, string>("source-01", new StringSerDes(),
+                    new StringSerDes(), null));
             root.AppendChild(source);
             nodes.Add(source);
 
@@ -76,7 +80,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 new Stream.Internal.Produced<string, string>(
                     new StringSerDes(),
                     new StringSerDes())
-                );
+            );
             filter.AppendChild(to);
             nodes.Add(to);
 

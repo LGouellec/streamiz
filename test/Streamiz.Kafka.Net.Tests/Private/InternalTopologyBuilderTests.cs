@@ -18,7 +18,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             builder.Table("source", inmemory);
 
             var topology = builder.Build();
-            
+
             topology.Builder.RewriteTopology(config);
             topology.Builder.BuildTopology();
 

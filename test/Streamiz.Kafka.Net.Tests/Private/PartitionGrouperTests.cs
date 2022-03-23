@@ -24,8 +24,10 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var partitions = new Dictionary<TopicPartition, RecordQueue>();
             var sourceProcessor = new SourceProcessor<string, string>("source1", "test", serdes, serdes, timestampEx);
             var sourceProcessor2 = new SourceProcessor<string, string>("source2", "test2", serdes, serdes, timestampEx);
-            var recordQueue = new RecordQueue("", "source_queue", timestampEx, topicPart1, sourceProcessor, droppedSensor);
-            var recordQueue2 = new RecordQueue("", "source2_queue", timestampEx, topicPart2, sourceProcessor2, droppedSensor);
+            var recordQueue =
+                new RecordQueue("", "source_queue", timestampEx, topicPart1, sourceProcessor, droppedSensor);
+            var recordQueue2 = new RecordQueue("", "source2_queue", timestampEx, topicPart2, sourceProcessor2,
+                droppedSensor);
             partitions.Add(topicPart1, recordQueue);
             partitions.Add(topicPart2, recordQueue2);
             return partitions;
@@ -63,7 +65,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
         public void AddOneRecordErrorTest()
         {
             var grouper = new PartitionGrouper(new Dictionary<TopicPartition, RecordQueue>());
-            Assert.Throws<IllegalStateException>(() => grouper.AddRecord(topicPart1, MakeMessageWithKey("key", "test")));
+            Assert.Throws<IllegalStateException>(() =>
+                grouper.AddRecord(topicPart1, MakeMessageWithKey("key", "test")));
             Assert.Throws<IllegalStateException>(() => grouper.NumBuffered(topicPart1));
         }
 

@@ -42,46 +42,48 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var consumerConfig = new ConsumerConfig();
             consumerConfig.GroupId = "global-consulmer";
             var globalConsumer = mockKafkaSupplier.GetConsumer(consumerConfig, null);
-            
+
             streamConfigMock = new Mock<IStreamConfig>();
             streamConfigMock.Setup(c => c.StateDir).Returns($"./{Guid.NewGuid().ToString()}");
             streamConfigMock.Setup(c => c.ApplicationId).Returns("app");
 
             kvStoreMock = CreateMockStore<IKeyValueStore<object, object>>(kvStoreName);
             otherStoreMock = CreateMockStore<IKeyValueStore<object, object>>(otherStoreName);
-            var globalStateStores = new Dictionary<string, IStateStore>() {
-                { kvStoreMock.Object.Name, kvStoreMock.Object },
-                { otherStoreMock.Object.Name, otherStoreMock.Object }
+            var globalStateStores = new Dictionary<string, IStateStore>()
+            {
+                {kvStoreMock.Object.Name, kvStoreMock.Object},
+                {otherStoreMock.Object.Name, otherStoreMock.Object}
             };
-            var storesToTopics = new Dictionary<string, string>() {
-                { kvStoreMock.Object.Name, kvStoreTopic },
-                { otherStoreMock.Object.Name, otherStoreTopic }
+            var storesToTopics = new Dictionary<string, string>()
+            {
+                {kvStoreMock.Object.Name, kvStoreTopic},
+                {otherStoreMock.Object.Name, otherStoreTopic}
             };
 
             topology = new ProcessorTopology(
-                    null,
-                    new Dictionary<string, IProcessor>(),
-                    new Dictionary<string, IProcessor>(),
-                    new Dictionary<string, IProcessor>(),
-                    new Dictionary<string, IStateStore>(),
-                    globalStateStores,
-                    storesToTopics,
-                    new List<string>());
+                null,
+                new Dictionary<string, IProcessor>(),
+                new Dictionary<string, IProcessor>(),
+                new Dictionary<string, IProcessor>(),
+                new Dictionary<string, IStateStore>(),
+                globalStateStores,
+                storesToTopics,
+                new List<string>());
 
             adminClientMock = new Mock<IAdminClient>();
             RegisterPartitionInAdminClient(kvStoreTopic);
             RegisterPartitionInAdminClient(otherStoreTopic);
 
             stateManager = new GlobalStateManager(globalConsumer, topology,
-                    adminClientMock.Object,
-                    streamConfigMock.Object
-                );
+                adminClientMock.Object,
+                streamConfigMock.Object
+            );
 
             context = new GlobalProcessorContext(
                 streamConfigMock.Object,
                 stateManager,
                 new StreamMetricsRegistry());
-            
+
             stateManager.SetGlobalProcessorContext(context);
         }
 
@@ -111,7 +113,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             ISet<string> storeNames = stateManager.Initialize();
 
-            Assert.AreEqual(new HashSet<string>() { kvStoreName, otherStoreName }, storeNames);
+            Assert.AreEqual(new HashSet<string>() {kvStoreName, otherStoreName}, storeNames);
         }
 
         [Test]
@@ -128,12 +130,10 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             kvStoreMock
                 .Setup(s => s.Init(context, It.IsAny<IStateStore>()))
-                .Callback((ProcessorContext c, IStateStore store) =>
-                {
-                    stateManager.Register(store, (k, v) => { });
-                });
-            
-            adminClientMock.Setup(client => client.GetMetadata(kvStoreTopic, It.IsAny<TimeSpan>())).Returns((Metadata)null);
+                .Callback((ProcessorContext c, IStateStore store) => { stateManager.Register(store, (k, v) => { }); });
+
+            adminClientMock.Setup(client => client.GetMetadata(kvStoreTopic, It.IsAny<TimeSpan>()))
+                .Returns((Metadata) null);
             Assert.Throws<StreamsException>(() => stateManager.Initialize());
         }
 
@@ -235,12 +235,14 @@ namespace Streamiz.Kafka.Net.Tests.Private
             offsets.AddOrUpdate(new TopicPartition("kv-store-topic", 1), 12);
             stateManager.UpdateChangelogOffsets(offsets);
 
-            Directory.CreateDirectory(Path.Combine(streamConfigMock.Object.StateDir, streamConfigMock.Object.ApplicationId, "global"));
-            
+            Directory.CreateDirectory(Path.Combine(streamConfigMock.Object.StateDir,
+                streamConfigMock.Object.ApplicationId, "global"));
+
             stateManager.Checkpoint();
 
-            var lines = File.ReadAllLines(Path.Combine(streamConfigMock.Object.StateDir, streamConfigMock.Object.ApplicationId, "global", ".checkpoint"));
-            
+            var lines = File.ReadAllLines(Path.Combine(streamConfigMock.Object.StateDir,
+                streamConfigMock.Object.ApplicationId, "global", ".checkpoint"));
+
             Directory.Delete(Path.Combine(streamConfigMock.Object.StateDir), true);
 
             Assert.AreEqual(4, lines.Length);
@@ -248,9 +250,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.AreEqual("2", lines[1]);
             Assert.AreEqual("kv-store-topic 0 30", lines[2]);
             Assert.AreEqual("kv-store-topic 1 12", lines[3]);
-            
         }
-        
+
         [Test]
         public void ShouldCheckpointWriteException()
         {
@@ -260,11 +261,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
             offsets.AddOrUpdate(new TopicPartition("kv-store-topic", 0), 30);
             offsets.AddOrUpdate(new TopicPartition("kv-store-topic", 1), 12);
             stateManager.UpdateChangelogOffsets(offsets);
-            
+
             // Should raise catched exception because directory ./app/global does not exist
             stateManager.Checkpoint();
 
-            Assert.False(File.Exists(Path.Combine(streamConfigMock.Object.StateDir, streamConfigMock.Object.ApplicationId, "global", ".checkpoint")));
+            Assert.False(File.Exists(Path.Combine(streamConfigMock.Object.StateDir,
+                streamConfigMock.Object.ApplicationId, "global", ".checkpoint")));
         }
 
         [Test]
@@ -273,7 +275,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.Throws<NotImplementedException>(() =>
             {
                 var c = stateManager.ChangelogPartitions;
-            } );
+            });
 
             Assert.Throws<NotImplementedException>(() => stateManager.GetRegisteredChangelogPartitionFor(""));
         }
@@ -283,15 +285,17 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("0").AppendLine("1").AppendLine("toto 0 130");
-            
-            Directory.CreateDirectory(Path.Combine(streamConfigMock.Object.StateDir, streamConfigMock.Object.ApplicationId, "global"));
-            
+
+            Directory.CreateDirectory(Path.Combine(streamConfigMock.Object.StateDir,
+                streamConfigMock.Object.ApplicationId, "global"));
+
             File.WriteAllText(
-                Path.Combine(streamConfigMock.Object.StateDir, streamConfigMock.Object.ApplicationId, "global", ".checkpoint"), 
+                Path.Combine(streamConfigMock.Object.StateDir, streamConfigMock.Object.ApplicationId, "global",
+                    ".checkpoint"),
                 sb.ToString());
-            
+
             Assert.Throws<StreamsException>(() => stateManager.Initialize());
-            
+
             Directory.Delete(Path.Combine(streamConfigMock.Object.StateDir), true);
         }
 
@@ -302,11 +306,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
             mockOffsetManager.Setup(x => x.Read(It.IsAny<TaskId>())).Throws<Exception>();
             mockOffsetManager.Setup(x => x.Configure(streamConfigMock.Object, It.IsAny<TaskId>()))
                 .Callback(() => { });
-            
+
             streamConfigMock.Setup(c => c.OffsetCheckpointManager).Returns(mockOffsetManager.Object);
-            
+
             stateManager.SetGlobalProcessorContext(context);
-            
+
             Assert.Throws<StreamsException>(() => stateManager.Initialize());
         }
 
@@ -317,48 +321,43 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             byte[] GetBytes(string content)
                 => serdes.Serialize(content, SerializationContext.Empty);
-            
+
             kvStoreMock
                 .Setup(s => s.Init(context, It.IsAny<IStateStore>()))
-                .Callback((ProcessorContext c, IStateStore store) =>
-                {
-                    stateManager.Register(store, (k, v) => { });
-                });
-            
+                .Callback((ProcessorContext c, IStateStore store) => { stateManager.Register(store, (k, v) => { }); });
+
             otherStoreMock
                 .Setup(s => s.Init(context, It.IsAny<IStateStore>()))
-                .Callback((ProcessorContext c, IStateStore store) =>
-                {
-                    stateManager.Register(store, (k, v) => { });
-                });
+                .Callback((ProcessorContext c, IStateStore store) => { stateManager.Register(store, (k, v) => { }); });
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("0").AppendLine("1").AppendLine("kv-store-topic 0 10");
 
             var producer = mockKafkaSupplier.GetProducer(new ProducerConfig());
-            for(int i = 0 ; i < 10; ++i)
-                producer.Produce("other-store-topic", 
+            for (int i = 0; i < 10; ++i)
+                producer.Produce("other-store-topic",
                     new Message<byte[], byte[]>()
                     {
                         Key = GetBytes($"key{i}"),
                         Value = GetBytes($"value{i}")
                     });
 
-            Directory.CreateDirectory(Path.Combine(streamConfigMock.Object.StateDir, streamConfigMock.Object.ApplicationId, "global"));
-            
+            Directory.CreateDirectory(Path.Combine(streamConfigMock.Object.StateDir,
+                streamConfigMock.Object.ApplicationId, "global"));
+
             File.WriteAllText(
-                Path.Combine(streamConfigMock.Object.StateDir, streamConfigMock.Object.ApplicationId, "global", ".checkpoint"), 
+                Path.Combine(streamConfigMock.Object.StateDir, streamConfigMock.Object.ApplicationId, "global",
+                    ".checkpoint"),
                 sb.ToString());
 
             stateManager.Initialize();
 
             Assert.AreEqual(10, stateManager.ChangelogOffsets[new TopicPartition("kv-store-topic", 0)]);
             Assert.AreEqual(9, stateManager.ChangelogOffsets[new TopicPartition("other-store-topic", 0)]);
-            
-            Directory.Delete(Path.Combine(streamConfigMock.Object.StateDir), true);
 
+            Directory.Delete(Path.Combine(streamConfigMock.Object.StateDir), true);
         }
-        
+
         private Mock<T> CreateMockStore<T>(string name, bool isOpen = true) where T : class, IStateStore
         {
             var store = new Mock<T>();
@@ -373,10 +372,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
             adminClientMock.Setup(client => client.GetMetadata(topic, It.IsAny<TimeSpan>())).Returns(
                 new Metadata(
                     null,
-                    new List<TopicMetadata>() {
+                    new List<TopicMetadata>()
+                    {
                         new TopicMetadata(
                             topic,
-                            new List<PartitionMetadata>() { new PartitionMetadata(0, 0, new int[] { }, new int[] { }, null) },
+                            new List<PartitionMetadata>()
+                                {new PartitionMetadata(0, 0, new int[] { }, new int[] { }, null)},
                             null)
                     }, 0, "")
             );

@@ -15,16 +15,17 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
         private class InMemoryLogger : ILogger
         {
-            [ThreadStatic]
-            private static StringWriter _stringWriter;
-            
+            [ThreadStatic] private static StringWriter _stringWriter;
+
             private const string LoglevelPadding = ": ";
-            
-            private static readonly string MessagePadding = new string(' ', GetLogLevelString(LogLevel.Information).Length + LoglevelPadding.Length);
-            
+
+            private static readonly string MessagePadding = new string(' ',
+                GetLogLevelString(LogLevel.Information).Length + LoglevelPadding.Length);
+
             private static readonly string NewLineWithMessagePadding = Environment.NewLine + MessagePadding;
 
-            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception,
+                Func<TState, Exception, string> formatter)
             {
                 _stringWriter ??= new StringWriter();
                 var logEntry = new LogEntry<TState>(logLevel, Name, eventId, state, exception, formatter);
@@ -33,7 +34,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 string computedAnsiString = sb.ToString();
                 Logs.Add(computedAnsiString);
             }
-            
+
             private void Write<TState>(in LogEntry<TState> logEntry, TextWriter textWriter)
             {
                 string message = logEntry.Formatter(logEntry.State, logEntry.Exception);
@@ -41,6 +42,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 {
                     return;
                 }
+
                 LogLevel logLevel = logEntry.LogLevel;
                 string logLevelString = GetLogLevelString(logLevel);
 
@@ -54,10 +56,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 {
                     textWriter.Write(logLevelString);
                 }
+
                 CreateDefaultLogMessage(textWriter, logEntry, message);
             }
-            
-            private void CreateDefaultLogMessage<TState>(TextWriter textWriter, in LogEntry<TState> logEntry, string message)
+
+            private void CreateDefaultLogMessage<TState>(TextWriter textWriter, in LogEntry<TState> logEntry,
+                string message)
             {
                 int eventId = logEntry.EventId.Id;
                 Exception exception = logEntry.Exception;
@@ -80,10 +84,10 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     // exception message
                     WriteMessage(textWriter, exception.ToString());
                 }
-                
+
                 textWriter.Write(Environment.NewLine);
             }
-            
+
             private void WriteMessage(TextWriter textWriter, string message)
             {
                 if (string.IsNullOrEmpty(message)) return;
@@ -102,7 +106,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             {
                 return null;
             }
-            
+
             private static string GetLogLevelString(LogLevel logLevel)
             {
                 return logLevel switch
@@ -116,7 +120,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     _ => throw new ArgumentOutOfRangeException(nameof(logLevel))
                 };
             }
-            
+
             public List<string> Logs { get; } = new List<string>();
         }
 

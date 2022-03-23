@@ -20,9 +20,9 @@ namespace Streamiz.Kafka.Net.State.Metered
         protected ISerDes<V> valueSerdes;
         private readonly string metricScope;
         
-        private Sensor putSensor;
-        private Sensor fetchSensor;
-        private Sensor flushSensor;
+        private Sensor putSensor = NoRunnableSensor.Empty;
+        private Sensor fetchSensor = NoRunnableSensor.Empty;
+        private Sensor flushSensor = NoRunnableSensor.Empty;
 
         public MeteredWindowStore(
             IWindowStore<Bytes, byte[]> wrapped, 
@@ -132,7 +132,7 @@ namespace Streamiz.Kafka.Net.State.Metered
         {
             try
             {
-                MeasureLatency(() => wrapped.Put(GetKeyBytes(key), GetValueBytes(value), windowStartTimestamp));
+                MeasureLatency(() => wrapped.Put(GetKeyBytes(key), GetValueBytes(value), windowStartTimestamp), putSensor);
             }
             catch (ProcessorStateException e)
             {

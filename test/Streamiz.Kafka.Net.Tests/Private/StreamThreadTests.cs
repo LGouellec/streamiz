@@ -29,7 +29,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var state = ThreadState.CREATED;
             Assert.AreEqual(0, state.Ordinal);
             Assert.AreEqual("CREATED", state.Name);
-            Assert.AreEqual(new HashSet<int> { 1, 5 }, state.Transitions);
+            Assert.AreEqual(new HashSet<int> {1, 5}, state.Transitions);
             Assert.IsFalse(state.IsRunning());
             Assert.IsFalse(state.IsValidTransition(ThreadState.DEAD));
             Assert.IsTrue(state.IsValidTransition(ThreadState.STARTING));
@@ -41,7 +41,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var state = ThreadState.STARTING;
             Assert.AreEqual(1, state.Ordinal);
             Assert.AreEqual("STARTING", state.Name);
-            Assert.AreEqual(new HashSet<int> { 2, 3, 5 }, state.Transitions);
+            Assert.AreEqual(new HashSet<int> {2, 3, 5}, state.Transitions);
             Assert.IsTrue(state.IsRunning());
             Assert.IsFalse(state.IsValidTransition(ThreadState.CREATED));
             Assert.IsTrue(state.IsValidTransition(ThreadState.PARTITIONS_ASSIGNED));
@@ -53,19 +53,19 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var state = ThreadState.PARTITIONS_REVOKED;
             Assert.AreEqual(2, state.Ordinal);
             Assert.AreEqual("PARTITIONS_REVOKED", state.Name);
-            Assert.AreEqual(new HashSet<int> { 2,3,5}, state.Transitions);
+            Assert.AreEqual(new HashSet<int> {2, 3, 5}, state.Transitions);
             Assert.IsTrue(state.IsRunning());
             Assert.IsFalse(state.IsValidTransition(ThreadState.DEAD));
             Assert.IsTrue(state.IsValidTransition(ThreadState.PARTITIONS_ASSIGNED));
-        }        
-        
+        }
+
         [Test]
         public void TestPartitionsAssignedState()
         {
             var state = ThreadState.PARTITIONS_ASSIGNED;
             Assert.AreEqual(3, state.Ordinal);
             Assert.AreEqual("PARTITIONS_ASSIGNED", state.Name);
-            Assert.AreEqual(new HashSet<int> { 2,3,4,5}, state.Transitions);
+            Assert.AreEqual(new HashSet<int> {2, 3, 4, 5}, state.Transitions);
             Assert.IsTrue(state.IsRunning());
             Assert.IsFalse(state.IsValidTransition(ThreadState.DEAD));
             Assert.IsTrue(state.IsValidTransition(ThreadState.RUNNING));
@@ -77,7 +77,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var state = ThreadState.RUNNING;
             Assert.AreEqual(4, state.Ordinal);
             Assert.AreEqual("RUNNING", state.Name);
-            Assert.AreEqual(new HashSet<int> { 2, 3, 4, 5 }, state.Transitions);
+            Assert.AreEqual(new HashSet<int> {2, 3, 4, 5}, state.Transitions);
             Assert.IsTrue(state.IsRunning());
             Assert.IsFalse(state.IsValidTransition(ThreadState.CREATED));
             Assert.IsTrue(state.IsValidTransition(ThreadState.PARTITIONS_ASSIGNED));
@@ -89,7 +89,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var state = ThreadState.PENDING_SHUTDOWN;
             Assert.AreEqual(5, state.Ordinal);
             Assert.AreEqual("PENDING_SHUTDOWN", state.Name);
-            Assert.AreEqual(new HashSet<int> { 6 }, state.Transitions);
+            Assert.AreEqual(new HashSet<int> {6}, state.Transitions);
             Assert.IsFalse(state.IsRunning());
             Assert.IsFalse(state.IsValidTransition(ThreadState.CREATED));
             Assert.IsTrue(state.IsValidTransition(ThreadState.DEAD));
@@ -134,7 +134,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void GetTaskProducerClientIdTest()
         {
-            var taskId = new TaskId { Id = 0, Partition = 0 };
+            var taskId = new TaskId {Id = 0, Partition = 0};
             var result = StreamThread.GetTaskProducerClientId("thread-client", taskId);
             Assert.AreEqual($"thread-client-0-0-producer", result);
         }
@@ -160,7 +160,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             builder.Stream<string, string>("topic").To("topic2");
 
             var topo = builder.Build();
-            
+
             var supplier = new SyncKafkaSupplier();
             var thread = StreamThread.Create(
                 "thread-0", "c0",
@@ -230,7 +230,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.AreEqual("coucou", serdes.Deserialize(message.Message.Value, new SerializationContext()));
             Assert.AreEqual(expectedStates, allStates);
         }
-        
+
         [Test]
         public void StreamThreadCommitIntervalWorkflow()
         {
@@ -270,7 +270,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.AreEqual("key1", serdes.Deserialize(message.Message.Key, new SerializationContext()));
             Assert.AreEqual("coucou", serdes.Deserialize(message.Message.Value, new SerializationContext()));
 
-            var offsets = thread.GetCommittedOffsets(new List<TopicPartition> { new TopicPartition("topic", 0) }, TimeSpan.FromSeconds(10)).ToList();
+            var offsets = thread.GetCommittedOffsets(new List<TopicPartition> {new TopicPartition("topic", 0)},
+                TimeSpan.FromSeconds(10)).ToList();
             Assert.AreEqual(1, offsets.Count);
             Assert.AreEqual(1, offsets[0].Offset.Value);
             Assert.AreEqual(0, offsets[0].TopicPartition.Partition.Value);
@@ -366,6 +367,5 @@ namespace Streamiz.Kafka.Net.Tests.Private
         // TODO:
 
         #endregion
-
-   }
+    }
 }

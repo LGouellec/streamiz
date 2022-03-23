@@ -36,25 +36,27 @@ namespace Streamiz.Kafka.Net.Tests.Private
             sourceProcessorMock.Setup(x => x.TopicName).Returns("topic1");
             otherSourceProcessorMock.Setup(x => x.TopicName).Returns("topic2");
 
-            var sourceProcessors = new Dictionary<string, IProcessor>() { { "source1", sourceProcessorMock.Object }, { "source2", otherSourceProcessorMock.Object } };
-            var processors = new Dictionary<string, IProcessor>() { { "processor", processorMock.Object } };
+            var sourceProcessors = new Dictionary<string, IProcessor>()
+                {{"source1", sourceProcessorMock.Object}, {"source2", otherSourceProcessorMock.Object}};
+            var processors = new Dictionary<string, IProcessor>() {{"processor", processorMock.Object}};
 
-            var storesToTopics = new Dictionary<string, string>() {
-                { "store1", "topic1" },
-                { "store2", "topic2" },
+            var storesToTopics = new Dictionary<string, string>()
+            {
+                {"store1", "topic1"},
+                {"store2", "topic2"},
             };
 
-            stateManagerMock.Setup(x => x.Initialize()).Returns(new HashSet<string>() { "store1", "store2" });
+            stateManagerMock.Setup(x => x.Initialize()).Returns(new HashSet<string>() {"store1", "store2"});
 
             var topology = new ProcessorTopology(
-                    null,
-                    sourceProcessors,
-                    null,
-                    processors,
-                    null,
-                    null,
-                    storesToTopics,
-                    null);
+                null,
+                sourceProcessors,
+                null,
+                processors,
+                null,
+                null,
+                storesToTopics,
+                null);
 
             globalStateUpdateTask = new GlobalStateUpdateTask(stateManagerMock.Object, topology, contextMock.Object);
         }

@@ -24,11 +24,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
             kvStore = this.CreateMockStore<IKeyValueStore<object, object>>();
             timestampedKVStore = this.CreateMockStore<ITimestampedKeyValueStore<object, object>>();
             timestampWStore = this.CreateMockStore<ITimestampedWindowStore<object, object>>();
-            stores = new Dictionary<string, IStateStore> {
-                { "kv-store", kvStore },
-                { "ts-kv-store", timestampedKVStore },
-                { "ws-store", wStore },
-                { "ts-w-store", timestampWStore }
+            stores = new Dictionary<string, IStateStore>
+            {
+                {"kv-store", kvStore},
+                {"ts-kv-store", timestampedKVStore},
+                {"ws-store", wStore},
+                {"ts-w-store", timestampWStore}
             };
         }
 
@@ -37,7 +38,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             GlobalStateStoreProvider provider = new GlobalStateStoreProvider(new Dictionary<string, IStateStore>());
 
-            var result = provider.Stores(StoreQueryParameters.FromNameAndType("test", QueryableStoreTypes.KeyValueStore<object, object>()));
+            var result =
+                provider.Stores(StoreQueryParameters.FromNameAndType("test",
+                    QueryableStoreTypes.KeyValueStore<object, object>()));
 
             Assert.AreEqual(0, result.Count());
         }
@@ -46,9 +49,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
         public void ShouldThrowExceptionIfStoreIsNotOpen()
         {
             var mockStore = CreateMockStore<IKeyValueStore<object, object>>(isOpen: false);
-            GlobalStateStoreProvider provider = new GlobalStateStoreProvider(new Dictionary<string, IStateStore> { { "test", mockStore } });
+            GlobalStateStoreProvider provider =
+                new GlobalStateStoreProvider(new Dictionary<string, IStateStore> {{"test", mockStore}});
 
-            Assert.Throws<InvalidStateStoreException>(() => provider.Stores(StoreQueryParameters.FromNameAndType("test", QueryableStoreTypes.KeyValueStore<object, object>())));
+            Assert.Throws<InvalidStateStoreException>(() =>
+                provider.Stores(StoreQueryParameters.FromNameAndType("test",
+                    QueryableStoreTypes.KeyValueStore<object, object>())));
         }
 
         [Test]
@@ -56,7 +62,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             GlobalStateStoreProvider provider = new GlobalStateStoreProvider(stores);
 
-            var result = provider.Stores(StoreQueryParameters.FromNameAndType("ws-store", QueryableStoreTypes.WindowStore<object, object>()));
+            var result =
+                provider.Stores(StoreQueryParameters.FromNameAndType("ws-store",
+                    QueryableStoreTypes.WindowStore<object, object>()));
 
             Assert.AreEqual(wStore, result.Single());
         }
@@ -66,7 +74,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             GlobalStateStoreProvider provider = new GlobalStateStoreProvider(stores);
 
-            var result = provider.Stores(StoreQueryParameters.FromNameAndType("kv-store", QueryableStoreTypes.KeyValueStore<object, object>()));
+            var result = provider.Stores(StoreQueryParameters.FromNameAndType("kv-store",
+                QueryableStoreTypes.KeyValueStore<object, object>()));
 
             Assert.AreEqual(kvStore, result.Single());
         }
@@ -76,7 +85,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             GlobalStateStoreProvider provider = new GlobalStateStoreProvider(stores);
 
-            var result = provider.Stores(StoreQueryParameters.FromNameAndType("ts-kv-store", QueryableStoreTypes.TimestampedKeyValueStore<object, object>()));
+            var result = provider.Stores(StoreQueryParameters.FromNameAndType("ts-kv-store",
+                QueryableStoreTypes.TimestampedKeyValueStore<object, object>()));
 
             Assert.AreEqual(timestampedKVStore, result.Single());
         }
@@ -86,7 +96,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             GlobalStateStoreProvider provider = new GlobalStateStoreProvider(stores);
 
-            var result = provider.Stores(StoreQueryParameters.FromNameAndType("ts-w-store", QueryableStoreTypes.WindowStore<object, object>()));
+            var result = provider.Stores(StoreQueryParameters.FromNameAndType("ts-w-store",
+                QueryableStoreTypes.WindowStore<object, object>()));
 
             Assert.AreEqual(1, result.Count());
         }
@@ -96,7 +107,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             GlobalStateStoreProvider provider = new GlobalStateStoreProvider(stores);
 
-            var result = provider.Stores(StoreQueryParameters.FromNameAndType("kv-store", QueryableStoreTypes.TimestampedKeyValueStore<object, object>()));
+            var result = provider.Stores(StoreQueryParameters.FromNameAndType("kv-store",
+                QueryableStoreTypes.TimestampedKeyValueStore<object, object>()));
 
             Assert.AreEqual(0, result.Count());
         }
@@ -106,7 +118,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             GlobalStateStoreProvider provider = new GlobalStateStoreProvider(stores);
 
-            var result = provider.Stores(StoreQueryParameters.FromNameAndType("ts-kv-store", QueryableStoreTypes.KeyValueStore<object, object>()));
+            var result = provider.Stores(StoreQueryParameters.FromNameAndType("ts-kv-store",
+                QueryableStoreTypes.KeyValueStore<object, object>()));
 
             Assert.IsInstanceOf(typeof(IReadOnlyKeyValueStore<object, object>), result.Single());
             Assert.IsNotInstanceOf(typeof(ITimestampedKeyValueStore<object, object>), result.Single());

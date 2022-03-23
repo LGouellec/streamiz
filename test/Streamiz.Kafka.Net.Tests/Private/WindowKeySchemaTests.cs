@@ -12,8 +12,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void ExtractStoreKeyBytesTest()
         {
-            var bytes = new byte[14] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 };
-            var expected = new byte[2] { 0, 1 };
+            var bytes = new byte[14] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+            var expected = new byte[2] {0, 1};
             var r = WindowKeyHelper.ExtractStoreKeyBytes(bytes);
             Assert.AreEqual(expected, r);
         }

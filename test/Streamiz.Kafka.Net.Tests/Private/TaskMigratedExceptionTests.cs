@@ -38,6 +38,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     var p = base.GetProducer(config) as SyncProducer;
                     producerException = new KafkaProducerException(p, options);
                 }
+
                 return producerException;
             }
         }
@@ -53,7 +54,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 this.innerProducer = syncProducer;
             }
 
-            public KafkaProducerException(SyncProducer syncProducer, ProducerSyncExceptionOptions options) 
+            public KafkaProducerException(SyncProducer syncProducer, ProducerSyncExceptionOptions options)
                 : this(syncProducer)
             {
                 this.options = options;
@@ -95,7 +96,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             public void InitTransactions(TimeSpan timeout)
             {
-
             }
 
             public int Poll(TimeSpan timeout)
@@ -134,7 +134,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     {
                         deliveryHandler(new DeliveryReport<byte[], byte[]>()
                         {
-                            Error = new Error(ErrorCode.TransactionCoordinatorFenced, "TransactionCoordinatorFenced", false)
+                            Error = new Error(ErrorCode.TransactionCoordinatorFenced, "TransactionCoordinatorFenced",
+                                false)
                         });
                     }
                     else
@@ -145,10 +146,10 @@ namespace Streamiz.Kafka.Net.Tests.Private
                         });
                     }
                 }
-
             }
 
-            public void Produce(string topic, Message<byte[], byte[]> message, Action<DeliveryReport<byte[], byte[]>> deliveryHandler = null)
+            public void Produce(string topic, Message<byte[], byte[]> message,
+                Action<DeliveryReport<byte[], byte[]>> deliveryHandler = null)
             {
                 if (topic == "test" || !handleError)
                     innerProducer.Produce(topic, message, deliveryHandler);
@@ -156,7 +157,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     HandleError(deliveryHandler);
             }
 
-            public void Produce(TopicPartition topicPartition, Message<byte[], byte[]> message, Action<DeliveryReport<byte[], byte[]>> deliveryHandler = null)
+            public void Produce(TopicPartition topicPartition, Message<byte[], byte[]> message,
+                Action<DeliveryReport<byte[], byte[]>> deliveryHandler = null)
             {
                 if (topicPartition.Topic == "test" || !handleError)
                     innerProducer.Produce(topicPartition, message, deliveryHandler);
@@ -164,7 +166,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     HandleError(deliveryHandler);
             }
 
-            public async Task<DeliveryResult<byte[], byte[]>> ProduceAsync(string topic, Message<byte[], byte[]> message, CancellationToken cancellationToken = default)
+            public async Task<DeliveryResult<byte[], byte[]>> ProduceAsync(string topic,
+                Message<byte[], byte[]> message, CancellationToken cancellationToken = default)
             {
                 if (topic == "test")
                     return await innerProducer.ProduceAsync(topic, message, cancellationToken);
@@ -172,7 +175,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     throw new NotImplementedException();
             }
 
-            public async Task<DeliveryResult<byte[], byte[]>> ProduceAsync(TopicPartition topicPartition, Message<byte[], byte[]> message, CancellationToken cancellationToken = default)
+            public async Task<DeliveryResult<byte[], byte[]>> ProduceAsync(TopicPartition topicPartition,
+                Message<byte[], byte[]> message, CancellationToken cancellationToken = default)
             {
                 if (topicPartition.Topic == "test")
                     return await innerProducer.ProduceAsync(topicPartition, message, cancellationToken);
@@ -180,7 +184,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     throw new NotImplementedException();
             }
 
-            public void SendOffsetsToTransaction(IEnumerable<TopicPartitionOffset> offsets, IConsumerGroupMetadata groupMetadata, TimeSpan timeout)
+            public void SendOffsetsToTransaction(IEnumerable<TopicPartitionOffset> offsets,
+                IConsumerGroupMetadata groupMetadata, TimeSpan timeout)
             {
                 throw new NotImplementedException();
             }
@@ -212,7 +217,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config.PollMs = 10;
             config.ProductionExceptionHandler += (r) => ExceptionHandlerResponse.FAIL;
 
-            var options = new ProducerSyncExceptionOptions { IsFatal = true };
+            var options = new ProducerSyncExceptionOptions {IsFatal = true};
             var supplier = new ProducerSyncException(options);
 
             var builder = new StreamBuilder();
@@ -225,7 +230,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var t = builder.Build();
 
-            using (var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t.Builder, config,
+                TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
                 inputtopic.PipeInput("coucou");
@@ -238,6 +244,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                         break;
                     }
                 }
+
                 Assert.IsTrue(driver.IsError);
             }
 
@@ -257,7 +264,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config.PollMs = 10;
             config.ProductionExceptionHandler += (r) => ExceptionHandlerResponse.FAIL;
 
-            var options = new ProducerSyncExceptionOptions { IsRecoverable = true };
+            var options = new ProducerSyncExceptionOptions {IsRecoverable = true};
             var supplier = new ProducerSyncException(options);
 
             var builder = new StreamBuilder();
@@ -270,7 +277,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var t = builder.Build();
 
-            using (var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t.Builder, config,
+                TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
                 var outputTopic = driver.CreateOuputTopic<string, string>("test-output");
@@ -296,7 +304,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config.PollMs = 10;
             config.ProductionExceptionHandler += (r) => ExceptionHandlerResponse.FAIL;
 
-            var options = new ProducerSyncExceptionOptions { IsRecoverable = true, IsProductionException = true };
+            var options = new ProducerSyncExceptionOptions {IsRecoverable = true, IsProductionException = true};
             var supplier = new ProducerSyncException(options);
 
             var builder = new StreamBuilder();
@@ -309,7 +317,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var t = builder.Build();
 
-            using (var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t.Builder, config,
+                TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
                 var outputTopic = driver.CreateOuputTopic<string, string>("test-output");
@@ -322,6 +331,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                         break;
                     }
                 }
+
                 var expected = new List<KeyValuePair<string, string>>();
                 expected.Add(KeyValuePair.Create<string, string>(null, "coucou"));
                 Assert.AreEqual(expected, _return);
@@ -342,7 +352,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config.PollMs = 10;
             config.ProductionExceptionHandler += (r) => ExceptionHandlerResponse.FAIL;
 
-            var options = new ProducerSyncExceptionOptions { IsRecoverable = false, IsProductionException = true };
+            var options = new ProducerSyncExceptionOptions {IsRecoverable = false, IsProductionException = true};
             var supplier = new ProducerSyncException(options);
 
             var builder = new StreamBuilder();
@@ -355,7 +365,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var t = builder.Build();
 
-            using (var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t.Builder, config,
+                TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
                 inputtopic.PipeInput("coucou");
@@ -368,6 +379,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                         break;
                     }
                 }
+
                 Assert.IsTrue(driver.IsError);
             }
         }

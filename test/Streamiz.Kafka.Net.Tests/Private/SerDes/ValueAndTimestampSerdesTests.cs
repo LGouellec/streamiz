@@ -59,7 +59,8 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var stringSerdes = new StringSerDes();
             var serdes = new ValueAndTimestampSerDes<string>(stringSerdes);
             var data = ValueAndTimestamp<string>.Make(s, millie);
-            var r = serdes.Deserialize(serdes.Serialize(data, new Confluent.Kafka.SerializationContext()), new Confluent.Kafka.SerializationContext());
+            var r = serdes.Deserialize(serdes.Serialize(data, new Confluent.Kafka.SerializationContext()),
+                new Confluent.Kafka.SerializationContext());
             Assert.IsNotNull(r);
             Assert.AreEqual(s, r.Value);
             Assert.AreEqual(millie, r.Timestamp);
