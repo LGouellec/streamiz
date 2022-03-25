@@ -34,8 +34,7 @@ namespace sample_stream
             config.StateDir = Path.Combine(".");
             config.MetricsRecording = MetricsRecordingLevel.DEBUG;
             config.UsePrometheusExporter(9090);
-            config.Debug = "";
-            
+
             config.Logger = LoggerFactory.Create(builder =>
             {
                 builder.SetMinimumLevel(LogLevel.Debug);

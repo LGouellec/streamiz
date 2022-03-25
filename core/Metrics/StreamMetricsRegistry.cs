@@ -136,7 +136,7 @@ namespace Streamiz.Kafka.Net.Metrics
             return tagDic;
         }
 
-        private string ThreadSensorPrefix(string threadId)
+        internal string ThreadSensorPrefix(string threadId)
         {
             threadId ??= UNKNOWN_THREAD;
             return $"{SENSOR_INTERNAL_LABEL}{SENSOR_PREFIX_DELIMITER}{threadId}";
@@ -172,7 +172,7 @@ namespace Streamiz.Kafka.Net.Metrics
             return tagDic;
         }
 
-        private string TaskSensorPrefix(string threadId, string taskId)
+        internal string TaskSensorPrefix(string threadId, string taskId)
         {
             threadId ??= UNKNOWN_THREAD;
             return $"{ThreadSensorPrefix(threadId)}{SENSOR_PREFIX_DELIMITER}{SENSOR_TASK_LABEL}{SENSOR_PREFIX_DELIMITER}{taskId}";
@@ -209,7 +209,7 @@ namespace Streamiz.Kafka.Net.Metrics
             return tagDic;
         }
 
-        private string NodeSensorPrefix(string threadId, string taskId, string processorName)
+        internal string NodeSensorPrefix(string threadId, string taskId, string processorName)
         {
             threadId ??= UNKNOWN_THREAD;
             return $"{TaskSensorPrefix(threadId, taskId)}{SENSOR_PREFIX_DELIMITER}{SENSOR_NODE_LABEL}{SENSOR_PREFIX_DELIMITER}{processorName}";
@@ -246,7 +246,7 @@ namespace Streamiz.Kafka.Net.Metrics
             return tagDic;
         }
 
-        private string StoreSensorPrefix(string threadId, string taskId, string storeName)
+        internal string StoreSensorPrefix(string threadId, string taskId, string storeName)
         {
             threadId ??= UNKNOWN_THREAD;
             return $"{TaskSensorPrefix(threadId, taskId)}{SENSOR_PREFIX_DELIMITER}{SENSOR_STORE_LABEL}{SENSOR_PREFIX_DELIMITER}{storeName}";
@@ -259,6 +259,9 @@ namespace Streamiz.Kafka.Net.Metrics
         private bool TestMetricsRecordingLevel(MetricsRecordingLevel metricsRecordingLevel)
             => recordingLevel.CompareTo(metricsRecordingLevel) >= 0;
 
+        internal string FullSensorName(string sensorName, string key)
+            => $"{key}{SENSOR_NAME_DELIMITER}{sensorName}";
+        
         private Sensor GetSensor(
             IDictionary<string, IList<string>> listSensors,
             string sensorName,
@@ -267,7 +270,7 @@ namespace Streamiz.Kafka.Net.Metrics
             MetricsRecordingLevel metricsRecordingLevel,
             params Sensor[] parents)
         {
-            string fullSensorName = $"{key}{SENSOR_NAME_DELIMITER}{sensorName}";
+            string fullSensorName = FullSensorName(sensorName, key);
             Sensor sensor = GetSensor(fullSensorName, description, metricsRecordingLevel, parents);
             if (!listSensors.ContainsKey(key))
                 listSensors.Add(key, new List<string> { fullSensorName});

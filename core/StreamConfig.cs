@@ -1960,6 +1960,7 @@ namespace Streamiz.Kafka.Net
             OffsetCheckpointManager = null;
             MetricsIntervalMs = (long)TimeSpan.FromSeconds(30).TotalMilliseconds;
             MetricsRecording = MetricsRecordingLevel.INFO;
+            MetricsReporter = (_) => { }; // nothing by default, myabe another behavior in future
             ExposeLibrdKafkaStats = false;
 
             if (properties != null)

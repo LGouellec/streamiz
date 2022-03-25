@@ -2,55 +2,55 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 {
     internal class ThreadMetrics
     {
-        private static readonly string COMMIT = "commit";
-        private static readonly string POLL = "poll";
-        private static readonly string PROCESS = "process";
-        private static readonly string PUNCTUATE = "punctuate";
-        private static readonly string CREATE_TASK = "task-created";
-        private static readonly string CLOSE_TASK = "task-closed";
-        private static readonly string THREAD_START_TIME = "thread-start-time";
+        internal static readonly string COMMIT = "commit";
+        internal static readonly string POLL = "poll";
+        internal static readonly string PROCESS = "process";
+        internal static readonly string PUNCTUATE = "punctuate";
+        internal static readonly string CREATE_TASK = "task-created";
+        internal static readonly string CLOSE_TASK = "task-closed";
+        internal static readonly string THREAD_START_TIME = "thread-start-time";
 
-        private static readonly string COMMIT_DESCRIPTION = "calls to commit";
-        private static readonly string COMMIT_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + COMMIT_DESCRIPTION;
-        private static readonly string COMMIT_RATE_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION + COMMIT_DESCRIPTION;
-        private static readonly string COMMIT_AVG_LATENCY_DESCRIPTION = "The average commit latency";
-        private static readonly string COMMIT_MAX_LATENCY_DESCRIPTION = "The maximum commit latency";
-        private static readonly string CREATE_TASK_DESCRIPTION = "newly created tasks";
-        private static readonly string CREATE_TASK_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + CREATE_TASK_DESCRIPTION;
-        private static readonly string CREATE_TASK_RATE_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION + CREATE_TASK_DESCRIPTION;
-        private static readonly string CLOSE_TASK_DESCRIPTION = "closed tasks";
-        private static readonly string CLOSE_TASK_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + CLOSE_TASK_DESCRIPTION;
-        private static readonly string CLOSE_TASK_RATE_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION + CLOSE_TASK_DESCRIPTION;
-        private static readonly string POLL_DESCRIPTION = "calls to poll";
-        private static readonly string POLL_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + POLL_DESCRIPTION;
-        private static readonly string POLL_RATE_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION + POLL_DESCRIPTION;
-        private static readonly string POLL_AVG_LATENCY_DESCRIPTION = "The average poll latency";
-        private static readonly string POLL_MAX_LATENCY_DESCRIPTION = "The maximum poll latency";
-        private static readonly string POLL_AVG_RECORDS_DESCRIPTION = "The average number of records polled from consumer within an iteration";
-        private static readonly string POLL_MAX_RECORDS_DESCRIPTION = "The maximum number of records polled from consumer within an iteration";
-        private static readonly string PROCESS_DESCRIPTION = "calls to process";
-        private static readonly string PROCESS_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + PROCESS_DESCRIPTION;
-        private static readonly string PROCESS_RATE_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION + PROCESS_DESCRIPTION;
-        private static readonly string PROCESS_AVG_LATENCY_DESCRIPTION = "The average process latency";
-        private static readonly string PROCESS_MAX_LATENCY_DESCRIPTION = "The maximum process latency";
-        private static readonly string PROCESS_AVG_RECORDS_DESCRIPTION = "The average number of records processed within an iteration";
-        private static readonly string PROCESS_MAX_RECORDS_DESCRIPTION = "The maximum number of records processed within an iteration";
-        private static readonly string PUNCTUATE_DESCRIPTION = "calls to punctuate";
-        private static readonly string PUNCTUATE_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + PUNCTUATE_DESCRIPTION;
-        private static readonly string PUNCTUATE_RATE_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION + PUNCTUATE_DESCRIPTION;
-        private static readonly string PUNCTUATE_AVG_LATENCY_DESCRIPTION = "The average punctuate latency";
-        private static readonly string PUNCTUATE_MAX_LATENCY_DESCRIPTION = "The maximum punctuate latency";
-        private static readonly string COMMIT_OVER_TASKS_DESCRIPTION =
+        internal static readonly string COMMIT_DESCRIPTION = "calls to commit";
+        internal static readonly string COMMIT_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + COMMIT_DESCRIPTION;
+        internal static readonly string COMMIT_RATE_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION + COMMIT_DESCRIPTION;
+        internal static readonly string COMMIT_AVG_LATENCY_DESCRIPTION = "The average commit latency";
+        internal static readonly string COMMIT_MAX_LATENCY_DESCRIPTION = "The maximum commit latency";
+        internal static readonly string CREATE_TASK_DESCRIPTION = "newly created tasks";
+        internal static readonly string CREATE_TASK_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + CREATE_TASK_DESCRIPTION;
+        internal static readonly string CREATE_TASK_RATE_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION + CREATE_TASK_DESCRIPTION;
+        internal static readonly string CLOSE_TASK_DESCRIPTION = "closed tasks";
+        internal static readonly string CLOSE_TASK_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + CLOSE_TASK_DESCRIPTION;
+        internal static readonly string CLOSE_TASK_RATE_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION + CLOSE_TASK_DESCRIPTION;
+        internal static readonly string POLL_DESCRIPTION = "calls to poll";
+        internal static readonly string POLL_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + POLL_DESCRIPTION;
+        internal static readonly string POLL_RATE_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION + POLL_DESCRIPTION;
+        internal static readonly string POLL_AVG_LATENCY_DESCRIPTION = "The average poll latency";
+        internal static readonly string POLL_MAX_LATENCY_DESCRIPTION = "The maximum poll latency";
+        internal static readonly string POLL_AVG_RECORDS_DESCRIPTION = "The average number of records polled from consumer within an iteration";
+        internal static readonly string POLL_MAX_RECORDS_DESCRIPTION = "The maximum number of records polled from consumer within an iteration";
+        internal static readonly string PROCESS_DESCRIPTION = "calls to process";
+        internal static readonly string PROCESS_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + PROCESS_DESCRIPTION;
+        internal static readonly string PROCESS_RATE_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION + PROCESS_DESCRIPTION;
+        internal static readonly string PROCESS_AVG_LATENCY_DESCRIPTION = "The average process latency";
+        internal static readonly string PROCESS_MAX_LATENCY_DESCRIPTION = "The maximum process latency";
+        internal static readonly string PROCESS_AVG_RECORDS_DESCRIPTION = "The average number of records processed within an iteration";
+        internal static readonly string PROCESS_MAX_RECORDS_DESCRIPTION = "The maximum number of records processed within an iteration";
+        internal static readonly string PUNCTUATE_DESCRIPTION = "calls to punctuate";
+        internal static readonly string PUNCTUATE_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + PUNCTUATE_DESCRIPTION;
+        internal static readonly string PUNCTUATE_RATE_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION + PUNCTUATE_DESCRIPTION;
+        internal static readonly string PUNCTUATE_AVG_LATENCY_DESCRIPTION = "The average punctuate latency";
+        internal static readonly string PUNCTUATE_MAX_LATENCY_DESCRIPTION = "The maximum punctuate latency";
+        internal static readonly string COMMIT_OVER_TASKS_DESCRIPTION =
             "calls to commit over all tasks assigned to one stream thread";
-        private static readonly string COMMIT_OVER_TASKS_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + COMMIT_OVER_TASKS_DESCRIPTION;
-        private static readonly string COMMIT_OVER_TASKS_RATE_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION + COMMIT_OVER_TASKS_DESCRIPTION;
-        private static readonly string PROCESS_RATIO_DESCRIPTION =
+        internal static readonly string COMMIT_OVER_TASKS_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + COMMIT_OVER_TASKS_DESCRIPTION;
+        internal static readonly string COMMIT_OVER_TASKS_RATE_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION + COMMIT_OVER_TASKS_DESCRIPTION;
+        internal static readonly string PROCESS_RATIO_DESCRIPTION =
             "The fraction of time the thread spent on processing active tasks";
-        private static readonly string POLL_RATIO_DESCRIPTION =
+        internal static readonly string POLL_RATIO_DESCRIPTION =
             "The fraction of time the thread spent on polling records from consumer";
-        private static readonly string COMMIT_RATIO_DESCRIPTION =
+        internal static readonly string COMMIT_RATIO_DESCRIPTION =
             "The fraction of time the thread spent on committing all tasks";
-        private static readonly string THREAD_START_TIME_DESCRIPTION =
+        internal static readonly string THREAD_START_TIME_DESCRIPTION =
             "The time that the thread was started";
         
         #region Thread Metrics

@@ -6,22 +6,22 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 {
     internal class GeneralClientMetrics
     {
-        private static readonly string APP_INFO = "app-info";
-        private static readonly string APP_INFO_DESCRIPTION = "The application information metrics";
-        private static readonly string VERSION = "version";
-        private static readonly string APPLICATION_ID = "application_id";
-        private static readonly string TOPOLOGY_DESCRIPTION = "topology_description";
-        private static readonly string STATE = "state";
-        private static readonly string STREAM_THREADS = "stream_threads";
-        private static readonly string VERSION_FROM_ASSEMBLY;
-        private static readonly string DEFAULT_VALUE = "unknown";
+        internal static readonly string APP_INFO = "app-info";
+        internal static readonly string APP_INFO_DESCRIPTION = "The application information metrics";
+        internal static readonly string VERSION = "version";
+        internal static readonly string APPLICATION_ID = "application_id";
+        internal static readonly string TOPOLOGY_DESCRIPTION = "topology_description";
+        internal static readonly string STATE = "state";
+        internal static readonly string STREAM_THREADS = "stream_threads";
+        internal static readonly string VERSION_FROM_ASSEMBLY;
+        internal static readonly string DEFAULT_VALUE = "unknown";
 
-        private static readonly string VERSION_DESCRIPTION = "The version of the Kafka Streams client";
-        private static readonly string APPLICATION_ID_DESCRIPTION = "The application ID of the Kafka Streams client";
-        private static readonly string TOPOLOGY_DESCRIPTION_DESCRIPTION =
+        internal static readonly string VERSION_DESCRIPTION = "The version of the Kafka Streams client";
+        internal static readonly string APPLICATION_ID_DESCRIPTION = "The application ID of the Kafka Streams client";
+        internal static readonly string TOPOLOGY_DESCRIPTION_DESCRIPTION =
         "The description of the topology executed in the Kafka Streams client";
-        private static readonly string STATE_DESCRIPTION = "The state of the Kafka Streams client (1 = running, 0 = stopped)";
-        private static readonly string STREAM_THREADS_DESCRIPTION = "The number of stream threads that are running or participating in rebalance";
+        internal static readonly string STATE_DESCRIPTION = "The state of the Kafka Streams client (1 = running, 0 = stopped)";
+        internal static readonly string STREAM_THREADS_DESCRIPTION = "The number of stream threads that are running or participating in rebalance";
 
         static GeneralClientMetrics()
         {

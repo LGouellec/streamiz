@@ -20,5 +20,15 @@ namespace Streamiz.Kafka.Net.Metrics
             Description = description;
             Tags = tags;
         }
+
+        public static MetricName NameAndGroup(string name, string group)
+            => new MetricName(name, group, string.Empty, new Dictionary<string, string>());
+
+        public override bool Equals(object obj)
+            => obj is MetricName && ((MetricName) obj).Name.Equals(Name) &&
+               ((MetricName) obj).Group.Equals(Group);
+
+        public override int GetHashCode()
+            => Name.GetHashCode() + Group.GetHashCode();
     }
 }

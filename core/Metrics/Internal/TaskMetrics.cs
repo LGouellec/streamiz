@@ -4,60 +4,60 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 {
     internal class TaskMetrics
     {
-        private static string AVG_LATENCY_DESCRIPTION = "The average latency of ";
-        private static string MAX_LATENCY_DESCRIPTION = "The maximum latency of ";
-        private static string RATE_DESCRIPTION_PREFIX = "The average number of ";
-        private static string RATE_DESCRIPTION_SUFFIX = " per second";
-        private static string ACTIVE_TASK_PREFIX = "active-";
+        internal static string AVG_LATENCY_DESCRIPTION = "The average latency of ";
+        internal static string MAX_LATENCY_DESCRIPTION = "The maximum latency of ";
+        internal static string RATE_DESCRIPTION_PREFIX = "The average number of ";
+        internal static string RATE_DESCRIPTION_SUFFIX = " per second";
+        internal static string ACTIVE_TASK_PREFIX = "active-";
 
-        private static string COMMIT = "commit";
-        private static string COMMIT_DESCRIPTION = "calls to commit";
-        private static readonly string COMMIT_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + COMMIT_DESCRIPTION;
+        internal static string COMMIT = "commit";
+        internal static string COMMIT_DESCRIPTION = "calls to commit";
+        internal static readonly string COMMIT_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + COMMIT_DESCRIPTION;
 
-        private static string COMMIT_RATE_DESCRIPTION =
+        internal static string COMMIT_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + COMMIT_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
         
-        private static string ENFORCED_PROCESSING = "enforced-processing";
+        internal static string ENFORCED_PROCESSING = "enforced-processing";
 
-        private static string ENFORCED_PROCESSING_TOTAL_DESCRIPTION =
+        internal static string ENFORCED_PROCESSING_TOTAL_DESCRIPTION =
             "The total number of occurrences of enforced-processing operations";
 
-        private static string ENFORCED_PROCESSING_RATE_DESCRIPTION =
+        internal static string ENFORCED_PROCESSING_RATE_DESCRIPTION =
             "The average number of occurrences of enforced-processing operations per second";
 
-        private static string DROPPED_RECORDS = "dropped-records";
-        private static string DROPPED_RECORDS_DESCRIPTION = "dropped records";
+        internal static string DROPPED_RECORDS = "dropped-records";
+        internal static string DROPPED_RECORDS_DESCRIPTION = "dropped records";
 
-        private static readonly string DROPPED_RECORDS_TOTAL_DESCRIPTION =
+        internal static readonly string DROPPED_RECORDS_TOTAL_DESCRIPTION =
             StreamMetricsRegistry.TOTAL_DESCRIPTION + DROPPED_RECORDS_DESCRIPTION;
 
-        private static readonly string DROPPED_RECORDS_RATE_DESCRIPTION =
+        internal static readonly string DROPPED_RECORDS_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + DROPPED_RECORDS_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
 
-        private static string PROCESS = "process";
-        private static string PROCESS_DESCRIPTION = "calls to process";
-        private static readonly string PROCESS_LATENCY = PROCESS + StreamMetricsRegistry.LATENCY_SUFFIX;
-        private static readonly string PROCESS_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION + PROCESS_DESCRIPTION;
-        private static readonly string PROCESS_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION + PROCESS_DESCRIPTION;
-        private static readonly string PROCESS_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + PROCESS_DESCRIPTION;
-        private static readonly string PROCESS_RATE_DESCRIPTION =
+        internal static string PROCESS = "process";
+        internal static string PROCESS_DESCRIPTION = "calls to process";
+        internal static readonly string PROCESS_LATENCY = PROCESS + StreamMetricsRegistry.LATENCY_SUFFIX;
+        internal static readonly string PROCESS_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION + PROCESS_DESCRIPTION;
+        internal static readonly string PROCESS_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION + PROCESS_DESCRIPTION;
+        internal static readonly string PROCESS_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + PROCESS_DESCRIPTION;
+        internal static readonly string PROCESS_RATE_DESCRIPTION =
         RATE_DESCRIPTION_PREFIX + PROCESS_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
 
         
-        private static string PROCESS_RATIO_DESCRIPTION = "The fraction of time the thread spent " +
+        internal static string PROCESS_RATIO_DESCRIPTION = "The fraction of time the thread spent " +
                                                           "on processing this task among all assigned active tasks";
 
-        private static string BUFFER_COUNT = "buffer-count";
+        internal static string BUFFER_COUNT = "buffer-count";
 
-        private static string NUM_BUFFERED_RECORDS_DESCRIPTION = "The count of buffered records that are polled " +
+        internal static string NUM_BUFFERED_RECORDS_DESCRIPTION = "The count of buffered records that are polled " +
                                                                  "from consumer and not yet processed for this active task";
 
 
-        private static string RESTORATION_RECORDS = "restoration-records";
-        private static string RESTORATION_RECORDS_DESCRIPTION = "The count of records not restored yet for this active task";
+        internal static string RESTORATION_RECORDS = "restoration-records";
+        internal static string RESTORATION_RECORDS_DESCRIPTION = "The count of records not restored yet for this active task";
         
-        private static string ACTIVE_RESTORATION = "active-restoration";
-        private static string ACTIVE_RESTORATION_DESCRIPTION = "Indicate if the active task is in restoration or not";
+        internal static string ACTIVE_RESTORATION = "active-restoration";
+        internal static string ACTIVE_RESTORATION_DESCRIPTION = "Indicate if the active task is in restoration or not";
 
         #region Process
 

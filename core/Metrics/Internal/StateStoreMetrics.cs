@@ -6,141 +6,141 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 {
     internal class StateStoreMetrics
     {
-        private static string AVG_DESCRIPTION_PREFIX = "The average ";
-        private static string MAX_DESCRIPTION_PREFIX = "The maximum ";
-        private static string LATENCY_DESCRIPTION = "latency of ";
-        private static readonly string AVG_LATENCY_DESCRIPTION_PREFIX = AVG_DESCRIPTION_PREFIX + LATENCY_DESCRIPTION;
-        private static readonly string MAX_LATENCY_DESCRIPTION_PREFIX = MAX_DESCRIPTION_PREFIX + LATENCY_DESCRIPTION;
-        private static string RATE_DESCRIPTION_PREFIX = "The average number of ";
-        private static string RATE_DESCRIPTION_SUFFIX = " per second";
-        private static string BUFFERED_RECORDS = "buffered records";
+        internal static string AVG_DESCRIPTION_PREFIX = "The average ";
+        internal static string MAX_DESCRIPTION_PREFIX = "The maximum ";
+        internal static string LATENCY_DESCRIPTION = "latency of ";
+        internal static readonly string AVG_LATENCY_DESCRIPTION_PREFIX = AVG_DESCRIPTION_PREFIX + LATENCY_DESCRIPTION;
+        internal static readonly string MAX_LATENCY_DESCRIPTION_PREFIX = MAX_DESCRIPTION_PREFIX + LATENCY_DESCRIPTION;
+        internal static string RATE_DESCRIPTION_PREFIX = "The average number of ";
+        internal static string RATE_DESCRIPTION_SUFFIX = " per second";
+        internal static string BUFFERED_RECORDS = "buffered records";
 
-        private static string PUT = "put";
-        private static string PUT_DESCRIPTION = "calls to put";
+        internal static string PUT = "put";
+        internal static string PUT_DESCRIPTION = "calls to put";
 
-        private static readonly string PUT_RATE_DESCRIPTION =
+        internal static readonly string PUT_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + PUT_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
 
-        private static readonly string PUT_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + PUT_DESCRIPTION;
-        private static readonly string PUT_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + PUT_DESCRIPTION;
+        internal static readonly string PUT_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + PUT_DESCRIPTION;
+        internal static readonly string PUT_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + PUT_DESCRIPTION;
 
-        private static string PUT_IF_ABSENT = "put-if-absent";
-        private static string PUT_IF_ABSENT_DESCRIPTION = "calls to put-if-absent";
+        internal static string PUT_IF_ABSENT = "put-if-absent";
+        internal static string PUT_IF_ABSENT_DESCRIPTION = "calls to put-if-absent";
 
-        private static readonly string PUT_IF_ABSENT_RATE_DESCRIPTION =
+        internal static readonly string PUT_IF_ABSENT_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + PUT_IF_ABSENT_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
 
-        private static readonly string PUT_IF_ABSENT_AVG_LATENCY_DESCRIPTION =
+        internal static readonly string PUT_IF_ABSENT_AVG_LATENCY_DESCRIPTION =
             AVG_LATENCY_DESCRIPTION_PREFIX + PUT_IF_ABSENT_DESCRIPTION;
 
-        private static readonly string PUT_IF_ABSENT_MAX_LATENCY_DESCRIPTION =
+        internal static readonly string PUT_IF_ABSENT_MAX_LATENCY_DESCRIPTION =
             MAX_LATENCY_DESCRIPTION_PREFIX + PUT_IF_ABSENT_DESCRIPTION;
 
-        private static string PUT_ALL = "put-all";
-        private static string PUT_ALL_DESCRIPTION = "calls to put-all";
+        internal static string PUT_ALL = "put-all";
+        internal static string PUT_ALL_DESCRIPTION = "calls to put-all";
 
-        private static readonly string PUT_ALL_RATE_DESCRIPTION =
+        internal static readonly string PUT_ALL_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + PUT_ALL_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
 
-        private static readonly string PUT_ALL_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + PUT_ALL_DESCRIPTION;
-        private static readonly string PUT_ALL_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + PUT_ALL_DESCRIPTION;
+        internal static readonly string PUT_ALL_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + PUT_ALL_DESCRIPTION;
+        internal static readonly string PUT_ALL_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + PUT_ALL_DESCRIPTION;
 
-        private static string GET = "get";
-        private static string GET_DESCRIPTION = "calls to get";
+        internal static string GET = "get";
+        internal static string GET_DESCRIPTION = "calls to get";
 
-        private static readonly string GET_RATE_DESCRIPTION =
+        internal static readonly string GET_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + GET_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
 
-        private static readonly string GET_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + GET_DESCRIPTION;
-        private static readonly string GET_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + GET_DESCRIPTION;
+        internal static readonly string GET_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + GET_DESCRIPTION;
+        internal static readonly string GET_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + GET_DESCRIPTION;
 
-        private static string FETCH = "fetch";
-        private static string FETCH_DESCRIPTION = "calls to fetch";
+        internal static string FETCH = "fetch";
+        internal static string FETCH_DESCRIPTION = "calls to fetch";
 
-        private static readonly string FETCH_RATE_DESCRIPTION =
+        internal static readonly string FETCH_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + FETCH_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
 
-        private static readonly string FETCH_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + FETCH_DESCRIPTION;
-        private static readonly string FETCH_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + FETCH_DESCRIPTION;
+        internal static readonly string FETCH_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + FETCH_DESCRIPTION;
+        internal static readonly string FETCH_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + FETCH_DESCRIPTION;
 
-        private static string ALL = "all";
-        private static string ALL_DESCRIPTION = "calls to all";
+        internal static string ALL = "all";
+        internal static string ALL_DESCRIPTION = "calls to all";
 
-        private static string ALL_RATE_DESCRIPTION =
+        internal static string ALL_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + ALL_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
 
-        private static readonly string ALL_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + ALL_DESCRIPTION;
-        private static readonly string ALL_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + ALL_DESCRIPTION;
+        internal static readonly string ALL_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + ALL_DESCRIPTION;
+        internal static readonly string ALL_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + ALL_DESCRIPTION;
 
-        private static string RANGE = "range";
-        private static string RANGE_DESCRIPTION = "calls to range";
+        internal static string RANGE = "range";
+        internal static string RANGE_DESCRIPTION = "calls to range";
 
-        private static readonly string RANGE_RATE_DESCRIPTION =
+        internal static readonly string RANGE_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + RANGE_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
 
-        private static readonly string RANGE_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + RANGE_DESCRIPTION;
-        private static readonly string RANGE_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + RANGE_DESCRIPTION;
+        internal static readonly string RANGE_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + RANGE_DESCRIPTION;
+        internal static readonly string RANGE_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + RANGE_DESCRIPTION;
 
-        private static string FLUSH = "flush";
-        private static string FLUSH_DESCRIPTION = "calls to flush";
-        private static readonly string FLUSH_RATE_DESCRIPTION =
+        internal static string FLUSH = "flush";
+        internal static string FLUSH_DESCRIPTION = "calls to flush";
+        internal static readonly string FLUSH_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + FLUSH_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
 
-        private static readonly string FLUSH_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + FLUSH_DESCRIPTION;
-        private static readonly string FLUSH_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + FLUSH_DESCRIPTION;
+        internal static readonly string FLUSH_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + FLUSH_DESCRIPTION;
+        internal static readonly string FLUSH_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + FLUSH_DESCRIPTION;
 
-        private static string DELETE = "delete";
-        private static string DELETE_DESCRIPTION = "calls to delete";
+        internal static string DELETE = "delete";
+        internal static string DELETE_DESCRIPTION = "calls to delete";
 
-        private static readonly string DELETE_RATE_DESCRIPTION =
+        internal static readonly string DELETE_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + DELETE_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
 
-        private static readonly string DELETE_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + DELETE_DESCRIPTION;
-        private static readonly string DELETE_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + DELETE_DESCRIPTION;
+        internal static readonly string DELETE_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + DELETE_DESCRIPTION;
+        internal static readonly string DELETE_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + DELETE_DESCRIPTION;
 
-        private static string REMOVE = "remove";
-        private static string REMOVE_DESCRIPTION = "calls to remove";
+        internal static string REMOVE = "remove";
+        internal static string REMOVE_DESCRIPTION = "calls to remove";
 
-        private static readonly string REMOVE_RATE_DESCRIPTION =
+        internal static readonly string REMOVE_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + REMOVE_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
 
-        private static readonly string REMOVE_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + REMOVE_DESCRIPTION;
-        private static readonly string REMOVE_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + REMOVE_DESCRIPTION;
+        internal static readonly string REMOVE_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + REMOVE_DESCRIPTION;
+        internal static readonly string REMOVE_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + REMOVE_DESCRIPTION;
 
-        private static string RESTORE = "restore";
-        private static string RESTORE_DESCRIPTION = "restorations";
+        internal static string RESTORE = "restore";
+        internal static string RESTORE_DESCRIPTION = "restorations";
 
-        private static readonly string RESTORE_RATE_DESCRIPTION =
+        internal static readonly string RESTORE_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + RESTORE_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
 
-        private static readonly string RESTORE_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + RESTORE_DESCRIPTION;
-        private static readonly string RESTORE_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + RESTORE_DESCRIPTION;
+        internal static readonly string RESTORE_AVG_LATENCY_DESCRIPTION = AVG_LATENCY_DESCRIPTION_PREFIX + RESTORE_DESCRIPTION;
+        internal static readonly string RESTORE_MAX_LATENCY_DESCRIPTION = MAX_LATENCY_DESCRIPTION_PREFIX + RESTORE_DESCRIPTION;
 
-        private static string SUPPRESSION_BUFFER_COUNT = "suppression-buffer-count";
-        private static readonly string SUPPRESSION_BUFFER_COUNT_DESCRIPTION = "count of " + BUFFERED_RECORDS;
+        internal static string SUPPRESSION_BUFFER_COUNT = "suppression-buffer-count";
+        internal static readonly string SUPPRESSION_BUFFER_COUNT_DESCRIPTION = "count of " + BUFFERED_RECORDS;
 
-        private static readonly string SUPPRESSION_BUFFER_COUNT_AVG_DESCRIPTION =
+        internal static readonly string SUPPRESSION_BUFFER_COUNT_AVG_DESCRIPTION =
             AVG_DESCRIPTION_PREFIX + SUPPRESSION_BUFFER_COUNT_DESCRIPTION;
 
-        private static readonly string SUPPRESSION_BUFFER_COUNT_MAX_DESCRIPTION =
+        internal static readonly string SUPPRESSION_BUFFER_COUNT_MAX_DESCRIPTION =
             MAX_DESCRIPTION_PREFIX + SUPPRESSION_BUFFER_COUNT_DESCRIPTION;
 
-        private static string SUPPRESSION_BUFFER_SIZE = "suppression-buffer-size";
-        private static readonly string SUPPRESSION_BUFFER_SIZE_DESCRIPTION = "size of " + BUFFERED_RECORDS;
+        internal static string SUPPRESSION_BUFFER_SIZE = "suppression-buffer-size";
+        internal static readonly string SUPPRESSION_BUFFER_SIZE_DESCRIPTION = "size of " + BUFFERED_RECORDS;
 
-        private static readonly string SUPPRESSION_BUFFER_SIZE_AVG_DESCRIPTION =
+        internal static readonly string SUPPRESSION_BUFFER_SIZE_AVG_DESCRIPTION =
             AVG_DESCRIPTION_PREFIX + SUPPRESSION_BUFFER_SIZE_DESCRIPTION;
 
-        private static readonly string SUPPRESSION_BUFFER_SIZE_MAX_DESCRIPTION =
+        internal static readonly string SUPPRESSION_BUFFER_SIZE_MAX_DESCRIPTION =
             MAX_DESCRIPTION_PREFIX + SUPPRESSION_BUFFER_SIZE_DESCRIPTION;
 
-        private static string EXPIRED_WINDOW_RECORD_DROP = "expired-window-record-drop";
-        private static string EXPIRED_WINDOW_RECORD_DROP_DESCRIPTION = "dropped records due to an expired window";
+        internal static string EXPIRED_WINDOW_RECORD_DROP = "expired-window-record-drop";
+        internal static string EXPIRED_WINDOW_RECORD_DROP_DESCRIPTION = "dropped records due to an expired window";
 
-        private static readonly string EXPIRED_WINDOW_RECORD_DROP_TOTAL_DESCRIPTION =
+        internal static readonly string EXPIRED_WINDOW_RECORD_DROP_TOTAL_DESCRIPTION =
             StreamMetricsRegistry.TOTAL_DESCRIPTION + EXPIRED_WINDOW_RECORD_DROP_DESCRIPTION;
 
-        private static readonly string EXPIRED_WINDOW_RECORD_DROP_RATE_DESCRIPTION =
+        internal static readonly string EXPIRED_WINDOW_RECORD_DROP_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + EXPIRED_WINDOW_RECORD_DROP_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
 
         public static Sensor PutSensor(TaskId taskId,

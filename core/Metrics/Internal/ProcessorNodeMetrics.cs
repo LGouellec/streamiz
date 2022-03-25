@@ -4,23 +4,23 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 {
     internal class ProcessorNodeMetrics
     {
-        private static string RATE_DESCRIPTION_PREFIX = "The average number of ";
-        private static string RATE_DESCRIPTION_SUFFIX = " per second";
+        internal static string RATE_DESCRIPTION_PREFIX = "The average number of ";
+        internal static string RATE_DESCRIPTION_SUFFIX = " per second";
 
-        private static string SUPPRESSION_EMIT = "suppression-emit";
-        private static string SUPPRESSION_EMIT_DESCRIPTION = "emitted records from the suppression buffer";
+        internal static string SUPPRESSION_EMIT = "suppression-emit";
+        internal static string SUPPRESSION_EMIT_DESCRIPTION = "emitted records from the suppression buffer";
 
-        private static readonly string SUPPRESSION_EMIT_TOTAL_DESCRIPTION =
+        internal static readonly string SUPPRESSION_EMIT_TOTAL_DESCRIPTION =
             StreamMetricsRegistry.TOTAL_DESCRIPTION + SUPPRESSION_EMIT_DESCRIPTION;
 
-        private static readonly string SUPPRESSION_EMIT_RATE_DESCRIPTION =
+        internal static readonly string SUPPRESSION_EMIT_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + SUPPRESSION_EMIT_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
         
-        private static string PROCESS = "process";
-        private static string PROCESS_DESCRIPTION = "calls to process";
-        private static readonly string PROCESS_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + PROCESS_DESCRIPTION;
+        internal static string PROCESS = "process";
+        internal static string PROCESS_DESCRIPTION = "calls to process";
+        internal static readonly string PROCESS_TOTAL_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + PROCESS_DESCRIPTION;
 
-        private static readonly string PROCESS_RATE_DESCRIPTION =
+        internal static readonly string PROCESS_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + PROCESS_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
         
         // NOT USE FOR MOMENT
