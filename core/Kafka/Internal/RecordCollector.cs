@@ -62,7 +62,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 lock (_lock)
                 {
                     string producerName = producer.Name.Split("#")[0];
-                    if (--instanceProducer[producerName] <= 0)
+                    if (instanceProducer.ContainsKey(producerName) && --instanceProducer[producerName] <= 0)
                     {
                         producer.Dispose();
                         producer = null;

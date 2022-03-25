@@ -49,5 +49,24 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 supplier,
                 producer);
         }
+        
+        public static UnassignedStreamTask Create(TaskId id)
+        {
+            var config = new StreamConfig();
+            config.ApplicationId = "un-assigned-stream-task";
+            var supplier = new SyncKafkaSupplier();
+            var producer = supplier.GetProducer(config.ToProducerConfig());
+            var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
+            return new UnassignedStreamTask(
+                "un-assigned-stream-task",
+                id,
+                new List<TopicPartition>(),
+                ProcessorTopology.EMPTY,
+                consumer,
+                config,
+                supplier,
+                producer);
+        }
+
     }
 }

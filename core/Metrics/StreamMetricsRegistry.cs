@@ -22,16 +22,16 @@ namespace Streamiz.Kafka.Net.Metrics
         
         #region Constants
         
-        private static readonly string SENSOR_PREFIX_DELIMITER = ".";
-        private static readonly string SENSOR_NAME_DELIMITER = ".sensor.";
-        private static readonly string SENSOR_TASK_LABEL = "task";
-        private static readonly string SENSOR_NODE_LABEL = "node";
-        private static readonly string SENSOR_STORE_LABEL = "store";
-        private static readonly string SENSOR_ENTITY_LABEL = "entity";
-        private static readonly string SENSOR_EXTERNAL_LABEL = "external";
-        private static readonly string SENSOR_INTERNAL_LABEL = "internal";
+        internal static readonly string SENSOR_PREFIX_DELIMITER = ".";
+        internal static readonly string SENSOR_NAME_DELIMITER = ".sensor.";
+        internal static readonly string SENSOR_TASK_LABEL = "task";
+        internal static readonly string SENSOR_NODE_LABEL = "node";
+        internal static readonly string SENSOR_STORE_LABEL = "store";
+        internal static readonly string SENSOR_ENTITY_LABEL = "entity";
+        internal static readonly string SENSOR_EXTERNAL_LABEL = "external";
+        internal static readonly string SENSOR_INTERNAL_LABEL = "internal";
         // FOR TESTING
-        private static readonly string UNKNOWN_THREAD = "unknown-thread";
+        internal static readonly string UNKNOWN_THREAD = "unknown-thread";
         
         public static readonly string CLIENT_ID_TAG = "client_id";
         public static readonly string APPLICATION_ID_TAG = "application_id";
