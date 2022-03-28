@@ -1,18 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Confluent.Kafka;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Mock;
-using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
-using Streamiz.Kafka.Net.State;
-using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.Metrics
 {
@@ -102,13 +100,14 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
                 context.SetRecordMetaData(r);
                 sourceProcessor.Process(key, value);
             }
-
+            
             long now = DateTime.Now.GetMilliseconds();
             var sensors = streamMetricsRegistry.GetThreadScopeSensor(threadId);
             foreach (var s in sensors)
                 s.Refresh(now);
-            
-            var processorSensor = sensors.FirstOrDefault(s => s.Name.Equals(GetSensorName(ProcessorNodeMetrics.PROCESS)));
+
+            sourceProcessor.ProcessSensor.Refresh(now);
+            var processorSensor = sourceProcessor.ProcessSensor;
             Assert.AreEqual(2, processorSensor.Metrics.Count());
             Assert.AreEqual(nbMessage,  
                 processorSensor.Metrics[MetricName.NameAndGroup(

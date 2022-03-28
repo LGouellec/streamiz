@@ -250,7 +250,6 @@ namespace Streamiz.Kafka.Net.Processors
                                         processLatency = ActionHelper.MeasureLatency(() =>
                                         {
                                             processed = manager.Process(now);
-                                            now = DateTime.Now.GetMilliseconds();
                                         });
                                     else
                                         processed = 0;
@@ -270,7 +269,7 @@ namespace Streamiz.Kafka.Net.Processors
                                     //else
                                     //    break;
                                 }
-
+                                
                                 timeSinceLastPoll = Math.Max(DateTime.Now.GetMilliseconds() - lastPollMs, 0);
 
                                 int commited = 0;

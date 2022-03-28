@@ -18,7 +18,7 @@ namespace Streamiz.Kafka.Net.Processors
 
     internal class SourceProcessor<K, V> : AbstractProcessor<K, V>, ISourceProcessor
     {
-        private Sensor processSensor;
+        internal Sensor ProcessSensor { get; private set; }
         
         internal SourceProcessor(string name, string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, ITimestampExtractor extractor)
             : base(name, keySerdes, valueSerdes)
@@ -46,7 +46,7 @@ namespace Streamiz.Kafka.Net.Processors
             Key?.Initialize(context.SerDesContext);
             Value?.Initialize(context.SerDesContext);
 
-            processSensor = ProcessorNodeMetrics.ProcessNodeSensor(
+            ProcessSensor = ProcessorNodeMetrics.ProcessNodeSensor(
                 Thread.CurrentThread.Name,
                 context.Id,
                 Name,
@@ -58,7 +58,7 @@ namespace Streamiz.Kafka.Net.Processors
         public override void Process(K key, V value)
         {
             Forward(key, value);
-            processSensor.Record(1.0, Context.Timestamp);
+            ProcessSensor.Record(1.0, Context.Timestamp);
         }
     }
 }
