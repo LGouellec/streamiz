@@ -37,7 +37,7 @@ namespace sample_stream
             });
             
             StreamBuilder builder = new StreamBuilder();
-            
+     
             builder.Stream<string, string>("tempTopic")
                 .GroupByKey()
                 .Reduce((v1,v2) => v1 + " " + v2)

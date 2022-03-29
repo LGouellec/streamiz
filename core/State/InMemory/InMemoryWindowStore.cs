@@ -323,7 +323,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
             {
                 // register the store
                 context.Register(root,
-                    (key, value) => Put(key, value, context.Timestamp));
+                    (key, value, timestamp) => Put(key, value, timestamp));
             }
 
             IsOpen = true;

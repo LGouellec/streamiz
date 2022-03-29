@@ -233,8 +233,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             long? endOffset = changelogMetadata.RestoreEndOffset;
             if (endOffset == null || endOffset == Offset.Unset || endOffset == 0)
                 return true;
-            if (changelogMetadata.CurrentOffset >= endOffset)
-                return true;
             if (!changelogMetadata.BufferedRecords.Any())
             {
                 var offset = restoreConsumer.Position(changelogMetadata.StoreMetadata.ChangelogTopicPartition);

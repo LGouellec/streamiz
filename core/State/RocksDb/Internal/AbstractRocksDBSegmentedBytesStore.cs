@@ -87,7 +87,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
             this.context = context;
 
             segments.OpenExisting(context, observedStreamTime);
-            context.Register(root, (k, v) => Put(k, v));
+            context.Register(root, (k, v, t) => Put(k, v));
 
             isOpen = true;
         }

@@ -128,7 +128,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 .Setup(s => s.Init(context, It.IsAny<IStateStore>()))
                 .Callback((ProcessorContext c, IStateStore store) =>
                 {
-                    stateManager.Register(store, (k, v) => { });
+                    stateManager.Register(store, (k, v, t) => { });
                 });
             
             adminClientMock.Setup(client => client.GetMetadata(kvStoreTopic, It.IsAny<TimeSpan>())).Returns((Metadata)null);
@@ -320,14 +320,14 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 .Setup(s => s.Init(context, It.IsAny<IStateStore>()))
                 .Callback((ProcessorContext c, IStateStore store) =>
                 {
-                    stateManager.Register(store, (k, v) => { });
+                    stateManager.Register(store, (k, v, t) => { });
                 });
             
             otherStoreMock
                 .Setup(s => s.Init(context, It.IsAny<IStateStore>()))
                 .Callback((ProcessorContext c, IStateStore store) =>
                 {
-                    stateManager.Register(store, (k, v) => { });
+                    stateManager.Register(store, (k, v, t) => { });
                 });
 
             StringBuilder sb = new StringBuilder();
