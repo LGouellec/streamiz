@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Metrics;
 using ThreadState = Streamiz.Kafka.Net.Processors.ThreadState;
 
@@ -155,7 +156,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test";
-
+            
             var builder = new StreamBuilder();
             builder.Stream<string, string>("topic").To("topic2");
 
@@ -173,7 +174,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
         [Test]
         public void StreamThreadNormalWorkflow()
-        {
+        {            
+            bool metricsReporterCalled = false;
             List<ThreadState> allStates = new List<ThreadState>();
             var expectedStates = new List<ThreadState>
             {
@@ -190,7 +192,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config.ApplicationId = "test";
             config.Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
             config.PollMs = 1;
-
+            config.MetricsReporter = (sensor) => { metricsReporterCalled = true; };
+            config.AddOrUpdate(StreamConfig.metricsIntervalMsCst, 10);
+            
             var serdes = new StringSerDes();
             var builder = new StreamBuilder();
             builder.Stream<string, string>("topic").To("topic2");
@@ -229,6 +233,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.AreEqual("key1", serdes.Deserialize(message.Message.Key, new SerializationContext()));
             Assert.AreEqual("coucou", serdes.Deserialize(message.Message.Value, new SerializationContext()));
             Assert.AreEqual(expectedStates, allStates);
+            Assert.IsTrue(metricsReporterCalled);
         }
 
         [Test]

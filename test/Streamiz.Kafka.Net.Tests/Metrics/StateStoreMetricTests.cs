@@ -91,6 +91,68 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
                 return base.PutIfAbsent(key, value);
             }
         }
+
+        /// <summary>
+        /// Just mock to add some ms latency to measure it
+        /// </summary>
+        private class MockInMemoryWindowStore : InMemoryWindowStore
+        {
+            private void Wait()
+                => Wait(1, 100);
+            
+            private void Wait(int b, int e)
+            {
+                Random rd = new Random();
+                Thread.Sleep(rd.Next(b, e));
+            }
+            
+            public MockInMemoryWindowStore(string storeName, TimeSpan retention, long size) 
+                : base(storeName, retention, size)
+            {
+            }
+
+            public override IKeyValueEnumerator<Windowed<Bytes>, byte[]> All()
+            {
+                Wait();
+                return base.All();
+            }
+
+            public override IWindowStoreEnumerator<byte[]> Fetch(Bytes key, DateTime @from, DateTime to)
+            {
+                Wait();
+                return base.Fetch(key, @from, to);
+            }
+
+            public override IWindowStoreEnumerator<byte[]> Fetch(Bytes key, long @from, long to)
+            {
+                Wait();
+                return base.Fetch(key, @from, to);
+            }
+
+            public override byte[] Fetch(Bytes key, long time)
+            {
+                Wait(1, 5);
+                return base.Fetch(key, time);
+            }
+
+            public override void Flush()
+            {
+                Wait();
+                base.Flush();
+            }
+
+            public override void Put(Bytes key, byte[] value, long windowStartTimestamp)
+            {
+                Wait(1, 5);
+                base.Put(key, value, windowStartTimestamp);
+            }
+
+            public override IKeyValueEnumerator<Windowed<Bytes>, byte[]> FetchAll(DateTime @from, DateTime to)
+            {
+                Wait();
+                return base.FetchAll(@from, to);
+            }
+        }
         
         private StreamMetricsRegistry streamMetricsRegistry = null;
 
@@ -217,6 +279,63 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             AssertAvgAndMaxLatency(StateStoreMetrics.FLUSH);
         }
 
+        [Test]
+        public void WindowStoreMetricsTest()
+        {
+            long windowSize = 1000 * 60;
+            var random = new Random();
+            MeteredWindowStore<string, string> meteredWindowStore = new MeteredWindowStore<string, string>(
+                new MockInMemoryWindowStore(storeName, TimeSpan.FromDays(1), windowSize),
+                windowSize,
+                new StringSerDes(),
+                new StringSerDes(),
+                storeScope);
+            store = meteredWindowStore;
+            meteredWindowStore.Init(context, meteredWindowStore);
+            
+            int nbMessage = random.Next(0, 250);
+            long now1 = DateTime.Now.GetMilliseconds();
+            
+            // produce ${nbMessage} messages to input topic (both);
+            for(int i = 0 ; i < nbMessage ; ++i)
+                meteredWindowStore.Put($"test{i}", $"test{i}", now1);
+            
+            meteredWindowStore.Flush();
+            
+            long now2 = DateTime.Now.GetMilliseconds();
+            for(int i = 0 ; i < nbMessage ; ++i)
+                meteredWindowStore.Put($"test{i}", $"test{i}", now2);
+            
+            meteredWindowStore.Flush();
+            
+            AssertAvgAndMaxLatency(StateStoreMetrics.PUT);
+            AssertAvgAndMaxLatency(StateStoreMetrics.FLUSH);
+        
+            for (int i = 0; i < nbMessage; ++i)
+                meteredWindowStore.Fetch($"test{i}", now1);
+            
+            AssertAvgAndMaxLatency(StateStoreMetrics.FETCH);
+
+            meteredWindowStore.Fetch($"test0", now1.FromMilliseconds().AddSeconds(-10),
+                now1.FromMilliseconds().AddSeconds(10)).ToList();
+            
+            AssertAvgAndMaxLatency(StateStoreMetrics.FETCH);
+
+            meteredWindowStore.Fetch($"test0", now1 - 10000,
+                now1 + 10000).ToList();
+            
+            AssertAvgAndMaxLatency(StateStoreMetrics.FETCH);
+
+            var nb = meteredWindowStore.FetchAll(now1.FromMilliseconds().AddSeconds(-10),
+                now2.FromMilliseconds().AddSeconds(10)).ToList().Count();
+            
+            Assert.AreEqual(nbMessage * 2 , nb);
+            
+            AssertAvgAndMaxLatency(StateStoreMetrics.FETCH);
+
+            meteredWindowStore.All().ToList();
+        }
+        
         private void AssertAvgAndMaxLatency(string sensorName)
         {
             var latencyAvg = GetSensorMetric(

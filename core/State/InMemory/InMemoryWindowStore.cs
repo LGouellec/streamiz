@@ -253,7 +253,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
         public bool IsOpen { get; private set; } = false;
 
-        public IKeyValueEnumerator<Windowed<Bytes>, byte[]> All()
+        public virtual IKeyValueEnumerator<Windowed<Bytes>, byte[]> All()
         {
             RemoveExpiredData();
             long minTime = observedStreamTime - (long)retention.TotalMilliseconds;
@@ -273,7 +273,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
             IsOpen = false;
         }
 
-        public byte[] Fetch(Bytes key, long time)
+        public virtual byte[] Fetch(Bytes key, long time)
         {
             RemoveExpiredData();
 
@@ -286,10 +286,10 @@ namespace Streamiz.Kafka.Net.State.InMemory
                 return null;
         }
 
-        public IWindowStoreEnumerator<byte[]> Fetch(Bytes key, DateTime from, DateTime to)
+        public virtual IWindowStoreEnumerator<byte[]> Fetch(Bytes key, DateTime from, DateTime to)
             => Fetch(key, from.GetMilliseconds(), to.GetMilliseconds());
 
-        public IWindowStoreEnumerator<byte[]> Fetch(Bytes key, long from, long to)
+        public virtual IWindowStoreEnumerator<byte[]> Fetch(Bytes key, long from, long to)
         {
             RemoveExpiredData();
 
@@ -304,7 +304,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
             return CreateNewWindowStoreEnumerator(key, SubMap(minTime, to));
         }
 
-        public IKeyValueEnumerator<Windowed<Bytes>, byte[]> FetchAll(DateTime from, DateTime to)
+        public virtual IKeyValueEnumerator<Windowed<Bytes>, byte[]> FetchAll(DateTime from, DateTime to)
         {
             RemoveExpiredData();
 
@@ -318,7 +318,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
             return CreateNewWindowedKeyValueEnumerator(null, null, SubMap(minTime, to.GetMilliseconds()));
         }
 
-        public void Flush()
+        public virtual void Flush()
         {
         }
 
@@ -340,7 +340,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
             IsOpen = true;
         }
 
-        public void Put(Bytes key, byte[] value, long windowStartTimestamp)
+        public virtual void Put(Bytes key, byte[] value, long windowStartTimestamp)
         {
             RemoveExpiredData();
 
