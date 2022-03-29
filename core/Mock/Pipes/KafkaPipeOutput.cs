@@ -19,7 +19,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         private readonly CancellationToken token;
         private readonly Thread readThread;
         private readonly IConsumer<byte[], byte[]> consumer;
-        private readonly Queue<(byte[], byte[])> queue = new Queue<(byte[], byte[])>();
+        private readonly Queue<ConsumeResult<byte[], byte[]>> queue = new();
         private readonly object _lock = new object();
 
 
@@ -67,7 +67,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
                 if (record != null)
                 {
                     lock (_lock)
-                        queue.Enqueue((record.Message.Key, record.Message.Value));
+                        queue.Enqueue(record);
                     consumer.Commit(record);
                 }
             }
@@ -84,7 +84,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
             consumer.Dispose();
         }
 
-        public KeyValuePair<byte[], byte[]> Read()
+        public ConsumeResult<byte[], byte[]> Read()
         {
             int count = 0;
             while (count <= 10)
@@ -95,8 +95,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
 
                 if (size > 0)
                 {
-                    var record = queue.Dequeue();
-                    return new KeyValuePair<byte[], byte[]>(record.Item1, record.Item2);
+                    return queue.Dequeue();
                 }
                 else
                 {
@@ -128,9 +127,9 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
             return l;
         }
 
-        public IEnumerable<KeyValuePair<byte[], byte[]>> ReadList()
+        public IEnumerable<ConsumeResult<byte[], byte[]>> ReadList()
         {
-            List<KeyValuePair<byte[], byte[]>> records = new List<KeyValuePair<byte[], byte[]>>();
+            List<ConsumeResult<byte[], byte[]>> records = new List<ConsumeResult<byte[], byte[]>>();
             int count = 0;
             while (count <= 10)
             {
@@ -143,7 +142,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
                     for (int i = 0; i < size; ++i)
                     {
                         var r = queue.Dequeue();
-                        records.Add(new KeyValuePair<byte[], byte[]>(r.Item1, r.Item2));
+                        records.Add(r);
                     }
                     return records;
                 }

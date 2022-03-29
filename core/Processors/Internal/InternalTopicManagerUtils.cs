@@ -120,6 +120,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                             {
                                 var count = clusterMetadata.PartitionCountForTopic(upstreamSourceTopic);
                                 if (count == null)
+                                    count = ComputePartitionCount(upstreamSourceTopic);
+                                // always null ?
+                                if(count == null)
                                     throw new StreamsException(
                                         $"No partition count found for source topic {upstreamSourceTopic}, but I should have been.");
                                 numPartitionCandidate = count;
@@ -137,14 +140,18 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             
             foreach (var repartitionTopic in repartitionTopics)
             {
-                var numberPartition = ComputePartitionCount(repartitionTopic.Key);
-                if (!numberPartition.HasValue)
+                if (repartitionTopic.Value.NumberPartitions == 0)
                 {
-                    log.LogWarning(
-                        $"Unable to determine number of partitions for {repartitionTopic}.");
-                    throw new StreamsException($"Unable to determine number of partitions for {repartitionTopic}.");
+                    var numberPartition = ComputePartitionCount(repartitionTopic.Key);
+                    if (!numberPartition.HasValue)
+                    {
+                        log.LogWarning(
+                            $"Unable to determine number of partitions for {repartitionTopic}.");
+                        throw new StreamsException($"Unable to determine number of partitions for {repartitionTopic}.");
+                    }
+
+                    repartitionTopic.Value.NumberPartitions = numberPartition.Value;
                 }
-                repartitionTopic.Value.NumberPartitions = numberPartition.Value;
             }
         }
         

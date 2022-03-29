@@ -9,6 +9,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             { InternalTopicConfigCst.CLEANUP_POLICY_CONFIG, "delete"},
             { InternalTopicConfigCst.SEGMENT_BYTES_CONFIG, "52428800"}, // 50MB
+            // TODO : set infinity, and purge records automatically
             { InternalTopicConfigCst.RETENTION_MS_CONFIG, "-1"}, // Infinity
         };
         

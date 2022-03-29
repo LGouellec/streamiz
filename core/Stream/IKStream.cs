@@ -1522,5 +1522,21 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">a name config used to name the processor in the topology</param>
         /// <returns>a <see cref="IKTable{K, V}"/> that contains the same records as this <see cref="IKStream{K, V}"/></returns>>
         IKTable<K, V> ToTable(Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        
+        /// <summary>
+        /// Materialize this stream to an auto-generated repartition topic and create a new <see cref="IKStream{K,V}"/>
+        /// from the auto-generated topic using default serializers, deserializers, and producer's partitioner.
+        /// The number of partitions is determined based on the upstream topics partition numbers.
+        /// <para>
+        /// The created topic is considered as an internal topic and is meant to be used only by the current Kafka Streams instance.
+        /// Similar to auto-repartitioning, the topic will be created with infinite retention time and data will be automatically purged by Kafka Streams.
+        /// The topic will be named as "${applicationId}-&lt;name&gt;-repartition", where "applicationId" is user-specified in
+        /// <see cref="IStreamConfig.ApplicationId"/>.
+        /// "&lt;name&gt;" is an internally generated name, and "-repartition" is a fixed suffix.
+        /// </para>
+        /// </summary>
+        /// <param name="repartitioned">Repartition instructions parameter</param>
+        /// <returns><see cref="IKStream{K,V}"/> that contains the exact same repartitioned records as this stream.</returns>
+        IKStream<K, V> Repartition(Repartitioned<K, V> repartitioned = null);
     }
 }

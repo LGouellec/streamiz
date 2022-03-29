@@ -24,11 +24,11 @@ namespace sample_stream
         static async Task Main(string[] args)
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-app2";
-            config.BootstrapServers = "localhost:9092";
+            config.ApplicationId = "test-reducer";
+            config.BootstrapServers = "localhost:19092";
             config.CommitIntervalMs = (long)TimeSpan.FromSeconds(5).TotalMilliseconds;
-            config.AutoOffsetReset = Confluent.Kafka.AutoOffsetReset.Earliest;
-            config.StateDir = Path.Combine(".");
+            config.AutoOffsetReset = AutoOffsetReset.Latest;
+            config.StateDir = Path.Combine(".", Guid.NewGuid().ToString());
 
             config.Logger = LoggerFactory.Create(builder =>
             {
@@ -37,18 +37,13 @@ namespace sample_stream
             });
             
             StreamBuilder builder = new StreamBuilder();
-
-            var stream1 = builder
-                .Stream<string, string>("topic1");
-
-            builder
-                .Stream<string, string>("topic2")
-                .Join(
-                    stream1,
-                    (s, v) => $"{s}-{v}",
-                    JoinWindowOptions.Of(TimeSpan.FromHours(1)))
-                .To("output-join");
-
+     
+            builder.Stream<string, string>("tempTopic")
+                .GroupByKey()
+                .Reduce((v1,v2) => v1 + " " + v2)
+                .ToStream()
+                .To("finalTopic");
+            
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
             

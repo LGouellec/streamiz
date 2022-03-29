@@ -1,4 +1,5 @@
-﻿using Streamiz.Kafka.Net.SerDes;
+﻿using System;
+using Streamiz.Kafka.Net.SerDes;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
@@ -7,8 +8,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         internal ISerDes<K> KeySerdes { get; }
         internal ISerDes<V> ValueSerdes { get; }
         internal string Named { get; private set; }
-
-
+        
+        internal Func<string, K, V, int> Partitioner { get; private set; }
+        
         internal Produced(ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
         {
             KeySerdes = keySerdes;
@@ -30,6 +32,12 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         internal Produced<K, V> WithName(string named)
         {
             Named = named;
+            return this;
+        }
+
+        internal Produced<K, V> WithPartitioner(Func<string, K, V, int> partitioner)
+        {
+            this.Partitioner = partitioner;
             return this;
         }
     }

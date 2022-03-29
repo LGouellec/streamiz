@@ -45,6 +45,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         internal static readonly string TRANSFORMVALUES_NAME = "KSTREAM-TRANSFORMVALUES-";
         internal static readonly string FOREACH_NAME = "KSTREAM-FOREACH-";
         internal static readonly string TO_KTABLE_NAME = "KSTREAM-TOTABLE-";
+        internal static readonly string REPARTITION_NAME = "KSTREAM-REPARTITION-";
         
         #endregion
     }
@@ -90,6 +91,34 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Transform
 
+        #endregion
+        
+        #region Repartition
+
+        public IKStream<K, V> Repartition(Repartitioned<K, V> repartitioned = null)
+        {
+            repartitioned ??= Repartitioned<K, V>.Empty();
+            string name =  repartitioned.Named ?? builder.NewProcessorName(KStream.REPARTITION_NAME);
+            ISerDes<K> keySerdes = repartitioned.KeySerdes ?? KeySerdes;
+            ISerDes<V> valueSerdes = repartitioned.ValueSerdes ?? ValueSerdes;
+
+            (string repartitionName, RepartitionNode<K, V> repartitionNode) =
+                CreateRepartitionSource(name, keySerdes, valueSerdes, builder);
+                
+            repartitionNode.NumberOfPartition = repartitioned.NumberOfPartition;
+            repartitionNode.StreamPartitioner = repartitioned.StreamPartitioner;
+            
+            builder.AddGraphNode(Node, repartitionNode);
+            
+            return new KStream<K, V>(
+                repartitionName,
+                keySerdes,
+                valueSerdes,
+                name.ToSingle().ToList(),
+                repartitionNode,
+                builder);
+        }
+        
         #endregion
 
         #region To

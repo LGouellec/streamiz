@@ -13,14 +13,16 @@ Branching is useful, for example, to route records to different downstream topic
 - IKStream -> IKStream[]
 
 ``` csharp
-IKStream<string, string> stream = ....
+IKStream<string, string> stream = ....;
 var branches = stream.Branch(
                 (k,v) => k.StartsWith("A"),
                 (k,v) => k.StartsWith("B"),
-                (k,v) => k.StartsWith("C"));
+                (k,v) => k.StartsWith("C"),
+                (k,v) => true); // DLQ pattern
 // branches[0] contains all records whose keys start with "A"
 // branches[1] contains all records whose keys start with "B"
 // branches[2] contains all records whose keys start with "C"
+// branches[3] contains other records
 ```
 
 ## Filter
@@ -31,8 +33,8 @@ Evaluates a boolean function for each element and retains those for which the fu
 - IKTable -> IKTable
 
 ``` csharp
-IKStream<string, string> stream = ....
-IKTable<string, string> table =  ...
+IKStream<string, string> stream = ....;
+IKTable<string, string> table =  ...;
 
 // A filter that selects  only value which contains 'test' string constant
 stream.Filter((k, v) => v.Contains("test"))
@@ -47,8 +49,8 @@ Evaluates a boolean function for each element and drops those for which the func
 - IKTable -> IKTable
 
 ``` csharp
-IKStream<string, string> stream = ....
-IKTable<string, string> table =  ...
+IKStream<string, string> stream = ....;
+IKTable<string, string> table =  ...;
 
 // A inverse filter that selects value which contains not 'test' string constant
 stream.FilterNot((k, v) => v.Contains("test"))
@@ -62,7 +64,7 @@ Takes one record and produces zero, one, or more records. You can modify the rec
 - IKStream → IKStream
 
 ``` csharp
-IKStream<string, string> stream = ....
+IKStream<string, string> stream = ....;
 
 // Here, we generate two output records for each input record.
 // We also change the key and value types.
@@ -86,7 +88,7 @@ flatMapValues is preferable to flatMap because it will not cause data re-partiti
 - IKStream → IKStream
 
 ``` csharp
-IKStream<string, string> stream = ....
+IKStream<string, string> stream = ....;
 
 // Split a word into characters.
 stream.FlatMapValues((k,v) => v.ToCharArray())
@@ -103,7 +105,7 @@ Note on processing guarantees: Any side effects of an action (such as writing to
 - IKGroupedStream  → IKTable
 
 ``` csharp
-IKStream<string, string> stream = ....
+IKStream<string, string> stream = ....;
 
 // Print the contents of the IKStream to the local console
 stream.Foreach((k,v) => Console.WriteLine($"{k} {v}"))
@@ -137,7 +139,7 @@ Takes one record and produces one record. You can modify the record key and valu
 - IKStream → IKStream
 
 ``` csharp
-IKStream<string, string> stream = ....
+IKStream<string, string> stream = ....;
 
 // We create a new record keyvalue, with the value to key and key to value
 stream.Map((k,v) => KeyValuePair.Create(v.ToUpper(), k.ToUpper()))
@@ -153,8 +155,8 @@ MapValues is preferable to map because it will not cause data re-partitioning. H
 - IKTable → IKTable
 
 ``` csharp
-IKStream<string, string> stream = ....
-IKTable<string, string> table = ...
+IKStream<string, string> stream = ....;
+IKTable<string, string> table = ...;
 
 // New value type => Int32 which is the length of string value
 stream.MapValues((k,v) => v.Length)
@@ -174,7 +176,7 @@ Note on processing guarantees: Any side effects of an action (such as writing to
 - IKStream → IKStream
 
 ``` csharp
-IKStream<string, string> stream = ....
+IKStream<string, string> stream = ....;
 
 stream.Peek((k,v) => Console.WriteLine($"{k} {v}"))
 ```
@@ -207,7 +209,7 @@ Marks the stream for data re-partitioning: Applying a grouping or a join after s
 - IKStream → IKStream
 
 ``` csharp
-IKStream<string, string> stream = ....
+IKStream<string, string> stream = ....;
 
 // Derive a new record key from the record's value.
 stream.SelectKey((k,v) => v.Length)
@@ -220,9 +222,19 @@ Get the changelog stream of this table.
 - IKTable → IKStream
 
 ``` csharp
-IKTable<string, string> table = ....
-
+IKTable<string, string> table = ....;
 // Also, a variant of `ToStream` exists that allows you
 // to select a new key for the resulting stream.
 IKStream<string, string> = table.ToStream();
+```
+
+## Repartition
+
+Manually trigger repartitioning of the stream with desired number of partitions.
+
+Generated topic is treated as internal topic, as a result data will be purged automatically as any other internal repartition topic. In addition, you can specify the desired number of partitions, which allows to easily scale in/out downstream sub-topologies.
+
+``` csharp
+IKStream<string, string> stream = ....;
+IKStream<string, string> repartitionedStream = stream.Repartition(Repartitioned<string, string>.NumberOfPartitions(10));
 ```
