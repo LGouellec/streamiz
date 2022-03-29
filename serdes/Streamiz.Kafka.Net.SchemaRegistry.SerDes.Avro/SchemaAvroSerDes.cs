@@ -16,8 +16,11 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
     {
         internal SchemaRegistryConfig GetConfig(ISchemaRegistryConfig config)
         {
-            SchemaRegistryConfig c = new SchemaRegistryConfig();
-            c.Url = config.SchemaRegistryUrl;
+            var c = new SchemaRegistryConfig
+            {
+                Url = config.SchemaRegistryUrl
+            };
+
             if (config.SchemaRegistryMaxCachedSchemas.HasValue)
             {
                 c.MaxCachedSchemas = config.SchemaRegistryMaxCachedSchemas;
@@ -27,6 +30,7 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
             {
                 c.RequestTimeoutMs = config.SchemaRegistryRequestTimeoutMs;
             }
+
             if (!string.IsNullOrEmpty(config.BasicAuthUserInfo))
             {
                 c.BasicAuthUserInfo = config.BasicAuthUserInfo;
@@ -41,15 +45,28 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
 
         internal AvroSerializerConfig GetSerializerConfig(ISchemaRegistryConfig config)
         {
-            AvroSerializerConfig c = new AvroSerializerConfig();
+            var c = new AvroSerializerConfig();
+
             if (config.AutoRegisterSchemas.HasValue)
             {
                 c.AutoRegisterSchemas = config.AutoRegisterSchemas;
             }
+
             if (config.SubjectNameStrategy.HasValue)
             {
                 c.SubjectNameStrategy = (Confluent.SchemaRegistry.SubjectNameStrategy)config.SubjectNameStrategy.Value;
             }
+
+            if (config.UseLatestVersion.HasValue)
+            {
+                c.UseLatestVersion = config.UseLatestVersion.Value;
+            }
+
+            if (config.BufferBytes.HasValue)
+            {
+                c.BufferBytes = config.BufferBytes.Value;
+            }
+
             return c;
         }
 
