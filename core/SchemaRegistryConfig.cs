@@ -1,6 +1,5 @@
 ﻿namespace Streamiz.Kafka.Net
 {
-
     /// <summary>
     ///  Subject name strategy. Refer to: https://www.confluent.io/blog/put-several-event-types-kafka-topic/
     /// </summary>
@@ -28,7 +27,18 @@
     }
 
     /// <summary>
-    /// Interface schema registry configuration. 
+    ///    Subject name strategy for referenced schemas.
+    /// <summary>
+    public enum ReferenceSubjectNameStrategy
+    {
+        /// <summary>
+        ///    (default): Use the reference name as the subject name.
+        /// </summary>
+        ReferenceName
+    }
+
+    /// <summary>
+    /// Interface schema registry configuration.
     /// Configure url schema registry, auto register configuration, etc .... for stream application.
     /// See <see cref="StreamConfig"/> to obtain implementation about this interface.
     /// </summary>
@@ -62,7 +72,6 @@
         /// <summary>
         /// Credentials for the schema registry
         /// </summary>
-
         public string BasicAuthUserInfo { get; set; }
 
         /// <summary>
@@ -70,6 +79,38 @@
         /// </summary>
         public int? BasicAuthCredentialsSource { get; set; }
 
+        /// <summary>
+        ///    Specifies the initial size (in bytes) of the buffer used for message
+        ///    serialization. Use a value high enough to avoid resizing the buffer, but small
+        ///    enough to avoid excessive memory use. Inspect the size of the byte array returned
+        ///    by the Serialize method to estimate an appropriate value. Note: each call to
+        ///    serialize creates a new buffer. default: 1024
+        /// </summary>
+        public int? BufferBytes { get; set; }
 
+        /// <summary>
+        ///    Specifies whether or not the serializer should use the latest subject
+        ///    version for serialization. WARNING: There is no check that the latest schema
+        ///    is backwards compatible with the schema of the object being serialized. default:
+        ///    false
+        /// </summary>
+        public bool? UseLatestVersion { get; set; }
+
+        /// <summary>
+        ///    Specifies whether or not the Protobuf serializer should skip known types when
+        ///    resolving dependencies. default: false
+        /// </summary>
+        public bool? SkipKnownTypes { get; set; }
+
+        /// <summary>
+        ///    Specifies whether the Protobuf serializer should serialize message indexes without
+        ///    zig-zag encoding. default: false
+        /// </summary>
+        public bool? UseDeprecatedFormat { get; set; }
+
+        /// <summary>
+        ///    Reference subject name strategy. default: ReferenceSubjectNameStrategy.ReferenceName
+        /// </summary>
+        public ReferenceSubjectNameStrategy? ReferenceSubjectNameStrategy { get; set; }
     }
 }
