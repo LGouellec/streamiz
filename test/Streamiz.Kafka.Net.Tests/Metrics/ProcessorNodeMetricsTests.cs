@@ -118,10 +118,5 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
                     ProcessorNodeMetrics.PROCESS + StreamMetricsRegistry.RATE_SUFFIX, 
                     StreamMetricsRegistry.PROCESSOR_NODE_LEVEL_GROUP)].Value > 0d);
         }
-
-        private string GetSensorName(string sensorName)
-            => streamMetricsRegistry.FullSensorName(sensorName, streamMetricsRegistry.NodeSensorPrefix(threadId, id.ToString(), processorNodeName));
-
-    
     }
 }
