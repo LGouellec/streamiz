@@ -247,7 +247,7 @@ namespace Streamiz.Kafka.Net
         private readonly IStreamConfig configuration;
         private readonly string clientId;
         private readonly ILogger logger;
-        private readonly string logPrefix = "";
+        private readonly string logPrefix;
         private readonly object stateLock = new object();
         private readonly QueryableStoreProvider queryableStoreProvider;
         private readonly GlobalStreamThread globalStreamThread;
@@ -270,7 +270,7 @@ namespace Streamiz.Kafka.Net
         /// <param name="topology">the topology specifying the computational logic</param>
         /// <param name="configuration">configuration about this stream</param>
         public KafkaStream(Topology topology, IStreamConfig configuration)
-            : this(topology, configuration, new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(configuration)))
+            : this(topology, configuration, new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(configuration), configuration))
         {
         }
 
@@ -300,7 +300,8 @@ namespace Streamiz.Kafka.Net
             clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;
             logPrefix = $"stream-application[{configuration.ApplicationId}] ";
             metricsRegistry = new StreamMetricsRegistry(clientId, configuration.MetricsRecording);
-
+            this.kafkaSupplier.MetricsRegistry = metricsRegistry;
+            
             logger.LogInformation($"{logPrefix} Start creation of the stream application with this configuration: {configuration}");
 
             // re-write the physical topology according to the config
