@@ -14,6 +14,7 @@ namespace Streamiz.Kafka.Net.Metrics
         private IDictionary<string, IList<string>> taskLevelSensors = new Dictionary<string, IList<string>>();
         private IDictionary<string, IList<string>> nodeLevelSensors = new Dictionary<string, IList<string>>();
         private IDictionary<string, IList<string>> storeLevelSensors = new Dictionary<string, IList<string>>();
+        private IDictionary<string, IList<string>> librdkafkaSensors = new Dictionary<string, IList<string>>();
 
         private IDictionary<string, IList<string>> threadScopeSensors = new Dictionary<string, IList<string>>();
 
@@ -30,10 +31,12 @@ namespace Streamiz.Kafka.Net.Metrics
         internal static readonly string SENSOR_ENTITY_LABEL = "entity";
         internal static readonly string SENSOR_EXTERNAL_LABEL = "external";
         internal static readonly string SENSOR_INTERNAL_LABEL = "internal";
+        internal static readonly string SENSOR_LIBRDKAFKA_LABEL = "librdkafka";
         // FOR TESTING
         internal static readonly string UNKNOWN_THREAD = "unknown-thread";
         
         public static readonly string CLIENT_ID_TAG = "client_id";
+        public static readonly string LIBRDKAFKA_CLIENT_ID_TAG = "librdkafka_client_id";
         public static readonly string APPLICATION_ID_TAG = "application_id";
         public static readonly string THREAD_ID_TAG = "thread_id";
         public static readonly string TASK_ID_TAG = "task_id";
@@ -55,6 +58,8 @@ namespace Streamiz.Kafka.Net.Metrics
         public static readonly string GROUP_SUFFIX = "-metrics";
         public static readonly string CLIENT_LEVEL_GROUP = GROUP_PREFIX_WO_DELIMITER + GROUP_SUFFIX;
         public static readonly string THREAD_LEVEL_GROUP = GROUP_PREFIX + "thread" + GROUP_SUFFIX;
+        public static readonly string LIBRDKAFKA_CONSUMER_LEVEL_GROUP = GROUP_PREFIX + "librdkafka-consumer" + GROUP_SUFFIX;
+        public static readonly string LIBRDKAFKA_PRODUCER_LEVEL_GROUP = GROUP_PREFIX + "librdkafka-producer" + GROUP_SUFFIX;
         public static readonly string TASK_LEVEL_GROUP = GROUP_PREFIX + "task" + GROUP_SUFFIX;
         public static readonly string PROCESSOR_NODE_LEVEL_GROUP = GROUP_PREFIX + "processor-node" + GROUP_SUFFIX;
         public static readonly string STATE_STORE_LEVEL_GROUP = GROUP_PREFIX + "state" + GROUP_SUFFIX;
@@ -254,6 +259,41 @@ namespace Streamiz.Kafka.Net.Metrics
 
         #endregion
         
+        #region Librdkafka Metrics
+        
+        internal Sensor LibrdKafkaSensor(
+            string threadId,
+            string librdKafkaClientId,
+            string sensorName,
+            string description,
+            MetricsRecordingLevel metricsRecordingLevel,
+            params Sensor[] parents)
+        {
+            lock (librdkafkaSensors)
+            {
+                threadId ??= UNKNOWN_THREAD;
+                string key = LibrdKafkaSensorPrefix(librdKafkaClientId);
+                var sensor = GetSensor(librdkafkaSensors, sensorName, key, description, metricsRecordingLevel, parents);
+                AddSensorThreadScope(threadId, sensor.Name);
+                return sensor;
+            }   
+        }
+
+        internal IDictionary<string, string> LibrdKafkaLevelTags(string threadId, string librdKafkaClientId, string streamsAppId)
+        {
+            var tagDic = ThreadLevelTags(threadId);
+            tagDic.Add(LIBRDKAFKA_CLIENT_ID_TAG, librdKafkaClientId);
+            tagDic.Add(APPLICATION_ID_TAG, streamsAppId);
+            return tagDic;
+        }
+
+        internal string LibrdKafkaSensorPrefix(string librdKafkaClientId)
+        {
+            return $"{SENSOR_LIBRDKAFKA_LABEL}{SENSOR_PREFIX_DELIMITER}{librdKafkaClientId}";
+        }
+        
+        #endregion
+
         #region Helpers
 
         private bool TestMetricsRecordingLevel(MetricsRecordingLevel metricsRecordingLevel)

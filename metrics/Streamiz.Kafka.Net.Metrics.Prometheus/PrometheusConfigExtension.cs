@@ -19,7 +19,7 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
             config.Add(prometheusRunner);
 
             if (config.ExposeLibrdKafkaStats && config is StreamConfig streamConfig)
-                streamConfig.StatisticsIntervalMs = (int) config.MetricsIntervalMs / 2;
+                streamConfig.StatisticsIntervalMs = (int) config.MetricsIntervalMs / 3;
             
             return config;
         }

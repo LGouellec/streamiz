@@ -9,6 +9,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
     internal class DefaultKafkaClientSupplier : IKafkaSupplier
     {
         private readonly KafkaLoggerAdapter loggerAdapter = null;
+        private readonly IStreamConfig streamConfig;
         private readonly bool exposeLibrdKafka;
 
         public DefaultKafkaClientSupplier(KafkaLoggerAdapter loggerAdapter)
@@ -24,6 +25,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 throw new ArgumentNullException(nameof(loggerAdapter));
 
             this.loggerAdapter = loggerAdapter;
+            this.streamConfig = streamConfig;
             exposeLibrdKafka = streamConfig?.ExposeLibrdKafkaStats ?? false;
         }
 
@@ -46,7 +48,9 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 builder.SetErrorHandler(loggerAdapter.ErrorConsume);
                 if (exposeLibrdKafka)
                 {
-                    var consumerStatisticsHandler = new ConsumerStatisticsHandler(config.GroupId, config.ClientId);
+                    var consumerStatisticsHandler = new ConsumerStatisticsHandler(
+                        config.ClientId,
+                        streamConfig.ApplicationId);
                     consumerStatisticsHandler.Register(MetricsRegistry);
                     builder.SetStatisticsHandler((c, stat) =>
                     {
@@ -65,7 +69,9 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             builder.SetErrorHandler(loggerAdapter.ErrorProduce);
             if (exposeLibrdKafka)
             {
-                var producerStatisticsHandler = new ProducerStatisticsHandler(config.ClientId);
+                var producerStatisticsHandler = new ProducerStatisticsHandler(
+                    streamConfig.ClientId,
+                    streamConfig.ApplicationId);
                 producerStatisticsHandler.Register(MetricsRegistry);
                 builder.SetStatisticsHandler((c, stat) =>
                 {
