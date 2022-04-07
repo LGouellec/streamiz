@@ -555,7 +555,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
                 streamAppId,
                 TOPIC_BATCH_SIZE_BYTES_AVG,
                 TOPIC_BATCH_SIZE_BYTES_AVG_DESCRIPTION,
-                (true, true, false),
+                (false, true, false),
                 false,
                 metricsRegistry);
         }
@@ -572,7 +572,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
                 streamAppId,
                 TOPIC_BATCH_COUNT_AVG,
                 TOPIC_BATCH_COUNT_AVG_DESCRIPTION,
-                (true, true, false),
+                (false, true, false),
                 false,
                 metricsRegistry);
         }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Metrics.Stats;
 
 namespace Streamiz.Kafka.Net.Metrics
@@ -35,5 +36,8 @@ namespace Streamiz.Kafka.Net.Metrics
             else if (metricValueProvider is IGauge)
                 lastValue = ((IGauge) metricValueProvider).Value(config, now);
         }
+
+        internal void ChangeTagValue(string tag, string newValue)
+            => metricName.Tags.AddOrUpdate(tag, newValue);
     }
 }

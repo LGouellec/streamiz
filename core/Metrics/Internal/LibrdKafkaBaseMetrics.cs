@@ -4,9 +4,9 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 {
     internal class LibrdKafkaBaseMetrics
     {
-        private static readonly string BROKER_ID_TAG = "broker_id";
-        private static readonly string TOPIC_TAG = "topic";
-        private static readonly string PARTITION_ID_TAG = "partition_id";
+        internal static readonly string BROKER_ID_TAG = "broker_id";
+        internal static readonly string TOPIC_TAG = "topic";
+        internal static readonly string PARTITION_ID_TAG = "partition_id";
         
         protected static Sensor CreateSensor(
             string threadId,

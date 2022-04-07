@@ -105,6 +105,14 @@ namespace Streamiz.Kafka.Net.Metrics
                     metric.Measure(now);
             }
         }
+
+        internal Sensor ChangeTagValue(string tag, string newValue)
+        {
+            foreach (var metric in metrics)
+                metric.Value.ChangeTagValue(tag, newValue);
+            
+            return this;
+        }
         
         public bool Equals(Sensor? other)
             => other != null && other.Name.Equals(Name);
