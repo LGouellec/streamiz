@@ -33,7 +33,7 @@ namespace sample_stream
             config.AutoOffsetReset = Confluent.Kafka.AutoOffsetReset.Earliest;
             config.StateDir = Path.Combine(".");
             config.MetricsRecording = MetricsRecordingLevel.DEBUG;
-            config.UsePrometheusExporter(9090);
+            config.UsePrometheusExporter(9090, true);
 
             config.Logger = LoggerFactory.Create(builder =>
             {
@@ -53,7 +53,6 @@ namespace sample_stream
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
-            stream.Store(StoreQueryParameters.FromNameAndType("", QueryableStoreTypes.KeyValueStore<string, string>()));
             
             Console.CancelKeyPress += (o, e) => stream.Dispose();
 
