@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Kafka.Internal;
 
 namespace Streamiz.Kafka.Net.Mock.Pipes
 {

@@ -176,7 +176,7 @@ namespace Streamiz.Kafka.Net.Processors
             var newConfig = configuration.Clone();
             log.LogInformation($"${logPrefix}Creating producer client for task {Id}");
             newConfig.TransactionalId = $"{newConfig.ApplicationId}-{Id}";
-            tmpProducer = kafkaSupplier.GetProducer(newConfig.ToProducerConfig(StreamThread.GetTaskProducerClientId(threadId, Id)));
+            tmpProducer = kafkaSupplier.GetProducer(newConfig.ToProducerConfig(StreamThread.GetTaskProducerClientId(threadId, Id)).Wrap(threadId, Id));
             return tmpProducer;
         }
 

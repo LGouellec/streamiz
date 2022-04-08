@@ -18,12 +18,12 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
 
         public void ExposeMetrics(IEnumerable<Sensor> sensors)
         {
-            string MetricKey(MetricName m) => $"{m.Group}_{m.Name}".Replace("-", "_");
+            string MetricKey(StreamMetric metric) => $"{metric.Group}_{metric.Name}".Replace("-", "_");
             
             var metrics = sensors.SelectMany(s => s.Metrics);
             foreach (var metric in metrics)
             {
-                var metricKey = MetricKey(metric.Key);
+                var metricKey = MetricKey(metric.Value);
                 Gauge gauge = null;
                 
                 if (gauges.ContainsKey(metricKey))
@@ -44,8 +44,8 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
                     gauge.WithLabels(metric.Key.Tags.Values.ToArray()).Set(1);
             }
         }
-        
-        public bool IsNumeric(object expression, out Double number)
+
+        private bool IsNumeric(object expression, out Double number)
         {
             if (expression == null)
             {

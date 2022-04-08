@@ -8,17 +8,23 @@ namespace Streamiz.Kafka.Net.Metrics
 {
     public class Sensor : IEquatable<Sensor>, IComparable<Sensor>
     {
-        private readonly Dictionary<MetricName, StreamMetric> metrics;
-        private readonly IList<IMeasurableStat> stats;
-        protected readonly object @lock = new object();
-        private MetricConfig config = new MetricConfig();
+        internal readonly Dictionary<MetricName, StreamMetric> metrics;
+        internal readonly IList<IMeasurableStat> stats;
+        internal MetricConfig config = new MetricConfig();
         
+        private readonly object @lock = new object();
+
+        /// <summary>
+        /// True if the sensor is not runnable because the metris recording level is not compatible with this one passed on configuration
+        /// </summary>
+        internal bool NoRunnable { get; set; } = false;
         public string Name { get; private set; }
         public string Description { get; private set; }
         public MetricsRecordingLevel MetricsRecording { get; private set; }
-        public IReadOnlyDictionary<MetricName, StreamMetric> Metrics =>
+        public virtual IReadOnlyDictionary<MetricName, StreamMetric> Metrics =>
             new ReadOnlyDictionary<MetricName, StreamMetric>(metrics);
 
+        // Only one constructor, really important
         internal Sensor(
             string name,
             string description,
@@ -34,14 +40,37 @@ namespace Streamiz.Kafka.Net.Metrics
         
         #region Add
 
+        internal bool AddStatMetric(MetricName keyMetricName, MetricName metricName, IMeasurableStat stat, MetricConfig config = null)
+        {
+            if (!NoRunnable)
+            {
+                if (!metrics.ContainsKey(keyMetricName))
+                {
+                    StreamMetric metric = new StreamMetric(metricName, stat, config ?? this.config);
+                    metrics.Add(keyMetricName, metric);
+                    stats.Add(stat);
+                    return true;
+                }
+
+                return false;
+            }
+
+            return false;
+        }
+
         internal virtual bool AddStatMetric(MetricName name, IMeasurableStat stat, MetricConfig config = null)
         {
-            if(!metrics.ContainsKey(name))
+            if (!NoRunnable)
             {
-                StreamMetric metric = new StreamMetric(name, stat, config ?? this.config);
-                metrics.Add(name, metric);
-                stats.Add(stat);
-                return true;
+                if (!metrics.ContainsKey(name))
+                {
+                    StreamMetric metric = new StreamMetric(name, stat, config ?? this.config);
+                    metrics.Add(name, metric);
+                    stats.Add(stat);
+                    return true;
+                }
+
+                return false;
             }
 
             return false;
@@ -49,13 +78,19 @@ namespace Streamiz.Kafka.Net.Metrics
 
         internal virtual bool AddImmutableMetric<T>(MetricName name, T value, MetricConfig config = null)
         {
-            if (!metrics.ContainsKey(name))
+            if (!NoRunnable)
             {
-                StreamMetric metric = new StreamMetric(name, new ImmutableMetricValue<T>(value), config?? this.config);
-                metrics.Add(name, metric);
-                if(value is IMeasurableStat)
-                    stats.Add((IMeasurableStat)value);
-                return true;
+                if (!metrics.ContainsKey(name))
+                {
+                    StreamMetric metric =
+                        new StreamMetric(name, new ImmutableMetricValue<T>(value), config ?? this.config);
+                    metrics.Add(name, metric);
+                    if (value is IMeasurableStat)
+                        stats.Add((IMeasurableStat) value);
+                    return true;
+                }
+
+                return false;
             }
 
             return false;
@@ -63,11 +98,17 @@ namespace Streamiz.Kafka.Net.Metrics
         
         internal virtual bool AddProviderMetric<T>(MetricName name, Func<T> provider, MetricConfig config = null)
         {
-            if (!metrics.ContainsKey(name))
+            if (!NoRunnable)
             {
-                StreamMetric metric = new StreamMetric(name, new ProviderMetricValue<T>(provider), config?? this.config);
-                metrics.Add(name, metric);
-                return true;
+                if (!metrics.ContainsKey(name))
+                {
+                    StreamMetric metric = new StreamMetric(name, new ProviderMetricValue<T>(provider),
+                        config ?? this.config);
+                    metrics.Add(name, metric);
+                    return true;
+                }
+
+                return false;
             }
 
             return false;
@@ -77,40 +118,52 @@ namespace Streamiz.Kafka.Net.Metrics
 
         #region Record
 
-        internal void Record() 
+        internal virtual void Record() 
             => Record(1);
         
-        internal void Record(long value)
+        internal virtual void Record(long value)
             => Record(value, DateTime.Now.GetMilliseconds());
         
-        internal void Record(double value, long timeMs)
+        internal virtual void Record(double value, long timeMs)
             => RecordInternal(value, timeMs);
         
         protected virtual void RecordInternal(double value, long timeMs)
         {
-            lock (@lock)
+            if (!NoRunnable)
             {
-                foreach (var stat in stats)
-                    stat.Record(config, value, timeMs);
+                lock (@lock)
+                {
+                    foreach (var stat in stats)
+                        stat.Record(config, value, timeMs);
+                }
             }
         }
         
         #endregion
 
-        internal void Refresh(long now)
+        internal virtual void Refresh(long now)
         {
-            lock (@lock)
-            { 
-                foreach(var metric in metrics.Values)
-                    metric.Measure(now);
+            if (!NoRunnable)
+            {
+                lock (@lock)
+                {
+                    foreach (var metric in metrics.Values)
+                        metric.Measure(now);
+                }
             }
         }
 
         internal Sensor ChangeTagValue(string tag, string newValue)
         {
-            foreach (var metric in metrics)
-                metric.Value.ChangeTagValue(tag, newValue);
-            
+            if (!NoRunnable)
+            {
+                foreach (var metric in metrics)
+                {
+                    metric.Key.Tags.AddOrUpdate(tag, newValue);
+                    metric.Value.ChangeTagValue(tag, newValue);
+                }
+            }
+
             return this;
         }
         

@@ -44,6 +44,44 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             return sensor;
         }
 
+        protected static T CreateSensor<T>(
+            string threadId,
+            string librdKafkaClientId,
+            string streamAppId,
+            string sensorName,
+            string sensorDescription,
+            (bool brokerSensor, bool topicSensor, bool partitionSensor) options,
+            bool isConsumer,
+            StreamMetricsRegistry metricsRegistry)
+            where T : Sensor
+        {
+            var sensor = metricsRegistry.LibrdKafkaSensor<T>(
+                threadId,
+                librdKafkaClientId,
+                sensorName,
+                sensorDescription,
+                MetricsRecordingLevel.INFO);
+
+            var tags = metricsRegistry.LibrdKafkaLevelTags(threadId, librdKafkaClientId, streamAppId);
+            
+            if(options.brokerSensor)
+                tags.Add(BROKER_ID_TAG, string.Empty);
+            if(options.topicSensor)
+                tags.Add(TOPIC_TAG, string.Empty);
+            if(options.partitionSensor)
+                tags.Add(PARTITION_ID_TAG, string.Empty);
+            
+            AddValueMetric(
+                sensor,
+                sensorName,
+                sensorDescription,
+                tags,
+                isConsumer);
+            
+            return sensor;
+        }
+
+        
         protected static void AddValueMetric(Sensor sensor,
             string name,
             string description,

@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reflection;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
 
@@ -278,6 +281,25 @@ namespace Streamiz.Kafka.Net.Metrics
                 return sensor;
             }   
         }
+        
+        internal T LibrdKafkaSensor<T>(
+            string threadId,
+            string librdKafkaClientId,
+            string sensorName,
+            string description,
+            MetricsRecordingLevel metricsRecordingLevel,
+            params Sensor[] parents)
+            where T : Sensor
+        {
+            lock (librdkafkaSensors)
+            {
+                threadId ??= UNKNOWN_THREAD;
+                string key = LibrdKafkaSensorPrefix(librdKafkaClientId);
+                var sensor = GetSensor<T>(librdkafkaSensors, sensorName, key, description, metricsRecordingLevel, parents);
+                AddSensorThreadScope(threadId, sensor.Name);
+                return sensor;
+            }   
+        }
 
         internal IDictionary<string, string> LibrdKafkaLevelTags(string threadId, string librdKafkaClientId, string streamsAppId)
         {
@@ -309,31 +331,64 @@ namespace Streamiz.Kafka.Net.Metrics
             string description,
             MetricsRecordingLevel metricsRecordingLevel,
             params Sensor[] parents)
-        {
-            string fullSensorName = FullSensorName(sensorName, key);
-            Sensor sensor = GetSensor(fullSensorName, description, metricsRecordingLevel, parents);
-            if (!listSensors.ContainsKey(key))
-                listSensors.Add(key, new List<string> { fullSensorName});
-            else if(!listSensors[key].Contains(fullSensorName))
-                listSensors[key].Add(fullSensorName);
-            return sensor;
-        }
+            => GetSensor<Sensor>(listSensors, sensorName, key, description, metricsRecordingLevel, parents);
 
         private Sensor GetSensor(
             string name,
             string description,
             MetricsRecordingLevel metricsRecordingLevel,
             params Sensor[] parents)
+            => GetSensor<Sensor>(name, description, metricsRecordingLevel, parents);
+
+        private T GetSensor<T>(
+            IDictionary<string, IList<string>> listSensors,
+            string sensorName,
+            string key,
+            string description,
+            MetricsRecordingLevel metricsRecordingLevel,
+            params Sensor[] parents)
+            where T : Sensor
         {
-            if (sensors.ContainsKey(name))
-                return sensors[name];
+            string fullSensorName = FullSensorName(sensorName, key);
+            T sensor = GetSensor<T>(fullSensorName, description, metricsRecordingLevel, parents);
+            
+            if (!listSensors.ContainsKey(key))
+                listSensors.Add(key, new List<string> { fullSensorName});
+            else if(!listSensors[key].Contains(fullSensorName))
+                listSensors[key].Add(fullSensorName);
+            
+            return sensor;
+        }
+
+        private T GetSensor<T>(
+            string name,
+            string description,
+            MetricsRecordingLevel metricsRecordingLevel,
+            params Sensor[] parents)
+            where T : Sensor
+        {
+            if (sensors.ContainsKey(name) && sensors[name] is T)
+                return (T)sensors[name];
             else
             {
-                Sensor sensor = null;
-                if (TestMetricsRecordingLevel(metricsRecordingLevel))
-                    sensor = new Sensor(name, description, metricsRecordingLevel);
-                else
-                    sensor = new NoRunnableSensor(name, description, metricsRecordingLevel);
+                BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
+                T sensor = (T) (typeof(T)
+                    .GetConstructor(
+                        BindingFlags.NonPublic | BindingFlags.Instance,
+                        null,
+                        new Type[]
+                        {
+                            typeof(string),
+                            typeof(string),
+                            typeof(MetricsRecordingLevel)
+                        }, null)
+                    ?.Invoke(new object[] {name, description, metricsRecordingLevel}));
+
+                if (sensor == null)
+                    throw new StreamsException($"{typeof(T)} has no constructor with string, string, MetricsRecordingLevel parameters !");
+                
+                if (!TestMetricsRecordingLevel(metricsRecordingLevel))
+                    sensor.NoRunnable = true;
                 
                 sensors.Add(name, sensor);
                 return sensor;   

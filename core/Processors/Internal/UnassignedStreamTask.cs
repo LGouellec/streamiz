@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Confluent.Kafka;
 using Streamiz.Kafka.Net.Kafka;
+using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Stream.Internal;

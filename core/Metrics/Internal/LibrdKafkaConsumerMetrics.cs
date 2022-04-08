@@ -1,3 +1,5 @@
+using Streamiz.Kafka.Net.Metrics.Librdkafka;
+
 namespace Streamiz.Kafka.Net.Metrics.Internal
 {
     internal class LibrdKafkaConsumerMetrics : LibrdKafkaBaseMetrics
@@ -203,13 +205,13 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 
         #region Broker Metrics
 
-        public static Sensor TotalNumberOfResponsesReceivedSensor(
+         public static LibrdKafkaSensor TotalNumberOfResponsesReceivedSensor(
             string threadId,
             string librdKafkaClientId,
             string streamAppId,
             StreamMetricsRegistry metricsRegistry)
         {
-            return CreateSensor(
+            return CreateSensor<LibrdKafkaSensor>(
                 threadId,
                 librdKafkaClientId,
                 streamAppId,
@@ -220,13 +222,13 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
                 metricsRegistry);
         }
 
-        public static Sensor TotalNumberOfBytesReceivedSensor(
+         public static LibrdKafkaSensor  TotalNumberOfBytesReceivedSensor(
             string threadId,
             string librdKafkaClientId,
             string streamAppId,
             StreamMetricsRegistry metricsRegistry)
         {
-            return CreateSensor(
+            return CreateSensor<LibrdKafkaSensor>(
                 threadId,
                 librdKafkaClientId,
                 streamAppId,
@@ -237,13 +239,13 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
                 metricsRegistry);
         }
 
-        public static Sensor TotalNumberOfReceivedErrorsSensor(
+         public static LibrdKafkaSensor  TotalNumberOfReceivedErrorsSensor(
             string threadId,
             string librdKafkaClientId,
             string streamAppId,
             StreamMetricsRegistry metricsRegistry)
         {
-            return CreateSensor(
+            return CreateSensor<LibrdKafkaSensor>(
                 threadId,
                 librdKafkaClientId,
                 streamAppId,
@@ -254,13 +256,13 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
                 metricsRegistry);
         }
 
-        public static Sensor NumberOfConnectionAttempsSensor(
+         public static LibrdKafkaSensor  NumberOfConnectionAttempsSensor(
             string threadId,
             string librdKafkaClientId,
             string streamAppId,
             StreamMetricsRegistry metricsRegistry)
         {
-            return CreateSensor(
+            return CreateSensor<LibrdKafkaSensor>(
                 threadId,
                 librdKafkaClientId,
                 streamAppId,
@@ -271,13 +273,13 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
                 metricsRegistry);
         }
 
-        public static Sensor NumberOfDisconnectsSensor(
+         public static LibrdKafkaSensor  NumberOfDisconnectsSensor(
             string threadId,
             string librdKafkaClientId,
             string streamAppId,
             StreamMetricsRegistry metricsRegistry)
         {
-            return CreateSensor(
+            return CreateSensor<LibrdKafkaSensor>(
                 threadId,
                 librdKafkaClientId,
                 streamAppId,
@@ -288,13 +290,13 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
                 metricsRegistry);
         }
 
-        public static Sensor BrokerLatencyAverageMsSensor(
+         public static LibrdKafkaSensor  BrokerLatencyAverageMsSensor(
             string threadId,
             string librdKafkaClientId,
             string streamAppId,
             StreamMetricsRegistry metricsRegistry)
         {
-            return CreateSensor(
+            return CreateSensor<LibrdKafkaSensor>(
                 threadId,
                 librdKafkaClientId,
                 streamAppId,
@@ -309,13 +311,13 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 
         #region Topic Metrics
 
-        public static Sensor BatchSizeAverageBytesSensor(
+         public static LibrdKafkaSensor  BatchSizeAverageBytesSensor(
             string threadId,
             string librdKafkaClientId,
             string streamAppId,
             StreamMetricsRegistry metricsRegistry)
         {
-            return CreateSensor(
+            return CreateSensor<LibrdKafkaSensor>(
                 threadId,
                 librdKafkaClientId,
                 streamAppId,
@@ -326,13 +328,13 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
                 metricsRegistry);
         }
 
-        public static Sensor BatchMessageCountsAverageSensor(
+         public static LibrdKafkaSensor  BatchMessageCountsAverageSensor(
             string threadId,
             string librdKafkaClientId,
             string streamAppId,
             StreamMetricsRegistry metricsRegistry)
         {
-            return CreateSensor(
+            return CreateSensor<LibrdKafkaSensor>(
                 threadId,
                 librdKafkaClientId,
                 streamAppId,
@@ -347,13 +349,13 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 
         #region Partition Metrics
 
-        public static Sensor ConsumerLagSensor(
+         public static LibrdKafkaSensor  ConsumerLagSensor(
             string threadId,
             string librdKafkaClientId,
             string streamAppId,
             StreamMetricsRegistry metricsRegistry)
         {
-            return CreateSensor(
+            return CreateSensor<LibrdKafkaSensor>(
                 threadId,
                 librdKafkaClientId,
                 streamAppId,
@@ -364,13 +366,13 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
                 metricsRegistry);
         }
 
-        public static Sensor TotalNumberOfMessagesConsumedByPartitionSensor(
+         public static LibrdKafkaSensor  TotalNumberOfMessagesConsumedByPartitionSensor(
             string threadId,
             string librdKafkaClientId,
             string streamAppId,
             StreamMetricsRegistry metricsRegistry)
         {
-            return CreateSensor(
+            return CreateSensor<LibrdKafkaSensor>(
                 threadId,
                 librdKafkaClientId,
                 streamAppId,
@@ -381,13 +383,13 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
                 metricsRegistry);
         }
 
-        public static Sensor TotalNumberOfBytesConsumedByPartitionSensor(
+         public static LibrdKafkaSensor  TotalNumberOfBytesConsumedByPartitionSensor(
             string threadId,
             string librdKafkaClientId,
             string streamAppId,
             StreamMetricsRegistry metricsRegistry)
         {
-            return CreateSensor(
+            return CreateSensor<LibrdKafkaSensor>(
                 threadId,
                 librdKafkaClientId,
                 streamAppId,

@@ -65,7 +65,7 @@ namespace Streamiz.Kafka.Net.Processors
             if (configuration.Guarantee == ProcessingGuarantee.AT_LEAST_ONCE)
             {
                 log.LogInformation("{LogPrefix}Creating shared producer client", logPrefix);
-                producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig(GetThreadProducerClientId(threadId)));
+                producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig(GetThreadProducerClientId(threadId)).Wrap(threadId));
             }
 
             var restoreConfig = configuration.ToConsumerConfig(GetRestoreConsumerClientId(customerID));
@@ -84,7 +84,7 @@ namespace Streamiz.Kafka.Net.Processors
             var listener = new StreamsRebalanceListener(manager);
 
             log.LogInformation("{LogPrefix}Creating consumer client", logPrefix);
-            var consumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig(GetConsumerClientId(customerID)), listener);
+            var consumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig(GetConsumerClientId(customerID)).Wrap(threadId), listener);
             manager.Consumer = consumer;
 
             var thread = new StreamThread(threadId, customerID, manager, consumer, builder, storeChangelogReader, streamMetricsRegistry, configuration);

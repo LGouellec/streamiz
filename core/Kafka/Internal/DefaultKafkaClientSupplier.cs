@@ -16,7 +16,6 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             : this(loggerAdapter, null)
         { }
 
-        
         public DefaultKafkaClientSupplier(
             KafkaLoggerAdapter loggerAdapter,
             IStreamConfig streamConfig)
@@ -50,7 +49,8 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 {
                     var consumerStatisticsHandler = new ConsumerStatisticsHandler(
                         config.ClientId,
-                        streamConfig.ApplicationId);
+                        streamConfig.ApplicationId, 
+                        (config as StreamizConsumerConfig)?.ThreadId);
                     consumerStatisticsHandler.Register(MetricsRegistry);
                     builder.SetStatisticsHandler((c, stat) =>
                     {
@@ -71,7 +71,9 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             {
                 var producerStatisticsHandler = new ProducerStatisticsHandler(
                     streamConfig.ClientId,
-                    streamConfig.ApplicationId);
+                    streamConfig.ApplicationId,
+                    (config as StreamizProducerConfig)?.ThreadId,
+                    (config as StreamizProducerConfig)?.Id?.ToString());
                 producerStatisticsHandler.Register(MetricsRegistry);
                 builder.SetStatisticsHandler((c, stat) =>
                 {

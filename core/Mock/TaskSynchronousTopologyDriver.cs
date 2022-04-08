@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Mock
