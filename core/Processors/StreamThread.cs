@@ -529,6 +529,7 @@ namespace Streamiz.Kafka.Net.Processors
                     else
                         consumer.Dispose();
 
+                    streamMetricsRegistry.RemoveThreadSensors(threadId);
                     log.LogInformation($"{logPrefix}Shutdown complete");
                     IsDisposable = true;
                 }

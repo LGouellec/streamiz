@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
+using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
 
@@ -114,6 +115,12 @@ namespace Streamiz.Kafka.Net.Metrics
             return tagDic;
         }
 
+        internal void RemoveClientSensors()
+        {
+            lock (clientLevelSensors)
+                clientLevelSensors.Clear();
+        }
+
         #endregion
         
         #region Thread Level Metrics
@@ -149,6 +156,21 @@ namespace Streamiz.Kafka.Net.Metrics
             return $"{SENSOR_INTERNAL_LABEL}{SENSOR_PREFIX_DELIMITER}{threadId}";
         }
 
+        internal void RemoveThreadSensors(string threadId)
+        {
+            lock (threadLevelSensors)
+            {
+                var key = ThreadSensorPrefix(threadId);
+                if (threadLevelSensors.ContainsKey(key))
+                {
+                    var sensorKeys = threadLevelSensors[key];
+                    sensors.RemoveAll(sensorKeys);
+                    threadScopeSensors[threadId].RemoveAll(sensorKeys);
+                    threadLevelSensors.Remove(key);
+                }
+            }
+        }
+        
         #endregion
         
         #region Task Level Metrics
@@ -183,6 +205,21 @@ namespace Streamiz.Kafka.Net.Metrics
         {
             threadId ??= UNKNOWN_THREAD;
             return $"{ThreadSensorPrefix(threadId)}{SENSOR_PREFIX_DELIMITER}{SENSOR_TASK_LABEL}{SENSOR_PREFIX_DELIMITER}{taskId}";
+        }
+
+        internal void RemoveTaskSensors(string threadId, string taskId)
+        {
+            lock (taskLevelSensors)
+            {
+                var key = TaskSensorPrefix(threadId, taskId);
+                if (taskLevelSensors.ContainsKey(key))
+                {
+                    var sensorKeys = taskLevelSensors[key];
+                    sensors.RemoveAll(sensorKeys);
+                    threadScopeSensors[threadId].RemoveAll(sensorKeys);
+                    taskLevelSensors.Remove(key);
+                }
+            }
         }
 
         #endregion
@@ -221,6 +258,21 @@ namespace Streamiz.Kafka.Net.Metrics
             threadId ??= UNKNOWN_THREAD;
             return $"{TaskSensorPrefix(threadId, taskId)}{SENSOR_PREFIX_DELIMITER}{SENSOR_NODE_LABEL}{SENSOR_PREFIX_DELIMITER}{processorName}";
         }
+        
+        internal void RemoveNodeSensors(string threadId, string taskId, string processorName)
+        {
+            lock (nodeLevelSensors)
+            {
+                var key = NodeSensorPrefix(threadId, taskId, processorName);
+                if (nodeLevelSensors.ContainsKey(key))
+                {
+                    var sensorKeys = nodeLevelSensors[key];
+                    sensors.RemoveAll(sensorKeys);
+                    threadScopeSensors[threadId].RemoveAll(sensorKeys);
+                    nodeLevelSensors.Remove(key);
+                }
+            }
+        }
 
         #endregion
         
@@ -258,11 +310,26 @@ namespace Streamiz.Kafka.Net.Metrics
             threadId ??= UNKNOWN_THREAD;
             return $"{TaskSensorPrefix(threadId, taskId)}{SENSOR_PREFIX_DELIMITER}{SENSOR_STORE_LABEL}{SENSOR_PREFIX_DELIMITER}{storeName}";
         }
+        
+        internal void RemoveStoreSensors(string threadId, string taskId, string storeName)
+        {
+            lock (storeLevelSensors)
+            {
+                var key = StoreSensorPrefix(threadId, taskId, storeName);
+                if (storeLevelSensors.ContainsKey(key))
+                {
+                    var sensorKeys = storeLevelSensors[key];
+                    sensors.RemoveAll(sensorKeys);
+                    threadScopeSensors[threadId].RemoveAll(sensorKeys);
+                    storeLevelSensors.Remove(key);
+                }
+            }
+        }
 
         #endregion
         
         #region Librdkafka Metrics
-        
+
         internal Sensor LibrdKafkaSensor(
             string threadId,
             string librdKafkaClientId,
@@ -270,17 +337,9 @@ namespace Streamiz.Kafka.Net.Metrics
             string description,
             MetricsRecordingLevel metricsRecordingLevel,
             params Sensor[] parents)
-        {
-            lock (librdkafkaSensors)
-            {
-                threadId ??= UNKNOWN_THREAD;
-                string key = LibrdKafkaSensorPrefix(librdKafkaClientId);
-                var sensor = GetSensor(librdkafkaSensors, sensorName, key, description, metricsRecordingLevel, parents);
-                AddSensorThreadScope(threadId, sensor.Name);
-                return sensor;
-            }   
-        }
-        
+            => LibrdKafkaSensor<Sensor>(threadId, librdKafkaClientId, sensorName, description, metricsRecordingLevel,
+                parents);
+
         internal T LibrdKafkaSensor<T>(
             string threadId,
             string librdKafkaClientId,
@@ -298,6 +357,21 @@ namespace Streamiz.Kafka.Net.Metrics
                 AddSensorThreadScope(threadId, sensor.Name);
                 return sensor;
             }   
+        }
+        
+        internal void RemoveLibrdKafkaSensors(string threadId, string librdKafkaClientId)
+        {
+            lock (librdkafkaSensors)
+            {
+                var key = LibrdKafkaSensorPrefix(librdKafkaClientId);
+                if (librdkafkaSensors.ContainsKey(key))
+                {
+                    var sensorKeys = librdkafkaSensors[key];
+                    sensors.RemoveAll(sensorKeys);
+                    threadScopeSensors[threadId].RemoveAll(sensorKeys);
+                    librdkafkaSensors.Remove(key);
+                }
+            }
         }
 
         internal IDictionary<string, string> LibrdKafkaLevelTags(string threadId, string librdKafkaClientId, string streamsAppId)
@@ -403,15 +477,7 @@ namespace Streamiz.Kafka.Net.Metrics
                 threadScopeSensors[threadId].Add(fullSensorName);
         }
         
-        #endregion
-        
-        #region Public API
-        
-        /*** GET METRICS ***/
-        public IEnumerable<Sensor> GetFullScope()
-            => new ReadOnlyCollection<Sensor>(sensors.Values.Where(s => TestMetricsRecordingLevel(s.MetricsRecording)).ToList());
-
-        public IEnumerable<Sensor> GetThreadScopeSensor(string threadId)
+        internal IEnumerable<Sensor> GetThreadScopeSensor(string threadId)
         {
             var sensors = new List<Sensor>();
 
@@ -434,6 +500,14 @@ namespace Streamiz.Kafka.Net.Metrics
 
             return sensors;
         }
+        
+        #endregion
+        
+        #region Public API
+        
+        /*** GET METRICS ***/
+        public IEnumerable<Sensor> GetSensors()
+            => new ReadOnlyCollection<Sensor>(sensors.Values.Where(s => TestMetricsRecordingLevel(s.MetricsRecording)).ToList());
         /*** GET METRICS ***/
 
         // TODO: add sensor

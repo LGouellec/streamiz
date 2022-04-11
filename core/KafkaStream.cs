@@ -480,7 +480,7 @@ namespace Streamiz.Kafka.Net
                 }
 
                 RunMiddleware(false, false);
-                
+                metricsRegistry.RemoveClientSensors();
                 SetState(State.NOT_RUNNING);
                 logger.LogInformation($"{logPrefix}Streams client stopped completely");
             }

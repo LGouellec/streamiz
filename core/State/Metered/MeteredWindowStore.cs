@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Metrics;
@@ -142,5 +143,20 @@ namespace Streamiz.Kafka.Net.State.Metered
 
         public override void Flush()
             => MeasureLatency(() => base.Flush(), flushSensor);
+
+        public override void Close()
+        {
+            try
+            {
+                base.Close();
+            }
+            finally
+            {
+                context.Metrics.RemoveStoreSensors(
+                    Thread.CurrentThread.Name,
+                    context.Id.ToString(),
+                    Name);
+            }
+        }
     }
 }

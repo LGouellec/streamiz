@@ -72,7 +72,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             task.InitializeStateStores();
             task.InitializeTopology();
             task.RestorationIfNeeded();
-            var activeRestorationSensor = streamMetricsRegistry.GetFullScope().FirstOrDefault(s => s.Name.Equals(GetSensorName(TaskMetrics.ACTIVE_RESTORATION)));
+            var activeRestorationSensor = streamMetricsRegistry.GetSensors().FirstOrDefault(s => s.Name.Equals(GetSensorName(TaskMetrics.ACTIVE_RESTORATION)));
             activeRestorationSensor.Refresh(DateTime.Now.GetMilliseconds());
             Assert.AreEqual(1,
                 activeRestorationSensor.Metrics[MetricName.NameAndGroup(

@@ -71,6 +71,8 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 n.Close();
             }
+            
+            Context.Metrics.RemoveNodeSensors(Thread.CurrentThread.Name, Context.Id.ToString(), Name);
         }
 
         #region Forward

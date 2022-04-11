@@ -15,11 +15,3 @@ for tag in ${tags[@]}; do
   done
   echo "$tag done"
 done
-
-
-# sed -i '' -e "s/<$tag>\(.*\)<\/$tag>/<$tag>$1<\/$tag>/g" core/Streamiz.Kafka.Net.csproj
- # sed -i '' -e "s/<$tag>\(.*\)<\/$tag>/<$tag>$1<\/$tag>/g" metrics/Streamiz.Kafka.Net.Metrics.Prometheus/Streamiz.Kafka.Net.Metrics.Prometheus.csproj
- # #sed -i '' -e "s/<$tag>\(.*\)<\/$tag>/<$tag>$1<\/$tag>/g" serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.csproj
- # sed -i '' -e "s/<$tag>\(.*\)<\/$tag>/<$tag>$1<\/$tag>/g" serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.csproj
-  #sed -i '' -e "s/<$tag>\(.*\)<\/$tag>/<$tag>$1<\/$tag>/g" serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf.csproj
- 

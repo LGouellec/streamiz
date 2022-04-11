@@ -353,7 +353,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
         private StreamMetric GetSensorMetric(string sensorName, string metricSuffix, string group)
         {
             long now = DateTime.Now.GetMilliseconds();
-            var sensor = streamMetricsRegistry.GetFullScope().FirstOrDefault(s => s.Name.Equals(GetSensorName(sensorName)));
+            var sensor = streamMetricsRegistry.GetSensors().FirstOrDefault(s => s.Name.Equals(GetSensorName(sensorName)));
             if (sensor == null)
                 throw new NullReferenceException($"sensor {sensorName} not found");
 

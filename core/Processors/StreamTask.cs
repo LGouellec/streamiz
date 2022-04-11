@@ -279,6 +279,8 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 throw new IllegalStateException($"Unknow state {state} while suspending active task {Id}");
             }
+            
+            streamMetricsRegistry.RemoveTaskSensors(threadId, Id.ToString());
         }
 
         public override void Commit() => Commit(true);

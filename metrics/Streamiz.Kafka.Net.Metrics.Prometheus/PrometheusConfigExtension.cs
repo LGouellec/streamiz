@@ -4,13 +4,13 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
 {
     public static class PrometheusConfigExtension
     {
-        public static IStreamConfig UsePrometheusExporter(
+        public static IStreamConfig UsePrometheusReporter(
             this IStreamConfig config, 
             TimeSpan metricInterval,
-            int prometheusExporterEndpointPort = 9090,
+            int prometheusReporterEndpointPort = 9090,
             bool exposeLibrdkafkaStatistics = false)
         {
-            var prometheusRunner = new PrometheusRunner(prometheusExporterEndpointPort);
+            var prometheusRunner = new PrometheusRunner(prometheusReporterEndpointPort);
             var prometheusMetricsExporter = new PrometheusMetricsExporter(prometheusRunner); 
             
             config.MetricsIntervalMs = (long) metricInterval.TotalMilliseconds;
@@ -24,10 +24,10 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
             return config;
         }
 
-        public static IStreamConfig UsePrometheusExporter(
+        public static IStreamConfig UsePrometheusReporter(
             this IStreamConfig config,
-            int prometheusExporterEndpointPort,
+            int prometheusReporterEndpointPort,
             bool exposeLibrdkafkaStatistics = false)
-            => UsePrometheusExporter(config, TimeSpan.FromSeconds(30), prometheusExporterEndpointPort, exposeLibrdkafkaStatistics);
+            => UsePrometheusReporter(config, TimeSpan.FromSeconds(30), prometheusReporterEndpointPort, exposeLibrdkafkaStatistics);
     }
 }
