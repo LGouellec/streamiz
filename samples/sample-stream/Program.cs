@@ -33,7 +33,7 @@ namespace sample_stream
             config.AutoOffsetReset = Confluent.Kafka.AutoOffsetReset.Earliest;
             config.StateDir = Path.Combine(".");
             config.MetricsRecording = MetricsRecordingLevel.DEBUG;
-            config.UsePrometheusExporter(9090, true);
+            config.UsePrometheusReporter(9090, true);
 
             config.Logger = LoggerFactory.Create(builder =>
             {
