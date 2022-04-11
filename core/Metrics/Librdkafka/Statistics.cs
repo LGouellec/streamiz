@@ -3,11 +3,10 @@ using Newtonsoft.Json;
 
 namespace Streamiz.Kafka.Net.Metrics.Librdkafka
 {
-/// <summary>
-    /// https://github.com/edenhill/librdkafka/blob/master/STATISTICS.md
-    /// https://github.com/rfrancotechnologies/kafka-statistics/tree/master/kafka-statistics-handler-net/Models
+    /// <summary>
+    /// JSON Model from : https://github.com/edenhill/librdkafka/blob/master/STATISTICS.md
     /// </summary>
-    public class Statistics
+    internal class Statistics
     {
         [JsonProperty(PropertyName = "name")]
         public string Name;

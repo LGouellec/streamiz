@@ -280,7 +280,13 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         long MetricsIntervalMs { get; set; }
         
+        /// <summary>
+        /// A list of classes to use as metrics reporters.
+        /// Implementing the <code>org.apache.kafka.common.metrics.MetricsReporter</code> interface allows plugging in classes that will be notified of new metric creation.
+        /// The JmxReporter is always included to register JMX statistics.
+        /// </summary>
         Action<IEnumerable<Sensor>> MetricsReporter { get; set; }
+        
         bool ExposeLibrdKafkaStats { get; set; }
         MetricsRecordingLevel MetricsRecording { get; set; }
         

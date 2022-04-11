@@ -5,7 +5,7 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
     /// <summary>
     /// Rolling window statistics. The values are in microseconds unless otherwise stated.
     /// </summary>
-    public class WindowStatistic
+    internal class WindowStatistic
     {
         [JsonProperty(PropertyName = "min")]
         public long Min;

@@ -3,9 +3,9 @@ using Newtonsoft.Json;
 namespace Streamiz.Kafka.Net.Metrics.Librdkafka
 {
     /// <summary>
-    /// 
+    /// JSON Model from : https://github.com/edenhill/librdkafka/blob/master/STATISTICS.md
     /// </summary>
-    public class IdempotentProducerStatistic
+    internal class IdempotentProducerStatistic
     {
         [JsonProperty(PropertyName = "idemp_state")]
         public string State;

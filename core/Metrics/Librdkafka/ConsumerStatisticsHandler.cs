@@ -5,7 +5,7 @@ using Streamiz.Kafka.Net.Metrics.Internal;
 
 namespace Streamiz.Kafka.Net.Metrics.Librdkafka
 {
-    public class ConsumerStatisticsHandler : IStatisticsHandler
+    internal class ConsumerStatisticsHandler : IStatisticsHandler
     {
         private readonly string threadId;
         private readonly string clientId;

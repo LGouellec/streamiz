@@ -2,10 +2,10 @@ using Newtonsoft.Json;
 
 namespace Streamiz.Kafka.Net.Metrics.Librdkafka
 {
-  /// <summary>
-    /// 
+    /// <summary>
+    /// JSON Model from : https://github.com/edenhill/librdkafka/blob/master/STATISTICS.md
     /// </summary>
-    public class PartitionStatistic
+    internal class PartitionStatistic
     {
 
         public enum PartitionState

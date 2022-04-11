@@ -4,9 +4,9 @@ using Newtonsoft.Json;
 namespace Streamiz.Kafka.Net.Metrics.Librdkafka
 {
     /// <summary>
-    /// 
+    /// JSON Model from : https://github.com/edenhill/librdkafka/blob/master/STATISTICS.md
     /// </summary>
-    public class TopicStatistic
+    internal class TopicStatistic
     {
         [JsonProperty(PropertyName = "topic")]
         public string TopicName;

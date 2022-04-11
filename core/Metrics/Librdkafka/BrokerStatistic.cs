@@ -3,10 +3,10 @@ using Newtonsoft.Json;
 
 namespace Streamiz.Kafka.Net.Metrics.Librdkafka
 {
- /// <summary>
-    /// 
+    /// <summary>
+    /// JSON Model from : https://github.com/edenhill/librdkafka/blob/master/STATISTICS.md
     /// </summary>
-    public class BrokerStatistic
+    internal class BrokerStatistic
     {
         public enum BrokerState
         {
@@ -131,7 +131,10 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
         }
     }
 
-    public class Toppars
+    /// <summary>
+    /// JSON Model from : https://github.com/edenhill/librdkafka/blob/master/STATISTICS.md
+    /// </summary>
+    internal class Toppars
     {
         [JsonProperty(PropertyName = "topic")]
         public string TopicName;
