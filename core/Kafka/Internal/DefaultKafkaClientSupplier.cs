@@ -70,7 +70,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             if (exposeLibrdKafka)
             {
                 var producerStatisticsHandler = new ProducerStatisticsHandler(
-                    streamConfig.ClientId,
+                    config.ClientId,
                     streamConfig.ApplicationId,
                     (config as StreamizProducerConfig)?.ThreadId,
                     (config as StreamizProducerConfig)?.Id?.ToString());

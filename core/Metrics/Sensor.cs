@@ -12,7 +12,7 @@ namespace Streamiz.Kafka.Net.Metrics
         internal readonly IList<IMeasurableStat> stats;
         internal MetricConfig config = new MetricConfig();
         
-        private readonly object @lock = new object();
+        protected readonly object @lock = new object();
 
         /// <summary>
         /// True if the sensor is not runnable because the metris recording level is not compatible with this one passed on configuration

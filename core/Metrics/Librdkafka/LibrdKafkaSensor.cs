@@ -11,7 +11,7 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
     /// </summary>
     internal class LibrdKafkaSensor : Sensor
     {
-        internal class ScopedLibrdKafka : IEquatable<ScopedLibrdKafka>
+        internal class ScopedLibrdKafka
         {
             internal static readonly string internalSeparator = ":";
             internal static readonly string separator = "#";
@@ -20,12 +20,15 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
             public string Scope { get; set; }
             public long LastRecordedTime { get; set; } = -1;
 
-            public bool Equals(ScopedLibrdKafka other)
+            public override bool Equals(object other)
             {
-                if (other == null)
+                if (other == null || !(other is ScopedLibrdKafka))
                     return false;
-                return other.Name.Equals(Name) && other.Scope.Equals(Scope);
+                return ((ScopedLibrdKafka)other).Name.Equals(Name) && ((ScopedLibrdKafka)other).Scope.Equals(Scope);
             }
+
+            public override int GetHashCode()
+                => Name.GetHashCode() + Scope.GetHashCode() & 0xFFFFFFF;
         }
 
         internal class ScopedLibrdKafkaSensor : Sensor
@@ -46,7 +49,7 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
                         {
                             var items = i.Split(ScopedLibrdKafka.internalSeparator);
                             if(items.Length == 2)
-                                tags.Add(items[0], items[1]);
+                                tags.AddOrUpdate(items[0], items[1]);
                         });
 
                     var newKeyMetricName = new MetricName(
@@ -112,6 +115,8 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
         internal LibrdKafkaSensor(string name, string description, MetricsRecordingLevel metricsRecording)
             : base(name, description, metricsRecording)
         {
+            originMetrics = new Dictionary<MetricName, StreamMetric>();
+            originMeasurableStats = new Dictionary<MetricName, IMeasurableStat>();
             scopedLibrdKafkaSensors = new Dictionary<ScopedLibrdKafka, ScopedLibrdKafkaSensor>();
         }
         
@@ -158,6 +163,18 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
             }
             
             return false;        
+        }
+
+        internal override void Refresh(long now)
+        {
+            if (!NoRunnable)
+            {
+                lock (@lock)
+                {
+                    foreach (var scopedSensor in scopedLibrdKafkaSensors)
+                        scopedSensor.Value.Refresh(now);;
+                }
+            }
         }
     }
 }

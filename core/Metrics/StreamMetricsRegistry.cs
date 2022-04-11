@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using Streamiz.Kafka.Net.Errors;
-using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.Metrics
@@ -250,7 +249,7 @@ namespace Streamiz.Kafka.Net.Metrics
         {
             threadId ??= UNKNOWN_THREAD;
             var tagDic = TaskLevelTags(threadId, taskId);
-            tagDic.Add($"{storeType}-{STORE_ID_TAG}", storeName);
+            tagDic.Add($"{storeType}_{STORE_ID_TAG}", storeName);
             return tagDic;
         }
 

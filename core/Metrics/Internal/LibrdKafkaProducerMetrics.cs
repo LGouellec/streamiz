@@ -96,17 +96,17 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
         internal static string TOTAL_BROKER_DISCONNECTION_DESCRIPTION =
             "Number of disconnects (triggered by broker, network, load-balancer, etc.).";
 
-        internal static string BROKER_INTERNAL_QUEUE_LATENCY = "broker-internal-queue-latency-μs";
+        internal static string BROKER_INTERNAL_QUEUE_LATENCY = "broker-internal-queue-latency-micros";
 
         internal static string BROKER_INTERNAL_QUEUE_LATENCY_DESCRIPTION =
             "Internal producer queue latency in microseconds. ";
 
-        internal static string BROKER_INTERNAL_REQUEST_QUEUE_LATENCY = "broker-internal-request-queue-latency-μs";
+        internal static string BROKER_INTERNAL_REQUEST_QUEUE_LATENCY = "broker-internal-request-queue-latency-micros";
 
         internal static string BROKER_INTERNAL_REQUEST_QUEUE_LATENCY_DESCRIPTION =
             "Internal request queue latency in microseconds. This is the time between a request is enqueued on the transmit (outbuf) queue and the time the request is written to the TCP socket. Additional buffering and latency may be incurred by the TCP stack and network.";
 
-        internal static string BROKER_LATENCY_AVG = "broker-latency-avg-μs";
+        internal static string BROKER_LATENCY_AVG = "broker-latency-avg-micros";
         internal static string BROKER_LATENCY_AVG_DESCRIPTION = "Broker latency / round-trip time in microseconds.";
 
         // Per Topic(add topic name as label)

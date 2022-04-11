@@ -55,7 +55,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
         internal static string TOTAL_BROKER_DISCONNECTION_DESCRIPTION =
             "Number of disconnects (triggered by broker, network, load-balancer, etc.).";
 
-        internal static string BROKER_LATENCY_AVG = "broker-latency-avg";
+        internal static string BROKER_LATENCY_AVG = "broker-latency-avg-micros";
         internal static string BROKER_LATENCY_AVG_DESCRIPTION = "Broker latency / round-trip time in microseconds.";
 
         // Per Topic (add topic name as label)		
