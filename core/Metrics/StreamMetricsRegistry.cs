@@ -9,6 +9,9 @@ using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.Metrics
 {
+    /// <summary>
+    /// Steamiz metrics registry for adding metric sensors and collecting metric values.
+    /// </summary>
     public class StreamMetricsRegistry
     {
         private IDictionary<string, Sensor> sensors = new Dictionary<string, Sensor>();
@@ -38,50 +41,153 @@ namespace Streamiz.Kafka.Net.Metrics
         // FOR TESTING
         internal static readonly string UNKNOWN_THREAD = "unknown-thread";
         
+        /// <summary>
+        /// Client Id tag
+        /// </summary>
         public static readonly string CLIENT_ID_TAG = "client_id";
+        /// <summary>
+        /// Librdkafka Client Id tag
+        /// </summary>
         public static readonly string LIBRDKAFKA_CLIENT_ID_TAG = "librdkafka_client_id";
+        /// <summary>
+        /// Application Id tag
+        /// </summary>
         public static readonly string APPLICATION_ID_TAG = "application_id";
+        /// <summary>
+        /// Thread Id tag
+        /// </summary>
         public static readonly string THREAD_ID_TAG = "thread_id";
+        /// <summary>
+        /// Task Id tag
+        /// </summary>
         public static readonly string TASK_ID_TAG = "task_id";
+        /// <summary>
+        /// Processor Node Id tag
+        /// </summary>
         public static readonly string PROCESSOR_NODE_ID_TAG = "processor_node_id";
+        /// <summary>
+        /// State id tag
+        /// </summary>
         public static readonly string STORE_ID_TAG = "state_id";
-        
-        
+
+        /// <summary>
+        /// Latency suffix
+        /// </summary>
         public static readonly string LATENCY_SUFFIX = "-latency";
+        /// <summary>
+        /// Records suffix
+        /// </summary>
         public static readonly string RECORDS_SUFFIX = "-records";
+        /// <summary>
+        /// Average suffix
+        /// </summary>
         public static readonly string AVG_SUFFIX = "-avg";
+        /// <summary>
+        /// Max suffix
+        /// </summary>
         public static readonly string MAX_SUFFIX = "-max";
+        /// <summary>
+        /// Min suffix
+        /// </summary>
         public static readonly string MIN_SUFFIX = "-min";
+        /// <summary>
+        /// Rate suffix
+        /// </summary>
         public static readonly string RATE_SUFFIX = "-rate";
+        /// <summary>
+        /// Total suffix
+        /// </summary>
         public static readonly string TOTAL_SUFFIX = "-total";
+        /// <summary>
+        /// Ratio suffix
+        /// </summary>
         public static readonly string RATIO_SUFFIX = "-ratio";
 
+        /// <summary>
+        /// Logical group prefix
+        /// </summary>
         public static readonly string GROUP_PREFIX_WO_DELIMITER = "stream";
+        /// <summary>
+        /// Logical group prefix
+        /// </summary>
         public static readonly string GROUP_PREFIX = GROUP_PREFIX_WO_DELIMITER + "-";
+        /// <summary>
+        /// Logical group suffix
+        /// </summary>
         public static readonly string GROUP_SUFFIX = "-metrics";
+        /// <summary>
+        /// Client Logical group
+        /// </summary>
         public static readonly string CLIENT_LEVEL_GROUP = GROUP_PREFIX_WO_DELIMITER + GROUP_SUFFIX;
+        /// <summary>
+        /// Thread Logical group
+        /// </summary>
         public static readonly string THREAD_LEVEL_GROUP = GROUP_PREFIX + "thread" + GROUP_SUFFIX;
+        /// <summary>
+        /// Librdkafka consumer Logical group
+        /// </summary>
         public static readonly string LIBRDKAFKA_CONSUMER_LEVEL_GROUP = GROUP_PREFIX + "librdkafka-consumer" + GROUP_SUFFIX;
+        /// <summary>
+        /// Librdkafka producer Logical group
+        /// </summary>
         public static readonly string LIBRDKAFKA_PRODUCER_LEVEL_GROUP = GROUP_PREFIX + "librdkafka-producer" + GROUP_SUFFIX;
+        /// <summary>
+        /// Task Logical group
+        /// </summary>
         public static readonly string TASK_LEVEL_GROUP = GROUP_PREFIX + "task" + GROUP_SUFFIX;
+        /// <summary>
+        /// Processor node Logical group
+        /// </summary>
         public static readonly string PROCESSOR_NODE_LEVEL_GROUP = GROUP_PREFIX + "processor-node" + GROUP_SUFFIX;
+        /// <summary>
+        /// State store Logical group
+        /// </summary>
         public static readonly string STATE_STORE_LEVEL_GROUP = GROUP_PREFIX + "state" + GROUP_SUFFIX;
         
+        /// <summary>
+        /// Operation constant
+        /// </summary>
         public static readonly string OPERATIONS = " operations";
+        /// <summary>
+        /// Total description
+        /// </summary>
         public static readonly string TOTAL_DESCRIPTION = "The total number of ";
+        /// <summary>
+        /// Rate description
+        /// </summary>
         public static readonly string RATE_DESCRIPTION = "The average per-second number of ";
+        /// <summary>
+        /// Avg latency description
+        /// </summary>
         public static readonly string AVG_LATENCY_DESCRIPTION = "The average latency of ";
+        /// <summary>
+        /// Maximum latency description
+        /// </summary>
         public static readonly string MAX_LATENCY_DESCRIPTION = "The maximum latency of ";
+        /// <summary>
+        /// Rate description prefix
+        /// </summary>
         public static readonly string RATE_DESCRIPTION_PREFIX = "The average number of ";
+        /// <summary>
+        /// Rate description suffix
+        /// </summary>
         public static readonly string RATE_DESCRIPTION_SUFFIX = " per second";
         
         #endregion
 
-        public StreamMetricsRegistry() 
+        /// <summary>
+        /// Create stream metrics registry in INFO level with a empty cliend Id.
+        /// </summary>
+        internal StreamMetricsRegistry() 
             : this(string.Empty, MetricsRecordingLevel.INFO)
         {
         }
 
+        /// <summary>
+        /// Create stream metrics registry
+        /// </summary>
+        /// <param name="clientId">Client Id derived from <see cref="IStreamConfig.ApplicationId"/></param>
+        /// <param name="metricsRecordingLevel">Metrics recording level derived from <see cref="IStreamConfig.MetricsRecording"/></param>
         public StreamMetricsRegistry(
             string clientId,
             MetricsRecordingLevel metricsRecordingLevel)
@@ -444,7 +550,6 @@ namespace Streamiz.Kafka.Net.Metrics
                 return (T)sensors[name];
             else
             {
-                BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
                 T sensor = (T) (typeof(T)
                     .GetConstructor(
                         BindingFlags.NonPublic | BindingFlags.Instance,
@@ -505,12 +610,14 @@ namespace Streamiz.Kafka.Net.Metrics
         
         #region Public API
         
-        /*** GET METRICS ***/
+        /// <summary>
+        /// Get all sensors function the metrics recording level set in constructor.
+        /// Return a <see cref="ReadOnlyCollection{T}"/> of sensors.
+        /// For each sensor, you can use <see cref="Sensor.Metrics"/> to get the current value of each metric.
+        /// </summary>
+        /// <returns>Return a <see cref="ReadOnlyCollection{T}"/> of sensors.</returns>
         public IEnumerable<Sensor> GetSensors()
             => new ReadOnlyCollection<Sensor>(sensors.Values.Where(s => TestMetricsRecordingLevel(s.MetricsRecording)).ToList());
-        /*** GET METRICS ***/
-
-        // TODO: add sensor
         
         #endregion
     }

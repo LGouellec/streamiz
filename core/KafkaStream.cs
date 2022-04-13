@@ -580,12 +580,12 @@ namespace Streamiz.Kafka.Net
 
         private void RunMiddleware(bool before, bool start)
         {
-            if (configuration.Any())
+            if (configuration.Middlewares.Any())
             {
                 int index = start ? (before ? 0 : 1) : (before ? 2 : 3);
                 var methods = typeof(IStreamMiddleware).GetMethods();
                 logger.LogInformation($"{logPrefix}Starting middleware (${methods[index].Name}) ....");
-                foreach (var middleware in configuration)
+                foreach (var middleware in configuration.Middlewares)
                     methods[index].Invoke(middleware, new object[] {configuration});
             }
         }

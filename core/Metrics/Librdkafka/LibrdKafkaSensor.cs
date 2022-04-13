@@ -7,7 +7,7 @@ using Streamiz.Kafka.Net.Metrics.Stats;
 namespace Streamiz.Kafka.Net.Metrics.Librdkafka
 {
     /// <summary>
-    /// Dynamic sensor functions topics, partitions, brokers ...
+    /// Dynamic sensor functions topics, partitions, brokers ... on librdkafka handle
     /// </summary>
     internal class LibrdKafkaSensor : Sensor
     {
@@ -99,7 +99,7 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
             get
             {
                 if (scopedLibrdKafkaSensors.Count == 0)
-                    return base.Metrics;
+                    return originMetrics;
                 else
                 {
                   return scopedLibrdKafkaSensors

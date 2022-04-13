@@ -26,7 +26,9 @@ namespace Streamiz.Kafka.Net
         internal IStateManager States { get; }
         internal bool FollowMetadata { get; set; }
         
-        
+        /// <summary>
+        /// Return the <see cref="StreamMetricsRegistry"/> instance.
+        /// </summary>
         public virtual StreamMetricsRegistry Metrics { get; private set; }
 
         /// <summary>

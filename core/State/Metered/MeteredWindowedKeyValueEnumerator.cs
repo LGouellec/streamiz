@@ -7,7 +7,7 @@ using Streamiz.Kafka.Net.State.Enumerator;
 
 namespace Streamiz.Kafka.Net.State.Metered
 {
-    public class MeteredWindowedKeyValueEnumerator<K, V>
+    internal class MeteredWindowedKeyValueEnumerator<K, V>
         : IKeyValueEnumerator<Windowed<K>, V>
     {
         private readonly Sensor sensor;

@@ -5,6 +5,9 @@ using Streamiz.Kafka.Net.Metrics.Stats;
 
 namespace Streamiz.Kafka.Net.Metrics
 {
+    /// <summary>
+    /// A metric tracked for monitoring purposes.
+    /// </summary>
     public class StreamMetric
     {
         private readonly MetricName metricName;
@@ -23,10 +26,29 @@ namespace Streamiz.Kafka.Net.Metrics
             this.config = config;
         }
 
+        /// <summary>
+        /// The value of the metric, which may be measurable or a non-measurable gauge
+        /// </summary>
         public object Value => lastValue;
+        
+        /// <summary>
+        /// Name of the metric
+        /// </summary>
         public string Name => this.metricName.Name;
+        
+        /// <summary>
+        /// Description of the metric
+        /// </summary>
         public string Description => this.metricName.Description;
+        
+        /// <summary>
+        /// Logical group of the metric
+        /// </summary>
         public string Group => metricName.Group;
+        
+        /// <summary>
+        /// Additional key/value pairs
+        /// </summary>
         public IReadOnlyDictionary<string, string> Tags => new ReadOnlyDictionary<string, string>(metricName.Tags);
 
         internal void Measure(long now)

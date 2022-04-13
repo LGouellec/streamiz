@@ -3,7 +3,7 @@ using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Crosscutting
 {
-    public static class ActionHelper
+    internal static class ActionHelper
     {
         internal static long MeasureLatency(Action action)
         {

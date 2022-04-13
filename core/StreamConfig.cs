@@ -38,7 +38,7 @@ namespace Streamiz.Kafka.Net
     /// See <see cref="StreamConfig"/> to obtain implementation about this interface.
     /// You could develop your own implementation and get it in your <see cref="KafkaStream"/> instance.
     /// </summary>
-    public interface IStreamConfig : ICloneable<IStreamConfig>, ICollection<IStreamMiddleware>
+    public interface IStreamConfig : ICloneable<IStreamConfig>
     {
         #region AddConfig
 
@@ -276,22 +276,56 @@ namespace Streamiz.Kafka.Net
         ILoggerFactory Logger { get; set; }
         
         /// <summary>
-        /// Minimum & default : 30 seconds
+        /// Delay between two invocations of MetricsReporter().
+        /// Minimum and default value : 30 seconds
         /// </summary>
         long MetricsIntervalMs { get; set; }
         
         /// <summary>
-        /// A list of classes to use as metrics reporters.
-        /// Implementing the <code>org.apache.kafka.common.metrics.MetricsReporter</code> interface allows plugging in classes that will be notified of new metric creation.
-        /// The JmxReporter is always included to register JMX statistics.
+        /// The reporter expose a list of sensors throw by a stream thread every <see cref="MetricsIntervalMs"/>.
+        /// This reporter has the responsibility to export sensors and metrics into another platform.
+        /// Streamiz package provide one reporter for Prometheus (see Streamiz.Kafka.Net.Metrics.Prometheus package).
         /// </summary>
         Action<IEnumerable<Sensor>> MetricsReporter { get; set; }
         
+        /// <summary>
+        /// Boolean which indicate if librdkafka handle statistics should be exposed ot not. (default: false)
+        /// Only mainConsumer and producer will be concerned.
+        /// </summary>
         bool ExposeLibrdKafkaStats { get; set; }
+        
+        /// <summary>
+        /// The highest recording level for metrics.
+        /// </summary>
         MetricsRecordingLevel MetricsRecording { get; set; }
-        
-        
 
+        #endregion
+        
+        #region Middlewares
+        
+        /// <summary>
+        /// Add middleware
+        /// </summary>
+        /// <param name="item">New middleware</param>
+        void AddMiddleware(IStreamMiddleware item);
+
+        /// <summary>
+        /// Clear all middlewares
+        /// </summary>
+        void ClearMiddleware();
+        
+        /// <summary>
+        /// Remove a specific middleware
+        /// </summary>
+        /// <param name="item">middleware to remove</param>
+        /// <returns></returns>
+        bool RemoveMiddleware(IStreamMiddleware item);
+        
+        /// <summary>
+        /// Get all middlewares
+        /// </summary>
+        IEnumerable<IStreamMiddleware> Middlewares { get; }
+        
         #endregion
     }
 
@@ -431,23 +465,30 @@ namespace Streamiz.Kafka.Net
 
         private bool changeGuarantee = false;
         
-        #region Middleware's collections
+        #region Middlewares
+        
+        /// <summary>
+        /// Add middleware
+        /// </summary>
+        /// <param name="item">New middleware</param>
+        public void AddMiddleware(IStreamMiddleware item) => middlewares.Add(item);
 
-        public int Count => middlewares.Count;
+        /// <summary>
+        /// Clear all middlewares
+        /// </summary>
+        public void ClearMiddleware() => middlewares.Clear();
 
-        public bool IsReadOnly => false;
-
-        public void Add(IStreamMiddleware item) => middlewares.Add(item);
-
-        public void Clear() => middlewares.Clear();
-
-        public bool Contains(IStreamMiddleware item) => middlewares.Contains(item);
-
-        public void CopyTo(IStreamMiddleware[] array, int arrayIndex) => middlewares.CopyTo(array, arrayIndex);
-
-        public bool Remove(IStreamMiddleware item) => middlewares.Remove(item);
-
-        public IEnumerator<IStreamMiddleware> GetEnumerator() => middlewares.GetEnumerator();
+        /// <summary>
+        /// Remove a specific middleware
+        /// </summary>
+        /// <param name="item">middleware to remove</param>
+        /// <returns></returns>
+        public bool RemoveMiddleware(IStreamMiddleware item) => middlewares.Remove(item);
+        
+        /// <summary>
+        /// Get all middlewares
+        /// </summary>
+        public IEnumerable<IStreamMiddleware> Middlewares => middlewares.AsReadOnly();
         
         #endregion
 
@@ -2232,6 +2273,10 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         public Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler { get; set; }
         
+        /// <summary>
+        /// Delay between two invocations of MetricsReporter().
+        /// Minimum and default value : 30 seconds
+        /// </summary>
         public long MetricsIntervalMs
         {
             get => this[metricsIntervalMsCst];
@@ -2243,18 +2288,30 @@ namespace Streamiz.Kafka.Net
             }
         }
         
+        /// <summary>
+        /// The reporter expose a list of sensors throw by a stream thread every <see cref="MetricsIntervalMs"/>.
+        /// This reporter has the responsibility to export sensors and metrics into another platform.
+        /// Streamiz package provide one reporter for Prometheus (see Streamiz.Kafka.Net.Metrics.Prometheus package).
+        /// </summary>
         public Action<IEnumerable<Sensor>> MetricsReporter
         {
             get => this[metricsReportCst];
             set => this.AddOrUpdate(metricsReportCst, value);
         }
         
+        /// <summary>
+        /// Boolean which indicate if librdkafka handle statistics should be exposed ot not. (default: false)
+        /// Only mainConsumer and producer will be concerned.
+        /// </summary>
         public bool ExposeLibrdKafkaStats 
         {
             get => this[exposeLibrdKafkaCst];
             set => this.AddOrUpdate(exposeLibrdKafkaCst, value);
         }
         
+        /// <summary>
+        /// The highest recording level for metrics.
+        /// </summary>
         public MetricsRecordingLevel MetricsRecording 
         {
             get => this[metricsRecordingLevelCst];
