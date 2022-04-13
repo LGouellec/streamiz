@@ -33,7 +33,6 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
                 builder.Build().Describe().ToString(),
                 () => 0,
                 () => 1, streamMetricsRegistry);
-            sensor.Refresh(DateTime.Now.GetMilliseconds());
 
             Assert.AreEqual(5, sensor.Metrics.Keys.Count());
             

@@ -165,16 +165,16 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
             return false;        
         }
 
-        internal override void Refresh(long now)
-        {
-            if (!NoRunnable)
-            {
-                lock (@lock)
-                {
-                    foreach (var scopedSensor in scopedLibrdKafkaSensors)
-                        scopedSensor.Value.Refresh(now);;
-                }
-            }
-        }
+        // internal override void Refresh(long now)
+        // {
+        //     if (!NoRunnable)
+        //     {
+        //         lock (@lock)
+        //         {
+        //             foreach (var scopedSensor in scopedLibrdKafkaSensors)
+        //                 scopedSensor.Value.Refresh(now);;
+        //         }
+        //     }
+        // }
     }
 }

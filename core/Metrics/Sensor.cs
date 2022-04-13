@@ -176,22 +176,6 @@ namespace Streamiz.Kafka.Net.Metrics
         
         #endregion
 
-        /// <summary>
-        /// Refresh the current value of all metrics
-        /// </summary>
-        /// <param name="now"></param>
-        internal virtual void Refresh(long now)
-        {
-            if (!NoRunnable)
-            {
-                lock (@lock)
-                {
-                    foreach (var metric in metrics.Values)
-                        metric.Measure(now);
-                }
-            }
-        }
-
         internal Sensor ChangeTagValue(string tag, string newValue)
         {
             if (!NoRunnable)

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Streamiz.Kafka.Net.Crosscutting;
@@ -29,7 +30,14 @@ namespace Streamiz.Kafka.Net.Metrics
         /// <summary>
         /// The value of the metric, which may be measurable or a non-measurable gauge
         /// </summary>
-        public object Value => lastValue;
+        public object Value
+        {
+            get
+            {
+                Measure(DateTime.Now.GetMilliseconds());
+                return lastValue;
+            }
+        }
         
         /// <summary>
         /// Name of the metric
@@ -51,7 +59,7 @@ namespace Streamiz.Kafka.Net.Metrics
         /// </summary>
         public IReadOnlyDictionary<string, string> Tags => new ReadOnlyDictionary<string, string>(metricName.Tags);
 
-        internal void Measure(long now)
+        private void Measure(long now)
         {
             if (metricValueProvider is IMeasurable)
                 lastValue = ((IMeasurable) metricValueProvider).Measure(config, now);

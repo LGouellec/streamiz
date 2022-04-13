@@ -73,13 +73,11 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             task.InitializeTopology();
             task.RestorationIfNeeded();
             var activeRestorationSensor = streamMetricsRegistry.GetSensors().FirstOrDefault(s => s.Name.Equals(GetSensorName(TaskMetrics.ACTIVE_RESTORATION)));
-            activeRestorationSensor.Refresh(DateTime.Now.GetMilliseconds());
             Assert.AreEqual(1,
                 activeRestorationSensor.Metrics[MetricName.NameAndGroup(
                     TaskMetrics.ACTIVE_RESTORATION, 
                     StreamMetricsRegistry.TASK_LEVEL_GROUP)].Value);
             task.CompleteRestoration();
-            activeRestorationSensor.Refresh(DateTime.Now.GetMilliseconds());
             Assert.AreEqual(0,
                 activeRestorationSensor.Metrics[MetricName.NameAndGroup(
                     TaskMetrics.ACTIVE_RESTORATION, 
@@ -140,8 +138,6 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
 
             long now = DateTime.Now.GetMilliseconds();
             var sensors = streamMetricsRegistry.GetThreadScopeSensor(threadId);
-            foreach (var s in sensors)
-                s.Refresh(now);
 
             var processorSensor = sensors.FirstOrDefault(s => s.Name.Equals(GetSensorName(TaskMetrics.PROCESS)));
             Assert.AreEqual(2, processorSensor.Metrics.Count());

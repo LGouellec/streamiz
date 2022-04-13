@@ -105,8 +105,6 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             
             long now = DateTime.Now.GetMilliseconds();
             var sensors = streamMetricsRegistry.GetThreadScopeSensor(threadId);
-            foreach (var s in sensors)
-                s.Refresh(now);
 
             var createTaskSensor = sensors.FirstOrDefault(s => s.Name.Equals(GetSensorName(ThreadMetrics.CREATE_TASK)));
             Assert.AreEqual(2, createTaskSensor.Metrics.Count());

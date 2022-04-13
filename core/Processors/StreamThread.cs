@@ -601,9 +601,6 @@ namespace Streamiz.Kafka.Net.Processors
         private void ExportMetrics(long now)
         {
             var sensors = streamMetricsRegistry.GetThreadScopeSensor(threadId);
-            foreach (var s in sensors)
-                s.Refresh(now);
-
             Task.Factory.StartNew(() => streamConfig.MetricsReporter?.Invoke(sensors));
         }
 

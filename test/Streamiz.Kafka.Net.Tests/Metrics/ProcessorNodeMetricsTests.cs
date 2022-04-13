@@ -103,10 +103,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             
             long now = DateTime.Now.GetMilliseconds();
             var sensors = streamMetricsRegistry.GetThreadScopeSensor(threadId);
-            foreach (var s in sensors)
-                s.Refresh(now);
-
-            sourceProcessor.ProcessSensor.Refresh(now);
+           
             var processorSensor = sourceProcessor.ProcessSensor;
             Assert.AreEqual(2, processorSensor.Metrics.Count());
             Assert.AreEqual(nbMessage,  

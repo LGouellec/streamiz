@@ -357,7 +357,6 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             if (sensor == null)
                 throw new NullReferenceException($"sensor {sensorName} not found");
 
-            sensor.Refresh(now);
             MetricName keyMetric = MetricName.NameAndGroup(
                 sensorName + metricSuffix,
                 group);
