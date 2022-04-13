@@ -115,8 +115,8 @@ namespace Streamiz.Kafka.Net.Metrics
                     StreamMetric metric =
                         new StreamMetric(name, new ImmutableMetricValue<T>(value), config ?? this.config);
                     metrics.Add(name, metric);
-                    if (value is IMeasurableStat)
-                        stats.Add((IMeasurableStat) value);
+                    if (value is IMeasurableStat stat)
+                        stats.Add(stat);
                     return true;
                 }
 
