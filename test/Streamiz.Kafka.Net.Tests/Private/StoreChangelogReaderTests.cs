@@ -227,8 +227,13 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
                 RestoreEndOffset = Offset.Unset
             };
-            Assert.IsTrue(storeChangelogReaderBis.HasRestoredToEnd(metadata));
+            Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
 
+            restoreConsumer.Commit(new List<TopicPartitionOffset>()
+            {
+                new TopicPartitionOffset(new TopicPartition(changelogTopic, 0), 10)
+            });
+            
             metadata = new ChangelogMetadata
             {
                 RestoreEndOffset = 10,
@@ -236,7 +241,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 BufferedRecords = new List<ConsumeResult<byte[], byte[]>>(),
                 StoreMetadata = new ProcessorStateManager.StateStoreMetadata()
                 {
-                    ChangelogTopicPartition = tp
+                    ChangelogTopicPartition = new TopicPartition(changelogTopic, 0)
                 }
             };
             Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));

@@ -130,7 +130,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             kvStoreMock
                 .Setup(s => s.Init(context, It.IsAny<IStateStore>()))
-                .Callback((ProcessorContext c, IStateStore store) => { stateManager.Register(store, (k, v) => { }); });
+                .Callback((ProcessorContext c, IStateStore store) => { stateManager.Register(store, (k, v, t) => { }); });
 
             adminClientMock.Setup(client => client.GetMetadata(kvStoreTopic, It.IsAny<TimeSpan>()))
                 .Returns((Metadata) null);
@@ -325,11 +325,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             kvStoreMock
                 .Setup(s => s.Init(context, It.IsAny<IStateStore>()))
-                .Callback((ProcessorContext c, IStateStore store) => { stateManager.Register(store, (k, v) => { }); });
+                .Callback((ProcessorContext c, IStateStore store) => { stateManager.Register(store, (k, v, t) => { }); });
 
             otherStoreMock
                 .Setup(s => s.Init(context, It.IsAny<IStateStore>()))
-                .Callback((ProcessorContext c, IStateStore store) => { stateManager.Register(store, (k, v) => { }); });
+                .Callback((ProcessorContext c, IStateStore store) => { stateManager.Register(store, (k, v, t) => { }); });
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("0").AppendLine("1").AppendLine("kv-store-topic 0 10");
