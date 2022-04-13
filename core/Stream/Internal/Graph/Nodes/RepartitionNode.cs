@@ -1,3 +1,4 @@
+using System;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 
@@ -10,17 +11,20 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
         {
         }
 
+        public int? NumberOfPartition { get; set; }
+        public Func<string, K, V, int> StreamPartitioner { get; set; }
+
         public override void WriteToTopology(InternalTopologyBuilder builder)
         {
             if (ProcessorParameters != null)
             {
-                builder.AddInternalTopic(RepartitionTopic);
+                builder.AddInternalTopic(RepartitionTopic, NumberOfPartition);
                 builder.AddProcessor(ProcessorParameters.ProcessorName, ProcessorParameters.Processor,
                     ParentNodeNames());
                 builder.AddSinkOperator(
                     new StaticTopicNameExtractor<K, V>(RepartitionTopic),
                     SinkName,
-                    Produced<K, V>.Create(KeySerdes, ValueSerdes),
+                    Produced<K, V>.Create(KeySerdes, ValueSerdes).WithPartitioner(StreamPartitioner),
                     ProcessorParameters.ProcessorName);
                 builder.AddSourceOperator(
                     RepartitionTopic,
@@ -29,11 +33,11 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
             }
             else
             {
-                builder.AddInternalTopic(RepartitionTopic);
+                builder.AddInternalTopic(RepartitionTopic, NumberOfPartition);
                 builder.AddSinkOperator(
                     new StaticTopicNameExtractor<K, V>(RepartitionTopic),
                     SinkName,
-                    Produced<K, V>.Create(KeySerdes, ValueSerdes),
+                    Produced<K, V>.Create(KeySerdes, ValueSerdes).WithPartitioner(StreamPartitioner),
                     ParentNodeNames());
                 builder.AddSourceOperator(
                     RepartitionTopic,

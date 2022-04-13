@@ -135,7 +135,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
             if (root != null)
             {
                 // register the store
-                context.Register(root, (key, value) => Put(key, value));
+                context.Register(root, (key, value, timestamp) => Put(key, value));
             }
 
             IsOpen = true;

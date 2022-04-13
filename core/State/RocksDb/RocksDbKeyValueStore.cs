@@ -242,7 +242,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             OpenDatabase(context);
 
             // TODO : batch restoration behavior
-            context.Register(root, (k, v) => Put(k, v));
+            context.Register(root, (k, v, t) => Put(k, v));
         }
 
         /// <summary>

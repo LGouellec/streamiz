@@ -134,6 +134,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             adminClientMock.Setup(client => client.GetMetadata(kvStoreTopic, It.IsAny<TimeSpan>()))
                 .Returns((Metadata) null);
+
             Assert.Throws<StreamsException>(() => stateManager.Initialize());
         }
 

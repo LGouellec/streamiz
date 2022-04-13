@@ -241,7 +241,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     var convertedRecords = records.Select(r => recordConverter(r)).ToList();
                     
                     foreach(var record in records)
-                        restoreCallback?.Invoke(Bytes.Wrap(record.Message.Key), record.Message.Value);
+                        restoreCallback?.Invoke(Bytes.Wrap(record.Message.Key), record.Message.Value, record.Message.Timestamp.UnixTimestampMs);
 
                     if (records.Any())
                         offset = records.Last().Offset;

@@ -45,12 +45,10 @@ namespace sample_stream
             
             builder.Stream<string, string>("input")
                 .GroupByKey()
-                .Reduce(
-                    (v1,v2) => $"{v1}-{v2}",
-                    RocksDb<string,string>.As("reduce-store"))
+                .Reduce((v1,v2) => v1 + " " + v2)
                 .ToStream()
                 .To("output");
-
+          
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
             

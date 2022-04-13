@@ -186,7 +186,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             throw new IllegalStateException($"The corresponding changelog restorer for {topicPartition} does not exist, this should not happen.");
         }
 
-        
         private void RestoreChangelog(ChangelogMetadata changelogMetadata)
         {
             var numRecords = changelogMetadata.BufferedLimit;
@@ -201,7 +200,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
                 long currentOffset = changelogMetadata.StoreMetadata.Offset.Value;
                 changelogMetadata.CurrentOffset = currentOffset;
-                
                 log.LogDebug($"Restored {numRecords} records from " +
                              $"changelog {changelogMetadata.StoreMetadata.Store.Name} " +
                              $"to store {changelogMetadata.StoreMetadata.ChangelogTopicPartition}, " +
@@ -249,8 +247,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             long? endOffset = changelogMetadata.RestoreEndOffset;
             if (endOffset == null || endOffset == Offset.Unset || endOffset == 0)
                 return true;
-            if (changelogMetadata.CurrentOffset >= endOffset)
-                return true;
             if (!changelogMetadata.BufferedRecords.Any())
             {
                 var offset = restoreConsumer.Position(changelogMetadata.StoreMetadata.ChangelogTopicPartition);
@@ -289,7 +285,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 if (endOffsets.ContainsKey(metadata.StoreMetadata.ChangelogTopicPartition)) {
                     metadata.RestoreEndOffset = endOffsets[metadata.StoreMetadata.ChangelogTopicPartition].Item2;
                     metadata.BeginOffset = endOffsets[metadata.StoreMetadata.ChangelogTopicPartition].Item1;
-
                     log.LogDebug($"State store {metadata.StoreMetadata.ChangelogTopicPartition} metadata found (begin offset: {metadata.BeginOffset} / end offset : {metadata.RestoreEndOffset})");
                     
                     if(metadata.StoreMetadata.Offset.HasValue && metadata.StoreMetadata.Offset < endOffsets[metadata.StoreMetadata.ChangelogTopicPartition].Item1)
@@ -317,7 +312,30 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             
             log.LogDebug($"Added partitions with offsets {string.Join(",", newPartitionsOffsets.Select(c => $"{c.Topic}-{c.Partition}#{c.Offset}"))} " +
                 $"to the restore consumer, current assignment is {string.Join(",", restoreConsumer.Assignment.Select(c => $"{c.Topic}-{c.Partition}"))}");
-            
+
+            // Seek each changelog to current offset (beginning if not present)
+            /*foreach (var metadata in registeredChangelogs)
+            {
+                if (metadata.RestoreEndOffset != Offset.Unset)
+                {
+                    var offset = metadata.StoreMetadata.Offset.HasValue
+                        ? new Offset(metadata.StoreMetadata.Offset.Value + 1)
+                        : new Offset(metadata.BeginOffset.Value);
+                    
+                    restoreConsumer.Seek(
+                        new TopicPartitionOffset(
+                            metadata.StoreMetadata.ChangelogTopicPartition,
+                            offset));
+
+                    if (offset == Offset.Beginning)
+                        log.LogDebug(
+                            $"Start restoring changelog partition {metadata.StoreMetadata.ChangelogTopicPartition} from the beginning offset to end offset {metadata.RestoreEndOffset}.");
+                    else
+                        log.LogDebug(
+                            $"Start restoring changelog partition {metadata.StoreMetadata.ChangelogTopicPartition} from current offset {offset.Value} to end offset {metadata.RestoreEndOffset}.");
+                }
+            }*/
+
             // TODO : call trigger onRestoreStart(...)
         }
 

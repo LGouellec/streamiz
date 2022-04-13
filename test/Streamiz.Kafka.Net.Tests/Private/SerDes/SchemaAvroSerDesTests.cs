@@ -14,6 +14,7 @@ using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Tests.Helpers.Bean.Avro;
 using System;
 using System.Linq;
+using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf;
 
 namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 {
@@ -431,21 +432,51 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             Assert.AreEqual(AuthCredentialsSource.UserInfo, schemaConfig.BasicAuthCredentialsSource);
         }
 
-
         [Test]
-        public void SchemaRegistrySerializerConfig()
+        public void SchemaRegistryAvroSerializerConfig()
         {
-            var config = new StreamConfig();
-            config.SubjectNameStrategy = SubjectNameStrategy.TopicRecord;
-            config.AutoRegisterSchemas = true;
+            var config = new StreamConfig
+            {
+                SubjectNameStrategy = SubjectNameStrategy.TopicRecord,
+                AutoRegisterSchemas = true,
+                UseLatestVersion = false,
+                BufferBytes = 1024
+            };
 
             var serdes = new SchemaAvroSerDes<Order>();
             var schemaConfig = serdes.GetSerializerConfig(config);
 
             Assert.AreEqual(Confluent.SchemaRegistry.SubjectNameStrategy.TopicRecord, schemaConfig.SubjectNameStrategy);
             Assert.AreEqual(true, schemaConfig.AutoRegisterSchemas);
+            Assert.AreEqual(false, schemaConfig.UseLatestVersion);
+            Assert.AreEqual(1024, schemaConfig.BufferBytes);
         }
 
+        [Test]
+        public void SchemaRegistryProtobufSerializerConfig()
+        {
+            var config = new StreamConfig
+            {
+                SubjectNameStrategy = SubjectNameStrategy.TopicRecord,
+                AutoRegisterSchemas = false,
+                UseLatestVersion = true,
+                BufferBytes = 1024,
+                SkipKnownTypes = true,
+                UseDeprecatedFormat = false,
+                ReferenceSubjectNameStrategy = ReferenceSubjectNameStrategy.ReferenceName
+            };
+
+            var serdes = new SchemaProtobufSerDes<Helpers.Proto.Order>();
+            var schemaConfig = serdes.GetSerializerConfig(config);
+
+            Assert.AreEqual(Confluent.SchemaRegistry.SubjectNameStrategy.TopicRecord, schemaConfig.SubjectNameStrategy);
+            Assert.AreEqual(false, schemaConfig.AutoRegisterSchemas);
+            Assert.AreEqual(true, schemaConfig.UseLatestVersion);
+            Assert.AreEqual(1024, schemaConfig.BufferBytes);
+            Assert.AreEqual(true, schemaConfig.SkipKnownTypes);
+            Assert.AreEqual(false, schemaConfig.UseDeprecatedFormat);
+            Assert.AreEqual(Confluent.SchemaRegistry.ReferenceSubjectNameStrategy.ReferenceName, schemaConfig.ReferenceSubjectNameStrategy);
+        }
 
         [Test]
         public void DefaultSchemaRegistryConfig()

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Confluent.Kafka;
 
 namespace Streamiz.Kafka.Net.Mock.Pipes
 {
@@ -15,8 +16,8 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
     internal interface IPipeOutput : IDisposable
     {
         string TopicName { get; }
-        KeyValuePair<byte[], byte[]> Read();
-        IEnumerable<KeyValuePair<byte[], byte[]>> ReadList();
+        ConsumeResult<byte[], byte[]> Read();
+        IEnumerable<ConsumeResult<byte[], byte[]>> ReadList();
         List<PipeOutputInfo> GetInfos();
         int Size { get; }
         bool IsEmpty { get; }

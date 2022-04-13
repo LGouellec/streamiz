@@ -224,14 +224,20 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             metadata = new ChangelogMetadata
             {
+
                 RestoreEndOffset = Offset.Unset
             };
-            Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
+            Assert.IsTrue(storeChangelogReaderBis.HasRestoredToEnd(metadata));
 
             metadata = new ChangelogMetadata
             {
                 RestoreEndOffset = 10,
-                CurrentOffset = 12
+                CurrentOffset = 12,
+                BufferedRecords = new List<ConsumeResult<byte[], byte[]>>(),
+                StoreMetadata = new ProcessorStateManager.StateStoreMetadata()
+                {
+                    ChangelogTopicPartition = tp
+                }
             };
             Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
         }

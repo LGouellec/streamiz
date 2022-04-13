@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -14,11 +15,13 @@ namespace Streamiz.Kafka.Net.Processors
     internal class SinkProcessor<K, V> : AbstractProcessor<K, V>, ISinkProcessor
     {
         private ITopicNameExtractor<K, V> topicNameExtractor;
+        private readonly Func<string, K, V, int> partitioner; 
 
-        internal SinkProcessor(string name, ITopicNameExtractor<K, V> topicNameExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
+        internal SinkProcessor(string name, ITopicNameExtractor<K, V> topicNameExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Func<string, K, V, int> partitioner = null)
             : base(name, keySerdes, valueSerdes)
         {
             this.topicNameExtractor = topicNameExtractor;
+            this.partitioner = partitioner;
         }
 
         public override void Init(ProcessorContext context)
@@ -59,7 +62,18 @@ namespace Streamiz.Kafka.Net.Processors
             }
 
             var topicName = topicNameExtractor.Extract(key, value, Context.RecordContext);
-            Context.RecordCollector.Send(topicName, key, value, Context.RecordContext.Headers, timestamp, KeySerDes, ValueSerDes);
+            
+            if (partitioner != null)
+            {
+                int partition = partitioner.Invoke(topicName, key, value);
+                Context.RecordCollector.Send(topicName, key, value, Context.RecordContext.Headers, partition, timestamp, KeySerDes,
+                    ValueSerDes);
+            }
+            else
+            {
+                Context.RecordCollector.Send(topicName, key, value, Context.RecordContext.Headers, timestamp, KeySerDes,
+                    ValueSerDes); 
+            }
         }
 
         public void UseRepartitionTopic(string repartitionTopic)
