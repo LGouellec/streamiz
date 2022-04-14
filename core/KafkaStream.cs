@@ -504,6 +504,15 @@ namespace Streamiz.Kafka.Net
             return queryableStoreProvider.GetStore(storeQueryParameters);
         }
 
+
+        /// <summary>
+        /// Get read-only handle on global sensors registry, including streams client's own sensors plus
+        /// its embedded producer, consumer sensors (if <see cref="IStreamConfig.ExposeLibrdKafkaStats"/> is enable.
+        /// </summary>
+        /// <returns><see cref="IReadOnlyCollection{T}"/> of all sensors</returns>
+        public IEnumerable<Sensor> Metrics()
+            => metricsRegistry.GetSensors();
+
         #region Privates
 
         /// <summary>
