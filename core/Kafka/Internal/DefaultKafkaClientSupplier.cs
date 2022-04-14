@@ -91,6 +91,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             builder.SetErrorHandler(loggerAdapter.ErrorProduce);
             if (exposeLibrdKafka)
             {
+                // TODO : test librdkafka statistics with IntegrationTest (WIP see #82)
                 var producerStatisticsHandler = new ProducerStatisticsHandler(
                     config.ClientId,
                     streamConfig.ApplicationId,

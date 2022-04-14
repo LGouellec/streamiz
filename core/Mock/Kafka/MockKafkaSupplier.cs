@@ -48,5 +48,8 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         {
             cluster.Destroy();
         }
+
+        public void CreateTopic(string topic)
+            => cluster.CreateTopic(topic);
     }
 }
