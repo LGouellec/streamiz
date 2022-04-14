@@ -7,6 +7,7 @@ using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using System;
 using System.Collections.Generic;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Tests.Public
 {
@@ -23,7 +24,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 null,
                 new MockChangelogRegister(),
                 new MockOffsetCheckpointManager());
-            ProcessorContext context = new ProcessorContext(null, config, stateMgt);
+            ProcessorContext context = new ProcessorContext(null, config, stateMgt, new StreamMetricsRegistry());
 
             Assert.AreEqual("test", context.ApplicationId);
         }
@@ -40,7 +41,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 null,
                 new MockChangelogRegister(),
                 new MockOffsetCheckpointManager());
-            ProcessorContext context = new ProcessorContext(null, config, stateMgt);
+            ProcessorContext context = new ProcessorContext(null, config, stateMgt, new StreamMetricsRegistry());
             ConsumeResult<byte[], byte[]> result = new ConsumeResult<byte[], byte[]> { Message = new Message<byte[], byte[]>() };
             result.Topic = "topic";
             result.Partition = 0;
@@ -67,7 +68,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 null,
                 new MockChangelogRegister(),
                 new MockOffsetCheckpointManager());
-            ProcessorContext context = new ProcessorContext(task, config, stateMgt);
+            ProcessorContext context = new ProcessorContext(task, config, stateMgt, new StreamMetricsRegistry());
 
             Assert.AreEqual(id, context.Id);
         }
@@ -83,7 +84,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 taskId,
                 new List<TopicPartition>(),
                 new Stream.Internal.ProcessorTopology(null, null, null, null, null, null, null, null),
-                null, config , null, new SyncProducer(config.ToProducerConfig()), new MockChangelogRegister());
+                null, config , null, new SyncProducer(config.ToProducerConfig()), new MockChangelogRegister(), new StreamMetricsRegistry());
 
             return streamTask;
         }

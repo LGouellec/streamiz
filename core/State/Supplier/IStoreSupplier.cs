@@ -20,5 +20,10 @@ namespace Streamiz.Kafka.Net.State.Supplier
         /// </summary>
         /// <returns>Return a new <see cref="IStateStore"/> instance of type <typeparamref name="T"/>.</returns>
         T Get();
+        
+        /// <summary>
+        /// Return a String that is used as the scope for metrics recorded by Metered stores.
+        /// </summary>
+        string MetricsScope { get; }
     }
 }

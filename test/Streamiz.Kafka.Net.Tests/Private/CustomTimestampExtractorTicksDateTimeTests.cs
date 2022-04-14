@@ -14,6 +14,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
     public class CustomTimestampExtractorTicksDateTimeTests
     {
         #region inner class
+
         internal class ObjectATimestampUnixExtractor : ITimestampExtractor
         {
             public long Extract(ConsumeResult<object, object> record, long partitionTime)
@@ -56,7 +57,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             public DateTime LastDate { get; set; }
             public int Count { get; set; } = 0;
-
         }
 
         internal static class ObjectBHelper
@@ -94,8 +94,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var outputTopic = driver.CreateOuputTopic<String, ObjectB, StringSerDes, JSONSerDes<ObjectB>>("sink");
             var dt = DateTime.Parse("2021-04-17T09:21:00-0000");
             var dt2 = dt.AddMinutes(1);
-            inputTopic.PipeInput("key1", new ObjectA { Date = dt, Symbol = "$" });
-            inputTopic.PipeInput("key1", new ObjectA { Date = dt2, Symbol = "$" });
+            inputTopic.PipeInput("key1", new ObjectA {Date = dt, Symbol = "$"});
+            inputTopic.PipeInput("key1", new ObjectA {Date = dt2, Symbol = "$"});
 
             var output = outputTopic.ReadKeyValuesToMap();
             Assert.AreEqual(1, output.Count);

@@ -14,6 +14,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
         public long Retention => 100;
 
         public string Name => "TEST";
+        
+        public string MetricsScope => "test-window";
 
         public IWindowStore<Bytes, byte[]> Get()
             => null;

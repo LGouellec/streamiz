@@ -28,7 +28,7 @@
 
     /// <summary>
     ///    Subject name strategy for referenced schemas.
-    /// <summary>
+    /// </summary>
     public enum ReferenceSubjectNameStrategy
     {
         /// <summary>

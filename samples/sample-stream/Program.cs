@@ -12,6 +12,10 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using System.Threading.Tasks;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
+using Streamiz.Kafka.Net.Metrics.Prometheus;
+using Streamiz.Kafka.Net.State;
 
 namespace sample_stream
 {
@@ -24,11 +28,12 @@ namespace sample_stream
         static async Task Main(string[] args)
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-reducer";
-            config.BootstrapServers = "localhost:19092";
-            config.CommitIntervalMs = (long)TimeSpan.FromSeconds(5).TotalMilliseconds;
-            config.AutoOffsetReset = AutoOffsetReset.Latest;
-            config.StateDir = Path.Combine(".", Guid.NewGuid().ToString());
+            config.ApplicationId = "test-app2";
+            config.BootstrapServers = "localhost:9092";
+            config.AutoOffsetReset = Confluent.Kafka.AutoOffsetReset.Earliest;
+            config.StateDir = Path.Combine(".");
+            config.MetricsRecording = MetricsRecordingLevel.DEBUG;
+            config.UsePrometheusReporter(9090, true);
 
             config.Logger = LoggerFactory.Create(builder =>
             {
@@ -37,13 +42,13 @@ namespace sample_stream
             });
             
             StreamBuilder builder = new StreamBuilder();
-     
-            builder.Stream<string, string>("tempTopic")
+            
+            builder.Stream<string, string>("input")
                 .GroupByKey()
                 .Reduce((v1,v2) => v1 + " " + v2)
                 .ToStream()
-                .To("finalTopic");
-            
+                .To("output");
+          
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
             

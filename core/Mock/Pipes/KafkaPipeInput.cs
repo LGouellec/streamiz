@@ -2,6 +2,7 @@
 using Streamiz.Kafka.Net.Kafka;
 using System;
 using System.Collections.Generic;
+using Streamiz.Kafka.Net.Kafka.Internal;
 
 namespace Streamiz.Kafka.Net.Mock.Pipes
 {
@@ -15,7 +16,8 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         public KafkaPipeInput(string topicName, IStreamConfig configuration, IKafkaSupplier kafkaSupplier)
         {
             this.topicName = topicName;
-            producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig($"pipe-input-{configuration.ApplicationId}-{topicName}"));
+            producer = kafkaSupplier.GetProducer(
+                configuration.ToProducerConfig($"pipe-input-{configuration.ApplicationId}-{topicName}"));
         }
 
         public string TopicName => topicName;

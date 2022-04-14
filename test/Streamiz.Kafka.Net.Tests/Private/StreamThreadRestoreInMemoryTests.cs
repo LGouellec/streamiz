@@ -1,4 +1,3 @@
-
 using Confluent.Kafka;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Mock.Kafka;
@@ -11,6 +10,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Tests.Helpers;
 using ThreadState = Streamiz.Kafka.Net.Processors.ThreadState;
 
@@ -21,6 +22,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
     {
         private CancellationTokenSource token1;
         private CancellationTokenSource token2;
+
         private readonly StreamConfig<StringSerDes, StringSerDes> config =
             new StreamConfig<StringSerDes, StringSerDes>();
 
@@ -34,39 +36,38 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             token1 = new System.Threading.CancellationTokenSource();
             token2 = new System.Threading.CancellationTokenSource();
-            
+
             config.ApplicationId = "test-stream-thread";
             config.StateDir = Path.Combine(".", Guid.NewGuid().ToString());
             config.Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
             config.PollMs = 10;
 
             mockKafkaSupplier = new MockKafkaSupplier(2, 0);
-            
+
             var builder = new StreamBuilder();
             builder.Table("topic", InMemory<string, string>.As("store").WithLoggingEnabled());
 
             var topo = builder.Build();
             topo.Builder.RewriteTopology(config);
             topo.Builder.BuildTopology();
-            
+
             thread1 = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 mockKafkaSupplier, mockKafkaSupplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
-            
+
             thread2 = StreamThread.Create(
                 "thread-1", "c1",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 mockKafkaSupplier, mockKafkaSupplier.GetAdmin(config.ToAdminConfig("admin")),
                 1) as StreamThread;
-            
+
             var internalTopicManager =
                 new DefaultTopicManager(config, mockKafkaSupplier.GetAdmin(config.ToAdminConfig("admin")));
             InternalTopicManagerUtils
                 .New()
                 .CreateInternalTopicsAsync(internalTopicManager, topo.Builder).GetAwaiter();
-
         }
 
         [TearDown]
@@ -77,13 +78,13 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 token2.Cancel();
                 thread2.Dispose();
             }
-            
+
             token1.Cancel();
             thread1.Dispose();
             mockKafkaSupplier.Destroy();
         }
 
-        
+
         #region StreamThread restore statefull topology
 
         [Test]
@@ -94,7 +95,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var serdes = new StringSerDes();
             var producer = mockKafkaSupplier.GetProducer(producerConfig.ToProducerConfig());
-            
+
             thread1.Start(token1.Token);
             Thread.Sleep(1500);
             thread2.Start(token2.Token);
@@ -127,9 +128,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 TimeSpan.FromMilliseconds(20));
 
             var storeThread1 =
-                thread1.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread1.ActiveTasks.ToList()[0].GetStore("store") as ITimestampedKeyValueStore<string, string>;
             var storeThread2 =
-                thread2.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread2.ActiveTasks.ToList()[0].GetStore("store") as ITimestampedKeyValueStore<string, string>;
 
             Assert.IsNotNull(storeThread1);
             Assert.IsNotNull(storeThread2);
@@ -138,12 +139,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 () => storeThread1.All().ToList().Count == 1,
                 TimeSpan.FromSeconds(5),
                 TimeSpan.FromMilliseconds(20));
-            
+
             AssertExtensions.WaitUntil(
                 () => storeThread2.All().ToList().Count == 1,
                 TimeSpan.FromSeconds(5),
                 TimeSpan.FromMilliseconds(20));
-            
+
             var totalItemsSt1 = storeThread1.All().ToList();
             var totalItemsSt2 = storeThread2.All().ToList();
 
@@ -156,7 +157,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             thread2.Dispose();
 
             thread2Disposed = true;
-            
+
             producer.Produce(new TopicPartition("topic", 1), new Confluent.Kafka.Message<byte[], byte[]>
             {
                 Key = serdes.Serialize("key3", new SerializationContext()),
@@ -177,9 +178,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 TimeSpan.FromMilliseconds(20));
 
             var storeThreadTask1 =
-                thread1.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread1.ActiveTasks.ToList()[0].GetStore("store") as ITimestampedKeyValueStore<string, string>;
             var storeThreadTask2 =
-                thread1.ActiveTasks.ToList()[1].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread1.ActiveTasks.ToList()[1].GetStore("store") as ITimestampedKeyValueStore<string, string>;
 
             Assert.IsNotNull(storeThreadTask1);
             Assert.IsNotNull(storeThreadTask2);
@@ -190,19 +191,19 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 () => storeThreadTask1.All().ToList().Count == (task0Part0 ? 1 : 2),
                 TimeSpan.FromSeconds(1),
                 TimeSpan.FromMilliseconds(20));
-            
+
             AssertExtensions.WaitUntil(
                 () => storeThreadTask2.All().ToList().Count == (task0Part0 ? 2 : 1),
                 TimeSpan.FromSeconds(1),
                 TimeSpan.FromMilliseconds(20));
-            
+
             var totalItemsSt10 = storeThreadTask1.All().ToList();
             var totalItemsSt11 = storeThreadTask2.All().ToList();
 
             Assert.AreEqual((task0Part0 ? 1 : 2), totalItemsSt10.Count);
             Assert.AreEqual((task0Part0 ? 2 : 1), totalItemsSt11.Count);
         }
-            
+
         [Test]
         public void StreamThreadRestorationPhaseStartSmallDifferent()
         {
@@ -211,7 +212,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var serdes = new StringSerDes();
             var producer = mockKafkaSupplier.GetProducer(producerConfig.ToProducerConfig());
-            
+
             thread1.Start(token1.Token);
             Thread.Sleep(25);
             thread2.Start(token2.Token);
@@ -244,9 +245,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 TimeSpan.FromMilliseconds(20));
 
             var storeThread1 =
-                thread1.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread1.ActiveTasks.ToList()[0].GetStore("store") as ITimestampedKeyValueStore<string, string>;
             var storeThread2 =
-                thread2.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread2.ActiveTasks.ToList()[0].GetStore("store") as ITimestampedKeyValueStore<string, string>;
 
             Assert.IsNotNull(storeThread1);
             Assert.IsNotNull(storeThread2);
@@ -255,12 +256,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 () => storeThread1.All().ToList().Count == 1,
                 TimeSpan.FromSeconds(5),
                 TimeSpan.FromMilliseconds(20));
-            
+
             AssertExtensions.WaitUntil(
                 () => storeThread2.All().ToList().Count == 1,
                 TimeSpan.FromSeconds(5),
                 TimeSpan.FromMilliseconds(20));
-            
+
             var totalItemsSt1 = storeThread1.All().ToList();
             var totalItemsSt2 = storeThread2.All().ToList();
 
@@ -273,7 +274,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             thread2.Dispose();
 
             thread2Disposed = true;
-            
+
             producer.Produce(new TopicPartition("topic", 1), new Confluent.Kafka.Message<byte[], byte[]>
             {
                 Key = serdes.Serialize("key3", new SerializationContext()),
@@ -294,9 +295,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 TimeSpan.FromMilliseconds(20));
 
             var storeThreadTask1 =
-                thread1.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread1.ActiveTasks.ToList()[0].GetStore("store") as ITimestampedKeyValueStore<string, string>;
             var storeThreadTask2 =
-                thread1.ActiveTasks.ToList()[1].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread1.ActiveTasks.ToList()[1].GetStore("store") as ITimestampedKeyValueStore<string, string>;
 
             Assert.IsNotNull(storeThreadTask1);
             Assert.IsNotNull(storeThreadTask2);
@@ -307,19 +308,19 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 () => storeThreadTask1.All().ToList().Count == (task0Part0 ? 1 : 2),
                 TimeSpan.FromSeconds(1),
                 TimeSpan.FromMilliseconds(20));
-            
+
             AssertExtensions.WaitUntil(
                 () => storeThreadTask2.All().ToList().Count == (task0Part0 ? 2 : 1),
                 TimeSpan.FromSeconds(1),
                 TimeSpan.FromMilliseconds(20));
-            
+
             var totalItemsSt10 = storeThreadTask1.All().ToList();
             var totalItemsSt11 = storeThreadTask2.All().ToList();
 
             Assert.AreEqual((task0Part0 ? 1 : 2), totalItemsSt10.Count);
             Assert.AreEqual((task0Part0 ? 2 : 1), totalItemsSt11.Count);
         }
-        
+
         [Test]
         public void StreamThreadRestorationPhaseStartParallel()
         {
@@ -328,7 +329,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var serdes = new StringSerDes();
             var producer = mockKafkaSupplier.GetProducer(producerConfig.ToProducerConfig());
-            
+
             thread1.Start(token1.Token);
             thread2.Start(token2.Token);
 
@@ -360,9 +361,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 TimeSpan.FromMilliseconds(20));
 
             var storeThread1 =
-                thread1.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread1.ActiveTasks.ToList()[0].GetStore("store") as ITimestampedKeyValueStore<string, string>;
             var storeThread2 =
-                thread2.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread2.ActiveTasks.ToList()[0].GetStore("store") as ITimestampedKeyValueStore<string, string>;
 
             Assert.IsNotNull(storeThread1);
             Assert.IsNotNull(storeThread2);
@@ -371,12 +372,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 () => storeThread1.All().ToList().Count == 1,
                 TimeSpan.FromSeconds(5),
                 TimeSpan.FromMilliseconds(20));
-            
+
             AssertExtensions.WaitUntil(
                 () => storeThread2.All().ToList().Count == 1,
                 TimeSpan.FromSeconds(5),
                 TimeSpan.FromMilliseconds(20));
-            
+
             var totalItemsSt1 = storeThread1.All().ToList();
             var totalItemsSt2 = storeThread2.All().ToList();
 
@@ -389,7 +390,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             thread2.Dispose();
 
             thread2Disposed = true;
-            
+
             producer.Produce(new TopicPartition("topic", 1), new Confluent.Kafka.Message<byte[], byte[]>
             {
                 Key = serdes.Serialize("key3", new SerializationContext()),
@@ -410,9 +411,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 TimeSpan.FromMilliseconds(20));
 
             var storeThreadTask1 =
-                thread1.ActiveTasks.ToList()[0].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread1.ActiveTasks.ToList()[0].GetStore("store") as ITimestampedKeyValueStore<string, string>;
             var storeThreadTask2 =
-                thread1.ActiveTasks.ToList()[1].GetStore("store") as TimestampedKeyValueStore<string, string>;
+                thread1.ActiveTasks.ToList()[1].GetStore("store") as ITimestampedKeyValueStore<string, string>;
 
             Assert.IsNotNull(storeThreadTask1);
             Assert.IsNotNull(storeThreadTask2);
@@ -423,12 +424,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 () => storeThreadTask1.All().ToList().Count == (task0Part0 ? 1 : 2),
                 TimeSpan.FromSeconds(1),
                 TimeSpan.FromMilliseconds(20));
-            
+
             AssertExtensions.WaitUntil(
                 () => storeThreadTask2.All().ToList().Count == (task0Part0 ? 2 : 1),
                 TimeSpan.FromSeconds(1),
                 TimeSpan.FromMilliseconds(20));
-            
+
             var totalItemsSt10 = storeThreadTask1.All().ToList();
             var totalItemsSt11 = storeThreadTask2.All().ToList();
 
@@ -437,6 +438,5 @@ namespace Streamiz.Kafka.Net.Tests.Private
         }
 
         #endregion
-        
     }
 }

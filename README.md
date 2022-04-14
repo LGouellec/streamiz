@@ -37,8 +37,8 @@ This project is being written. Thanks for you contribution !
 
 # ROADMAP
 
-- 1.3.0 - Processor API, Metrics
-- 1.4.0 - Standby Replica
+- 1.3.0 - Metrics
+- 1.4.0 - Standby Replica, Processor API
 - 1.5.0 - Interactive Queries
 
 # Documentation

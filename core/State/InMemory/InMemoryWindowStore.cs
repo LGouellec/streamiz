@@ -7,7 +7,10 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 
 namespace Streamiz.Kafka.Net.State.InMemory
 {
@@ -225,6 +228,8 @@ namespace Streamiz.Kafka.Net.State.InMemory
     {
         private readonly TimeSpan retention;
         private readonly long size;
+        private Sensor expiredRecordSensor;
+        private ProcessorContext context;
 
         private long observedStreamTime = -1;
 
@@ -248,7 +253,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
         public bool IsOpen { get; private set; } = false;
 
-        public IKeyValueEnumerator<Windowed<Bytes>, byte[]> All()
+        public virtual IKeyValueEnumerator<Windowed<Bytes>, byte[]> All()
         {
             RemoveExpiredData();
             long minTime = observedStreamTime - (long)retention.TotalMilliseconds;
@@ -268,7 +273,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
             IsOpen = false;
         }
 
-        public byte[] Fetch(Bytes key, long time)
+        public virtual byte[] Fetch(Bytes key, long time)
         {
             RemoveExpiredData();
 
@@ -281,10 +286,10 @@ namespace Streamiz.Kafka.Net.State.InMemory
                 return null;
         }
 
-        public IWindowStoreEnumerator<byte[]> Fetch(Bytes key, DateTime from, DateTime to)
+        public virtual IWindowStoreEnumerator<byte[]> Fetch(Bytes key, DateTime from, DateTime to)
             => Fetch(key, from.GetMilliseconds(), to.GetMilliseconds());
 
-        public IWindowStoreEnumerator<byte[]> Fetch(Bytes key, long from, long to)
+        public virtual IWindowStoreEnumerator<byte[]> Fetch(Bytes key, long from, long to)
         {
             RemoveExpiredData();
 
@@ -299,7 +304,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
             return CreateNewWindowStoreEnumerator(key, SubMap(minTime, to));
         }
 
-        public IKeyValueEnumerator<Windowed<Bytes>, byte[]> FetchAll(DateTime from, DateTime to)
+        public virtual IKeyValueEnumerator<Windowed<Bytes>, byte[]> FetchAll(DateTime from, DateTime to)
         {
             RemoveExpiredData();
 
@@ -313,12 +318,18 @@ namespace Streamiz.Kafka.Net.State.InMemory
             return CreateNewWindowedKeyValueEnumerator(null, null, SubMap(minTime, to.GetMilliseconds()));
         }
 
-        public void Flush()
+        public virtual void Flush()
         {
         }
 
         public void Init(ProcessorContext context, IStateStore root)
         {
+            expiredRecordSensor = TaskMetrics.DroppedRecordsSensor(
+                Thread.CurrentThread.Name,
+                context.Id,
+                context.Metrics);
+            this.context = context;
+            
             if (root != null)
             {
                 // register the store
@@ -329,7 +340,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
             IsOpen = true;
         }
 
-        public void Put(Bytes key, byte[] value, long windowStartTimestamp)
+        public virtual void Put(Bytes key, byte[] value, long windowStartTimestamp)
         {
             RemoveExpiredData();
 
@@ -337,6 +348,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
             if (windowStartTimestamp <= observedStreamTime - retention.TotalMilliseconds)
             {
+                expiredRecordSensor.Record(1.0, context.Timestamp);
                 logger.LogWarning("Skipping record for expired segment");
             }
             else

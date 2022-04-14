@@ -30,7 +30,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             long l = 126700;
             int i = 965;
-            byte[] array = new byte[] { 1, 1, 1, 2 };
+            byte[] array = new byte[] {1, 1, 1, 2};
 
             var longBytes = BitConverter.GetBytes(l);
             var intBytes = BitConverter.GetBytes(i);
@@ -50,7 +50,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             long l = 200;
             int i = 42;
-            byte[] array = new byte[] { 1, 2, 3, 4 };
+            byte[] array = new byte[] {1, 2, 3, 4};
 
             var longBytes = BitConverter.GetBytes(l);
             var intBytes = BitConverter.GetBytes(i);
@@ -74,7 +74,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void ByteBufferWriteBytesArray()
         {
-            byte[] array = new byte[] { 1, 2, 3, 4 };
+            byte[] array = new byte[] {1, 2, 3, 4};
 
             var buffer = ByteBuffer.Build(0);
             buffer.PutInt(array.Length);

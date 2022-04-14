@@ -4,6 +4,7 @@ using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -24,13 +25,14 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly ITimestampExtractor timestampExtractor;
         private readonly TopicPartition topicPartition;
         private readonly ISourceProcessor sourceProcessor;
+        private readonly Sensor droppedRecordsSensor;
 
-        public RecordQueue(
-            string logPrefix,
+        public RecordQueue(string logPrefix,
             string nameQueue,
             ITimestampExtractor timestampExtractor,
             TopicPartition topicPartition,
-            ISourceProcessor sourceProcessor)
+            ISourceProcessor sourceProcessor,
+            Sensor droppedRecordsSensor)
         {
             this.logPrefix = $"{logPrefix}- recordQueue [{nameQueue}] ";
             queue = new List<ConsumeResult<byte[], byte[]>>();
@@ -38,6 +40,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             this.timestampExtractor = timestampExtractor;
             this.topicPartition = topicPartition;
             this.sourceProcessor = sourceProcessor;
+            this.droppedRecordsSensor = droppedRecordsSensor;
         }
 
         public long HeadRecordTimestamp
@@ -105,6 +108,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     log.LogWarning(
                         "Skipping record due to negative extracted timestamp. topic=[{Topic}] partition=[{Partition}] offset=[{Offset}] extractedTimestamp=[{Timestamp}] extractor=[{TimestampExtractor}]",
                         record.Topic, record.Partition, record.Offset, timestamp, timestampExtractor.GetType().Name);
+                    droppedRecordsSensor.Record();
                     continue;
                 }
 

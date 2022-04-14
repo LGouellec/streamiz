@@ -3,7 +3,10 @@ using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.State.Enumerator;
 using Streamiz.Kafka.Net.State.Internal;
 using System;
+using System.Threading;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 
 namespace Streamiz.Kafka.Net.State.RocksDb.Internal
 {
@@ -16,6 +19,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
         private readonly ISegments<S> segments;
         private readonly IKeySchema keySchema;
         private ProcessorContext context;
+        private Sensor expiredRecordSensor;
 
         private bool isOpen = false;
         private long observedStreamTime = -1;
@@ -85,7 +89,11 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
         public void Init(ProcessorContext context, IStateStore root)
         {
             this.context = context;
-
+            expiredRecordSensor = TaskMetrics.DroppedRecordsSensor(
+                Thread.CurrentThread.Name,
+                context.Id,
+                context.Metrics);
+            
             segments.OpenExisting(context, observedStreamTime);
             context.Register(root, (k, v, t) => Put(k, v));
 
@@ -100,6 +108,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
             var segment = segments.GetOrCreateSegmentIfLive(segId, context, observedStreamTime);
             if (segment == null)
             {
+                expiredRecordSensor.Record(1.0, context.Timestamp);
                 logger.LogWarning("Skipping record for expired segment");
             }
             else

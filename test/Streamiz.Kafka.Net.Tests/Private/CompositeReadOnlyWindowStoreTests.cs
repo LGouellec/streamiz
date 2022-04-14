@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Streamiz.Kafka.Net.State.Metered;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -18,15 +19,18 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             private readonly List<ITimestampedWindowStore<K, V>> stores = new List<ITimestampedWindowStore<K, V>>();
 
-            public MockStateProvider(long windowSize, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, params InMemoryWindowStore[] stores)
+            public MockStateProvider(long windowSize, ISerDes<K> keySerdes, ISerDes<V> valueSerdes,
+                params InMemoryWindowStore[] stores)
             {
                 this.stores = stores
-                                .Select(s => new TimestampedWindowStore<K, V>(s, windowSize, keySerdes, new ValueAndTimestampSerDes<V>(valueSerdes)))
-                                .Cast<ITimestampedWindowStore<K, V>>()
-                                .ToList();
+                    .Select(s => new MeteredTimestampedWindowStore<K, V>(s, windowSize, keySerdes,
+                        new ValueAndTimestampSerDes<V>(valueSerdes), "test-scope"))
+                    .Cast<ITimestampedWindowStore<K, V>>()
+                    .ToList();
             }
 
-            public IEnumerable<IReadOnlyWindowStore<K, V>> Stores(string storeName, IQueryableStoreType<IReadOnlyWindowStore<K, V>, K, V> queryableStoreType)
+            public IEnumerable<IReadOnlyWindowStore<K, V>> Stores(string storeName,
+                IQueryableStoreType<IReadOnlyWindowStore<K, V>, K, V> queryableStoreType)
             {
                 return
                     stores
@@ -57,9 +61,14 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var dt = DateTime.Now.GetMilliseconds();
             var valueSerdes = new ValueAndTimestampSerDes<string>(new StringSerDes());
             var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
-            var provider = new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1, store2);
-            var composite = new CompositeReadOnlyWindowStore<string, string>(provider, new WindowStoreType<string, string>(), "store");
-            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt), new SerializationContext()), dt);
+            var provider =
+                new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1,
+                    store2);
+            var composite =
+                new CompositeReadOnlyWindowStore<string, string>(provider, new WindowStoreType<string, string>(),
+                    "store");
+            store1.Put(bytes,
+                valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt), new SerializationContext()), dt);
             var result = composite.Fetch("test", dt);
             Assert.IsNotNull(result);
             Assert.AreEqual("coucou1", result);
@@ -73,9 +82,15 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var dt = DateTime.Now;
             var valueSerdes = new ValueAndTimestampSerDes<string>(new StringSerDes());
             var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
-            var provider = new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1, store2);
-            var composite = new CompositeReadOnlyWindowStore<string, string>(provider, new WindowStoreType<string, string>(), "store");
-            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt.GetMilliseconds()), new SerializationContext()), dt.GetMilliseconds());
+            var provider =
+                new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1,
+                    store2);
+            var composite =
+                new CompositeReadOnlyWindowStore<string, string>(provider, new WindowStoreType<string, string>(),
+                    "store");
+            store1.Put(bytes,
+                valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt.GetMilliseconds()),
+                    new SerializationContext()), dt.GetMilliseconds());
             var result = composite.Fetch("test", dt.AddSeconds(-2), dt.AddSeconds(2));
             Assert.IsNotNull(result);
             var items = result.ToList();
@@ -93,10 +108,18 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var valueSerdes = new ValueAndTimestampSerDes<string>(new StringSerDes());
             var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
             var bytes2 = new Bytes(Encoding.UTF8.GetBytes("test2"));
-            var provider = new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1, store2);
-            var composite = new CompositeReadOnlyWindowStore<string, string>(provider, new WindowStoreType<string, string>(), "store");
-            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt.GetMilliseconds()), new SerializationContext()), dt.GetMilliseconds());
-            store1.Put(bytes2, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou2", dt.GetMilliseconds()), new SerializationContext()), dt.GetMilliseconds());
+            var provider =
+                new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1,
+                    store2);
+            var composite =
+                new CompositeReadOnlyWindowStore<string, string>(provider, new WindowStoreType<string, string>(),
+                    "store");
+            store1.Put(bytes,
+                valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt.GetMilliseconds()),
+                    new SerializationContext()), dt.GetMilliseconds());
+            store1.Put(bytes2,
+                valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou2", dt.GetMilliseconds()),
+                    new SerializationContext()), dt.GetMilliseconds());
             var result = composite.FetchAll(dt.AddSeconds(-2), dt.AddSeconds(2));
             Assert.IsNotNull(result);
             var items = result.ToList();
@@ -118,10 +141,18 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var valueSerdes = new ValueAndTimestampSerDes<string>(new StringSerDes());
             var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
             var bytes2 = new Bytes(Encoding.UTF8.GetBytes("test2"));
-            var provider = new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1, store2);
-            var composite = new CompositeReadOnlyWindowStore<string, string>(provider, new WindowStoreType<string, string>(), "store");
-            store1.Put(bytes, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt.GetMilliseconds()), new SerializationContext()), dt.GetMilliseconds());
-            store1.Put(bytes2, valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou2", dt.GetMilliseconds()), new SerializationContext()), dt.GetMilliseconds());
+            var provider =
+                new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1,
+                    store2);
+            var composite =
+                new CompositeReadOnlyWindowStore<string, string>(provider, new WindowStoreType<string, string>(),
+                    "store");
+            store1.Put(bytes,
+                valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou1", dt.GetMilliseconds()),
+                    new SerializationContext()), dt.GetMilliseconds());
+            store1.Put(bytes2,
+                valueSerdes.Serialize(ValueAndTimestamp<string>.Make("coucou2", dt.GetMilliseconds()),
+                    new SerializationContext()), dt.GetMilliseconds());
             var result = composite.All();
             Assert.IsNotNull(result);
             var items = result.ToList();

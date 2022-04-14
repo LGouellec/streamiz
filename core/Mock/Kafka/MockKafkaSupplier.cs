@@ -1,5 +1,6 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net.Kafka;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Mock.Kafka
 {
@@ -33,6 +34,8 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         public IConsumer<byte[], byte[]> GetGlobalConsumer(ConsumerConfig config)
             => GetConsumer(config, null);
 
+        public StreamMetricsRegistry MetricsRegistry { get; set; }
+
         public IProducer<byte[], byte[]> GetProducer(ProducerConfig config)
         {
             return new MockProducer(cluster, config.ClientId);
@@ -45,5 +48,8 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         {
             cluster.Destroy();
         }
+
+        public void CreateTopic(string topic)
+            => cluster.CreateTopic(topic);
     }
 }

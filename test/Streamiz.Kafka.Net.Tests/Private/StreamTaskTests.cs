@@ -11,6 +11,7 @@ using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Table;
 using Streamiz.Kafka.Net.State.Internal;
 using System.IO;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -31,32 +32,33 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 .To("topic2");
 
             var topology = builder.Build();
-            TaskId id = new TaskId { Id = 0, Partition = 0 };
+            TaskId id = new TaskId {Id = 0, Partition = 0};
             var processorTopology = topology.Builder.BuildTopology(id);
 
             var supplier = new SyncKafkaSupplier();
             var producer = supplier.GetProducer(config.ToProducerConfig());
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
 
-            
+
             var part = new TopicPartition("topic", 0);
             StreamTask task = new StreamTask(
                 "thread-0",
                 id,
-                new List<TopicPartition> { part },
+                new List<TopicPartition> {part},
                 processorTopology,
                 consumer,
                 config,
                 supplier,
                 null,
-                new MockChangelogRegister());
+                new MockChangelogRegister()
+                , new StreamMetricsRegistry());
             task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
             task.RestorationIfNeeded();
             task.CompleteRestoration();
 
-            List <ConsumeResult<byte[], byte[]>> messages = new List<ConsumeResult<byte[], byte[]>>();
+            List<ConsumeResult<byte[], byte[]>> messages = new List<ConsumeResult<byte[], byte[]>>();
             int offset = 0;
             for (int i = 0; i < 5; ++i)
                 messages.Add(
@@ -100,7 +102,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             for (int i = 0; i < 5; ++i)
             {
                 Assert.AreEqual($"KEY{i + 1}", serdes.Deserialize(results[i].Message.Key, new SerializationContext()));
-                Assert.AreEqual($"VALUE{i + 1}", serdes.Deserialize(results[i].Message.Value, new SerializationContext()));
+                Assert.AreEqual($"VALUE{i + 1}",
+                    serdes.Deserialize(results[i].Message.Value, new SerializationContext()));
             }
 
             task.Close();
@@ -121,25 +124,26 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 .To("topic2");
 
             var topology = builder.Build();
-            TaskId id = new TaskId { Id = 0, Partition = 0 };
+            TaskId id = new TaskId {Id = 0, Partition = 0};
             var processorTopology = topology.Builder.BuildTopology(id);
 
             var supplier = new SyncKafkaSupplier();
             var producer = supplier.GetProducer(config.ToProducerConfig());
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
 
-            
+
             var part = new TopicPartition("topic", 0);
             StreamTask task = new StreamTask(
                 "thread-0",
                 id,
-                new List<TopicPartition> { part },
+                new List<TopicPartition> {part},
                 processorTopology,
                 consumer,
                 config,
                 supplier,
                 null,
-                new MockChangelogRegister());
+                new MockChangelogRegister()
+                , new StreamMetricsRegistry());
             task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
@@ -176,7 +180,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             task.Suspend();
             task.Resume();
             task.RestorationIfNeeded();
-            
+
             task.AddRecords(messages);
 
             Assert.IsTrue(task.CanProcess(DateTime.Now.GetMilliseconds()));
@@ -223,25 +227,26 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 .To("topic2");
 
 
-            TaskId id = new TaskId { Id = 0, Partition = 0 };
+            TaskId id = new TaskId {Id = 0, Partition = 0};
             var topology = builder.Build();
             var processorTopology = topology.Builder.BuildTopology(id);
 
             var supplier = new SyncKafkaSupplier();
             var producer = supplier.GetProducer(config.ToProducerConfig());
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
-            
+
             var part = new TopicPartition("topic", 0);
             StreamTask task = new StreamTask(
                 "thread-0",
                 id,
-                new List<TopicPartition> { part },
+                new List<TopicPartition> {part},
                 processorTopology,
                 consumer,
                 config,
                 supplier,
                 producer,
-                new MockChangelogRegister());
+                new MockChangelogRegister()
+                , new StreamMetricsRegistry());
             task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
@@ -257,7 +262,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     {
                         Message = new Message<byte[], byte[]>
                         {
-                            Key = serdes.Serialize($"key{i+1}", new SerializationContext()),
+                            Key = serdes.Serialize($"key{i + 1}", new SerializationContext()),
                             Value = serdes.Serialize($"value{i + 1}", new SerializationContext())
                         },
                         TopicPartitionOffset = new TopicPartitionOffset(part, offset++)
@@ -280,10 +285,10 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.IsNull(task.GetStore("store"));
             task.Resume();
             task.RestorationIfNeeded();
-            
+
             Assert.IsNotNull(task.GetStore("store"));
             task.AddRecords(messages);
-            
+
             Assert.IsTrue(task.CanProcess(DateTime.Now.GetMilliseconds()));
 
             while (task.CanProcess(DateTime.Now.GetMilliseconds()))
@@ -325,7 +330,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var table = builder.Table("topic", RocksDb<string, string>.As("store").WithLoggingEnabled());
 
-            TaskId id = new TaskId { Id = 0, Partition = 0 };
+            TaskId id = new TaskId {Id = 0, Partition = 0};
             var topology = builder.Build();
             topology.Builder.RewriteTopology(config);
 
@@ -339,13 +344,14 @@ namespace Streamiz.Kafka.Net.Tests.Private
             StreamTask task = new StreamTask(
                 "thread-0",
                 id,
-                new List<TopicPartition> { part },
+                new List<TopicPartition> {part},
                 processorTopology,
                 consumer,
                 config,
                 supplier,
                 producer,
-                new MockChangelogRegister());
+                new MockChangelogRegister()
+                , new StreamMetricsRegistry());
             task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();

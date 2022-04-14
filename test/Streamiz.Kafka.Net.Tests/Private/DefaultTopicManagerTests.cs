@@ -93,7 +93,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             DefaultTopicManager manager = new DefaultTopicManager(config2, kafkaSupplier.GetAdmin(config));
 
-            ((SyncProducer)kafkaSupplier.GetProducer(new ProducerConfig())).CreateTopic("topic");
+            ((SyncProducer) kafkaSupplier.GetProducer(new ProducerConfig())).CreateTopic("topic");
 
             IDictionary<string, InternalTopicConfig> topics = new Dictionary<string, InternalTopicConfig>();
             topics.Add("topic", new UnwindowedChangelogTopicConfig
@@ -124,7 +124,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             DefaultTopicManager manager = new DefaultTopicManager(config2, kafkaSupplier.GetAdmin(config));
 
             // Create topic with just one partition
-            ((SyncProducer)kafkaSupplier.GetProducer(new ProducerConfig())).CreateTopic("topic");
+            ((SyncProducer) kafkaSupplier.GetProducer(new ProducerConfig())).CreateTopic("topic");
 
             IDictionary<string, InternalTopicConfig> topics = new Dictionary<string, InternalTopicConfig>();
             topics.Add("topic", new UnwindowedChangelogTopicConfig
@@ -153,7 +153,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 NumberPartitions = 1
             });
 
-            var r = Parallel.ForEach(new List<int> { 1, 2, 3, 4 }, (i) => manager.ApplyAsync(topics).GetAwaiter().GetResult());
+            var r = Parallel.ForEach(new List<int> {1, 2, 3, 4},
+                (i) => manager.ApplyAsync(topics).GetAwaiter().GetResult());
             Assert.IsTrue(r.IsCompleted);
         }
 

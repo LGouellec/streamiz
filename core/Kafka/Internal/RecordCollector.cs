@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Kafka.Internal
 {
@@ -23,6 +24,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
         private IProducer<byte[], byte[]> producer;
         private readonly IStreamConfig configuration;
         private readonly TaskId id;
+        private readonly Sensor droppedRecordsSensor;
 
         private readonly string logPrefix;
         private readonly ILogger log = Logger.GetLogger(typeof(RecordCollector));
@@ -30,11 +32,12 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
         public IDictionary<TopicPartition, long> CollectorOffsets => collectorsOffsets.ToDictionary();
 
-        public RecordCollector(string logPrefix, IStreamConfig configuration, TaskId id) 
+        public RecordCollector(string logPrefix, IStreamConfig configuration, TaskId id, Sensor droppedRecordsSensor) 
         {
             this.logPrefix = $"{logPrefix}";
             this.configuration = configuration;
             this.id = id;
+            this.droppedRecordsSensor = droppedRecordsSensor;
         }
 
         public void Init(ref IProducer<byte[], byte[]> producer)
@@ -59,7 +62,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 lock (_lock)
                 {
                     string producerName = producer.Name.Split("#")[0];
-                    if (--instanceProducer[producerName] <= 0)
+                    if (instanceProducer.ContainsKey(producerName) && --instanceProducer[producerName] <= 0)
                     {
                         producer.Dispose();
                         producer = null;
@@ -153,6 +156,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                         {
                             sb.AppendLine($"{logPrefix}Exception handler choose to CONTINUE processing in spite of this error but written offsets would not be recorded.");
                             log.LogError(sb.ToString());
+                            droppedRecordsSensor.Record();
                         }
                     }
                 }

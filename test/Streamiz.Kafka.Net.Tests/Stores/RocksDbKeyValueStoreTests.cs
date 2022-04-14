@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Tests.Stores
 {
@@ -45,7 +46,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             task = new Mock<AbstractTask>();
             task.Setup(k => k.Id).Returns(id);
 
-            context = new ProcessorContext(task.Object, config, stateManager);
+            context = new ProcessorContext(task.Object, config, stateManager, new StreamMetricsRegistry());
 
             store = new RocksDbKeyValueStore("test-store");
             store.Init(context, store);

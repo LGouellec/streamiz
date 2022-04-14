@@ -15,6 +15,8 @@ using Streamiz.Kafka.Net.State.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 
 namespace Streamiz.Kafka.Net.Tests.Stores
 {
@@ -51,7 +53,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             producerConfig.ClientId = "producer-1";
             var producerClient = kafkaSupplier.GetProducer(producerConfig);
 
-            recordCollector = new RecordCollector("p-1", config, id);
+            recordCollector = new RecordCollector("p-1", config, id, new NoRunnableSensor("s", "s", MetricsRecordingLevel.DEBUG));
             recordCollector.Init(ref producerClient);
 
             var changelogsTopics = new Dictionary<string, string>{
@@ -68,7 +70,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             task = new Mock<AbstractTask>();
             task.Setup(k => k.Id).Returns(id);
 
-            context = new ProcessorContext(task.Object, config, stateManager);
+            context = new ProcessorContext(task.Object, config, stateManager, new StreamMetricsRegistry());
             context.UseRecordCollector(recordCollector);
 
             var inmemorystore = new InMemoryKeyValueStore("test-store");

@@ -8,6 +8,7 @@ using Moq;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -64,7 +65,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             };
 
             store = new RocksDbKeyValueStore("store");
-            storeChangelogReader = new StoreChangelogReader(config, restoreConsumer);
+            storeChangelogReader =
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
             stateMgr = new ProcessorStateManager(
                 id,
                 topicPart.ToSingle(),
@@ -74,9 +76,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
             );
 
             Mock<AbstractTask> moq = new Mock<AbstractTask>();
-            moq.Setup(t => t.Id).Returns(new TaskId { Id = 0, Partition = 0 });
+            moq.Setup(t => t.Id).Returns(new TaskId {Id = 0, Partition = 0});
 
-            context = new ProcessorContext(moq.Object, config, stateMgr);
+            context = new ProcessorContext(moq.Object, config, stateMgr, new StreamMetricsRegistry());
             store.Init(context, store);
 
             producer.Produce(changelogTopic, CreateMessage(changelogTopic, "key1", "value1"));
@@ -201,46 +203,48 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void RegisterFailed()
         {
-            Assert.Throws<StreamsException>(() => storeChangelogReader.Register(new TopicPartition("test", 0), stateMgr));
+            Assert.Throws<StreamsException>(
+                () => storeChangelogReader.Register(new TopicPartition("test", 0), stateMgr));
         }
 
         [Test]
         public void TestHasRestoredEnd()
         {
-            var configBis = new StreamConfig<StringSerDes, StringSerDes>();
-            var tp = new TopicPartition("topic", 0);
-            Mock<IConsumer<byte[], byte[]>> consumer = new Mock<IConsumer<byte[], byte[]>>();
-            consumer.Setup(x => x.Position(tp)).Returns(12);
-
-            var storeChangelogReaderBis = new StoreChangelogReader(config, consumer.Object);
-
-            ChangelogMetadata metadata = new ChangelogMetadata {
+            ChangelogMetadata metadata = new ChangelogMetadata
+            {
                 RestoreEndOffset = null
             };
-            Assert.IsTrue(storeChangelogReaderBis.HasRestoredToEnd(metadata));
-            
-            metadata = new ChangelogMetadata {
+            Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
+
+            metadata = new ChangelogMetadata
+            {
                 RestoreEndOffset = 0
             };
-            Assert.IsTrue(storeChangelogReaderBis.HasRestoredToEnd(metadata));
-            
-            metadata = new ChangelogMetadata {
+            Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
+
+            metadata = new ChangelogMetadata
+            {
+
                 RestoreEndOffset = Offset.Unset
             };
-            Assert.IsTrue(storeChangelogReaderBis.HasRestoredToEnd(metadata));
+            Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
 
-            metadata = new ChangelogMetadata {
+            restoreConsumer.Commit(new List<TopicPartitionOffset>()
+            {
+                new TopicPartitionOffset(new TopicPartition(changelogTopic, 0), 10)
+            });
+            
+            metadata = new ChangelogMetadata
+            {
                 RestoreEndOffset = 10,
                 CurrentOffset = 12,
                 BufferedRecords = new List<ConsumeResult<byte[], byte[]>>(),
                 StoreMetadata = new ProcessorStateManager.StateStoreMetadata()
                 {
-                    ChangelogTopicPartition = tp
+                    ChangelogTopicPartition = new TopicPartition(changelogTopic, 0)
                 }
             };
-            
-            Assert.IsTrue(storeChangelogReaderBis.HasRestoredToEnd(metadata));
-
+            Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
         }
     }
 }

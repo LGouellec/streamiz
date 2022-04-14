@@ -6,6 +6,7 @@ using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.SerDes.Internal;
 using System.IO;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net
 {
@@ -17,13 +18,18 @@ namespace Streamiz.Kafka.Net
         internal static readonly ByteArraySerDes BYTEARRAY_VALUE_SERDES = new ByteArraySerDes();
         internal static readonly BytesSerDes BYTES_KEY_SERDES = new BytesSerDes();
 
-        internal AbstractTask Task { get; private set; }
-        internal SerDesContext SerDesContext { get; private set; }
-        internal IStreamConfig Configuration { get; private set; }
+        internal AbstractTask Task { get; }
+        internal SerDesContext SerDesContext { get; }
+        internal IStreamConfig Configuration { get; }
         internal IRecordContext RecordContext { get; private set; }
         internal IRecordCollector RecordCollector { get; private set; }
-        internal IStateManager States { get; private set; }
+        internal IStateManager States { get; }
         internal bool FollowMetadata { get; set; }
+        
+        /// <summary>
+        /// Return the <see cref="StreamMetricsRegistry"/> instance.
+        /// </summary>
+        public virtual StreamMetricsRegistry Metrics { get; private set; }
 
         /// <summary>
         /// Current application id
@@ -33,7 +39,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Current timestamp of record processing
         /// </summary>
-        public long Timestamp => RecordContext.Timestamp;
+        public virtual long Timestamp => RecordContext.Timestamp;
 
         /// <summary>
         /// Current topic of record processing
@@ -60,12 +66,19 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         public virtual string StateDir => $"{Path.Combine(Configuration.StateDir, Configuration.ApplicationId, Id.ToString())}";
 
-        internal ProcessorContext(AbstractTask task, IStreamConfig configuration, IStateManager stateManager)
+        // FOR TESTING
+        internal ProcessorContext()
+        {
+        }
+
+        internal ProcessorContext(AbstractTask task, IStreamConfig configuration, IStateManager stateManager,
+            StreamMetricsRegistry streamMetricsRegistry)
         { 
             Task = task;
             Configuration = configuration;
             States = stateManager;
-
+            Metrics = streamMetricsRegistry;
+            
             SerDesContext = new SerDesContext(configuration);
         }
 

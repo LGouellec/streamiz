@@ -13,7 +13,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 builder.SetMinimumLevel(LogLevel.Debug);
                 builder.AddConsole();
             });
-            
+
             var logger = loggerFactory.CreateLogger<TestLogger>();
             logger.LogInformation("Coucou test");
             logger.LogDebug("Debug Coucou test");

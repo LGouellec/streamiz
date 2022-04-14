@@ -32,6 +32,7 @@ namespace Streamiz.Kafka.Net.Processors
             if (key == null || value == null)
             {
                 log.LogWarning($"Skipping record due to null key or value. key=[{key}] value=[{value}] topic=[{Context.Topic}] partition=[{Context.Partition}] offset=[{Context.Offset}]");
+                droppedRecordsSensor.Record();
                 return;
             }
             else

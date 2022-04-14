@@ -9,7 +9,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         public void SerializeData()
         {
             char i = 'b';
-            byte[] b = new byte[] { 98, 0};
+            byte[] b = new byte[] {98, 0};
             var serdes = new CharSerDes();
             var r = serdes.Serialize(i, new Confluent.Kafka.SerializationContext());
             Assert.IsNotNull(r);
@@ -21,7 +21,8 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         {
             char i = 'p';
             var serdes = new CharSerDes();
-            var r = serdes.Deserialize(serdes.Serialize(i, new Confluent.Kafka.SerializationContext()), new Confluent.Kafka.SerializationContext());
+            var r = serdes.Deserialize(serdes.Serialize(i, new Confluent.Kafka.SerializationContext()),
+                new Confluent.Kafka.SerializationContext());
             Assert.IsNotNull(r);
             Assert.AreEqual(i, r);
         }

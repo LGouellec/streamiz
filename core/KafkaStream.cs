@@ -9,10 +9,13 @@ using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 
 [assembly: InternalsVisibleTo("Streamiz.Kafka.Net.Tests, PublicKey=00240000048000009400000006020000002400005253413100040000010001000d9d4a8e90a3b987f68f047ec499e5a3405b46fcad30f52abadefca93b5ebce094d05976950b38cc7f0855f600047db0a351ede5e0b24b9d5f1de6c59ab55dee145da5d13bb86f7521b918c35c71ca5642fc46ba9b04d4900725a2d4813639ff47898e1b762ba4ccd5838e2dd1e1664bd72bf677d872c87749948b1174bd91ad")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2, PublicKey=0024000004800000940000000602000000240000525341310004000001000100c547cac37abd99c8db225ef2f6c8a3602f3b3606cc9891605d02baa56104f4cfc0734aa39b93bf7852f7d9266654753cc297e7d2edfe0bac1cdcf9f717241550e0a7b191195b7667bb4f64bcb8e2121380fd1d9d46ad2d92d2d15605093924cceaf74c4861eff62abf69b9291ed0a340e113be11e6a7d3113e92484cf7045cc7")]
@@ -244,11 +247,12 @@ namespace Streamiz.Kafka.Net
         private readonly IStreamConfig configuration;
         private readonly string clientId;
         private readonly ILogger logger;
-        private readonly string logPrefix = "";
+        private readonly string logPrefix;
         private readonly object stateLock = new object();
         private readonly QueryableStoreProvider queryableStoreProvider;
         private readonly GlobalStreamThread globalStreamThread;
-        private readonly StreamStateManager manager = null;
+        private readonly StreamStateManager manager;
+        private readonly StreamMetricsRegistry metricsRegistry;
 
         private readonly CancellationTokenSource _cancelSource = new CancellationTokenSource();
 
@@ -266,7 +270,7 @@ namespace Streamiz.Kafka.Net
         /// <param name="topology">the topology specifying the computational logic</param>
         /// <param name="configuration">configuration about this stream</param>
         public KafkaStream(Topology topology, IStreamConfig configuration)
-            : this(topology, configuration, new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(configuration)))
+            : this(topology, configuration, new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(configuration), configuration))
         {
         }
 
@@ -295,7 +299,9 @@ namespace Streamiz.Kafka.Net
             var processID = Guid.NewGuid();
             clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;
             logPrefix = $"stream-application[{configuration.ApplicationId}] ";
-
+            metricsRegistry = new StreamMetricsRegistry(clientId, configuration.MetricsRecording);
+            this.kafkaSupplier.MetricsRegistry = metricsRegistry;
+            
             logger.LogInformation($"{logPrefix} Start creation of the stream application with this configuration: {configuration}");
 
             // re-write the physical topology according to the config
@@ -306,6 +312,13 @@ namespace Streamiz.Kafka.Net
 
             int numStreamThreads = topology.Builder.HasNoNonGlobalTopology ? 0 : configuration.NumStreamThreads;
 
+            GeneralClientMetrics.StreamsAppSensor(
+                configuration.ApplicationId,
+                topology.Describe().ToString(),
+                () => StreamState != null && StreamState.IsRunning() ? 1 : 0,
+                () => threads.Length, // todo : remove thread from array if one crash or die
+                metricsRegistry);
+                
             threads = new IThread[numStreamThreads];
             var threadState = new Dictionary<long, Processors.ThreadState>();
 
@@ -321,11 +334,13 @@ namespace Streamiz.Kafka.Net
             if (hasGlobalTopology)
             {
                 string globalThreadId = $"{clientId}-GlobalStreamThread";
-                GlobalStreamThreadFactory globalStreamThreadFactory = new GlobalStreamThreadFactory(globalTaskTopology,
+                GlobalStreamThreadFactory globalStreamThreadFactory = new GlobalStreamThreadFactory(
+                    globalTaskTopology,
                     globalThreadId,
                     kafkaSupplier.GetGlobalConsumer(configuration.ToGlobalConsumerConfig(globalThreadId)),
                     configuration,
-                    kafkaSupplier.GetAdmin(configuration.ToAdminConfig(clientId)));
+                    kafkaSupplier.GetAdmin(configuration.ToAdminConfig(clientId)),
+                    metricsRegistry);
                 globalStreamThread = globalStreamThreadFactory.GetGlobalStreamThread();
                 globalThreadState = globalStreamThread.State;
             }
@@ -333,7 +348,7 @@ namespace Streamiz.Kafka.Net
             List<StreamThreadStateStoreProvider> stateStoreProviders = new List<StreamThreadStateStoreProvider>();
             for (int i = 0; i < numStreamThreads; ++i)
             {
-                var threadId = $"{configuration.ApplicationId.ToLower()}-stream-thread-{i}";
+                var threadId = $"{clientId}-stream-thread-{i}";
 
                 var adminClient = this.kafkaSupplier.GetAdmin(configuration.ToAdminConfig(StreamThread.GetSharedAdminClientId(clientId)));
 
@@ -341,6 +356,7 @@ namespace Streamiz.Kafka.Net
                     threadId,
                     clientId,
                     this.topology.Builder,
+                    metricsRegistry,
                     configuration,
                     this.kafkaSupplier,
                     adminClient,
@@ -402,6 +418,8 @@ namespace Streamiz.Kafka.Net
                     logger.LogInformation("{LogPrefix}Starting Streams client with this topology : {Topology}", logPrefix, topology.Describe());
 
                     await InitializeInternalTopicManagerAsync();
+                    
+                    RunMiddleware(true, true);
 
                     if (globalStreamThread != null)
                     {
@@ -412,6 +430,8 @@ namespace Streamiz.Kafka.Net
                     {
                         t.Start(_cancelSource.Token);
                     }
+                    
+                    RunMiddleware(false, true);
                 }
             }, token.HasValue ? token.Value : _cancelSource.Token);
 
@@ -447,6 +467,8 @@ namespace Streamiz.Kafka.Net
             }
             else
             {
+                RunMiddleware(true, false);
+                
                 foreach (var t in threads)
                 {
                     t.Dispose();
@@ -457,6 +479,8 @@ namespace Streamiz.Kafka.Net
                     globalStreamThread.Dispose();
                 }
 
+                RunMiddleware(false, false);
+                metricsRegistry.RemoveClientSensors();
                 SetState(State.NOT_RUNNING);
                 logger.LogInformation($"{logPrefix}Streams client stopped completely");
             }
@@ -479,6 +503,15 @@ namespace Streamiz.Kafka.Net
             ValidateIsRunning();
             return queryableStoreProvider.GetStore(storeQueryParameters);
         }
+
+
+        /// <summary>
+        /// Get read-only handle on global sensors registry, including streams client's own sensors plus
+        /// its embedded producer, consumer sensors (if <see cref="IStreamConfig.ExposeLibrdKafkaStats"/> is enable.
+        /// </summary>
+        /// <returns><see cref="IReadOnlyCollection{T}"/> of all sensors</returns>
+        public IEnumerable<Sensor> Metrics()
+            => metricsRegistry.GetSensors();
 
         #region Privates
 
@@ -554,6 +587,18 @@ namespace Streamiz.Kafka.Net
                 await InternalTopicManagerUtils.New().CreateInternalTopicsAsync(internalTopicManager, topology.Builder);
         }
 
+        private void RunMiddleware(bool before, bool start)
+        {
+            if (configuration.Middlewares.Any())
+            {
+                int index = start ? (before ? 0 : 1) : (before ? 2 : 3);
+                var methods = typeof(IStreamMiddleware).GetMethods();
+                logger.LogInformation($"{logPrefix}Starting middleware (${methods[index].Name}) ....");
+                foreach (var middleware in configuration.Middlewares)
+                    methods[index].Invoke(middleware, new object[] {configuration});
+            }
+        }
+        
         #endregion
     }
 }

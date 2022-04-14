@@ -12,6 +12,7 @@ using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.Internal;
 using System.IO;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -33,9 +34,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
-            var storeChangelogReader = new StoreChangelogReader(config, restoreConsumer);
-            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer, storeChangelogReader);
-            var taskManager = new TaskManager(topology.Builder, taskCreator, supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader);
+            var storeChangelogReader =
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
+            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer,
+                storeChangelogReader, new StreamMetricsRegistry());
+            var taskManager = new TaskManager(topology.Builder, taskCreator,
+                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader);
 
             taskManager.CreateTasks(
                 new List<TopicPartition>
@@ -59,10 +63,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
             }
 
             // Revoked 2 partitions
-            taskManager.RevokeTasks(new List<TopicPartition> {
-                                        new TopicPartition("topic", 2),
-                                        new TopicPartition("topic", 3),
-                                    });
+            taskManager.RevokeTasks(new List<TopicPartition>
+            {
+                new TopicPartition("topic", 2),
+                new TopicPartition("topic", 3),
+            });
             Assert.AreEqual(2, taskManager.ActiveTasks.Count());
             Assert.AreEqual(2, taskManager.RevokedTasks.Count());
             for (int i = 0; i < 2; ++i)
@@ -100,9 +105,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
-            var storeChangelogReader = new StoreChangelogReader(config, restoreConsumer);
-            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer, storeChangelogReader);
-            var taskManager = new TaskManager(topology.Builder, taskCreator, supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader);
+            var storeChangelogReader =
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
+            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer,
+                storeChangelogReader, new StreamMetricsRegistry());
+            var taskManager = new TaskManager(topology.Builder, taskCreator,
+                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader);
 
             taskManager.CreateTasks(
                 new List<TopicPartition>
@@ -128,7 +136,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var builder = new StreamBuilder();
 
             builder.Stream<string, string>("topic")
-                .Map((k,v) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()))
+                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()))
                 .To("topic2");
 
             var topology = builder.Build();
@@ -139,9 +147,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
-            var storeChangelogReader = new StoreChangelogReader(config, restoreConsumer);
-            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer, storeChangelogReader);
-            var taskManager = new TaskManager(topology.Builder, taskCreator, supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader);
+            var storeChangelogReader =
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
+            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer,
+                storeChangelogReader, new StreamMetricsRegistry());
+            var taskManager = new TaskManager(topology.Builder, taskCreator,
+                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader);
 
             taskManager.CreateTasks(
                 new List<TopicPartition>
@@ -200,7 +211,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             for (int i = 0; i < 5; ++i)
             {
                 Assert.AreEqual($"KEY{i + 1}", serdes.Deserialize(results[i].Message.Key, new SerializationContext()));
-                Assert.AreEqual($"VALUE{i+1}", serdes.Deserialize(results[i].Message.Value, new SerializationContext()));
+                Assert.AreEqual($"VALUE{i + 1}",
+                    serdes.Deserialize(results[i].Message.Value, new SerializationContext()));
             }
 
             // NO RECORD IN THIS TASKS
@@ -232,9 +244,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
-            var storeChangelogReader = new StoreChangelogReader(config, restoreConsumer);
-            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer, storeChangelogReader);
-            var taskManager = new TaskManager(topology.Builder, taskCreator, supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader);
+            var storeChangelogReader =
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
+            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer,
+                storeChangelogReader, new StreamMetricsRegistry());
+            var taskManager = new TaskManager(topology.Builder, taskCreator,
+                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader);
 
             taskManager.CreateTasks(
                 new List<TopicPartition>
@@ -282,9 +297,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
-            var storeChangelogReader = new StoreChangelogReader(config, restoreConsumer);
-            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer, storeChangelogReader);
-            var taskManager = new TaskManager(topology.Builder, taskCreator, supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader);
+            var storeChangelogReader =
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
+            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer,
+                storeChangelogReader, new StreamMetricsRegistry());
+            var taskManager = new TaskManager(topology.Builder, taskCreator,
+                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader);
 
             taskManager.CreateTasks(
                 new List<TopicPartition>
@@ -335,9 +353,10 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config.StateDir = stateDir;
 
             var builder = new StreamBuilder();
-            builder.Table("topic", persistenStateStore ?
-                RocksDb<string, string>.As("store").WithLoggingEnabled(null) :
-                InMemory<string, string>.As("store").WithLoggingEnabled(null));
+            builder.Table("topic",
+                persistenStateStore
+                    ? RocksDb<string, string>.As("store").WithLoggingEnabled(null)
+                    : InMemory<string, string>.As("store").WithLoggingEnabled(null));
 
             var serdes = new StringSerDes();
 
@@ -349,17 +368,20 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
-            var storeChangelogReader = new StoreChangelogReader(config, restoreConsumer);
-            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer, storeChangelogReader);
-            var taskManager = new TaskManager(topology.Builder, taskCreator, supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader);
+            var storeChangelogReader =
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
+            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer,
+                storeChangelogReader, new StreamMetricsRegistry());
+            var taskManager = new TaskManager(topology.Builder, taskCreator,
+                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader);
 
             var part = new TopicPartition("topic", 0);
 
             taskManager.CreateTasks(
-                        new List<TopicPartition>
-                        {
-                            part
-                        });
+                new List<TopicPartition>
+                {
+                    part
+                });
 
             var task = taskManager.ActiveTaskFor(part);
 
@@ -399,10 +421,10 @@ namespace Streamiz.Kafka.Net.Tests.Private
             restoreConsumer.Resume(new TopicPartition("test-restoration-changelog-app-store-changelog", 0).ToSingle());
 
             taskManager.CreateTasks(
-                        new List<TopicPartition>
-                        {
-                            part
-                        });
+                new List<TopicPartition>
+                {
+                    part
+                });
 
             task = taskManager.ActiveTaskFor(part);
             tasks = new Dictionary<TaskId, ITask>();
@@ -413,7 +435,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.IsTrue(taskManager.TryToCompleteRestoration());
 
             var store = task.GetStore("store");
-            var items = (store as TimestampedKeyValueStore<string, string>).All().ToList();
+            var items = (store as ITimestampedKeyValueStore<string, string>).All().ToList();
 
             Assert.AreEqual(5, items.Count);
 

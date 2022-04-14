@@ -8,12 +8,13 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.RocksDb;
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net
 {
@@ -273,7 +274,58 @@ namespace Streamiz.Kafka.Net
         /// Logger factory which will be used for logging 
         /// </summary>
         ILoggerFactory Logger { get; set; }
+        
+        /// <summary>
+        /// Delay between two invocations of MetricsReporter().
+        /// Minimum and default value : 30 seconds
+        /// </summary>
+        long MetricsIntervalMs { get; set; }
+        
+        /// <summary>
+        /// The reporter expose a list of sensors throw by a stream thread every <see cref="MetricsIntervalMs"/>.
+        /// This reporter has the responsibility to export sensors and metrics into another platform.
+        /// Streamiz package provide one reporter for Prometheus (see Streamiz.Kafka.Net.Metrics.Prometheus package).
+        /// </summary>
+        Action<IEnumerable<Sensor>> MetricsReporter { get; set; }
+        
+        /// <summary>
+        /// Boolean which indicate if librdkafka handle statistics should be exposed ot not. (default: false)
+        /// Only mainConsumer and producer will be concerned.
+        /// </summary>
+        bool ExposeLibrdKafkaStats { get; set; }
+        
+        /// <summary>
+        /// The highest recording level for metrics.
+        /// </summary>
+        MetricsRecordingLevel MetricsRecording { get; set; }
 
+        #endregion
+        
+        #region Middlewares
+        
+        /// <summary>
+        /// Add middleware
+        /// </summary>
+        /// <param name="item">New middleware</param>
+        void AddMiddleware(IStreamMiddleware item);
+
+        /// <summary>
+        /// Clear all middlewares
+        /// </summary>
+        void ClearMiddleware();
+        
+        /// <summary>
+        /// Remove a specific middleware
+        /// </summary>
+        /// <param name="item">middleware to remove</param>
+        /// <returns></returns>
+        bool RemoveMiddleware(IStreamMiddleware item);
+        
+        /// <summary>
+        /// Get all middlewares
+        /// </summary>
+        IEnumerable<IStreamMiddleware> Middlewares { get; }
+        
         #endregion
     }
 
@@ -392,6 +444,10 @@ namespace Streamiz.Kafka.Net
         internal static readonly string replicationFactorCst = "replication.factor";
         internal static readonly string windowstoreChangelogAdditionalRetentionMsCst = "windowstore.changelog.additional.retention.ms";
         internal static readonly string offsetCheckpointManagerCst = "offset.checkpoint.manager";
+        internal static readonly string metricsReportCst = "metrics.reporter";
+        internal static readonly string metricsIntervalMsCst = "metrics.interval.ms";
+        internal static readonly string exposeLibrdKafkaCst = "expose.librdkafka.stats";
+        internal static readonly string metricsRecordingLevelCst = "metrics.recording.level";
 
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -414,7 +470,36 @@ namespace Streamiz.Kafka.Net
         private IDictionary<string, string> _internalProducerConfig = new Dictionary<string, string>();
         private IDictionary<string, string> _internalAdminConfig = new Dictionary<string, string>();
 
+        private readonly List<IStreamMiddleware> middlewares = new();
+
         private bool changeGuarantee = false;
+        
+        #region Middlewares
+        
+        /// <summary>
+        /// Add middleware
+        /// </summary>
+        /// <param name="item">New middleware</param>
+        public void AddMiddleware(IStreamMiddleware item) => middlewares.Add(item);
+
+        /// <summary>
+        /// Clear all middlewares
+        /// </summary>
+        public void ClearMiddleware() => middlewares.Clear();
+
+        /// <summary>
+        /// Remove a specific middleware
+        /// </summary>
+        /// <param name="item">middleware to remove</param>
+        /// <returns></returns>
+        public bool RemoveMiddleware(IStreamMiddleware item) => middlewares.Remove(item);
+        
+        /// <summary>
+        /// Get all middlewares
+        /// </summary>
+        public IEnumerable<IStreamMiddleware> Middlewares => middlewares.AsReadOnly();
+        
+        #endregion
 
         #region ClientConfig
 
@@ -1925,6 +2010,10 @@ namespace Streamiz.Kafka.Net
             ReplicationFactor = 1;
             WindowStoreChangelogAdditionalRetentionMs = (long)TimeSpan.FromDays(1).TotalMilliseconds;
             OffsetCheckpointManager = null;
+            MetricsIntervalMs = (long)TimeSpan.FromSeconds(30).TotalMilliseconds;
+            MetricsRecording = MetricsRecordingLevel.INFO;
+            MetricsReporter = (_) => { }; // nothing by default, myabe another behavior in future
+            ExposeLibrdKafkaStats = false;
 
             if (properties != null)
             {
@@ -2167,6 +2256,8 @@ namespace Streamiz.Kafka.Net
             set => this.AddOrUpdate(offsetCheckpointManagerCst, value);
         }
 
+        // TODO : set real config into dictionary ...
+        
         /// <summary>
         /// A Rocks DB config handler function
         /// </summary>
@@ -2186,7 +2277,52 @@ namespace Streamiz.Kafka.Net
         /// Production exception handling function called when kafka produce exception is raise.
         /// </summary>
         public Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler { get; set; }
-
+        
+        /// <summary>
+        /// Delay between two invocations of MetricsReporter().
+        /// Minimum and default value : 30 seconds
+        /// </summary>
+        public long MetricsIntervalMs
+        {
+            get => this[metricsIntervalMsCst];
+            set
+            {
+                if (value < 30000)
+                    value = 30000;
+                this.AddOrUpdate(metricsIntervalMsCst, value);
+            }
+        }
+        
+        /// <summary>
+        /// The reporter expose a list of sensors throw by a stream thread every <see cref="MetricsIntervalMs"/>.
+        /// This reporter has the responsibility to export sensors and metrics into another platform.
+        /// Streamiz package provide one reporter for Prometheus (see Streamiz.Kafka.Net.Metrics.Prometheus package).
+        /// </summary>
+        public Action<IEnumerable<Sensor>> MetricsReporter
+        {
+            get => this[metricsReportCst];
+            set => this.AddOrUpdate(metricsReportCst, value);
+        }
+        
+        /// <summary>
+        /// Boolean which indicate if librdkafka handle statistics should be exposed ot not. (default: false)
+        /// Only mainConsumer and producer will be concerned.
+        /// </summary>
+        public bool ExposeLibrdKafkaStats 
+        {
+            get => this[exposeLibrdKafkaCst];
+            set => this.AddOrUpdate(exposeLibrdKafkaCst, value);
+        }
+        
+        /// <summary>
+        /// The highest recording level for metrics.
+        /// </summary>
+        public MetricsRecordingLevel MetricsRecording 
+        {
+            get => this[metricsRecordingLevelCst];
+            set => this.AddOrUpdate(metricsRecordingLevelCst, value);
+        }
+        
         /// <summary>
         /// Get the configs to the <see cref="IProducer{TKey, TValue}"/>
         /// </summary>
@@ -2460,8 +2596,8 @@ namespace Streamiz.Kafka.Net
             // stream config property
             sb.AppendLine();
             sb.AppendLine("\tStream property:");
-            foreach (var kp in this)
-                sb.AppendLine($"\t\t{kp.Key}: \t{kp.Value}");
+            foreach (var kp in this.Keys)
+                sb.AppendLine($"\t\t{kp}: \t{this[kp]}");
 
             // client config property
             sb.AppendLine("\tClient property:");
@@ -2560,8 +2696,7 @@ namespace Streamiz.Kafka.Net
         public StreamConfig() : this(null) { }
 
         /// <summary>
-        /// Constructor with properties.
-        /// See <see cref="StreamConfig.StreamConfig(IDictionary{string, dynamic})"/>
+        /// Constructor with properties. 
         /// <para>
         /// <see cref="IStreamConfig.DefaultKeySerDes"/> is set to <code>new KS();</code>
         /// <see cref="IStreamConfig.DefaultValueSerDes"/> is set to <code>new VS();</code>

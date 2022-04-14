@@ -8,6 +8,7 @@ using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -163,6 +164,10 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     break;
                 }
             }
+
+            var sensors = stream.Metrics();
+            Assert.IsTrue(sensors.Any());
+            
             stream.Dispose();
             Assert.IsTrue(isRunningState);
         }
@@ -385,8 +390,6 @@ namespace Streamiz.Kafka.Net.Tests.Public
         [Test]
         public void GetStateStoreBeforeRunningState()
         {
-            
-
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test";
             config.BootstrapServers = "127.0.0.1";

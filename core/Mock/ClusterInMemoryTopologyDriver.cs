@@ -8,6 +8,7 @@ using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Mock
 {
@@ -21,6 +22,7 @@ namespace Streamiz.Kafka.Net.Mock
         private readonly CancellationToken token;
         private readonly TimeSpan startTimeout;
         private readonly InternalTopologyBuilder internalTopologyBuilder;
+        private readonly StreamMetricsRegistry metricsRegistry;
         private ITopicManager internalTopicManager;
 
         public ClusterInMemoryTopologyDriver(string clientId, InternalTopologyBuilder topologyBuilder, IStreamConfig configuration, IStreamConfig topicConfiguration, CancellationToken token)
@@ -44,6 +46,7 @@ namespace Streamiz.Kafka.Net.Mock
             this.topicConfiguration = topicConfiguration;
             this.token = token;
             internalTopologyBuilder = topologyBuilder;
+            metricsRegistry = new StreamMetricsRegistry(clientId, MetricsRecordingLevel.DEBUG);
 
             pipeBuilder = new KafkaPipeBuilder(kafkaSupplier);
 
@@ -54,6 +57,7 @@ namespace Streamiz.Kafka.Net.Mock
                 $"{this.configuration.ApplicationId.ToLower()}-stream-thread-0",
                 clientId,
                 topologyBuilder,
+                metricsRegistry,
                 this.configuration,
                 kafkaSupplier,
                 kafkaSupplier.GetAdmin(configuration.ToAdminConfig($"{clientId}-admin")),
