@@ -851,7 +851,8 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             var producerStatisticsHandler = new ProducerStatisticsHandler(
                 config.ClientId,
                 config.ApplicationId, 
-                threadId);
+                threadId,
+                "0_0");
             producerStatisticsHandler.Register(streamMetricsRegistry);
 
             var sensorLibrdkafkaProducerMetrics = streamMetricsRegistry
