@@ -27,6 +27,8 @@ By default Streamiz has metrics with two recording levels: INFO and DEBUG. The `
 
 ### Application metrics
 
+All the following metrics have a recording level of `INFO`.
+
 **Sensor : stream-metrics.sensor.app-info, Type : stream-metrics**
 
 | Metric name      | Description | Tags          |
@@ -127,7 +129,7 @@ All the following metrics have a recording level of `INFO`.
 
 ### Task metrics
 
-All the following metrics have a recording level of `INFO`.
+All the following metrics have a recording level of `DEBUG`.
 
 **Sensor : internal.[THREAD_ID].task.[TASK_ID].sensor.process-latency, Type : stream-task-metrics**
 

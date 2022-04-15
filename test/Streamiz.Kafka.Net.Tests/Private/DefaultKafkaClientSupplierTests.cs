@@ -61,7 +61,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void CreateConsumerWithStats()
         {
-            StreamConfig config = new StreamConfig();
             config.ExposeLibrdKafkaStats = true;
             config.ApplicationId = "test-app";
             config.ClientId = "test-client";
@@ -77,7 +76,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void CreateProducerWithStats()
         {
-            StreamConfig config = new StreamConfig();
             config.ExposeLibrdKafkaStats = true;
             config.ApplicationId = "test-app";
             config.ClientId = "test-client";
