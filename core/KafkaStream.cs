@@ -435,7 +435,9 @@ namespace Streamiz.Kafka.Net
                 }
             }, token.HasValue ? token.Value : _cancelSource.Token);
             
-            await Task.Delay(Timeout.Infinite, token ?? _cancelSource.Token);
+            
+            // Allow time for streams thread to run
+            await Task.Delay(TimeSpan.FromSeconds(5), token ?? _cancelSource.Token);
         }
 
         /// <summary>
