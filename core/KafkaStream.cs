@@ -434,8 +434,8 @@ namespace Streamiz.Kafka.Net
                     RunMiddleware(false, true);
                 }
             }, token.HasValue ? token.Value : _cancelSource.Token);
-
-            await Task.Delay(1000);
+            
+            await Task.Delay(Timeout.Infinite, token ?? _cancelSource.Token);
         }
 
         /// <summary>
