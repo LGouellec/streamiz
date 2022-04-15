@@ -47,7 +47,8 @@ namespace Streamiz.Kafka.Net.Mock
             this.token = token;
             internalTopologyBuilder = topologyBuilder;
             metricsRegistry = new StreamMetricsRegistry(clientId, MetricsRecordingLevel.DEBUG);
-
+            kafkaSupplier.MetricsRegistry = metricsRegistry;
+            
             pipeBuilder = new KafkaPipeBuilder(kafkaSupplier);
 
             // ONLY FOR CHECK IF TOLOGY IS CORRECT

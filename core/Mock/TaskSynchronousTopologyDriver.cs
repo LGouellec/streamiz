@@ -56,6 +56,7 @@ namespace Streamiz.Kafka.Net.Mock
             this.token = token;
             builder = topologyBuilder;
             this.supplier = supplier ?? new SyncKafkaSupplier();
+            this.supplier.MetricsRegistry = metricsRegistry;
             producer = this.supplier.GetProducer(configuration.ToProducerConfig()) as SyncProducer;
 
             foreach (var sourceTopic in builder

@@ -166,5 +166,50 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             }
 
         }
+        
+        [Test]
+        public void RepartitionInternalTopicOnCascace()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>
+            {
+                ApplicationId = "test-repartition-processor-on-cascade"
+            };
+            
+            StreamBuilder builder = new StreamBuilder();
+
+            var table = builder.Table<string, string>("input-table");
+            
+            builder
+                .Stream<string, string>("topic")
+                .SelectKey((k, v) => v.ToUpper())
+                .Join(table, (v,t) => $"{v}:{t}")
+                .To("output");
+
+            Topology t = builder.Build();
+
+            MockKafkaSupplier supplier = new MockKafkaSupplier(4);
+            
+            using (var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("topic");
+                var inputTableTopic = driver.CreateInputTopic<string, string>("input-table");
+                var outputTopic = driver.CreateOuputTopic<string, string>("output");
+                inputTableTopic.PipeInput("PRODUCT1", "P1");
+                inputTableTopic.PipeInput("PRODUCT2", "P2");
+                inputTopic.PipeInput("test", "product1");
+                inputTopic.PipeInput("test", "product2");
+                
+                var records = IntegrationTestUtils
+                    .WaitUntilMinKeyValueRecordsReceived(outputTopic, 2)
+                    .ToUpdateDictionary(r => r.Message.Key, r => r.Message.Value);
+                
+                Assert.IsNotNull(records);
+                Assert.AreEqual(2, records.Count);
+                Assert.AreEqual("product2:P2", records["PRODUCT2"]);
+                Assert.AreEqual("product1:P1", records["PRODUCT1"]);
+                
+            }
+        }
+        
     }
 }
