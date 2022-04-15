@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using Streamiz.Kafka.Net.Kafka.Internal;
 using System;
+using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.Tests.Private
@@ -64,8 +65,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config.ExposeLibrdKafkaStats = true;
             config.ApplicationId = "test-app";
             config.ClientId = "test-client";
-            var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config));
-
+            var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config), config);
+            supplier.MetricsRegistry = new StreamMetricsRegistry();
+            
             var consumerConfig = config.ToConsumerConfig("consume");
             StreamizConsumerConfig wrapper = new StreamizConsumerConfig(consumerConfig, "thread-1");
 
@@ -79,8 +81,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config.ExposeLibrdKafkaStats = true;
             config.ApplicationId = "test-app";
             config.ClientId = "test-client";
-            var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config));
-
+            var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config), config);
+            supplier.MetricsRegistry = new StreamMetricsRegistry();
+            
             var producerConfig = config.ToProducerConfig("producer");
             StreamizProducerConfig wrapper = new StreamizProducerConfig(producerConfig, "thread-1", new TaskId(){Id = 0, Partition = 0});
 

@@ -524,6 +524,7 @@ namespace Streamiz.Kafka.Net.Processors
                     consumer.Unsubscribe();
                     IsRunning = false;
 
+                    // TODO : Maybe thread join first before closing manager
                     if (cleanUp)
                         thread.Join();
                     else
