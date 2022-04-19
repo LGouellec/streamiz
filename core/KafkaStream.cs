@@ -434,8 +434,10 @@ namespace Streamiz.Kafka.Net
                     RunMiddleware(false, true);
                 }
             }, token.HasValue ? token.Value : _cancelSource.Token);
-
-            await Task.Delay(1000);
+            
+            
+            // Allow time for streams thread to run
+            await Task.Delay(TimeSpan.FromMilliseconds(configuration.StartTaskDelayMs), token ?? _cancelSource.Token);
         }
 
         /// <summary>
