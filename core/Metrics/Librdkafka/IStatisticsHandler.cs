@@ -4,7 +4,5 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
     {
         void Register(StreamMetricsRegistry metricsRegistry);
         void Publish(Statistics statistics);
-        // TODO : to remove
-        void Unregister(StreamMetricsRegistry metricsRegistry);
     }
 }

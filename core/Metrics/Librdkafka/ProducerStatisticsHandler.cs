@@ -219,62 +219,57 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
             PublishBrokerStats(statistics.Brokers);
             PublishTopicsStats(statistics.Topics);
         }
-
-        public void Unregister(StreamMetricsRegistry metricsRegistry)
-        {
-            // TODO : 
-        }
-
+        
         private void PublishTopicsStats(Dictionary<string, TopicStatistic> statisticsTopics)
         {
             long now = DateTime.Now.GetMilliseconds();
 
             foreach (var topic in statisticsTopics)
             {
-                BatchSizeAverageBytesSensor
+                LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(BatchSizeAverageBytesSensor
                     .Scoped((LibrdKafkaBaseMetrics.TOPIC_TAG, topic.Value.TopicName))
-                    .Record(topic.Value.BatchSize.Average, now);
+                    , topic.Value.BatchSize.Average, now);
                 
-                BatchMessageCountsAverageSensor
+                LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(BatchMessageCountsAverageSensor
                     .Scoped((LibrdKafkaBaseMetrics.TOPIC_TAG, topic.Value.TopicName))
-                    .Record(topic.Value.BatchMessageCounts.Average, now);
+                    , topic.Value.BatchMessageCounts.Average, now);
 
                 foreach (var partition in topic.Value.Partitions)
                 {
-                    PartitionTotalNumberOfMessagesProducedSensor
+                    LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(PartitionTotalNumberOfMessagesProducedSensor
                         .Scoped(
                             (LibrdKafkaBaseMetrics.TOPIC_TAG, topic.Value.TopicName),
                             (LibrdKafkaBaseMetrics.BROKER_ID_TAG, partition.Value.BrokerId.ToString()), 
                             (LibrdKafkaBaseMetrics.PARTITION_ID_TAG, partition.Value.PartitionId.ToString()))
-                        .Record(partition.Value.TotalNumberOfMessagesProduced, now);
+                        , partition.Value.TotalNumberOfMessagesProduced, now);
 
-                    PartitionTotalNumberOfBytesProducedSensor
+                    LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(PartitionTotalNumberOfBytesProducedSensor
                         .Scoped(
                             (LibrdKafkaBaseMetrics.TOPIC_TAG, topic.Value.TopicName),
                             (LibrdKafkaBaseMetrics.BROKER_ID_TAG, partition.Value.BrokerId.ToString()), 
                             (LibrdKafkaBaseMetrics.PARTITION_ID_TAG, partition.Value.PartitionId.ToString()))
-                        .Record(partition.Value.TotalNumberOfBytesProduced, now);
+                        , partition.Value.TotalNumberOfBytesProduced, now);
 
-                    PartitionNumberOfMessagesInFlightSensor
+                    LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(PartitionNumberOfMessagesInFlightSensor
                         .Scoped(
                             (LibrdKafkaBaseMetrics.TOPIC_TAG, topic.Value.TopicName),
                             (LibrdKafkaBaseMetrics.BROKER_ID_TAG, partition.Value.BrokerId.ToString()), 
                             (LibrdKafkaBaseMetrics.PARTITION_ID_TAG, partition.Value.PartitionId.ToString()))
-                        .Record(partition.Value.NumberOfMessagesInFlight, now);
+                        , partition.Value.NumberOfMessagesInFlight, now);
 
-                    PartitionNextExpectedAckSequenceSensor
+                    LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(PartitionNextExpectedAckSequenceSensor
                         .Scoped(
                             (LibrdKafkaBaseMetrics.TOPIC_TAG, topic.Value.TopicName),
                             (LibrdKafkaBaseMetrics.BROKER_ID_TAG, partition.Value.BrokerId.ToString()), 
                             (LibrdKafkaBaseMetrics.PARTITION_ID_TAG, partition.Value.PartitionId.ToString()))
-                        .Record(partition.Value.NextExpectedAckSequence, now);
+                        , partition.Value.NextExpectedAckSequence, now);
 
-                    PartitionLastInternalMessageIdAckedSensor
+                    LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(PartitionLastInternalMessageIdAckedSensor
                         .Scoped(
                             (LibrdKafkaBaseMetrics.TOPIC_TAG, topic.Value.TopicName),
                             (LibrdKafkaBaseMetrics.BROKER_ID_TAG, partition.Value.BrokerId.ToString()), 
                             (LibrdKafkaBaseMetrics.PARTITION_ID_TAG, partition.Value.PartitionId.ToString()))
-                        .Record(partition.Value.LastInternalMessageIdAcked, now);
+                        , partition.Value.LastInternalMessageIdAcked, now);
                 }
 
                 BatchSizeAverageBytesSensor.RemoveOldScopeSensor(now);
@@ -293,48 +288,48 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
 
             foreach (var broker in statisticsBrokers)
             {
-                NumberOfRequestAwaitingTransmissionSensor
+                LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(NumberOfRequestAwaitingTransmissionSensor
                     .Scoped((LibrdKafkaBaseMetrics.BROKER_ID_TAG, broker.Value.NodeId.ToString()))
-                    .Record(broker.Value.NumberOfRequestAwaitingTransmission, now);
-                NumberOfMessagesAwaitingTransmissionSensor
+                    , broker.Value.NumberOfRequestAwaitingTransmission, now);
+                LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(NumberOfMessagesAwaitingTransmissionSensor
                     .Scoped((LibrdKafkaBaseMetrics.BROKER_ID_TAG, broker.Value.NodeId.ToString()))
-                    .Record(broker.Value.NumberOfMessagesAwaitingTransmission, now);
-                NumberOfRequestInFlightSensor
+                    , broker.Value.NumberOfMessagesAwaitingTransmission, now);
+                LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(NumberOfRequestInFlightSensor
                     .Scoped((LibrdKafkaBaseMetrics.BROKER_ID_TAG, broker.Value.NodeId.ToString()))
-                    .Record(broker.Value.NumberOfRequestInFlight, now);
-                NumberOfMessagesInFlightSensor
+                    , broker.Value.NumberOfRequestInFlight, now);
+                LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(NumberOfMessagesInFlightSensor
                     .Scoped((LibrdKafkaBaseMetrics.BROKER_ID_TAG, broker.Value.NodeId.ToString()))
-                    .Record(broker.Value.NumberOfMessagesInFlight, now);
-                TotalNumberOfRequestSentSensor
+                    , broker.Value.NumberOfMessagesInFlight, now);
+                LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(TotalNumberOfRequestSentSensor
                     .Scoped((LibrdKafkaBaseMetrics.BROKER_ID_TAG, broker.Value.NodeId.ToString()))
-                    .Record(broker.Value.TotalNumberOfRequestSent, now);
-                TotalNumberOfBytesSentSensor
+                    , broker.Value.TotalNumberOfRequestSent, now);
+                LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(TotalNumberOfBytesSentSensor
                     .Scoped((LibrdKafkaBaseMetrics.BROKER_ID_TAG, broker.Value.NodeId.ToString()))
-                    .Record(broker.Value.TotalNumberOfBytesSent, now);
-                TotalNumberOfTransmissionErrorsSensor
+                    , broker.Value.TotalNumberOfBytesSent, now);
+                LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(TotalNumberOfTransmissionErrorsSensor
                     .Scoped((LibrdKafkaBaseMetrics.BROKER_ID_TAG, broker.Value.NodeId.ToString()))
-                    .Record(broker.Value.TotalNumberOfTransmissionErrors, now);
-                TotalNumberOfRequestRetriesSensor
+                    , broker.Value.TotalNumberOfTransmissionErrors, now);
+                LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(TotalNumberOfRequestRetriesSensor
                     .Scoped((LibrdKafkaBaseMetrics.BROKER_ID_TAG, broker.Value.NodeId.ToString()))
-                    .Record(broker.Value.TotalNumberOfRequestRetries, now);
-                TotalNumberOfRequestTimeoutSensor
+                    , broker.Value.TotalNumberOfRequestRetries, now);
+                LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(TotalNumberOfRequestTimeoutSensor
                     .Scoped((LibrdKafkaBaseMetrics.BROKER_ID_TAG, broker.Value.NodeId.ToString()))
-                    .Record(broker.Value.TotalNumberOfRequestTimeout, now);
-                NumberOfConnectionAttempsSensor
+                    , broker.Value.TotalNumberOfRequestTimeout, now);
+                LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(NumberOfConnectionAttempsSensor
                     .Scoped((LibrdKafkaBaseMetrics.BROKER_ID_TAG, broker.Value.NodeId.ToString()))
-                    .Record(broker.Value.NumberOfConnectionAttemps, now);
-                NumberOfDisconnectsSensor
+                    , broker.Value.NumberOfConnectionAttemps, now);
+                LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(NumberOfDisconnectsSensor
                     .Scoped((LibrdKafkaBaseMetrics.BROKER_ID_TAG, broker.Value.NodeId.ToString()))
-                    .Record(broker.Value.NumberOfDisconnects, now);
-                InternalQueueProducerLatencyAverageMsSensor
+                    , broker.Value.NumberOfDisconnects, now);
+                LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(InternalQueueProducerLatencyAverageMsSensor
                     .Scoped((LibrdKafkaBaseMetrics.BROKER_ID_TAG, broker.Value.NodeId.ToString()))
-                    .Record(broker.Value.InternalQueueProducerLatency.Average, now);
-                InternalRequestQueueLatencyAverageMsSensor
+                    , broker.Value.InternalQueueProducerLatency.Average, now);
+                LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(InternalRequestQueueLatencyAverageMsSensor
                     .Scoped((LibrdKafkaBaseMetrics.BROKER_ID_TAG, broker.Value.NodeId.ToString()))
-                    .Record(broker.Value.InternalRequestQueueLatency.Average, now);
-                BrokerLatencyAverageMsSensor
+                    , broker.Value.InternalRequestQueueLatency.Average, now);
+                LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(BrokerLatencyAverageMsSensor
                     .Scoped((LibrdKafkaBaseMetrics.BROKER_ID_TAG, broker.Value.NodeId.ToString()))
-                    .Record(broker.Value.BrokerLatency.Average, now);
+                    , broker.Value.BrokerLatency.Average, now);
             }
 
             NumberOfRequestAwaitingTransmissionSensor.RemoveOldScopeSensor(now);
@@ -352,5 +347,6 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
             InternalRequestQueueLatencyAverageMsSensor.RemoveOldScopeSensor(now);
             BrokerLatencyAverageMsSensor.RemoveOldScopeSensor(now);
         }
+        
     }
 }

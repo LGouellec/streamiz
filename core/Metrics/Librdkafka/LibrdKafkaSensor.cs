@@ -75,6 +75,9 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
                 base.Record(value, timeMs);
                 scoped.LastRecordedTime = timeMs;
             }
+
+            public static void Record(ScopedLibrdKafkaSensor sensor, double value, long now)
+                => sensor.Record(value, now);
         }
 
         private readonly Dictionary<MetricName, StreamMetric> originMetrics;
