@@ -5,12 +5,8 @@ using Streamiz.Kafka.Net.Metrics.Internal;
 
 namespace Streamiz.Kafka.Net.Metrics.Librdkafka
 {
-    internal class ConsumerStatisticsHandler : IStatisticsHandler
+    internal class ConsumerStatisticsHandler : LibrdKafkaStatisticsHandler
     {
-        private readonly string threadId;
-        private readonly string clientId;
-        private readonly string streamAppId;
-
         private Sensor TotalNumberOfMessagesConsumedSensor;
         private Sensor TotalNumberOfMessageBytesConsumedSensor;
         private Sensor NumberOfOpsWaitinInQueueSensor; // Sensor
@@ -27,10 +23,6 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
         private LibrdKafkaSensor NumberOfDisconnectsSensor;
         private LibrdKafkaSensor BrokerLatencyAverageMsSensor;
 
-        // Per Topic (add topic name as label)			
-        private LibrdKafkaSensor BatchSizeAverageBytesSensor;
-        private LibrdKafkaSensor BatchMessageCountsAverageSensor;
-
         // Per partition(topic brokder id PartitionId as label)
 
         private LibrdKafkaSensor ConsumerLagSensor; // Sensor
@@ -40,14 +32,10 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
         public ConsumerStatisticsHandler(
             string clientId,
             string streamAppId,
-            string threadId = null)
-        {
-            this.clientId = clientId;
-            this.streamAppId = streamAppId;
-            this.threadId = threadId ?? StreamMetricsRegistry.UNKNOWN_THREAD;
-        }
+            string threadId = null) : base(clientId, streamAppId, threadId)
+        { }
 
-        public void Register(StreamMetricsRegistry metricsRegistry)
+        public override void Register(StreamMetricsRegistry metricsRegistry)
         {
             TotalNumberOfMessagesConsumedSensor =
                 LibrdKafkaConsumerMetrics.TotalNumberOfMessagesConsumedSensor(threadId, clientId, streamAppId,
@@ -101,7 +89,7 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
                     metricsRegistry);
         }
 
-        public void Publish(Statistics statistics)
+        public override void Publish(Statistics statistics)
         {
             TotalNumberOfMessagesConsumedSensor.Record(statistics.TotalNumberOfMessagesConsumed);
             TotalNumberOfMessageBytesConsumedSensor.Record(statistics.TotalNumberOfMessageBytesConsumed);
@@ -119,16 +107,10 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
         {
             long now = DateTime.Now.GetMilliseconds();
 
+            PublishTopicsStatistics(statisticsTopics);
+            
             foreach (var topic in statisticsTopics)
             {
-                LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(BatchSizeAverageBytesSensor
-                    .Scoped((LibrdKafkaBaseMetrics.TOPIC_TAG, topic.Value.TopicName))
-                    , topic.Value.BatchSize.Average, now);
-                
-                LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(BatchMessageCountsAverageSensor
-                    .Scoped((LibrdKafkaBaseMetrics.TOPIC_TAG, topic.Value.TopicName))
-                    , topic.Value.BatchMessageCounts.Average, now);
-
                 foreach (var partition in topic.Value.Partitions)
                 {
                     LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(ConsumerLagSensor
