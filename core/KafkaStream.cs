@@ -437,7 +437,7 @@ namespace Streamiz.Kafka.Net
             
             
             // Allow time for streams thread to run
-            await Task.Delay(TimeSpan.FromSeconds(5), token ?? _cancelSource.Token);
+            await Task.Delay(TimeSpan.FromMilliseconds(configuration.StartTaskDelayMs), token ?? _cancelSource.Token);
         }
 
         /// <summary>
