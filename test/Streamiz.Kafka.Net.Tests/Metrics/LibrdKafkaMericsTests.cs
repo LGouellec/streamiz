@@ -888,6 +888,8 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             .FirstOrDefault(s => s.Name.Contains($"{LibrdKafkaProducerMetrics.TOTAL_BROKER_CONNECTION}"));
 
           Assert.AreEqual(3, sensorTotalBR.Metrics.Count());
+          
+          Thread.Sleep(100);
 
           var statistics2 = JsonConvert.DeserializeObject<Statistics>(jsonPayloadWithout1Broker);
           consumerStatisticsHandler.Publish(statistics2);
@@ -922,6 +924,8 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             .FirstOrDefault(s => s.Name.Contains($"{LibrdKafkaProducerMetrics.TOTAL_BROKER_REQUEST_INFLIFGHT_AWAITING_RESPONSE}"));
 
           Assert.AreEqual(3, sensorTotalBRInFlight.Metrics.Count());
+          
+          Thread.Sleep(100);
           
           var statistics2 = JsonConvert.DeserializeObject<Statistics>(jsonPayloadWithout1Broker);
           producerStatisticsHandler.Publish(statistics2);

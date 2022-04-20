@@ -148,10 +148,10 @@ namespace Streamiz.Kafka.Net.Metrics
 
         #region Record
 
-        internal virtual void Record() 
+        internal void Record() 
             => Record(1);
         
-        internal virtual void Record(long value)
+        internal void Record(long value)
             => Record(value, DateTime.Now.GetMilliseconds());
         
         internal virtual void Record(double value, long timeMs)

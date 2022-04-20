@@ -70,29 +70,20 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
                 }
             }
             
-            internal override void Record()
-            {
-                base.Record();
-                scoped.LastRecordedTime = DateTime.Now.GetMilliseconds();
-            }
-
-            internal override void Record(long value)
-            {
-                base.Record(value);
-                scoped.LastRecordedTime = DateTime.Now.GetMilliseconds();
-            }
-
             internal override void Record(double value, long timeMs)
             {
                 base.Record(value, timeMs);
-                scoped.LastRecordedTime = DateTime.Now.GetMilliseconds();
+                scoped.LastRecordedTime = timeMs;
             }
+
+            public static void Record(ScopedLibrdKafkaSensor sensor, double value, long now)
+                => sensor.Record(value, now);
         }
 
         private readonly Dictionary<MetricName, StreamMetric> originMetrics;
         private readonly Dictionary<MetricName, IMeasurableStat> originMeasurableStats;
         private readonly Dictionary<ScopedLibrdKafka, ScopedLibrdKafkaSensor> scopedLibrdKafkaSensors;
-        private readonly MetricConfig config = new MetricConfig();
+        private readonly MetricConfig config = new();
 
         public override IReadOnlyDictionary<MetricName, StreamMetric> Metrics
         {

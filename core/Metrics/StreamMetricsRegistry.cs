@@ -367,6 +367,7 @@ namespace Streamiz.Kafka.Net.Metrics
         
         internal void RemoveNodeSensors(string threadId, string taskId, string processorName)
         {
+            threadId ??= StreamMetricsRegistry.UNKNOWN_THREAD;
             lock (nodeLevelSensors)
             {
                 var key = NodeSensorPrefix(threadId, taskId, processorName);
@@ -407,7 +408,7 @@ namespace Streamiz.Kafka.Net.Metrics
         {
             threadId ??= UNKNOWN_THREAD;
             var tagDic = TaskLevelTags(threadId, taskId);
-            tagDic.Add($"{storeType}_{STORE_ID_TAG}", storeName);
+            tagDic.Add($"{storeType.Replace("-", "_")}_{STORE_ID_TAG}", storeName);
             return tagDic;
         }
 
@@ -419,6 +420,7 @@ namespace Streamiz.Kafka.Net.Metrics
         
         internal void RemoveStoreSensors(string threadId, string taskId, string storeName)
         {
+            threadId ??= StreamMetricsRegistry.UNKNOWN_THREAD;
             lock (storeLevelSensors)
             {
                 var key = StoreSensorPrefix(threadId, taskId, storeName);

@@ -28,6 +28,8 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
         [JsonProperty(PropertyName = "state")]
         public string _State;
 
+        // NOT USED FOR MOMENT
+        /*
         public BrokerState State
         {
             get
@@ -45,7 +47,7 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
                     default: return BrokerState.UP;
                 }
             }
-        }
+        }*/
 
         [JsonProperty(PropertyName = "stateage")]
         public long TimeSinceLastBrokerStateChange; // Gauge

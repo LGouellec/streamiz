@@ -48,7 +48,7 @@ namespace sample_stream
                 .Reduce((v1,v2) => v1 + " " + v2)
                 .ToStream()
                 .To("output");
-          
+            
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
             
