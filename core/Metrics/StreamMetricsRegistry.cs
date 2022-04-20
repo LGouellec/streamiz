@@ -408,7 +408,7 @@ namespace Streamiz.Kafka.Net.Metrics
         {
             threadId ??= UNKNOWN_THREAD;
             var tagDic = TaskLevelTags(threadId, taskId);
-            tagDic.Add($"{storeType}_{STORE_ID_TAG}", storeName);
+            tagDic.Add($"{storeType.Replace("-", "_")}_{STORE_ID_TAG}", storeName);
             return tagDic;
         }
 

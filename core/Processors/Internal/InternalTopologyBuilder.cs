@@ -567,6 +567,21 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 Dictionary<string, InternalTopicConfig> changelogTopics = new Dictionary<string, InternalTopicConfig>();
                 Dictionary<string, InternalTopicConfig> repartitionTopics = new Dictionary<string, InternalTopicConfig>();
 
+                string AddRepartitionTopic(string topic)
+                {
+                    var internalTopic = DecorateTopic(topic);
+                    int? internalTopicPartition = internalTopics[topic];
+
+                    if (internalTopicPartition.HasValue)
+                        repartitionTopics.Add(internalTopic,
+                            new RepartitionTopicConfig()
+                                {Name = internalTopic, NumberPartitions = internalTopicPartition.Value});
+                    else
+                        repartitionTopics.Add(internalTopic,
+                            new RepartitionTopicConfig() {Name = internalTopic});
+                    return internalTopic;
+                }
+
                 foreach(var node in entry.Value)
                 {
                     var nodeFactory = nodeFactories[node];
@@ -575,25 +590,18 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                         case ISourceNodeFactory sourceNodeFactory:
                             if (internalTopics.ContainsKey(sourceNodeFactory.Topic))
                             {
-                                var internalTopic = DecorateTopic(sourceNodeFactory.Topic);
-                                int? internalTopicPartition = internalTopics[sourceNodeFactory.Topic];
-
-                                if (internalTopicPartition.HasValue)
-                                    repartitionTopics.Add(internalTopic,
-                                        new RepartitionTopicConfig()
-                                            {Name = internalTopic, NumberPartitions = internalTopicPartition.Value});
-                                else
-                                    repartitionTopics.Add(internalTopic,
-                                        new RepartitionTopicConfig() {Name = internalTopic});
-                                
+                                string internalTopic = AddRepartitionTopic(sourceNodeFactory.Topic);
                                 sourceTopics.Add(internalTopic);
                             }
                             else
                                 sourceTopics.Add(sourceNodeFactory.Topic);
                             break;
                         case ISinkNodeFactory sinkNodeFactory:
-                            if(sinkNodeFactory.Topic != null && internalTopics.ContainsKey(sinkNodeFactory.Topic))
-                                sinkTopics.Add(DecorateTopic(sinkNodeFactory.Topic));
+                            if (sinkNodeFactory.Topic != null && internalTopics.ContainsKey(sinkNodeFactory.Topic))
+                            {
+                                string internalTopic = AddRepartitionTopic(sinkNodeFactory.Topic);
+                                sinkTopics.Add(internalTopic);
+                            }
                             else
                                 sinkTopics.AddIfNotNull(sinkNodeFactory.Topic);
                             break;
