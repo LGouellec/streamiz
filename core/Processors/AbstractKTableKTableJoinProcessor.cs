@@ -8,12 +8,14 @@ namespace Streamiz.Kafka.Net.Processors
         protected readonly IKTableValueGetter<K, V2> valueGetter;
         protected readonly IValueJoiner<V1, V2, VR> joiner;
         protected readonly bool sendOldValues;
+        protected readonly string joinResultTopic;
 
-        public AbstractKTableKTableJoinProcessor(IKTableValueGetter<K, V2> valueGetter, IValueJoiner<V1, V2, VR> joiner, bool sendOldValues)
+        public AbstractKTableKTableJoinProcessor(IKTableValueGetter<K, V2> valueGetter, IValueJoiner<V1, V2, VR> joiner, bool sendOldValues, string joinResultTopic = null)
         {
             this.valueGetter = valueGetter;
             this.joiner = joiner;
             this.sendOldValues = sendOldValues;
+            this.joinResultTopic = joinResultTopic;
         }
 
         public override void Close()

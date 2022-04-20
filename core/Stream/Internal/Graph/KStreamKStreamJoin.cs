@@ -10,8 +10,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph
         private readonly long afterMs;
         private readonly IValueJoiner<V, V1, VR> joiner;
         private readonly bool outer;
+        private readonly string joinResultTopic;
 
-        public KStreamKStreamJoin(string name, string otherWindowName, long beforeMs, long afterMs, IValueJoiner<V, V1, VR> joiner, bool outer)
+        public KStreamKStreamJoin(string name, string otherWindowName, long beforeMs, long afterMs, IValueJoiner<V, V1, VR> joiner, bool outer, string joinResultTopic = null)
         {
             this.name = name;
             this.otherWindowName = otherWindowName;
@@ -19,9 +20,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph
             this.afterMs = afterMs;
             this.joiner = joiner;
             this.outer = outer;
+            this.joinResultTopic = joinResultTopic;
         }
 
         public IProcessor<K, V> Get()
-            => new KStreamKStreamJoinProcessor<K, V, V1, VR>(name, otherWindowName, beforeMs, afterMs, joiner, outer);
+            => new KStreamKStreamJoinProcessor<K, V, V1, VR>(name, otherWindowName, beforeMs, afterMs, joiner, outer, joinResultTopic);
     }
 }

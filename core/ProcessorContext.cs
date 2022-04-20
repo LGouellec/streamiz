@@ -1,4 +1,6 @@
-﻿using Confluent.Kafka;
+﻿using System;
+using System.Collections.Generic;
+using Confluent.Kafka;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Processors;
@@ -25,7 +27,8 @@ namespace Streamiz.Kafka.Net
         internal IRecordCollector RecordCollector { get; private set; }
         internal IStateManager States { get; }
         internal bool FollowMetadata { get; set; }
-        
+        internal List<KeyValuePair<string, Type>> JoinIntermediateTopics { get; set; }
+
         /// <summary>
         /// Return the <see cref="StreamMetricsRegistry"/> instance.
         /// </summary>

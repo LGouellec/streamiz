@@ -29,7 +29,8 @@ namespace Streamiz.Kafka.Net.Table.Internal
             IKTable<K, V0> tableRight,
             IValueJoiner<V, V0, VR> joiner,
             string named,
-            Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materializedInternal)
+            Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materializedInternal,
+            string joinResultTopic = null)
         {
             var renamed = new Named(named);
             var joinMergeName = renamed.OrElseGenerateWithPrefix(builder, KTable.MERGE_NAME);
@@ -52,18 +53,18 @@ namespace Streamiz.Kafka.Net.Table.Internal
 
             if (!leftOuter) // INNER JOIN
             {
-                joinLeft = new KTableKTableInnerJoin<K, VR, V, V0>((tableLeft as IKTableGetter<K, V>), (tableRight as IKTableGetter<K, V0>), joiner);
-                joinRight = new KTableKTableInnerJoin<K, VR, V0, V>((tableRight as IKTableGetter<K, V0>), (tableLeft as IKTableGetter<K, V>), joiner.Reverse());
+                joinLeft = new KTableKTableInnerJoin<K, VR, V, V0>((tableLeft as IKTableGetter<K, V>), (tableRight as IKTableGetter<K, V0>), joiner, joinResultTopic);
+                joinRight = new KTableKTableInnerJoin<K, VR, V0, V>((tableRight as IKTableGetter<K, V0>), (tableLeft as IKTableGetter<K, V>), joiner.Reverse(), joinResultTopic);
             }
             else if (!rightOuter) // LEFT JOIN
             {
-                joinLeft = new KTableKTableLeftJoin<K, VR, V, V0>((tableLeft as IKTableGetter<K, V>), (tableRight as IKTableGetter<K, V0>), joiner);
-                joinRight = new KTableKTableRightJoin<K, VR, V0, V>((tableRight as IKTableGetter<K, V0>), (tableLeft as IKTableGetter<K, V>), joiner.Reverse());
+                joinLeft = new KTableKTableLeftJoin<K, VR, V, V0>((tableLeft as IKTableGetter<K, V>), (tableRight as IKTableGetter<K, V0>), joiner, joinResultTopic);
+                joinRight = new KTableKTableRightJoin<K, VR, V0, V>((tableRight as IKTableGetter<K, V0>), (tableLeft as IKTableGetter<K, V>), joiner.Reverse(), joinResultTopic);
             }
             else // OUTER JOIN
             {
-                joinLeft = new KTableKTableOuterJoin<K, VR, V, V0>((tableLeft as IKTableGetter<K, V>), (tableRight as IKTableGetter<K, V0>), joiner);
-                joinRight = new KTableKTableOuterJoin<K, VR, V0, V>((tableRight as IKTableGetter<K, V0>), (tableLeft as IKTableGetter<K, V>), joiner.Reverse());
+                joinLeft = new KTableKTableOuterJoin<K, VR, V, V0>((tableLeft as IKTableGetter<K, V>), (tableRight as IKTableGetter<K, V0>), joiner, joinResultTopic);
+                joinRight = new KTableKTableOuterJoin<K, VR, V0, V>((tableRight as IKTableGetter<K, V0>), (tableLeft as IKTableGetter<K, V>), joiner.Reverse(), joinResultTopic);
             }
 
             var joinLeftName = renamed.SuffixWithOrElseGet("-join-this", builder, KTable.JOINTHIS_NAME);

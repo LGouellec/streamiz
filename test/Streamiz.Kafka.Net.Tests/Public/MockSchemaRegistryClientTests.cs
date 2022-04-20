@@ -1,6 +1,6 @@
 ﻿using Confluent.SchemaRegistry;
 using NUnit.Framework;
-using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock;
+using Streamiz.Kafka.Net.SchemaRegistry.SerDes;
 using System;
 using System.Threading.Tasks;
 

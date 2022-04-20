@@ -195,11 +195,11 @@ namespace Streamiz.Kafka.Net.Table.Internal
         public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner)
             => Join(table, valueJoiner, null);
 
-        public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
-            => Join(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), materialized, named);
+        public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null, string joinResultTopic = null)
+            => Join(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), materialized, named, joinResultTopic);
 
-        public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
-            => DoJoin(table, valueJoiner, named, materialized, false, false);
+        public IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null, string joinResultTopic = null)
+            => DoJoin(table, valueJoiner, named, materialized, false, false, joinResultTopic);
 
         #endregion
 
@@ -217,7 +217,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
 
         public IKTable<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
             => LeftJoin(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), materialized, named);
-        
+
 
         #endregion
 
@@ -402,7 +402,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
                 builder);
         }
 
-        private IKTable<K, VR> DoJoin<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> joiner, string named, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materializedInternal, bool leftOuter, bool rightOuter)
+        private IKTable<K, VR> DoJoin<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> joiner, string named, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materializedInternal, bool leftOuter, bool rightOuter, string joinResultTopic = null)
         {
             CheckIfParamNull(table, "table");
             CheckIfParamNull(joiner, "joiner");
@@ -417,7 +417,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
 
             var tableJoinBuilder = new TableJoinBuilder(builder, leftOuter, rightOuter);
 
-            return tableJoinBuilder.Join(this, table, joiner, named, materializedInternal);
+            return tableJoinBuilder.Join(this, table, joiner, named, materializedInternal, joinResultTopic);
         }
 
         #endregion

@@ -8,8 +8,8 @@ namespace Streamiz.Kafka.Net.Processors
     internal class KTableKTableRightJoinProcessor<K, V1, V2, VR> : AbstractKTableKTableJoinProcessor<K, V1, V2, VR>
     {
 
-        public KTableKTableRightJoinProcessor(IKTableValueGetter<K, V2> iKTableValueGetter, IValueJoiner<V1, V2, VR> valueJoiner, bool sendOldValues)
-            : base(iKTableValueGetter, valueJoiner, sendOldValues)
+        public KTableKTableRightJoinProcessor(IKTableValueGetter<K, V2> iKTableValueGetter, IValueJoiner<V1, V2, VR> valueJoiner, bool sendOldValues, string joinResultTopic = null)
+            : base(iKTableValueGetter, valueJoiner, sendOldValues, joinResultTopic)
         {
         }
 
@@ -38,8 +38,9 @@ namespace Streamiz.Kafka.Net.Processors
                 oldValue = joiner.Apply(value.OldValue, valueAndTimestampLeft.Value);
             }
 
+            SetIntermediateJoinTopic(joinResultTopic, typeof(VR));
             Forward(key, new Change<VR>(oldValue, newValue), resultTs);
         }
 
-     }
+    }
 }

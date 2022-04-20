@@ -561,7 +561,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
         IKGroupedStream<KR, V> GroupBy<KR, KRS>(Func<K, V, KR> keySelector, string named = null) where KRS : ISerDes<KR>, new();
 
-                /// <summary>
+        /// <summary>
         /// Group the records of this <see cref="IKStream{K, V}"/> on a new key that is selected using the provided <code>Func&lt;K, V, VR&gt;</code> and default serializers and deserializers.
         /// Grouping a stream on the record key is required before an aggregation operator can be applied to the data <see cref="IKGroupedStream{KR, V}"/>
         /// The provider <code>Func&lt;K, V, VR&gt;</code> selects a new key (which may or may not be of the same type) while preserving the
@@ -584,10 +584,10 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKGroupedStream{KR, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
-        IKGroupedStream<KR, V> GroupBy<KR, KRS, VS>(Func<K, V, KR> keySelector, string named = null) 
+        IKGroupedStream<KR, V> GroupBy<KR, KRS, VS>(Func<K, V, KR> keySelector, string named = null)
                     where KRS : ISerDes<KR>, new()
                     where VS : ISerDes<V>, new();
-        
+
         /// <summary>
         /// Group the records by their current key into a <see cref="IKGroupedStream{K, V}"/> while preserving the original values
         /// and default serializers and deserializers.
@@ -1093,8 +1093,9 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="valueJoiner">a <see cref="Func{V, V0, VR}"/> joiner function that computes the join result for a pair of matching records</param>
         /// <param name="windows">the specification of the <see cref="JoinWindowOptions"/></param>
         /// <param name="props">a <see cref="StreamJoinProps"/> used to configure join stores</param>
+        /// <param name="joinResultTopic">Name of the intermediary topic - required when joining multiple streams and using only the schema hosted in Schema Registry</param>
         /// <returns>a <see cref="IKStream{K, VR}"/> that contains join-records for each key and values computed by the given <see cref="IValueJoiner{V, V0, VR}"/> , one for each matched record-pair with the same key and within the joining window intervals</returns>
-        IKStream<K, VR> Join<V0, VR>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null);
+        IKStream<K, VR> Join<V0, VR>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null, string joinResultTopic = null);
 
         /// <summary>
         /// Join records of this stream with another <code>IKStream</code>'s records using windowed inner equi join using the
@@ -1522,7 +1523,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">a name config used to name the processor in the topology</param>
         /// <returns>a <see cref="IKTable{K, V}"/> that contains the same records as this <see cref="IKStream{K, V}"/></returns>>
         IKTable<K, V> ToTable(Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
-        
+
         /// <summary>
         /// Materialize this stream to an auto-generated repartition topic and create a new <see cref="IKStream{K,V}"/>
         /// from the auto-generated topic using default serializers, deserializers, and producer's partitioner.

@@ -5,12 +5,12 @@ using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
-using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -301,6 +301,24 @@ namespace Streamiz.Kafka.Net.Processors
                     log.LogError(sb.ToString());
                     return ObjectDeserialized.ObjectSkipped;
                 }
+            }
+        }
+
+        protected void SetIntermediateJoinTopic(string topicName, Type topicType)
+        {
+            if (string.IsNullOrWhiteSpace(topicName))
+            {
+                return;
+            }
+
+            Context.JoinIntermediateTopics ??= new List<KeyValuePair<string, Type>>
+            {
+                new(topicName, topicType)
+            };
+
+            if (Context.JoinIntermediateTopics.All(x => x.Value != topicType))
+            {
+                Context.JoinIntermediateTopics.Add(new KeyValuePair<string, Type>(topicName, topicType));
             }
         }
     }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
+namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes
 {
     /// <summary>
     /// Mock schema registry client. Implements <see cref="ISchemaRegistryClient"/>.

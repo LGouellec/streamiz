@@ -2,7 +2,6 @@
 using Confluent.Kafka.SyncOverAsync;
 using Confluent.SchemaRegistry;
 using Streamiz.Kafka.Net.Errors;
-using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;

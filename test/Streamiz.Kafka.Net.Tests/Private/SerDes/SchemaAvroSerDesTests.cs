@@ -7,7 +7,6 @@ using Moq;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock;
-using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock;
 using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
@@ -15,6 +14,7 @@ using Streamiz.Kafka.Net.Tests.Helpers.Bean.Avro;
 using System;
 using System.Linq;
 using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf;
+using Streamiz.Kafka.Net.SchemaRegistry.SerDes;
 
 namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 {

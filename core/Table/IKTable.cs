@@ -535,8 +535,9 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="valueJoiner">a value joiner that computes the join result for a pair of matching records</param>
         /// <param name="materialized">an instance of <see cref="Materialized{K, VR, S}"/> used to describe how the state store should be materialized.</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <param name="joinResultTopic">Name of the intermediary topic - required when joining multiple streams and using only the schema hosted in Schema Registry</param>
         /// <returns>a <see cref="IKTable{K, VR}"/> that contains join-records for each key and values computed by the given value joiner, one for each matched record-pair with the same key</returns>
-        IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null, string joinResultTopic = null);
 
         /// <summary>
         /// Join records of this <see cref="IKTable{K, V}"/> with another <see cref="IKTable{K, VT}"/>'s records using non-windowed inner equi join.
@@ -611,8 +612,9 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="valueJoiner">a value joiner that computes the join result for a pair of matching records</param>
         /// <param name="materialized">an instance of <see cref="Materialized{K, VR, S}"/> used to describe how the state store should be materialized.</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <param name="joinResultTopic">Name of the intermediary topic - required when joining multiple streams and using only the schema hosted in Schema Registry</param>
         /// <returns>a <see cref="IKTable{K, VR}"/> that contains join-records for each key and values computed by the given value joiner, one for each matched record-pair with the same key</returns>
-        IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<K, VR> Join<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null, string joinResultTopic = null);
 
         /// <summary>
         /// Join records of this <see cref="IKTable{K, V}"/> (left input) with another <see cref="IKTable{K, VT}"/>'s (right input) records using
@@ -698,7 +700,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>a <see cref="IKTable{K, VR}"/> that contains join-records for each key and values computed by the given value joiner, one for each matched record-pair with the same key plus one for each non-matching record of left <see cref="IKTable{K, V}"/></returns>
         IKTable<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
-        
+
         /// <summary>
         /// Join records of this <see cref="IKTable{K, V}"/> (left input) with another <see cref="IKTable{K, VT}"/>'s (right input) records using
         /// non-windowed left equi join.

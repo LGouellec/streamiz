@@ -9,6 +9,7 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
         protected readonly IKTableGetter<K, V1> table1;
         protected readonly IKTableGetter<K, V2> table2;
         protected readonly IValueJoiner<V1, V2, VR> valueJoiner;
+        protected readonly string joinResultTopic;
 
         public abstract IKTableValueGetterSupplier<K, VR> View { get; }
         public abstract IProcessor<K, Change<V1>> Get();
@@ -17,11 +18,13 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
         public AbstractKTableKTableJoin(
             IKTableGetter<K, V1> table1,
             IKTableGetter<K, V2> table2,
-            IValueJoiner<V1, V2, VR> valueJoiner)
+            IValueJoiner<V1, V2, VR> valueJoiner, 
+            string joinResultTopic = null)
         {
             this.table1 = table1;
             this.table2 = table2;
             this.valueJoiner = valueJoiner;
+            this.joinResultTopic = joinResultTopic;
         }
 
 

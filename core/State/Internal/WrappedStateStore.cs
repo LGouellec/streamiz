@@ -1,4 +1,6 @@
-﻿using Confluent.Kafka;
+﻿using System;
+using System.Linq;
+using Confluent.Kafka;
 using Streamiz.Kafka.Net.Processors;
 
 namespace Streamiz.Kafka.Net.State.Internal
@@ -54,10 +56,15 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public IStateStore Wrapped => wrapped;
 
-        protected SerializationContext GetSerializationContext(bool isKey)
+        protected SerializationContext GetSerializationContext(bool isKey, Type topicType = null)
         {
+            string intermediateTopic = context?.JoinIntermediateTopics?.FirstOrDefault(x => x.Value == topicType).Key;
+            string topic = !string.IsNullOrWhiteSpace(intermediateTopic)
+                ? intermediateTopic
+                : context?.RecordContext?.Topic;
+
             return new SerializationContext(isKey ? MessageComponentType.Key : MessageComponentType.Value,
-                context?.RecordContext?.Topic,
+                topic,
                 context?.RecordContext?.Headers);
         }
     }

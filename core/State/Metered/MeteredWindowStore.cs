@@ -43,6 +43,9 @@ namespace Streamiz.Kafka.Net.State.Metered
         {
             keySerdes = keySerdes == null ? context.Configuration.DefaultKeySerDes as ISerDes<K> : keySerdes;
             valueSerdes = valueSerdes == null ? context.Configuration.DefaultValueSerDes as ISerDes<V> : valueSerdes;
+
+            keySerdes?.Initialize(context.SerDesContext);
+            valueSerdes?.Initialize(context.SerDesContext);
         }
         
         public override void Init(ProcessorContext context, IStateStore root)
@@ -78,7 +81,7 @@ namespace Streamiz.Kafka.Net.State.Metered
         private byte[] GetValueBytes(V value)
         {
             if (valueSerdes != null)
-                return valueSerdes.Serialize(value, GetSerializationContext(false));
+                return valueSerdes.Serialize(value, GetSerializationContext(false, typeof(V)));
             else
                 throw new StreamsException($"The serializer is not compatible to the actual value (Value type: {typeof(V).FullName}). Change the default Serdes in StreamConfig or provide correct Serdes via method parameters(using the DSL)");
         }

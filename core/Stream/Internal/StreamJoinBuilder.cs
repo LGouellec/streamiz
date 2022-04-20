@@ -29,7 +29,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             KStream<K, V0> joinRight,
             IValueJoiner<V, V0, VR> joiner,
             JoinWindowOptions windows,
-            StreamJoinProps<K, V, V0> joined)
+            StreamJoinProps<K, V, V0> joined,
+            string joinResultTopic = null)
         {
             var named = new Named(joined.Name);
             var joinLeftSuffix = rightOuter ? "-outer-this-join" : "-this-join";
@@ -45,7 +46,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             var joinRightName = named.SuffixWithOrElseGet(joinRightSuffix, joinRightGeneratedName);
 
             var joinMergeName = named.SuffixWithOrElseGet("-merge", builder, KStream.MERGE_NAME);
-
+            
             StreamGraphNode leftStreamsGraphNode = joinLeft.Node;
             StreamGraphNode rightStreamsGraphNode = joinRight.Node;
             var userProvidedBaseStoreName = joined.StoreName;
@@ -80,7 +81,6 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 rightWindowStore = Stores.WindowStoreBuilder(rightStoreSupplier, joined.KeySerdes, joined.RightValueSerdes);
             }
 
-
             var leftStream = new KStreamJoinWindow<K, V>(leftWindowStore.Name);
             var leftStreamParams = new ProcessorParameters<K, V>(leftStream, leftWindowStreamProcessorName);
             var leftNode = new ProcessorGraphNode<K, V>(leftWindowStreamProcessorName, leftStreamParams);
@@ -91,9 +91,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             var rightNode = new ProcessorGraphNode<K, V0>(rightWindowStreamProcessorName, rightStreamParams);
             builder.AddGraphNode(rightStreamsGraphNode, rightNode);
 
-            var joinL = new KStreamKStreamJoin<K, V, V0, VR>(joinLeftName, rightWindowStore.Name, windows.beforeMs, windows.afterMs, joiner, leftOuter);
+            var joinL = new KStreamKStreamJoin<K, V, V0, VR>(joinLeftName, rightWindowStore.Name, windows.beforeMs, windows.afterMs, joiner, leftOuter, joinResultTopic);
             var joinLParams = new ProcessorParameters<K, V>(joinL, joinLeftName);
-            var joinR = new KStreamKStreamJoin<K, V0, V, VR>(joinRightName, leftWindowStore.Name, windows.beforeMs, windows.afterMs, joiner.Reverse(), rightOuter);
+            var joinR = new KStreamKStreamJoin<K, V0, V, VR>(joinRightName, leftWindowStore.Name, windows.beforeMs, windows.afterMs, joiner.Reverse(), rightOuter, joinResultTopic);
             var joinRParams = new ProcessorParameters<K, V0>(joinR, joinRightName);
             var merge = new PassThrough<K, VR>();
             var mergeParams = new ProcessorParameters<K, VR>(merge, joinMergeName);

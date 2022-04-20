@@ -5,7 +5,7 @@ using Confluent.SchemaRegistry;
 using Confluent.SchemaRegistry.Serdes;
 using System;
 
-namespace Producer
+namespace Producer_Avro
 {
     internal class Program
     {
@@ -54,12 +54,12 @@ namespace Producer
                     string[] p = r[1].Split("|");
                     producer.Produce("orders", new Message<int, Order>
                     {
-                        Key = Int32.Parse(r[0]),
+                        Key = int.Parse(r[0]),
                         Value = new Order
                         {
-                            order_id = Int32.Parse(p[0]),
+                            order_id = int.Parse(p[0]),
                             price = float.Parse(p[1]),
-                            product_id = Int32.Parse(r[0])
+                            product_id = int.Parse(r[0])
                         }
                     }, (d) =>
                     {
@@ -88,12 +88,12 @@ namespace Producer
                     string[] p = r[1].Split("|");
                     producer.Produce("product", new Message<int, Product>
                     {
-                        Key = Int32.Parse(r[0]),
+                        Key = int.Parse(r[0]),
                         Value = new Product
                         {
                             name = p[0],
                             price = float.Parse(p[1]),
-                            product_id = Int32.Parse(r[0])
+                            product_id = int.Parse(r[0])
                         }
                     }, (d) =>
                     {

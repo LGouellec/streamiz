@@ -133,7 +133,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 //Some timezone have daylight savings time (DST) resulting in two days in year that have either 23 or 25 hours.
                 //Kafka streams currently support only fixed period for the moment.
                 TimeZoneInfo zoneWithDST = TZConvert.GetTimeZoneInfo("Europe/Paris");
-
+                
                 var inputRecords = new List<TestRecord<string, int>>{
                 new TestRecord<string, int>(null, 1, TimeZoneInfo.ConvertTime(new DateTime(2019, 3, 30, 1, 39, 0, DateTimeKind.Unspecified), zoneWithDST)),
                 new TestRecord<string, int>(null, 2, TimeZoneInfo.ConvertTime(new DateTime(2019, 3, 30, 3, 0, 0, DateTimeKind.Unspecified), zoneWithDST)),

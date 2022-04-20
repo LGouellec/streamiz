@@ -14,6 +14,7 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly bool outer;
 
         private IWindowStore<K, V1> window;
+        private readonly string joinResultTopic;
 
 
         public KStreamKStreamJoinProcessor(
@@ -22,7 +23,8 @@ namespace Streamiz.Kafka.Net.Processors
             long beforeMs,
             long afterMs,
             IValueJoiner<V, V1, VR> joiner,
-            bool outer)
+            bool outer,
+            string joinResultTopic = null)
             : base(name)
         {
             this.windowStoreName = windowStoreName;
@@ -30,6 +32,7 @@ namespace Streamiz.Kafka.Net.Processors
             this.afterMs = afterMs;
             this.joiner = joiner;
             this.outer = outer;
+            this.joinResultTopic = joinResultTopic;
         }
 
         public override void Init(ProcessorContext context)
@@ -58,9 +61,11 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     needOuterJoin = false;
                     var otherRecord = enumerator.Current;
-                    Forward(key,
-                        joiner.Apply(value, otherRecord.Value.Value),
-                        Math.Max(inputRecordTimestamp, otherRecord.Value.Key));
+
+                    var value2 = joiner.Apply(value, otherRecord.Value.Value);
+
+                    SetIntermediateJoinTopic(joinResultTopic, value2.GetType());
+                    Forward(key, value2, Math.Max(inputRecordTimestamp, otherRecord.Value.Key));
                 }
             }
 
