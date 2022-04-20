@@ -43,7 +43,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 
                 var internalTopics = entry.Value.ChangelogTopics.Union(entry.Value.RepartitionTopics).ToDictionary(); 
                 
-                await topicManager.ApplyAsync(internalTopics);
+                await topicManager.ApplyAsync(entry.Key, internalTopics);
+                // refresh metadata
+                clusterMetadata = topicManager.AdminClient.GetMetadata(timeout);
             }
         }
 

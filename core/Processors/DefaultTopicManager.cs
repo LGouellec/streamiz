@@ -34,9 +34,10 @@ namespace Streamiz.Kafka.Net.Processors
         /// If a topic exists already but has different number of partitions we fail and throw exception requesting user to reset the app before restarting again.
         /// </para>
         /// </summary>
+        /// <param name="topologyId">SubTopology Id</param>
         /// <param name="topics">internal topics of topology</param>
         /// <returns>the list of topics which had to be newly created</returns>
-        public async Task<IEnumerable<string>> ApplyAsync(IDictionary<string, InternalTopicConfig> topics)
+        public async Task<IEnumerable<string>> ApplyAsync(int topologyId, IDictionary<string, InternalTopicConfig> topics)
         {
             int maxRetry = 10, i = 0;
 
@@ -44,7 +45,7 @@ namespace Streamiz.Kafka.Net.Processors
 
             async Task<IEnumerable<string>> Run()
             {
-                log.LogDebug($"Starting to apply internal topics in topic manager (try: {i + 1}, max retry : {maxRetry}).");
+                log.LogDebug($"Starting to apply internal topics for topology {topologyId} in topic manager (try: {i + 1}, max retry : {maxRetry}).");
                 var defaultConfig = new Dictionary<string, string>();
                 var topicsNewCreated = new List<string>();
                 var topicsToCreate = new List<string>();
