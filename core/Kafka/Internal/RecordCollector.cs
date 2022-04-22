@@ -12,19 +12,20 @@ using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Kafka.Internal
 {
-    // TODO : Need to refactor, not necessary now to have one producer by thread if EOS is enable
+    // TODO : Need to refactor, not necessary now to have one producer by thread if EOS is enable, see EOS_V2
     internal class RecordCollector : IRecordCollector
     {
         // IF EOS DISABLED, ONE PRODUCER BY TASK BUT ONE INSTANCE RECORD COLLECTOR BY TASK
         // WHEN CLOSING TASK, WE MUST DISPOSE PRODUCER WHEN NO MORE INSTANCE OF RECORD COLLECTOR IS PRESENT
         // IT'S A GARBAGE COLLECTOR LIKE
         private static IDictionary<string, int> instanceProducer = new Dictionary<string, int>();
-        private static object _lock = new object();
+        private object _lock = new();
 
         private IProducer<byte[], byte[]> producer;
         private readonly IStreamConfig configuration;
         private readonly TaskId id;
         private readonly Sensor droppedRecordsSensor;
+        private Exception exception = null;
 
         private readonly string logPrefix;
         private readonly ILogger log = Logger.GetLogger(typeof(RecordCollector));
@@ -66,6 +67,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                     {
                         producer.Dispose();
                         producer = null;
+                        CheckForException();
                     }
                 }
             }
@@ -79,6 +81,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 try
                 {
                     producer.Flush();
+                    CheckForException();
                 }catch(ObjectDisposedException)
                 {
                     // has been disposed
@@ -124,11 +127,13 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             var k = key != null ? keySerializer.Serialize(key, new SerializationContext(MessageComponentType.Key, topic, headers)) : null;
             var v = value != null ? valueSerializer.Serialize(value, new SerializationContext(MessageComponentType.Value, topic, headers)) : null;
 
+            CheckForException();
+            
             void HandleError(DeliveryReport<byte[], byte[]> report){
                 if (report.Error.IsError)
                 {
                     StringBuilder sb = new StringBuilder();
-                    sb.AppendLine($"{logPrefix}Error encountered sending record to topic {topic} for task {id} due to:");
+                    sb.AppendLine($"{logPrefix}Error encountered sending record (key {key}, value {value}) to topic {topic} for task {id} due to:");
                     sb.AppendLine($"{logPrefix}Error Code : {report.Error.Code.ToString()}");
                     sb.AppendLine($"{logPrefix}Message : {report.Error.Reason}");
 
@@ -136,13 +141,15 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                     {
                         sb.AppendLine($"{logPrefix}Written offsets would not be recorded and no more records would be sent since this is a fatal error.");
                         log.LogError(sb.ToString());
-                        throw new StreamsException(sb.ToString());
+                        lock(_lock)
+                            exception = new StreamsException(sb.ToString());
                     }
                     else if (IsRecoverableError(report))
                     {
                         sb.AppendLine($"{logPrefix}Written offsets would not be recorded and no more records would be sent since the producer is fenced, indicating the task may be migrated out");
                         log.LogError(sb.ToString());
-                        throw new TaskMigratedException(sb.ToString());
+                        lock(_lock)
+                            exception = new TaskMigratedException(sb.ToString());
                     }
                     else
                     {
@@ -150,7 +157,8 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                         {
                             sb.AppendLine($"{logPrefix}Exception handler choose to FAIL the processing, no more records would be sent.");
                             log.LogError(sb.ToString());
-                            throw new ProductionException(sb.ToString());
+                            lock(_lock)
+                                exception = new ProductionException(sb.ToString());
                         }
                         else
                         {
@@ -171,7 +179,6 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                         logPrefix, report.Message.Timestamp.UnixTimestampMs, topic, report.Partition, report.Offset);
                     collectorsOffsets.AddOrUpdate(report.TopicPartition, report.Offset.Value);
                 }
-
             }
 
             try
@@ -187,10 +194,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                             Headers = headers,
                             Timestamp = new Timestamp(timestamp, TimestampType.CreateTime)
                         },
-                        (report) =>
-                        {
-                            HandleError(report);
-                        });
+                        HandleError);
                 }
                 else
                 {
@@ -203,10 +207,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                                Headers = headers,
                                Timestamp = new Timestamp(timestamp, TimestampType.CreateTime)
                            },
-                           (report) =>
-                           {
-                               HandleError(report);
-                           });
+                           HandleError);
                 }
             }
             catch (ProduceException<byte[], byte[]> produceException)
@@ -219,6 +220,16 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 {
                     throw new StreamsException($"Error encountered trying to send record to topic {topic} [{logPrefix}] : {produceException.Message}");
                 }
+            }
+        }
+        
+        private void CheckForException() {
+            lock (_lock)
+            {
+                if (exception == null) return;
+                var e = exception;
+                exception = null;
+                throw e;
             }
         }
     }

@@ -29,12 +29,14 @@ namespace sample_stream
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app2";
-            config.BootstrapServers = "localhost:9092";
-            config.AutoOffsetReset = Confluent.Kafka.AutoOffsetReset.Earliest;
+            config.BootstrapServers = "localhost:29092";
+            config.SaslMechanism = SaslMechanism.Plain;
+            config.SecurityProtocol = SecurityProtocol.SaslPlaintext;
+            config.SaslUsername = "client";
+            config.SaslPassword = "client-secret";
+            config.AutoOffsetReset = AutoOffsetReset.Earliest;
             config.StateDir = Path.Combine(".");
-            config.MetricsRecording = MetricsRecordingLevel.DEBUG;
-            config.UsePrometheusReporter(9090, true);
-
+            config.ProductionExceptionHandler += (report) => ExceptionHandlerResponse.CONTINUE;
             config.Logger = LoggerFactory.Create(builder =>
             {
                 builder.SetMinimumLevel(LogLevel.Debug);
@@ -44,9 +46,6 @@ namespace sample_stream
             StreamBuilder builder = new StreamBuilder();
             
             builder.Stream<string, string>("input")
-                .GroupByKey()
-                .Reduce((v1,v2) => v1 + " " + v2)
-                .ToStream()
                 .To("output");
             
             Topology t = builder.Build();
