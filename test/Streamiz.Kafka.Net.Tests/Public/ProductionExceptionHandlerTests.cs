@@ -110,6 +110,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
                 inputtopic.PipeInput("coucou");
+                inputtopic.PipeInput("coucou");
                 while (!errorState)
                 {
                     errorState = driver.IsError;

@@ -235,6 +235,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
                 inputtopic.PipeInput("coucou");
+                inputtopic.PipeInput("coucou");
                 while (!errorState)
                 {
                     errorState = driver.IsError;
@@ -282,6 +283,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
                 var outputTopic = driver.CreateOuputTopic<string, string>("test-output");
+                inputtopic.PipeInput("coucou");
                 inputtopic.PipeInput("coucou");
                 while (_return.Count == 0) ;
                 var expected = new List<KeyValuePair<string, string>>();
