@@ -23,7 +23,7 @@ The entire metrics registry of a KafkaStream instance can be accessed read-only 
 
 ### Configuring Metrics Granularity
 
-By default Streamiz has metrics with two recording levels: INFO and DEBUG. The `DEBUG` level records most metrics, while the `INFO` level records only some of them. Use the `IStreamConfig.MetricsRecording` configuration option to specify which metrics you want collected, see <a href="stream-configuration.html#optional-configuration-parameters" rel="stylesheet">configuration parameters</a>.
+By default Streamiz has metrics with two recording levels: INFO and DEBUG. The `DEBUG` level records most metrics, while the `INFO` level records only some of them. Use the `IStreamConfig.MetricsRecording` configuration option to specify which metrics you want collected, see <a href="stream-configuration.html#metricsrecording" rel="stylesheet">configuration parameters</a>.
 
 ### Application metrics
 

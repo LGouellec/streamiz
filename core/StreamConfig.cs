@@ -2018,7 +2018,7 @@ namespace Streamiz.Kafka.Net
             OffsetCheckpointManager = null;
             MetricsIntervalMs = (long)TimeSpan.FromSeconds(30).TotalMilliseconds;
             MetricsRecording = MetricsRecordingLevel.INFO;
-            MetricsReporter = (_) => { }; // nothing by default, myabe another behavior in future
+            MetricsReporter = (_) => { }; // nothing by default, maybe another behavior in future
             ExposeLibrdKafkaStats = false;
             StartTaskDelayMs = 5000;
 
@@ -2322,7 +2322,7 @@ namespace Streamiz.Kafka.Net
         }
         
         /// <summary>
-        /// The highest recording level for metrics.
+        /// The highest recording level for metrics (default: INFO).
         /// </summary>
         public MetricsRecordingLevel MetricsRecording 
         {
@@ -2331,7 +2331,7 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
-        /// Time wait before completing the start task of <see cref="KafkaStream"/>. (default: 2000)
+        /// Time wait before completing the start task of <see cref="KafkaStream"/>. (default: 5000)
         /// </summary>
         public long StartTaskDelayMs
         {
