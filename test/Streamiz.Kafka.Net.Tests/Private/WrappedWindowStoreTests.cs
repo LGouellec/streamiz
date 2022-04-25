@@ -19,6 +19,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
         private MeteredWindowStore<string, int> wrapped = null;
         private InMemoryWindowStore inmemorystore = null;
 
+        private StreamConfig config = new StreamConfig
+        {
+            ApplicationId = "wrapped-window-store-test"
+        };
+
         [SetUp]
         public void Setup()
         {
@@ -38,7 +43,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var stateManager = new ProcessorStateManager(id,
                 new List<Confluent.Kafka.TopicPartition> {new Confluent.Kafka.TopicPartition("test", 0)}, null, null,
                 null);
-            var context = new ProcessorContext(UnassignedStreamTask.Create(), new StreamConfig(), stateManager,
+            var context = new ProcessorContext(UnassignedStreamTask.Create(), config, stateManager,
                 new StreamMetricsRegistry());
             wrapped.Init(context, inmemorystore);
             Assert.Throws<StreamsException>(() => wrapped.Put("coucou", 120, 1300));
@@ -52,7 +57,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var stateManager = new ProcessorStateManager(id,
                 new List<Confluent.Kafka.TopicPartition> {new Confluent.Kafka.TopicPartition("test", 0)}, null, null,
                 null);
-            var context = new ProcessorContext(UnassignedStreamTask.Create(), new StreamConfig(), stateManager,
+            var context = new ProcessorContext(UnassignedStreamTask.Create(), config, stateManager,
                 new StreamMetricsRegistry());
             wrapped.Init(context, inmemorystore);
             inmemorystore.Put(new Bytes(Encoding.UTF8.GetBytes("test")), BitConverter.GetBytes(100), 300);
@@ -66,7 +71,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var stateManager = new ProcessorStateManager(id,
                 new List<Confluent.Kafka.TopicPartition> {new Confluent.Kafka.TopicPartition("test", 0)}, null, null,
                 null);
-            var context = new ProcessorContext(UnassignedStreamTask.Create(), new StreamConfig(), stateManager,
+            var context = new ProcessorContext(UnassignedStreamTask.Create(), config, stateManager,
                 new StreamMetricsRegistry());
             wrapped.Init(context, inmemorystore);
             wrapped.Put("coucou", 120, 1300);
@@ -81,7 +86,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var stateManager = new ProcessorStateManager(id,
                 new List<Confluent.Kafka.TopicPartition> {new Confluent.Kafka.TopicPartition("test", 0)}, null, null,
                 null);
-            var context = new ProcessorContext(UnassignedStreamTask.Create(), new StreamConfig(), stateManager,
+            var context = new ProcessorContext(UnassignedStreamTask.Create(), config, stateManager,
                 new StreamMetricsRegistry());
             wrapped.Init(context, inmemorystore);
             wrapped.Put("coucou", 120, dt.GetMilliseconds());
@@ -99,7 +104,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var stateManager = new ProcessorStateManager(id,
                 new List<Confluent.Kafka.TopicPartition> {new Confluent.Kafka.TopicPartition("test", 0)}, null, null,
                 null);
-            var context = new ProcessorContext(UnassignedStreamTask.Create(), new StreamConfig(), stateManager,
+            var context = new ProcessorContext(UnassignedStreamTask.Create(), config, stateManager,
                 new StreamMetricsRegistry());
             wrapped.Init(context, inmemorystore);
             wrapped.Put("coucou", 120, dt.GetMilliseconds());
@@ -118,7 +123,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var stateManager = new ProcessorStateManager(id,
                 new List<Confluent.Kafka.TopicPartition> {new Confluent.Kafka.TopicPartition("test", 0)}, null, null,
                 null);
-            var context = new ProcessorContext(UnassignedStreamTask.Create(), new StreamConfig(), stateManager,
+            var context = new ProcessorContext(UnassignedStreamTask.Create(), config, stateManager,
                 new StreamMetricsRegistry());
             wrapped.Init(context, inmemorystore);
             wrapped.Put("coucou", 120, dt.GetMilliseconds());
