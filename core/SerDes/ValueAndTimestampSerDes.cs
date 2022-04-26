@@ -85,5 +85,16 @@ namespace Streamiz.Kafka.Net.SerDes
             else
                 return null;
         }
+
+        /// <summary>
+        /// Initialize method with a current context which contains <see cref="IStreamConfig"/>.
+        /// Can be used to initialize the serdes according to some parameters present in the configuration such as the schema.registry.url
+        /// </summary>
+        /// <param name="context">SerDesContext with stream configuration</param>
+        public override void Initialize(SerDesContext context)
+        {
+            base.Initialize(context);
+            InnerSerdes.Initialize(context);
+        }
     }
 }
