@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Confluent.Kafka;
@@ -81,4 +81,4 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             throw new NotImplementedException();
         }
     }
-}
+}*/

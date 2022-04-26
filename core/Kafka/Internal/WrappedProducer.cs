@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -121,4 +121,4 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             internalProducer.SendOffsetsToTransaction(offsets, groupMetadata, timeout);
         }
     }
-}
+}*/

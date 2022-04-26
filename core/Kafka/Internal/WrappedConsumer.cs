@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections.Generic;
 using System.Threading;
 using Confluent.Kafka;
@@ -214,4 +214,4 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
         public List<string> Subscription => internalConsumer.Subscription;
         public IConsumerGroupMetadata ConsumerGroupMetadata => internalConsumer.ConsumerGroupMetadata;
     }
-}
+}*/

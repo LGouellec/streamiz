@@ -33,9 +33,6 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
         {
             string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
             log.LogError($"{logPrefix}Error consumer {GetName(consumer)} - {error.Reason}");
-            
-            if (error.IsLocalError)
-                throw new StreamsException($"{logPrefix}Error consumer {GetName(consumer)} - {error.Reason}");
         }
 
         #endregion
