@@ -19,14 +19,9 @@ namespace sample_stream_registry
 
             var config = new StreamConfig();
             config.ApplicationId = "test-app";
-            config.BootstrapServers = "192.168.56.1:9092";
-            config.SaslMechanism = SaslMechanism.Plain;
-            config.SaslUsername = "admin";
-            config.SaslPassword = "admin";
-            config.SecurityProtocol = SecurityProtocol.SaslPlaintext;
-            config.AutoOffsetReset = AutoOffsetReset.Earliest;
+            config.BootstrapServers = "localhost:9092";
             // NEED FOR SchemaAvroSerDes
-            config.SchemaRegistryUrl = "http://192.168.56.1:8081";
+            config.SchemaRegistryUrl = "http://localhost:8081";
             config.AutoRegisterSchemas = true;
 
             StreamBuilder builder = new StreamBuilder();
@@ -36,8 +31,9 @@ namespace sample_stream_registry
                                 new SchemaAvroSerDes<Product>(),
                                 InMemory<int, Product>.As("product-store"));
 
-            builder.Stream<int, Order, Int32SerDes, SchemaAvroSerDes<Order>>("orders")
-                    .Join(table, (order, product) => new OrderProduct
+            var orders = builder.Stream<int, Order, Int32SerDes, SchemaAvroSerDes<Order>>("orders");
+            
+            orders.Join(table, (order, product) => new OrderProduct
                     {
                         order_id = order.order_id,
                         price = order.price,
@@ -47,7 +43,22 @@ namespace sample_stream_registry
                     })
                     .To<Int32SerDes, SchemaAvroSerDes<OrderProduct>>("orders-output");
 
-            Topology t = builder.Build();
+            orders
+                .GroupByKey()
+                .Aggregate<OrderAgg, SchemaAvroSerDes<OrderAgg>>(
+                    () => new OrderAgg(),
+                    (key, order, agg) =>
+                    {
+                        agg.order_id = order.order_id;
+                        agg.price = order.price;
+                        agg.product_id = order.product_id;
+                        agg.totalPrice += order.price;
+                        return agg;
+                    })
+                .ToStream()
+                .Print(Printed<int, OrderAgg>.ToOut());
+
+                Topology t = builder.Build();
 
             KafkaStream stream = new KafkaStream(t, config);
 
