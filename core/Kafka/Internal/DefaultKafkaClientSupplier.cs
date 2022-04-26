@@ -82,7 +82,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 }
             }
 
-            return new WrappedConsumer(builder.Build(), loggerAdapter);
+            return builder.Build();
         }
 
         public IProducer<byte[], byte[]> GetProducer(ProducerConfig config)
@@ -106,7 +106,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 });
             }
 
-            return new WrappedProducer(builder.Build(), loggerAdapter);
+            return builder.Build();
         }
 
         public IConsumer<byte[], byte[]> GetRestoreConsumer(ConsumerConfig config)
@@ -114,7 +114,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             ConsumerBuilder<byte[], byte[]> builder = builderKafkaHandler.GetConsumerBuilder(config);
             builder.SetLogHandler(loggerAdapter.LogConsume);
             builder.SetErrorHandler(loggerAdapter.ErrorConsume);
-            return new WrappedConsumer(builder.Build(), loggerAdapter);
+            return builder.Build();
         }
 
         public IConsumer<byte[], byte[]> GetGlobalConsumer(ConsumerConfig config)
@@ -123,7 +123,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             ConsumerBuilder<byte[], byte[]> builder = builderKafkaHandler.GetConsumerBuilder(config);
             builder.SetLogHandler(loggerAdapter.LogConsume);
             builder.SetErrorHandler(loggerAdapter.ErrorConsume);
-            return new WrappedConsumer(builder.Build(), loggerAdapter);
+            return builder.Build();
         }
         
         public StreamMetricsRegistry MetricsRegistry { get; set; }
