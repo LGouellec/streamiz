@@ -59,7 +59,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
                     var diffTs = Math.Max((dt.Add(timeout) - now).TotalMilliseconds, 0);
                     ts = TimeSpan.FromMilliseconds(1 / (2 * Math.Log(diffTs) + 1) * 1000);
                     
-                    if (!consumer.Assignment.Any()) // if consumer has no assignment, sleep Max (ts / 2, 100 ms)
+                    if (consumer.Assignment  != null && !consumer.Assignment.Any()) // if consumer has no assignment, sleep Max (ts / 2, 100 ms)
                         Thread.Sleep(Math.Max((int)ts.TotalMilliseconds / 2, 100));
                     
                     if (ts.TotalMilliseconds == 0) // if not enough time, do not call Consume(0); => break;
