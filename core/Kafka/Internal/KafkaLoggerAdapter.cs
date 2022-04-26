@@ -3,6 +3,7 @@ using Streamiz.Kafka.Net.Crosscutting;
 using System;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Errors;
 
 namespace Streamiz.Kafka.Net.Kafka.Internal
 {
@@ -31,7 +32,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
         internal void ErrorConsume(IConsumer<byte[], byte[]> consumer, Error error)
         {
             string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
-            log.LogError("{LogPrefix}Error consumer {ConsumerName} - {ErrorReason}", logPrefix, GetName(consumer), error.Reason);
+            log.LogError($"{logPrefix}Error consumer {GetName(consumer)} - {error.Reason}");
         }
 
         #endregion

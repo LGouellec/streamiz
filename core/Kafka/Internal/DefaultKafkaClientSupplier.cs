@@ -81,6 +81,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                     });
                 }
             }
+
             return builder.Build();
         }
 
@@ -104,13 +105,13 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                     producerStatisticsHandler.Publish(statistics);
                 });
             }
+
             return builder.Build();
         }
 
         public IConsumer<byte[], byte[]> GetRestoreConsumer(ConsumerConfig config)
         {
             ConsumerBuilder<byte[], byte[]> builder = builderKafkaHandler.GetConsumerBuilder(config);
-            // TOOD : Finish
             builder.SetLogHandler(loggerAdapter.LogConsume);
             builder.SetErrorHandler(loggerAdapter.ErrorConsume);
             return builder.Build();
@@ -120,7 +121,6 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
         {
             config.AutoOffsetReset = AutoOffsetReset.Earliest;
             ConsumerBuilder<byte[], byte[]> builder = builderKafkaHandler.GetConsumerBuilder(config);
-            // TOOD : Finish
             builder.SetLogHandler(loggerAdapter.LogConsume);
             builder.SetErrorHandler(loggerAdapter.ErrorConsume);
             return builder.Build();
