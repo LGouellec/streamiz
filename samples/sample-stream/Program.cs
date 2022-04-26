@@ -29,19 +29,30 @@ namespace sample_stream
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app2";
-            config.BootstrapServers = "localhost:29092";
-            config.SaslMechanism = SaslMechanism.Plain;
-            config.SecurityProtocol = SecurityProtocol.SaslPlaintext;
-            config.SaslUsername = "client";
-            config.SaslPassword = "client-secret";
+            config.BootstrapServers = "localhost:9092";
             config.AutoOffsetReset = AutoOffsetReset.Earliest;
             config.StateDir = Path.Combine(".");
-            config.ProductionExceptionHandler += (report) => ExceptionHandlerResponse.CONTINUE;
+            config.CommitIntervalMs = 5000;
             config.Logger = LoggerFactory.Create(builder =>
             {
-                builder.SetMinimumLevel(LogLevel.Debug);
+                builder.SetMinimumLevel(LogLevel.Information);
                 builder.AddLog4Net();
             });
+            
+            config.InnerExceptionHandler = (ex) => {
+                Console.WriteLine("Exception inside Kafka Streams");
+                return ExceptionHandlerResponse.CONTINUE;
+            };
+
+            config.DeserializationExceptionHandler = (context, consumed, ex) => {
+                Console.WriteLine("Exception at deserialization inside Kafka Streams");
+                return ExceptionHandlerResponse.FAIL;
+            };
+
+            config.ProductionExceptionHandler = (delivery) => {
+                Console.WriteLine("Exception at producing inside Kafka Streams");
+                return ExceptionHandlerResponse.FAIL;
+            };
             
             StreamBuilder builder = new StreamBuilder();
             
