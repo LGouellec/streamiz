@@ -257,6 +257,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
         }
 
+        public string ChangelogFor(string storeName)
+            => changelogTopics.Get(storeName);
+        
         #endregion
 
         internal StateStoreMetadata GetStoreMetadata(TopicPartition topicPartition)

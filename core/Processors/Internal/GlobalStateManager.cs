@@ -89,6 +89,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
         }
 
+        public string ChangelogFor(string storeName)
+            => storesToTopic.Get(storeName);
+
         public void Flush()
         {
             log.LogDebug("Flushing all global globalStores registered in the state manager");
