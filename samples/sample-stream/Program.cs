@@ -38,25 +38,13 @@ namespace sample_stream
                 builder.SetMinimumLevel(LogLevel.Information);
                 builder.AddLog4Net();
             });
-            
-            config.InnerExceptionHandler = (ex) => {
-                Console.WriteLine("Exception inside Kafka Streams");
-                return ExceptionHandlerResponse.CONTINUE;
-            };
 
-            config.DeserializationExceptionHandler = (context, consumed, ex) => {
-                Console.WriteLine("Exception at deserialization inside Kafka Streams");
-                return ExceptionHandlerResponse.FAIL;
-            };
-
-            config.ProductionExceptionHandler = (delivery) => {
-                Console.WriteLine("Exception at producing inside Kafka Streams");
-                return ExceptionHandlerResponse.FAIL;
-            };
-            
             StreamBuilder builder = new StreamBuilder();
             
             builder.Stream<string, string>("input")
+                .GroupBy((k,v) => v)
+                .Count()
+                .ToStream()
                 .To("output");
             
             Topology t = builder.Build();

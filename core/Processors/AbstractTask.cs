@@ -65,7 +65,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public ICollection<TopicPartition> ChangelogPartitions => stateMgr.ChangelogPartitions;
 
-        public bool HasStateStores => !(Topology.StateStores.Count == 0);
+        public bool HasStateStores => Topology.StateStores.Count != 0;
 
         public string ApplicationId => configuration.ApplicationId;
 
@@ -82,7 +82,7 @@ namespace Streamiz.Kafka.Net.Processors
                     .Any((s) => s.Persistent);
 
         #region Abstract
-
+        public abstract IDictionary<TopicPartition, long> PurgeOffsets { get; }
         public abstract PartitionGrouper Grouper { get; }
         public abstract bool CanProcess(long now);
         public abstract void Close();
