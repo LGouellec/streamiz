@@ -206,6 +206,18 @@ namespace Streamiz.Kafka.Net.Processors
 
         #region Abstract
 
+        public override IDictionary<TopicPartition, long> PurgeOffsets
+        {
+            get
+            {
+                var purgeableConsumedOffsets = new Dictionary<TopicPartition, long>();
+                foreach(var kv in consumedOffsets)
+                    if (Topology.RepartitionTopics.Contains(kv.Key.Topic))
+                        purgeableConsumedOffsets.AddOrUpdate(kv.Key, kv.Value + 1);
+                return purgeableConsumedOffsets;
+            }
+        }
+
         public override PartitionGrouper Grouper => partitionGrouper;
 
         public override bool CanProcess(long now)

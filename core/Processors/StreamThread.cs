@@ -276,7 +276,7 @@ namespace Streamiz.Kafka.Net.Processors
                                 timeSinceLastPoll = Math.Max(DateTime.Now.GetMilliseconds() - lastPollMs, 0);
 
                                 int commited = 0;
-                                long commitLatency = ActionHelper.MeasureLatency(() => commited = MaybeCommit());
+                                long commitLatency = ActionHelper.MeasureLatency(() => commited = Commit());
                                 totalCommitLatency += commitLatency;
                                 if (commited > 0)
                                 {
@@ -296,7 +296,7 @@ namespace Streamiz.Kafka.Net.Processors
                             } while (processed > 0);
 
                             if (State == ThreadState.RUNNING)
-                                totalCommitLatency += ActionHelper.MeasureLatency(() => MaybeCommit());
+                                totalCommitLatency += ActionHelper.MeasureLatency(() => Commit());
 
                             if (State == ThreadState.PARTITIONS_ASSIGNED)
                                 SetState(ThreadState.RUNNING);
@@ -470,7 +470,7 @@ namespace Streamiz.Kafka.Net.Processors
             consumer.Subscribe(builder.GetSourceTopics());
         }
 
-        private int MaybeCommit()
+        private int Commit()
         {
             int committed = 0;
             if (DateTime.Now - lastCommit > TimeSpan.FromMilliseconds(commitTimeMs))

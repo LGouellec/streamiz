@@ -2,7 +2,9 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Confluent.Kafka;
+using Confluent.Kafka.Admin;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Metrics;
@@ -35,7 +37,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly ConcurrentDictionary<TopicPartition, TaskId> partitionsToTaskId = new ConcurrentDictionary<TopicPartition, TaskId>();
         private readonly ConcurrentDictionary<TaskId, StreamTask> activeTasks = new ConcurrentDictionary<TaskId, StreamTask>();
         private readonly ConcurrentDictionary<TaskId, StreamTask> revokedTasks = new ConcurrentDictionary<TaskId, StreamTask>();
-
+        private Task<List<DeleteRecordsResult>> currentDeleteTask = null;
+        
         public IEnumerable<StreamTask> ActiveTasks => activeTasks.Values.ToList();
         public IEnumerable<StreamTask> RevokedTasks => revokedTasks.Values.ToList();
         public IDictionary<TaskId, ITask> Tasks => activeTasks.ToDictionary(i => i.Key, i => (ITask)i.Value);
@@ -153,6 +156,10 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             revokedTasks.Clear();
             partitionsToTaskId.Clear();
+
+            // if one delete request is in progress, we wait the result before closing the manager
+            if (currentDeleteTask is {IsCompleted: false})
+                currentDeleteTask.GetAwaiter().GetResult();
         }
 
         // NOT AVAILABLE NOW, NEED PROCESSOR API
@@ -193,6 +200,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         internal int CommitAll()
         {
             int committed = 0;
+            var purgeOffsets = new Dictionary<TopicPartition, long>();
             if (RebalanceInProgress)
             {
                 return -1;
@@ -203,12 +211,17 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 CurrentTask = t;
                 if (t.CommitNeeded)
                 {
+                    purgeOffsets.AddRange(t.PurgeOffsets);
                     t.Commit();
                     t.MayWriteCheckpoint();
                     ++committed;
                 }
             }
             CurrentTask = null;
+
+            if (committed > 0) // try to purge the committed records for repartition topics if possible
+                PurgeCommittedRecords(purgeOffsets);
+            
             return committed;
         }
 
@@ -294,6 +307,24 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 Consumer.Resume(Consumer.Assignment);
 
             return allRunning;
+        }
+
+        private void PurgeCommittedRecords(Dictionary<TopicPartition, long> offsets)
+        {
+            if (currentDeleteTask == null || currentDeleteTask.IsCompleted)
+            {
+                if (currentDeleteTask != null && currentDeleteTask.IsFaulted)
+                    log.LogDebug($"Previous delete-records request has failed. Try sending the new request now.");
+
+                var recordsToDelete = new List<TopicPartitionOffset>();
+                recordsToDelete.AddRange(offsets.Select(k => new TopicPartitionOffset(k.Key,k.Value)));
+
+                if (recordsToDelete.Any())
+                {
+                    currentDeleteTask = adminClient.DeleteRecordsAsync(recordsToDelete);
+                    log.LogDebug($"Sent delete-records request: {string.Join(",", recordsToDelete)}");
+                }
+            }
         }
     }
 }
