@@ -15,16 +15,14 @@ image: gitpod/workspace-dotnet
 
 tasks:
   - name: prebuild
-    init: |
-      docker-compose -f ./environment/docker-compose.yml
-  - name: Postinstall .NET 5.0 and dev certificates
-    init: |
+    init: docker-compose -f ./environment/docker-compose.yml
+  - name: install .NET 5.0, restore, build and start demo stream project
+    command: |
       mkdir -p /tmp/dotnet && curl -fsSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 5.0 --install-dir /tmp/dotnet 
       /tmp/dotnet/dotnet dev-certs https 
       /tmp/dotnet/dotnet restore
       /tmp/dotnet/dotnet build
-  - name: run-sample-gitpod
-    command: /tmp/dotnet/dotnet run -p samples/sample-stream-demo/sample-stream-demo.csproj --no-build --no-restore
+      /tmp/dotnet/dotnet run -p samples/sample-stream-demo/sample-stream-demo.csproj --no-build --no-restore
 
 vscode:
   extensions:
