@@ -15,10 +15,21 @@ image: gitpod/workspace-dotnet
 
 tasks:
   - name: prebuild
-    init: docker-compose -f ./environment/docker-compose.yml up -d
+    init: |
+      docker-compose -f ./environment/docker-compose.yml up -d
+      gp sync-done prebuild
   - name: install .NET 5.0, restore, build and start demo stream project
+    init: gp sync-await prebuild
     command: |
-      curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version 5.0.0 --install-dir /home/gitpod/dotnet/
+      curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 5.0 --install-dir /home/gitpod/dotnet/
+      dotnet new globaljson
+      cat <<EOF > /home/gitpod/dotnet/global.json
+      {
+        "sdk": {
+          "version": "5.0.213"
+        }
+      }
+      EOF
       dotnet dev-certs https
       dotnet restore
       dotnet build
