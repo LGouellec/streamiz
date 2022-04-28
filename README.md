@@ -95,7 +95,7 @@ static async System.Threading.Tasks.Task Main(string[] args)
 - [ ] Optimizing Kafka Streams Topologies
 - [ ] Standby Replica
 - [ ] Interactive Queries
-- [ ] Metrics
+- [X] Metrics
 
 # Contributing
 

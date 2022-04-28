@@ -1,0 +1,47 @@
+github:
+  prebuilds:
+    # enable for the default branch (defaults to true)
+    master: true
+    # enable for all branches in this repo (defaults to false)
+    branches: true
+    # enable for pull requests coming from this repo (defaults to true)
+    pullRequests: true
+    # add a "Review in Gitpod" button as a comment to pull requests (defaults to false)
+    addComment: true
+    # configure whether Gitpod registers itself as a status check to pull requests
+    addCheck: false
+
+image: gitpod/workspace-dotnet
+
+tasks:
+  - name: prebuild
+    init: |
+      docker-compose -f ./environment/docker-compose.yml
+      sleep 20
+  - name: build-library
+    command: dotnet build
+  - name: run-sample-gitpod
+    command: dotnet run -p samples/sample-stream-demo/sample-stream-demo.csproj --no-build --no-restore
+
+vscode:
+  extensions:
+    - muhammad-sammy.csharp
+
+ports:
+# streamiz metrics
+- port: 9090
+  onOpen: ignore
+# zookeeper
+- port: 2181
+  onOpen: ignore
+# broker
+- port: 9092
+  onOpen: ignore
+- port: 9101
+  onOpen: ignore
+# akhq
+- port: 8082
+  onOpen: ignore
+# schema-registry
+- port: 8081
+  onOpen: ignore
