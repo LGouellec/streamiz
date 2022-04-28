@@ -30,11 +30,6 @@ namespace sample_stream_demo
             config.StateDir = Path.Combine(".");
             config.CommitIntervalMs = 5000;
             config.Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
-            config.Logger = LoggerFactory.Create(builder =>
-            {
-                builder.SetMinimumLevel(LogLevel.Information);
-                builder.AddConsole();
-            });
             config.MetricsRecording = MetricsRecordingLevel.DEBUG;
             config.UsePrometheusReporter(9090, true);
 
