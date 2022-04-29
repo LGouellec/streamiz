@@ -18,21 +18,13 @@ tasks:
     init: |
       docker-compose -f ./environment/docker-compose.yml up -d
       gp sync-done prebuild
-  - name: install .NET 5.0, restore, build and start demo stream project
+  - name: restore, build and start demo stream project
     init: gp sync-await prebuild
     command: |
-      curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 5.0 --install-dir /home/gitpod/dotnet/
-      cat <<EOF > /workspace/kafka-streams-dotnet
-      {
-        "sdk": {
-          "version": "5.0.213"
-        }
-      }
-      EOF
       dotnet dev-certs https
       dotnet restore
-      dotnet build
-      dotnet run -p samples/sample-stream-demo/sample-stream-demo.csproj --no-build --no-restore
+      dotnet build -f net6.0 --no-restore
+      dotnet run -f net6.0 --project samples/sample-stream-demo/sample-stream-demo.csproj --no-build --no-restore
 
 vscode:
   extensions:
