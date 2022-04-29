@@ -11,12 +11,14 @@ github:
     # configure whether Gitpod registers itself as a status check to pull requests
     addCheck: false
 
-image: gitpod/workspace-dotnet
+image:
+  file: .gitpod.Dockerfile
 
 tasks:
   - name: prebuild
     init: |
       docker-compose -f ./environment/docker-compose.yml up -d
+      mkdir -p /tmp/dotnet && curl -fsSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 6.0 --install-dir /tmp/dotnet 
       gp sync-done prebuild
   - name: restore, build and start demo stream project
     init: gp sync-await prebuild
