@@ -22,8 +22,7 @@ tasks:
     init: gp sync-await prebuild
     command: |
       curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 5.0 --install-dir /home/gitpod/dotnet/
-      dotnet new globaljson
-      cat <<EOF > /home/gitpod/dotnet/global.json
+      cat <<EOF > /workspace/kafka-streams-dotnet
       {
         "sdk": {
           "version": "5.0.213"
