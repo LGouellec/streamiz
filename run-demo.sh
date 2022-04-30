@@ -34,7 +34,8 @@ do
     fi
 done
 
-docker exec -i ${kafkaContainerId} kafka-topics --bootstrap-server broker:29092 --topic test --create --partitions 4 --replication-factor 1 > /dev/null 2>&1
+docker exec -i ${kafkaContainerId} kafka-topics --bootstrap-server broker:29092 --topic input --create --partitions 4 --replication-factor 1 > /dev/null 2>&1
+docker exec -i ${kafkaContainerId} kafka-topics --bootstrap-server broker:29092 --topic output --create --partitions 4 --replication-factor 1 > /dev/null 2>&1
 echo "Topic test created"
 
 echo "List all topics ..."
@@ -44,4 +45,8 @@ echo "Restore, build and run demo sample"
 dotnet dev-certs https
 dotnet restore
 dotnet build -f net6.0 --no-restore
-dotnet run -f net6.0 --project samples/sample-stream-demo/sample-stream-demo.csproj --no-build --no-restore
+
+if [ $# -gt 0 ]
+  then
+     dotnet run -f net6.0 --project samples/sample-stream-demo/sample-stream-demo.csproj --no-build --no-restore
+fi
