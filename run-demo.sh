@@ -1,10 +1,11 @@
 #!/bin/bash
 
 docker rm -f $(docker ps -aq) > /dev/null 2>&1
-docker-compose -f environment/docker-compose.yml up -d
+docker-compose -f environment/docker-compose.yml pull
+
+docker-compose -f environment/docker-compose.yml up -d zookeeper
 
 zookeeperContainerId=`docker ps -f name=zookeeper | tail -n 1 | awk '{print $1}'`
-kafkaContainerId=`docker ps -f name=broker | tail -n 1 | awk '{print $1}'`
 
 # Waiting zookeeper is UP
 echo "Waiting zookeper ..."
@@ -20,6 +21,9 @@ do
     fi
 done
 
+docker-compose -f environment/docker-compose.yml up -d broker
+kafkaContainerId=`docker ps -f name=broker | tail -n 1 | awk '{print $1}'`
+
 # Wait broker is UP
 test=true
 echo "Waiting kafka broker ..."
@@ -34,6 +38,7 @@ do
     fi
 done
 
+docker-compose -f environment/docker-compose.yml up -d schema-registry akhq
 docker exec -i ${kafkaContainerId} kafka-topics --bootstrap-server broker:29092 --topic input --create --partitions 4 --replication-factor 1 > /dev/null 2>&1
 docker exec -i ${kafkaContainerId} kafka-topics --bootstrap-server broker:29092 --topic output --create --partitions 4 --replication-factor 1 > /dev/null 2>&1
 echo "Topics created"
