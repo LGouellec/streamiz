@@ -18,11 +18,11 @@ tasks:
   - name: prebuild
     init: |
       docker-compose -f ./environment/docker-compose.yml up -d
-      mkdir -p /tmp/dotnet && curl -fsSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 6.0 --install-dir /tmp/dotnet 
       gp sync-done prebuild
   - name: restore, build and start demo stream project
     init: gp sync-await prebuild
     command: |
+      mkdir -p /tmp/dotnet && curl -fsSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 6.0 --install-dir /tmp/dotnet 
       dotnet dev-certs https
       dotnet restore
       dotnet build -f net6.0 --no-restore
