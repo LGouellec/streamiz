@@ -35,6 +35,23 @@ It's a rewriting inspired by [Kafka Streams](https://github.com/apache/kafka). F
 
 This project is being written. Thanks for you contribution !
 
+# Try it with Gitpod
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/LGouellec/kafka-streams-dotnet)
+
+## Step 1
+
+Waiting run task is complete. The task is consider complete some seconds after viewing this message `"🚀 Enjoy Streamiz the .NET Stream processing library for Apache Kafka (TM)"`
+
+## Step 2
+
+Switch to `producer` terminal and send sentences or word. The sample use is case is "Count the number words" similar to [here](https://developpaper.com/kafka-stream-word-count-instance/)
+
+## Step 3
+
+Switch to `consumer`terminal and check aggregation result
+
+
 # ROADMAP
 
 - 1.3.0 - Metrics

@@ -36,7 +36,7 @@ done
 
 docker exec -i ${kafkaContainerId} kafka-topics --bootstrap-server broker:29092 --topic input --create --partitions 4 --replication-factor 1 > /dev/null 2>&1
 docker exec -i ${kafkaContainerId} kafka-topics --bootstrap-server broker:29092 --topic output --create --partitions 4 --replication-factor 1 > /dev/null 2>&1
-echo "Topic test created"
+echo "Topics created"
 
 echo "List all topics ..."
 docker exec -i ${kafkaContainerId} kafka-topics --bootstrap-server broker:29092 --list
