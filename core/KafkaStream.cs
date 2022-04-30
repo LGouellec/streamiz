@@ -447,12 +447,13 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         public void Dispose()
         {
-            if (!_cancelSource.IsCancellationRequested)
-            {
-                _cancelSource.Cancel();
-            }
-
-            Close();
+            Task.Factory.StartNew(() => {
+                if (!_cancelSource.IsCancellationRequested)
+                {
+                    _cancelSource.Cancel();
+                }
+                Close();
+            }).GetAwaiter().GetResult();
         }
 
         /// <summary>
