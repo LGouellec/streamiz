@@ -40,6 +40,7 @@ namespace sample_stream_demo
                 .GroupBy((k,v) => v)
                 .Count()
                 .ToStream()
+                .MapValues((v) => v.ToString())
                 .To(outputTopic);
             
             Topology t = builder.Build();

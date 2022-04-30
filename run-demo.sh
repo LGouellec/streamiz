@@ -39,3 +39,9 @@ echo "Topic test created"
 
 echo "List all topics ..."
 docker exec -i ${kafkaContainerId} kafka-topics --bootstrap-server broker:29092 --list
+
+echo "Restore, build and run demo sample"
+dotnet dev-certs https
+dotnet restore
+dotnet build -f net6.0 --no-restore
+dotnet run -f net6.0 --project samples/sample-stream-demo/sample-stream-demo.csproj --no-build --no-restore

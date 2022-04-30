@@ -15,14 +15,13 @@ image:
   file: .gitpod.Dockerfile
 
 tasks:
-  - name: restore, build and start demo stream project
+  - name: run
     before: mkdir -p /tmp/dotnet && curl -fsSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 6.0 --install-dir /tmp/dotnet 
-    init: ./start.sh
-    command: |
-      dotnet dev-certs https
-      dotnet restore
-      dotnet build -f net6.0 --no-restore
-      dotnet run -f net6.0 --project samples/sample-stream-demo/sample-stream-demo.csproj --no-build --no-restore
+    command: ./run-demo.sh
+  - name: producer
+    command: docker-compose -f environment/docker-compose.yml exec broker kafka-console-producer --bootstrap-server broker:29092 --topic input
+  - name: consumer
+    command: docker-compose -f environment/docker-compose.yml exec broker kafka-console-consumer --bootstrap-server broker:29092 --topic output --property print.key=true --property print.value=true --from-beginning
 
 vscode:
   extensions:
