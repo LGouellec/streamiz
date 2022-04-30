@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker rm -f $(docker ps -aq)
+docker rm -f $(docker ps -aq) > /dev/null 2>&1
 docker-compose -f environment/docker-compose.yml up -d
 
 zookeeperContainerId=`docker ps -f name=zookeeper | tail -n 1 | awk '{print $1}'`
