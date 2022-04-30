@@ -17,7 +17,6 @@ image:
 tasks:
   - name: run
     before: mkdir -p /tmp/dotnet && curl -fsSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 6.0 --install-dir /tmp/dotnet 
-    init: docker-compose -f environment/docker-compose.yml pull
     command: |
       ./run-demo.sh
       echo "1" > run
