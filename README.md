@@ -45,7 +45,7 @@ Waiting run task is complete. The task is consider complete some seconds after v
 
 ## Step 2
 
-Switch to `producer` terminal and send sentences or word. The sample use is case is "Count the number words" similar to [here](https://developpaper.com/kafka-stream-word-count-instance/)
+Switch to `producer` terminal and send sentences or word. The sample case is "Count the number words" similar to [here](https://developpaper.com/kafka-stream-word-count-instance/)
 
 ## Step 3
 
