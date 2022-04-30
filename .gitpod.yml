@@ -21,7 +21,7 @@ tasks:
       ./run-demo.sh
       echo "1" > run
       echo "🚀 Enjoy Streamiz the .NET Stream processing library for Apache Kafka (TM)"; 
-      sleep 3
+      sleep 2
       dotnet run -f net6.0 --project samples/sample-stream-demo/sample-stream-demo.csproj --no-build --no-restore
   - name: producer
     command: while [ ! -f run ]; do sleep 1; done; docker-compose -f environment/docker-compose.yml exec broker kafka-console-producer --bootstrap-server broker:29092 --topic input
