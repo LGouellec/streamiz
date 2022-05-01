@@ -434,7 +434,7 @@ namespace Streamiz.Kafka.Net
                     
                     RunMiddleware(false, true);
                 }
-            }, token.HasValue ? token.Value : _cancelSource.Token);
+            }, token ?? _cancelSource.Token);
             
             
             // Allow time for streams thread to run
@@ -447,13 +447,18 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         public void Dispose()
         {
-            Task.Factory.StartNew(() => {
+            Thread backgroundThread = new Thread(() =>
+            {
                 if (!_cancelSource.IsCancellationRequested)
                 {
                     _cancelSource.Cancel();
                 }
+
                 Close();
-            }).GetAwaiter().GetResult();
+            });
+            backgroundThread.IsBackground = true;
+            backgroundThread.Start();
+            backgroundThread.Join();
         }
 
         /// <summary>

@@ -24,7 +24,6 @@ namespace sample_stream_demo
 
             await CreateTopics(inputTopic, outputTopic, numberPartitions);
             
-            var cts = new CancellationTokenSource();
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "sample-streamiz-demo";
             config.BootstrapServers = "localhost:9092";
@@ -47,13 +46,17 @@ namespace sample_stream_demo
             
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
-            
-            await stream.StartAsync(cts.Token);
 
-            Console.WriteLine("Press enter to cancel");
-            Console.ReadKey();
+            Console.CancelKeyPress += (o, e) =>
+            {
+                e.Cancel = true;
+                stream.Dispose();
+            };
 
-            cts.Cancel();
+            await stream.StartAsync();
+
+            Console.ReadLine();
+            stream.Dispose();
         }
 
         private static async Task CreateTopics(string input, string output, int numberPartitions)
