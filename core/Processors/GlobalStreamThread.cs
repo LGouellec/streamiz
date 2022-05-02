@@ -72,7 +72,9 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 try
                 {
+                    globalConsumer.Unassign();
                     globalConsumer.Close();
+                    globalConsumer.Dispose();
                 }
                 catch (Exception e)
                 {
@@ -151,15 +153,10 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 stateConsumer = InitializeStateConsumer();
             }
-            catch
-            {
-                SetState(GlobalThreadState.PENDING_SHUTDOWN);
-                SetState(GlobalThreadState.DEAD);
-
+            catch(Exception e){
+                
                 log.LogWarning(
-                    "{LogPrefix}Error happened during initialization of the global state store; this thread has shutdown",
-                    logPrefix);
-
+                    $"{logPrefix}Error happened during initialization of the global state store; this thread has shutdown : {e}");
                 throw;
             }
 

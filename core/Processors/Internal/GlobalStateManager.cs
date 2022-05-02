@@ -224,7 +224,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             foreach (var topicPartition in topicPartitions)
             {
-                globalConsumer.Assign(topicPartition.ToSingle());
                 long offset, checkpoint, highWM;
                 
                 if (ChangelogOffsets.ContainsKey(topicPartition)) 
@@ -232,7 +231,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 else
                     checkpoint = Offset.Beginning.Value;
                 
-                globalConsumer.Seek(new TopicPartitionOffset(topicPartition, new Offset(checkpoint)));
+                globalConsumer.Assign((new TopicPartitionOffset(topicPartition, new Offset(checkpoint))).ToSingle());
                 offset = checkpoint;
                 highWM = highWatermarks[topicPartition].Item2;
 
