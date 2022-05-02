@@ -40,7 +40,9 @@ namespace sample_stream
 
             StreamBuilder builder = new StreamBuilder();
             
-            /*builder.Stream<string, string>("input")
+            var table = builder.GlobalTable<string, string>("topic");
+            
+            builder.Stream<string, string>("input")
                 .GroupBy((k,v) => v)
                 .Count()
                 .ToStream()
@@ -51,12 +53,6 @@ namespace sample_stream
             
             Console.CancelKeyPress += (o, e) => stream.Dispose();
 
-            await stream.StartAsync();*/
-            var table = builder.GlobalTable<string, string>("topic");
-
-            Topology t = builder.Build();
-
-            KafkaStream stream = new KafkaStream(t, config);
             await stream.StartAsync();
         }
     }
