@@ -435,10 +435,18 @@ namespace Streamiz.Kafka.Net
                     RunMiddleware(false, true);
                 }
             }, token ?? _cancelSource.Token);
-            
-            
-            // Allow time for streams thread to run
-            await Task.Delay(TimeSpan.FromMilliseconds(configuration.StartTaskDelayMs), token ?? _cancelSource.Token);
+
+
+            try
+            {
+                // Allow time for streams thread to run
+                await Task.Delay(TimeSpan.FromMilliseconds(configuration.StartTaskDelayMs),
+                    token ?? _cancelSource.Token);
+            }
+            catch
+            {
+                 // nothing, in case or Application crash or stop before end of configuration.StartTaskDelayMs
+            }
         }
 
         /// <summary>
@@ -447,7 +455,7 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         public void Dispose()
         {
-            Thread backgroundThread = new Thread(() =>
+            Task.Factory.StartNew(() =>
             {
                 if (!_cancelSource.IsCancellationRequested)
                 {
@@ -455,18 +463,14 @@ namespace Streamiz.Kafka.Net
                 }
 
                 Close();
-            });
-            backgroundThread.IsBackground = true;
-            backgroundThread.Start();
-            backgroundThread.Join();
+            }).Wait(TimeSpan.FromSeconds(30));
         }
 
         /// <summary>
         /// Shutdown this <see cref="KafkaStream"/> instance by signaling all the threads to stop, and then wait for them to join.
         /// This will block until all threads have stopped.
         /// </summary>
-        [Obsolete("This method is deprecated, please use Dispose() instead. It will be removed in next release version.")]
-        public void Close()
+        private void Close()
         {
             if (!SetState(State.PENDING_SHUTDOWN))
             {

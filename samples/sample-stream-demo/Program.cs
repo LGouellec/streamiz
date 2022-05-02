@@ -47,16 +47,9 @@ namespace sample_stream_demo
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
 
-            Console.CancelKeyPress += (o, e) =>
-            {
-                e.Cancel = true;
-                stream.Dispose();
-            };
-
+            Console.CancelKeyPress += (o, e) => stream.Dispose();
+            
             await stream.StartAsync();
-
-            Console.ReadLine();
-            stream.Dispose();
         }
 
         private static async Task CreateTopics(string input, string output, int numberPartitions)
