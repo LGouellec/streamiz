@@ -40,18 +40,15 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         public int AddBrokers(string brokers) => 0;
 
         public void Assign(TopicPartition partition)
-        {
-            cluster.Assign(this, new List<TopicPartition> { partition });
-        }
+            => Assign(new List<TopicPartition> {partition});
 
         public void Assign(TopicPartitionOffset partition)
-        {
-            // TODO
-        }
+            => Assign(new List<TopicPartitionOffset> {partition});
 
         public void Assign(IEnumerable<TopicPartitionOffset> partitions)
         {
-            // TODO
+            cluster.Assign(this, partitions);
+            Assignment = partitions.Select(t => t.TopicPartition).ToList();
         }
 
         public void Assign(IEnumerable<TopicPartition> partitions)
@@ -64,6 +61,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         {
             cluster.CloseConsumer(Name);
             Assignment.Clear();
+            Subscription.Clear();
         }
 
         public List<TopicPartitionOffset> Commit()

@@ -40,6 +40,8 @@ namespace sample_stream
 
             StreamBuilder builder = new StreamBuilder();
             
+            var table = builder.GlobalTable<string, string>("topic");
+            
             builder.Stream<string, string>("input")
                 .GroupBy((k,v) => v)
                 .Count()

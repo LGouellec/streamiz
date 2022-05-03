@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.Processors
         protected bool taskInitialized;
         protected bool commitNeeded = false;
         protected bool commitRequested = false;
-        protected IStateManager stateMgr;
+        protected ProcessorStateManager stateMgr;
         protected ILogger log;
         protected readonly string logPrefix = "";
         protected TaskState state = TaskState.CREATED;
@@ -126,12 +126,7 @@ namespace Streamiz.Kafka.Net.Processors
                 store.Init(Context, store);
             }
 
-            foreach (var kv in Topology.GlobalStateStores.Where(k => !Topology.StateStores.ContainsKey(k.Key)))
-            {
-                var store = kv.Value;
-                log.LogDebug("{LogPrefix}Initializing store {Key}", logPrefix, kv.Key);
-                store.Init(Context, store);
-            }
+            stateMgr.RegisterGlobalStateStores(Topology.GlobalStateStores);
         }
 
         protected virtual void FlushState()
