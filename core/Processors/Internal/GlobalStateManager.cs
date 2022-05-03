@@ -237,6 +237,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
                 while (offset < highWM - 1)
                 {
+                    if (offset == Offset.Beginning && highWM == 0) // no message into local and topics;
+                        break;
+                    
                     var records = globalConsumer.ConsumeRecords(TimeSpan.FromMilliseconds(config.PollMs),
                         config.MaxPollRestoringRecords).ToList();
 

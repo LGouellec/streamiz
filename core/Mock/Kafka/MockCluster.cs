@@ -81,6 +81,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         private readonly long waitBeforeRebalanceMs;
         private readonly static object _lock = new();
         private readonly ILogger log = Logger.GetLogger(typeof(MockCluster));
+        private readonly string guidCluster = Guid.NewGuid().ToString();
         
         #region Ctor
 
@@ -146,7 +147,6 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             {
                 log.LogDebug($"Closing consumer {name}");
                 Unsubscribe(consumers[name].Consumer);
-                consumers[name].Consumer.Subscription.Clear();
                 log.LogDebug($"Consumer {name} close");
 
             }
@@ -526,6 +526,64 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                                 IsPaused = false,
                                 OffsetComitted = offset.Offset,
                                 OffsetConsumed = offset.Offset,
+                                Topic = tp.Topic
+                            });
+                    }
+                }
+
+                log.LogDebug($"Consumer {mockConsumer.Name} assigned partitions list : {string.Join(",", c.Partitions)}");
+                c.Assigned = true;
+            }
+        }
+
+        internal void Assign(MockConsumer mockConsumer, IEnumerable<TopicPartitionOffset> topicPartitions)
+        {
+            lock (_lock)
+            {
+                foreach (var t in topicPartitions)
+                    CreateTopic(t.Topic);
+
+                var copyPartitions = new List<TopicPartition>();
+
+                var c = GetMetadataConsumer(mockConsumer);
+                copyPartitions.AddRange(c.Partitions);
+                c.Partitions.Clear();
+                bool r = CheckConsumerAlreadyAssign(c.GroupId, c.Name, topicPartitions.Select(t => t.TopicPartition));
+                if (r)
+                    c.Partitions = new ThreadSafeList<TopicPartition>(copyPartitions);
+                else
+                {
+                    foreach (var tp in topicPartitions)
+                    {
+                        Offset offset;
+                        
+                        if (tp.Offset == Offset.Beginning)
+                            offset = 0;
+                        else if (tp.Offset == Offset.End)
+                        {
+                            var topic = topics[tp.Topic];
+                            var part = topic.GetPartition(tp.Partition);
+                            offset = part.HighOffset;
+                        }
+                        else
+                            offset = tp.Offset;
+                        
+                        c.Partitions.Add(tp.TopicPartition);
+                        if (c.TopicPartitionsOffset.Contains(new MockTopicPartitionOffset()
+                            {Partition = tp.Partition.Value, Topic = tp.Topic}))
+                        {
+                            var tpo = c.TopicPartitionsOffset.FirstOrDefault(t =>
+                                t.Partition.Equals(tp.Partition.Value) && t.Topic.Equals(tp.Topic));
+                            tpo.OffsetComitted = offset;
+                            tpo.OffsetConsumed = offset;
+                        }
+                        else
+                            c.TopicPartitionsOffset.Add(new MockTopicPartitionOffset()
+                            {
+                                Partition = tp.Partition.Value,
+                                IsPaused = false,
+                                OffsetComitted = offset,
+                                OffsetConsumed = offset,
                                 Topic = tp.Topic
                             });
                     }
