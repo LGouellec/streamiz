@@ -138,7 +138,7 @@ namespace Streamiz.Kafka.Net.Mock
         {
             IsRunning = false;
             threadTopology.Dispose();
-            globalStreamThread.Dispose();
+            globalStreamThread?.Dispose();
             
             foreach(var asyncPipe in asyncPipeOutput)
                 asyncPipe.Dispose();
