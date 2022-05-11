@@ -62,10 +62,12 @@ namespace Streamiz.Kafka.Net.Processors
                     needOuterJoin = false;
                     var otherRecord = enumerator.Current;
 
-                    var value2 = joiner.Apply(value, otherRecord.Value.Value);
+                    var joinValue = joiner.Apply(value, otherRecord.Value.Value);
 
-                    SetIntermediateJoinTopic(joinResultTopic, value2.GetType());
-                    Forward(key, value2, Math.Max(inputRecordTimestamp, otherRecord.Value.Key));
+                    SetIntermediateJoinTopic(joinResultTopic, joinValue.GetType());
+                    Forward(key,
+                        joinValue,
+                        Math.Max(inputRecordTimestamp, otherRecord.Value.Key));
                 }
             }
 
