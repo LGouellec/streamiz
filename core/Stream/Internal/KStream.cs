@@ -535,8 +535,16 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             where V0S : ISerDes<V0>, new()
             => Join<V0, VR, V0S>(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows, props);
 
-        public IKStream<K, VR> Join<V0, VR>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null, string joinResultTopic = null)
-            => Join(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows, props, null, joinResultTopic);
+        public IKStream<K, VR> Join<V0, VR>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner,
+            JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null, string joinResultTopic = null)
+        {
+            return stream is AbstractStream<K, V0>
+                ? Join(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows,
+                    StreamJoinProps.From<K, V, V0>(props), ((AbstractStream<K, V0>)stream).ValueSerdes, joinResultTopic)
+                : Join(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows,
+                    StreamJoinProps.From<K, V, V0>(props), null,
+                    joinResultTopic);
+        }
 
         public IKStream<K, VR> Join<V0, VR, V0S>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null)
             where V0S : ISerDes<V0>, new()
@@ -555,7 +563,6 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             props.RightValueSerdes = props.RightValueSerdes ?? valueSerdes;
             props.KeySerdes = props.KeySerdes ?? KeySerdes;
             props.LeftValueSerdes = props.LeftValueSerdes ?? ValueSerdes;
-
             return DoJoin(stream, valueJoiner, windows, props, new StreamJoinBuilder(builder, false, false), joinResultTopic);
         }
 
@@ -756,7 +763,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         {
             KStream<K, V> kstream = (KStream<K, V>)stream;
             string name = new Named(named).OrElseGenerateWithPrefix(builder, KStream.MERGE_NAME);
-            bool requireRepartitioning = RepartitionRequired || ((KStream<K, V>) stream).RepartitionRequired;
+            bool requireRepartitioning = RepartitionRequired || ((KStream<K, V>)stream).RepartitionRequired;
             ISet<string> sourceNodes = new HashSet<string>();
             sourceNodes.AddRange(SetSourceNodes);
             sourceNodes.AddRange(kstream.SetSourceNodes);

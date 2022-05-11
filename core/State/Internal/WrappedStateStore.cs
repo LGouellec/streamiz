@@ -58,7 +58,10 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         protected SerializationContext GetSerializationContext(bool isKey, Type topicType = null)
         {
-            string intermediateTopic = context?.JoinIntermediateTopics?.FirstOrDefault(x => x.Value == topicType).Key;
+            string intermediateTopic = context?.JoinIntermediateTopics?.FirstOrDefault(x =>
+                x.Value == topicType || 
+                topicType is { IsGenericType: true } && topicType.GetGenericArguments().First() == x.Value).Key;
+
             string topic = !string.IsNullOrWhiteSpace(intermediateTopic)
                 ? intermediateTopic
                 : context?.RecordContext?.Topic;
