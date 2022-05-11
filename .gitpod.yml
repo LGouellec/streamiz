@@ -1,0 +1,52 @@
+github:
+  prebuilds:
+    # enable for the default branch (defaults to true)
+    master: true
+    # enable for all branches in this repo (defaults to false)
+    branches: true
+    # enable for pull requests coming from this repo (defaults to true)
+    pullRequests: true
+    # add a "Review in Gitpod" button as a comment to pull requests (defaults to false)
+    addComment: true
+    # configure whether Gitpod registers itself as a status check to pull requests
+    addCheck: false
+
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - name: run
+    before: mkdir -p /tmp/dotnet && curl -fsSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 6.0 --install-dir /tmp/dotnet 
+    command: |
+      ./run-demo.sh
+      echo "1" > run
+      echo "🚀 Enjoy Streamiz the .NET Stream processing library for Apache Kafka (TM)"; 
+      sleep 2
+      dotnet run -f net6.0 --project samples/sample-stream-demo/sample-stream-demo.csproj --no-build --no-restore
+  - name: producer
+    command: while [ ! -f run ]; do sleep 1; done; docker-compose -f environment/docker-compose.yml exec broker kafka-console-producer --bootstrap-server broker:29092 --topic input
+  - name: consumer
+    command: while [ ! -f run ]; do sleep 1; done; docker-compose -f environment/docker-compose.yml exec broker kafka-console-consumer --bootstrap-server broker:29092 --topic output --property print.key=true --property print.value=true --from-beginning
+
+vscode:
+  extensions:
+    - muhammad-sammy.csharp
+
+ports:
+# streamiz metrics
+- port: 9090
+  onOpen: ignore
+# zookeeper
+- port: 2181
+  onOpen: ignore
+# broker
+- port: 9092
+  onOpen: ignore
+- port: 9101
+  onOpen: ignore
+# akhq
+- port: 8082
+  onOpen: ignore
+# schema-registry
+- port: 8081
+  onOpen: ignore

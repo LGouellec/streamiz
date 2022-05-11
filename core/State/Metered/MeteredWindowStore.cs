@@ -20,6 +20,7 @@ namespace Streamiz.Kafka.Net.State.Metered
         protected ISerDes<K> keySerdes;
         protected ISerDes<V> valueSerdes;
         private readonly string metricScope;
+        protected bool initStoreSerdes = false;
         
         private Sensor putSensor = NoRunnableSensor.Empty;
         private Sensor fetchSensor = NoRunnableSensor.Empty;
@@ -41,11 +42,16 @@ namespace Streamiz.Kafka.Net.State.Metered
 
         public virtual void InitStoreSerde(ProcessorContext context)
         {
-            keySerdes = keySerdes == null ? context.Configuration.DefaultKeySerDes as ISerDes<K> : keySerdes;
-            valueSerdes = valueSerdes == null ? context.Configuration.DefaultValueSerDes as ISerDes<V> : valueSerdes;
+            if (!initStoreSerdes)
+            {
+                keySerdes ??= context.Configuration.DefaultKeySerDes as ISerDes<K>;
+                valueSerdes ??= context.Configuration.DefaultValueSerDes as ISerDes<V>;
 
-            keySerdes?.Initialize(context.SerDesContext);
-            valueSerdes?.Initialize(context.SerDesContext);
+                keySerdes?.Initialize(new SerDesContext(context.Configuration));
+                valueSerdes?.Initialize(new SerDesContext(context.Configuration));
+                
+                initStoreSerdes = true;
+            }
         }
         
         public override void Init(ProcessorContext context, IStateStore root)

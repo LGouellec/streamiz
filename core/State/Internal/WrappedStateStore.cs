@@ -2,6 +2,7 @@
 using System.Linq;
 using Confluent.Kafka;
 using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
@@ -28,6 +29,7 @@ namespace Streamiz.Kafka.Net.State.Internal
     {
         protected ProcessorContext context;
         protected readonly S wrapped;
+        protected string changelogTopic;
 
         public WrappedStateStore(S wrapped)
         {
@@ -49,6 +51,11 @@ namespace Streamiz.Kafka.Net.State.Internal
         public virtual void Init(ProcessorContext context, IStateStore root)
         {
             this.context = context;
+            
+            changelogTopic = context.ChangelogFor(Name);
+            if (string.IsNullOrEmpty(changelogTopic))
+                changelogTopic = ProcessorStateManager.StoreChangelogTopic(context.ApplicationId, Name);
+            
             wrapped.Init(context, root);
         }
 
@@ -67,7 +74,7 @@ namespace Streamiz.Kafka.Net.State.Internal
                 : context?.RecordContext?.Topic;
 
             return new SerializationContext(isKey ? MessageComponentType.Key : MessageComponentType.Value,
-                topic,
+                changelogTopic,
                 context?.RecordContext?.Headers);
         }
     }

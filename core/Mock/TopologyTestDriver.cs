@@ -78,7 +78,7 @@ namespace Streamiz.Kafka.Net.Mock
             ASYNC_CLUSTER_IN_MEMORY
         }
 
-        private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
+        private readonly CancellationTokenSource tokenSource = new();
         private readonly InternalTopologyBuilder topologyBuilder;
         private readonly IStreamConfig configuration;
         private readonly IStreamConfig topicConfiguration;

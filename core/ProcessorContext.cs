@@ -124,6 +124,9 @@ namespace Streamiz.Kafka.Net
                 BYTEARRAY_VALUE_SERDES);
         }
 
+        internal string ChangelogFor(string storeName)
+            => States.ChangelogFor(storeName);
+        
         /// <summary>
         /// Requests a commit
         /// </summary>

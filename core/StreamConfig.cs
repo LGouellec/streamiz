@@ -298,6 +298,11 @@ namespace Streamiz.Kafka.Net
         /// The highest recording level for metrics.
         /// </summary>
         MetricsRecordingLevel MetricsRecording { get; set; }
+        
+        /// <summary>
+        /// Time wait before completing the start task of <see cref="KafkaStream"/>. (default: 2000)
+        /// </summary>
+        long StartTaskDelayMs { get; set; }
 
         #endregion
         
@@ -448,6 +453,7 @@ namespace Streamiz.Kafka.Net
         internal static readonly string metricsIntervalMsCst = "metrics.interval.ms";
         internal static readonly string exposeLibrdKafkaCst = "expose.librdkafka.stats";
         internal static readonly string metricsRecordingLevelCst = "metrics.recording.level";
+        internal static readonly string startTaskDelayMsCst = "start.task.delay.ms";
 
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -2012,8 +2018,9 @@ namespace Streamiz.Kafka.Net
             OffsetCheckpointManager = null;
             MetricsIntervalMs = (long)TimeSpan.FromSeconds(30).TotalMilliseconds;
             MetricsRecording = MetricsRecordingLevel.INFO;
-            MetricsReporter = (_) => { }; // nothing by default, myabe another behavior in future
+            MetricsReporter = (_) => { }; // nothing by default, maybe another behavior in future
             ExposeLibrdKafkaStats = false;
+            StartTaskDelayMs = 5000;
 
             if (properties != null)
             {
@@ -2041,7 +2048,7 @@ namespace Streamiz.Kafka.Net
         #endregion
 
         #region IStreamConfig Impl
-
+        
         /// <summary>
         /// Authorize your streams application to follow metadata (timestamp, topic, partition, offset and headers) during processing record.
         /// You can use <see cref="StreamizMetadata"/> to get these metadatas. (Default : false)
@@ -2315,14 +2322,23 @@ namespace Streamiz.Kafka.Net
         }
         
         /// <summary>
-        /// The highest recording level for metrics.
+        /// The highest recording level for metrics (default: INFO).
         /// </summary>
         public MetricsRecordingLevel MetricsRecording 
         {
             get => this[metricsRecordingLevelCst];
             set => this.AddOrUpdate(metricsRecordingLevelCst, value);
         }
-        
+
+        /// <summary>
+        /// Time wait before completing the start task of <see cref="KafkaStream"/>. (default: 5000)
+        /// </summary>
+        public long StartTaskDelayMs
+        {
+            get => this[startTaskDelayMsCst];
+            set => this.AddOrUpdate(startTaskDelayMsCst, value);
+        }
+
         /// <summary>
         /// Get the configs to the <see cref="IProducer{TKey, TValue}"/>
         /// </summary>

@@ -148,9 +148,10 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public IStateStore GetStore(string name)
         {
             if (registeredStores.ContainsKey(name))
-            {
                 return registeredStores[name].Store;
-            }
+
+            if (globalStateStores.ContainsKey(name))
+                return globalStateStores[name];
 
             return null;
         }
@@ -257,6 +258,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
         }
 
+        public string ChangelogFor(string storeName)
+            => changelogTopics.Get(storeName);
+        
         #endregion
 
         internal StateStoreMetadata GetStoreMetadata(TopicPartition topicPartition)

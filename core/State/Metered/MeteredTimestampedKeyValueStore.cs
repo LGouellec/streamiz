@@ -6,8 +6,6 @@ namespace Streamiz.Kafka.Net.State.Metered
     internal class MeteredTimestampedKeyValueStore<K, V>
         : MeteredKeyValueStore<K, ValueAndTimestamp<V>>, ITimestampedKeyValueStore<K, V>
     {
-        private bool initStoreSerdes = false;
-
         public MeteredTimestampedKeyValueStore(
             IKeyValueStore<Bytes, byte[]> wrapped,
             ISerDes<K> keySerdes,
@@ -20,8 +18,12 @@ namespace Streamiz.Kafka.Net.State.Metered
         {
             if (!initStoreSerdes)
             {
-                keySerdes = keySerdes == null ? context.Configuration.DefaultKeySerDes as ISerDes<K> : keySerdes;
-                valueSerdes = valueSerdes == null ? new ValueAndTimestampSerDes<V>(context.Configuration.DefaultValueSerDes as ISerDes<V>) : valueSerdes;
+                keySerdes ??= context.Configuration.DefaultKeySerDes as ISerDes<K>;
+                valueSerdes ??= new ValueAndTimestampSerDes<V>(context.Configuration.DefaultValueSerDes as ISerDes<V>);
+                
+                keySerdes?.Initialize(new SerDesContext(context.Configuration));
+                valueSerdes?.Initialize(new SerDesContext(context.Configuration));
+                
                 initStoreSerdes = true;
             }
         }

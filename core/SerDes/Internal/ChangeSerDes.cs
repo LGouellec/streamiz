@@ -55,6 +55,8 @@ namespace Streamiz.Kafka.Net.SerDes.Internal
             
             if(innerSerdes == null)
                 throw new StreamsException($"ChangeSerdes<{typeof(V)}> is not correctly configured. Please set explicitly serdes in previous operation.");
+            
+            innerSerdes.Initialize(context);
         }
     }
 }

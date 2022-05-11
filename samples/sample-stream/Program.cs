@@ -21,34 +21,33 @@ namespace sample_stream
 {
     /// <summary>
     /// Sample program with a passtrought stream, instanciate and dispose with CTRL+ C console event.
-    /// If you want an example with token source passed to startasync, see <see cref="ProgramToken"/> class.
     /// </summary>
     internal class Program
     {
-        static async Task Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app2";
             config.BootstrapServers = "localhost:9092";
-            config.AutoOffsetReset = Confluent.Kafka.AutoOffsetReset.Earliest;
+            config.AutoOffsetReset = AutoOffsetReset.Earliest;
             config.StateDir = Path.Combine(".");
-            config.MetricsRecording = MetricsRecordingLevel.DEBUG;
-            config.UsePrometheusReporter(9090, true);
-
+            config.CommitIntervalMs = 5000;
             config.Logger = LoggerFactory.Create(builder =>
             {
-                builder.SetMinimumLevel(LogLevel.Debug);
+                builder.SetMinimumLevel(LogLevel.Information);
                 builder.AddLog4Net();
             });
-            
+
             StreamBuilder builder = new StreamBuilder();
             
+            var table = builder.GlobalTable<string, string>("topic");
+            
             builder.Stream<string, string>("input")
-                .GroupByKey()
-                .Reduce((v1,v2) => v1 + " " + v2)
+                .GroupBy((k,v) => v)
+                .Count()
                 .ToStream()
                 .To("output");
-          
+            
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
             

@@ -47,6 +47,11 @@ namespace Streamiz.Kafka.Net.Processors
         /// </summary>        
         ICollection<TopicPartition> ChangelogPartitions { get; }
 
+        /// <summary>
+        /// Any repartitions records to purge after processing and committing
+        /// </summary>
+        IDictionary<TopicPartition, long> PurgeOffsets { get;  }
+
         bool HasStateStores { get; }
 
         PartitionGrouper Grouper { get; }

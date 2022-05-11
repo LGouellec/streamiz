@@ -123,8 +123,6 @@ Example :
     var config = new StreamConfig<StringSerDes, StringSerDes>();
 ```
 
-**TODO : Make documentation about Data types and serdes**
-
 ### DefaultValueSerDes
 
 The default Serializer/Deserializer class for record values. Serialization and deserialization in Kafka Streams happens whenever data needs to be materialized, for example:
@@ -145,8 +143,6 @@ Example :
     // Set defaultkeyserdes to StringSerDes, and defaultvalueserdes to StringSerDes
     var config = new StreamConfig<StringSerDes, StringSerDes>();
 ```
-
-**TODO : Make documentation about Data types and serdes**
 
 ### NumStreamThreads
 
@@ -270,6 +266,30 @@ Manager which track offset saved in local state store.
 ### RocksDbConfigHandler
 
 A Rocks DB config handler function called just before openning a rocksdb state store.
+
+
+### MetricsIntervalMs
+
+Delay between two invocations of `MetricsReporter()`. The minimum and default value is 30 seconds.
+
+### MetricsReporter
+
+The reporter expose a list of sensors throw by a stream thread every `MetricsIntervalMs` This reporter has the responsibility to export sensors and metrics into another platform (default: empty).
+
+Streamiz provide one reporter for Prometheus (see `Streamiz.Kafka.Net.Metrics.Prometheus` package).
+
+### ExposeLibrdKafkaStats
+
+Boolean which indicate if librdkafka handle statistics should be exposed ot not (default: false).
+**Only main consumer and producer will be concerned.**
+
+### MetricsRecording
+
+The highest recording level for metrics (default: INFO).
+
+### StartTaskDelayMs
+
+Time wait before completing the start task of `KafkaStream` (default: 5000).
 
 ### BasicAuthUserInfo
 
