@@ -8,6 +8,7 @@ files=(
   "serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.csproj"
   "serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf.csproj"
   "test/Streamiz.Kafka.Net.Tests/Streamiz.Kafka.Net.Tests.csproj"
+  "stores/Streamiz.Kafka.Net.Faster/Streamiz.Kafka.Net.Faster.csproj"
   )
 
 for tag in ${tags[@]}; do
