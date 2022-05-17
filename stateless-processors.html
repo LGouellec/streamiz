@@ -57,11 +57,13 @@
 <li class="toctree-l2"><a class="reference internal" href="#print">Print</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#selectkey">SelectKey</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#table-to-steam">Table to Steam</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#repartition">Repartition</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="statefull-processors.html">Statefull processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stores.html">State stores</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tology-test-driver.html">Test topology driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="monitoring.html">Monitoring Stream Applications</a></li>
 </ul>
 
         </div>
@@ -99,14 +101,16 @@
 <ul class="simple">
 <li><p>IKStream -&gt; IKStream[]</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
 <span class="kt">var</span><span class="w"> </span><span class="n">branches</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">Branch</span><span class="p">(</span><span class="w"></span>
 <span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">),</span><span class="w"></span>
 <span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">),</span><span class="w"></span>
-<span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">));</span><span class="w"></span>
+<span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">),</span><span class="w"></span>
+<span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="k">true</span><span class="p">);</span><span class="w"> </span><span class="c1">// DLQ pattern</span>
 <span class="c1">// branches[0] contains all records whose keys start with &quot;A&quot;</span>
 <span class="c1">// branches[1] contains all records whose keys start with &quot;B&quot;</span>
 <span class="c1">// branches[2] contains all records whose keys start with &quot;C&quot;</span>
+<span class="c1">// branches[3] contains other records</span>
 </pre></div>
 </div>
 </section>
@@ -117,8 +121,8 @@
 <li><p>IKStream -&gt; IKStream</p></li>
 <li><p>IKTable -&gt; IKTable</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....</span><span class="w"></span>
-<span class="n">IKTable</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="p">=</span><span class="w">  </span><span class="p">...</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+<span class="n">IKTable</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="p">=</span><span class="w">  </span><span class="p">...;</span><span class="w"></span>
 
 <span class="c1">// A filter that selects  only value which contains &#39;test&#39; string constant</span>
 <span class="n">stream</span><span class="p">.</span><span class="n">Filter</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span><span class="w"></span>
@@ -133,8 +137,8 @@
 <li><p>IKStream -&gt; IKStream</p></li>
 <li><p>IKTable -&gt; IKTable</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....</span><span class="w"></span>
-<span class="n">IKTable</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="p">=</span><span class="w">  </span><span class="p">...</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+<span class="n">IKTable</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="p">=</span><span class="w">  </span><span class="p">...;</span><span class="w"></span>
 
 <span class="c1">// A inverse filter that selects value which contains not &#39;test&#39; string constant</span>
 <span class="n">stream</span><span class="p">.</span><span class="n">FilterNot</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span><span class="w"></span>
@@ -148,7 +152,7 @@
 <ul class="simple">
 <li><p>IKStream → IKStream</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
 
 <span class="c1">// Here, we generate two output records for each input record.</span>
 <span class="c1">// We also change the key and value types.</span>
@@ -171,7 +175,7 @@
 <ul class="simple">
 <li><p>IKStream → IKStream</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
 
 <span class="c1">// Split a word into characters.</span>
 <span class="n">stream</span><span class="p">.</span><span class="n">FlatMapValues</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">ToCharArray</span><span class="p">())</span><span class="w"></span>
@@ -186,7 +190,7 @@
 <ul class="simple">
 <li><p>IKGroupedStream  → IKTable</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
 
 <span class="c1">// Print the contents of the IKStream to the local console</span>
 <span class="n">stream</span><span class="p">.</span><span class="n">Foreach</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;{k} {v}&quot;</span><span class="p">))</span><span class="w"></span>
@@ -218,7 +222,7 @@
 <ul class="simple">
 <li><p>IKStream → IKStream</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
 
 <span class="c1">// We create a new record keyvalue, with the value to key and key to value</span>
 <span class="n">stream</span><span class="p">.</span><span class="n">Map</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">KeyValuePair</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">()))</span><span class="w"></span>
@@ -233,8 +237,8 @@
 <li><p>IKStream → IKStream</p></li>
 <li><p>IKTable → IKTable</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....</span><span class="w"></span>
-<span class="n">IKTable</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">...</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+<span class="n">IKTable</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">...;</span><span class="w"></span>
 
 <span class="c1">// New value type =&gt; Int32 which is the length of string value</span>
 <span class="n">stream</span><span class="p">.</span><span class="n">MapValues</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span><span class="w"></span>
@@ -251,7 +255,7 @@
 <ul class="simple">
 <li><p>IKStream → IKStream</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
 
 <span class="n">stream</span><span class="p">.</span><span class="n">Peek</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;{k} {v}&quot;</span><span class="p">))</span><span class="w"></span>
 </pre></div>
@@ -280,7 +284,7 @@
 <ul class="simple">
 <li><p>IKStream → IKStream</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
 
 <span class="c1">// Derive a new record key from the record&#39;s value.</span>
 <span class="n">stream</span><span class="p">.</span><span class="n">SelectKey</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span><span class="w"></span>
@@ -293,11 +297,19 @@
 <ul class="simple">
 <li><p>IKTable → IKStream</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKTable</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....</span><span class="w"></span>
-
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKTable</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
 <span class="c1">// Also, a variant of `ToStream` exists that allows you</span>
 <span class="c1">// to select a new key for the resulting stream.</span>
 <span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">table</span><span class="p">.</span><span class="n">ToStream</span><span class="p">();</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="repartition">
+<h2>Repartition<a class="headerlink" href="#repartition" title="Permalink to this headline">¶</a></h2>
+<p>Manually trigger repartitioning of the stream with desired number of partitions.</p>
+<p>Generated topic is treated as internal topic, as a result data will be purged automatically as any other internal repartition topic. In addition, you can specify the desired number of partitions, which allows to easily scale in/out downstream sub-topologies.</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+<span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">repartitionedStream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">Repartition</span><span class="p">(</span><span class="n">Repartitioned</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;.</span><span class="n">NumberOfPartitions</span><span class="p">(</span><span class="m">10</span><span class="p">));</span><span class="w"></span>
 </pre></div>
 </div>
 </section>

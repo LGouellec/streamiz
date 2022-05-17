@@ -76,3 +76,4 @@ Feel free to ping me: `@LGouellec <https://twitter.com/LGouellec>`_
    statefull-processors
    stores
    tology-test-driver
+   monitoring

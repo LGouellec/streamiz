@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monitoring Stream Applications &mdash; Streamiz.Kafka.Net  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Test topology driver" href="tology-test-driver.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> Streamiz.Kafka.Net
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Streamiz.Kafka.Net</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stream-configuration.html">Configuring a Stream Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stateless-processors.html">Stateless processors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="statefull-processors.html">Statefull processors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stores.html">State stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tology-test-driver.html">Test topology driver</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Monitoring Stream Applications</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#metrics">Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#accessing-metrics">Accessing Metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-metrics-granularity">Configuring Metrics Granularity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#application-metrics">Application metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#thread-metrics">Thread metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#task-metrics">Task metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#processor-metrics">Processor metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#state-store-metrics">State store metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rocksdb-metrics">RocksDb metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#librdkafka-metrics">Librdkafka metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#main-consumer">Main consumer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#producer">Producer</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Streamiz.Kafka.Net</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Monitoring Stream Applications</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/monitoring.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="monitoring-stream-applications">
+<h1>Monitoring Stream Applications<a class="headerlink" href="#monitoring-stream-applications" title="Permalink to this headline">¶</a></h1>
+<section id="metrics">
+<h2>Metrics<a class="headerlink" href="#metrics" title="Permalink to this headline">¶</a></h2>
+<p>The Streamiz library reports a variety of metrics through his own registry. You have to specify a <a href="stream-configuration.html#optional-configuration-parameters" rel="stylesheet">metric reporter</a> (see <code class="docutils literal notranslate"><span class="pre">IStreamConfig.MetricsReporter</span></code>) to export all metrics to a different layer (Prometheus, Elastic, …). This reporter will be triggered every <code class="docutils literal notranslate"><span class="pre">IStreamConfig.MetricsIntervalMs</span></code> (minimium and default : 30 seconds).</p>
+<p>Streamiz provide an implementation for Prometheus. See <code class="docutils literal notranslate"><span class="pre">Streamiz.Kafka.Net.Metrics.Prometheus</span></code> package.
+You can use extension method to specify prometheus port and some other settings.</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">&gt;();</span><span class="w"></span>
+<span class="n">config</span><span class="p">.</span><span class="n">ApplicationId</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;test-app2&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="n">config</span><span class="p">.</span><span class="n">BootstrapServers</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;localhost:9092&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="n">config</span><span class="p">.</span><span class="n">MetricsRecording</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">MetricsRecordingLevel</span><span class="p">.</span><span class="n">DEBUG</span><span class="p">;</span><span class="w"></span>
+<span class="c1">// Run a http endpoint to 9090 and expose metrics to prometheus format</span>
+<span class="c1">// Expose librdkafka metrics too !</span>
+<span class="n">config</span><span class="p">.</span><span class="n">UsePrometheusReporter</span><span class="p">(</span><span class="m">9090</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<section id="accessing-metrics">
+<h3>Accessing Metrics<a class="headerlink" href="#accessing-metrics" title="Permalink to this headline">¶</a></h3>
+<p>The entire metrics registry of a KafkaStream instance can be accessed read-only through the method <code class="docutils literal notranslate"><span class="pre">KafkaStream.Metrics()</span></code>. The metrics registry will contain all the available metrics listed below.</p>
+</section>
+<section id="configuring-metrics-granularity">
+<h3>Configuring Metrics Granularity<a class="headerlink" href="#configuring-metrics-granularity" title="Permalink to this headline">¶</a></h3>
+<p>By default Streamiz has metrics with two recording levels: INFO and DEBUG. The <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code> level records most metrics, while the <code class="docutils literal notranslate"><span class="pre">INFO</span></code> level records only some of them. Use the <code class="docutils literal notranslate"><span class="pre">IStreamConfig.MetricsRecording</span></code> configuration option to specify which metrics you want collected, see <a href="stream-configuration.html#metricsrecording" rel="stylesheet">configuration parameters</a>.</p>
+</section>
+<section id="application-metrics">
+<h3>Application metrics<a class="headerlink" href="#application-metrics" title="Permalink to this headline">¶</a></h3>
+<p>All the following metrics have a recording level of <code class="docutils literal notranslate"><span class="pre">INFO</span></code>.</p>
+<p><strong>Sensor : stream-metrics.sensor.app-info, Type : stream-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">version</span></td>
+<td align="center">The version of the Streamiz client</td>
+<td align="right">application_id,version</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">application_id</span></td>
+<td align="center">The application ID of the Streamiz client</td>
+<td align="right">application_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">topology_description</span></td>
+<td align="center">The description of the topology executed in the Streamiz client</td>
+<td align="right">application_id,topology_description</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">state</span></td>
+<td align="center">The state of the Streamiz client (1 = running, 0 = stopped)</td>
+<td align="right">application_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">stream_threads</span></td>
+<td align="center">The number of stream threads that are running or participating in rebalance</td>
+<td align="right">application_id</td>
+</tr>
+</tbody>
+</table></section>
+<section id="thread-metrics">
+<h3>Thread metrics<a class="headerlink" href="#thread-metrics" title="Permalink to this headline">¶</a></h3>
+<p>All the following metrics have a recording level of <code class="docutils literal notranslate"><span class="pre">INFO</span></code>.</p>
+<p><strong>Sensor : internal.[THREAD_ID].sensor.thread-start-time, Type : stream-thread-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">thread-start-time</span></td>
+<td align="center">The time that the thread was started</td>
+<td align="right">thread_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].sensor.task-created, Type : stream-thread-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">task-created-total</span></td>
+<td align="center">The total number of newly created tasks</td>
+<td align="right">thread_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">task-created-rate</span></td>
+<td align="center">The average per-second number of newly created tasks</td>
+<td align="right">thread_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].sensor.task-closed, Type : stream-thread-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">task-closed-total</span></td>
+<td align="center">The total number of closed tasks</td>
+<td align="right">thread_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">task-closed-rate</span></td>
+<td align="center">The average per-second number of closed tasks</td>
+<td align="right">thread_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].sensor.commit, Type : stream-thread-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">commit-total</span></td>
+<td align="center">The total number of calls to commit</td>
+<td align="right">thread_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">commit-rate</span></td>
+<td align="center">The average per-second number of calls to commit</td>
+<td align="right">thread_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">commit-latency-avg</span></td>
+<td align="center">The average commit latency</td>
+<td align="right">thread_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">commit-latency-max</span></td>
+<td align="center">The maximum commit latency</td>
+<td align="right">thread_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].sensor.poll, Type : stream-thread-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">poll-total</span></td>
+<td align="center">The total number of calls to poll</td>
+<td align="right">thread_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">poll-rate</span></td>
+<td align="center">The average per-second number of calls to poll</td>
+<td align="right">thread_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">poll-latency-avg</span></td>
+<td align="center">The average poll latency</td>
+<td align="right">thread_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">poll-latency-max</span></td>
+<td align="center">The maximum poll latency</td>
+<td align="right">thread_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].sensor.poll-records, Type : stream-thread-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">poll-records-max</span></td>
+<td align="center">The maximum number of records polled from consumer within an iteration</td>
+<td align="right">thread_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">poll-records-avg</span></td>
+<td align="center">The average number of records polled from consumer within an iteration</td>
+<td align="right">thread_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].sensor.process-records, Type : stream-thread-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">process-records-max</span></td>
+<td align="center">The maximum number of records processed from consumer within an iteration</td>
+<td align="right">thread_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">process-records-avg</span></td>
+<td align="center">The average number of records processed from consumer within an iteration</td>
+<td align="right">thread_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].sensor.process-rate, Type : stream-thread-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">process-rate-rate</span></td>
+<td align="center">The average per-second number of calls to process</td>
+<td align="right">thread_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">process-rate-total</span></td>
+<td align="center">The total number of calls to process</td>
+<td align="right">thread_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].sensor.process-latency, Type : stream-thread-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">process-latency-avg</span></td>
+<td align="center">The average process latency</td>
+<td align="right">thread_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">process-latency-max</span></td>
+<td align="center">The maximum process latency</td>
+<td align="right">thread_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].sensor.process-ratio, Type : stream-thread-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">process-ratio</span></td>
+<td align="center">The fraction of time the thread spent on processing active tasks</td>
+<td align="right">thread_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].sensor.poll-ratio, Type : stream-thread-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">poll-ratio</span></td>
+<td align="center">The fraction of time the thread spent on polling records from consumer</td>
+<td align="right">thread_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].sensor.commit-ratio, Type : stream-thread-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">commit-ratio</span></td>
+<td align="center">The fraction of time the thread spent on committing all tasks</td>
+<td align="right">thread_id</td>
+</tr>
+</tbody>
+</table></section>
+<section id="task-metrics">
+<h3>Task metrics<a class="headerlink" href="#task-metrics" title="Permalink to this headline">¶</a></h3>
+<p>All the following metrics have a recording level of <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code>.</p>
+<p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].sensor.process-latency, Type : stream-task-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">process-latency-avg</span></td>
+<td align="center">The average latency of calls to process</td>
+<td align="right">thread_id,task_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">process-latency-max</span></td>
+<td align="center">The maximum latency of calls to process</td>
+<td align="right">thread_id,task_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].sensor.enforced-processing, Type : stream-task-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">enforced-processing-total</span></td>
+<td align="center">The total number of occurrences of enforced-processing operations</td>
+<td align="right">thread_id,task_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">enforced-processing-rate</span></td>
+<td align="center">The average number of occurrences of enforced-processing operations per second</td>
+<td align="right">thread_id,task_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].sensor.process, Type : stream-task-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">process-rate</span></td>
+<td align="center">The average number of calls to process per second</td>
+<td align="right">thread_id,task_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">process-total</span></td>
+<td align="center">The total number of calls to process</td>
+<td align="right">thread_id,task_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].sensor.commit, Type : stream-task-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">commit-rate</span></td>
+<td align="center">The average number of calls to commit per second</td>
+<td align="right">thread_id,task_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">commit-total</span></td>
+<td align="center">The total number of calls to commit</td>
+<td align="right">thread_id,task_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].sensor.dropped-records, Type : stream-task-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">dropped-records-rate</span></td>
+<td align="center">The average number of dropped records per second</td>
+<td align="right">thread_id,task_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">dropped-records-total</span></td>
+<td align="center">The total number of dropped records</td>
+<td align="right">thread_id,task_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].sensor.active-buffer-count, Type : stream-task-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">active-buffer-count</span></td>
+<td align="center">The count of buffered records that are polled from consumer and not yet processed for this active task</td>
+<td align="right">thread_id,task_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].sensor.restoration-records, Type : stream-task-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">restoration-records</span></td>
+<td align="center">The count of records not restored yet for this active task</td>
+<td align="right">thread_id,task_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].sensor.active-restoration, Type : stream-task-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">active-restoration</span></td>
+<td align="center">Indicate if the active task is in restoration or not (1 = restoration in progress, 0 = restoration done)</td>
+<td align="right">thread_id,task_id</td>
+</tr>
+</tbody>
+</table></section>
+<section id="processor-metrics">
+<h3>Processor metrics<a class="headerlink" href="#processor-metrics" title="Permalink to this headline">¶</a></h3>
+<p>All the following metrics have a recording level of <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code>.</p>
+<p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].node.[PROCESSOR_NODE_ID].sensor.process, Type : stream-processor-node-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">process-rate</span></td>
+<td align="center">The average number of calls to process per second</td>
+<td align="right">thread_id,task_id,processor_node_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">process-total</span></td>
+<td align="center">The total number of calls to process</td>
+<td align="right">thread_id,task_id,processor_node_id</td>
+</tr>
+</tbody>
+</table></section>
+<section id="state-store-metrics">
+<h3>State store metrics<a class="headerlink" href="#state-store-metrics" title="Permalink to this headline">¶</a></h3>
+<p>All the following metrics have a recording level of <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code>. The <code class="docutils literal notranslate"><span class="pre">store-scope</span></code> value is specified in <code class="docutils literal notranslate"><span class="pre">IStoreSupplier.MetricsScope</span></code> for the user’s customized state stores; for built-in state stores, currently we have:</p>
+<ul class="simple">
+<li><p>in-memory_state</p></li>
+<li><p>in-memory-window_state</p></li>
+<li><p>rocksdb_state (for RocksDB backed key-value store)</p></li>
+<li><p>rocksdb-window_state (for RocksDB backed window store)</p></li>
+</ul>
+<p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].store.[STORE_NAME].sensor.put, Type : stream-state-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-rate</span></td>
+<td align="center">The average number of calls to put per second</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-avg</span></td>
+<td align="center">The average latency of calls to put</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-max</span></td>
+<td align="center">The maximum latency of calls to put</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].store.[STORE_NAME].sensor.put-if-absent, Type : stream-state-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-rate</span></td>
+<td align="center">The average number of calls to put-if-absent per second</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-avg</span></td>
+<td align="center">The average latency of calls to put-if-absent</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-max</span></td>
+<td align="center">The maximum latency of calls to put-if-absent</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].store.[STORE_NAME].sensor.put-all, Type : stream-state-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-rate</span></td>
+<td align="center">The average number of calls to put-all per second</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-avg</span></td>
+<td align="center">The average latency of calls to put-all</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-max</span></td>
+<td align="center">The maximum latency of calls to put-all</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].store.[STORE_NAME].sensor.get, Type : stream-state-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-rate</span></td>
+<td align="center">The average number of calls to get per second</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-avg</span></td>
+<td align="center">The average latency of calls to get</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-max</span></td>
+<td align="center">The maximum latency of calls to get</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].store.[STORE_NAME].sensor.fetch, Type : stream-state-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-rate</span></td>
+<td align="center">The average number of calls to fetch per second</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-avg</span></td>
+<td align="center">The average latency of calls to fetch</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-max</span></td>
+<td align="center">The maximum latency of calls to fetch</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].store.[STORE_NAME].sensor.all, Type : stream-state-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-rate</span></td>
+<td align="center">The average number of calls to all per second</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-avg</span></td>
+<td align="center">The average latency of calls to all</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-max</span></td>
+<td align="center">The maximum latency of calls to all</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].store.[STORE_NAME].sensor.range, Type : stream-state-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-rate</span></td>
+<td align="center">The average number of calls to range per second</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-avg</span></td>
+<td align="center">The average latency of calls to range</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-max</span></td>
+<td align="center">The maximum latency of calls to range</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].store.[STORE_NAME].sensor.flush, Type : stream-state-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-rate</span></td>
+<td align="center">The average number of calls to flush per second</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-avg</span></td>
+<td align="center">The average latency of calls to flush</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-max</span></td>
+<td align="center">The maximum latency of calls to flush</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].store.[STORE_NAME].sensor.delete, Type : stream-state-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-rate</span></td>
+<td align="center">The average number of calls to delete per second</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-avg</span></td>
+<td align="center">The average latency of calls to delete</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-max</span></td>
+<td align="center">The maximum latency of calls to delete</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].store.[STORE_NAME].sensor.remove, Type : stream-state-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-rate</span></td>
+<td align="center">The average number of calls to remove per second</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-avg</span></td>
+<td align="center">The average latency of calls to remove</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">put-max</span></td>
+<td align="center">The maximum latency of calls to remove</td>
+<td align="right">thread_id,task_id,[STORE-TYPE]_id</td>
+</tr>
+</tbody>
+</table></section>
+<section id="rocksdb-metrics">
+<h3>RocksDb metrics<a class="headerlink" href="#rocksdb-metrics" title="Permalink to this headline">¶</a></h3>
+<p><em>Not available for now, stay tuned works in progress</em></p>
+</section>
+<section id="librdkafka-metrics">
+<h3>Librdkafka metrics<a class="headerlink" href="#librdkafka-metrics" title="Permalink to this headline">¶</a></h3>
+<p>Only main consumer and producer librdkafka statistics are exposed for now in Streamiz application. All the following metrics have a recording level of <code class="docutils literal notranslate"><span class="pre">INFO</span></code>.</p>
+<section id="main-consumer">
+<h4>Main consumer<a class="headerlink" href="#main-consumer" title="Permalink to this headline">¶</a></h4>
+<p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.messages-consumed-total, Type : librdkafka-consumer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">messages-consumed-total</span></td>
+<td align="center">Total number of messages consumed, not including ignored messages (due to offset, etc), from Kafka brokers</td>
+<td align="right">librdkafka_client_id, application_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.bytes-consumed-total, Type : librdkafka-consumer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">bytes-consumed-total</span></td>
+<td align="center">Total number of bytes received from Kafka brokers</td>
+<td align="right">librdkafka_client_id, application_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.ops-waiting-queue-total, Type : librdkafka-consumer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">ops-waiting-queue-total</span></td>
+<td align="center">Number of ops (callbacks, events, etc) waiting in queue for application to serve with rd_kafka_poll().</td>
+<td align="right">librdkafka_client_id, application_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.responses-received-total, Type : librdkafka-consumer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">responses-received-total</span></td>
+<td align="center">Total number of responses received from Kafka brokers.</td>
+<td align="right">librdkafka_client_id, application_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.responses-bytes-received-total, Type : librdkafka-consumer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">responses-bytes-received-total</span></td>
+<td align="center">Total number of reponses bytes received from Kafka brokers.</td>
+<td align="right">librdkafka_client_id, application_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.time-rebalance-age, Type : librdkafka-consumer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">time-rebalance-age</span></td>
+<td align="center">Time elapsed since last rebalance (assign or revoke) (milliseconds).</td>
+<td align="right">librdkafka_client_id, application_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.rebalance-total, Type : librdkafka-consumer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">rebalance-total</span></td>
+<td align="center">Total number of rebalances (assign or revoke).</td>
+<td align="right">librdkafka_client_id, application_id</td>
+</tr>
+</tbody>
+</table><section id="broker-metrics">
+<h5>Broker metrics<a class="headerlink" href="#broker-metrics" title="Permalink to this headline">¶</a></h5>
+<p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-responses-received-total, Type : librdkafka-consumer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-responses-received-total</span></td>
+<td align="center">Total number of responses received.</td>
+<td align="right">librdkafka_client_id, application_id, broker_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-responses-bytes-received-total, Type : librdkafka-consumer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-responses-bytes-received-total</span></td>
+<td align="center">Total number of bytes received.</td>
+<td align="right">librdkafka_client_id, application_id, broker_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-error-received-total, Type : librdkafka-consumer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-error-received-total</span></td>
+<td align="center">Total number of receive errors.</td>
+<td align="right">librdkafka_client_id, application_id, broker_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-connection-total, Type : librdkafka-consumer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-connection-total</span></td>
+<td align="center">Number of connection attempts, including successful and failed, and name resolution failures.</td>
+<td align="right">librdkafka_client_id, application_id, broker_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-disconnection-total, Type : librdkafka-consumer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-disconnection-total</span></td>
+<td align="center">Number of disconnects (triggered by broker, network, load-balancer, etc.).</td>
+<td align="right">librdkafka_client_id, application_id, broker_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-latency-avg-micros, Type : librdkafka-consumer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-latency-avg-micros</span></td>
+<td align="center">Broker latency / round-trip time in microseconds.</td>
+<td align="right">librdkafka_client_id, application_id, broker_id</td>
+</tr>
+</tbody>
+</table></section>
+<section id="topic-metrics">
+<h5>Topic metrics<a class="headerlink" href="#topic-metrics" title="Permalink to this headline">¶</a></h5>
+<p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.topic-batch-size-bytes-avg, Type : librdkafka-consumer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">topic-batch-size-bytes-avg</span></td>
+<td align="center">Batch sizes in bytes average.</td>
+<td align="right">librdkafka_client_id, application_id, topic</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.topic-batch-message-count-avg, Type : librdkafka-consumer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">topic-batch-message-count-avg</span></td>
+<td align="center">Batch message counts average.</td>
+<td align="right">librdkafka_client_id, application_id, topic</td>
+</tr>
+</tbody>
+</table></section>
+<section id="partition-metrics">
+<h5>Partition metrics<a class="headerlink" href="#partition-metrics" title="Permalink to this headline">¶</a></h5>
+<p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.consumer-lag, Type : librdkafka-consumer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">consumer-lag</span></td>
+<td align="center">Difference between (hi_offset or ls_offset) - max(app_offset, committed_offset). hi_offset is used when isolation.level=read_uncommitted, otherwise ls_offset.</td>
+<td align="right">librdkafka_client_id, application_id, partition_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.partition-messages-consumed-total, Type : librdkafka-consumer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">partition-messages-consumed-total</span></td>
+<td align="center">Total number of messages consumed, not including ignored messages (due to offset, etc).</td>
+<td align="right">librdkafka_client_id, application_id, partition_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.partition-bytes-consumed-total, Type : librdkafka-consumer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">partition-bytes-consumed-total</span></td>
+<td align="center">Total number of bytes received for rxmsgs.</td>
+<td align="right">librdkafka_client_id, application_id, partition_id</td>
+</tr>
+</tbody>
+</table></section>
+</section>
+<section id="producer">
+<h4>Producer<a class="headerlink" href="#producer" title="Permalink to this headline">¶</a></h4>
+<p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.messages-produced-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">messages-produced-total</span></td>
+<td align="center">Total number of messages transmitted (produced) to Kafka brokers</td>
+<td align="right">librdkafka_client_id, application_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.bytes-produced-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">bytes-produced-total</span></td>
+<td align="center">Total number of message bytes (including framing, such as per-Message framing and MessageSet/batch framing) transmitted to Kafka brokers</td>
+<td align="right">librdkafka_client_id, application_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.ops-waiting-queue-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">ops-waiting-queue-total</span></td>
+<td align="center">Number of ops (callbacks, events, etc) waiting in queue for application to serve with rd_kafka_poll()</td>
+<td align="right">librdkafka_client_id, application_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.messages-queue-current-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">messages-queue-current-total</span></td>
+<td align="center">Current number of messages in producer queues</td>
+<td align="right">librdkafka_client_id, application_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.bytes-queue-current-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">bytes-queue-current-total</span></td>
+<td align="center">Current total size of messages in producer queues</td>
+<td align="right">librdkafka_client_id, application_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.messages-queue-max, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">messages-queue-max</span></td>
+<td align="center">Threshold: maximum number of messages allowed allowed on the producer queues</td>
+<td align="right">librdkafka_client_id, application_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.bytes-queue-max, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">bytes-queue-max</span></td>
+<td align="center">Threshold: maximum total size of messages allowed on the producer queues</td>
+<td align="right">librdkafka_client_id, application_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.request-produced-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">request-produced-total</span></td>
+<td align="center">Total number of requests sent to Kafka brokers</td>
+<td align="right">librdkafka_client_id, application_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.request-bytes-produced-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">request-bytes-produced-total</span></td>
+<td align="center">Total number of bytes transmitted to Kafka brokers</td>
+<td align="right">librdkafka_client_id, application_id</td>
+</tr>
+</tbody>
+</table><section id="id1">
+<h5>Broker metrics<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h5>
+<p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-request-awaiting-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-request-awaiting-total</span></td>
+<td align="center">Number of requests awaiting transmission to broker</td>
+<td align="right">librdkafka_client_id, application_id,broker_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-message-awaiting-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-message-awaiting-total</span></td>
+<td align="center">Number of messages awaiting transmission to broker</td>
+<td align="right">librdkafka_client_id, application_id,broker_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-request-in-flight-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-request-in-flight-total</span></td>
+<td align="center">Number of requests in-flight to broker awaiting response</td>
+<td align="right">librdkafka_client_id, application_id,broker_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-message-in-flight-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-message-in-flight-total</span></td>
+<td align="center">Number of messages in-flight to broker awaiting response</td>
+<td align="right">librdkafka_client_id, application_id,broker_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-request-sent-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-request-sent-total</span></td>
+<td align="center">Total number of requests sent</td>
+<td align="right">librdkafka_client_id, application_id,broker_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-request-sent-bytes-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-request-sent-bytes-total</span></td>
+<td align="center">Total number of bytes sent</td>
+<td align="right">librdkafka_client_id, application_id,broker_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-error-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-error-total</span></td>
+<td align="center">Total number of transmission errors</td>
+<td align="right">librdkafka_client_id, application_id,broker_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-retries-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-retries-total</span></td>
+<td align="center">Total number of request retries</td>
+<td align="right">librdkafka_client_id, application_id,broker_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-timeout-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-timeout-total</span></td>
+<td align="center">Total number of requests timed out</td>
+<td align="right">librdkafka_client_id, application_id,broker_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-connection-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-connection-total</span></td>
+<td align="center">Number of connection attempts, including successful and failed, and name resolution failures.</td>
+<td align="right">librdkafka_client_id, application_id,broker_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-disconnection-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-disconnection-total</span></td>
+<td align="center">Number of disconnects (triggered by broker, network, load-balancer, etc.).</td>
+<td align="right">librdkafka_client_id, application_id,broker_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-internal-queue-latency-micros, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-internal-queue-latency-micros</span></td>
+<td align="center">Internal producer queue latency in microseconds.</td>
+<td align="right">librdkafka_client_id, application_id,broker_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-internal-request-queue-latency-micros, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-internal-request-queue-latency-micros</span></td>
+<td align="center">Internal request queue latency in microseconds. This is the time between a request is enqueued on the transmit (outbuf) queue and the time the request is written to the TCP socket. Additional buffering and latency may be incurred by the TCP stack and network.</td>
+<td align="right">librdkafka_client_id, application_id,broker_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-latency-avg-micros, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">broker-latency-avg-micros</span></td>
+<td align="center">Broker latency / round-trip time in microseconds.</td>
+<td align="right">librdkafka_client_id, application_id,broker_id</td>
+</tr>
+</tbody>
+</table></section>
+<section id="id2">
+<h5>Topic metrics<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h5>
+<p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.topic-batch-size-bytes-avg, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">topic-batch-size-bytes-avg</span></td>
+<td align="center">Batch sizes in bytes average</td>
+<td align="right">librdkafka_client_id, application_id,topic</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.topic-batch-count-avg, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">topic-batch-count-avg</td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left"></span></td>
+<td align="center">Batch message counts average</td>
+<td align="right">librdkafka_client_id, application_id,topic</td>
+</tr>
+</tbody>
+</table></section>
+<section id="id3">
+<h5>Partition metrics<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h5>
+<p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.partition-messages-produced-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">partition-messages-produced-total</span></td>
+<td align="center">Total number of messages transmitted (produced)</td>
+<td align="right">librdkafka_client_id, application_id,partition_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.partition-bytes-produced-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">partition-bytes-produced-total</span></td>
+<td align="center">Total number of bytes transmitted for txmsgs</td>
+<td align="right">librdkafka_client_id, application_id,partition_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.partition-messages-in-flight-total, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">partition-messages-in-flight-total</span></td>
+<td align="center">Current number of messages in-flight to/from broker</td>
+<td align="right">librdkafka_client_id, application_id,partition_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.partition-next-expected-ack, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">partition-next-expected-ack</span></td>
+<td align="center">Next expected acked sequence (idempotent producer)</td>
+<td align="right">librdkafka_client_id, application_id,partition_id</td>
+</tr>
+</tbody>
+</table><p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.partition-last-message-id-acked, Type : librdkafka-producer-metrics</strong></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="left">Metric name</th>
+<th align="center">Description</th>
+<th align="right">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><span style="color: #06389C; font-weight: bold;">partition-last-message-id-acked</span></td>
+<td align="center">Last acked internal message id (idempotent producer)</td>
+<td align="right">librdkafka_client_id, application_id,partition_id</td>
+</tr>
+</tbody>
+</table></section>
+</section>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tology-test-driver.html" class="btn btn-neutral float-left" title="Test topology driver" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, @LGouellec.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

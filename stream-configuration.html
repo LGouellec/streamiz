@@ -76,6 +76,11 @@
 <li class="toctree-l3"><a class="reference internal" href="#windowstorechangelogadditionalretentionms">WindowStoreChangelogAdditionalRetentionMs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#offsetcheckpointmanager">OffsetCheckpointManager</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rocksdbconfighandler">RocksDbConfigHandler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#metricsintervalms">MetricsIntervalMs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#metricsreporter">MetricsReporter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#exposelibrdkafkastats">ExposeLibrdKafkaStats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#metricsrecording">MetricsRecording</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#starttaskdelayms">StartTaskDelayMs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#basicauthuserinfo">BasicAuthUserInfo</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#basicauthcredentialssource">BasicAuthCredentialsSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#schemaregistryrequesttimeoutms">SchemaRegistryRequestTimeoutMs</a></li>
@@ -93,6 +98,7 @@
 <li class="toctree-l1"><a class="reference internal" href="statefull-processors.html">Statefull processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stores.html">State stores</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tology-test-driver.html">Test topology driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="monitoring.html">Monitoring Stream Applications</a></li>
 </ul>
 
         </div>
@@ -227,7 +233,6 @@ Whenever data is read from or written to a state store.</p>
 <span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">&gt;();</span><span class="w"></span>
 </pre></div>
 </div>
-<p><strong>TODO : Make documentation about Data types and serdes</strong></p>
 </section>
 <section id="defaultvalueserdes">
 <h3>DefaultValueSerDes<a class="headerlink" href="#defaultvalueserdes" title="Permalink to this headline">¶</a></h3>
@@ -245,7 +250,6 @@ Whenever data is read from or written to a state store.</p>
 <span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">&gt;();</span><span class="w"></span>
 </pre></div>
 </div>
-<p><strong>TODO : Make documentation about Data types and serdes</strong></p>
 </section>
 <section id="numstreamthreads">
 <h3>NumStreamThreads<a class="headerlink" href="#numstreamthreads" title="Permalink to this headline">¶</a></h3>
@@ -367,6 +371,28 @@ Default is 1 day.</p>
 <section id="rocksdbconfighandler">
 <h3>RocksDbConfigHandler<a class="headerlink" href="#rocksdbconfighandler" title="Permalink to this headline">¶</a></h3>
 <p>A Rocks DB config handler function called just before openning a rocksdb state store.</p>
+</section>
+<section id="metricsintervalms">
+<h3>MetricsIntervalMs<a class="headerlink" href="#metricsintervalms" title="Permalink to this headline">¶</a></h3>
+<p>Delay between two invocations of <code class="docutils literal notranslate"><span class="pre">MetricsReporter()</span></code>. The minimum and default value is 30 seconds.</p>
+</section>
+<section id="metricsreporter">
+<h3>MetricsReporter<a class="headerlink" href="#metricsreporter" title="Permalink to this headline">¶</a></h3>
+<p>The reporter expose a list of sensors throw by a stream thread every <code class="docutils literal notranslate"><span class="pre">MetricsIntervalMs</span></code> This reporter has the responsibility to export sensors and metrics into another platform (default: empty).</p>
+<p>Streamiz provide one reporter for Prometheus (see <code class="docutils literal notranslate"><span class="pre">Streamiz.Kafka.Net.Metrics.Prometheus</span></code> package).</p>
+</section>
+<section id="exposelibrdkafkastats">
+<h3>ExposeLibrdKafkaStats<a class="headerlink" href="#exposelibrdkafkastats" title="Permalink to this headline">¶</a></h3>
+<p>Boolean which indicate if librdkafka handle statistics should be exposed ot not (default: false).
+<strong>Only main consumer and producer will be concerned.</strong></p>
+</section>
+<section id="metricsrecording">
+<h3>MetricsRecording<a class="headerlink" href="#metricsrecording" title="Permalink to this headline">¶</a></h3>
+<p>The highest recording level for metrics (default: INFO).</p>
+</section>
+<section id="starttaskdelayms">
+<h3>StartTaskDelayMs<a class="headerlink" href="#starttaskdelayms" title="Permalink to this headline">¶</a></h3>
+<p>Time wait before completing the start task of <code class="docutils literal notranslate"><span class="pre">KafkaStream</span></code> (default: 5000).</p>
 </section>
 <section id="basicauthuserinfo">
 <h3>BasicAuthUserInfo<a class="headerlink" href="#basicauthuserinfo" title="Permalink to this headline">¶</a></h3>
