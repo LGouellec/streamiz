@@ -98,6 +98,20 @@ namespace Streamiz.Kafka.Net.Stream
         void To(string topicName, string named = null);
 
         /// <summary>
+        /// Materialize this stream to a topic using serializers specified in the method parameters.
+        /// The specified topic should be manually created before it is used(i.e., before the Kafka Streams application is
+        /// started).
+        /// </summary>
+        /// <param name="topicName">the topic name</param>
+        /// <param name="keySerdes">Key serializer</param>
+        /// <param name="valueSerdes">Value serializer</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> if <paramref name="topicName"/> is null</exception>
+        /// /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if <paramref name="topicName"/> is incorrect</exception>
+        void To(string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null);
+
+
+        /// <summary>
         /// Dynamically materialize this stream to topics using default serializers specified in the config and producer's.
         /// The topic names for each record to send to is dynamically determined based on the <code>Func&lt;K, V, IRecordContext, string&gt;</code>.
         /// </summary>
@@ -112,6 +126,17 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="topicExtractor">The extractor to determine the name of the Kafka topic to write to for each record</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         void To(ITopicNameExtractor<K, V> topicExtractor, string named = null);
+
+        /// <summary>
+        /// Dynamically materialize this stream to a topic using serializers specified in the method parameters.
+        /// The topic names for each record to send to is dynamically determined based on the <see cref="ITopicNameExtractor&lt;K, V&gt;"/>}.
+        /// </summary>
+        /// <param name="topicExtractor">The extractor to determine the name of the Kafka topic to write to for each record</param>4
+        /// <param name="keySerdes">Key serializer</param>
+        /// <param name="valueSerdes">Value serializer</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        void To(ITopicNameExtractor<K, V> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null);
+
 
         /// <summary>
         /// Materialize this stream to a topic using <typeparamref name="KS"/> and <typeparamref name="VS"/> serializers specified in the method parameters.
