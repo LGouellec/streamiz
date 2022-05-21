@@ -160,6 +160,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public void To(Func<K, V, IRecordContext, string> topicExtractor, string named = null) => To(new WrapperTopicNameExtractor<K, V>(topicExtractor), named);
 
+        public void To(Func<K, V, IRecordContext, string> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null)
+            => To(new WrapperTopicNameExtractor<K, V>(topicExtractor), keySerdes, valueSerdes, named);
+
         public void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor, string named = null)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()

@@ -110,7 +110,6 @@ namespace Streamiz.Kafka.Net.Stream
         /// /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if <paramref name="topicName"/> is incorrect</exception>
         void To(string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null);
 
-
         /// <summary>
         /// Dynamically materialize this stream to topics using default serializers specified in the config and producer's.
         /// The topic names for each record to send to is dynamically determined based on the <code>Func&lt;K, V, IRecordContext, string&gt;</code>.
@@ -118,6 +117,16 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="topicExtractor">Extractor function to determine the name of the Kafka topic to write to for each record</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         void To(Func<K, V, IRecordContext, string> topicExtractor, string named = null);
+
+        /// <summary>
+        /// Dynamically materialize this stream to topics using default serializers specified in the config and producer's.
+        /// The topic names for each record to send to is dynamically determined based on the <code>Func&lt;K, V, IRecordContext, string&gt;</code>.
+        /// </summary>
+        /// <param name="topicExtractor">Extractor function to determine the name of the Kafka topic to write to for each record</param>
+        /// <param name="keySerdes">Key serializer</param>
+        /// <param name="valueSerdes">Value serializer</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        void To(Func<K, V, IRecordContext, string> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null);
 
         /// <summary>
         /// Dynamically materialize this stream to topics using default serializers specified in the config and producer's.
