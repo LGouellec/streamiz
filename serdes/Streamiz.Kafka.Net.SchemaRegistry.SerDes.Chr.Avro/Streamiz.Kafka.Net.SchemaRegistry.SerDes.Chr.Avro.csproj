@@ -1,0 +1,52 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.1;net5.0;net6.0</TargetFrameworks>
+		<RootNamespace>Streamiz.Kafka.Net.SchemaRegistry.SerDes.Chr.Avro</RootNamespace>
+		<AssemblyName>Streamiz.Kafka.Net.SchemaRegistry.SerDes.Chr.Avro</AssemblyName>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<Authors>@LGouellec</Authors>
+		<PackageId>Streamiz.Kafka.Net.SchemaRegistry.SerDes.Chr.Avro</PackageId>
+		<Product>Streamiz.Kafka.Net.SchemaRegistry.SerDes.Chr.Avro</Product>
+		<Company />
+		<Description>Avro serdes using schema hosted on schema registry for Streamiz Application</Description>
+		<Copyright>Copyright 2020</Copyright>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/LGouellec/kafka-streams-dotnet</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/LGouellec/kafka-streams-dotnet</RepositoryUrl>
+		<PackageTags>kafka kafka-streams kafka-streams-dotnet event-streaming</PackageTags>
+		<PackageReleaseNotes>https://github.com/LGouellec/kafka-streams-dotnet/releases</PackageReleaseNotes>
+		<PackageIconUrl>https://raw.githubusercontent.com/LGouellec/kafka-streams-dotnet/master/resources/logo-kafka-stream-net.png</PackageIconUrl>
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\..\key.snk</AssemblyOriginatorKeyFile>
+		<Version>1.0.0</Version>
+		<PackageVersion>1.0.0</PackageVersion>
+		<AssemblyVersion>1.0.0</AssemblyVersion>
+		<FileVersion>1.0.0</FileVersion>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DocumentationFile>bin\Debug\netstandard2.1\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Chr.Avro.xml</DocumentationFile>
+		<LangVersion>9.0</LangVersion>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+		<LangVersion>9.0</LangVersion>
+	</PropertyGroup>
+	<ItemGroup>
+		<None Include="..\..\key.snk" Link="key.snk" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Chr.Avro" Version="8.1.1" />
+		<PackageReference Include="Chr.Avro.Confluent" Version="8.1.1" />
+		<PackageReference Include="Confluent.SchemaRegistry" Version="1.8.2" />
+		<PackageReference Include="Confluent.SchemaRegistry.Serdes.Avro" Version="1.8.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\core\Streamiz.Kafka.Net.csproj" />
+		<ProjectReference Include="..\Streamiz.Kafka.Net.SchemaRegistry.SerDes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.csproj" />
+	</ItemGroup>
+
+</Project>
