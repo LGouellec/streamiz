@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using Confluent.SchemaRegistry;
 using Confluent.SchemaRegistry.Serdes;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.SerDes;
@@ -12,36 +11,17 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json
     /// </summary>
     /// <typeparam name="T">type of json bean
     /// </typeparam>
-    public class SchemaJsonSerDes<T> : SchemaSerDes<T>
+    public class SchemaJsonSerDes<T> : SchemaSerDes<T, JsonSerializerConfig>
         where T : class
     {
-        internal JsonSerializerConfig GetSerializerConfig(ISchemaRegistryConfig config)
+        /// <summary>
+        /// Empty constructor
+        /// </summary>
+        public SchemaJsonSerDes() 
+            : base("json")
         {
-            var c = new JsonSerializerConfig();
-
-            if (config.AutoRegisterSchemas.HasValue)
-            {
-                c.AutoRegisterSchemas = config.AutoRegisterSchemas;
-            }
-
-            if (config.SubjectNameStrategy.HasValue)
-            {
-                c.SubjectNameStrategy = (Confluent.SchemaRegistry.SubjectNameStrategy) config.SubjectNameStrategy.Value;
-            }
-
-            if (config.UseLatestVersion.HasValue)
-            {
-                c.UseLatestVersion = config.UseLatestVersion.Value;
-            }
-
-            if (config.BufferBytes.HasValue)
-            {
-                c.BufferBytes = config.BufferBytes.Value;
-            }
-
-            return c;
         }
-
+        
         /// <summary>
         /// Initialize method with a current context which contains <see cref="IStreamConfig"/>.
         /// Can be used to initialize the serdes according to some parameters present in the configuration such as the schema.registry.url
@@ -65,5 +45,6 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json
                 }
             }
         }
+        
     }
 }

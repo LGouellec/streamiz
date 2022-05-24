@@ -11,35 +11,16 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
     /// </summary>
     /// <typeparam name="T">type of avro bean
     /// </typeparam>
-    public class SchemaAvroSerDes<T> : SchemaSerDes<T>
+    public class SchemaAvroSerDes<T> : SchemaSerDes<T, AvroSerializerConfig>
     {
-        internal AvroSerializerConfig GetSerializerConfig(ISchemaRegistryConfig config)
+        /// <summary>
+        /// Empty constructor
+        /// </summary>
+        public SchemaAvroSerDes() :
+            base ("avro")
         {
-            var c = new AvroSerializerConfig();
-
-            if (config.AutoRegisterSchemas.HasValue)
-            {
-                c.AutoRegisterSchemas = config.AutoRegisterSchemas;
-            }
-
-            if (config.SubjectNameStrategy.HasValue)
-            {
-                c.SubjectNameStrategy = (Confluent.SchemaRegistry.SubjectNameStrategy)config.SubjectNameStrategy.Value;
-            }
-
-            if (config.UseLatestVersion.HasValue)
-            {
-                c.UseLatestVersion = config.UseLatestVersion.Value;
-            }
-
-            if (config.BufferBytes.HasValue)
-            {
-                c.BufferBytes = config.BufferBytes.Value;
-            }
-
-            return c;
         }
-
+        
         /// <summary>
         /// Initialize method with a current context which contains <see cref="IStreamConfig"/>.
         /// Can be used to initialize the serdes according to some parameters present in the configuration such as the schema.registry.url

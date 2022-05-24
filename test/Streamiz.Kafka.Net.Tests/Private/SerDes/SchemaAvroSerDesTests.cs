@@ -444,7 +444,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             };
 
             var serdes = new SchemaAvroSerDes<Order>();
-            var schemaConfig = serdes.GetSerializerConfig(config);
+            var schemaConfig = serdes.ToSerializerConfig(config);
 
             Assert.AreEqual(Confluent.SchemaRegistry.SubjectNameStrategy.TopicRecord, schemaConfig.SubjectNameStrategy);
             Assert.AreEqual(true, schemaConfig.AutoRegisterSchemas);
@@ -468,7 +468,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             };
 
             var serdes = new SchemaProtobufSerDes<Helpers.Proto.Order>();
-            var schemaConfig = serdes.GetSerializerConfig(config);
+            var schemaConfig = serdes.ToSerializerConfig(config);
 
             Assert.AreEqual(Confluent.SchemaRegistry.SubjectNameStrategy.TopicRecord, schemaConfig.SubjectNameStrategy);
             Assert.AreEqual(false, schemaConfig.AutoRegisterSchemas);

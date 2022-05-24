@@ -16,8 +16,17 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes
     /// Abstract SerDes for use with schema registries
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public abstract class SchemaSerDes<T> : AbstractSerDes<T>
+    /// <typeparam name="C"></typeparam>
+    public abstract class SchemaSerDes<T, C> : AbstractSerDes<T>
+        where C : Config, new()
     {
+        private readonly string prefixConfig;
+
+        protected SchemaSerDes(string prefixConfig)
+        {
+            this.prefixConfig = prefixConfig;
+        }
+        
         /// <summary>
         /// Schema registry client
         /// </summary>
@@ -92,7 +101,7 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes
         /// </summary>
         /// <param name="config">Streamiz schema registry config</param>
         /// <returns></returns>
-        protected SchemaRegistryConfig GetConfig(ISchemaRegistryConfig config)
+        protected virtual SchemaRegistryConfig GetConfig(ISchemaRegistryConfig config)
         {
             var c = new SchemaRegistryConfig
             {
@@ -122,11 +131,39 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes
             return c;
         }
 
-        #region Privates
+        /// <summary>
+        /// Transform <see cref="ISchemaRegistryConfig"/> to <typeparamref name="C"/>
+        /// </summary>
+        /// <param name="config">Streamiz schema registry config</param>
+        /// <returns></returns>
+        protected virtual C GetSerializerConfig(ISchemaRegistryConfig config)
+        {
+            string Key(string keySuffix) => $"{prefixConfig}.{keySuffix}";
+            
+            C c = new C();
+            
+            if (config.AutoRegisterSchemas.HasValue)
+                c.Set(Key("serializer.auto.register.schemas"), config.AutoRegisterSchemas.ToString());
 
+            if (config.SubjectNameStrategy.HasValue)
+                c.Set(Key("serializer.subject.name.strategy"), ((Confluent.SchemaRegistry.SubjectNameStrategy) config.SubjectNameStrategy.Value).ToString());
+            
+            if (config.UseLatestVersion.HasValue)
+                c.Set(Key("serializer.use.latest.version"), config.UseLatestVersion.ToString());
+            
+            if (config.BufferBytes.HasValue)
+                c.Set(Key("serializer.buffer.bytes"), config.BufferBytes.ToString());
+
+            return c;
+        }
+        
+        #region Privates
+        
         // FOR TESTING
         internal SchemaRegistryConfig ToConfig(ISchemaRegistryConfig config)
             => GetConfig(config);
+        internal C ToSerializerConfig(ISchemaRegistryConfig config) 
+            => GetSerializerConfig(config);
         
         private string MaybeGetScope(string schemaRegistryUrl)
         {

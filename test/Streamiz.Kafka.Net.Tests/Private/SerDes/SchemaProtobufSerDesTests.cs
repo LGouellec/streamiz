@@ -367,7 +367,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             config.AutoRegisterSchemas = true;
 
             var serdes = new SchemaProtobufSerDes<Order>();
-            var schemaConfig = serdes.GetSerializerConfig(config);
+            var schemaConfig = serdes.ToSerializerConfig(config);
 
             Assert.AreEqual(Confluent.SchemaRegistry.SubjectNameStrategy.TopicRecord, schemaConfig.SubjectNameStrategy);
             Assert.AreEqual(true, schemaConfig.AutoRegisterSchemas);
