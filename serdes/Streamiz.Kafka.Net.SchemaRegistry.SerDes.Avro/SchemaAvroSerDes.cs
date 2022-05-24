@@ -1,4 +1,3 @@
-using Confluent.SchemaRegistry;
 using Confluent.SchemaRegistry.Serdes;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.SerDes;
@@ -14,35 +13,6 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
     /// </typeparam>
     public class SchemaAvroSerDes<T> : SchemaSerDes<T>
     {
-        internal SchemaRegistryConfig GetConfig(ISchemaRegistryConfig config)
-        {
-            var c = new SchemaRegistryConfig
-            {
-                Url = config.SchemaRegistryUrl
-            };
-
-            if (config.SchemaRegistryMaxCachedSchemas.HasValue)
-            {
-                c.MaxCachedSchemas = config.SchemaRegistryMaxCachedSchemas;
-            }
-
-            if (config.SchemaRegistryRequestTimeoutMs.HasValue)
-            {
-                c.RequestTimeoutMs = config.SchemaRegistryRequestTimeoutMs;
-            }
-
-            if (!string.IsNullOrEmpty(config.BasicAuthUserInfo))
-            {
-                c.BasicAuthUserInfo = config.BasicAuthUserInfo;
-            }
-
-            if (config.BasicAuthCredentialsSource.HasValue)
-            {
-                c.BasicAuthCredentialsSource = (AuthCredentialsSource)config.BasicAuthCredentialsSource.Value;
-            }
-            return c;
-        }
-
         internal AvroSerializerConfig GetSerializerConfig(ISchemaRegistryConfig config)
         {
             var c = new AvroSerializerConfig();

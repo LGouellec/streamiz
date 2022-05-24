@@ -15,36 +15,6 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json
     public class SchemaJsonSerDes<T> : SchemaSerDes<T>
         where T : class
     {
-        internal SchemaRegistryConfig GetConfig(ISchemaRegistryConfig config)
-        {
-            var c = new SchemaRegistryConfig
-            {
-                Url = config.SchemaRegistryUrl
-            };
-
-            if (config.SchemaRegistryMaxCachedSchemas.HasValue)
-            {
-                c.MaxCachedSchemas = config.SchemaRegistryMaxCachedSchemas;
-            }
-
-            if (config.SchemaRegistryRequestTimeoutMs.HasValue)
-            {
-                c.RequestTimeoutMs = config.SchemaRegistryRequestTimeoutMs;
-            }
-
-            if (!string.IsNullOrEmpty(config.BasicAuthUserInfo))
-            {
-                c.BasicAuthUserInfo = config.BasicAuthUserInfo;
-            }
-
-            if (config.BasicAuthCredentialsSource.HasValue)
-            {
-                c.BasicAuthCredentialsSource = (AuthCredentialsSource) config.BasicAuthCredentialsSource.Value;
-            }
-
-            return c;
-        }
-
         internal JsonSerializerConfig GetSerializerConfig(ISchemaRegistryConfig config)
         {
             var c = new JsonSerializerConfig();

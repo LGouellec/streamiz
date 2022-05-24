@@ -227,7 +227,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             config.SchemaRegistryRequestTimeoutMs = 30;
 
             var serdes = new SchemaJsonSerDes<Person>();
-            var schemaConfig = serdes.GetConfig(config);
+            var schemaConfig = serdes.ToConfig(config);
 
             Assert.AreEqual(1, schemaConfig.MaxCachedSchemas);
             Assert.AreEqual(30, schemaConfig.RequestTimeoutMs);

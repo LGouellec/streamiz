@@ -15,36 +15,6 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf
     /// <typeparam name="T"></typeparam>
     public class SchemaProtobufSerDes<T> : SchemaSerDes<T> where T : class, IMessage<T>, new()
     {
-        internal SchemaRegistryConfig GetConfig(ISchemaRegistryConfig config)
-        {
-            var c = new SchemaRegistryConfig
-            {
-                Url = config.SchemaRegistryUrl
-            };
-
-            if (config.SchemaRegistryMaxCachedSchemas.HasValue)
-            {
-                c.MaxCachedSchemas = config.SchemaRegistryMaxCachedSchemas;
-            }
-
-            if (config.SchemaRegistryRequestTimeoutMs.HasValue)
-            {
-                c.RequestTimeoutMs = config.SchemaRegistryRequestTimeoutMs;
-            }
-
-            if (!string.IsNullOrEmpty(config.BasicAuthUserInfo))
-            {
-                c.BasicAuthUserInfo = config.BasicAuthUserInfo;
-            }
-
-            if (config.BasicAuthCredentialsSource.HasValue)
-            {
-                c.BasicAuthCredentialsSource = (AuthCredentialsSource)config.BasicAuthCredentialsSource.Value;
-            }
-
-            return c;
-        }
-
         internal ProtobufSerializerConfig GetSerializerConfig(ISchemaRegistryConfig config)
         {
             var c = new ProtobufSerializerConfig();
