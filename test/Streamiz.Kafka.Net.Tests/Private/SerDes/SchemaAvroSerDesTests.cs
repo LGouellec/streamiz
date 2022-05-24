@@ -106,7 +106,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         }
     }
 
-    #endregion Mock
+    #endregion
 
     public class SchemaAvroSerDesTests
     {
@@ -455,6 +455,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         [Test]
         public void SchemaRegistryProtobufSerializerConfig()
         {
+            // Move in other class
             var config = new StreamConfig
             {
                 SubjectNameStrategy = SubjectNameStrategy.TopicRecord,
