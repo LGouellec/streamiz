@@ -8,6 +8,7 @@
 - [ ] Dead letter queue mecanism
 - [ ] Backpressure pattern
 - [ ] External Source Connector
+- [ ] Request/Reply | External system inside the topology
 - [ ] Session Windows
 - [ ] Dynamic Session Windows
 - [ ] Singleton Registered SerDes
