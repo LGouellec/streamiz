@@ -12,3 +12,4 @@
 - [ ] Session Windows
 - [ ] Dynamic Session Windows
 - [ ] Singleton Registered SerDes
+- [ ] Auto scaling consumption
