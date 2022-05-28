@@ -15,7 +15,7 @@ using Streamiz.Kafka.Net.Metrics.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    internal class StreamThread : IThread, IDisposable
+    internal class StreamThread : IThread
     {
         #region Static 
 
