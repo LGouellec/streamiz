@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -46,12 +45,6 @@ namespace Streamiz.Kafka.Net.Processors
         {
             LogProcessingKeyValue(key, value);
 
-            long timestamp = Context.Timestamp;
-            if (timestamp < 0)
-            {
-                throw new StreamsException($"Invalid (negative) timestamp of {timestamp } for output record <{key}:{value}>.");
-            }
-
             if (KeySerDes == null || ValueSerDes == null)
             {
                 var s = KeySerDes == null ? "key" : "value";
@@ -62,7 +55,13 @@ namespace Streamiz.Kafka.Net.Processors
             }
 
             var topicName = topicNameExtractor.Extract(key, value, Context.RecordContext);
-            
+
+            var timestamp = Context.Timestamp;
+            if (timestamp < 0)
+            {
+                throw new StreamsException($"Invalid (negative) timestamp of {timestamp} for output record <{key}:{value}>.");
+            }
+
             if (partitioner != null)
             {
                 int partition = partitioner.Invoke(topicName, key, value);
