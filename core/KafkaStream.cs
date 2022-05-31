@@ -245,6 +245,7 @@ namespace Streamiz.Kafka.Net
         private readonly Topology topology;
         private readonly IKafkaSupplier kafkaSupplier;
         private readonly IThread[] threads;
+        private readonly IThread externalStreamThread;
         private readonly IStreamConfig configuration;
         private readonly string clientId;
         private readonly ILogger logger;
@@ -346,6 +347,18 @@ namespace Streamiz.Kafka.Net
                 globalThreadState = globalStreamThread.State;
             }
 
+            if (this.topology.Builder.ExternalCall)
+            {
+                var threadId = $"{clientId}-external-stream-thread";
+                externalStreamThread = new ExternalStreamThread(
+                    threadId,
+                    clientId,
+                    this.kafkaSupplier,
+                    this.topology.Builder,
+                    metricsRegistry,
+                    configuration);
+            }
+
             List<StreamThreadStateStoreProvider> stateStoreProviders = new List<StreamThreadStateStoreProvider>();
             for (int i = 0; i < numStreamThreads; ++i)
             {
@@ -421,12 +434,10 @@ namespace Streamiz.Kafka.Net
                     await InitializeInternalTopicManagerAsync();
                     
                     RunMiddleware(true, true);
-
-                    if (globalStreamThread != null)
-                    {
-                        globalStreamThread.Start(_cancelSource.Token);
-                    }
-
+                    
+                    globalStreamThread?.Start(_cancelSource.Token);
+                    externalStreamThread?.Start(_cancelSource.Token);
+                    
                     foreach (var t in threads)
                     {
                         t.Start(_cancelSource.Token);
@@ -487,10 +498,8 @@ namespace Streamiz.Kafka.Net
                     t.Dispose();
                 }
 
-                if (globalStreamThread != null)
-                {
-                    globalStreamThread.Dispose();
-                }
+                externalStreamThread?.Dispose();
+                globalStreamThread?.Dispose();
 
                 RunMiddleware(false, false);
                 metricsRegistry.RemoveClientSensors();

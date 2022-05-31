@@ -1,92 +1,126 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
 {
     internal class ExternalStreamThread : IThread
     {
         private static readonly ILogger log = Logger.GetLogger(typeof(ExternalStreamThread));
+        private static readonly object @lock = new();
+        
         private readonly string clientId;
-        private readonly IConsumer<byte[], byte[]> consumer;
-        private readonly IProducer<byte[], byte[]> producer;
+        private readonly IKafkaSupplier kafkaSupplier;
+        private readonly InternalTopologyBuilder internalTopologyBuilder;
         private readonly IEnumerable<string> externalSourceTopics;
         private readonly IDictionary<string, ExternalProcessorTopology> externalProcessorTopologies;
         private readonly StreamMetricsRegistry streamMetricsRegistry;
         private readonly IStreamConfig configuration;
+        private IConsumer<byte[], byte[]> currentConsumer;
         private readonly string logPrefix;
         private readonly Thread thread;
         private CancellationToken token;
+        private DateTime lastCommit = DateTime.Now;
 
         public ExternalStreamThread(
             string threadId,
             string clientId,
-            IConsumer<byte[], byte[]> consumer,
-            IProducer<byte[], byte[]> producer,
-            IEnumerable<string> externalSourceTopics,
-            IDictionary<string, ExternalProcessorTopology> externalProcessorTopologies,
+            IKafkaSupplier kafkaSupplier,
+            InternalTopologyBuilder internalTopologyBuilder,
             StreamMetricsRegistry streamMetricsRegistry,
             IStreamConfig configuration)
         {
             this.clientId = clientId;
-            this.consumer = consumer;
-            this.producer = producer;
-            this.externalSourceTopics = externalSourceTopics;
-            this.externalProcessorTopologies = externalProcessorTopologies;
+            this.kafkaSupplier = kafkaSupplier;
+            this.internalTopologyBuilder = internalTopologyBuilder;
+            externalSourceTopics = internalTopologyBuilder.GetRequestTopics();
             this.streamMetricsRegistry = streamMetricsRegistry;
             this.configuration = configuration;
             
-            thread = new Thread(Run);
-            thread.Name = threadId;
+            thread = new Thread(Run)
+            {
+                Name = threadId
+            };
             Name = threadId;
             logPrefix = $"external-stream-thread[{threadId}] ";
             
             State = ThreadState.CREATED;
-            
+
             // Todo : sensors
         }
         
         public void Dispose() => CloseThread();
-
         public int Id => thread.ManagedThreadId;
         public ThreadState State { get; private set; }
-        
         public bool IsDisposable { get; private set; } = false;
         public string Name { get; }
-        
         public bool IsRunning { get; private set; } = false;
         
         public void Run()
         {
+            Exception exception = null;
             try
             {
                 SetState(ThreadState.RUNNING);
                 while (!token.IsCancellationRequested)
                 {
-                    long now = DateTime.Now.GetMilliseconds();
-                    var result = consumer.Consume();
-                    if (result != null)
+                    if (exception != null)
                     {
-                        // do external call
-                        // throw NotEnoughTimeException
-                        // consume and put in local buffer, stop assign partitions if buffer size is full
-                        // and continue to processing
+                        ExceptionHandlerResponse response = TreatException(exception);
+                        if (response == ExceptionHandlerResponse.FAIL)
+                            break;
+                        if (response == ExceptionHandlerResponse.CONTINUE)
+                        {
+                            exception = null;
+                            HandleInnerException();
+                        }
+                    }
+
+                    var consumer = GetConsumer();
+                    var result = consumer.Consume(TimeSpan.FromMilliseconds(configuration.PollMs));
+                    
+                    try
+                    {
+                        var processor = GetExternalProcessorTopology(result.Topic);
+                        processor.Process(result);
+
+                        if (processor.State == ExternalProcessorTopology.ExternalProcessorTopologyState.BUFFER_FULL)
+                        {
+                            var assignmentTopic = consumer.Assignment.Where(a => a.Topic.Equals(result.Topic)).ToList();
+                            consumer.Pause(assignmentTopic);
+                            processor.State = ExternalProcessorTopology.ExternalProcessorTopologyState.PAUSED;
+                            processor.PreviousAssignment = assignmentTopic;
+                        }
+                        else if(processor.State == ExternalProcessorTopology.ExternalProcessorTopologyState.RESUMED)
+                        {
+                            consumer.Resume(processor.PreviousAssignment);
+                            processor.State = ExternalProcessorTopology.ExternalProcessorTopologyState.RUNNING;
+                            processor.PreviousAssignment = null;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        if (e is NoneRetriableException or NotEnoughtTimeException)
+                            break; // log and fail, 
+                            
+                        exception = e;
                     }
 
                     Commit();
                 }
-
             }
             finally
             {
                 CompleteShutdown();
             }
-            
         }
 
         private void CompleteShutdown()
@@ -100,14 +134,15 @@ namespace Streamiz.Kafka.Net.Processors
                     SetState(ThreadState.PENDING_SHUTDOWN);
 
                     IsRunning = false;
-                    
-                    // clear local buffer
-                    
+
+                    CommitOffsets(true);
+
+                    var consumer = GetConsumer();
                     consumer.Unsubscribe();
                     consumer.Close();
                     consumer.Dispose();
 
-                  //  streamMetricsRegistry.RemoveThreadSensors(threadId);
+                    //  streamMetricsRegistry.RemoveThreadSensors(threadId);
                     log.LogInformation($"{logPrefix}Shutdown complete");
                     IsDisposable = true;
                 }
@@ -123,9 +158,39 @@ namespace Streamiz.Kafka.Net.Processors
             }        
         }
 
+        private void CommitOffsets(bool clearBuffer)
+        {
+            externalProcessorTopologies
+                .Values
+                .ForEach(e =>
+                {
+                    e.Flush();
+                    if(clearBuffer)
+                        e.ClearBuffer();
+                });
+            
+            var offsets = externalProcessorTopologies
+                .Values
+                .SelectMany(e => e.GetCommitOffsets());
+            
+            var consumer = GetConsumer();
+            consumer.Commit(offsets);
+
+            externalProcessorTopologies
+                .Values
+                .ForEach(e => e.ClearOffsets());
+        }
+
         private void Commit()
         {
-            throw new NotImplementedException();
+            if (DateTime.Now - lastCommit > TimeSpan.FromMilliseconds(configuration.CommitIntervalMs))
+            {
+                DateTime beginCommit = DateTime.Now;
+                log.LogDebug($"Committing all topic/partitions since {(DateTime.Now - lastCommit).TotalMilliseconds}ms has elapsed (commit interval is {configuration.CommitIntervalMs}ms)");
+                CommitOffsets(false);
+                log.LogDebug($"Committed all topic/partitions in {(DateTime.Now - beginCommit).TotalMilliseconds}ms");
+                lastCommit = DateTime.Now;
+            }
         }
         
         private void CloseThread()
@@ -154,14 +219,15 @@ namespace Streamiz.Kafka.Net.Processors
             this.token = token;
             IsRunning = true;
             
-            // check conf with max poll interval ms + retry backoff * number retry
+            if(configuration.Guarantee == ProcessingGuarantee.EXACTLY_ONCE)
+                log.LogWarning($"Be carefully the processing guarantee 'EXACTLY_ONCE' is not guarantee with an external service. This behavior is use for processing topic-to-topic. Downstreams consumer must be idempotent.");
             
-            consumer.Subscribe(externalSourceTopics);
+            currentConsumer = GetConsumer();
             SetState(ThreadState.PARTITIONS_ASSIGNED);
             thread.Start();     
         }
 
-        internal ThreadState SetState(ThreadState newState)
+        private ThreadState SetState(ThreadState newState)
         {
             if (State.IsValidTransition(newState))
                 State = newState;
@@ -174,5 +240,65 @@ namespace Streamiz.Kafka.Net.Processors
         public IEnumerable<ITask> ActiveTasks => throw new NotSupportedException();
 
         public event ThreadStateListener StateChanged;
+
+        private ExternalProcessorTopology GetExternalProcessorTopology(string topic)
+        {
+            if (externalProcessorTopologies.ContainsKey(topic))
+                return externalProcessorTopologies[topic];
+            
+            var taskId = internalTopologyBuilder.GetTaskIdFromPartition(new TopicPartition(topic, 0));
+            var topology = internalTopologyBuilder.BuildTopology(taskId);
+
+            var producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig($"{thread.Name}-producer-{topic}"));
+            
+            ExternalProcessorTopology externalProcessorTopology = new ExternalProcessorTopology(
+                taskId,
+                topology.GetSourceProcessor(topic),
+                producer,
+                configuration,
+                streamMetricsRegistry);
+            externalProcessorTopologies.Add(topic, externalProcessorTopology);
+                
+            return externalProcessorTopology;
+        }
+        
+        private ExceptionHandlerResponse TreatException(Exception exception)
+        {
+            if (exception is DeserializationException || exception is ProductionException)
+            {
+                return ExceptionHandlerResponse.FAIL;
+            }
+            var response = configuration.InnerExceptionHandler(exception);
+            return response;
+        }
+
+        private IConsumer<byte[], byte[]> GetConsumer()
+        {
+            lock (@lock)
+            {
+                if (currentConsumer == null)
+                {
+                    currentConsumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig($"{thread.Name}-consumer"), null);
+                    currentConsumer.Subscribe(externalSourceTopics);
+                }
+
+                return currentConsumer;
+            }
+        }
+        
+        private void HandleInnerException()
+        {
+            log.LogWarning("{LogPrefix}Detected that the thread throw an inner exception. Your configuration manager has decided to continue running stream processing. So will close out all assigned tasks and rejoin the consumer group",
+                logPrefix);
+
+            CommitOffsets(true);
+
+            var consumer = GetConsumer();
+            
+            consumer.Unsubscribe();
+            consumer.Close();
+            consumer.Dispose();
+            currentConsumer = null;
+        }
     }
 }

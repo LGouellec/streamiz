@@ -39,15 +39,20 @@ namespace sample_stream
             });
 
             StreamBuilder builder = new StreamBuilder();
-            
-            var table = builder.GlobalTable<string, string>("topic");
-            
-            builder.Stream<string, string>("input")
-                .GroupBy((k,v) => v)
-                .Count()
-                .ToStream()
+
+            builder
+                .Stream<string, string>("input")
+                .ExternalCallAsync(
+                    async (record, context) =>
+                        await Task.FromResult(new KeyValuePair<string, string>(record.Key, record.Value)),
+                    RetryPolicyBuilder
+                        .NewBuilder()
+                        .NumberOfRetry(10)
+                        .RetryBackOffMs(100)
+                        .Build())
+                .MapValues((k,v) => v.ToUpper())
                 .To("output");
-            
+
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
             

@@ -12,6 +12,7 @@ using Streamiz.Kafka.Net.Table.Internal.Graph;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
@@ -46,6 +47,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         internal static readonly string FOREACH_NAME = "KSTREAM-FOREACH-";
         internal static readonly string TO_KTABLE_NAME = "KSTREAM-TOTABLE-";
         internal static readonly string REPARTITION_NAME = "KSTREAM-REPARTITION-";
+        internal static readonly string EXTERNAL_CALL_NAME = "KSTREAM-EXTERNAL-CALL-";
         
         #endregion
     }
@@ -657,6 +659,59 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             return DoJoin(stream, valueJoiner, windows, props, new StreamJoinBuilder(builder, true, true));
         }
 
+        #endregion
+        
+        #region External Call
+
+        public IKStream<K1, V1> ExternalCallAsync<K1, V1>(
+            Func<ExternalRecord<K, V>, ExternalContext, Task<KeyValuePair<K1, V1>>> asyncExternalCall,
+            RetryPolicy retryPolicy,
+            RequestSerDes<K, V> requestSerDes = null,
+            ResponseSerDes<K1, V1> responseSerDes = null,
+            string named = null)
+        {
+            requestSerDes ??= new RequestSerDes<K, V>(null, null);
+            responseSerDes ??= new ResponseSerDes<K1, V1>(null, null);
+            
+            var _named = new Named(named);
+
+            string requestSinkProcessorName =                 
+                _named.SuffixWithOrElseGet("-request-sink", builder, KStream.SINK_NAME);
+            string requestSourceProcessorName =
+                _named.SuffixWithOrElseGet("-request-source", builder, KStream.SOURCE_NAME);
+            string responseSinkProcessorName=                 
+                _named.SuffixWithOrElseGet("-response-sink", builder, KStream.SINK_NAME);
+            string responseSourceProcessorName=                 
+                _named.SuffixWithOrElseGet("-response-source", builder, KStream.SOURCE_NAME);
+            
+            string asyncProcessorName = _named.OrElseGenerateWithPrefix(builder, KStream.EXTERNAL_CALL_NAME);
+
+            ProcessorParameters<K, V > processorParameters =
+                new ProcessorParameters<K, V>(new KStreamAsyncCall<K, V, K1, V1>(asyncExternalCall, retryPolicy), asyncProcessorName);
+            
+            AsyncNode<K, V, K1, V1> asyncNode = new AsyncNode<K, V, K1, V1>(
+                asyncProcessorName,
+                requestSinkProcessorName,
+                requestSourceProcessorName,
+                $"{asyncProcessorName}-request",
+                responseSinkProcessorName,
+                responseSourceProcessorName,
+                $"{asyncProcessorName}-response",
+                requestSerDes,
+                responseSerDes,
+                processorParameters);
+            
+            builder.AddGraphNode(Node, asyncNode.RequestNode);
+            builder.AddGraphNode(asyncNode.RequestNode, asyncNode.ResponseNode);
+
+            return new KStream<K1, V1>(responseSourceProcessorName,
+                responseSerDes.ResponseKeySerDes,
+                responseSerDes.ResponseValueSerDes,
+                responseSourceProcessorName.ToSingle().ToList(),
+                asyncNode.ResponseNode,
+                builder);
+        }
+        
         #endregion
 
         #region ToTable

@@ -6,6 +6,8 @@ using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Streamiz.Kafka.Net.SerDes.Internal;
 
 namespace Streamiz.Kafka.Net.Stream
 {
@@ -1572,5 +1574,12 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="repartitioned">Repartition instructions parameter</param>
         /// <returns><see cref="IKStream{K,V}"/> that contains the exact same repartitioned records as this stream.</returns>
         IKStream<K, V> Repartition(Repartitioned<K, V> repartitioned = null);
+        
+        IKStream<K1, V1> ExternalCallAsync<K1, V1>(
+            Func<ExternalRecord<K, V>, ExternalContext, Task<KeyValuePair<K1, V1>>> asyncExternalCall,
+            RetryPolicy retryPolicy,
+            RequestSerDes<K, V> requestSerDes = null,
+            ResponseSerDes<K1, V1> responseSerDes = null,
+            string named = null);
     }
 }
