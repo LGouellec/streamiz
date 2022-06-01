@@ -5,16 +5,6 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
 {
     internal class AsyncNode<K, V, K1, V1> : StreamGraphNode
     {
-        private readonly string requestSinkProcessorName;
-        private readonly string requestSourceProcessorName;
-        private readonly string requestTopicName;
-        private readonly string responseSinkProcessorName;
-        private readonly string responseSourceProcessorName;
-        private readonly string responseTopicName;
-        private readonly RequestSerDes<K, V> requestSerDes;
-        private readonly ResponseSerDes<K1, V1> responseSerDes;
-        private readonly ProcessorParameters<K, V> processorParameters;
-
         internal class AsyncNodeResponse<K, V, K1, V1> : StreamGraphNode
         {
             public string SourceName { get; }
@@ -64,16 +54,6 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
             ProcessorParameters<K, V> processorParameters) 
             : base(asyncProcessorName)
         {
-            this.requestSinkProcessorName = requestSinkProcessorName;
-            this.requestSourceProcessorName = requestSourceProcessorName;
-            this.requestTopicName = requestTopicName;
-            this.responseSinkProcessorName = responseSinkProcessorName;
-            this.responseSourceProcessorName = responseSourceProcessorName;
-            this.responseTopicName = responseTopicName;
-            this.requestSerDes = requestSerDes;
-            this.responseSerDes = responseSerDes;
-            this.processorParameters = processorParameters;
-
             RequestNode = new RepartitionNode<K, V>(
                 requestSourceProcessorName,
                 requestSourceProcessorName,
@@ -95,14 +75,40 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
                 responseSerDes.ResponseValueSerDes,
                 responseSinkProcessorName,
                 responseTopicName);
+
+            ContinueStreaming = true;
+        }
+        
+        public AsyncNode(
+            string asyncProcessorName,
+            string requestSinkProcessorName,
+            string requestSourceProcessorName,
+            string requestTopicName,
+            RequestSerDes<K, V> requestSerDes,
+            ProcessorParameters<K, V> processorParameters) 
+            : base(asyncProcessorName)
+        {
+            ResponseNode = null;
+
+            RequestNode = new AsyncNodeResponse<K,V,K,V>(
+                requestSourceProcessorName,
+                requestSourceProcessorName,
+                processorParameters,
+                requestSerDes.RequestKeySerDes,
+                requestSerDes.RequestValueSerDes,
+                requestSinkProcessorName,
+                requestTopicName);
+
+            ContinueStreaming = false;
         }
 
-        public RepartitionNode<K, V> RequestNode { get; }
-        public AsyncNodeResponse<K, V, K1, V1> ResponseNode { get; }
+        public StreamGraphNode RequestNode { get; }
+        public StreamGraphNode ResponseNode { get; }
+        public bool ContinueStreaming { get; }
 
         public override void WriteToTopology(InternalTopologyBuilder builder)
         {
-            /*
+            /* KEEP IN MY MIND
             builder.AddSinkOperator(
                 new StaticTopicNameExtractor<K, V>(requestTopicName),
                 requestSinkProcessorName,

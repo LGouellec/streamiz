@@ -26,11 +26,76 @@ namespace Streamiz.Kafka.Net.Processors
             RESUMED
         }
 
+        internal class ExternalStreamTask : AbstractTask
+        {
+            public override TaskId Id { get; }
+            private ExternalStreamTask(TaskId id) {
+                Id = id;
+            }
+            public static ExternalStreamTask Create(TaskId id) => new ExternalStreamTask(id);
+            
+            #region Not implemented
+            
+            public override IDictionary<TopicPartition, long> PurgeOffsets { get; }
+            public override PartitionGrouper Grouper { get; }
+            public override bool CanProcess(long now)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void Suspend()
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void MayWriteCheckpoint(bool force = false)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void Close()
+            {
+                throw new NotImplementedException();
+            }
+
+            public override IStateStore GetStore(string name)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void InitializeTopology()
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void RestorationIfNeeded()
+            {
+                throw new NotImplementedException();
+            }
+
+            public override bool InitializeStateStores()
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void Resume()
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void Commit()
+            {
+                throw new NotImplementedException();
+            }
+            #endregion
+        }
+        
         private ISourceProcessor Processor { get; }
         private Queue<ConsumeResult<byte[], byte[]>> BufferedRecords { get; } = new();
         private RetryPolicy RetryPolicy { get; }
         public ExternalProcessorTopologyState State { get; internal set; }
         public List<TopicPartition> PreviousAssignment { get; set; }
+        public int BufferSize => BufferedRecords.Count;
 
         private readonly IRecordCollector recordCollector;
         private ProcessorContext context;
@@ -52,8 +117,10 @@ namespace Streamiz.Kafka.Net.Processors
             recordCollector = new RecordCollector(logPrefix, config, taskId, NoRunnableSensor.Empty);
             recordCollector.Init(ref producer);
             
-            context = new ProcessorContext(UnassignedStreamTask.Create(taskId), config, null, streamMetricsRegistry);
+            context = new ProcessorContext(ExternalStreamTask.Create(taskId), config, null, streamMetricsRegistry);
             context.UseRecordCollector(recordCollector);
+            
+            Processor.Init(context);
             
             var asyncProcessor = Processor
                 .Next
@@ -81,6 +148,7 @@ namespace Streamiz.Kafka.Net.Processors
                 if (BufferedRecords.Any())
                 {
                     recordToProcess = BufferedRecords.Peek();
+                    log.LogDebug($"{logPrefix}Take one record into the buffer for process it (buffer size : {BufferSize})");
                     readingBuffer = true;
                 }
                 else
@@ -89,30 +157,38 @@ namespace Streamiz.Kafka.Net.Processors
                 if (recordToProcess != null)
                 {
                     context.SetRecordMetaData(recordToProcess);
-                    Processor.Process(recordToProcess);
+                    long latency = ActionHelper.MeasureLatency(() => Processor.Process(recordToProcess));
+                    log.LogDebug($"{logPrefix}Process record with this following metadata ({recordToProcess.TopicPartitionOffset}) in {latency} ms");
                     consumedOffsets.AddOrUpdate(recordToProcess.TopicPartition, recordToProcess.Offset.Value);
                 }
             }
-            catch (Exception e) when (e is NoneRetriableException or NotEnoughtTimeException)
+            catch (Exception e) when (e is NoneRetryableException or NotEnoughtTimeException)
             {
                 if (RetryPolicy.EndRetryBehavior == EndRetryBehavior.BUFFERED)
                 {
-                    // todo : log
+                    log.LogInformation($"{logPrefix}Record with this following metadata ({recordToProcess.TopicPartitionOffset}) exceed the retry policy. Add this record into the local buffer and will be reprocessed later.");
                     if (!readingBuffer)
                         BufferedRecords.Enqueue(record);
                     else
                         doNotDequeue = true;
 
                     if (BufferedRecords.Count >= RetryPolicy.MemoryBufferSize)
+                    {
                         State = ExternalProcessorTopologyState.BUFFER_FULL;
+                        log.LogWarning($"{logPrefix}The local buffer is FULL. Partitions's topic {recordToProcess.Topic} will be paused");
+                    }
                 }
                 else if (RetryPolicy.EndRetryBehavior == EndRetryBehavior.SKIP)
                 {
-                    // todo : log
+                    log.LogInformation($"{logPrefix}Record with this following metadata ({recordToProcess.TopicPartitionOffset}) exceed the retry policy. The retry policy behavior will be skipped this message and process next one");
                     consumedOffsets.AddOrUpdate(recordToProcess.TopicPartition, recordToProcess.Offset.Value);
                 }
-                else
+                else if (RetryPolicy.EndRetryBehavior == EndRetryBehavior.FAIL)
+                {
+                    log.LogInformation(
+                        $"{logPrefix}Record with this following metadata ({recordToProcess.TopicPartitionOffset}) exceed the retry policy. The retry policy behavior is defined as a failure.");
                     throw;
+                }
             }
             finally
             {
@@ -126,11 +202,13 @@ namespace Streamiz.Kafka.Net.Processors
 
         public void Flush()
         {
+            log.LogDebug($"{logPrefix}Flushing producer happens");
             recordCollector.Flush();
         }
 
         public void ClearBuffer()
         {
+            log.LogDebug($"{logPrefix}Clearing local buffer and restore the state to RUNNING (previous state : {State})");
             BufferedRecords.Clear();
             State = ExternalProcessorTopologyState.RUNNING;
         }

@@ -2,12 +2,12 @@ using System;
 
 namespace Streamiz.Kafka.Net.Errors
 {
-    public class NoneRetriableException : Exception
+    public class NoneRetryableException : Exception
     {
         public int NumberRetry { get; }
         public long ElapsedTime { get; }
 
-        public NoneRetriableException(
+        public NoneRetryableException(
             string message,
             int numberRetry,
             long ellapsedTime,

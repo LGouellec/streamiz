@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace Streamiz.Kafka.Net.Crosscutting
 {
@@ -89,6 +90,18 @@ namespace Streamiz.Kafka.Net.Crosscutting
             }
 
             return true;
+        }
+
+        internal static S Random<S>(this IEnumerable<S> source) 
+            where S : class
+        {
+            if (source.Any())
+            {
+                var items = source.ToList();
+                return items[RandomNumberGenerator.GetInt32(0, items.Count)];
+            }
+
+            return null;
         }
     }
 }

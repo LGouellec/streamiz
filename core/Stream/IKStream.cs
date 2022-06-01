@@ -1581,5 +1581,11 @@ namespace Streamiz.Kafka.Net.Stream
             RequestSerDes<K, V> requestSerDes = null,
             ResponseSerDes<K1, V1> responseSerDes = null,
             string named = null);
+
+        void ExternalCallAsync(
+            Func<ExternalRecord<K, V>, ExternalContext, Task> asyncExternalCall,
+            RetryPolicy retryPolicy,
+            RequestSerDes<K, V> requestSerDes = null,
+            string named = null);
     }
 }

@@ -21,7 +21,8 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly IKafkaSupplier kafkaSupplier;
         private readonly InternalTopologyBuilder internalTopologyBuilder;
         private readonly IEnumerable<string> externalSourceTopics;
-        private readonly IDictionary<string, ExternalProcessorTopology> externalProcessorTopologies;
+        private readonly IDictionary<string, ExternalProcessorTopology> externalProcessorTopologies =
+            new Dictionary<string, ExternalProcessorTopology>();
         private readonly StreamMetricsRegistry streamMetricsRegistry;
         private readonly IStreamConfig configuration;
         private IConsumer<byte[], byte[]> currentConsumer;
@@ -29,7 +30,11 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly Thread thread;
         private CancellationToken token;
         private DateTime lastCommit = DateTime.Now;
-
+        
+        private DateTime lastCheckoutProcessing = DateTime.Now;
+        private readonly TimeSpan intervalCheckoutProcessing = TimeSpan.FromMinutes(1); // hard code for now
+        private int messageProcessed;
+        
         public ExternalStreamThread(
             string threadId,
             string clientId,
@@ -89,28 +94,56 @@ namespace Streamiz.Kafka.Net.Processors
                     
                     try
                     {
-                        var processor = GetExternalProcessorTopology(result.Topic);
-                        processor.Process(result);
+                        ExternalProcessorTopology processor = null;
 
-                        if (processor.State == ExternalProcessorTopology.ExternalProcessorTopologyState.BUFFER_FULL)
+                        if (result != null)
+                            processor = GetExternalProcessorTopology(result.Topic);
+                        else
+                            processor = externalProcessorTopologies
+                                .Values
+                                .Where(e => e.BufferSize > 0)
+                                .Random();
+
+                        if (processor != null)
                         {
-                            var assignmentTopic = consumer.Assignment.Where(a => a.Topic.Equals(result.Topic)).ToList();
-                            consumer.Pause(assignmentTopic);
-                            processor.State = ExternalProcessorTopology.ExternalProcessorTopologyState.PAUSED;
-                            processor.PreviousAssignment = assignmentTopic;
+                            long processLatency = ActionHelper.MeasureLatency(() => processor.Process(result));
+                            log.LogDebug($"Process one record into {processLatency} ms");
+                            ++messageProcessed;
+
+                            if (processor.State == ExternalProcessorTopology.ExternalProcessorTopologyState.BUFFER_FULL)
+                            {
+                                var assignmentTopic = consumer.Assignment.Where(a => a.Topic.Equals(result.Topic))
+                                    .ToList();
+                                consumer.Pause(assignmentTopic);
+                                processor.State = ExternalProcessorTopology.ExternalProcessorTopologyState.PAUSED;
+                                processor.PreviousAssignment = assignmentTopic;
+                            }
+                            else if (processor.State ==
+                                     ExternalProcessorTopology.ExternalProcessorTopologyState.RESUMED)
+                            {
+                                consumer.Resume(processor.PreviousAssignment);
+                                processor.State = ExternalProcessorTopology.ExternalProcessorTopologyState.RUNNING;
+                                processor.PreviousAssignment = null;
+                            }
                         }
-                        else if(processor.State == ExternalProcessorTopology.ExternalProcessorTopologyState.RESUMED)
+
+                        if (DateTime.Now < lastCheckoutProcessing.Add(intervalCheckoutProcessing))
                         {
-                            consumer.Resume(processor.PreviousAssignment);
-                            processor.State = ExternalProcessorTopology.ExternalProcessorTopologyState.RUNNING;
-                            processor.PreviousAssignment = null;
+                            log.LogInformation($"{logPrefix}Processed {messageProcessed} total records in {intervalCheckoutProcessing}");
+                            lastCheckoutProcessing = DateTime.Now;
+                            messageProcessed = 0;
                         }
                     }
                     catch (Exception e)
                     {
-                        if (e is NoneRetriableException or NotEnoughtTimeException)
-                            break; // log and fail, 
-                            
+                        if (e is NoneRetryableException or NotEnoughtTimeException)
+                        {
+                            log.LogError(e,  $"{logPrefix}Encountered one retryable exception because number retry is exceed or you have not enough time to process the record regarding the max.poll.interval.ms configuration." +
+                                             $" Your retry policy behavior is failed, so the external stream thread will be stopped");
+                            break;
+                        }
+                        
+                        log.LogError(e, $"{logPrefix}Encountered the following unexpected Kafka exception during processing, this usually indicate Streams internal errors:");
                         exception = e;
                     }
 
@@ -288,8 +321,7 @@ namespace Streamiz.Kafka.Net.Processors
         
         private void HandleInnerException()
         {
-            log.LogWarning("{LogPrefix}Detected that the thread throw an inner exception. Your configuration manager has decided to continue running stream processing. So will close out all assigned tasks and rejoin the consumer group",
-                logPrefix);
+            log.LogWarning($"{logPrefix}Detected that the thread throw an inner exception. Your configuration manager has decided to continue running stream processing. So will close out all assigned tasks and rejoin the consumer group");
 
             CommitOffsets(true);
 
