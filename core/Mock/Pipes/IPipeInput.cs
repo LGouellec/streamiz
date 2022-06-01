@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Confluent.Kafka;
+using System;
 
 namespace Streamiz.Kafka.Net.Mock.Pipes
 {
@@ -8,7 +9,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
     {
         string TopicName { get; }
         event PipeFlushed Flushed;
-        void Pipe(byte[] key, byte[] value, DateTime timestamp);
+        void Pipe(byte[] key, byte[] value, DateTime timestamp, Headers headers);
         void Flush();
         
     }
