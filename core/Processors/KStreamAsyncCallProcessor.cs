@@ -62,15 +62,15 @@ namespace Streamiz.Kafka.Net.Processors
                 catch (AggregateException ae)
                 {
                     LogProcessingKeyValueWithRetryNumber(key, value, context.RetryNumber, false);
-                    if (ae.InnerExceptions.Any(e => Policy.RetriableExceptions.Contains(e.GetType())))
+                    if (ContainsRetryableExceptions(ae))
                     {
                         context.LastExceptions = ae.InnerExceptions;
+                        log.LogDebug($"{logPrefix}An retryable exception is thrown during the processing : {ae.InnerExceptions.First().Message}");
                     }
                     else
                     {
                         retry = false;
                         noneRetriableException = ae.InnerExceptions.First();
-                        
                     }
                 }
             }
@@ -85,7 +85,13 @@ namespace Streamiz.Kafka.Net.Processors
             if (!retry && !result)
                 throw new StreamsException(noneRetriableException);
         }
-        
+
+        private bool ContainsRetryableExceptions(AggregateException ae)
+            => (from innerException in ae.InnerExceptions 
+                from policyException in Policy.RetriableExceptions 
+                where policyException.IsInstanceOfType(innerException) 
+                select innerException).Any();
+
         protected void LogProcessingKeyValueWithRetryNumber(K key, V value, int retryNumber, bool result) => log.LogDebug(
             $"{logPrefix}Process<{typeof(K).Name},{typeof(V).Name}> message with key {key} and {value}" +
             $" with record metadata [topic:{Context.RecordContext.Topic}|" +

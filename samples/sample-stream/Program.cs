@@ -14,6 +14,7 @@ using Streamiz.Kafka.Net.Crosscutting;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Metrics.Prometheus;
@@ -74,6 +75,8 @@ namespace sample_stream
                         .NewBuilder()
                         .NumberOfRetry(10)
                         .RetryBackOffMs(100)
+                        .RetriableException<Exception>()
+                        .RetryBehavior(EndRetryBehavior.SKIP)
                         .Build())
                 .MapValues((k,v) => v.ToUpper())
                 .To("output");

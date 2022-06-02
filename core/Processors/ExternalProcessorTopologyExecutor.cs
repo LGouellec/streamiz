@@ -14,9 +14,9 @@ using Streamiz.Kafka.Net.Stream;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    internal class ExternalProcessorTopology
+    internal class ExternalProcessorTopologyExecutor
     {
-        private static readonly ILogger log = Logger.GetLogger(typeof(ExternalProcessorTopology));
+        private static readonly ILogger log = Logger.GetLogger(typeof(ExternalProcessorTopologyExecutor));
 
         internal enum ExternalProcessorTopologyState
         {
@@ -26,6 +26,7 @@ namespace Streamiz.Kafka.Net.Processors
             RESUMED
         }
 
+        // TODO : maybe use this task instead of ExternalProcessorTopologyExecutor
         internal class ExternalStreamTask : AbstractTask
         {
             public override TaskId Id { get; }
@@ -102,7 +103,7 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly string logPrefix;
         private readonly Dictionary<TopicPartition, long> consumedOffsets = new(); 
 
-        public ExternalProcessorTopology(
+        public ExternalProcessorTopologyExecutor(
             TaskId taskId,
             ISourceProcessor sourceProcessor, 
             IProducer<byte[], byte[]> producer,

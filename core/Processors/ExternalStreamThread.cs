@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Confluent.Kafka;
+using Confluent.Kafka.Admin;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
@@ -22,11 +24,12 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly IKafkaSupplier kafkaSupplier;
         private readonly InternalTopologyBuilder internalTopologyBuilder;
         private readonly IEnumerable<string> externalSourceTopics;
-        private readonly IDictionary<string, ExternalProcessorTopology> externalProcessorTopologies =
-            new Dictionary<string, ExternalProcessorTopology>();
+        private readonly IDictionary<string, ExternalProcessorTopologyExecutor> externalProcessorTopologies =
+            new Dictionary<string, ExternalProcessorTopologyExecutor>();
         private readonly StreamMetricsRegistry streamMetricsRegistry;
         private readonly IStreamConfig configuration;
         private IConsumer<byte[], byte[]> currentConsumer;
+        private IAdminClient adminClient;
         private readonly string logPrefix;
         private readonly Thread thread;
         private CancellationToken token;
@@ -35,6 +38,7 @@ namespace Streamiz.Kafka.Net.Processors
         private DateTime lastCheckoutProcessing = DateTime.Now;
         private readonly TimeSpan intervalCheckoutProcessing = TimeSpan.FromMinutes(1); // hard code for now
         private int messageProcessed;
+        private Task<List<DeleteRecordsResult>> currentDeleteTask = null;
         
         public ExternalStreamThread(
             string threadId,
@@ -76,6 +80,7 @@ namespace Streamiz.Kafka.Net.Processors
             try
             {
                 SetState(ThreadState.RUNNING);
+
                 while (!token.IsCancellationRequested)
                 {
                     if (exception != null)
@@ -89,13 +94,13 @@ namespace Streamiz.Kafka.Net.Processors
                             HandleInnerException();
                         }
                     }
-
+                    
                     var consumer = GetConsumer();
                     var result = consumer.Consume(TimeSpan.FromMilliseconds(configuration.PollMs));
                     
                     try
                     {
-                        ExternalProcessorTopology processor = null;
+                        ExternalProcessorTopologyExecutor processor = null;
 
                         if (result != null)
                             processor = GetExternalProcessorTopology(result.Topic);
@@ -111,19 +116,19 @@ namespace Streamiz.Kafka.Net.Processors
                             log.LogDebug($"Process one record into {processLatency} ms");
                             ++messageProcessed;
 
-                            if (processor.State == ExternalProcessorTopology.ExternalProcessorTopologyState.BUFFER_FULL)
+                            if (processor.State == ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState.BUFFER_FULL)
                             {
                                 var assignmentTopic = consumer.Assignment.Where(a => a.Topic.Equals(result.Topic))
                                     .ToList();
                                 consumer.Pause(assignmentTopic);
-                                processor.State = ExternalProcessorTopology.ExternalProcessorTopologyState.PAUSED;
+                                processor.State = ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState.PAUSED;
                                 processor.PreviousAssignment = assignmentTopic;
                             }
                             else if (processor.State ==
-                                     ExternalProcessorTopology.ExternalProcessorTopologyState.RESUMED)
+                                     ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState.RESUMED)
                             {
                                 consumer.Resume(processor.PreviousAssignment);
-                                processor.State = ExternalProcessorTopology.ExternalProcessorTopologyState.RUNNING;
+                                processor.State = ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState.RUNNING;
                                 processor.PreviousAssignment = null;
                             }
                         }
@@ -134,6 +139,8 @@ namespace Streamiz.Kafka.Net.Processors
                             lastCheckoutProcessing = DateTime.Now;
                             messageProcessed = 0;
                         }
+                        
+                        Commit();
                     }
                     catch (Exception e)
                     {
@@ -147,8 +154,6 @@ namespace Streamiz.Kafka.Net.Processors
                         log.LogError(e, $"{logPrefix}Encountered the following unexpected Kafka exception during processing, this usually indicate Streams internal errors:");
                         exception = e;
                     }
-
-                    Commit();
                 }
             }
             finally
@@ -175,6 +180,12 @@ namespace Streamiz.Kafka.Net.Processors
                     consumer.Unsubscribe();
                     consumer.Close();
                     consumer.Dispose();
+                    
+                    // if one delete request is in progress, we wait the result before closing the manager
+                    if (currentDeleteTask is {IsCompleted: false})
+                        currentDeleteTask.GetAwaiter().GetResult();
+                    
+                    adminClient?.Dispose();
 
                     //  streamMetricsRegistry.RemoveThreadSensors(threadId);
                     log.LogInformation($"{logPrefix}Shutdown complete");
@@ -202,14 +213,28 @@ namespace Streamiz.Kafka.Net.Processors
                     if(clearBuffer)
                         e.ClearBuffer();
                 });
-            
+
             var offsets = externalProcessorTopologies
                 .Values
-                .SelectMany(e => e.GetCommitOffsets());
+                .SelectMany(e => e.GetCommitOffsets())
+                .ToList();
             
             var consumer = GetConsumer();
             consumer.Commit(offsets);
-
+            
+            // purge records offsets
+            if (currentDeleteTask == null || currentDeleteTask.IsCompleted)
+            {
+                if (currentDeleteTask != null && currentDeleteTask.IsFaulted)
+                    log.LogDebug($"{logPrefix}Previous delete-records request has failed. Try sending the new request now.");
+                
+                if (offsets.Any())
+                {
+                    currentDeleteTask = adminClient.DeleteRecordsAsync(offsets);
+                    log.LogDebug($"Sent delete-records request: {string.Join(",", offsets)}");
+                }
+            }
+            
             externalProcessorTopologies
                 .Values
                 .ForEach(e => e.ClearOffsets());
@@ -257,6 +282,8 @@ namespace Streamiz.Kafka.Net.Processors
                 log.LogWarning($"Be carefully the processing guarantee 'EXACTLY_ONCE' is not guarantee with an external service. This behavior is use for processing topic-to-topic. Downstreams consumer must be idempotent.");
             
             currentConsumer = GetConsumer();
+            adminClient = kafkaSupplier.GetAdmin(configuration.ToAdminConfig(clientId));
+            
             SetState(ThreadState.PARTITIONS_ASSIGNED);
             thread.Start();     
         }
@@ -275,7 +302,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public event ThreadStateListener StateChanged;
 
-        private ExternalProcessorTopology GetExternalProcessorTopology(string topic)
+        private ExternalProcessorTopologyExecutor GetExternalProcessorTopology(string topic)
         {
             if (externalProcessorTopologies.ContainsKey(topic))
                 return externalProcessorTopologies[topic];
@@ -285,15 +312,15 @@ namespace Streamiz.Kafka.Net.Processors
 
             var producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig($"{thread.Name}-producer-{topic}"));
             
-            ExternalProcessorTopology externalProcessorTopology = new ExternalProcessorTopology(
+            ExternalProcessorTopologyExecutor externalProcessorTopologyExecutor = new ExternalProcessorTopologyExecutor(
                 taskId,
                 topology.GetSourceProcessor(topic),
                 producer,
                 configuration,
                 streamMetricsRegistry);
-            externalProcessorTopologies.Add(topic, externalProcessorTopology);
+            externalProcessorTopologies.Add(topic, externalProcessorTopologyExecutor);
                 
-            return externalProcessorTopology;
+            return externalProcessorTopologyExecutor;
         }
         
         private ExceptionHandlerResponse TreatException(Exception exception)

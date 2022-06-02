@@ -7,7 +7,7 @@ namespace Streamiz.Kafka.Net.Stream
     {
         private static readonly long DEFAULT_RETRY_BACKOFF_MS = 100;
         private static readonly int DEFAULT_NUMBER_OF_RETRY = 5;
-        private static readonly EndRetryBehavior DEFAULT_RETRY_BEHAVIOR = EndRetryBehavior.BUFFERED;
+        private static readonly EndRetryBehavior DEFAULT_RETRY_BEHAVIOR = EndRetryBehavior.SKIP;
         private static readonly List<Type> DEFAULT_RETRIABLE_EXCEPTIONS = new();
         private static long DEFAULT_MEMORY_BUFFER_SIZE = 100;
         private static long DEFAULT_TIMEOUT_MS = -1; // MaxPollIntervalMs / 3
