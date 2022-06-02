@@ -12,6 +12,8 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using System.Threading.Tasks;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Metrics.Prometheus;
@@ -24,6 +26,21 @@ namespace sample_stream
     /// </summary>
     internal class Program
     {
+        public class Address
+        {
+            public string city { get; set; }
+            public string zip { get; set; }
+        }
+
+        public class Person
+        {
+            public ObjectId _id { get; set; }
+            public Address address { get; set; }
+            public string name { get; set; }
+            public string phone { get; set; }
+        }
+
+        
         public static async Task Main(string[] args)
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -40,11 +57,19 @@ namespace sample_stream
 
             StreamBuilder builder = new StreamBuilder();
 
+            var client = new MongoClient(
+                "mongodb://admin:admin@localhost:27017"
+            );
+            var database = client.GetDatabase("streamiz");
+
             builder
                 .Stream<string, string>("input")
                 .ExternalCallAsync(
-                    async (record, context) =>
-                        await Task.FromResult(new KeyValuePair<string, string>(record.Key, record.Value)),
+                    async (record, _) => {
+                        var filter = Builders<Person>.Filter.Eq((p) => p.name, record.Value);
+                        var cursor = await database.GetCollection<Person>("adress").FindAsync(filter);
+                        return new KeyValuePair<string, string>(record.Key, cursor.ToList().First().address.city);
+                    },
                     RetryPolicyBuilder
                         .NewBuilder()
                         .NumberOfRetry(10)

@@ -51,7 +51,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         }
 
         internal IEnumerable<string> GetRequestTopics()
-            => new ReadOnlyCollection<string>(requestTopics);
+            => new ReadOnlyCollection<string>(requestTopics.Select(DecorateTopic).ToList());
 
         internal IEnumerable<string> GetGlobalTopics() => globalTopics;
         

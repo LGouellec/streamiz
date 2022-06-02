@@ -5,7 +5,47 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
 {
     internal class AsyncNode<K, V, K1, V1> : StreamGraphNode
     {
-        internal class AsyncNodeResponse<K, V, K1, V1> : StreamGraphNode
+        private class AsyncNodeRequest<K, V> : StreamGraphNode
+        {
+            private string SourceName { get; }
+            private ISerDes<K> KeySerdes { get; }
+            private ISerDes<V> ValueSerdes { get; }
+            private string SinkName { get; }
+            private string RepartitionTopic { get; }
+
+            public AsyncNodeRequest(
+                string streamGraphNode,
+                string sourceName,
+                ISerDes<K> keySerdes,
+                ISerDes<V> valueSerdes,
+                string sinkName,
+                string repartitionTopic)
+                : base(streamGraphNode)
+            {
+                SourceName = sourceName;
+                KeySerdes = keySerdes;
+                ValueSerdes = valueSerdes;
+                SinkName = sinkName;
+                RepartitionTopic = repartitionTopic;
+            }
+
+            public override void WriteToTopology(InternalTopologyBuilder builder)
+            {
+                builder.AddInternalTopic(RepartitionTopic, null);
+                builder.AddSinkOperator(
+                    new StaticTopicNameExtractor<K, V>(RepartitionTopic),
+                    SinkName,
+                    Produced<K, V>.Create(KeySerdes, ValueSerdes),
+                    ParentNodeNames());
+                builder.AddSourceOperator(
+                    RepartitionTopic,
+                    SourceName,
+                    new ConsumedInternal<K, V>(SourceName, KeySerdes, ValueSerdes, new FailOnInvalidTimestamp()),
+                    true);
+            }
+        }
+
+        private class AsyncNodeResponse<K, V, K1, V1> : StreamGraphNode
         {
             public string SourceName { get; }
             public ProcessorParameters<K, V> ProcessorParameters { get; }
@@ -41,6 +81,49 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
 
         }
 
+        private class AsyncNodeRequestVoid<K, V> : StreamGraphNode
+        {
+            public string SourceName { get; }
+            public ProcessorParameters<K, V> ProcessorParameters { get; }
+            public ISerDes<K> KeySerdes { get; }
+            public ISerDes<V> ValueSerdes { get; }
+            public string RequestTopic { get; }
+            public string SinkName { get; }
+
+            public AsyncNodeRequestVoid(
+                string streamGraphNode,
+                string sourceName,
+                string requestTopic,
+                string sinkName,
+                ProcessorParameters<K, V> processorParameters,
+                ISerDes<K> keySerdes,
+                ISerDes<V> valueSerdes)
+                : base(streamGraphNode)
+            {
+                SourceName = sourceName;
+                ProcessorParameters = processorParameters;
+                KeySerdes = keySerdes;
+                ValueSerdes = valueSerdes;
+                RequestTopic = requestTopic;
+                SinkName = sinkName;
+            }
+            
+            public override void WriteToTopology(InternalTopologyBuilder builder)
+            {
+                builder.AddInternalTopic(RequestTopic, null);
+                builder.AddSinkOperator(new StaticTopicNameExtractor<K, V>(RequestTopic),
+                    SinkName,
+                    Produced<K, V>.Create(KeySerdes, ValueSerdes),
+                    ParentNodeNames());
+                builder.AddSourceOperator(
+                    RequestTopic,
+                    SourceName, 
+                    new ConsumedInternal<K, V>(SourceName, KeySerdes, ValueSerdes, new FailOnInvalidTimestamp()),
+                    true);
+                builder.AddProcessor(ProcessorParameters.ProcessorName, ProcessorParameters.Processor, SourceName);
+            }
+        }
+        
         public AsyncNode(
             string asyncProcessorName,
             string requestSinkProcessorName,
@@ -54,18 +137,13 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
             ProcessorParameters<K, V> processorParameters) 
             : base(asyncProcessorName)
         {
-            RequestNode = new RepartitionNode<K, V>(
+            RequestNode = new AsyncNodeRequest<K, V>(
                 requestSourceProcessorName,
                 requestSourceProcessorName,
-                null,
                 requestSerDes.RequestKeySerDes,
                 requestSerDes.RequestValueSerDes,
                 requestSinkProcessorName,
-                requestTopicName)
-            {
-                StreamPartitioner = null,
-                NumberOfPartition = null
-            };
+                requestTopicName);
 
             ResponseNode = new AsyncNodeResponse<K,V,K1,V1>(
                 responseSourceProcessorName,
@@ -75,8 +153,6 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
                 responseSerDes.ResponseValueSerDes,
                 responseSinkProcessorName,
                 responseTopicName);
-
-            ContinueStreaming = true;
         }
         
         public AsyncNode(
@@ -90,21 +166,18 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
         {
             ResponseNode = null;
 
-            RequestNode = new AsyncNodeResponse<K,V,K,V>(
+            RequestNode = new AsyncNodeRequestVoid<K,V>(
                 requestSourceProcessorName,
                 requestSourceProcessorName,
+                requestTopicName,
+                requestSinkProcessorName,
                 processorParameters,
                 requestSerDes.RequestKeySerDes,
-                requestSerDes.RequestValueSerDes,
-                requestSinkProcessorName,
-                requestTopicName);
-
-            ContinueStreaming = false;
+                requestSerDes.RequestValueSerDes);
         }
 
         public StreamGraphNode RequestNode { get; }
         public StreamGraphNode ResponseNode { get; }
-        public bool ContinueStreaming { get; }
 
         public override void WriteToTopology(InternalTopologyBuilder builder)
         {

@@ -12,6 +12,7 @@ using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
 {
+    // TODO : delete records offsets
     internal class ExternalStreamThread : IThread
     {
         private static readonly ILogger log = Logger.GetLogger(typeof(ExternalStreamThread));
@@ -127,9 +128,9 @@ namespace Streamiz.Kafka.Net.Processors
                             }
                         }
 
-                        if (DateTime.Now < lastCheckoutProcessing.Add(intervalCheckoutProcessing))
+                        if (DateTime.Now >= lastCheckoutProcessing.Add(intervalCheckoutProcessing))
                         {
-                            log.LogInformation($"{logPrefix}Processed {messageProcessed} total records in {intervalCheckoutProcessing}");
+                            log.LogInformation($"{logPrefix}Processed {messageProcessed} total records in {intervalCheckoutProcessing.TotalMilliseconds}ms");
                             lastCheckoutProcessing = DateTime.Now;
                             messageProcessed = 0;
                         }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Stream
 {
@@ -7,14 +8,14 @@ namespace Streamiz.Kafka.Net.Stream
         private static readonly long DEFAULT_RETRY_BACKOFF_MS = 100;
         private static readonly int DEFAULT_NUMBER_OF_RETRY = 5;
         private static readonly EndRetryBehavior DEFAULT_RETRY_BEHAVIOR = EndRetryBehavior.BUFFERED;
-        private static readonly Exception[] DEFAULT_RETRIABLE_EXCEPTIONS = Array.Empty<Exception>();
+        private static readonly List<Type> DEFAULT_RETRIABLE_EXCEPTIONS = new();
         private static long DEFAULT_MEMORY_BUFFER_SIZE = 100;
         private static long DEFAULT_TIMEOUT_MS = -1; // MaxPollIntervalMs / 3
 
         private long retryBackOffMs = DEFAULT_RETRY_BACKOFF_MS;
         private int numberOfRetry = DEFAULT_NUMBER_OF_RETRY;
         private EndRetryBehavior endRetryBehavior = DEFAULT_RETRY_BEHAVIOR;
-        private Exception[] retriableExceptions = DEFAULT_RETRIABLE_EXCEPTIONS;
+        private List<Type> retriableExceptions = DEFAULT_RETRIABLE_EXCEPTIONS;
         private long memoryBufferSize = DEFAULT_MEMORY_BUFFER_SIZE;
         private long timeoutMs;
 
@@ -43,9 +44,10 @@ namespace Streamiz.Kafka.Net.Stream
             return this;
         }
 
-        public RetryPolicyBuilder RetriableException(params Exception[] exceptions)
+        public RetryPolicyBuilder RetriableException<T>()
+            where T : Exception
         {
-            this.retriableExceptions = exceptions;
+            retriableExceptions.Add(typeof(T));
             return this;
         }
 
@@ -86,13 +88,13 @@ namespace Streamiz.Kafka.Net.Stream
         public long RetryBackOffMs { get; }
         public int NumberOfRetry { get; }
         public EndRetryBehavior EndRetryBehavior { get; }
-        public Exception[] RetriableExceptions { get; }
+        public List<Type> RetriableExceptions { get; }
         public long MemoryBufferSize { get; }
 
         internal RetryPolicy(long retryBackOffMs,
             int numberOfRetry,
             EndRetryBehavior endRetryBehavior,
-            Exception[] retriableExceptions,
+            List<Type> retriableExceptions,
             long memoryBufferSize,
             long timeoutMs)
         {

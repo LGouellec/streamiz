@@ -62,7 +62,7 @@ namespace Streamiz.Kafka.Net.Processors
                 catch (AggregateException ae)
                 {
                     LogProcessingKeyValueWithRetryNumber(key, value, context.RetryNumber, false);
-                    if (ae.InnerExceptions.Any(e => Policy.RetriableExceptions.Contains(e)))
+                    if (ae.InnerExceptions.Any(e => Policy.RetriableExceptions.Contains(e.GetType())))
                     {
                         context.LastExceptions = ae.InnerExceptions;
                     }
