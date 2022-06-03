@@ -65,10 +65,10 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         }
 
         #region IProducer Impl
-
+        
         public Handle Handle => null;
 
-        public string Name => $"{config.ClientId}#{RandomNumberGenerator.GetInt32(0, Int16.MaxValue)}";
+        public string Name => $"{config.ClientId}#{RandomGenerator.GetInt32(Int16.MaxValue)}";
 
         public void AbortTransaction(TimeSpan timeout)
         {

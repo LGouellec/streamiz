@@ -41,7 +41,7 @@ namespace Streamiz.Kafka.Net.State.Metered
             {
                 var next = innerEnumerator.Current;
                 if (next.HasValue)
-                    return KeyValuePair.Create(next.Value.Key, funcSerdesValue(next.Value.Value));
+                    return new KeyValuePair<long, V>(next.Value.Key, funcSerdesValue(next.Value.Value));
                 else
                     return null;
             }

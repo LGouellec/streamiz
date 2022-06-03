@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;net5.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net5.0;net6.0</TargetFrameworks>
     <RootNamespace>Streamiz.Kafka.Net</RootNamespace>
     <AssemblyName>Streamiz.Kafka.Net</AssemblyName>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -42,7 +42,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="5.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="RocksDB" Version="6.26.1.23596" />
+    <PackageReference Include="RocksDB" Version="6.26.1.24111" />
     <PackageReference Include="Confluent.Kafka" Version="1.8.2" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
