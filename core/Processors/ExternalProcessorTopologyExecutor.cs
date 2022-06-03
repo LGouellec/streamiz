@@ -16,6 +16,9 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal class ExternalProcessorTopologyExecutor
     {
+        private readonly string producerId;
+        private readonly string threadId;
+        private readonly StreamMetricsRegistry streamMetricsRegistry;
         private static readonly ILogger log = Logger.GetLogger(typeof(ExternalProcessorTopologyExecutor));
 
         internal enum ExternalProcessorTopologyState
@@ -101,21 +104,35 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly IRecordCollector recordCollector;
         private ProcessorContext context;
         private readonly string logPrefix;
-        private readonly Dictionary<TopicPartition, long> consumedOffsets = new(); 
-
+        private readonly Dictionary<TopicPartition, long> consumedOffsets = new();
+        
+        private readonly Sensor droppedRecordsSensor;
+        private readonly Sensor activeBufferedRecordSensor;
+        private readonly Sensor processSensor;
+        private readonly Sensor processLatencySensor;
+        
         public ExternalProcessorTopologyExecutor(
+            string threadId,
             TaskId taskId,
             ISourceProcessor sourceProcessor, 
             IProducer<byte[], byte[]> producer,
             IStreamConfig config,
             StreamMetricsRegistry streamMetricsRegistry)
         {
+            this.threadId = threadId;
+            this.producerId = producer.Name;
+            this.streamMetricsRegistry = streamMetricsRegistry;
             State = ExternalProcessorTopologyState.RUNNING;
             Processor = sourceProcessor;
 
             logPrefix = $"external-task[{taskId.Id}] ";
             
-            recordCollector = new RecordCollector(logPrefix, config, taskId, NoRunnableSensor.Empty);
+            droppedRecordsSensor = TaskMetrics.DroppedRecordsSensor(threadId, taskId, streamMetricsRegistry);
+            activeBufferedRecordSensor = TaskMetrics.ActiveBufferedRecordsSensor(threadId, taskId, streamMetricsRegistry);
+            processSensor = TaskMetrics.ProcessSensor(threadId, taskId, streamMetricsRegistry);
+            processLatencySensor = TaskMetrics.ProcessLatencySensor(threadId, taskId, streamMetricsRegistry);
+            
+            recordCollector = new RecordCollector(logPrefix, config, taskId, droppedRecordsSensor);
             recordCollector.Init(ref producer);
             
             context = new ProcessorContext(ExternalStreamTask.Create(taskId), config, null, streamMetricsRegistry);
@@ -159,6 +176,8 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     context.SetRecordMetaData(recordToProcess);
                     long latency = ActionHelper.MeasureLatency(() => Processor.Process(recordToProcess));
+                    processSensor.Record();
+                    processLatencySensor.Record(latency);
                     log.LogDebug($"{logPrefix}Process record with this following metadata ({recordToProcess.TopicPartitionOffset}) in {latency} ms");
                     consumedOffsets.AddOrUpdate(recordToProcess.TopicPartition, recordToProcess.Offset.Value);
                 }
@@ -183,6 +202,7 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     log.LogInformation($"{logPrefix}Record with this following metadata ({recordToProcess.TopicPartitionOffset}) exceed the retry policy. The retry policy behavior will be skipped this message and process next one");
                     consumedOffsets.AddOrUpdate(recordToProcess.TopicPartition, recordToProcess.Offset.Value);
+                    droppedRecordsSensor.Record();
                 }
                 else if (RetryPolicy.EndRetryBehavior == EndRetryBehavior.FAIL)
                 {
@@ -198,6 +218,8 @@ namespace Streamiz.Kafka.Net.Processors
                 
                 if(readingBuffer && record != null) 
                     BufferedRecords.Enqueue(record);
+                
+                activeBufferedRecordSensor.Record(BufferSize);
             }
         }
 
@@ -225,6 +247,16 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 yield return new TopicPartitionOffset(kp.Key, kp.Value + 1);
             }
+        }
+
+        public void Close()
+        {
+            log.LogInformation($"{logPrefix}Closing");
+            Processor.Close();
+            recordCollector.Close();
+            streamMetricsRegistry.RemoveTaskSensors(threadId, context.Id.ToString());
+            streamMetricsRegistry.RemoveLibrdKafkaSensors(threadId, producerId);
+            log.LogInformation($"{logPrefix}Closed");
         }
     }
 }

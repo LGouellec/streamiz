@@ -350,13 +350,15 @@ namespace Streamiz.Kafka.Net
             if (this.topology.Builder.ExternalCall)
             {
                 var threadId = $"{clientId}-external-stream-thread";
+                var externalStreamConfig = configuration.Clone();
+                externalStreamConfig.ApplicationId += "-external";
                 externalStreamThread = new ExternalStreamThread(
                     threadId,
                     clientId,
                     this.kafkaSupplier,
                     this.topology.Builder,
                     metricsRegistry,
-                    configuration);
+                    externalStreamConfig);
             }
 
             List<StreamThreadStateStoreProvider> stateStoreProviders = new List<StreamThreadStateStoreProvider>();

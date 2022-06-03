@@ -2,23 +2,16 @@
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
-using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Intrinsics;
-using System.Threading;
 using Microsoft.Extensions.Logging;
-using Streamiz.Kafka.Net.Crosscutting;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Metrics;
-using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Metrics.Prometheus;
-using Streamiz.Kafka.Net.State;
 
 namespace sample_stream
 {
@@ -55,6 +48,8 @@ namespace sample_stream
                 builder.SetMinimumLevel(LogLevel.Information);
                 builder.AddLog4Net();
             });
+            config.MetricsRecording = MetricsRecordingLevel.DEBUG;
+            config.UsePrometheusReporter(9090, true);
 
             StreamBuilder builder = new StreamBuilder();
 
@@ -63,13 +58,38 @@ namespace sample_stream
             );
             var database = client.GetDatabase("streamiz");
 
+            // builder
+            //     .Stream<string, string>("input")
+            //     .ExternalCallAsync(
+            //         async (record, _) => {
+            //             var filter = Builders<Person>.Filter.Eq((p) => p.name, record.Value);
+            //             var cursor = await database.GetCollection<Person>("adress").FindAsync(filter);
+            //             return new KeyValuePair<string, string>(record.Key, cursor.ToList().First().address.city);
+            //         },
+            //         RetryPolicyBuilder
+            //             .NewBuilder()
+            //             .NumberOfRetry(10)
+            //             .RetryBackOffMs(100)
+            //             .RetriableException<Exception>()
+            //             .RetryBehavior(EndRetryBehavior.SKIP)
+            //             .Build())
+            //     .MapValues((k,v) => v.ToUpper())
+            //     .To("output");
             builder
                 .Stream<string, string>("input")
                 .ExternalCallAsync(
-                    async (record, _) => {
-                        var filter = Builders<Person>.Filter.Eq((p) => p.name, record.Value);
-                        var cursor = await database.GetCollection<Person>("adress").FindAsync(filter);
-                        return new KeyValuePair<string, string>(record.Key, cursor.ToList().First().address.city);
+                    async (record, _) =>
+                    {
+                        await database
+                            .GetCollection<Person>("adress")
+                            .InsertOneAsync(new Person()
+                            {
+                                name = record.Key,
+                                address = new Address()
+                                {
+                                    city = record.Value
+                                }
+                            });
                     },
                     RetryPolicyBuilder
                         .NewBuilder()
@@ -77,9 +97,7 @@ namespace sample_stream
                         .RetryBackOffMs(100)
                         .RetriableException<Exception>()
                         .RetryBehavior(EndRetryBehavior.SKIP)
-                        .Build())
-                .MapValues((k,v) => v.ToUpper())
-                .To("output");
+                        .Build());
 
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);

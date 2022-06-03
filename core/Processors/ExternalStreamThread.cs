@@ -9,12 +9,13 @@ using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka;
+using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    // TODO : delete records offsets
     internal class ExternalStreamThread : IThread
     {
         private static readonly ILogger log = Logger.GetLogger(typeof(ExternalStreamThread));
@@ -33,12 +34,19 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly string logPrefix;
         private readonly Thread thread;
         private CancellationToken token;
-        private DateTime lastCommit = DateTime.Now;
         
+        private DateTime lastCommit = DateTime.Now;
+        private DateTime lastMetrics = DateTime.Now;
+
         private DateTime lastCheckoutProcessing = DateTime.Now;
         private readonly TimeSpan intervalCheckoutProcessing = TimeSpan.FromMinutes(1); // hard code for now
         private int messageProcessed;
         private Task<List<DeleteRecordsResult>> currentDeleteTask = null;
+        
+        private readonly Sensor commitSensor;
+        private readonly Sensor pollSensor;
+        private readonly Sensor processLatencySensor;
+        private readonly Sensor processRateSensor;
         
         public ExternalStreamThread(
             string threadId,
@@ -64,7 +72,10 @@ namespace Streamiz.Kafka.Net.Processors
             
             State = ThreadState.CREATED;
 
-            // Todo : sensors
+            commitSensor = ThreadMetrics.CommitSensor(threadId, streamMetricsRegistry);
+            pollSensor = ThreadMetrics.PollSensor(threadId, streamMetricsRegistry);
+            processLatencySensor = ThreadMetrics.ProcessLatencySensor(threadId, streamMetricsRegistry);
+            processRateSensor = ThreadMetrics.ProcessRateSensor(threadId, streamMetricsRegistry);
         }
         
         public void Dispose() => CloseThread();
@@ -95,8 +106,14 @@ namespace Streamiz.Kafka.Net.Processors
                         }
                     }
                     
+                    long now = DateTime.Now.GetMilliseconds();
+                    
                     var consumer = GetConsumer();
-                    var result = consumer.Consume(TimeSpan.FromMilliseconds(configuration.PollMs));
+                    ConsumeResult<byte[], byte[]> result = null;
+                    long pollLatency = ActionHelper.MeasureLatency(() =>
+                        result = consumer.Consume(TimeSpan.FromMilliseconds(configuration.PollMs)));
+                    
+                    pollSensor.Record(pollLatency, now);
                     
                     try
                     {
@@ -112,35 +129,47 @@ namespace Streamiz.Kafka.Net.Processors
 
                         if (processor != null)
                         {
+                            now = DateTime.Now.GetMilliseconds();
                             long processLatency = ActionHelper.MeasureLatency(() => processor.Process(result));
                             log.LogDebug($"Process one record into {processLatency} ms");
                             ++messageProcessed;
+                            
+                            processLatencySensor.Record(processLatency, now);
+                            processRateSensor.Record(1, now);
 
-                            if (processor.State == ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState.BUFFER_FULL)
+                            if (processor.State == ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState
+                                .BUFFER_FULL)
                             {
                                 var assignmentTopic = consumer.Assignment.Where(a => a.Topic.Equals(result.Topic))
                                     .ToList();
                                 consumer.Pause(assignmentTopic);
-                                processor.State = ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState.PAUSED;
+                                processor.State = ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState
+                                    .PAUSED;
                                 processor.PreviousAssignment = assignmentTopic;
                             }
                             else if (processor.State ==
                                      ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState.RESUMED)
                             {
                                 consumer.Resume(processor.PreviousAssignment);
-                                processor.State = ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState.RUNNING;
+                                processor.State = ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState
+                                    .RUNNING;
                                 processor.PreviousAssignment = null;
                             }
                         }
 
-                        if (DateTime.Now >= lastCheckoutProcessing.Add(intervalCheckoutProcessing))
+                        now = DateTime.Now.GetMilliseconds();
+                        if (now >= lastCheckoutProcessing.Add(intervalCheckoutProcessing).GetMilliseconds())
                         {
-                            log.LogInformation($"{logPrefix}Processed {messageProcessed} total records in {intervalCheckoutProcessing.TotalMilliseconds}ms");
+                            log.LogInformation(
+                                $"{logPrefix}Processed {messageProcessed} total records in {intervalCheckoutProcessing.TotalMilliseconds}ms");
                             lastCheckoutProcessing = DateTime.Now;
                             messageProcessed = 0;
                         }
-                        
-                        Commit();
+
+                        bool committed = false;
+                        long commitLatency = ActionHelper.MeasureLatency(() => committed = Commit());
+                        if(committed)
+                            commitSensor.Record(commitLatency, now);
                     }
                     catch (Exception e)
                     {
@@ -153,6 +182,13 @@ namespace Streamiz.Kafka.Net.Processors
                         
                         log.LogError(e, $"{logPrefix}Encountered the following unexpected Kafka exception during processing, this usually indicate Streams internal errors:");
                         exception = e;
+                    }
+                    
+                    if (lastMetrics.Add(TimeSpan.FromMilliseconds(configuration.MetricsIntervalMs)) <
+                        DateTime.Now)
+                    {
+                        MetricUtils.ExportMetrics(streamMetricsRegistry, configuration, Name);
+                        lastMetrics = DateTime.Now;
                     }
                 }
             }
@@ -181,13 +217,19 @@ namespace Streamiz.Kafka.Net.Processors
                     consumer.Close();
                     consumer.Dispose();
                     
+                    externalProcessorTopologies
+                        .Values
+                        .ForEach(e => e.Close());
+
                     // if one delete request is in progress, we wait the result before closing the manager
                     if (currentDeleteTask is {IsCompleted: false})
                         currentDeleteTask.GetAwaiter().GetResult();
                     
                     adminClient?.Dispose();
 
-                    //  streamMetricsRegistry.RemoveThreadSensors(threadId);
+                    externalProcessorTopologies.Clear();
+                    streamMetricsRegistry.RemoveThreadSensors(Name);
+                    streamMetricsRegistry.RemoveLibrdKafkaSensors(Name, consumer.Name);
                     log.LogInformation($"{logPrefix}Shutdown complete");
                     IsDisposable = true;
                 }
@@ -203,7 +245,7 @@ namespace Streamiz.Kafka.Net.Processors
             }        
         }
 
-        private void CommitOffsets(bool clearBuffer)
+        private bool CommitOffsets(bool clearBuffer)
         {
             externalProcessorTopologies
                 .Values
@@ -218,38 +260,45 @@ namespace Streamiz.Kafka.Net.Processors
                 .Values
                 .SelectMany(e => e.GetCommitOffsets())
                 .ToList();
-            
-            var consumer = GetConsumer();
-            consumer.Commit(offsets);
-            
-            // purge records offsets
-            if (currentDeleteTask == null || currentDeleteTask.IsCompleted)
+
+            if (offsets.Any())
             {
-                if (currentDeleteTask != null && currentDeleteTask.IsFaulted)
-                    log.LogDebug($"{logPrefix}Previous delete-records request has failed. Try sending the new request now.");
-                
-                if (offsets.Any())
+                var consumer = GetConsumer();
+                consumer.Commit(offsets);
+
+                // purge records offsets
+                if (currentDeleteTask == null || currentDeleteTask.IsCompleted)
                 {
+                    if (currentDeleteTask != null && currentDeleteTask.IsFaulted)
+                        log.LogDebug(
+                            $"{logPrefix}Previous delete-records request has failed. Try sending the new request now.");
+                    
                     currentDeleteTask = adminClient.DeleteRecordsAsync(offsets);
                     log.LogDebug($"Sent delete-records request: {string.Join(",", offsets)}");
                 }
+
+                externalProcessorTopologies
+                    .Values
+                    .ForEach(e => e.ClearOffsets());
+
+                return true;
             }
-            
-            externalProcessorTopologies
-                .Values
-                .ForEach(e => e.ClearOffsets());
+
+            return false;
         }
 
-        private void Commit()
+        private bool Commit()
         {
             if (DateTime.Now - lastCommit > TimeSpan.FromMilliseconds(configuration.CommitIntervalMs))
             {
                 DateTime beginCommit = DateTime.Now;
                 log.LogDebug($"Committing all topic/partitions since {(DateTime.Now - lastCommit).TotalMilliseconds}ms has elapsed (commit interval is {configuration.CommitIntervalMs}ms)");
-                CommitOffsets(false);
+                bool committed = CommitOffsets(false);
                 log.LogDebug($"Committed all topic/partitions in {(DateTime.Now - beginCommit).TotalMilliseconds}ms");
                 lastCommit = DateTime.Now;
+                return committed;
             }
+            return false;
         }
         
         private void CloseThread()
@@ -307,12 +356,13 @@ namespace Streamiz.Kafka.Net.Processors
             if (externalProcessorTopologies.ContainsKey(topic))
                 return externalProcessorTopologies[topic];
             
-            var taskId = internalTopologyBuilder.GetTaskIdFromPartition(new TopicPartition(topic, 0));
+            var taskId = internalTopologyBuilder.GetTaskIdFromPartition(new TopicPartition(topic, Partition.Any));
             var topology = internalTopologyBuilder.BuildTopology(taskId);
 
-            var producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig($"{thread.Name}-producer-{topic}"));
+            var producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig($"{thread.Name}-producer-{topic}").Wrap(Name, configuration));
             
             ExternalProcessorTopologyExecutor externalProcessorTopologyExecutor = new ExternalProcessorTopologyExecutor(
+                Name,
                 taskId,
                 topology.GetSourceProcessor(topic),
                 producer,
@@ -339,7 +389,8 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 if (currentConsumer == null)
                 {
-                    currentConsumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig($"{thread.Name}-consumer"), null);
+                    var consumerConfig = configuration.ToConsumerConfig($"{thread.Name}-consumer").Wrap(Name, configuration);
+                    currentConsumer = kafkaSupplier.GetConsumer(consumerConfig, null);
                     currentConsumer.Subscribe(externalSourceTopics);
                 }
 
@@ -354,11 +405,14 @@ namespace Streamiz.Kafka.Net.Processors
             CommitOffsets(true);
 
             var consumer = GetConsumer();
+            var librdkafkaClientId = consumer.Name;
             
             consumer.Unsubscribe();
             consumer.Close();
             consumer.Dispose();
             currentConsumer = null;
+            
+            streamMetricsRegistry.RemoveLibrdKafkaSensors(Name, librdkafkaClientId);
         }
     }
 }
