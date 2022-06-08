@@ -43,6 +43,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "sample-stream-demo", "sampl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streamiz.Kafka.Net.SchemaRegistry.SerDes.Chr.Avro", "serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Chr.Avro\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Chr.Avro.csproj", "{A8B3B087-4020-471D-9594-2893318FB81E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "sample-stream-registry-chr-avro", "samples\sample-stream-registry-chr-avro\sample-stream-registry-chr-avro.csproj", "{5F1CBD5C-F7C7-4701-8C55-8D5BC960A218}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -233,6 +235,18 @@ Global
 		{A8B3B087-4020-471D-9594-2893318FB81E}.Release|x64.Build.0 = Release|Any CPU
 		{A8B3B087-4020-471D-9594-2893318FB81E}.Release|x86.ActiveCfg = Release|Any CPU
 		{A8B3B087-4020-471D-9594-2893318FB81E}.Release|x86.Build.0 = Release|Any CPU
+		{5F1CBD5C-F7C7-4701-8C55-8D5BC960A218}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F1CBD5C-F7C7-4701-8C55-8D5BC960A218}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F1CBD5C-F7C7-4701-8C55-8D5BC960A218}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5F1CBD5C-F7C7-4701-8C55-8D5BC960A218}.Debug|x64.Build.0 = Debug|Any CPU
+		{5F1CBD5C-F7C7-4701-8C55-8D5BC960A218}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5F1CBD5C-F7C7-4701-8C55-8D5BC960A218}.Debug|x86.Build.0 = Debug|Any CPU
+		{5F1CBD5C-F7C7-4701-8C55-8D5BC960A218}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F1CBD5C-F7C7-4701-8C55-8D5BC960A218}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F1CBD5C-F7C7-4701-8C55-8D5BC960A218}.Release|x64.ActiveCfg = Release|Any CPU
+		{5F1CBD5C-F7C7-4701-8C55-8D5BC960A218}.Release|x64.Build.0 = Release|Any CPU
+		{5F1CBD5C-F7C7-4701-8C55-8D5BC960A218}.Release|x86.ActiveCfg = Release|Any CPU
+		{5F1CBD5C-F7C7-4701-8C55-8D5BC960A218}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -253,6 +267,7 @@ Global
 		{29CB687B-951E-4B3E-AD1C-13B222490091} = {A34792BA-25DD-44A5-B420-9CC810379BFE}
 		{55E20242-D62A-4E5C-8D14-5DC6E544B6FB} = {FFB1B148-D781-4D08-A1E8-4A7F7147FCD4}
 		{A8B3B087-4020-471D-9594-2893318FB81E} = {3C748A6C-9316-4507-8FEE-77C684C4F028}
+		{5F1CBD5C-F7C7-4701-8C55-8D5BC960A218} = {FFB1B148-D781-4D08-A1E8-4A7F7147FCD4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {66BAF5BD-970F-480F-92B9-761323FFAA58}
