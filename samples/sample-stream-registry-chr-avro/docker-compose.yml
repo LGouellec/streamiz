@@ -1,6 +1,8 @@
----
 version: '2'
 services:
+  schema-registry-sample-app:
+    build: .
+    container_name: schema-registry-sample-app
   zookeeper:
     image: confluentinc/cp-zookeeper:7.1.1
     hostname: zookeeper

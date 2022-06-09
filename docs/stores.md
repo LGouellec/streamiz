@@ -2,7 +2,7 @@
 
 ⚠️ <span style="color:red">**Some things you need to know**</span> ⚠️
 
-- Default state store behavior still in memory store (change to rocksdb in 1.3.0 release)
+- Default state store behavior still in memory store (change to rocksdb in 1.4.0 release)
 - RocksDb state store is available from 1.2.0 release.
 - By default, a state store is tracked by a changelog topic from 1.2.0 release. (If you don't need, you have to make it explicit).
 

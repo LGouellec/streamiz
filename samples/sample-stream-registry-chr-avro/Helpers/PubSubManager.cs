@@ -1,6 +1,7 @@
 ﻿using Chr.Avro.Confluent;
 using Confluent.Kafka;
 using Confluent.SchemaRegistry;
+using Newtonsoft.Json;
 
 namespace sample_stream_registry_chr_avro.Helpers
 {
@@ -24,7 +25,7 @@ namespace sample_stream_registry_chr_avro.Helpers
             {
                 BootstrapServers = _bootstrapServers
             };
-            
+
             using var registry = new CachedSchemaRegistryClient(_schemaRegistryConfig);
 
             var builder = new ProducerBuilder<string, T>(producerConfig)
@@ -37,6 +38,8 @@ namespace sample_stream_registry_chr_avro.Helpers
                 Key = key,
                 Value = message
             });
+
+            Console.WriteLine($"Published message with key {key} and value {JsonConvert.SerializeObject(message)}");
         }
 
         public void Consume<T>(string topic) where T : class
@@ -46,7 +49,7 @@ namespace sample_stream_registry_chr_avro.Helpers
                 BootstrapServers = _bootstrapServers,
                 GroupId = "example_consumer_group"
             };
-            
+
             using var registry = new CachedSchemaRegistryClient(_schemaRegistryConfig);
             var builder = new ConsumerBuilder<string, T>(consumerConfig)
                 .SetAvroValueDeserializer(registry)
@@ -61,7 +64,7 @@ namespace sample_stream_registry_chr_avro.Helpers
                 if (result?.Message != null && !result.IsPartitionEOF)
                 {
                     Console.WriteLine(
-                        $"Received message for topic {topic} with key {result.Message.Key} and value {result.Message.Value}");
+                        $"Received message for topic {topic} with key {result.Message.Key} and value {JsonConvert.SerializeObject(result.Message.Value)}");
                 }
             }
         }

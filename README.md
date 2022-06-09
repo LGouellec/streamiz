@@ -55,8 +55,8 @@ Switch to `consumer`terminal and check aggregation result
 # ROADMAP
 
 - 1.3.0 - Metrics
-- 1.4.0 - Standby Replica, Processor API
-- 1.5.0 - Interactive Queries
+- 1.4.0 - Processor API
+- 1.5.0 - Interactive Queries, Standby Replica
 
 # Documentation
 
@@ -80,7 +80,7 @@ static async System.Threading.Tasks.Task Main(string[] args)
 { 
     var config = new StreamConfig<StringSerDes, StringSerDes>();
     config.ApplicationId = "test-app";
-    config.BootstrapServers = "192.168.56.1:9092";
+    config.BootstrapServers = "localhost:9092";
     
     StreamBuilder builder = new StreamBuilder();
 
@@ -100,19 +100,6 @@ static async System.Threading.Tasks.Task Main(string[] args)
     await stream.StartAsync();
 }
 ```
-
-# TODO implementation
-
-- [ ] Consumer Incremental Rebalance Protocol #KIP-429
-- [ ] Supress Processor (.suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded())))
-- [X] Repartition Processor [KAFKA-8611](https://issues.apache.org/jira/browse/KAFKA-8611) | [PR #7170](https://github.com/apache/kafka/pull/7170)
-- [ ] Processor API
-- [ ] Sample projects (Micro-services, console sample, topology implementation, etc ..) which use Streamiz package ([see](https://github.com/LGouellec/kafka-streams-dotnet-samples))
-- [ ] Json SerDes which interact Confluent Schema Registry
-- [ ] Optimizing Kafka Streams Topologies
-- [ ] Standby Replica
-- [ ] Interactive Queries
-- [X] Metrics
 
 # Contributing
 

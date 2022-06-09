@@ -36,5 +36,7 @@ jobs:
       run: dotnet pack serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.csproj  --configuration Release --include-source --include-symbols --no-build --no-restore
     - name: Pack Registry.Protobuf
       run: dotnet pack serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf.csproj  --configuration Release --include-source --include-symbols --no-build --no-restore
+    - name: Pack Metrics Prometheus
+      run: dotnet pack metrics/Streamiz.Kafka.Net.Metrics.Prometheus/Streamiz.Kafka.Net.Metrics.Prometheus.csproj --configuration Release --include-source --include-symbols --no-build --no-restore
     - name: Publish in nuget.org
       run: dotnet nuget push **/*symbols.nupkg -k ${{ secrets.NUGET_PACKAGE_TOKEN }} -s https://api.nuget.org/v3/index.json --no-symbols true      

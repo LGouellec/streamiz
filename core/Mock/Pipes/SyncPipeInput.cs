@@ -1,6 +1,4 @@
 ﻿using Confluent.Kafka;
-using Streamiz.Kafka.Net.Crosscutting;
-using Streamiz.Kafka.Net.Processors;
 using System;
 using Streamiz.Kafka.Net.Mock.Sync;
 
@@ -31,9 +29,9 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
             Flushed?.Invoke();
         }
 
-        public void Pipe(byte[] key, byte[] value, DateTime timestamp)
+        public void Pipe(byte[] key, byte[] value, DateTime timestamp, Headers headers)
         {
-            publisher.PublishRecord(topic, key, value, timestamp);
+            publisher.PublishRecord(topic, key, value, timestamp, headers);
         }
     }
 }

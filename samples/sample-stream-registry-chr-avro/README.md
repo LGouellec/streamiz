@@ -5,11 +5,13 @@ copy docker-compose.yml file next to sln
 
 run "docker-compose up -d"
 
-run "docker build -t schema-registry-test . "
-run "docker run -it --rm schema-registry-test"
+Now the sample application and the confluent kafka setup are running!
+Note: The sample app inside the docker container cannot access the kafka broker. But for testing, the code should be updated to use:
+	BootstrapServers = "broker:29092",
+	SchemaRegistryUrl = "http://schema-registry:8081",
 
-Now both the sample application and the confluent kafka setup are running!
 You can visit http://localhost:9021 to check Confluent's control center, but give it a minute or two. :)
+You can run the sample app directly since now it has access to Confluent.
 
 The sample app creates the necessary topics, generates the AVRO schema for them and publishes it to Schema Registry.
 Note: The models used for topic messages don't contain the schema information, we consult directly with Schema Registry.
@@ -23,6 +25,4 @@ The sample app waits continuously for other messages so other tests can be perfo
 
 Make sure to clean up once testing is done:
 	* docker-compose down -v
-	* docker stop schema-registry-test
-	* docker rm schema-registry-test
 

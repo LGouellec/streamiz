@@ -21,12 +21,12 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
             private int offset = 0;
 
-            public void PublishRecord(string topic, byte[] key, byte[] value, DateTime timestamp)
+            public void PublishRecord(string topic, byte[] key, byte[] value, DateTime timestamp, Headers headers)
                 => task.AddRecord(new ConsumeResult<byte[], byte[]>
                 {
                     Topic = topic,
                     TopicPartitionOffset = new TopicPartitionOffset(new TopicPartition(topic, task.Id.Partition), offset++),
-                    Message = new Message<byte[], byte[]> { Key = key, Value = value, Timestamp = new Timestamp(timestamp) }
+                    Message = new Message<byte[], byte[]> { Key = key, Value = value, Timestamp = new Timestamp(timestamp), Headers = headers }
                 });
 
             public void Flush()
@@ -47,13 +47,13 @@ namespace Streamiz.Kafka.Net.Mock.Sync
                 this.globalTask = globalTask;
             }
 
-            public void PublishRecord(string topic, byte[] key, byte[] value, DateTime timestamp)
+            public void PublishRecord(string topic, byte[] key, byte[] value, DateTime timestamp, Headers headers)
             {
                 globalTask.Update(new ConsumeResult<byte[], byte[]>
                 {
                     Topic = topic,
                     TopicPartitionOffset = new TopicPartitionOffset(new TopicPartition(topic, 0), offset++),
-                    Message = new Message<byte[], byte[]> { Key = key, Value = value, Timestamp = new Timestamp(timestamp) }
+                    Message = new Message<byte[], byte[]> { Key = key, Value = value, Timestamp = new Timestamp(timestamp), Headers = headers }
                 });
             }
 

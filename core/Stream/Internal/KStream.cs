@@ -138,9 +138,30 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             To(new StaticTopicNameExtractor<K, V>(topicName), named);
         }
 
+        public void To(string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null)
+        {
+            if (topicName == null)
+            {
+                throw new ArgumentNullException(nameof(topicName));
+            }
+
+            if (string.IsNullOrEmpty(topicName))
+            {
+                throw new ArgumentException("topicName must be empty");
+            }
+
+            To(new StaticTopicNameExtractor<K, V>(topicName), keySerdes, valueSerdes, named);
+        }
+
         public void To(ITopicNameExtractor<K, V> topicExtractor, string named = null) => DoTo(topicExtractor, Produced<K, V>.Create(KeySerdes, ValueSerdes).WithName(named));
 
+        public void To(ITopicNameExtractor<K, V> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null)
+            => DoTo(topicExtractor, Produced<K,V>.Create(keySerdes, valueSerdes).WithName(named));
+
         public void To(Func<K, V, IRecordContext, string> topicExtractor, string named = null) => To(new WrapperTopicNameExtractor<K, V>(topicExtractor), named);
+
+        public void To(Func<K, V, IRecordContext, string> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null)
+            => To(new WrapperTopicNameExtractor<K, V>(topicExtractor), keySerdes, valueSerdes, named);
 
         public void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor, string named = null)
             where KS : ISerDes<K>, new()

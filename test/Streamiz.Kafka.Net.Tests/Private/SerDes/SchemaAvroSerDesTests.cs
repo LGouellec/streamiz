@@ -106,7 +106,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         }
     }
 
-    #endregion Mock
+    #endregion
 
     public class SchemaAvroSerDesTests
     {
@@ -423,7 +423,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             config.SchemaRegistryRequestTimeoutMs = 30;
 
             var serdes = new SchemaAvroSerDes<Order>();
-            var schemaConfig = serdes.GetConfig(config);
+            var schemaConfig = serdes.ToConfig(config);
 
             Assert.AreEqual(1, schemaConfig.MaxCachedSchemas);
             Assert.AreEqual(30, schemaConfig.RequestTimeoutMs);
@@ -444,7 +444,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             };
 
             var serdes = new SchemaAvroSerDes<Order>();
-            var schemaConfig = serdes.GetSerializerConfig(config);
+            var schemaConfig = serdes.ToSerializerConfig(config);
 
             Assert.AreEqual(Confluent.SchemaRegistry.SubjectNameStrategy.TopicRecord, schemaConfig.SubjectNameStrategy);
             Assert.AreEqual(true, schemaConfig.AutoRegisterSchemas);
@@ -455,6 +455,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         [Test]
         public void SchemaRegistryProtobufSerializerConfig()
         {
+            // Move in other class
             var config = new StreamConfig
             {
                 SubjectNameStrategy = SubjectNameStrategy.TopicRecord,
@@ -467,7 +468,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             };
 
             var serdes = new SchemaProtobufSerDes<Helpers.Proto.Order>();
-            var schemaConfig = serdes.GetSerializerConfig(config);
+            var schemaConfig = serdes.ToSerializerConfig(config);
 
             Assert.AreEqual(Confluent.SchemaRegistry.SubjectNameStrategy.TopicRecord, schemaConfig.SubjectNameStrategy);
             Assert.AreEqual(false, schemaConfig.AutoRegisterSchemas);

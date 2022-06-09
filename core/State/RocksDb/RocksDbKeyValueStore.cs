@@ -89,8 +89,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         /// <param name="name">state store name</param>
         public RocksDbKeyValueStore(string name)
             : this(name, DB_FILE_DIR)
-        {
-        }
+        { }
 
         /// <summary>
         /// Constructor with state store name and parent directory

@@ -20,7 +20,9 @@ namespace sample_stream_registry_chr_avro
             {
                 ApplicationId = "test-app",
                 BootstrapServers = "localhost:9092",
+                //BootstrapServers = "broker:29092",
                 SchemaRegistryUrl = "http://localhost:8081",
+                //SchemaRegistryUrl = "http://schema-registry:8081",
                 AutoRegisterSchemas = true,
                 AllowAutoCreateTopics = false
             };
@@ -98,7 +100,7 @@ namespace sample_stream_registry_chr_avro
                 ProductId = 5
             };
 
-            await pubSubManager?.ProduceAsync(_productTopic, key, product)!;
+            await pubSubManager.ProduceAsync(_productTopic, key, product);
 
             var order = new Order
             {

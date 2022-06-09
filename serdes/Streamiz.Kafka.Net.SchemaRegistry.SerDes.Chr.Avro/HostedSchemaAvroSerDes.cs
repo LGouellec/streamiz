@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using Chr.Avro.Confluent;
 using Confluent.SchemaRegistry;
+using Confluent.SchemaRegistry.Serdes;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.SerDes;
 
@@ -12,8 +13,16 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Chr.Avro
     /// </summary>
     /// <typeparam name="T">type of avro bean
     /// </typeparam>
-    public class HostedSchemaAvroSerDes<T> : SchemaSerDes<T>
+    public class HostedSchemaAvroSerDes<T> : SchemaSerDes<T, AvroSerializerConfig>
     {
+        /// <summary>
+        /// Empty constructor
+        /// </summary>
+        public HostedSchemaAvroSerDes() :
+            base("avro")
+        {
+        }
+
         internal SchemaRegistryConfig GetConfig(ISchemaRegistryConfig config)
         {
             var c = new SchemaRegistryConfig
