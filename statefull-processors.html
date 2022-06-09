@@ -15,6 +15,7 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -104,10 +105,10 @@
            <div itemprop="articleBody">
              
   <section id="statefull-processors">
-<h1>Statefull processors<a class="headerlink" href="#statefull-processors" title="Permalink to this headline">¶</a></h1>
+<h1>Statefull processors<a class="headerlink" href="#statefull-processors" title="Permalink to this heading">¶</a></h1>
 <p>Stateful transformations depend on state for processing inputs and producing outputs and require a state store associated with the stream processor. For example, in aggregating operations, a windowing state store is used to collect the latest aggregation results per window. In join operations, a windowing state store is used to collect all of the records received so far within the defined window boundary.</p>
 <section id="count">
-<h2>Count<a class="headerlink" href="#count" title="Permalink to this headline">¶</a></h2>
+<h2>Count<a class="headerlink" href="#count" title="Permalink to this heading">¶</a></h2>
 <p><strong>Rolling aggregation.</strong> Counts the number of records by the grouped key. (see IKGroupedStream for details)</p>
 <p>Several variants of count exist.</p>
 <ul class="simple">
@@ -137,7 +138,7 @@
 </ul>
 </section>
 <section id="count-windowed">
-<h2>Count (Windowed)<a class="headerlink" href="#count-windowed" title="Permalink to this headline">¶</a></h2>
+<h2>Count (Windowed)<a class="headerlink" href="#count-windowed" title="Permalink to this heading">¶</a></h2>
 <p>** Windowed aggregation.** Counts the number of records, per window, by the grouped key. (ITimeWindowedKStream details)</p>
 <p>The windowed count turns a ITimeWindowedKStream&lt;K, V&gt; into a windowed IKTable&lt;Windowed<K>, V&gt;.</p>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">groupedStream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">builder</span><span class="w"></span>
@@ -155,7 +156,7 @@
 </ul>
 </section>
 <section id="aggregate">
-<h2>Aggregate<a class="headerlink" href="#aggregate" title="Permalink to this headline">¶</a></h2>
+<h2>Aggregate<a class="headerlink" href="#aggregate" title="Permalink to this heading">¶</a></h2>
 <p><strong>Rolling aggregation.</strong> Aggregates the values of (non-windowed) records by the grouped key. Aggregating is a generalization of reduce and allows, for example, the aggregate value to have a different type than the input values. (see IKGroupedStream for details)</p>
 <p>When aggregating a grouped stream, you must provide an initializer (e.g., aggValue = 0) and an “adder” aggregator (e.g., aggValue + curValue).</p>
 <p>Several variants of aggregate exist.</p>
@@ -207,7 +208,7 @@
 </ul>
 </section>
 <section id="aggregate-windowed">
-<h2>Aggregate (Windowed)<a class="headerlink" href="#aggregate-windowed" title="Permalink to this headline">¶</a></h2>
+<h2>Aggregate (Windowed)<a class="headerlink" href="#aggregate-windowed" title="Permalink to this heading">¶</a></h2>
 <p><strong>Windowed aggregation.</strong> Aggregates the values of records, per window, by the grouped key. Aggregating is a generalization of reduce and allows, for example, the aggregate value to have a different type than the input values. (ITimeWindowedKStream details)</p>
 <p>You must provide an initializer (e.g., aggValue = 0), “adder” aggregator (e.g., aggValue + curValue), and a window. When windowing based on sessions, you must additionally provide a “session merger” aggregator (e.g., mergedAggValue = leftAggValue + rightAggValue).</p>
 <p>The windowed aggregate turns a ITimeWindowedKStream&lt;K, V&gt; into a windowed IKTable&lt;Windowed<K>, V&gt;.</p>
@@ -232,7 +233,7 @@
 </ul>
 </section>
 <section id="reduce">
-<h2>Reduce<a class="headerlink" href="#reduce" title="Permalink to this headline">¶</a></h2>
+<h2>Reduce<a class="headerlink" href="#reduce" title="Permalink to this heading">¶</a></h2>
 <p><strong>Rolling aggregation.</strong> Combines the values of (non-windowed) records by the grouped key. The current record value is combined with the last reduced value, and a new reduced value is returned. The result value type cannot be changed, unlike aggregate. (see IKGroupedStream for details)</p>
 <p>When reducing a grouped stream, you must provide an “adder” reducer (e.g., aggValue + curValue).</p>
 <p>Several variants of reduce exist.</p>
@@ -274,7 +275,7 @@
 </ul>
 </section>
 <section id="reduce-windowed">
-<h2>Reduce (Windowed)<a class="headerlink" href="#reduce-windowed" title="Permalink to this headline">¶</a></h2>
+<h2>Reduce (Windowed)<a class="headerlink" href="#reduce-windowed" title="Permalink to this heading">¶</a></h2>
 <p><strong>Windowed aggregation.</strong> Combines the values of records, per window, by the grouped key. The current record value is combined with the last reduced value, and a new reduced value is returned. Records with null key or value are ignored. The result value type cannot be changed, unlike aggregate. (ITimeWindowedKStream details)</p>
 <p>The windowed reduce turns a turns a ITimeWindowedKStream&lt;K, V&gt; into a windowed IKTable&lt;Windowed<K>, V&gt;.</p>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">groupedStream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">builder</span><span class="w"></span>
@@ -295,10 +296,10 @@
 </ul>
 </section>
 <section id="ikstream-ikstream-join">
-<h2>IKStream-IKStream Join<a class="headerlink" href="#ikstream-ikstream-join" title="Permalink to this headline">¶</a></h2>
+<h2>IKStream-IKStream Join<a class="headerlink" href="#ikstream-ikstream-join" title="Permalink to this heading">¶</a></h2>
 <p>IKStream-IKStream joins are always windowed joins, because otherwise the size of the internal state store used to perform the join – e.g., a sliding window or “buffer” – would grow indefinitely. For stream-stream joins it’s important to highlight that a new input record on one side will produce a join output for each matching record on the other side, and there can be multiple such matching records in a given join window.</p>
 <section id="inner-join-windowed">
-<h3>Inner Join (Windowed)<a class="headerlink" href="#inner-join-windowed" title="Permalink to this headline">¶</a></h3>
+<h3>Inner Join (Windowed)<a class="headerlink" href="#inner-join-windowed" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>(IKStream, IKStream) → IKStream</p></li>
 </ul>
@@ -322,7 +323,7 @@
 </ul>
 </section>
 <section id="left-join-windowed">
-<h3>Left Join (Windowed)<a class="headerlink" href="#left-join-windowed" title="Permalink to this headline">¶</a></h3>
+<h3>Left Join (Windowed)<a class="headerlink" href="#left-join-windowed" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>(IKStream, IKStream) → IKStream</p></li>
 </ul>
@@ -346,7 +347,7 @@
 </ul>
 </section>
 <section id="outer-join-windowed">
-<h3>Outer Join (Windowed)<a class="headerlink" href="#outer-join-windowed" title="Permalink to this headline">¶</a></h3>
+<h3>Outer Join (Windowed)<a class="headerlink" href="#outer-join-windowed" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>(IKStream, IKStream) → IKStream</p></li>
 </ul>
@@ -371,10 +372,10 @@
 </section>
 </section>
 <section id="ikstream-iktable-join">
-<h2>IKStream-IKTable Join<a class="headerlink" href="#ikstream-iktable-join" title="Permalink to this headline">¶</a></h2>
+<h2>IKStream-IKTable Join<a class="headerlink" href="#ikstream-iktable-join" title="Permalink to this heading">¶</a></h2>
 <p>IKStream-IKTable joins are always non-windowed joins. They allow you to perform table lookups against a IKTable (changelog stream) upon receiving a new record from the IKStream (record stream). An example use case would be to enrich a stream of user activities (IKStream) with the latest user profile information (IKTable).</p>
 <section id="inner-join">
-<h3>Inner Join<a class="headerlink" href="#inner-join" title="Permalink to this headline">¶</a></h3>
+<h3>Inner Join<a class="headerlink" href="#inner-join" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>(IKStream, IKTable) → IKStream</p></li>
 </ul>
@@ -398,7 +399,7 @@ Input records for the table with a null value are interpreted as tombstones for 
 </ul>
 </section>
 <section id="left-join">
-<h3>Left Join<a class="headerlink" href="#left-join" title="Permalink to this headline">¶</a></h3>
+<h3>Left Join<a class="headerlink" href="#left-join" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>(IKStream, IKTable) → IKStream</p></li>
 </ul>
@@ -424,7 +425,7 @@ For each input record on the left side that does not have any match on the right
 </section>
 </section>
 <section id="ikstream-iglobalktable-join">
-<h2>IKStream-IGlobalKTable Join<a class="headerlink" href="#ikstream-iglobalktable-join" title="Permalink to this headline">¶</a></h2>
+<h2>IKStream-IGlobalKTable Join<a class="headerlink" href="#ikstream-iglobalktable-join" title="Permalink to this heading">¶</a></h2>
 <p>IKStream-IGlobalKTable joins are always non-windowed joins. They allow you to perform table lookups against a IGlobalKTable (entire changelog stream) upon receiving a new record from the IKStream (record stream). An example use case would be “star queries” or “star joins”, where you would enrich a stream of user activities (IKStream) with the latest user profile information (IGlobalKTable) and further context information (further GlobalKTables). However, because GlobalKTables have no notion of time, a IKStream-IGlobalKTable join is not a temporal join, and there is no event-time synchronization between updates to a IGlobalKTable and processing of IKStream records.</p>
 <p>At a high-level, IKStream-IGlobalKTable joins are very similar to IKStream-IKTable joins. However, global tables provide you with much more flexibility at the some expense when compared to partitioned tables:</p>
 <ul class="simple">
@@ -435,7 +436,7 @@ For each input record on the left side that does not have any match on the right
 <li><p>They are often more efficient than their partitioned IKTable counterpart when you need to perform multiple joins in succession.</p></li>
 </ul>
 <section id="id1">
-<h3>Inner Join<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<h3>Inner Join<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>(IKStream, IGlobalKTable) → IKStream</p></li>
 </ul>
@@ -460,7 +461,7 @@ Input records for the table with a null value are interpreted as tombstones, whi
 </ul>
 </section>
 <section id="id2">
-<h3>Left Join<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<h3>Left Join<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>(IKStream, IGlobalKTable) → IKStream</p></li>
 </ul>
@@ -487,10 +488,10 @@ For each input record on the left side that does not have any match on the right
 </section>
 </section>
 <section id="iktable-iktable-equi-join">
-<h2>IKTable-IKTable Equi-Join<a class="headerlink" href="#iktable-iktable-equi-join" title="Permalink to this headline">¶</a></h2>
+<h2>IKTable-IKTable Equi-Join<a class="headerlink" href="#iktable-iktable-equi-join" title="Permalink to this heading">¶</a></h2>
 <p>IKTable-IKTable equi-joins are always non-windowed joins. They are designed to be consistent with their counterparts in relational databases. The changelog streams of both IKTables are materialized into local state stores to represent the latest snapshot of their table duals. The join result is a new IKTable that represents the changelog stream of the join operation.</p>
 <section id="id3">
-<h3>Inner Join<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<h3>Inner Join<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>(IKTable, IKTable) → IKTable</p></li>
 </ul>
@@ -511,7 +512,7 @@ For each input record on the left side that does not have any match on the right
 </ul>
 </section>
 <section id="id4">
-<h3>Left Join<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<h3>Left Join<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>(IKTable, IKTable) → IKTable</p></li>
 </ul>
@@ -533,7 +534,7 @@ For each input record on the left side that does not have any match on the right
 </ul>
 </section>
 <section id="outer-join">
-<h3>Outer Join<a class="headerlink" href="#outer-join" title="Permalink to this headline">¶</a></h3>
+<h3>Outer Join<a class="headerlink" href="#outer-join" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>(IKTable, IKTable) → IKTable</p></li>
 </ul>

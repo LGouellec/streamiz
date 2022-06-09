@@ -15,6 +15,7 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -91,10 +92,10 @@
            <div itemprop="articleBody">
              
   <section id="stateless-processors">
-<h1>Stateless processors<a class="headerlink" href="#stateless-processors" title="Permalink to this headline">¶</a></h1>
+<h1>Stateless processors<a class="headerlink" href="#stateless-processors" title="Permalink to this heading">¶</a></h1>
 <p>Stateless transformations do not require state for processing and they do not require a state store associated with the stream processor. Kafka 0.11.0 and later allows you to materialize the result from a stateless IKTable transformation. This allows the result to be queried through interactive queries. To materialize a IKTable, each of the below stateless operations can be augmented with an optional queryableStoreName argument.</p>
 <section id="branch">
-<h2>Branch<a class="headerlink" href="#branch" title="Permalink to this headline">¶</a></h2>
+<h2>Branch<a class="headerlink" href="#branch" title="Permalink to this heading">¶</a></h2>
 <p>Branch (or split) a IKStream based on the supplied predicates into one or more IKStream instances. (details)</p>
 <p>Predicates are evaluated in order. A record is placed to one and only one output stream on the first match: if the n-th predicate evaluates to true, the record is placed to n-th stream. If no predicate matches, the the record is dropped.</p>
 <p>Branching is useful, for example, to route records to different downstream topics.</p>
@@ -115,7 +116,7 @@
 </div>
 </section>
 <section id="filter">
-<h2>Filter<a class="headerlink" href="#filter" title="Permalink to this headline">¶</a></h2>
+<h2>Filter<a class="headerlink" href="#filter" title="Permalink to this heading">¶</a></h2>
 <p>Evaluates a boolean function for each element and retains those for which the function returns true.</p>
 <ul class="simple">
 <li><p>IKStream -&gt; IKStream</p></li>
@@ -131,7 +132,7 @@
 </div>
 </section>
 <section id="inversefilter">
-<h2>InverseFilter<a class="headerlink" href="#inversefilter" title="Permalink to this headline">¶</a></h2>
+<h2>InverseFilter<a class="headerlink" href="#inversefilter" title="Permalink to this heading">¶</a></h2>
 <p>Evaluates a boolean function for each element and drops those for which the function returns true.</p>
 <ul class="simple">
 <li><p>IKStream -&gt; IKStream</p></li>
@@ -147,7 +148,7 @@
 </div>
 </section>
 <section id="flatmap">
-<h2>FlatMap<a class="headerlink" href="#flatmap" title="Permalink to this headline">¶</a></h2>
+<h2>FlatMap<a class="headerlink" href="#flatmap" title="Permalink to this heading">¶</a></h2>
 <p>Takes one record and produces zero, one, or more records. You can modify the record keys and values, including their types.</p>
 <ul class="simple">
 <li><p>IKStream → IKStream</p></li>
@@ -169,7 +170,7 @@
 </div>
 </section>
 <section id="flatmapvalues">
-<h2>FlatMapValues<a class="headerlink" href="#flatmapvalues" title="Permalink to this headline">¶</a></h2>
+<h2>FlatMapValues<a class="headerlink" href="#flatmapvalues" title="Permalink to this heading">¶</a></h2>
 <p>Takes one record and produces zero, one, or more records, while retaining the key of the original record. You can modify the record values and the value type.</p>
 <p>flatMapValues is preferable to flatMap because it will not cause data re-partitioning. However, you cannot modify the key or key type like flatMap does.</p>
 <ul class="simple">
@@ -183,7 +184,7 @@
 </div>
 </section>
 <section id="foreach">
-<h2>Foreach<a class="headerlink" href="#foreach" title="Permalink to this headline">¶</a></h2>
+<h2>Foreach<a class="headerlink" href="#foreach" title="Permalink to this heading">¶</a></h2>
 <p>Terminal operation. Performs a stateless action on each record.</p>
 <p>You would use foreach to cause side effects based on the input data (similar to peek) and then stop further processing of the input data (unlike peek, which is not a terminal operation).</p>
 <p>Note on processing guarantees: Any side effects of an action (such as writing to external systems) are not trackable by Kafka, which means they will typically not benefit from Kafka’s processing guarantees.</p>
@@ -198,7 +199,7 @@
 </div>
 </section>
 <section id="groupbykey">
-<h2>GroupByKey<a class="headerlink" href="#groupbykey" title="Permalink to this headline">¶</a></h2>
+<h2>GroupByKey<a class="headerlink" href="#groupbykey" title="Permalink to this heading">¶</a></h2>
 <p>Groups the records by the existing key.</p>
 <p>Grouping is a prerequisite for aggregating a stream or a table and ensures that data is properly partitioned (“keyed”) for subsequent operations.</p>
 <p>When to set explicit SerDes: Variants of GroupByKey exist to override the configured default SerDes of your application, which you must do if the key and/or value types of the resulting IKGroupedStream do not match the configured default SerDes.</p>
@@ -207,7 +208,7 @@
 </ul>
 </section>
 <section id="groupby">
-<h2>GroupBy<a class="headerlink" href="#groupby" title="Permalink to this headline">¶</a></h2>
+<h2>GroupBy<a class="headerlink" href="#groupby" title="Permalink to this heading">¶</a></h2>
 <p>Groups the records by a new key, which may be of a different key type. When grouping a table, you may also specify a new value and value type. groupBy is a shorthand for SelectKey(…).GroupByKey().</p>
 <p>Grouping is a prerequisite for aggregating a stream or a table and ensures that data is properly partitioned (“keyed”) for subsequent operations.</p>
 <p>When to set explicit SerDes: Variants of GroupBy exist to override the configured default SerDes of your application, which you must do if the key and/or value types of the resulting IKGroupedStream or IKGroupedTable do not match the configured default SerDes.</p>
@@ -217,7 +218,7 @@
 </ul>
 </section>
 <section id="map">
-<h2>Map<a class="headerlink" href="#map" title="Permalink to this headline">¶</a></h2>
+<h2>Map<a class="headerlink" href="#map" title="Permalink to this heading">¶</a></h2>
 <p>Takes one record and produces one record. You can modify the record key and value, including their types.</p>
 <ul class="simple">
 <li><p>IKStream → IKStream</p></li>
@@ -230,7 +231,7 @@
 </div>
 </section>
 <section id="mapvalues">
-<h2>MapValues<a class="headerlink" href="#mapvalues" title="Permalink to this headline">¶</a></h2>
+<h2>MapValues<a class="headerlink" href="#mapvalues" title="Permalink to this heading">¶</a></h2>
 <p>Takes one record and produces one record, while retaining the key of the original record. You can modify the record value and the value type.</p>
 <p>MapValues is preferable to map because it will not cause data re-partitioning. However, it does not allow you to modify the key or key type like map does.</p>
 <ul class="simple">
@@ -247,7 +248,7 @@
 </div>
 </section>
 <section id="peek">
-<h2>Peek<a class="headerlink" href="#peek" title="Permalink to this headline">¶</a></h2>
+<h2>Peek<a class="headerlink" href="#peek" title="Permalink to this heading">¶</a></h2>
 <p>Performs a stateless action on each record, and returns an unchanged stream.</p>
 <p>You would use peek to cause side effects based on the input data (similar to foreach) and continue processing the input data (unlike foreach, which is a terminal operation). peek returns the input stream as-is; if you need to modify the input stream, use map or mapValues instead.</p>
 <p>Peek is helpful for use cases such as logging or tracking metrics or for debugging and troubleshooting.</p>
@@ -262,7 +263,7 @@
 </div>
 </section>
 <section id="print">
-<h2>Print<a class="headerlink" href="#print" title="Permalink to this headline">¶</a></h2>
+<h2>Print<a class="headerlink" href="#print" title="Permalink to this heading">¶</a></h2>
 <p>Terminal operation. Prints the records to Sys Out.</p>
 <p>Calling Print() is the same as calling Foreach((key, value) =&gt; Console.WriteLine($”{k} {v}”))</p>
 <p>Print is mainly for debugging/testing purposes, and it will try to flush on each record print. Hence it should not be used for production usage if performance requirements are concerned.</p>
@@ -277,7 +278,7 @@
 </div>
 </section>
 <section id="selectkey">
-<h2>SelectKey<a class="headerlink" href="#selectkey" title="Permalink to this headline">¶</a></h2>
+<h2>SelectKey<a class="headerlink" href="#selectkey" title="Permalink to this heading">¶</a></h2>
 <p>Assigns a new key – possibly of a new key type – to each record.</p>
 <p>Calling SelectKey(…) is the same as calling Map((key, value) =&gt; …)</p>
 <p>Marks the stream for data re-partitioning: Applying a grouping or a join after selectKey will result in re-partitioning of the records.</p>
@@ -292,7 +293,7 @@
 </div>
 </section>
 <section id="table-to-steam">
-<h2>Table to Steam<a class="headerlink" href="#table-to-steam" title="Permalink to this headline">¶</a></h2>
+<h2>Table to Steam<a class="headerlink" href="#table-to-steam" title="Permalink to this heading">¶</a></h2>
 <p>Get the changelog stream of this table.</p>
 <ul class="simple">
 <li><p>IKTable → IKStream</p></li>
@@ -305,7 +306,7 @@
 </div>
 </section>
 <section id="repartition">
-<h2>Repartition<a class="headerlink" href="#repartition" title="Permalink to this headline">¶</a></h2>
+<h2>Repartition<a class="headerlink" href="#repartition" title="Permalink to this heading">¶</a></h2>
 <p>Manually trigger repartitioning of the stream with desired number of partitions.</p>
 <p>Generated topic is treated as internal topic, as a result data will be purged automatically as any other internal repartition topic. In addition, you can specify the desired number of partitions, which allows to easily scale in/out downstream sub-topologies.</p>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>

@@ -15,6 +15,7 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -126,14 +127,14 @@
            <div itemprop="articleBody">
              
   <section id="configuring-a-stream-application">
-<h1>Configuring a Stream Application<a class="headerlink" href="#configuring-a-stream-application" title="Permalink to this headline">¶</a></h1>
+<h1>Configuring a Stream Application<a class="headerlink" href="#configuring-a-stream-application" title="Permalink to this heading">¶</a></h1>
 <p>Stream configuration options must be configured before using Streams. You can configure KafkaStream by specifying parameters in a <code class="docutils literal notranslate"> <span class="pre">IStreamConfig</span></code> instance.</p>
 <p><code class="docutils literal notranslate"> <span class="pre">IStreamConfig</span></code> is an interface which defines all the parameters necessary for the proper functioning of a stream. You can therefore create your own implementation of your configuration.</p>
 <p>You have a default implementation in Streamiz Kafka .Net package (aka <code class="docutils literal notranslate"> <span class="pre">StreamConfig</span></code>)</p>
 <section id="required-configuration-parameters">
-<h2>Required configuration parameters<a class="headerlink" href="#required-configuration-parameters" title="Permalink to this headline">¶</a></h2>
+<h2>Required configuration parameters<a class="headerlink" href="#required-configuration-parameters" title="Permalink to this heading">¶</a></h2>
 <section id="applicationid">
-<h3>ApplicationId<a class="headerlink" href="#applicationid" title="Permalink to this headline">¶</a></h3>
+<h3>ApplicationId<a class="headerlink" href="#applicationid" title="Permalink to this heading">¶</a></h3>
 <p>(Required) The application ID. Each stream processing application must have a unique ID. The same ID must be given to all instances of the application. It is recommended to use only alphanumeric characters, . (dot), - (hyphen), and _ (underscore). Examples: “hello_world”, “hello_world-v1.0.0”</p>
 <p>This ID is used in the following places to isolate resources used by the application from others:</p>
 <p>As the default Kafka consumer and producer client.id prefix
@@ -144,20 +145,20 @@ Tip:
 When an application is updated, the application.id should be changed unless you want to reuse the existing data in internal topics and state stores. For example, you could embed the version information within application.id, as my-app-v1.0.0 and my-app-v1.0.2.</p>
 </section>
 <section id="bootstrapservers">
-<h3>BootstrapServers<a class="headerlink" href="#bootstrapservers" title="Permalink to this headline">¶</a></h3>
+<h3>BootstrapServers<a class="headerlink" href="#bootstrapservers" title="Permalink to this heading">¶</a></h3>
 <p>(Required) The Kafka bootstrap servers. This is the same setting that is used by the underlying producer and consumer clients to connect to the Kafka cluster. Example: “kafka-broker1:9092,kafka-broker2:9092”.</p>
 <p>Tip:
 Kafka Streams applications can only communicate with a single Kafka cluster specified by this config value. Future versions of Kafka Streams will support connecting to different Kafka clusters for reading input streams and writing output stream</p>
 </section>
 </section>
 <section id="optional-configuration-parameters">
-<h2>Optional configuration parameters<a class="headerlink" href="#optional-configuration-parameters" title="Permalink to this headline">¶</a></h2>
+<h2>Optional configuration parameters<a class="headerlink" href="#optional-configuration-parameters" title="Permalink to this heading">¶</a></h2>
 <section id="guarantee">
-<h3>Guarantee<a class="headerlink" href="#guarantee" title="Permalink to this headline">¶</a></h3>
+<h3>Guarantee<a class="headerlink" href="#guarantee" title="Permalink to this heading">¶</a></h3>
 <p>The processing guarantee that should be used. Possible values are <code class="docutils literal notranslate"><span class="pre">ProcessingGuarantee.AT_LEAST_ONCE</span></code> (default) and <code class="docutils literal notranslate"><span class="pre">ProcessingGuarantee.EXACTLY_ONCE</span></code>. Note that if exactly-once processing is enabled, the default for parameter commit.interval.ms changes to 100ms. Additionally, consumers are configured with isolation.level=”read_committed” and producers are configured with retries=Int32.MAX_VALUE, enable.idempotence=true, and max.in.flight.requests.per.connection=5 per default. Note that by default exactly-once processing requires a cluster of at least three brokers what is the recommended setting for production. For development you can change this, by adjusting broker setting transaction.state.log.replication.factor and transaction.state.log.min.isr to the number of broker you want to use.</p>
 </section>
 <section id="defaulttimestampextractor">
-<h3>DefaultTimestampExtractor<a class="headerlink" href="#defaulttimestampextractor" title="Permalink to this headline">¶</a></h3>
+<h3>DefaultTimestampExtractor<a class="headerlink" href="#defaulttimestampextractor" title="Permalink to this heading">¶</a></h3>
 <p>A timestamp extractor pulls a timestamp from an instance of ConsumeResult. Timestamps are used to control the progress of streams.</p>
 <p>The default extractor is FailOnInvalidTimestamp. This extractor retrieves built-in timestamps that are automatically embedded into Kafka messages by the Kafka producer client since Kafka version 0.10. Depending on the setting of Kafka’s server-side log.message.timestamp.type broker and message.timestamp.type topic parameters, this extractor provides you with:</p>
 <p>event-time processing semantics if log.message.timestamp.type is set to CreateTime aka “producer time” (which is the default). This represents the time when a Kafka producer sent the original message. If you use Kafka’s official producer client, the timestamp represents milliseconds since the epoch.
@@ -218,7 +219,7 @@ The FailOnInvalidTimestamp extractor throws an exception if a record contains an
 </div>
 </section>
 <section id="defaultkeyserdes">
-<h3>DefaultKeySerDes<a class="headerlink" href="#defaultkeyserdes" title="Permalink to this headline">¶</a></h3>
+<h3>DefaultKeySerDes<a class="headerlink" href="#defaultkeyserdes" title="Permalink to this heading">¶</a></h3>
 <p>The default Serializer/Deserializer class for record keys. Serialization and deserialization in Kafka Streams happens whenever data needs to be materialized, for example:</p>
 <p>Whenever data is read from or written to a Kafka topic (e.g., via the StreamsBuilder#Stream&lt;K, V&gt;() and IKStream&lt;K, V&gt;#To() methods).
 Whenever data is read from or written to a state store.</p>
@@ -235,7 +236,7 @@ Whenever data is read from or written to a state store.</p>
 </div>
 </section>
 <section id="defaultvalueserdes">
-<h3>DefaultValueSerDes<a class="headerlink" href="#defaultvalueserdes" title="Permalink to this headline">¶</a></h3>
+<h3>DefaultValueSerDes<a class="headerlink" href="#defaultvalueserdes" title="Permalink to this heading">¶</a></h3>
 <p>The default Serializer/Deserializer class for record values. Serialization and deserialization in Kafka Streams happens whenever data needs to be materialized, for example:</p>
 <p>Whenever data is read from or written to a Kafka topic (e.g., via the StreamsBuilder#Stream&lt;K, V&gt;() and IKStream&lt;K, V&gt;#To() methods).
 Whenever data is read from or written to a state store.</p>
@@ -252,11 +253,11 @@ Whenever data is read from or written to a state store.</p>
 </div>
 </section>
 <section id="numstreamthreads">
-<h3>NumStreamThreads<a class="headerlink" href="#numstreamthreads" title="Permalink to this headline">¶</a></h3>
+<h3>NumStreamThreads<a class="headerlink" href="#numstreamthreads" title="Permalink to this heading">¶</a></h3>
 <p>This specifies the number of stream threads in an instance of the Kafka Streams application. The stream processing code runs in these thread.</p>
 </section>
 <section id="clientid">
-<h3>ClientId<a class="headerlink" href="#clientid" title="Permalink to this headline">¶</a></h3>
+<h3>ClientId<a class="headerlink" href="#clientid" title="Permalink to this heading">¶</a></h3>
 <p>An ID prefix string used for the client IDs of internal consumer, producer and restore-consumer, with pattern ‘<ClientId>-StreamThread-<threadSequenceNumber>-&lt;consumer|producer|restore-consumer&gt;’ with</p>
 <ul class="simple">
 <li><p>ClientId : property setted, if null or empty, CliendId is randomly generated wih ‘ApplicationId-{GUID}’</p></li>
@@ -264,62 +265,62 @@ Whenever data is read from or written to a state store.</p>
 </ul>
 </section>
 <section id="transactionalid">
-<h3>TransactionalId<a class="headerlink" href="#transactionalid" title="Permalink to this headline">¶</a></h3>
+<h3>TransactionalId<a class="headerlink" href="#transactionalid" title="Permalink to this heading">¶</a></h3>
 <p>Enables the transactional producer. The TransactionalId is used to identify the same transactional producer instance across process restarts.
 Only use if Guarantee is setted to <code class="docutils literal notranslate"><span class="pre">ProcessingGuarantee.EXACTLY_ONCE</span></code>.</p>
 </section>
 <section id="transactiontimeout">
-<h3>TransactionTimeout<a class="headerlink" href="#transactiontimeout" title="Permalink to this headline">¶</a></h3>
+<h3>TransactionTimeout<a class="headerlink" href="#transactiontimeout" title="Permalink to this heading">¶</a></h3>
 <p>Timeout used for transaction related operations. (Default : 10 seconds).
 Only use if Guarantee is set to <code class="docutils literal notranslate"><span class="pre">ProcessingGuarantee.EXACTLY_ONCE</span></code>.</p>
 </section>
 <section id="commitintervalms">
-<h3>CommitIntervalMs<a class="headerlink" href="#commitintervalms" title="Permalink to this headline">¶</a></h3>
+<h3>CommitIntervalMs<a class="headerlink" href="#commitintervalms" title="Permalink to this heading">¶</a></h3>
 <p>The frequency with which to save the position of the processor. (Note, if Guarantee is set to <code class="docutils literal notranslate"><span class="pre">ProcessingGuarantee.EXACTLY_ONCE</span></code>, the default value is <code class="docutils literal notranslate"><span class="pre">StreamConfig.EOS_DEFAULT_COMMIT_INTERVAL_MS</span></code>,
 otherwise the default value is <code class="docutils literal notranslate"><span class="pre">StreamConfig.DEFAULT_COMMIT_INTERVAL_MS</span></code>.</p>
 </section>
 <section id="pollms">
-<h3>PollMs<a class="headerlink" href="#pollms" title="Permalink to this headline">¶</a></h3>
+<h3>PollMs<a class="headerlink" href="#pollms" title="Permalink to this heading">¶</a></h3>
 <p>The amount of time in milliseconds to block waiting for input. (Default : 100)</p>
 </section>
 <section id="maxpollrecords">
-<h3>MaxPollRecords<a class="headerlink" href="#maxpollrecords" title="Permalink to this headline">¶</a></h3>
+<h3>MaxPollRecords<a class="headerlink" href="#maxpollrecords" title="Permalink to this heading">¶</a></h3>
 <p>The maximum number of records returned in consumption processing by thread. (Default: 500)</p>
 </section>
 <section id="maxpollrestoringrecords">
-<h3>MaxPollRestoringRecords<a class="headerlink" href="#maxpollrestoringrecords" title="Permalink to this headline">¶</a></h3>
+<h3>MaxPollRestoringRecords<a class="headerlink" href="#maxpollrestoringrecords" title="Permalink to this heading">¶</a></h3>
 <p>The maximum number of records processed for each restoration step. Only use when application needs to restore state store from changelog topics. (Default: 1000)</p>
 </section>
 <section id="maxtaskidlems">
-<h3>MaxTaskIdleMs<a class="headerlink" href="#maxtaskidlems" title="Permalink to this headline">¶</a></h3>
+<h3>MaxTaskIdleMs<a class="headerlink" href="#maxtaskidlems" title="Permalink to this heading">¶</a></h3>
 <p>Maximum amount of time a stream task will stay idle when not all of its partition buffers contain records, to avoid potential out-of-order record processing across multiple input streams. (Default: 0)</p>
 </section>
 <section id="maxpollintervalms">
-<h3>MaxPollIntervalMs<a class="headerlink" href="#maxpollintervalms" title="Permalink to this headline">¶</a></h3>
+<h3>MaxPollIntervalMs<a class="headerlink" href="#maxpollintervalms" title="Permalink to this heading">¶</a></h3>
 <p>Maximum allowed time between calls to consume messages for high-level consumers. If this interval is exceeded the consumer is considered failed and the group will rebalance in order to reassign the partitions to another consumer group member.</p>
 </section>
 <section id="bufferedrecordsperpartition">
-<h3>BufferedRecordsPerPartition<a class="headerlink" href="#bufferedrecordsperpartition" title="Permalink to this headline">¶</a></h3>
+<h3>BufferedRecordsPerPartition<a class="headerlink" href="#bufferedrecordsperpartition" title="Permalink to this heading">¶</a></h3>
 <p>Maximum number of records to buffer per partition. (Default: 1000)
 If this number is exceeded, the consumer pauses for this partition until stream instance process messages.</p>
 </section>
 <section id="innerexceptionhandler">
-<h3>InnerExceptionHandler<a class="headerlink" href="#innerexceptionhandler" title="Permalink to this headline">¶</a></h3>
+<h3>InnerExceptionHandler<a class="headerlink" href="#innerexceptionhandler" title="Permalink to this heading">¶</a></h3>
 <p>Inner exception handling function called during processing.</p>
 </section>
 <section id="deserializationexceptionhandler">
-<h3>DeserializationExceptionHandler<a class="headerlink" href="#deserializationexceptionhandler" title="Permalink to this headline">¶</a></h3>
+<h3>DeserializationExceptionHandler<a class="headerlink" href="#deserializationexceptionhandler" title="Permalink to this heading">¶</a></h3>
 <p>Deserialization exception handling function called when deserialization exception during kafka consumption is raise.</p>
 </section>
 <section id="productionexceptionhandler">
-<h3>ProductionExceptionHandler<a class="headerlink" href="#productionexceptionhandler" title="Permalink to this headline">¶</a></h3>
+<h3>ProductionExceptionHandler<a class="headerlink" href="#productionexceptionhandler" title="Permalink to this heading">¶</a></h3>
 <p>Production exception handling function called when kafka produce exception is raise.</p>
 </section>
 <section id="logger">
-<h3>Logger<a class="headerlink" href="#logger" title="Permalink to this headline">¶</a></h3>
+<h3>Logger<a class="headerlink" href="#logger" title="Permalink to this heading">¶</a></h3>
 <p>This library uses Microsoft.Extensions.Logging.Abstractions for logging. To set logging for this library you need to set Logger property in your stream config instance.</p>
 <section id="configuring-log4net">
-<h4>Configuring log4net<a class="headerlink" href="#configuring-log4net" title="Permalink to this headline">¶</a></h4>
+<h4>Configuring log4net<a class="headerlink" href="#configuring-log4net" title="Permalink to this heading">¶</a></h4>
 <p>To configure log4net you need to install Microsoft.Extensions.Logging.Log4Net.AspNetCore nuget package in your project and add log4net.config.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>dotnet add package Microsoft.Extensions.Logging.Log4Net.AspNetCore
 </pre></div>
@@ -348,87 +349,87 @@ If this number is exceeded, the consumer pauses for this partition until stream 
 </section>
 </section>
 <section id="followmetadata">
-<h3>FollowMetadata<a class="headerlink" href="#followmetadata" title="Permalink to this headline">¶</a></h3>
+<h3>FollowMetadata<a class="headerlink" href="#followmetadata" title="Permalink to this heading">¶</a></h3>
 <p>Authorize your streams application to follow metadata (timestamp, topic, partition, offset and headers) during processing record. You can use <code class="docutils literal notranslate"><span class="pre">StreamizMetadata</span></code> to get these metadatas. (Default : false)</p>
 </section>
 <section id="statedir">
-<h3>StateDir<a class="headerlink" href="#statedir" title="Permalink to this headline">¶</a></h3>
+<h3>StateDir<a class="headerlink" href="#statedir" title="Permalink to this heading">¶</a></h3>
 <p>Directory location for state store. This path must be unique for each streams instance sharing the same underlying filesystem. (Default : <code class="docutils literal notranslate"><span class="pre">Path.Combine(Path.GetTempPath(),</span> <span class="pre">&quot;streamiz-kafka-net&quot;)</span></code>)</p>
 </section>
 <section id="replicationfactor">
-<h3>ReplicationFactor<a class="headerlink" href="#replicationfactor" title="Permalink to this headline">¶</a></h3>
+<h3>ReplicationFactor<a class="headerlink" href="#replicationfactor" title="Permalink to this heading">¶</a></h3>
 <p>The replication factor for change log topics topics created by the stream processing application. Default is 1.</p>
 </section>
 <section id="windowstorechangelogadditionalretentionms">
-<h3>WindowStoreChangelogAdditionalRetentionMs<a class="headerlink" href="#windowstorechangelogadditionalretentionms" title="Permalink to this headline">¶</a></h3>
+<h3>WindowStoreChangelogAdditionalRetentionMs<a class="headerlink" href="#windowstorechangelogadditionalretentionms" title="Permalink to this heading">¶</a></h3>
 <p>Added to a windows maintainMs to ensure data is not deleted from the log prematurely. Allows for clock drift.
 Default is 1 day.</p>
 </section>
 <section id="offsetcheckpointmanager">
-<h3>OffsetCheckpointManager<a class="headerlink" href="#offsetcheckpointmanager" title="Permalink to this headline">¶</a></h3>
+<h3>OffsetCheckpointManager<a class="headerlink" href="#offsetcheckpointmanager" title="Permalink to this heading">¶</a></h3>
 <p>Manager which track offset saved in local state store.</p>
 </section>
 <section id="rocksdbconfighandler">
-<h3>RocksDbConfigHandler<a class="headerlink" href="#rocksdbconfighandler" title="Permalink to this headline">¶</a></h3>
+<h3>RocksDbConfigHandler<a class="headerlink" href="#rocksdbconfighandler" title="Permalink to this heading">¶</a></h3>
 <p>A Rocks DB config handler function called just before openning a rocksdb state store.</p>
 </section>
 <section id="metricsintervalms">
-<h3>MetricsIntervalMs<a class="headerlink" href="#metricsintervalms" title="Permalink to this headline">¶</a></h3>
+<h3>MetricsIntervalMs<a class="headerlink" href="#metricsintervalms" title="Permalink to this heading">¶</a></h3>
 <p>Delay between two invocations of <code class="docutils literal notranslate"><span class="pre">MetricsReporter()</span></code>. The minimum and default value is 30 seconds.</p>
 </section>
 <section id="metricsreporter">
-<h3>MetricsReporter<a class="headerlink" href="#metricsreporter" title="Permalink to this headline">¶</a></h3>
+<h3>MetricsReporter<a class="headerlink" href="#metricsreporter" title="Permalink to this heading">¶</a></h3>
 <p>The reporter expose a list of sensors throw by a stream thread every <code class="docutils literal notranslate"><span class="pre">MetricsIntervalMs</span></code> This reporter has the responsibility to export sensors and metrics into another platform (default: empty).</p>
 <p>Streamiz provide one reporter for Prometheus (see <code class="docutils literal notranslate"><span class="pre">Streamiz.Kafka.Net.Metrics.Prometheus</span></code> package).</p>
 </section>
 <section id="exposelibrdkafkastats">
-<h3>ExposeLibrdKafkaStats<a class="headerlink" href="#exposelibrdkafkastats" title="Permalink to this headline">¶</a></h3>
+<h3>ExposeLibrdKafkaStats<a class="headerlink" href="#exposelibrdkafkastats" title="Permalink to this heading">¶</a></h3>
 <p>Boolean which indicate if librdkafka handle statistics should be exposed ot not (default: false).
 <strong>Only main consumer and producer will be concerned.</strong></p>
 </section>
 <section id="metricsrecording">
-<h3>MetricsRecording<a class="headerlink" href="#metricsrecording" title="Permalink to this headline">¶</a></h3>
+<h3>MetricsRecording<a class="headerlink" href="#metricsrecording" title="Permalink to this heading">¶</a></h3>
 <p>The highest recording level for metrics (default: INFO).</p>
 </section>
 <section id="starttaskdelayms">
-<h3>StartTaskDelayMs<a class="headerlink" href="#starttaskdelayms" title="Permalink to this headline">¶</a></h3>
+<h3>StartTaskDelayMs<a class="headerlink" href="#starttaskdelayms" title="Permalink to this heading">¶</a></h3>
 <p>Time wait before completing the start task of <code class="docutils literal notranslate"><span class="pre">KafkaStream</span></code> (default: 5000).</p>
 </section>
 <section id="basicauthuserinfo">
-<h3>BasicAuthUserInfo<a class="headerlink" href="#basicauthuserinfo" title="Permalink to this headline">¶</a></h3>
+<h3>BasicAuthUserInfo<a class="headerlink" href="#basicauthuserinfo" title="Permalink to this heading">¶</a></h3>
 <p>Credentials for the schema registry</p>
 </section>
 <section id="basicauthcredentialssource">
-<h3>BasicAuthCredentialsSource<a class="headerlink" href="#basicauthcredentialssource" title="Permalink to this headline">¶</a></h3>
+<h3>BasicAuthCredentialsSource<a class="headerlink" href="#basicauthcredentialssource" title="Permalink to this heading">¶</a></h3>
 <p>Specifies the source, use 0 for UserInfo or 1 for SaslInherit.</p>
 </section>
 <section id="schemaregistryrequesttimeoutms">
-<h3>SchemaRegistryRequestTimeoutMs<a class="headerlink" href="#schemaregistryrequesttimeoutms" title="Permalink to this headline">¶</a></h3>
+<h3>SchemaRegistryRequestTimeoutMs<a class="headerlink" href="#schemaregistryrequesttimeoutms" title="Permalink to this heading">¶</a></h3>
 <p>Specifies the timeout for requests to Confluent Schema Registry.
 Default: 30000</p>
 </section>
 <section id="schemaregistrymaxcachedschemas">
-<h3>SchemaRegistryMaxCachedSchemas<a class="headerlink" href="#schemaregistrymaxcachedschemas" title="Permalink to this headline">¶</a></h3>
+<h3>SchemaRegistryMaxCachedSchemas<a class="headerlink" href="#schemaregistrymaxcachedschemas" title="Permalink to this heading">¶</a></h3>
 <p>Specifies the maximum number of schemas CachedSchemaRegistryClient should cache locally.
 Default: 1000</p>
 </section>
 <section id="schemaregistryurl">
-<h3>SchemaRegistryUrl<a class="headerlink" href="#schemaregistryurl" title="Permalink to this headline">¶</a></h3>
+<h3>SchemaRegistryUrl<a class="headerlink" href="#schemaregistryurl" title="Permalink to this heading">¶</a></h3>
 <p>A comma-separated list of URLs for schema registry instances that are used register or lookup schemas.</p>
 </section>
 <section id="autoregisterschemas">
-<h3>AutoRegisterSchemas<a class="headerlink" href="#autoregisterschemas" title="Permalink to this headline">¶</a></h3>
+<h3>AutoRegisterSchemas<a class="headerlink" href="#autoregisterschemas" title="Permalink to this heading">¶</a></h3>
 <p>Specifies whether or not the Avro serializer should attempt to auto-register unrecognized schemas with Confluent Schema Registry.
 Default: true</p>
 </section>
 <section id="subjectnamestrategy">
-<h3>SubjectNameStrategy<a class="headerlink" href="#subjectnamestrategy" title="Permalink to this headline">¶</a></h3>
+<h3>SubjectNameStrategy<a class="headerlink" href="#subjectnamestrategy" title="Permalink to this heading">¶</a></h3>
 <p>The subject name strategy to use for schema registration / lookup.
 Possible values: <code class="docutils literal notranslate"><span class="pre">Topic,</span> <span class="pre">Record,</span> <span class="pre">TopicRecord</span></code></p>
 </section>
 </section>
 <section id="kafka-consumers-and-producer-configuration-parameters">
-<h2>Kafka consumers and producer configuration parameters<a class="headerlink" href="#kafka-consumers-and-producer-configuration-parameters" title="Permalink to this headline">¶</a></h2>
+<h2>Kafka consumers and producer configuration parameters<a class="headerlink" href="#kafka-consumers-and-producer-configuration-parameters" title="Permalink to this heading">¶</a></h2>
 <p>You can specify parameters for the Kafka consumers, producers, and admin client that are used internally. The consumer, producer and admin client settings are defined by wrapper properties on ConsumerConfig, ProducerConfig and AdminConfig.</p>
 <p>So, all consumer, producer and admin client settings are accessible directly from StreamConfig instance.</p>
 <p>In this example, the Kafka consumer session timeout is configured to be 60000 milliseconds in the StreamConfig instance.</p>
@@ -450,7 +451,7 @@ Possible values: <code class="docutils literal notranslate"><span class="pre">To
 </div>
 </section>
 <section id="sample-configuration-implementation">
-<h2>Sample configuration implementation<a class="headerlink" href="#sample-configuration-implementation" title="Permalink to this headline">¶</a></h2>
+<h2>Sample configuration implementation<a class="headerlink" href="#sample-configuration-implementation" title="Permalink to this heading">¶</a></h2>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">&gt;();</span><span class="w"></span>
 <span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">ApplicationId</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;test-app&quot;</span><span class="p">;</span><span class="w"></span>
 <span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">BootstrapServers</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;192.168.56.1:9092&quot;</span><span class="p">;</span><span class="w"></span>
