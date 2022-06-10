@@ -1,16 +1,17 @@
-﻿using Confluent.Kafka;
-using Streamiz.Kafka.Net.Crosscutting;
-using Streamiz.Kafka.Net.Errors;
-using Streamiz.Kafka.Net.Processors.Internal;
-using Streamiz.Kafka.Net.SerDes;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
-using Streamiz.Kafka.Net.Table.Internal;
+using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.SerDes;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -80,60 +81,85 @@ namespace Streamiz.Kafka.Net.Processors
         public virtual void Forward<K1, V1>(K1 key, V1 value, long ts)
         {
             Context.ChangeTimestamp(ts);
-            Forward<K1, V1>(key, value);
+            Forward(key, value);
         }
 
         public virtual void Forward<K1, V1>(K1 key, V1 value)
         {
-            log.LogDebug("{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to each next processor",
+            log.LogDebug(
+                "{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to each next processor",
                 logPrefix, typeof(K1).Name, typeof(V1).Name, key, value);
-            
-            foreach (var n in Next)
-                if (n is IProcessor<K1, V1>)
-                    (n as IProcessor<K1, V1>).Process(key, value);
+
+            try
+            {
+                Parallel.ForEach(Next.OfType<IProcessor<K1, V1>>(), processor => processor.Process(key, value));
+            }
+            catch (AggregateException e)
+            {
+                throw e.GetBaseException();
+            }
         }
 
         public virtual void Forward<K1, V1>(K1 key, V1 value, string name)
         {
-            foreach (var n in Next)
+            var processors = Next.OfType<IProcessor<K1, V1>>().Where(processor => processor.Name.Equals(name));
+            try
             {
-                if (n is IProcessor<K1, V1> && n.Name.Equals(name))
+                Parallel.ForEach(processors, processor =>
                 {
                     log.LogDebug(
-                        "{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to processor {Processor}", logPrefix,
+                        "{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to processor {Processor}",
+                        logPrefix,
                         typeof(K1).Name, typeof(V1).Name, key, value, name);
-                    (n as IProcessor<K1, V1>).Process(key, value);
-                }
+                    processor.Process(key, value);
+                });
+            }
+            catch (AggregateException e)
+            {
+                throw e.GetBaseException();
             }
         }
 
         public virtual void Forward(K key, V value)
         {
-            log.LogDebug("{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to each next processor",
+            log.LogDebug(
+                "{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to each next processor",
                 logPrefix, typeof(K).Name, typeof(V).Name, key, value);
-            foreach (var n in Next)
+            try
             {
-                if (n is IProcessor<K, V>)
-                    (n as IProcessor<K, V>).Process(key, value);
-                else
-                    n.Process(key, value);
+                Parallel.ForEach(Next, new ParallelOptions { MaxDegreeOfParallelism = 1 }, genericProcessor =>
+                {
+                    if (genericProcessor is IProcessor<K, V> processor)
+                        processor.Process(key, value);
+                    else
+                        genericProcessor.Process(key, value);
+                });
+            }
+            catch (AggregateException e)
+            {
+                throw e.GetBaseException();
             }
         }
 
         public virtual void Forward(K key, V value, string name)
         {
-            foreach (var n in Next)
+            try
             {
-                if (n.Name.Equals(name))
+                Parallel.ForEach(Next.Where(processor => processor.Name.Equals(name)), genericProcessor =>
                 {
                     log.LogDebug(
-                        "{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to processor {Processor}", logPrefix,
+                        "{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to processor {Processor}",
+                        logPrefix,
                         typeof(K).Name, typeof(V).Name, key, value, name);
-                    if (n is IProcessor<K, V>)
-                        (n as IProcessor<K, V>).Process(key, value);
+                    if (genericProcessor is IProcessor<K, V> processor)
+                        processor.Process(key, value);
                     else
-                        n.Process(key, value);
-                }
+                        genericProcessor.Process(key, value);
+                });
+            }
+            catch (AggregateException e)
+            {
+                throw e.GetBaseException();
             }
         }
 
