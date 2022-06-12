@@ -94,7 +94,7 @@ namespace Streamiz.Kafka.Net.State
                                 String line = fileReader.ReadLine();
                                 while (line != null)
                                 {
-                                    String[] pieces = line.Split(" ");
+                                    String[] pieces = line.Split(' ');
                                     if (pieces.Length != 3)
                                     {
                                         throw new IOException($"Malformed line in offset checkpoint file: {line}.");

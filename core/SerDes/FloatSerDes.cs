@@ -15,7 +15,7 @@ namespace Streamiz.Kafka.Net.SerDes
         /// <param name="context">serialization context</param>
         /// <returns>deserialized <see cref="float"/> using data; may be null</returns>
         public override float Deserialize(byte[] data, SerializationContext context)
-            => BitConverter.ToSingle(data);
+            => BitConverter.ToSingle(data, 0);
 
         /// <summary>
         /// Convert double <code>data</code> into a byte array.
