@@ -142,7 +142,6 @@ namespace Streamiz.Kafka.Net.Processors
             
             var asyncProcessor = Processor
                 .Next
-                .SelectMany(t => t.Next)
                 .OfType<IAsyncProcessor>()
                 .FirstOrDefault();
             

@@ -27,8 +27,10 @@ namespace Streamiz.Kafka.Net.Mock
         private readonly CancellationToken token;
         private readonly IKafkaSupplier supplier;
         private readonly IDictionary<TaskId, StreamTask> tasks = new Dictionary<TaskId, StreamTask>();
-        private readonly GlobalStateUpdateTask globalTask = null;
-        private readonly GlobalProcessorContext globalProcessorContext = null;
+        private readonly GlobalStateUpdateTask globalTask;
+        private readonly IDictionary<string, ExternalProcessorTopologyExecutor> externalProcessorTopologies =
+            new Dictionary<string, ExternalProcessorTopologyExecutor>();        
+        private readonly GlobalProcessorContext globalProcessorContext;
         private readonly StreamMetricsRegistry metricsRegistry;
         
         private readonly IDictionary<TaskId, IList<TopicPartition>> partitionsByTaskId =
@@ -91,6 +93,20 @@ namespace Streamiz.Kafka.Net.Mock
                 
                 globalTask.Initialize();
             }
+
+            foreach (var requestTopic in topologyBuilder.GetRequestTopics())
+            {
+                var taskId = topologyBuilder.GetTaskIdFromPartition(new TopicPartition(requestTopic, Partition.Any));
+                externalProcessorTopologies.Add(
+                    requestTopic, 
+                    new ExternalProcessorTopologyExecutor(
+                        "ext-thread-0",
+                        taskId,
+                        topologyBuilder.BuildTopology(taskId).GetSourceProcessor(requestTopic),
+                        this.supplier.GetProducer(configuration.ToProducerConfig($"ext-thread-producer-{requestTopic}")),
+                        configuration,
+                        metricsRegistry));
+            }
         }
 
         internal StreamTask GetTask(string topicName)
@@ -101,7 +117,7 @@ namespace Streamiz.Kafka.Net.Mock
                 task = tasks[id];
             else
             {
-                if (!builder.GetGlobalTopics().Contains(topicName))
+                if (builder.GetSourceTopics().Contains(topicName))
                 {
                     task = new StreamTask("thread-0",
                         id,
@@ -157,9 +173,16 @@ namespace Streamiz.Kafka.Net.Mock
             {
                 long now = DateTime.Now.GetMilliseconds();
                 var task = GetTask(topic);
-                task.AddRecords(records);
-                while (task.CanProcess(now))
-                    task.Process();
+                if (task != null)
+                {
+                    task.AddRecords(records);
+                    while (task.CanProcess(now))
+                        task.Process();
+                }else if (externalProcessorTopologies.ContainsKey(topic))
+                {
+                    foreach(var r in records)
+                        externalProcessorTopologies[topic].Process(r);
+                }
 
                 consumer.Commit(records.Last());
             }
@@ -170,9 +193,13 @@ namespace Streamiz.Kafka.Net.Mock
         private SyncPipeBuilder CreateBuilder(string topicName)
         {
             var task = GetTask(topicName);
-            if (task == null && hasGlobalTopology)
+            
+            if (task == null)
             {
-                return new SyncPipeBuilder(globalTask);
+                if(hasGlobalTopology && builder.GetGlobalTopics().Contains(topicName))
+                    return new SyncPipeBuilder(globalTask);
+                if (builder.GetRequestTopics().Contains(topicName))
+                    return new SyncPipeBuilder(externalProcessorTopologies[topicName]);
             }
 
             return new SyncPipeBuilder(task);
@@ -247,6 +274,12 @@ namespace Streamiz.Kafka.Net.Mock
             {
                 globalTask.FlushState();
                 globalTask.Close();
+            }
+
+            foreach (var ext in externalProcessorTopologies)
+            {
+                ext.Value.Flush();
+                ext.Value.Close();
             }
 
             IsRunning = false;

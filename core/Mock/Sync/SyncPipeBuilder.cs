@@ -63,6 +63,33 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             }
         }
         
+        private class ExternalTaskPublisher : ISyncPublisher
+        {
+            private readonly ExternalProcessorTopologyExecutor externalProcessorTopologyExecutor;
+            private int offset = 0;
+            public ExternalTaskPublisher(ExternalProcessorTopologyExecutor externalProcessorTopologyExecutor)
+            {
+                this.externalProcessorTopologyExecutor = externalProcessorTopologyExecutor;
+            }
+            
+            public void PublishRecord(string topic, byte[] key, byte[] value, DateTime timestamp)
+            {
+                var result = new ConsumeResult<byte[], byte[]>
+                {
+                    Topic = topic,
+                    TopicPartitionOffset = new TopicPartitionOffset(new TopicPartition(topic, 0), offset++),
+                    Message = new Message<byte[], byte[]>
+                        {Key = key, Value = value, Timestamp = new Timestamp(timestamp)}
+                };
+                externalProcessorTopologyExecutor.Process(result);
+            }
+
+            public void Flush()
+            {
+                externalProcessorTopologyExecutor.Flush();
+            }
+        }
+        
         private readonly ISyncPublisher publisher;
         private readonly SyncProducer mockProducer;
 
@@ -79,6 +106,11 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         public SyncPipeBuilder(SyncProducer mockProducer)
         {
             this.mockProducer = mockProducer;
+        }
+
+        public SyncPipeBuilder(ExternalProcessorTopologyExecutor externalProcessorTopology)
+        {
+            publisher = new ExternalTaskPublisher(externalProcessorTopology);
         }
 
         public IPipeInput Input(string topic, IStreamConfig configuration)

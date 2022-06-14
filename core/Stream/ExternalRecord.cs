@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.Stream
             Value = value;
             Timestamp = timestamp;
             Key = key;
-            Headers = new ReadOnlyCollection<IHeader>(headers.ToList());
+            Headers = new ReadOnlyCollection<IHeader>(headers != null ? headers.ToList() : new List<IHeader>());
         }
     }
 }

@@ -1577,14 +1577,14 @@ namespace Streamiz.Kafka.Net.Stream
         
         IKStream<K1, V1> ExternalCallAsync<K1, V1>(
             Func<ExternalRecord<K, V>, ExternalContext, Task<KeyValuePair<K1, V1>>> asyncExternalCall,
-            RetryPolicy retryPolicy,
+            RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
             ResponseSerDes<K1, V1> responseSerDes = null,
             string named = null);
 
         void ExternalCallAsync(
             Func<ExternalRecord<K, V>, ExternalContext, Task> asyncExternalCall,
-            RetryPolicy retryPolicy,
+            RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
             string named = null);
     }
