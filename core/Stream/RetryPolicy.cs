@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Streamiz.Kafka.Net.Stream
 {
@@ -15,7 +16,7 @@ namespace Streamiz.Kafka.Net.Stream
         private long retryBackOffMs = DEFAULT_RETRY_BACKOFF_MS;
         private int numberOfRetry = DEFAULT_NUMBER_OF_RETRY;
         private EndRetryBehavior endRetryBehavior = DEFAULT_RETRY_BEHAVIOR;
-        private readonly List<Type> retriableExceptions = DEFAULT_RETRIABLE_EXCEPTIONS;
+        private readonly List<Type> retriableExceptions = DEFAULT_RETRIABLE_EXCEPTIONS.ToList();
         private long memoryBufferSize = DEFAULT_MEMORY_BUFFER_SIZE;
         private long timeoutMs;
 
@@ -24,7 +25,7 @@ namespace Streamiz.Kafka.Net.Stream
             
         }
 
-        public static RetryPolicyBuilder NewBuilder() => new RetryPolicyBuilder();
+        public static RetryPolicyBuilder NewBuilder() => new();
         
         public RetryPolicyBuilder RetryBackOffMs(long retryBackOffMs)
         {

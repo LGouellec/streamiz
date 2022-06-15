@@ -10,6 +10,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using Confluent.Kafka.Admin;
 using static Streamiz.Kafka.Net.Mock.Kafka.MockConsumerInformation;
 using Microsoft.Extensions.Logging;
 using RocksDbSharp;
@@ -951,6 +952,24 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             }
 
             return consumers[mockConsumer.Name];
+        }
+
+        public List<DeleteRecordsResult> DeleteRecords(IEnumerable<TopicPartitionOffset> topicPartitionOffsets)
+        {
+            List<DeleteRecordsResult> results = new List<DeleteRecordsResult>();
+            foreach (var tpo in topicPartitionOffsets)
+            {
+                topics[tpo.Topic]
+                    .GetPartition(tpo.Partition)
+                    .Remove(tpo.Offset);
+                results.Add(new DeleteRecordsResult
+                {
+                    Offset = tpo.Offset,
+                    Partition = tpo.Partition,
+                    Topic = tpo.Topic,
+                });
+            }
+            return results;
         }
     }
 }

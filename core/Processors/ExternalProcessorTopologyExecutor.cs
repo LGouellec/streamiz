@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
@@ -185,7 +186,8 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 if (RetryPolicy.EndRetryBehavior == EndRetryBehavior.BUFFERED)
                 {
-                    log.LogInformation($"{logPrefix}Record with this following metadata ({recordToProcess.TopicPartitionOffset}) exceed the retry policy. Add this record into the local buffer and will be reprocessed later.");
+                    log.LogInformation(
+                        $"{logPrefix}Record with this following metadata ({recordToProcess.TopicPartitionOffset}) exceed the retry policy. Add this record into the local buffer and will be reprocessed later.");
                     if (!readingBuffer)
                         BufferedRecords.Enqueue(record);
                     else
@@ -194,12 +196,14 @@ namespace Streamiz.Kafka.Net.Processors
                     if (BufferedRecords.Count >= RetryPolicy.MemoryBufferSize)
                     {
                         State = ExternalProcessorTopologyState.BUFFER_FULL;
-                        log.LogWarning($"{logPrefix}The local buffer is FULL. Partitions's topic {recordToProcess.Topic} will be paused");
+                        log.LogWarning(
+                            $"{logPrefix}The local buffer is FULL. Partitions's topic {recordToProcess.Topic} will be paused");
                     }
                 }
                 else if (RetryPolicy.EndRetryBehavior == EndRetryBehavior.SKIP)
                 {
-                    log.LogInformation($"{logPrefix}Record with this following metadata ({recordToProcess.TopicPartitionOffset}) exceed the retry policy. The retry policy behavior will be skipped this message and process next one");
+                    log.LogInformation(
+                        $"{logPrefix}Record with this following metadata ({recordToProcess.TopicPartitionOffset}) exceed the retry policy. The retry policy behavior will be skipped this message and process next one");
                     consumedOffsets.AddOrUpdate(recordToProcess.TopicPartition, recordToProcess.Offset.Value);
                     droppedRecordsSensor.Record();
                 }

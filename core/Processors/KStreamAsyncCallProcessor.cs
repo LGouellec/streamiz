@@ -47,8 +47,8 @@ namespace Streamiz.Kafka.Net.Processors
                 
                 ++context.RetryNumber;
                 
-                if (startProcessing.Add(TimeSpan.FromMilliseconds(Policy.TimeoutMs)) <
-                    context.CurrentCallEpoch.FromMilliseconds())
+                if (startProcessing.Add(TimeSpan.FromMilliseconds(Policy.TimeoutMs)).GetMilliseconds() <
+                    context.CurrentCallEpoch)
                     throw new NotEnoughtTimeException("", context.CurrentCallEpoch - startProcessing.GetMilliseconds());
                 
                 task = ProcessAsync(key, value, Context.RecordContext.Headers, Context.Timestamp, context);
@@ -66,6 +66,7 @@ namespace Streamiz.Kafka.Net.Processors
                     {
                         context.LastExceptions = ae.InnerExceptions;
                         log.LogDebug($"{logPrefix}An retryable exception is thrown during the processing : {ae.InnerExceptions.First().Message}");
+                        log.LogInformation($"{logPrefix}An retryable exception is thrown during the processing : {ae.InnerExceptions.First().Message}");
                     }
                     else
                     {

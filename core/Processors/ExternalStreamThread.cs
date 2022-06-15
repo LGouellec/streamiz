@@ -339,10 +339,13 @@ namespace Streamiz.Kafka.Net.Processors
 
         private ThreadState SetState(ThreadState newState)
         {
+            var oldState = State;
             if (State.IsValidTransition(newState))
                 State = newState;
             else
                 throw new StreamsException($"{logPrefix}Unexpected state transition from {State} to {newState}");
+            
+            StateChanged?.Invoke(this, oldState, State);
             
             return State;
         }

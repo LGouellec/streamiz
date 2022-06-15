@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Metrics;
@@ -10,24 +11,24 @@ using Streamiz.Kafka.Net.Stream;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
-    public class KStreamExternalAsyncCallTests
+    public class SyncKStreamExternalAsyncCallTests
     {
-        private TopologyTestDriver BuildTopology(Action<StreamBuilder> funcBuilder, TopologyTestDriver.Mode mode = TopologyTestDriver.Mode.SYNC_TASK)
+        private TopologyTestDriver BuildTopology(Action<StreamBuilder> funcBuilder)
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-external-call";
+            config.ApplicationId = $"test-external-call-{Guid.NewGuid().ToString()}";
             config.Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
             config.PollMs = 10;
             config.MaxPollRecords = 10;
             config.CommitIntervalMs = 100;
             config.MetricsRecording = MetricsRecordingLevel.INFO;
-            
+
             var builder = new StreamBuilder();
             funcBuilder(builder);
 
             var topo = builder.Build();
 
-            return new TopologyTestDriver(topo, config, mode);
+            return new TopologyTestDriver(topo, config);
         }
 
         [Test]
@@ -172,29 +173,6 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             });
             var input = driver.CreateInputTopic<string, string>("input");
             Assert.Throws<NoneRetryableException>(() => input.PipeInput("key1", "value1"));
-        }
-
-        [Test]
-        public void SyncAsyncCallWithRetryWithoutExceptionConfigurable()
-        {
-            int numberCall = 0;
-            using var driver = BuildTopology((builder) =>
-            {
-                var stream = builder.Stream<string, string>("input");
-                stream
-                    .ExternalCallAsync(
-                        async (record, _) =>
-                        {
-                            ++numberCall;
-                            if (numberCall <= 1)
-                                throw new StreamsException("Exception");
-                            return await Task.FromResult(
-                                new KeyValuePair<string, string>(record.Key, record.Value.ToUpper()));
-                        })
-                    .To("output");
-            });
-            var input = driver.CreateInputTopic<string, string>("input");
-            Assert.Throws<StreamsException>(() => input.PipeInput("key1", "value1"));
         }
         
         // TODO : add not enougth time exception + async mode (buffered + skip + failed test)

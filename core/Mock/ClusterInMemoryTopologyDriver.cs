@@ -7,6 +7,7 @@ using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Stream.Internal;
@@ -20,6 +21,7 @@ namespace Streamiz.Kafka.Net.Mock
         private readonly IPipeBuilder pipeBuilder;
         private readonly IThread threadTopology;
         private readonly GlobalStreamThread globalStreamThread;
+        private readonly IThread externalStreamThread;
         private readonly IKafkaSupplier kafkaSupplier;
         private readonly CancellationToken token;
         private readonly TimeSpan startTimeout;
@@ -84,6 +86,20 @@ namespace Streamiz.Kafka.Net.Mock
                     metricsRegistry);
                 globalStreamThread = globalStreamThreadFactory.GetGlobalStreamThread();
             }
+
+            if (topologyBuilder.ExternalCall)
+            {
+                var threadId = $"{clientId}-external-stream-thread";
+                var externalStreamConfig = configuration.Clone();
+                externalStreamConfig.ApplicationId += "-external";
+                externalStreamThread = new ExternalStreamThread(
+                    threadId,
+                    clientId,
+                    kafkaSupplier,
+                    topologyBuilder,
+                    metricsRegistry,
+                    externalStreamConfig);
+            }
         }
 
         public bool IsRunning { get; private set; }
@@ -139,6 +155,7 @@ namespace Streamiz.Kafka.Net.Mock
             IsRunning = false;
             threadTopology.Dispose();
             globalStreamThread?.Dispose();
+            externalStreamThread?.Dispose();
             
             foreach(var asyncPipe in asyncPipeOutput)
                 asyncPipe.Dispose();
@@ -166,7 +183,8 @@ namespace Streamiz.Kafka.Net.Mock
             bool isRunningState = false;
             DateTime dt = DateTime.Now;
 
-            threadTopology.StateChanged += (thread, old, @new) =>
+            void stateChangedHandeler(IThread thread, ThreadStateTransitionValidator old,
+                ThreadStateTransitionValidator @new)
             {
                 if (@new is Processors.ThreadState && ((Processors.ThreadState)@new) == Processors.ThreadState.RUNNING)
                 {
@@ -183,12 +201,16 @@ namespace Streamiz.Kafka.Net.Mock
                     IsRunning = false;
                     IsError = false;
                 }
-            };
+            }
 
+            threadTopology.StateChanged += stateChangedHandeler;
+            if(externalStreamThread != null)
+                externalStreamThread.StateChanged += stateChangedHandeler;
+            
             InitializeInternalTopicManager();
-
-            if (globalStreamThread != null)
-                globalStreamThread.Start(token);
+            
+            globalStreamThread?.Start(token);
+            externalStreamThread?.Start(token);
 
             threadTopology.Start(token);
             while (!isRunningState)
