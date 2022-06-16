@@ -171,18 +171,10 @@ namespace Streamiz.Kafka.Net.Mock
 
             if (records.Any())
             {
-                long now = DateTime.Now.GetMilliseconds();
-                var task = GetTask(topic);
-                if (task != null)
-                {
-                    task.AddRecords(records);
-                    while (task.CanProcess(now))
-                        task.Process();
-                }else if (externalProcessorTopologies.ContainsKey(topic))
-                {
-                    foreach(var r in records)
-                        externalProcessorTopologies[topic].Process(r);
-                }
+                var pipe = CreateBuilder(topic).Input(topic, configuration);
+                foreach(var r in records)
+                    pipe.Pipe(r.Message.Key, r.Message.Value, r.Message.Timestamp.UnixTimestampMs.FromMilliseconds());
+                pipe.Flush();
 
                 consumer.Commit(records.Last());
             }

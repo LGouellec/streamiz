@@ -166,20 +166,28 @@ namespace Streamiz.Kafka.Net.Processors
                 if (BufferedRecords.Any())
                 {
                     recordToProcess = BufferedRecords.Peek();
-                    log.LogDebug($"{logPrefix}Take one record into the buffer for process it (buffer size : {BufferSize})");
+                    log.LogDebug(
+                        $"{logPrefix}Take one record into the buffer for process it (buffer size : {BufferSize})");
                     readingBuffer = true;
                 }
                 else
                     recordToProcess = record;
-                
+
                 if (recordToProcess != null)
                 {
                     context.SetRecordMetaData(recordToProcess);
                     long latency = ActionHelper.MeasureLatency(() => Processor.Process(recordToProcess));
                     processSensor.Record();
                     processLatencySensor.Record(latency);
-                    log.LogDebug($"{logPrefix}Process record with this following metadata ({recordToProcess.TopicPartitionOffset}) in {latency} ms");
+                    log.LogDebug(
+                        $"{logPrefix}Process record with this following metadata ({recordToProcess.TopicPartitionOffset}) in {latency} ms");
                     consumedOffsets.AddOrUpdate(recordToProcess.TopicPartition, recordToProcess.Offset.Value);
+                    
+                    if (State == ExternalProcessorTopologyState.PAUSED && BufferSize <= RetryPolicy.MemoryBufferSize / 2)
+                    {
+                        State = ExternalProcessorTopologyState.RESUMED;
+                        log.LogInformation($"{logPrefix}The local buffer is half full. Partitions's topic {recordToProcess.Topic} will be resumed");
+                    }
                 }
             }
             catch (Exception e) when (e is NoneRetryableException or NotEnoughtTimeException)
@@ -193,7 +201,7 @@ namespace Streamiz.Kafka.Net.Processors
                     else
                         doNotDequeue = true;
 
-                    if (BufferedRecords.Count >= RetryPolicy.MemoryBufferSize)
+                    if (State !=  ExternalProcessorTopologyState.PAUSED && BufferedRecords.Count >= RetryPolicy.MemoryBufferSize)
                     {
                         State = ExternalProcessorTopologyState.BUFFER_FULL;
                         log.LogWarning(

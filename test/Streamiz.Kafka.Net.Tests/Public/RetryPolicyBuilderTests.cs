@@ -31,5 +31,57 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual(10, pol1.NumberOfRetry);
             Assert.AreEqual(2, pol2.NumberOfRetry);
         }
+        
+        [Test]
+        public void RetryPolicyBackOffTests()
+        {
+            var builder1 = RetryPolicyBuilder.NewBuilder();
+            var builder2 = RetryPolicyBuilder.NewBuilder();
+            builder1.RetryBackOffMs(120);
+            builder2.RetryBackOffMs(50);
+            var pol1 = builder1.Build();
+            var pol2 = builder2.Build();
+            Assert.AreEqual(120, pol1.RetryBackOffMs);
+            Assert.AreEqual(50, pol2.RetryBackOffMs);
+        }
+        
+        [Test]
+        public void RetryPolicyBufferSize()
+        {
+            var builder1 = RetryPolicyBuilder.NewBuilder();
+            var builder2 = RetryPolicyBuilder.NewBuilder();
+            builder1.MemoryBufferSize(40);
+            builder2.MemoryBufferSize(10);
+            var pol1 = builder1.Build();
+            var pol2 = builder2.Build();
+            Assert.AreEqual(40, pol1.MemoryBufferSize);
+            Assert.AreEqual(10, pol2.MemoryBufferSize);
+        }
+        
+        [Test]
+        public void RetryPolicyTimeout()
+        {
+            var builder1 = RetryPolicyBuilder.NewBuilder();
+            var builder2 = RetryPolicyBuilder.NewBuilder();
+            builder1.TimeoutMs(300);
+            builder2.TimeoutMs(600);
+            var pol1 = builder1.Build();
+            var pol2 = builder2.Build();
+            Assert.AreEqual(300, pol1.TimeoutMs);
+            Assert.AreEqual(600, pol2.TimeoutMs);
+        }
+        
+        [Test]
+        public void RetryPolicyBehavior()
+        {
+            var builder1 = RetryPolicyBuilder.NewBuilder();
+            var builder2 = RetryPolicyBuilder.NewBuilder();
+            builder1.RetryBehavior(EndRetryBehavior.FAIL);
+            builder2.RetryBehavior(EndRetryBehavior.BUFFERED);
+            var pol1 = builder1.Build();
+            var pol2 = builder2.Build();
+            Assert.AreEqual(EndRetryBehavior.FAIL, pol1.EndRetryBehavior);
+            Assert.AreEqual(EndRetryBehavior.BUFFERED, pol2.EndRetryBehavior);
+        }
     }
 }

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Metrics;
@@ -161,5 +160,65 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             Assert.IsTrue(driver.IsError);
         }
 
+        [Test]
+        public void AsyncCallBufferFull()
+        {
+            int numberCall = 0;
+            using var driver = BuildTopology((builder) =>
+            {
+                var stream = builder.Stream<string, string>("input");
+                stream
+                    .ExternalCallAsync(
+                        async (record, _) =>
+                        {
+                            ++numberCall;
+                            if (numberCall <= 10)
+                                throw new StreamsException("Exception");
+                            return await Task.FromResult(
+                                new KeyValuePair<string, string>(record.Key, record.Value.ToUpper()));
+                        }, 
+                        RetryPolicyBuilder
+                            .NewBuilder()
+                            .RetriableException<StreamsException>()
+                            .NumberOfRetry(1)
+                            .RetryBackOffMs(1)
+                            .MemoryBufferSize(5)
+                            .RetryBehavior(EndRetryBehavior.BUFFERED)
+                            .Build())
+                    .To("output");
+            });
+            
+            var input = driver.CreateInputTopic<string, string>("input");
+            var output = driver.CreateOuputTopic<string, string>("output");
+            
+            for(int i = 0 ; i < 15 ; ++i)
+                input.PipeInput("key1", "value1");
+            
+            var results = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(output, 15);
+            Assert.AreEqual(15, results.Count);
+        }
+
+        [Test]
+        public void AsyncCallInnerExceptionHandler()
+        {
+            using var driver = BuildTopology((builder) =>
+            {
+                var stream = builder.Stream<string, string>("input");
+                stream
+                    .ExternalCallAsync(
+                        (_, _) => throw new StreamsException("Exception"));
+            }, 
+                config => config.InnerExceptionHandler = _ => ExceptionHandlerResponse.CONTINUE);
+            
+            var input = driver.CreateInputTopic<string, string>("input");
+            var output = driver.CreateOuputTopic<string, string>("output");
+            
+            for(int i = 0 ; i < 5 ; ++i)
+                input.PipeInput("key1", "value1");
+            
+            var results = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(output, 5, TimeSpan.FromSeconds(2));
+            Assert.AreEqual(0, results.Count);
+            Assert.IsFalse(driver.IsError);
+        }
     }
 }
