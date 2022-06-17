@@ -6,9 +6,9 @@ Overview
    :align: center
 
 **Streamiz.Kafka.Net** is a .NET stream processing library for Apache Kafka (TM).
-**Streamiz.Kafka.Net** is cross-platforms and based on .Net Standard 2.1.
+**Streamiz.Kafka.Net** is cross-platforms and based on .Net Standard 2.0, .NET 5 and .NET 6.
 
-Just few lines of code, with the settings kafka cluster and DSL builder, you may to create your first .NET streamiz application.
+With a few lines of code, you may to create your first .NET streamiz application.
 
 Nuget package
 ----------------------
