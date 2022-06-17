@@ -154,19 +154,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             dbOptions.SetAllowMmapWrites(value);
             return this;
         }
-        
-        /// <summary>
-        /// NOT SUPPORTED ANYMORE. Will remove in future release.
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns>the instance of the current object</returns>
-        [Obsolete]
-        public RocksDbOptions SetBaseBackgroundCompactions(int value)
-        {
-            dbOptions.SetBaseBackgroundCompactions(value);
-            return this;
-        }
-        
+
         /// <summary>
         /// Allows OS to incrementally sync files to disk while they are being written, asynchronously, in the background.
         /// Issue one request for every bytes_per_sync written. 0 turns it off.
@@ -479,19 +467,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             dbOptions.SetTableCacheNumShardbits(value);
             return this;
         }
-        
-        /// <summary>
-        /// NOT SUPPORTED ANYMORE. Will remove in future release.
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns>the instance of the current object</returns>
-        [Obsolete]
-        public RocksDbOptions SetTableCacheRemoveScanCountLimit(int value)
-        {
-            dbOptions.SetTableCacheRemoveScanCountLimit(value);
-            return this;
-        }
-        
+
         /// <summary>
         /// Use adaptive mutex, which spins in the user space before resorting to kernel.
         /// This could reduce context switch when the mutex is not heavily contended.
@@ -865,19 +841,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             columnFamilyOptions.SetHardPendingCompactionBytesLimit(value);
             return this;
         }
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns>the instance of the current object</returns>
-        [Obsolete]
-        public RocksDbOptions SetHardRateLimit(double value)
-        {
-            columnFamilyOptions.SetHardRateLimit(value);
-            return this;
-        }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -1059,19 +1023,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             columnFamilyOptions.SetMaxCompactionBytes(bytes);
             return this;
         }
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns>the instance of the current object</returns>
-        [Obsolete]
-        public RocksDbOptions SetMaxMemCompactionLevel(int value)
-        {
-            columnFamilyOptions.SetMaxMemCompactionLevel(value);
-            return this;
-        }
-        
+
         /// <summary>
         /// An iteration->Next() sequentially skips over keys with the same user-key unless this option is set.
         /// This number specifies the number of keys (with the same userkey) that will be sequentially skipped before a reseek is issued.
@@ -1267,29 +1219,6 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             return this;
         }
         
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns>the instance of the current object</returns>
-        [Obsolete]
-        public RocksDbOptions SetPurgeRedundantKvsWhileFlush(bool value)
-        {
-            columnFamilyOptions.SetPurgeRedundantKvsWhileFlush(value);
-            return this;
-        }
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns>the instance of the current object</returns>
-        [Obsolete("no longer used")]
-        public RocksDbOptions SetRateLimitDelayMaxMilliseconds(uint value)
-        {
-            columnFamilyOptions.SetRateLimitDelayMaxMilliseconds(value);
-            return this;
-        }
         
         /// <summary>
         /// Measure IO stats in compactions and flushes, if true.
@@ -1302,19 +1231,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             columnFamilyOptions.SetReportBgIoStats(value);
             return this;
         }
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns>the instance of the current object</returns>
-        [Obsolete("no longer used")]
-        public RocksDbOptions SetSkipLogErrorOnRecovery(bool value)
-        {
-            columnFamilyOptions.SetSkipLogErrorOnRecovery(value);
-            return this;
-        }
-        
+
         /// <summary>
         /// All writes will be slowed down to at least delayed_write_rate if estimated bytes needed to be compaction exceed this threshold.
         /// Default: 64GB
@@ -1326,19 +1243,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             columnFamilyOptions.SetSoftPendingCompactionBytesLimit(value);
             return this;
         }
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns>the instance of the current object</returns>
-        [Obsolete("no longer used")]
-        public RocksDbOptions SetSoftRateLimit(double value)
-        {
-            columnFamilyOptions.SetSoftRateLimit(value);
-            return this;
-        }
-        
+
         /// <summary>
         /// The target file size for compaction. This targetFileSizeBase determines a level-1 file size. Target file size for level L can be calculated by targetFileSizeBase * (targetFileSizeMultiplier ^ (L-1)) For example, if targetFileSizeBase is 2MB and target_file_size_multiplier is 10, then each file on level-1 will be 2MB, and each file on level 2 will be 20MB, and each file on level-3 will be 200MB. by default targetFileSizeBase is 64MB
         /// </summary>
