@@ -20,14 +20,12 @@ So you can found documentation here :
 * `Confluent Kafka Streams <https://docs.confluent.io/current/streams/index.html>`_
 * `Apache Kafka Streams <https://kafka.apache.org/documentation/streams>`_
 
-Streamiz Kafka .Net use `Confluent Kafka .Net libary <https://github.com/confluentinc/confluent-kafka-dotnet>`_ to interact with Kafka Cluster.
-
 Starting from scratch
 =============================================
 
 Here is the easiest way to create a first sync, from scratch : 
  
-* Create a **.Net Standard 2.1** compatible project, like a **.Net Core > = 3.0** console application. For more information, please find help here `net-standard <https://docs.microsoft.com/fr-fr/dotnet/standard/net-standard#net-implementation-support>`_
+* Create a **.Net Standard 2.0, .NET 5 or .NET 6** compatible project. For more information, please find help here `net-standard <https://docs.microsoft.com/fr-fr/dotnet/standard/net-standard#net-implementation-support>`_
 * Add the nuget package Streamiz.Kafka.Net
 * Please retrieve your kafka cluster connection information
 
@@ -42,7 +40,7 @@ Add this code ::
       StreamBuilder builder = new StreamBuilder();
 
       builder.Stream<string, string>("test")
-         .FilterNot((k, v) => v.Contains("test"))
+         .FilterNot((k, v) => v.Contains("key1"))
          .To("test-output");
 
       Topology t = builder.Build();
@@ -61,8 +59,7 @@ You’re done !
 Need help
 =============================================
 
-
-Feel free to ping me: `@LGouellec <https://twitter.com/LGouellec>`_
+`@LGouellec <https://twitter.com/LGouellec>`_
 
 
 .. toctree::

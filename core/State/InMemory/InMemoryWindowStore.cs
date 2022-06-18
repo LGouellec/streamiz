@@ -374,9 +374,9 @@ namespace Streamiz.Kafka.Net.State.InMemory
                     {
                         ConcurrentDictionary<Bytes, byte[]> tmp = null;
                         byte[] d = null;
-                        map[windowStartTimestamp].Remove(key, out d);
+                        map[windowStartTimestamp].TryRemove(key, out d);
                         if (map[windowStartTimestamp].Count == 0)
-                            map.Remove(windowStartTimestamp, out tmp);
+                            map.TryRemove(windowStartTimestamp, out tmp);
                     }
                 }
             }
@@ -397,7 +397,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
             foreach (var k in map.Keys.ToList())
             {
                 if (k < minLiveTime)
-                    map.Remove(k, out tmp);
+                    map.TryRemove(k, out tmp);
             }
         }
 

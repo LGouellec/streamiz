@@ -263,7 +263,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 task.Suspend();
                 foreach(var part in task.Partition)
                 {
-                    partitionsToTaskId.Remove(part, out TaskId taskId);
+                    partitionsToTaskId.TryRemove(part, out TaskId taskId);
                 }
                 task.Close();
                 task.MayWriteCheckpoint(true);

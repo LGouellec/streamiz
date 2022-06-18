@@ -168,7 +168,7 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes
         private string MaybeGetScope(string schemaRegistryUrl)
         {
             IEnumerable<string> urls = schemaRegistryUrl != null ?
-                schemaRegistryUrl.Split(",").ToList() :
+                schemaRegistryUrl.Split(',').ToList() :
                 Enumerable.Empty<string>();
             List<string> scope = new List<string>();
 

@@ -45,7 +45,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
         {
             this.producer = producer;
 
-            string producerName = producer.Name.Split("#")[0];
+            string producerName = producer.Name.Split('#')[0];
             lock (_lock)
             {
                 if (instanceProducer.ContainsKey(producerName))
@@ -62,7 +62,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             {
                 lock (_lock)
                 {
-                    string producerName = producer.Name.Split("#")[0];
+                    string producerName = producer.Name.Split('#')[0];
                     if (instanceProducer.ContainsKey(producerName) && --instanceProducer[producerName] <= 0)
                     {
                         producer.Dispose();

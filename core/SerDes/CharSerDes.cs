@@ -14,7 +14,7 @@ namespace Streamiz.Kafka.Net.SerDes
         /// <param name="data">serialized bytes.</param>
         /// <param name="context">serialization context</param>
         /// <returns>deserialized <see cref="char"/> using data; may be null</returns>
-        public override char Deserialize(byte[] data, SerializationContext context) => BitConverter.ToChar(data);
+        public override char Deserialize(byte[] data, SerializationContext context) => BitConverter.ToChar(data, 0);
 
         /// <summary>
         /// Convert <see cref="char"/> <code>data</code> into a byte array.

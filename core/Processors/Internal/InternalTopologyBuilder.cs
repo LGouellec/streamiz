@@ -392,10 +392,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 rootProcessor.AddNextProcessor(sourceProcessor);
             }
 
-            var storesToChangelog = new Dictionary<string, string>(
-                storesToTopics
+            var storesToChangelog = storesToTopics
                             .Where(e => stateStores.ContainsKey(e.Key) 
-                                                                || GlobalStateStores.ContainsKey(e.Key)));
+                                    || GlobalStateStores.ContainsKey(e.Key)).ToDictionary();
             
             return new ProcessorTopology(
                 rootProcessor,

@@ -791,7 +791,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
             int partition;
             if (message.Key == null)
-                partition = RandomNumberGenerator.GetInt32(0, topics[topic].PartitionNumber);
+                partition = RandomGenerator.GetInt32(topics[topic].PartitionNumber);
             else
                 partition = Math.Abs(MurMurHash3.Hash(new MemoryStream(message.Key))) % topics[topic].PartitionNumber;
             
@@ -834,7 +834,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             return r;
         }
 
-        #endregion
+#endregion
 
         internal MockConsumerInformation GetConsumerInformation(string consumerName)
         {

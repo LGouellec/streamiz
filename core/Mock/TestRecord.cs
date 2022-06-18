@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Confluent.Kafka;
+using System;
 
 namespace Streamiz.Kafka.Net.Mock
 {
     /// <summary>
-    /// A key/value pair, including timestamp, to be sent to or received from <see cref="TopologyTestDriver"/>.
+    /// A key/value pair, including timestamp and headers, to be sent to or received from <see cref="TopologyTestDriver"/>.
     /// If [a] record does not contain a timestamp, will auto advance it's time when the record is piped.
     /// </summary>
     /// <typeparam name="K">key type</typeparam>
@@ -25,13 +26,18 @@ namespace Streamiz.Kafka.Net.Mock
         /// </summary>
         public DateTime? Timestamp { get; set; }
 
+        /// <summary>
+        /// The headers of the record, or empty list if not set
+        /// </summary>
+        public Headers Headers { get; set; }
+
 
         /// <summary>
         /// Empty constructor
         /// </summary>
         public TestRecord()
         {
-
+            Headers = new Headers();
         }
 
         /// <summary>
@@ -48,6 +54,21 @@ namespace Streamiz.Kafka.Net.Mock
         }
 
         /// <summary>
+        /// Constructor with key/value, timestamp and headers
+        /// </summary>
+        /// <param name="key">Key of record</param>
+        /// <param name="value">Value of record</param>
+        /// <param name="timestamp">Timestamp of record</param>
+        /// <param name="headers">Headers of record</param>
+        public TestRecord(K key, V value, DateTime? timestamp, Headers headers)
+        {
+            Key = key;
+            Value = value;
+            Timestamp = timestamp;
+            Headers = headers;
+        }
+
+        /// <summary>
         /// Constructor with key/value
         /// </summary>
         /// <param name="key">Key of record</param>
@@ -56,6 +77,19 @@ namespace Streamiz.Kafka.Net.Mock
         {
             Key = key;
             Value = value;
+        }
+
+        /// <summary>
+        /// Constructor with key/value and headers
+        /// </summary>
+        /// <param name="key">Key of record</param>
+        /// <param name="value">Value of record</param>
+        /// <param name="headers">Headers of record</param>
+        public TestRecord(K key, V value, Headers headers)
+        {
+            Key = key;
+            Value = value;
+            Headers = headers;
         }
     }
 }
