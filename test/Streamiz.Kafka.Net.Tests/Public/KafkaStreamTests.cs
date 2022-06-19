@@ -689,7 +689,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var builder = new StreamBuilder();
             builder.Stream<string, string>("input")
-                .ExternalCallAsync(
+                .MapAsync(
                     async (record, _) =>
                     {
                         await Task.Delay(100);

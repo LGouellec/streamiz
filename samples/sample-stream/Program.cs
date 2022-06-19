@@ -60,7 +60,7 @@ namespace sample_stream
 
             // builder
             //     .Stream<string, string>("input")
-            //     .ExternalCallAsync(
+            //     .ForeachAsync(
             //         async (record, _) => {
             //             var filter = Builders<Person>.Filter.Eq((p) => p.name, record.Value);
             //             var cursor = await database.GetCollection<Person>("adress").FindAsync(filter);
@@ -77,7 +77,7 @@ namespace sample_stream
             //     .To("output");
             builder
                 .Stream<string, string>("input")
-                .ExternalCallAsync(
+                .ForeachAsync(
                     async (record, _) =>
                     {
                         await database
@@ -98,7 +98,7 @@ namespace sample_stream
                         .RetriableException<Exception>()
                         .RetryBehavior(EndRetryBehavior.SKIP)
                         .Build());
-
+            
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
             

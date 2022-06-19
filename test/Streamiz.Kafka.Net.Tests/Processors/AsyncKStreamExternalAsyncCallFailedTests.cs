@@ -40,7 +40,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 var stream = builder.Stream<string, string>("input");
                 stream
-                    .ExternalCallAsync(
+                    .MapAsync(
                         async (record, _) =>
                         {
                             ++numberCall;
@@ -65,7 +65,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 var stream = builder.Stream<string, string>("input");
                 stream
-                    .ExternalCallAsync(
+                    .MapAsync(
                         async (record, _) =>
                         {
                             ++numberCall;
@@ -100,7 +100,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 var stream = builder.Stream<string, string>("input");
                 stream
-                    .ExternalCallAsync(
+                    .MapAsync(
                         async (record, _) =>
                         {
                             ++numberCall;
@@ -134,7 +134,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 var stream = builder.Stream<string, string>("input");
                 stream
-                    .ExternalCallAsync(
+                    .MapAsync(
                         async (record, _) =>
                         {
                             ++numberCall;
@@ -168,7 +168,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 var stream = builder.Stream<string, string>("input");
                 stream
-                    .ExternalCallAsync(
+                    .MapAsync(
                         async (record, _) =>
                         {
                             ++numberCall;

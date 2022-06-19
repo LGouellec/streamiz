@@ -664,7 +664,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         
         #region External Call
 
-        public IKStream<K1, V1> ExternalCallAsync<K1, V1>(
+        public IKStream<K1, V1> MapAsync<K1, V1>(
             Func<ExternalRecord<K, V>, ExternalContext, Task<KeyValuePair<K1, V1>>> asyncExternalCall,
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
@@ -716,7 +716,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 builder);
         }
         
-        public void ExternalCallAsync(
+        public void ForeachAsync(
             Func<ExternalRecord<K, V>, ExternalContext, Task> asyncExternalCall,
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,

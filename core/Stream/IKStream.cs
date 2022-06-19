@@ -1575,15 +1575,36 @@ namespace Streamiz.Kafka.Net.Stream
         /// <returns><see cref="IKStream{K,V}"/> that contains the exact same repartitioned records as this stream.</returns>
         IKStream<K, V> Repartition(Repartitioned<K, V> repartitioned = null);
         
-        IKStream<K1, V1> ExternalCallAsync<K1, V1>(
-            Func<ExternalRecord<K, V>, ExternalContext, Task<KeyValuePair<K1, V1>>> asyncExternalCall,
+        IKStream<K1, V1> MapAsync<K1, V1>(
+            Func<ExternalRecord<K, V>, ExternalContext, Task<KeyValuePair<K1, V1>>> asyncMapper,
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
             ResponseSerDes<K1, V1> responseSerDes = null,
             string named = null);
+        
+        IKStream<K1, V1> FlatMapAsync<K1, V1>(
+            Func<ExternalRecord<K, V>, ExternalContext, Task<IEnumerable<KeyValuePair<K1, V1>>>> asyncMapper,
+            RetryPolicy retryPolicy = null,
+            RequestSerDes<K, V> requestSerDes = null,
+            ResponseSerDes<K1, V1> responseSerDes = null,
+            string named = null);
+        
+        IKStream<K, V1> MapValuesAsync<V1>(
+            Func<ExternalRecord<K, V>, ExternalContext, Task<V1>> asyncMapper,
+            RetryPolicy retryPolicy = null,
+            RequestSerDes<K, V> requestSerDes = null,
+            ResponseSerDes<K, V1> responseSerDes = null,
+            string named = null);
+        
+        IKStream<K, V1> FlatMapValuesAsync<V1>(
+            Func<ExternalRecord<K, V>, ExternalContext, Task<IEnumerable<V1>>> asyncMapper,
+            RetryPolicy retryPolicy = null,
+            RequestSerDes<K, V> requestSerDes = null,
+            ResponseSerDes<K, V1> responseSerDes = null,
+            string named = null);
 
-        void ExternalCallAsync(
-            Func<ExternalRecord<K, V>, ExternalContext, Task> asyncExternalCall,
+        void ForeachAsync(
+            Func<ExternalRecord<K, V>, ExternalContext, Task> asyncAction,
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
             string named = null);
