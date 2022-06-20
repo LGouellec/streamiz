@@ -1,20 +1,18 @@
-﻿using Confluent.Kafka;
-
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using Confluent.Kafka;
+using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.RocksDb;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using Microsoft.Extensions.Logging;
-using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net
 {
@@ -2354,12 +2352,19 @@ namespace Streamiz.Kafka.Net
             set => this.AddOrUpdate(startTaskDelayMsCst, value);
         }
 
+        /// <summary>
+        /// Enables parallel processing for messages (default: false)
+        /// </summary>
         public bool ParallelProcessing
         {
             get => this[parallelProcessingCst];
             set => this.AddOrUpdate(parallelProcessingCst, value);
         }
 
+        /// <summary>
+        /// The max number of concurrent messages processing by thread. (default: 8)
+        /// Only valid if ParallelProcessing is true
+        /// </summary>
         public int MaxDegreeOfParallelism
         {
             get => this[maxDegreeOfParallelismCst];
