@@ -70,15 +70,29 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
 
         [Test]
-        public void WithNullValueSerDes()
+        public void WithNullValueSerDesWithParallel()
+        {
+            WithNullValueSerDes(true);
+        }
+
+        [Test]
+        public void WithNullValueSerDesWithoutParallel()
+        {
+            WithNullValueSerDes(false);
+        }
+        
+        private void WithNullValueSerDes(bool parallelProcessing)
         {
             // WITH VALUE NULL SERDES, in running KeySerdes must be StringSerdes, and ValueSerdes Int64SerDes
-            var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-window-count";
+            var config = new StreamConfig<StringSerDes, StringSerDes>
+            {
+                ApplicationId = "test-window-count",
+                ParallelProcessing = parallelProcessing
+            };
 
             var builder = new StreamBuilder();
 
-            Materialized<string, string, IWindowStore<Bytes, byte[]>> m =
+            var materialized =
                 Materialized<string, string, IWindowStore<Bytes, byte[]>>
                     .Create("store")
                     .With(null, null);
@@ -87,19 +101,17 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Stream<string, string>("topic")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(2000))
-                .Reduce((v1, v2) => v1.Length > v2.Length ? v1 : v2, m)
+                .Reduce((v1, v2) => v1.Length > v2.Length ? v1 : v2, materialized)
                 .ToStream()
                 .To("output-topic");
 
             var topology = builder.Build();
             Assert.Throws<StreamsException>(() =>
             {
-                using (var driver = new TopologyTestDriver(topology, config))
-                {
-                    var input = driver.CreateInputTopic<string, string>("topic");
-                    var output = driver.CreateOuputTopic("output-topic", TimeSpan.FromSeconds(1), new StringTimeWindowedSerDes(), new Int64SerDes());
-                    input.PipeInput("test", "1");
-                }
+                using var driver = new TopologyTestDriver(topology, config);
+                var input = driver.CreateInputTopic<string, string>("topic");
+                var output = driver.CreateOuputTopic("output-topic", TimeSpan.FromSeconds(1), new StringTimeWindowedSerDes(), new Int64SerDes());
+                input.PipeInput("test", "1");
             });
         }
 
@@ -180,10 +192,22 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
 
         [Test]
-        public void TimeWindowingReduceKeySerdesUnknow()
+        public void TimeWindowingReduceKeySerdesUnknownWithParallel()
+        {
+            TimeWindowingReduceKeySerdesUnknown(true);
+        }
+
+        [Test]
+        public void TimeWindowingReduceKeySerdesUnknownWithoutParallel()
+        {
+            TimeWindowingReduceKeySerdesUnknown(false);
+        }
+        
+        private void TimeWindowingReduceKeySerdesUnknown(bool parallelProcessing)
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-window-stream";
+            config.ParallelProcessing = parallelProcessing;
 
             var builder = new StreamBuilder();
             builder
@@ -199,11 +223,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var topology = builder.Build();
             Assert.Throws<StreamsException>(() =>
             {
-                using (var driver = new TopologyTestDriver(topology, config))
-                {
-                    var input = driver.CreateInputTopic<string, string>("topic");
-                    input.PipeInput("test", "1");
-                }
+                using var driver = new TopologyTestDriver(topology, config);
+                var input = driver.CreateInputTopic<string, string>("topic");
+                input.PipeInput("test", "1");
             });
         }
 

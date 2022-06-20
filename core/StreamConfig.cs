@@ -303,6 +303,17 @@ namespace Streamiz.Kafka.Net
         /// Time wait before completing the start task of <see cref="KafkaStream"/>. (default: 2000)
         /// </summary>
         long StartTaskDelayMs { get; set; }
+        
+        /// <summary>
+        /// Enables parallel processing for messages (default: false)
+        /// </summary>
+        bool ParallelProcessing { get; set; }
+        
+        /// <summary>
+        /// The max number of concurrent messages processing by thread. (default: 8)
+        /// Only valid if ParallelProcessing is true
+        /// </summary>
+        int MaxDegreeOfParallelism { get; set; }
 
         #endregion
         
@@ -454,6 +465,8 @@ namespace Streamiz.Kafka.Net
         internal static readonly string exposeLibrdKafkaCst = "expose.librdkafka.stats";
         internal static readonly string metricsRecordingLevelCst = "metrics.recording.level";
         internal static readonly string startTaskDelayMsCst = "start.task.delay.ms";
+        internal static readonly string parallelProcessingCst = "parallel.processing";
+        internal static readonly string maxDegreeOfParallelismCst = "max.degree.of.parallelism";
 
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -2021,6 +2034,8 @@ namespace Streamiz.Kafka.Net
             MetricsReporter = (_) => { }; // nothing by default, maybe another behavior in future
             ExposeLibrdKafkaStats = false;
             StartTaskDelayMs = 5000;
+            ParallelProcessing = false;
+            MaxDegreeOfParallelism = 8;
 
             if (properties != null)
             {
@@ -2337,6 +2352,18 @@ namespace Streamiz.Kafka.Net
         {
             get => this[startTaskDelayMsCst];
             set => this.AddOrUpdate(startTaskDelayMsCst, value);
+        }
+
+        public bool ParallelProcessing
+        {
+            get => this[parallelProcessingCst];
+            set => this.AddOrUpdate(parallelProcessingCst, value);
+        }
+
+        public int MaxDegreeOfParallelism
+        {
+            get => this[maxDegreeOfParallelismCst];
+            set => this.AddOrUpdate(maxDegreeOfParallelismCst, value);
         }
 
         /// <summary>

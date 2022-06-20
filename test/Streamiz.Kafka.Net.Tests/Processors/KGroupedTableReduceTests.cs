@@ -1,4 +1,6 @@
-﻿using NUnit.Framework;
+﻿using System;
+using System.Collections.Generic;
+using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock;
@@ -6,9 +8,6 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
-using System;
-using System.Collections.Generic;
-using Microsoft.VisualBasic;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -285,12 +284,25 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             }
         }
 
+        [Test]
+        public void KeySerdesUnknownWithParallel()
+        {
+            KeySerdesUnknown(true);
+        }
 
         [Test]
-        public void KeySerdesUnknow()
+        public void KeySerdesUnknownWithoutParallel()
         {
-            var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-reduce";
+            KeySerdesUnknown(false);
+        }
+        
+        private void KeySerdesUnknown(bool parallelProcessing)
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>
+            {
+                ApplicationId = "test-reduce",
+                ParallelProcessing = parallelProcessing
+            };
 
             var builder = new StreamBuilder();
 
@@ -302,11 +314,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var topology = builder.Build();
             Assert.Throws<StreamsException>(() =>
             {
-                using (var driver = new TopologyTestDriver(topology, config))
-                {
-                    var input = driver.CreateInputTopic<string, string>("topic");
-                    input.PipeInput("test", "1");
-                }
+                using var driver = new TopologyTestDriver(topology, config);
+                var input = driver.CreateInputTopic<string, string>("topic");
+                input.PipeInput("test", "1");
             });
         }
     }
