@@ -48,11 +48,20 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         internal static readonly string FOREACH_NAME = "KSTREAM-FOREACH-";
         internal static readonly string TO_KTABLE_NAME = "KSTREAM-TOTABLE-";
         internal static readonly string REPARTITION_NAME = "KSTREAM-REPARTITION-";
-        internal static readonly string EXTERNAL_CALL_NAME = "KSTREAM-EXTERNAL-CALL-";
-        
+        internal static readonly string MAP_ASYNC_NAME = "KSTREAM-MAP-ASYNC-";
+        internal static readonly string MAPVALUES_ASYNC_NAME = "KSTREAM-MAPVALUES-ASYNC-";
+        internal static readonly string FLATMAP_ASYNC_NAME = "KSTREAM-FLATMAP-ASYNC-";
+        internal static readonly string FLATMAPVALUES_ASYNC_NAME = "KSTREAM-FLATMAPVALUES-ASYNC-";
+        internal static readonly string FOREACH_ASYNC_NAME = "KSTREAM-FOREACH-ASYNC-";
+
+        internal static readonly string REQUEST_SINK_SUFFIX = "-request-sink";
+        internal static readonly string RESPONSE_SINK_SUFFIX = "-response-sink";
+        internal static readonly string REQUEST_SOURCE_SUFFIX = "-request-source";
+        internal static readonly string RESPONSE_SOURCE_SUFFIX = "-response-source";
+
         #endregion
     }
-
+    
     internal class KStream<K, V> : AbstractStream<K, V>, IKStream<K, V>
     {
         internal RepartitionNode<K, V> RepartitionNode { get; private set; }
@@ -662,45 +671,31 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #endregion
         
-        #region External Call
+        #region Map,FlatMap,MapValues,FlatMapValues,Foreach Async 
 
         public IKStream<K1, V1> MapAsync<K1, V1>(
-            Func<ExternalRecord<K, V>, ExternalContext, Task<KeyValuePair<K1, V1>>> asyncExternalCall,
+            Func<ExternalRecord<K, V>, ExternalContext, Task<KeyValuePair<K1, V1>>> asyncMapper,
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
             ResponseSerDes<K1, V1> responseSerDes = null,
             string named = null)
         {
-            requestSerDes ??= new RequestSerDes<K, V>(null, null);
-            responseSerDes ??= new ResponseSerDes<K1, V1>(null, null);
+            requestSerDes ??= RequestSerDes<K, V>.Empty;
+            responseSerDes ??= ResponseSerDes<K1, V1>.Empty;
             
-            Func<ExternalRecord<K, V>, ExternalContext, Task<KeyValuePair<K1, V1>?>> wrapperFunction 
-                = async (e, c) => await asyncExternalCall(e, c);
+            var processors = RequestResponseProcessor(new Named(named), KStream.MAP_ASYNC_NAME);
             
-            var _named = new Named(named);
-
-            string requestSinkProcessorName =                 
-                _named.SuffixWithOrElseGet("-request-sink", builder, KStream.SINK_NAME);
-            string requestSourceProcessorName =
-                _named.SuffixWithOrElseGet("-request-source", builder, KStream.SOURCE_NAME);
-            string responseSinkProcessorName=                 
-                _named.SuffixWithOrElseGet("-response-sink", builder, KStream.SINK_NAME);
-            string responseSourceProcessorName=                 
-                _named.SuffixWithOrElseGet("-response-source", builder, KStream.SOURCE_NAME);
-            
-            string asyncProcessorName = _named.OrElseGenerateWithPrefix(builder, KStream.EXTERNAL_CALL_NAME);
-
             ProcessorParameters<K, V > processorParameters =
-                new ProcessorParameters<K, V>(new KStreamAsyncCall<K, V, K1, V1>(wrapperFunction, retryPolicy), asyncProcessorName);
-            
+                new ProcessorParameters<K, V>(new KStreamMapAsync<K, V, K1, V1>(asyncMapper, retryPolicy), processors.asyncProcessorName);
+
             AsyncNode<K, V, K1, V1> asyncNode = new AsyncNode<K, V, K1, V1>(
-                asyncProcessorName,
-                requestSinkProcessorName,
-                requestSourceProcessorName,
-                $"{asyncProcessorName}-request",
-                responseSinkProcessorName,
-                responseSourceProcessorName,
-                $"{asyncProcessorName}-response",
+                processors.asyncProcessorName,
+                processors.requestSinkProcessorName,
+                processors.requestSourceProcessorName,
+                RequestTopic(processors.asyncProcessorName),
+                processors.responseSinkProcessorName,
+                processors.responseSourceProcessorName,
+                ResponseTopic(processors.asyncProcessorName),
                 requestSerDes,
                 responseSerDes,
                 processorParameters);
@@ -708,10 +703,122 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             builder.AddGraphNode(Node, asyncNode.RequestNode);
             builder.AddGraphNode(asyncNode.RequestNode, asyncNode.ResponseNode);
 
-            return new KStream<K1, V1>(responseSourceProcessorName,
+            return new KStream<K1, V1>(processors.responseSourceProcessorName,
                 responseSerDes.ResponseKeySerDes,
                 responseSerDes.ResponseValueSerDes,
-                responseSourceProcessorName.ToSingle().ToList(),
+                processors.responseSourceProcessorName.ToSingle().ToList(),
+                asyncNode.ResponseNode,
+                builder);
+        }
+        
+        public IKStream<K, V1> MapValuesAsync<V1>(
+            Func<ExternalRecord<K, V>, ExternalContext, Task<V1>> asyncMapper,
+            RetryPolicy retryPolicy = null,
+            RequestSerDes<K, V> requestSerDes = null,
+            ResponseSerDes<K, V1> responseSerDes = null,
+            string named = null)
+        {
+            requestSerDes ??= RequestSerDes<K, V>.Empty;
+            responseSerDes ??= ResponseSerDes<K, V1>.Empty;
+            
+            var processors = RequestResponseProcessor(new Named(named), KStream.MAPVALUES_ASYNC_NAME);
+            
+            ProcessorParameters<K, V > processorParameters =
+                new ProcessorParameters<K, V>(new KStreamMapValuesAsync<K, V, V1>(asyncMapper, retryPolicy), processors.asyncProcessorName);
+
+            AsyncNode<K, V, K, V1> asyncNode = new AsyncNode<K, V, K, V1>(
+                processors.asyncProcessorName,
+                processors.requestSinkProcessorName,
+                processors.requestSourceProcessorName,
+                RequestTopic(processors.asyncProcessorName),
+                processors.responseSinkProcessorName,
+                processors.responseSourceProcessorName,
+                ResponseTopic(processors.asyncProcessorName),
+                requestSerDes,
+                responseSerDes,
+                processorParameters);
+            
+            builder.AddGraphNode(Node, asyncNode.RequestNode);
+            builder.AddGraphNode(asyncNode.RequestNode, asyncNode.ResponseNode);
+
+            return new KStream<K, V1>(processors.responseSourceProcessorName,
+                responseSerDes.ResponseKeySerDes,
+                responseSerDes.ResponseValueSerDes,
+                processors.responseSourceProcessorName.ToSingle().ToList(),
+                asyncNode.ResponseNode,
+                builder);
+        }
+        
+        public IKStream<K1, V1> FlatMapAsync<K1, V1>(
+            Func<ExternalRecord<K, V>, ExternalContext, Task<IEnumerable<KeyValuePair<K1, V1>>>> asyncMapper,
+            RetryPolicy retryPolicy = null,
+            RequestSerDes<K, V> requestSerDes = null,
+            ResponseSerDes<K1, V1> responseSerDes = null,
+            string named = null)
+        {
+            requestSerDes ??= RequestSerDes<K, V>.Empty;
+            responseSerDes ??= ResponseSerDes<K1, V1>.Empty;
+            
+            var processors = RequestResponseProcessor(new Named(named), KStream.FLATMAP_ASYNC_NAME);
+
+            ProcessorParameters<K, V > processorParameters =
+                new ProcessorParameters<K, V>(new KStreamFlatMapAsync<K, V, K1, V1>(asyncMapper, retryPolicy), processors.asyncProcessorName);
+
+            AsyncNode<K, V, K1, V1> asyncNode = new AsyncNode<K, V, K1, V1>(
+                processors.asyncProcessorName,
+                processors.requestSinkProcessorName,
+                processors.requestSourceProcessorName,
+                RequestTopic(processors.asyncProcessorName),
+                processors.responseSinkProcessorName,
+                processors.responseSourceProcessorName,
+                ResponseTopic(processors.asyncProcessorName),
+                requestSerDes,
+                responseSerDes,
+                processorParameters);
+            builder.AddGraphNode(Node, asyncNode.RequestNode);
+            builder.AddGraphNode(asyncNode.RequestNode, asyncNode.ResponseNode);
+
+            return new KStream<K1, V1>(processors.responseSourceProcessorName,
+                responseSerDes.ResponseKeySerDes,
+                responseSerDes.ResponseValueSerDes,
+                processors.responseSourceProcessorName.ToSingle().ToList(),
+                asyncNode.ResponseNode,
+                builder);
+        }
+        
+        public IKStream<K, V1> FlatMapValuesAsync<V1>(
+            Func<ExternalRecord<K, V>, ExternalContext, Task<IEnumerable<V1>>> asyncMapper,
+            RetryPolicy retryPolicy = null,
+            RequestSerDes<K, V> requestSerDes = null,
+            ResponseSerDes<K, V1> responseSerDes = null,
+            string named = null)
+        {
+            requestSerDes ??= RequestSerDes<K, V>.Empty;
+            responseSerDes ??= ResponseSerDes<K, V1>.Empty;
+            
+            var processors = RequestResponseProcessor(new Named(named), KStream.FLATMAPVALUES_ASYNC_NAME);
+
+            ProcessorParameters<K, V > processorParameters =
+                new ProcessorParameters<K, V>(new KStreamFlatMapValuesAsync<K, V, V1>(asyncMapper, retryPolicy), processors.asyncProcessorName);
+
+            AsyncNode<K, V, K, V1> asyncNode = new AsyncNode<K, V, K, V1>(
+                processors.asyncProcessorName,
+                processors.requestSinkProcessorName,
+                processors.requestSourceProcessorName,
+                RequestTopic(processors.asyncProcessorName),
+                processors.responseSinkProcessorName,
+                processors.responseSourceProcessorName,
+                ResponseTopic(processors.asyncProcessorName),
+                requestSerDes,
+                responseSerDes,
+                processorParameters);
+            builder.AddGraphNode(Node, asyncNode.RequestNode);
+            builder.AddGraphNode(asyncNode.RequestNode, asyncNode.ResponseNode);
+
+            return new KStream<K, V1>(processors.responseSourceProcessorName,
+                responseSerDes.ResponseKeySerDes,
+                responseSerDes.ResponseValueSerDes,
+                processors.responseSourceProcessorName.ToSingle().ToList(),
                 asyncNode.ResponseNode,
                 builder);
         }
@@ -723,30 +830,17 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             string named = null)
         {
             requestSerDes ??= new RequestSerDes<K, V>(null, null);
-            
-            Func<ExternalRecord<K, V>, ExternalContext, Task<KeyValuePair<object, object>?>> wrapperFunction 
-                = async (e, c) => {
-                    await asyncExternalCall(e, c);
-                    return await Task.FromResult<KeyValuePair<object, object>?>(null);
-                };
-            
-            var _named = new Named(named);
 
-            string requestSinkProcessorName =                 
-                _named.SuffixWithOrElseGet("-request-sink", builder, KStream.SINK_NAME);
-            string requestSourceProcessorName =
-                _named.SuffixWithOrElseGet("-request-source", builder, KStream.SOURCE_NAME);
-            
-            string asyncProcessorName = _named.OrElseGenerateWithPrefix(builder, KStream.EXTERNAL_CALL_NAME);
+            var processors = RequestResponseProcessor(new Named(named), KStream.FOREACH_ASYNC_NAME, true);
 
             ProcessorParameters<K, V > processorParameters =
-                new ProcessorParameters<K, V>(new KStreamAsyncCall<K, V, object, object>(wrapperFunction, retryPolicy), asyncProcessorName);
+                new ProcessorParameters<K, V>(new KStreamForeachAsync<K, V>(asyncExternalCall, retryPolicy), processors.asyncProcessorName);
             
             AsyncNode<K, V, K, V> asyncNode = new AsyncNode<K, V, K, V>(
-                asyncProcessorName,
-                requestSinkProcessorName,
-                requestSourceProcessorName,
-                $"{asyncProcessorName}-request",
+                processors.asyncProcessorName,
+                processors.requestSinkProcessorName,
+                processors.requestSourceProcessorName,
+                RequestTopic(processors.asyncProcessorName),
                 requestSerDes,
                 processorParameters);
             
@@ -1063,7 +1157,43 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             
             return (sourceName, repartitionNode);
         }
-        
+
+        private string RequestTopic(string name) => $"{name}-request";
+        private string ResponseTopic(string name) => $"{name}-response";
+
+        private (
+            string requestSinkProcessorName,
+            string requestSourceProcessorName,
+            string responseSinkProcessorName,
+            string responseSourceProcessorName,
+            string asyncProcessorName
+            ) RequestResponseProcessor(Named named, string asyncCst, bool onlyRequest = false)
+        {
+            var requestSinkProcessorName =                 
+                named.SuffixWithOrElseGet("-request-sink", builder, KStream.SINK_NAME);
+            var requestSourceProcessorName =
+                named.SuffixWithOrElseGet("-request-source", builder, KStream.SOURCE_NAME);
+
+            string responseSinkProcessorName = null;
+            string responseSourceProcessorName = null;
+            if (!onlyRequest)
+            {
+                responseSinkProcessorName =
+                    named.SuffixWithOrElseGet("-response-sink", builder, KStream.SINK_NAME);
+                responseSourceProcessorName =
+                    named.SuffixWithOrElseGet("-response-source", builder, KStream.SOURCE_NAME);
+            }
+
+            var asyncProcessorName = named.OrElseGenerateWithPrefix(builder, asyncCst);
+
+            return (
+                requestSinkProcessorName,
+                requestSourceProcessorName,
+                responseSinkProcessorName,
+                responseSourceProcessorName,
+                asyncProcessorName);
+        }
+
         #endregion
     }
 }

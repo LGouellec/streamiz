@@ -98,7 +98,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
             if (source.Any())
             {
                 var items = source.ToList();
-                return items[RandomNumberGenerator.GetInt32(0, items.Count)];
+                return items[RandomGenerator.GetInt32(items.Count)];
             }
 
             return null;

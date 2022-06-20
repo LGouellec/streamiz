@@ -173,7 +173,7 @@ namespace Streamiz.Kafka.Net.Mock
             {
                 var pipe = CreateBuilder(topic).Input(topic, configuration);
                 foreach(var r in records)
-                    pipe.Pipe(r.Message.Key, r.Message.Value, r.Message.Timestamp.UnixTimestampMs.FromMilliseconds());
+                    pipe.Pipe(r.Message.Key, r.Message.Value, r.Message.Timestamp.UnixTimestampMs.FromMilliseconds(), r.Message.Headers);
                 pipe.Flush();
 
                 consumer.Commit(records.Last());

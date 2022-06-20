@@ -11,18 +11,15 @@ using Streamiz.Kafka.Net.Stream;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    internal class KStreamAsyncCallProcessor<K, V, K1, V1> : 
+    internal abstract class AbstractAsyncProcessor<K, V, K1, V1> : 
         AbstractProcessor<K, V>, IAsyncProcessor<K, V, K1, V1>
     {
-        private readonly Func<ExternalRecord<K, V>, ExternalContext, Task<KeyValuePair<K1, V1>?>> asyncExternalCall;
-        
-        public KStreamAsyncCallProcessor(
-            Func<ExternalRecord<K, V>, ExternalContext, Task<KeyValuePair<K1, V1>?>> asyncExternalCall,
-            RetryPolicy retryPolicy)
+        protected AbstractAsyncProcessor(RetryPolicy policy)
         {
-            this.asyncExternalCall = asyncExternalCall;
-            Policy = retryPolicy;
+            Policy = policy;
         }
+        
+        public RetryPolicy Policy { get; }
 
         public override void Process(K key, V value)
         {
@@ -31,7 +28,7 @@ namespace Streamiz.Kafka.Net.Processors
             };
             DateTime startProcessing = DateTime.Now;
             bool result = false, retry = true;
-            Task<KeyValuePair<K1, V1>?> task = null;
+            Task<IEnumerable<KeyValuePair<K1, V1>>> task = null;
             Exception noneRetriableException = null;
             context.FirstCallEpoch = DateTime.Now.GetMilliseconds();
             
@@ -52,7 +49,7 @@ namespace Streamiz.Kafka.Net.Processors
                     throw new NotEnoughtTimeException("", context.CurrentCallEpoch - startProcessing.GetMilliseconds());
                 
                 task = ProcessAsync(key, value, Context.RecordContext.Headers, Context.Timestamp, context);
-
+   
                 try
                 {
                     task.Wait();
@@ -76,37 +73,31 @@ namespace Streamiz.Kafka.Net.Processors
                 }
             }
 
-            if (result && task.IsCompletedSuccessfully)
+            if (result && task.IsCompleted)
             {
                 LogProcessingKeyValueWithRetryNumber(key, value, context.RetryNumber, true);
-                if(task.Result.HasValue)
-                    Forward(task.Result.Value.Key, task.Result.Value.Value);
+                if(task.Result != null && task.Result.Any())
+                    foreach(var kv in task.Result)
+                        Forward(kv.Key, kv.Value);
             }
 
             if (!retry && !result)
                 throw new StreamsException(noneRetriableException);
         }
-
+        
         private bool ContainsRetryableExceptions(AggregateException ae)
             => (from innerException in ae.InnerExceptions 
                 from policyException in Policy.RetriableExceptions 
                 where policyException.IsInstanceOfType(innerException) 
                 select innerException).Any();
 
-        protected void LogProcessingKeyValueWithRetryNumber(K key, V value, int retryNumber, bool result) => log.LogDebug(
+        private void LogProcessingKeyValueWithRetryNumber(K key, V value, int retryNumber, bool result) => log.LogDebug(
             $"{logPrefix}Process<{typeof(K).Name},{typeof(V).Name}> message with key {key} and {value}" +
             $" with record metadata [topic:{Context.RecordContext.Topic}|" +
-            $"partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}] [retry.number={retryNumber}, result={(result ? "Sucess" : "Failure")}]");
+            $"partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}] [retry.number={retryNumber}, result={(result ? "Success" : "Failure")}]");
         
-        public async Task<KeyValuePair<K1, V1>?> ProcessAsync(K key, V value, Headers headers, long timestamp, ExternalContext context)
-        {
-            var record = new ExternalRecord<K, V>(key, value, headers, timestamp);
-            
-            return await asyncExternalCall(
-                record,
-                context);
-        }
-
-        public RetryPolicy Policy { get; }
+        public abstract Task<IEnumerable<KeyValuePair<K1, V1>>> ProcessAsync(K key, V value, Headers headers, long timestamp,
+            ExternalContext context);
+        
     }
 }

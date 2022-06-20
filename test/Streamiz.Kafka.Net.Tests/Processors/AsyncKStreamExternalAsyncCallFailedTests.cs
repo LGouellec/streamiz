@@ -205,7 +205,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 var stream = builder.Stream<string, string>("input");
                 stream
-                    .ExternalCallAsync(
+                    .ForeachAsync(
                         (_, _) => throw new StreamsException("Exception"));
             }, 
                 config => config.InnerExceptionHandler = _ => ExceptionHandlerResponse.CONTINUE);

@@ -12,6 +12,6 @@ namespace Streamiz.Kafka.Net.Processors
     
     internal interface IAsyncProcessor<K, V, K1, V1> : IAsyncProcessor
     {
-        public Task<KeyValuePair<K1, V1>?> ProcessAsync(K key, V value, Headers headers, long timestamp, ExternalContext context);
+        public Task<IEnumerable<KeyValuePair<K1, V1>>> ProcessAsync(K key, V value, Headers headers, long timestamp, ExternalContext context);
     }
 }

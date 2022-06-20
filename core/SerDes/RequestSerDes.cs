@@ -5,6 +5,8 @@ namespace Streamiz.Kafka.Net.SerDes
         internal ISerDes<K> RequestKeySerDes { get; private set; }
         internal ISerDes<V> RequestValueSerDes { get; private set; }
 
+        internal static RequestSerDes<K, V> Empty => new RequestSerDes<K, V>(null, null);
+        
         public RequestSerDes(
             ISerDes<K> requestKeySerDes,
             ISerDes<V> requestValueSerDes)

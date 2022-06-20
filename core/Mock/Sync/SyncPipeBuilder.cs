@@ -72,14 +72,14 @@ namespace Streamiz.Kafka.Net.Mock.Sync
                 this.externalProcessorTopologyExecutor = externalProcessorTopologyExecutor;
             }
             
-            public void PublishRecord(string topic, byte[] key, byte[] value, DateTime timestamp)
+            public void PublishRecord(string topic, byte[] key, byte[] value, DateTime timestamp, Headers headers)
             {
                 var result = new ConsumeResult<byte[], byte[]>
                 {
                     Topic = topic,
                     TopicPartitionOffset = new TopicPartitionOffset(new TopicPartition(topic, 0), offset++),
                     Message = new Message<byte[], byte[]>
-                        {Key = key, Value = value, Timestamp = new Timestamp(timestamp)}
+                        {Key = key, Value = value, Timestamp = new Timestamp(timestamp), Headers = headers}
                 };
                 externalProcessorTopologyExecutor.Process(result);
             }
