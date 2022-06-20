@@ -11,11 +11,11 @@ namespace Streamiz.Kafka.Net.Crosscutting
         /// <summary>
         /// Nano-second timeunit
         /// </summary>
-        public static TimeUnit NANOSECONDS { get; } = new TimeUnit(TimeSpan.FromMilliseconds(1) * 1000 * 1000, (timeMs) => timeMs * 1000.0 * 1000.0);
+        public static TimeUnit NANOSECONDS { get; } = new TimeUnit(TimeSpan.FromMilliseconds(1 * 1000 * 1000), (timeMs) => timeMs * 1000.0 * 1000.0);
         /// <summary>
         /// Micro-second timeunit
         /// </summary>
-        public static TimeUnit MICROSECONDS { get; } = new TimeUnit(TimeSpan.FromMilliseconds(1) * 1000, (timeMs) => timeMs * 1000.0);
+        public static TimeUnit MICROSECONDS { get; } = new TimeUnit(TimeSpan.FromMilliseconds(1 * 1000), (timeMs) => timeMs * 1000.0);
         /// <summary>
         /// Millisecond timeunit
         /// </summary>

@@ -44,10 +44,10 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
                 {
                     var cloneMeasurableStat = (IMeasurableStat)Activator.CreateInstance(m.Value.GetType());
                     var tags = new Dictionary<string, string>(m.Key.Tags);
-                    scoped.Scope.Split(ScopedLibrdKafka.separator)
+                    scoped.Scope.Split(ScopedLibrdKafka.separator.ToArray())
                         .ForEach((i) =>
                         {
-                            var items = i.Split(ScopedLibrdKafka.internalSeparator);
+                            var items = i.Split(ScopedLibrdKafka.internalSeparator.ToArray());
                             if(items.Length == 2)
                                 tags.AddOrUpdate(items[0], items[1]);
                         });

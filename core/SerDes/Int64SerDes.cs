@@ -14,7 +14,7 @@ namespace Streamiz.Kafka.Net.SerDes
         /// <param name="data">serialized bytes.</param>
         /// <param name="context">serialization context</param>
         /// <returns>deserialized <see cref="Int64"/> using data; may be null</returns>
-        public override long Deserialize(byte[] data, SerializationContext context) => BitConverter.ToInt64(data);
+        public override long Deserialize(byte[] data, SerializationContext context) => BitConverter.ToInt64(data, 0);
 
         /// <summary>
         /// Convert long <code>data</code> into a byte array.

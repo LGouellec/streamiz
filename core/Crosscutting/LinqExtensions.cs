@@ -53,7 +53,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
             foreach (var item in source)
             {
                 if (function.Invoke(item))
-                    results.Add(KeyValuePair.Create(item.Key, interceptedValue));
+                    results.Add(new KeyValuePair<K, V>(item.Key, interceptedValue));
                 else
                     results.Add(item);
             }
