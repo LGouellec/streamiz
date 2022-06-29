@@ -146,7 +146,7 @@ namespace Streamiz.Kafka.Net.Processors
                 .OfType<IAsyncProcessor>()
                 .FirstOrDefault();
             
-            RetryPolicy = asyncProcessor != null ? asyncProcessor.Policy : RetryPolicyBuilder.NewBuilder().Build();
+            RetryPolicy = asyncProcessor != null ? asyncProcessor.Policy : RetryPolicy.NewBuilder().Build();
             if(RetryPolicy.TimeoutMs <= 0)
                 RetryPolicy.TimeoutMs = (long)config.MaxPollIntervalMs / 3;
             

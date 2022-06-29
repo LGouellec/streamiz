@@ -4,13 +4,13 @@ using Streamiz.Kafka.Net.Stream;
 
 namespace Streamiz.Kafka.Net.Tests.Public
 {
-    public class RetryPolicyBuilderTests
+    public class RetryPolicyTests
     {
         [Test]
         public void RetryPolicyExceptionsTests()
         {
-            var builder1 = RetryPolicyBuilder.NewBuilder();
-            var builder2 = RetryPolicyBuilder.NewBuilder();
+            var builder1 = RetryPolicy.NewBuilder();
+            var builder2 = RetryPolicy.NewBuilder();
             builder1.RetriableException<StreamsException>();
             builder2.RetriableException<NoneRetryableException>();
             var pol1 = builder1.Build();
@@ -22,8 +22,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
         [Test]
         public void RetryPolicyNumberRetryTests()
         {
-            var builder1 = RetryPolicyBuilder.NewBuilder();
-            var builder2 = RetryPolicyBuilder.NewBuilder();
+            var builder1 = RetryPolicy.NewBuilder();
+            var builder2 = RetryPolicy.NewBuilder();
             builder1.NumberOfRetry(10);
             builder2.NumberOfRetry(2);
             var pol1 = builder1.Build();
@@ -35,8 +35,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
         [Test]
         public void RetryPolicyBackOffTests()
         {
-            var builder1 = RetryPolicyBuilder.NewBuilder();
-            var builder2 = RetryPolicyBuilder.NewBuilder();
+            var builder1 = RetryPolicy.NewBuilder();
+            var builder2 = RetryPolicy.NewBuilder();
             builder1.RetryBackOffMs(120);
             builder2.RetryBackOffMs(50);
             var pol1 = builder1.Build();
@@ -48,8 +48,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
         [Test]
         public void RetryPolicyBufferSize()
         {
-            var builder1 = RetryPolicyBuilder.NewBuilder();
-            var builder2 = RetryPolicyBuilder.NewBuilder();
+            var builder1 = RetryPolicy.NewBuilder();
+            var builder2 = RetryPolicy.NewBuilder();
             builder1.MemoryBufferSize(40);
             builder2.MemoryBufferSize(10);
             var pol1 = builder1.Build();
@@ -61,8 +61,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
         [Test]
         public void RetryPolicyTimeout()
         {
-            var builder1 = RetryPolicyBuilder.NewBuilder();
-            var builder2 = RetryPolicyBuilder.NewBuilder();
+            var builder1 = RetryPolicy.NewBuilder();
+            var builder2 = RetryPolicy.NewBuilder();
             builder1.TimeoutMs(300);
             builder2.TimeoutMs(600);
             var pol1 = builder1.Build();
@@ -74,8 +74,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
         [Test]
         public void RetryPolicyBehavior()
         {
-            var builder1 = RetryPolicyBuilder.NewBuilder();
-            var builder2 = RetryPolicyBuilder.NewBuilder();
+            var builder1 = RetryPolicy.NewBuilder();
+            var builder2 = RetryPolicy.NewBuilder();
             builder1.RetryBehavior(EndRetryBehavior.FAIL);
             builder2.RetryBehavior(EndRetryBehavior.BUFFERED);
             var pol1 = builder1.Build();

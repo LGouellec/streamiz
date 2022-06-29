@@ -14,7 +14,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph
             RetryPolicy retryPolicy)
         {
             this.asyncCall = asyncCall;
-            this.retryPolicy = retryPolicy ?? RetryPolicyBuilder.NewBuilder().Build();
+            this.retryPolicy = retryPolicy ?? RetryPolicy.NewBuilder().Build();
         }
 
         public IProcessor<K, V> Get()

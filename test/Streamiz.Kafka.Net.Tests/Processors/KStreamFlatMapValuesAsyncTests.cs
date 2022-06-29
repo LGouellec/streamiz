@@ -62,7 +62,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                                 throw new StreamsException("Exception");
                             return await Task.FromResult(record.Value.ToCharArray());
                         }, 
-                            RetryPolicyBuilder
+                            RetryPolicy
                                 .NewBuilder()
                                 .RetriableException<StreamsException>()
                                 .Build(), 
@@ -100,7 +100,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                                 throw new StreamsException("Exception");
                             return await Task.FromResult(record.Value.ToCharArray());
                         }, 
-                        RetryPolicyBuilder
+                        RetryPolicy
                             .NewBuilder()
                             .RetriableException<StreamsException>()
                             .Build(),
@@ -138,7 +138,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                                 throw new StreamsException("Exception");
                             return await Task.FromResult(record.Value.ToCharArray());
                         }, 
-                        RetryPolicyBuilder
+                        RetryPolicy
                             .NewBuilder()
                             .NumberOfRetry(5)
                             .RetriableException<StreamsException>()
@@ -171,7 +171,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                                 throw new StreamsException("Exception");
                             return await Task.FromResult(record.Value.ToCharArray());
                         }, 
-                        RetryPolicyBuilder
+                        RetryPolicy
                             .NewBuilder()
                             .NumberOfRetry(5)
                             .RetriableException<StreamsException>()
@@ -233,7 +233,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                             }
                             return await Task.FromResult(record.Value.ToCharArray());
                         }, 
-                        RetryPolicyBuilder
+                        RetryPolicy
                             .NewBuilder()
                             .RetriableException<StreamsException>()
                             .RetryBehavior(EndRetryBehavior.BUFFERED)
@@ -276,7 +276,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                             }
                             return await Task.FromResult(record.Value.ToCharArray());
                         }, 
-                        RetryPolicyBuilder
+                        RetryPolicy
                             .NewBuilder()
                             .RetriableException<StreamsException>()
                             .RetryBehavior(EndRetryBehavior.SKIP)
@@ -313,7 +313,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                             }
                             return await Task.FromResult(record.Value.ToCharArray());
                         }, 
-                        RetryPolicyBuilder
+                        RetryPolicy
                             .NewBuilder()
                             .RetriableException<StreamsException>()
                             .RetryBehavior(EndRetryBehavior.FAIL)
@@ -347,7 +347,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                                 throw new StreamsException("Exception");
                             return await Task.FromResult(record.Value.ToCharArray());
                         }, 
-                        RetryPolicyBuilder
+                        RetryPolicy
                             .NewBuilder()
                             .RetriableException<StreamsException>()
                             .NumberOfRetry(1)

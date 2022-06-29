@@ -13,7 +13,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph
         public KStreamFlatMapAsync(Func<ExternalRecord<K, V>, ExternalContext, Task<IEnumerable<KeyValuePair<K1, V1>>>> asyncMapper, RetryPolicy retryPolicy)
         {
             this.asyncMapper = asyncMapper;
-            this.retryPolicy = retryPolicy ?? RetryPolicyBuilder.NewBuilder().Build();
+            this.retryPolicy = retryPolicy ?? RetryPolicy.NewBuilder().Build();
         }
 
         public IProcessor<K, V> Get()

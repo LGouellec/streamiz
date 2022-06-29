@@ -1574,7 +1574,25 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="repartitioned">Repartition instructions parameter</param>
         /// <returns><see cref="IKStream{K,V}"/> that contains the exact same repartitioned records as this stream.</returns>
         IKStream<K, V> Repartition(Repartitioned<K, V> repartitioned = null);
-        
+
+        /// <summary>
+        /// Transform each record of the input stream into a new record in the output stream (both key and value type can be
+        /// altered arbitrarily) with an asynchronous function. 
+        /// The provided async mapper is applied to each input record and computes a new output record.
+        /// Thus, an input record &lt;<typeparamref name="K"/>, <typeparamref name="V"/>&gt; can be transformed into an output record &lt;<typeparamref name="K1"/>, <typeparamref name="V1"/>&gt;.
+        /// This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.
+        /// By default, the retry policy is null (so means without policy). You can use <see cref="RetryPolicyBuilder"/> to specify your own behavior regarding your retriable logic about this asynchronous processing.
+        /// <paramref name="requestSerDes"/> and <paramref name="responseSerDes"/> will be use for serialize and deserialize records from reauest source topic and to response sink topic.
+        /// If you still this parameters null, we will try to use the default key/value serdes on the configuration.
+        /// </summary>
+        /// <typeparam name="K1">the key type of the result stream</typeparam>
+        /// <typeparam name="V1">the value type of the result stream</typeparam>
+        /// <param name="asyncMapper">A asynchronous function to map a new key/value pair record</param>
+        /// <param name="retryPolicy">Retry policy behavior for this async processing</param>
+        /// <param name="requestSerDes">Serdes used for serialized/deserialized key and value for the request topic</param>
+        /// <param name="responseSerDes">Serdes used for serialized/deserialized new key and value for the response topic</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKStream{K1, V1}"/> that contains records with new key and value (possibly both of different type)</returns>
         IKStream<K1, V1> MapAsync<K1, V1>(
             Func<ExternalRecord<K, V>, ExternalContext, Task<KeyValuePair<K1, V1>>> asyncMapper,
             RetryPolicy retryPolicy = null,
@@ -1582,6 +1600,24 @@ namespace Streamiz.Kafka.Net.Stream
             ResponseSerDes<K1, V1> responseSerDes = null,
             string named = null);
         
+        /// <summary>
+        /// Transform each record of the input stream into zero or more records in the output stream (bot
+        /// can be altered arbitrarily) with an asynchronous function.
+        /// The provided async mapper is applied to each input record and computes a new list of output records.
+        /// Thus, an input record &lt;<typeparamref name="K"/>, <typeparamref name="V"/>&gt; can be transformed into an enumerable list of output records &lt;<typeparamref name="K1"/>, <typeparamref name="V1"/>&gt;.
+        /// This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.
+        /// By default, the retry policy is null (so means without policy). You can use <see cref="RetryPolicyBuilder"/> to specify your own behavior regarding your retriable logic about this asynchronous processing.
+        /// <paramref name="requestSerDes"/> and <paramref name="responseSerDes"/> will be use for serialize and deserialize records from reauest source topic and to response sink topic.
+        /// If you still this parameters null, we will try to use the default key/value serdes on the configuration.
+        /// </summary>
+        /// <typeparam name="K1">the key type of the result stream</typeparam>
+        /// <typeparam name="V1">the value type of the result stream</typeparam>
+        /// <param name="asyncMapper">A asynchronous function to map an enumerable collection of key/value pair</param>
+        /// <param name="retryPolicy">Retry policy behavior for this async processing</param>
+        /// <param name="requestSerDes">Serdes used for serialized/deserialized key and value for the request topic</param>
+        /// <param name="responseSerDes">Serdes used for serialized/deserialized new key and value for the response topic</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKStream{K1, V1}"/> that contains records with new key and value (possibly both of different type)</returns>
         IKStream<K1, V1> FlatMapAsync<K1, V1>(
             Func<ExternalRecord<K, V>, ExternalContext, Task<IEnumerable<KeyValuePair<K1, V1>>>> asyncMapper,
             RetryPolicy retryPolicy = null,
@@ -1589,6 +1625,23 @@ namespace Streamiz.Kafka.Net.Stream
             ResponseSerDes<K1, V1> responseSerDes = null,
             string named = null);
         
+        /// <summary>
+        /// Transform each record of the input stream into a new record in the output stream (value type can be
+        /// altered arbitrarily) with an asynchronous function. 
+        /// The provided async mapper is applied to each input record and computes a new output record.
+        /// Thus, an input record &lt;<typeparamref name="K"/>, <typeparamref name="V"/>&gt; can be transformed into an output record &lt;<typeparamref name="K"/>, <typeparamref name="V1"/>&gt;.
+        /// This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.
+        /// By default, the retry policy is null (so means without policy). You can use <see cref="RetryPolicyBuilder"/> to specify your own behavior regarding your retriable logic about this asynchronous processing.
+        /// <paramref name="requestSerDes"/> and <paramref name="responseSerDes"/> will be use for serialize and deserialize records from reauest source topic and to response sink topic.
+        /// If you still this parameters null, we will try to use the default key/value serdes on the configuration.
+        /// </summary>
+        /// <typeparam name="V1">the value type of the result stream</typeparam>
+        /// <param name="asyncMapper">A asynchronous function to map a new key/value pair record</param>
+        /// <param name="retryPolicy">Retry policy behavior for this async processing</param>
+        /// <param name="requestSerDes">Serdes used for serialized/deserialized key and value for the request topic</param>
+        /// <param name="responseSerDes">Serdes used for serialized/deserialized new key and value for the response topic</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKStream{K, V1}"/> that contains records with new key and value (possibly both of different type)</returns>
         IKStream<K, V1> MapValuesAsync<V1>(
             Func<ExternalRecord<K, V>, ExternalContext, Task<V1>> asyncMapper,
             RetryPolicy retryPolicy = null,
@@ -1596,6 +1649,23 @@ namespace Streamiz.Kafka.Net.Stream
             ResponseSerDes<K, V1> responseSerDes = null,
             string named = null);
         
+        /// <summary>
+        /// Transform each record of the input stream into zero or more records in the output stream (bot
+        /// can be altered arbitrarily) with an asynchronous function.
+        /// The provided async mapper is applied to each input record and computes a new list of output records.
+        /// Thus, an input record &lt;<typeparamref name="K"/>, <typeparamref name="V"/>&gt; can be transformed into an enumerable list of output records &lt;<typeparamref name="K"/>, <typeparamref name="V1"/>&gt;.
+        /// This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.
+        /// By default, the retry policy is null (so means without policy). You can use <see cref="RetryPolicyBuilder"/> to specify your own behavior regarding your retriable logic about this asynchronous processing.
+        /// <paramref name="requestSerDes"/> and <paramref name="responseSerDes"/> will be use for serialize and deserialize records from reauest source topic and to response sink topic.
+        /// If you still this parameters null, we will try to use the default key/value serdes on the configuration.
+        /// </summary>
+        /// <typeparam name="V1">the value type of the result stream</typeparam>
+        /// <param name="asyncMapper">A asynchronous function to map an enumerable collection of key/value pair</param>
+        /// <param name="retryPolicy">Retry policy behavior for this async processing</param>
+        /// <param name="requestSerDes">Serdes used for serialized/deserialized key and value for the request topic</param>
+        /// <param name="responseSerDes">Serdes used for serialized/deserialized new key and value for the response topic</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKStream{K, V1}"/> that contains records with new key and value (possibly both of different type)</returns>
         IKStream<K, V1> FlatMapValuesAsync<V1>(
             Func<ExternalRecord<K, V>, ExternalContext, Task<IEnumerable<V1>>> asyncMapper,
             RetryPolicy retryPolicy = null,
@@ -1603,6 +1673,17 @@ namespace Streamiz.Kafka.Net.Stream
             ResponseSerDes<K, V1> responseSerDes = null,
             string named = null);
 
+        /// <summary>
+        /// Perform an asynchronous action on each record of {@code KStream}. Note that this is a terminal operation that returns void.
+        /// This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.
+        /// By default, the retry policy is null (so means without policy). You can use <see cref="RetryPolicyBuilder"/> to specify your own behavior regarding your retriable logic about this asynchronous processing.
+        /// <paramref name="requestSerDes"/> will be use for serialize and deserialize records from reauest source topic.
+        /// If you still this parameters null, we will try to use the default key/value serdes on the configuration.
+        /// </summary>
+        /// <param name="asyncAction">An asynchronous action to perform on each record</param>
+        /// <param name="retryPolicy">Retry policy behavior for this async processing</param>
+        /// <param name="requestSerDes">Serdes used for serialized/deserialized key and value for the request topic</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         void ForeachAsync(
             Func<ExternalRecord<K, V>, ExternalContext, Task> asyncAction,
             RetryPolicy retryPolicy = null,

@@ -91,7 +91,7 @@ namespace sample_stream
                                 }
                             });
                     },
-                    RetryPolicyBuilder
+                    RetryPolicy
                         .NewBuilder()
                         .NumberOfRetry(10)
                         .RetryBackOffMs(100)

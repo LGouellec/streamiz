@@ -151,6 +151,7 @@ namespace Streamiz.Kafka.Net.Mock
         /// <param name="topic">topic name</param>
         /// <param name="key">key record</param>
         /// <param name="value">value record</param>
+        /// <param name="headers">headers record</param>
         public void PipeInput(string topic, K key, V value, Headers headers = default)
             => PipeInput(topic, new TestRecord<K, V> { Value = value, Key = key, Headers = headers ?? new Headers() });
 
@@ -161,6 +162,7 @@ namespace Streamiz.Kafka.Net.Mock
         /// <param name="key">key record</param>
         /// <param name="value">value record</param>
         /// <param name="timestamp">Timestamp to record</param>
+        /// <param name="headers">headers record</param>
         public void PipeInput(string topic, K key, V value, DateTime timestamp, Headers headers = default)
             => PipeInput(topic, new TestRecord<K, V> { Key = key, Value = value, Timestamp = timestamp, Headers = headers ?? new Headers() });
 
