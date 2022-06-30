@@ -58,6 +58,12 @@ namespace sample_stream
             );
             var database = client.GetDatabase("streamiz");
 
+            builder.Stream<string, string>("INPUT")
+                .FlatMapValuesAsync<char>(
+                    async (record, context) =>
+                        await Task.FromResult(record.Value.ToCharArray()),
+                    RetryPolicy.NewBuilder().NumberOfRetry(10).Build());
+
             // builder
             //     .Stream<string, string>("input")
             //     .ForeachAsync(

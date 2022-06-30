@@ -1601,7 +1601,7 @@ namespace Streamiz.Kafka.Net.Stream
             string named = null);
         
         /// <summary>
-        /// Transform each record of the input stream into zero or more records in the output stream (bot
+        /// Transform each record of the input stream into zero or more records in the output stream (both key and value
         /// can be altered arbitrarily) with an asynchronous function.
         /// The provided async mapper is applied to each input record and computes a new list of output records.
         /// Thus, an input record &lt;<typeparamref name="K"/>, <typeparamref name="V"/>&gt; can be transformed into an enumerable list of output records &lt;<typeparamref name="K1"/>, <typeparamref name="V1"/>&gt;.

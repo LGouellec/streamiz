@@ -102,7 +102,7 @@ You would use foreach to cause side effects based on the input data (similar to 
 
 Note on processing guarantees: Any side effects of an action (such as writing to external systems) are not trackable by Kafka, which means they will typically not benefit from Kafka’s processing guarantees.
 
-- IKGroupedStream  → IKTable
+- IKStream → void
 
 ``` csharp
 IKStream<string, string> stream = ....;
@@ -237,4 +237,120 @@ Generated topic is treated as internal topic, as a result data will be purged au
 ``` csharp
 IKStream<string, string> stream = ....;
 IKStream<string, string> repartitionedStream = stream.Repartition(Repartitioned<string, string>.NumberOfPartitions(10));
+```
+
+## MapAsync
+
+Takes one record and produces one record. You can modify the record key and value, including their types.This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.
+
+Use cases : Enrichment data from HTTP Api, Database SQL or Nosql, etc ...
+
+- IKStream → IKStream
+
+``` csharp
+IKStream<string, string> stream = ....;
+
+// We create a new record keyvalue, with the upper value to key and value
+stream.MapAsync(
+        async (record, context) =>
+            await Task.FromResult(new KeyValuePair<string, string>(record.Value.ToUpper(), record.Value)),
+        RetryPolicy.NewBuilder().NumberOfRetry(10).Build());
+```
+
+## MapValuesAsync
+
+Takes one record and produces one record, while retaining the key of the original record. You can modify the record value and the value type.
+
+This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.
+
+Use cases : Enrichment data from HTTP Api, Database SQL or Nosql, etc ...
+
+- IKStream → IKStream
+
+``` csharp
+IKStream<string, string> stream = ....;
+
+// New value type => Int32 which is the length of string value
+stream.MapValuesAsync(
+        async (record, context) =>
+            await Task.FromResult(record.Value.Length),
+        RetryPolicy.NewBuilder().NumberOfRetry(10).Build());
+```
+
+## FlatMapAsync
+
+Takes one record and produces zero, one, or more records. You can modify the record keys and values, including their types. 
+
+This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.
+
+Use cases : Enrichment data from HTTP Api, Database SQL or Nosql, etc ...
+
+- IKStream → IKStream
+
+``` csharp
+IKStream<string, string> stream = ....;
+
+// Here, we generate two output records for each input record.
+// We also change the key and value types.
+// Example: ("KEY1", "co") -> ("KEY1", c), ("KEY1", o)
+stream
+   .FlatMapAsync(
+        async (record, context) =>
+            await Task.FromResult(record.Value.ToCharArray().Select(c => new KeyValuePair<string,char>(record.Key, c))),
+        RetryPolicy.NewBuilder().NumberOfRetry(10).Build());
+```
+
+## FlatMapValuesAsync
+
+Takes one record and produces zero, one, or more records, while retaining the key of the original record. You can modify the record values and the value type.
+
+This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.
+
+Use cases : Enrichment data from HTTP Api, Database SQL or Nosql, etc ...
+
+- IKStream → IKStream
+
+``` csharp
+IKStream<string, string> stream = ....;
+
+// Split a word into characters.
+stream..FlatMapValuesAsync<char>(
+            async (record, context) =>
+                await Task.FromResult(record.Value.ToCharArray()),
+            RetryPolicy.NewBuilder().NumberOfRetry(10).Build());
+```
+
+## ForeachAsync
+
+Perform an asynchronous action on each record of a stream. Note that this is a terminal operation that returns void. This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.
+
+Use cases : Push data asynchronously into a sink system like Database, HTTP Api, JMS Broker, etc ..
+
+- IKStream → void
+
+``` csharp
+IKStream<string, string> stream = ....;
+
+// try to insert new items into a mongoDb collection
+stream..ForeachAsync(
+                    async (record, _) =>
+                    {
+                        await database
+                            .GetCollection<Person>("adress")
+                            .InsertOneAsync(new Person()
+                            {
+                                name = record.Key,
+                                address = new Address()
+                                {
+                                    city = record.Value
+                                }
+                            });
+                    },
+                    RetryPolicy
+                        .NewBuilder()
+                        .NumberOfRetry(10)
+                        .RetryBackOffMs(100)
+                        .RetriableException<Exception>()
+                        .RetryBehavior(EndRetryBehavior.SKIP)
+                        .Build());
 ```
