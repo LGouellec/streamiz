@@ -47,7 +47,8 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly Sensor pollSensor;
         private readonly Sensor processLatencySensor;
         private readonly Sensor processRateSensor;
-        
+        private IProducer<byte[],byte[]> producer;
+
         public ExternalStreamThread(
             string threadId,
             string clientId,
@@ -332,6 +333,7 @@ namespace Streamiz.Kafka.Net.Processors
             
             currentConsumer = GetConsumer();
             adminClient = kafkaSupplier.GetAdmin(configuration.ToAdminConfig(clientId));
+            producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig($"{thread.Name}-producer").Wrap(Name, configuration));
             
             SetState(ThreadState.PARTITIONS_ASSIGNED);
             thread.Start();     
@@ -362,8 +364,6 @@ namespace Streamiz.Kafka.Net.Processors
             var taskId = internalTopologyBuilder.GetTaskIdFromPartition(new TopicPartition(topic, Partition.Any));
             var topology = internalTopologyBuilder.BuildTopology(taskId);
 
-            var producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig($"{thread.Name}-producer-{topic}").Wrap(Name, configuration));
-            
             ExternalProcessorTopologyExecutor externalProcessorTopologyExecutor = new ExternalProcessorTopologyExecutor(
                 Name,
                 taskId,

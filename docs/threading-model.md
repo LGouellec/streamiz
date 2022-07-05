@@ -1,3 +1,0 @@
-# Threading model
-
-TODO
