@@ -58,54 +58,43 @@ namespace sample_stream
             );
             var database = client.GetDatabase("streamiz");
 
-            builder.Stream<string, string>("INPUT")
-                .FlatMapValuesAsync<char>(
-                    async (record, context) =>
-                        await Task.FromResult(record.Value.ToCharArray()),
-                    RetryPolicy.NewBuilder().NumberOfRetry(10).Build());
-
+            builder
+                .Stream<string, string>("input")
+                .MapValuesAsync(async (record, _) => {
+                    var persons = await database
+                        .GetCollection<Person>("adress")
+                        .FindAsync((p) => p.name.Equals(record.Key))
+                        .Result.ToListAsync();
+                    return persons.FirstOrDefault()?.address.city;
+                })
+                .To("person-city");
+            
             // builder
             //     .Stream<string, string>("input")
             //     .ForeachAsync(
-            //         async (record, _) => {
-            //             var filter = Builders<Person>.Filter.Eq((p) => p.name, record.Value);
-            //             var cursor = await database.GetCollection<Person>("adress").FindAsync(filter);
-            //             return new KeyValuePair<string, string>(record.Key, cursor.ToList().First().address.city);
+            //         async (record, _) =>
+            //         {
+            //             await database
+            //                 .GetCollection<Person>("adress")
+            //                 .InsertOneAsync(new Person()
+            //                 {
+            //                     name = record.Key,
+            //                     address = new Address()
+            //                     {
+            //                         city = record.Value
+            //                     }
+            //                 });
             //         },
-            //         RetryPolicyBuilder
+            //         RetryPolicy
             //             .NewBuilder()
             //             .NumberOfRetry(10)
             //             .RetryBackOffMs(100)
             //             .RetriableException<Exception>()
             //             .RetryBehavior(EndRetryBehavior.SKIP)
-            //             .Build())
-            //     .MapValues((k,v) => v.ToUpper())
-            //     .To("output");
-            builder
-                .Stream<string, string>("input")
-                .ForeachAsync(
-                    async (record, _) =>
-                    {
-                        await database
-                            .GetCollection<Person>("adress")
-                            .InsertOneAsync(new Person()
-                            {
-                                name = record.Key,
-                                address = new Address()
-                                {
-                                    city = record.Value
-                                }
-                            });
-                    },
-                    RetryPolicy
-                        .NewBuilder()
-                        .NumberOfRetry(10)
-                        .RetryBackOffMs(100)
-                        .RetriableException<Exception>()
-                        .RetryBehavior(EndRetryBehavior.SKIP)
-                        .Build());
+            //             .Build());
             
             Topology t = builder.Build();
+            var s = t.Describe().ToString();
             KafkaStream stream = new KafkaStream(t, config);
             
             Console.CancelKeyPress += (o, e) => stream.Dispose();
