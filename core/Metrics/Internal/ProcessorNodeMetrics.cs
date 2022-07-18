@@ -22,6 +22,11 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 
         internal static readonly string PROCESS_RATE_DESCRIPTION =
             RATE_DESCRIPTION_PREFIX + PROCESS_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
+            
+        internal static string RETRY = "retry";
+        internal static string RETRY_DESCRIPTION = "retries";
+        internal static readonly string RETRY_AVG_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION_PREFIX + RETRY_DESCRIPTION;
+        internal static readonly string RETRY_MAX_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
         
         // NOT USE FOR MOMENT
         public static Sensor SuppressionEmitSensor(string threadId,
@@ -85,5 +90,55 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             );
             return sensor;
         }
+
+        public static Sensor RetrySensor(
+            string threadId,
+            TaskId taskId,
+            string processorNodeId,
+            StreamMetricsRegistry metricsRegistry)
+        {
+            Sensor sensor = metricsRegistry.NodeLevelSensor(threadId, taskId, processorNodeId, RETRY, RETRY_DESCRIPTION, MetricsRecordingLevel.DEBUG);
+            var tags = metricsRegistry.NodeLevelTags(threadId, taskId.ToString(), processorNodeId);
+
+            SensorHelper.AddAvgAndMaxToSensor(sensor,
+                StreamMetricsRegistry.PROCESSOR_NODE_LEVEL_GROUP,
+                tags,
+                RETRY,
+                RETRY_AVG_DESCRIPTION,
+                RETRY_MAX_DESCRIPTION);
+            
+            return sensor;
+        }
+
+        internal static Sensor InvocationRateAndCountAndAvgAndMaxLatencySensor( string threadId,
+            string metricName,
+            string metricDescription,
+            string descriptionOfRate,
+            string descriptionOfCount,
+            string descriptionOfAvg,
+            string descriptionOfMax,
+            MetricsRecordingLevel recordingLevel,
+            StreamMetricsRegistry streamsMetrics) {
+            
+            Sensor sensor = streamsMetrics.ThreadLevelSensor(threadId, metricName, metricDescription, recordingLevel);
+            var tags = streamsMetrics.ThreadLevelTags(threadId);
+
+            SensorHelper.AddAvgAndMaxToSensor(sensor,
+                StreamMetricsRegistry.THREAD_LEVEL_GROUP,
+                tags,
+                metricName + StreamMetricsRegistry.LATENCY_SUFFIX,
+                descriptionOfAvg,
+                descriptionOfMax);
+
+            SensorHelper.AddInvocationRateAndCountToSensor(sensor,
+                StreamMetricsRegistry.THREAD_LEVEL_GROUP,
+                tags,
+                metricName,
+                descriptionOfRate,
+                descriptionOfCount);
+            
+            return sensor;
+        }
+
     }
 }

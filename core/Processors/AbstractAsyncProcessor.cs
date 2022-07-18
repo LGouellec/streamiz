@@ -7,6 +7,8 @@ using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Stream;
 
 namespace Streamiz.Kafka.Net.Processors
@@ -14,6 +16,8 @@ namespace Streamiz.Kafka.Net.Processors
     internal abstract class AbstractAsyncProcessor<K, V, K1, V1> : 
         AbstractProcessor<K, V>, IAsyncProcessor<K, V, K1, V1>
     {
+        private Sensor retrySensor;
+
         protected AbstractAsyncProcessor(RetryPolicy policy)
         {
             Policy = policy;
@@ -43,13 +47,14 @@ namespace Streamiz.Kafka.Net.Processors
                     throw new NoneRetryableException($"Number of retry exceeded", context.RetryNumber,  context.CurrentCallEpoch - startProcessing.GetMilliseconds(), null); 
                 
                 ++context.RetryNumber;
-                
+
                 if (startProcessing.Add(TimeSpan.FromMilliseconds(Policy.TimeoutMs)).GetMilliseconds() <
                     context.CurrentCallEpoch)
                     throw new NotEnoughtTimeException("", context.CurrentCallEpoch - startProcessing.GetMilliseconds());
                 
                 task = ProcessAsync(key, value, Context.RecordContext.Headers, Context.Timestamp, context);
-   
+                retrySensor.Record(context.RetryNumber);
+                
                 try
                 {
                     task.Wait();
@@ -85,6 +90,17 @@ namespace Streamiz.Kafka.Net.Processors
                 throw new StreamsException(noneRetriableException);
         }
         
+        public override void Init(ProcessorContext context)
+        {
+            retrySensor = ProcessorNodeMetrics.RetrySensor( 
+                Thread.CurrentThread.Name,
+                context.Id,
+                Name,
+                context.Metrics);
+            
+            base.Init(context);
+        }
+
         private bool ContainsRetryableExceptions(AggregateException ae)
             => (from innerException in ae.InnerExceptions 
                 from policyException in Policy.RetriableExceptions 

@@ -66,7 +66,14 @@ namespace sample_stream
                         .FindAsync((p) => p.name.Equals(record.Key))
                         .Result.ToListAsync();
                     return persons.FirstOrDefault()?.address.city;
-                })
+                },
+                    RetryPolicy
+                        .NewBuilder()
+                        .NumberOfRetry(10)
+                        .RetryBackOffMs(100)
+                        .RetriableException<Exception>()
+                        .RetryBehavior(EndRetryBehavior.BUFFERED)
+                        .Build())
                 .To("person-city");
             
             // builder
@@ -94,7 +101,6 @@ namespace sample_stream
             //             .Build());
             
             Topology t = builder.Build();
-            var s = t.Describe().ToString();
             KafkaStream stream = new KafkaStream(t, config);
             
             Console.CancelKeyPress += (o, e) => stream.Dispose();
