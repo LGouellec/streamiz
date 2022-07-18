@@ -137,7 +137,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
                 DROPPED_RECORDS_DESCRIPTION,
                 DROPPED_RECORDS_RATE_DESCRIPTION,
                 DROPPED_RECORDS_TOTAL_DESCRIPTION,
-                MetricsRecordingLevel.INFO,
+                MetricsRecordingLevel.DEBUG,
                 streamsMetrics
             );
         }

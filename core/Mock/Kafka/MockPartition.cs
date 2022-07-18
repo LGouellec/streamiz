@@ -1,11 +1,14 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Confluent.Kafka;
+using Streamiz.Kafka.Net.Crosscutting;
 
 namespace Streamiz.Kafka.Net.Mock.Kafka
 {
     internal class MockPartition
     {
-        private readonly List<(byte[], byte[])> log = new List<(byte[], byte[])>();
+        private readonly List<(byte[], byte[])> log = new();
+        private readonly Dictionary<long, long> mappingOffsets = new();
 
         public MockPartition(int indice)
         {
@@ -20,6 +23,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         internal void AddMessageInLog(byte[] key, byte[] value)
         {
+            mappingOffsets.Add(Size, log.Count);
             log.Add((key, value));
             ++Size;
             UpdateOffset();
@@ -29,12 +33,34 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         {
             if (Size > 0)
             {
-                LowOffset = 0;
+                LowOffset = mappingOffsets.Keys.Min();
                 HighOffset = Size - 1;
             }
         }
 
         internal TestRecord<byte[], byte[]> GetMessage(long offset)
-            => offset <= Size - 1 ? new TestRecord<byte[], byte[]> { Key = log[(int)offset].Item1, Value = log[(int)offset].Item2 } : null;
+        {
+            if (mappingOffsets.ContainsKey(offset))
+            {
+                var record = log[(int) mappingOffsets[offset]];
+                return new TestRecord<byte[], byte[]> {Key = record.Item1, Value = record.Item2};
+            }
+
+            return null;
+        }
+
+        public void Remove(Offset tpoOffset)
+        {
+            var offsetsToRemove = mappingOffsets.Keys.Where(k => k < tpoOffset).OrderBy(g => g).ToList();
+            foreach (var o in offsetsToRemove)
+            {
+                log.RemoveAt(0);
+                mappingOffsets.Remove(o);
+            }
+
+            foreach (var kv in mappingOffsets)
+                mappingOffsets.AddOrUpdate(kv.Key, kv.Value - offsetsToRemove.Count);
+
+        }
     }
 }

@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Confluent.Kafka.Admin;
 
 namespace Streamiz.Kafka.Net.Tests.Public
 {
@@ -385,8 +386,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             stream.Dispose();
         }
-
-
+        
         [Test]
         public void GetStateStoreBeforeRunningState()
         {
@@ -669,6 +669,95 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 var store = stream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.KeyValueStore<string, string>()));
                 Assert.IsNotNull(store);
                 Assert.AreEqual(1, store.ApproximateNumEntries());
+            }
+
+            stream.Dispose();
+        }
+        
+        [Test]
+        public async Task ExternalCall()
+        {
+            var timeout = TimeSpan.FromSeconds(10);
+            
+            bool isRunningState = false;
+            DateTime dt = DateTime.Now;
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test";
+            config.BootstrapServers = "127.0.0.1";
+            config.PollMs = 10;
+
+            var builder = new StreamBuilder();
+            builder.Stream<string, string>("input")
+                .MapAsync(
+                    async (record, _) =>
+                    {
+                        await Task.Delay(100);
+                        return await Task.FromResult(
+                            new KeyValuePair<string, string>(record.Key, record.Value.ToUpper()));
+                    })
+                .To("output");
+
+            var supplier = new SyncKafkaSupplier();
+            
+            supplier
+                .GetAdmin(new AdminClientConfig())
+                .CreateTopicsAsync(new List<TopicSpecification>()
+                {
+                    new(){Name = "input", NumPartitions = 1},
+                    new(){Name = "output", NumPartitions = 1}
+                })
+                .GetAwaiter()
+                .GetResult(); ;
+            
+            var producer = supplier.GetProducer(new ProducerConfig());
+            var t = builder.Build();
+            
+            var stream = new KafkaStream(t, config, supplier);
+
+            stream.StateChanged += (old, @new) =>
+            {
+                if (@new.Equals(KafkaStream.State.RUNNING))
+                {
+                    isRunningState = true;
+                }
+            };
+            await stream.StartAsync();
+            while (!isRunningState)
+            {
+                Thread.Sleep(250);
+                if (DateTime.Now > dt + timeout)
+                {
+                    break;
+                }
+            }
+            Assert.IsTrue(isRunningState);
+
+            if (isRunningState)
+            {
+                var stringSerdes = new StringSerDes();
+                producer.Produce("input",
+                    new Message<byte[], byte[]>
+                    {
+                        Key = stringSerdes.Serialize("key", new SerializationContext()),
+                        Value = stringSerdes.Serialize("value", new SerializationContext())
+                    });
+
+                var consumerConfig = config.Clone().ToConsumerConfig("outside");
+                consumerConfig.GroupId = "random-outside";
+                var outsideConsumer = supplier.GetConsumer(consumerConfig, null);
+
+                ConsumeResult<byte[], byte[]> r = null;
+                outsideConsumer.Subscribe("output");
+                DateTime now = DateTime.Now;
+                do
+                {
+                    r = outsideConsumer.Consume();
+                } while (r == null && now.Add(timeout) > DateTime.Now);
+                    
+                Assert.IsNotNull(r);
+                Assert.AreEqual(stringSerdes.Deserialize(r.Message.Key, SerializationContext.Empty), "key");
+                Assert.AreEqual(stringSerdes.Deserialize(r.Message.Value, SerializationContext.Empty), "VALUE");
             }
 
             stream.Dispose();

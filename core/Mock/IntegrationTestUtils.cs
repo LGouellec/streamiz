@@ -18,22 +18,35 @@ namespace Streamiz.Kafka.Net.Mock
         /// <param name="topic">output topic</param>
         /// <param name="size">number of message waiting</param>
         /// <returns>Return a list of records</returns>
-        public static List<ConsumeResult<K, V>> WaitUntilMinKeyValueRecordsReceived<K, V>(TestOutputTopic<K, V> topic, int size)
+        public static List<ConsumeResult<K, V>> WaitUntilMinKeyValueRecordsReceived<K, V>(TestOutputTopic<K, V> topic,
+            int size)
+            => WaitUntilMinKeyValueRecordsReceived(topic, size, TimeSpan.FromSeconds(10));
+
+        /// <summary>
+        /// Wait until <paramref name="size"/> messages in topic.
+        /// </summary>
+        /// <typeparam name="K">key type</typeparam>
+        /// <typeparam name="V">value type</typeparam>
+        /// <param name="topic">output topic</param>
+        /// <param name="size">number of message waiting</param>
+        /// <param name="timeout">waiting timeout</param>
+        /// <returns>Return a list of records</returns>
+        public static List<ConsumeResult<K, V>> WaitUntilMinKeyValueRecordsReceived<K, V>(TestOutputTopic<K, V> topic, int size, TimeSpan timeout)
         {
             DateTime dt = DateTime.Now;
-            TimeSpan ts = TimeSpan.FromSeconds(10);
 
             List<ConsumeResult<K, V>> results = new List<ConsumeResult<K, V>>();
             do
             {
                 results.AddRange(topic.ReadKeyValueList().ToList());
-                if (dt + ts < DateTime.Now)
+                if (dt + timeout < DateTime.Now)
                     break;
             } while (results.Count < size);
 
             return results;
         }
 
+        
         /// <summary>
         /// Read output to map.
         /// This method can be used if the result is considered a table, when you are only interested in the last table update (ie, the final table state).

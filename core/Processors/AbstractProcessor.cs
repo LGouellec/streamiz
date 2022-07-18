@@ -10,7 +10,6 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
-using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
 {

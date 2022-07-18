@@ -69,8 +69,10 @@ Need help
 
    overview
    stream-configuration
+   threading-model
    stateless-processors
    statefull-processors
    stores
    tology-test-driver
    monitoring
+   async-processing

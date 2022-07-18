@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Confluent.Kafka;
@@ -27,6 +28,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly IDictionary<string, StateStoreFactory> stateFactories = new Dictionary<string, StateStoreFactory>();
         private readonly IDictionary<string, StoreBuilder> globalStateBuilders = new Dictionary<string, StoreBuilder>();
         private readonly IList<string> sourceTopics = new List<string>();
+        private readonly IList<string> requestTopics = new List<string>();
         private readonly ISet<string> globalTopics = new HashSet<string>();
         private readonly IDictionary<string, int?> internalTopics = new Dictionary<string, int?>();
 
@@ -48,11 +50,16 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             return sourceTopicsTmp;
         }
 
+        internal IEnumerable<string> GetRequestTopics()
+            => new ReadOnlyCollection<string>(requestTopics.Select(DecorateTopic).ToList());
+
         internal IEnumerable<string> GetGlobalTopics() => globalTopics;
         
         internal IDictionary<string, IStateStore> GlobalStateStores { get; } = new Dictionary<string, IStateStore>();
 
         internal bool HasNoNonGlobalTopology => !sourceTopics.Any();
+
+        internal bool ExternalCall { get; private set; } = false;
 
         #region Connect
 
@@ -114,7 +121,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         #region Add Processors / State Store
 
-        internal void AddSourceOperator<K, V>(string topic, string nameNode, ConsumedInternal<K, V> consumed)
+        internal void AddSourceOperator<K, V>(string topic, string nameNode, ConsumedInternal<K, V> consumed, bool requestResponsePattern = false)
         {
             if (string.IsNullOrEmpty(topic))
             {
@@ -126,12 +133,20 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 throw new TopologyException($"Source processor {nameNode} is already added.");
             }
 
-            if (sourceTopics.Contains(topic))
+            if ((!requestResponsePattern && sourceTopics.Contains(topic)) || 
+                (requestResponsePattern && requestTopics.Contains(topic)))
             {
                 throw new TopologyException($"Topic {topic} has already been registered by another source.");
             }
 
-            sourceTopics.Add(topic);
+            if(!requestResponsePattern)
+                sourceTopics.Add(topic);
+            else
+            {
+                requestTopics.Add(topic);
+                ExternalCall = true;
+            }
+
             nodeFactories.Add(nameNode,
                 new SourceNodeFactory<K, V>(nameNode, topic, consumed.TimestampExtractor, consumed.KeySerdes, consumed.ValueSerdes));
             nodeGrouper.Add(nameNode);

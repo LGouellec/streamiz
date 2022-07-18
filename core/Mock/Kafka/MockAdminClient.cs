@@ -53,7 +53,8 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public Task<List<DeleteRecordsResult>> DeleteRecordsAsync(IEnumerable<TopicPartitionOffset> topicPartitionOffsets, DeleteRecordsOptions options = null)
         {
-            throw new NotImplementedException();
+            var result = cluster.DeleteRecords(topicPartitionOffsets);
+            return Task.FromResult(result);
         }
 
         public Task DeleteTopicsAsync(IEnumerable<string> topics, DeleteTopicsOptions options = null)

@@ -15,7 +15,7 @@ using Streamiz.Kafka.Net.Metrics.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    internal class StreamThread : IThread, IDisposable
+    internal class StreamThread : IThread
     {
         #region Static 
 
@@ -319,7 +319,7 @@ namespace Streamiz.Kafka.Net.Processors
                                 if (lastMetrics.Add(TimeSpan.FromMilliseconds(streamConfig.MetricsIntervalMs)) <
                                     DateTime.Now)
                                 {
-                                    ExportMetrics(DateTime.Now.GetMilliseconds());
+                                    MetricUtils.ExportMetrics(streamMetricsRegistry, streamConfig, Name);
                                     lastMetrics = DateTime.Now;
                                 }
                             }
@@ -598,12 +598,6 @@ namespace Streamiz.Kafka.Net.Processors
             StateChanged?.Invoke(this, oldState, State);
 
             return oldState;
-        }
-        
-        private void ExportMetrics(long now)
-        {
-            var sensors = streamMetricsRegistry.GetThreadScopeSensor(threadId);
-            Task.Factory.StartNew(() => streamConfig.MetricsReporter?.Invoke(sensors));
         }
 
         // FOR TEST
