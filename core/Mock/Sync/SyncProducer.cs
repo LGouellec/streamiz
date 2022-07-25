@@ -65,10 +65,10 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         }
 
         #region IProducer Impl
-
+        
         public Handle Handle => null;
 
-        public string Name => $"{config.ClientId}#{RandomNumberGenerator.GetInt32(0, Int16.MaxValue)}";
+        public string Name => $"{config.ClientId}#{RandomGenerator.GetInt32(Int16.MaxValue)}";
 
         public void AbortTransaction(TimeSpan timeout)
         {
@@ -121,7 +121,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             r.Message = message;
             r.Partition = 0;
             r.Topic = topic;
-            r.Timestamp = new Timestamp(DateTime.Now);
+            r.Offset = topics[topic].Count - 1;
             r.Error = new Error(ErrorCode.NoError);
             r.Status = PersistenceStatus.Persisted;
             deliveryHandler?.Invoke(r);

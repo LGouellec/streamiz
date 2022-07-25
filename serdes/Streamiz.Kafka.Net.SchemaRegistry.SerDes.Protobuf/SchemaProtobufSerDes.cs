@@ -13,49 +13,28 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf
     /// SerDes for Protobuf
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class SchemaProtobufSerDes<T> : SchemaSerDes<T> where T : class, IMessage<T>, new()
+    public class SchemaProtobufSerDes<T> : SchemaSerDes<T, ProtobufSerializerConfig> 
+        where T : class, IMessage<T>, new()
     {
-        internal SchemaRegistryConfig GetConfig(ISchemaRegistryConfig config)
+        /// <summary>
+        /// Empty constructor
+        /// </summary>
+        public SchemaProtobufSerDes()
+            : base("protobuf")
+        { }
+
+        protected override ProtobufSerializerConfig GetSerializerConfig(ISchemaRegistryConfig config)
         {
-            SchemaRegistryConfig c = new SchemaRegistryConfig();
-            c.Url = config.SchemaRegistryUrl;
-            if (config.SchemaRegistryMaxCachedSchemas.HasValue)
-            {
-                c.MaxCachedSchemas = config.SchemaRegistryMaxCachedSchemas;
-            }
-
-            if (config.SchemaRegistryRequestTimeoutMs.HasValue)
-            {
-                c.RequestTimeoutMs = config.SchemaRegistryRequestTimeoutMs;
-            }
-
-            if (!string.IsNullOrEmpty(config.BasicAuthUserInfo))
-            {
-                c.BasicAuthUserInfo = config.BasicAuthUserInfo;
-            }
-
-            if (config.BasicAuthCredentialsSource.HasValue)
-            {
-                c.BasicAuthCredentialsSource = (AuthCredentialsSource)config.BasicAuthCredentialsSource.Value;
-            }
-
-            return c;
+            ProtobufSerializerConfig protobufConfig = base.GetSerializerConfig(config);
+            if (config.UseDeprecatedFormat.HasValue)
+                protobufConfig.UseDeprecatedFormat = config.UseDeprecatedFormat.Value;
+            if (config.SkipKnownTypes.HasValue)
+                protobufConfig.SkipKnownTypes = config.SkipKnownTypes.Value;
+            if (config.ReferenceSubjectNameStrategy.HasValue)
+                protobufConfig.ReferenceSubjectNameStrategy = (Confluent.SchemaRegistry.ReferenceSubjectNameStrategy)config.ReferenceSubjectNameStrategy.Value;
+            return protobufConfig;
         }
-
-        internal ProtobufSerializerConfig GetSerializerConfig(ISchemaRegistryConfig config)
-        {
-            ProtobufSerializerConfig c = new ProtobufSerializerConfig();
-            if (config.AutoRegisterSchemas.HasValue)
-            {
-                c.AutoRegisterSchemas = config.AutoRegisterSchemas;
-            }
-            if (config.SubjectNameStrategy.HasValue)
-            {
-                c.SubjectNameStrategy = (Confluent.SchemaRegistry.SubjectNameStrategy)config.SubjectNameStrategy.Value;
-            }
-            return c;
-        }
-
+        
         /// <summary>
         /// Initialize method with a current context which contains <see cref="IStreamConfig"/>.
         /// Can be used to initialize the serdes according to some parameters present in the configuration such as the schema.registry.url

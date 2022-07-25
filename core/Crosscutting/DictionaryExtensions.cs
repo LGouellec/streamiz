@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using Confluent.Kafka;
 
 namespace Streamiz.Kafka.Net.Crosscutting
 {
@@ -45,13 +48,76 @@ namespace Streamiz.Kafka.Net.Crosscutting
             return r;
         }
 
+        
+        /// <summary>
+        /// Convert enumerable of <see cref="IEnumerable{T}"/> to <see cref="IDictionary{K, V}"/>.
+        /// If a key already exists, value will be replace.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="keySelector"></param>
+        /// <param name="elementSelector"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="K"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <returns></returns>
+        public static IDictionary<K, V> ToUpdateDictionary<T, K, V>(
+            this IEnumerable<T> source,
+            Func<T, K> keySelector,
+            Func<T, V> elementSelector)
+        {
+            var dictonary = new Dictionary<K, V>();
+            foreach (var element in source)
+            {
+                var key = keySelector(element);
+                if (dictonary.ContainsKey(key))
+                    dictonary[key] = elementSelector(element);
+                else
+                    dictonary.Add(key, elementSelector(element));
+            }
 
+            return dictonary;
+        }
+
+        /// <summary>
+        /// Merge an other dictionary into map dictionary
+        /// </summary>
+        /// <param name="map">source dictionary</param>
+        /// <param name="secondMap">dictionary to merge</param>
+        /// <typeparam name="K">key type</typeparam>
+        /// <typeparam name="V">value type</typeparam>
+        /// <returns>Return map dictionary merged with secondMap</returns>
         public static IDictionary<K, V> AddRange<K, V>(this IDictionary<K, V> map, IDictionary<K, V> secondMap)
         {
-            foreach (var entry in secondMap)
-                map.AddOrUpdate(entry.Key, entry.Value);
+            if(secondMap != null)
+                foreach (var entry in secondMap)
+                    map.AddOrUpdate(entry.Key, entry.Value);
             return map;
         }
 
+        /// <summary>
+        /// Try add or update a key/value on a <see cref="ConcurrentDictionary{K,V}"/>
+        /// </summary>
+        /// <param name="key">key to add or update</param>
+        /// <param name="value">new value</param>
+        /// <typeparam name="K">Key type</typeparam>
+        /// <typeparam name="V">Value type</typeparam>
+        /// <param name="source">Collection source</param>
+        /// <returns>Return true if the value is added/updated, false otherwise</returns>
+        public static bool TryAddOrUpdate<K, V>(this ConcurrentDictionary<K, V> source, K key, V value)
+        {
+            V valueTmp;
+            if (source.ContainsKey(key))
+            {
+                if (source.TryGetValue(key, out valueTmp))
+                    return source.TryUpdate(key, value, valueTmp);
+                else
+                    return false;
+            }   
+            else
+            {
+                return source.TryAdd(key, value);
+            }
+        }
+        
     }
 }

@@ -1,12 +1,11 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.SerDes;
-using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using System;
 
 namespace Streamiz.Kafka.Net.State.Helper
 {
-    public static class WindowKeyHelper
+    internal static class WindowKeyHelper
     {
         internal const int SEQNUM_SIZE = sizeof(int);
         internal const int TIMESTAMP_SIZE = sizeof(long);

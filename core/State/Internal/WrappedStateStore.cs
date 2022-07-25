@@ -1,16 +1,33 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net.Processors;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
-    internal class WrappedStateStore<S> : IStateStore
+    internal interface IWrappedStateStore
+    {
+        IStateStore Wrapped { get; }
+    }
+
+    internal class WrappedStore
+    {
+        internal static bool IsTimestamped(IStateStore stateStore)
+        {
+            if (stateStore is ITimestampedStore)
+                return true;
+            else if (stateStore is IWrappedStateStore)
+                return IsTimestamped(((IWrappedStateStore)stateStore).Wrapped);
+            else
+                return false;
+        }
+    }
+
+    internal class WrappedStateStore<S> : IStateStore, IWrappedStateStore
         where S : IStateStore
     {
         protected ProcessorContext context;
         protected readonly S wrapped;
+        protected string changelogTopic;
 
         public WrappedStateStore(S wrapped)
         {
@@ -19,28 +36,35 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         #region StateStore Impl
 
-        public string Name => wrapped.Name;
+        public virtual string Name => wrapped.Name;
 
-        public bool Persistent => wrapped.Persistent;
+        public virtual bool Persistent => wrapped.Persistent;
 
-        public bool IsOpen => wrapped.IsOpen;
+        public virtual bool IsOpen => wrapped.IsOpen;
 
-        public void Close() => wrapped.Close();
+        public virtual void Close() => wrapped.Close();
 
-        public void Flush() => wrapped.Flush();
+        public virtual void Flush() => wrapped.Flush();
 
         public virtual void Init(ProcessorContext context, IStateStore root)
         {
             this.context = context;
+            
+            changelogTopic = context.ChangelogFor(Name);
+            if (string.IsNullOrEmpty(changelogTopic))
+                changelogTopic = ProcessorStateManager.StoreChangelogTopic(context.ApplicationId, Name);
+            
             wrapped.Init(context, root);
         }
 
         #endregion
 
+        public IStateStore Wrapped => wrapped;
+
         protected SerializationContext GetSerializationContext(bool isKey)
         {
             return new SerializationContext(isKey ? MessageComponentType.Key : MessageComponentType.Value,
-                context?.RecordContext?.Topic,
+                changelogTopic,
                 context?.RecordContext?.Headers);
         }
     }

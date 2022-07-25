@@ -3,6 +3,7 @@ using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace Streamiz.Kafka.Net.Mock.Kafka
@@ -39,23 +40,21 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         public int AddBrokers(string brokers) => 0;
 
         public void Assign(TopicPartition partition)
-        {
-            cluster.Assign(this, new List<TopicPartition> { partition });
-        }
+            => Assign(new List<TopicPartition> {partition});
 
         public void Assign(TopicPartitionOffset partition)
-        {
-            // TODO
-        }
+            => Assign(new List<TopicPartitionOffset> {partition});
 
         public void Assign(IEnumerable<TopicPartitionOffset> partitions)
         {
-            // TODO
+            cluster.Assign(this, partitions);
+            Assignment = partitions.Select(t => t.TopicPartition).ToList();
         }
 
         public void Assign(IEnumerable<TopicPartition> partitions)
         {
             cluster.Assign(this, partitions);
+            Assignment = partitions.ToList();
         }
 
         public void Close()
@@ -107,31 +106,28 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void Pause(IEnumerable<TopicPartition> partitions)
         {
-            // TODO : 
+            cluster.Pause(this, partitions.Where(p => Assignment.Contains(p)));
         }
 
         public Offset Position(TopicPartition partition)
         {
-            // TODO
-            throw new NotImplementedException();
+            var info = cluster.GetConsumerInformation(Name);
+            return info != null ?
+                info.TopicPartitionsOffset.FirstOrDefault(t => t.TopicPartition.Equals(partition)).OffsetConsumed :
+                Offset.Unset;
         }
 
         public WatermarkOffsets QueryWatermarkOffsets(TopicPartition topicPartition, TimeSpan timeout)
-        {
-            // TODO
-            throw new NotImplementedException();
-        }
+            => GetWatermarkOffsets(topicPartition);
 
         public void Resume(IEnumerable<TopicPartition> partitions)
         {
-            // TODO
-            throw new NotImplementedException();
+            cluster.Resume(this, partitions.Where(p => Assignment.Contains(p)));
         }
 
         public void Seek(TopicPartitionOffset tpo)
         {
-            // TODO
-            throw new NotImplementedException();
+            cluster.Seek(this, tpo);
         }
 
         public void StoreOffset(TopicPartitionOffset offset)
@@ -168,6 +164,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         {
             cluster.Unsubscribe(this);
             Subscription.Clear();
+            Assignment.Clear();
         }
 
         public ConsumeResult<byte[], byte[]> Consume(int millisecondsTimeout)
@@ -175,7 +172,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public ConsumeResult<byte[], byte[]> Consume(CancellationToken cancellationToken = default)
         {
-            if (Subscription.Count == 0)
+            if (Subscription.Count == 0 && Assignment.Count == 0)
                 throw new StreamsException("No subscription have been done !");
 
             return cluster.Consume(this, cancellationToken);
@@ -183,7 +180,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public ConsumeResult<byte[], byte[]> Consume(TimeSpan timeout)
         {
-            if (Subscription.Count == 0)
+            if (Subscription.Count == 0 && Assignment.Count == 0)
                 throw new StreamsException("No subscription have been done !");
 
             return cluster.Consume(this, timeout);
@@ -211,17 +208,24 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void IncrementalAssign(IEnumerable<TopicPartitionOffset> partitions)
         {
-            throw new NotImplementedException();
+            cluster.IncrementalAssign(this, partitions);
+            foreach(var tp in partitions)
+                if(!Assignment.Contains(tp.TopicPartition))
+                    Assignment.Add(tp.TopicPartition);
         }
 
         public void IncrementalAssign(IEnumerable<TopicPartition> partitions)
         {
-            throw new NotImplementedException();
+            cluster.IncrementalAssign(this, partitions);
+            foreach(var tp in partitions)
+                if(!Assignment.Contains(tp))
+                    Assignment.Add(tp);
         }
 
         public void IncrementalUnassign(IEnumerable<TopicPartition> partitions)
         {
-            throw new NotImplementedException();
+            cluster.IncrementalUnassign(this, partitions);
+            Assignment.RemoveAll(t => partitions.Contains(t));
         }
     }
 }

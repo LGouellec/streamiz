@@ -4,6 +4,7 @@ using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
 using System;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Tests.Public
 {
@@ -45,7 +46,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var thread = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 
@@ -110,7 +111,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var thread = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 
@@ -172,7 +173,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var thread = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 
@@ -232,7 +233,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var thread = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 
@@ -289,7 +290,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var thread = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 
@@ -348,7 +349,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var thread = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 
@@ -405,7 +406,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var thread = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 
@@ -464,7 +465,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var thread = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 
@@ -521,7 +522,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var thread = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 
@@ -581,7 +582,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var thread = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 
@@ -589,7 +590,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
             producer.Produce("topic", new Confluent.Kafka.Message<byte[], byte[]>
             {
                 Key = serdes.Serialize("key1", new SerializationContext()),
-                Value = serdes.Serialize("coucou", new SerializationContext())
+                Value = serdes.Serialize("coucou", new SerializationContext()),
+                Timestamp = new Timestamp(DateTime.Now)
             });
 
             consumer.Subscribe("output");
@@ -639,7 +641,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var thread = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 

@@ -1,6 +1,8 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State.Logging;
+using Streamiz.Kafka.Net.State.Metered;
 using Streamiz.Kafka.Net.State.Supplier;
 
 namespace Streamiz.Kafka.Net.State.Internal.Builder
@@ -23,10 +25,12 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
         public override ITimestampedKeyValueStore<K, V> Build()
         {
             var store = storeSupplier.Get();
-            return new TimestampedKeyValueStore<K, V>(
+            
+            return new MeteredTimestampedKeyValueStore<K, V>(
                 WrapLogging(store),
                 keySerdes,
-                valueSerdes);
+                valueSerdes,
+                storeSupplier.MetricsScope);
         }
 
         private IKeyValueStore<Bytes, byte[]> WrapLogging(IKeyValueStore<Bytes, byte[]> inner)
@@ -34,8 +38,7 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
             if (!LoggingEnabled)
                 return inner;
 
-            // TODO:
-            return inner;
+            return new ChangeLoggingTimestampedKeyValueBytesStore(inner);
         }
     }
 }

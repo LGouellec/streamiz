@@ -1,7 +1,4 @@
-﻿using Confluent.Kafka;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -10,7 +7,5 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         ISet<string> Initialize();
 
         void SetGlobalProcessorContext(ProcessorContext processorContext);
-
-        IDictionary<TopicPartition, long> ChangelogOffsets { get; }
     }
 }

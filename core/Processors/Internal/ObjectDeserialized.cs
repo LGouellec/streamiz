@@ -2,8 +2,8 @@
 {
     internal class ObjectDeserialized
     {
-        public object Bean { get; private set; } = null;
-        public bool MustBeSkipped { get; private set; } = false;
+        public object Bean { get; private set; }
+        public bool MustBeSkipped { get; private set; }
 
         public static ObjectDeserialized ObjectSkipped => new ObjectDeserialized(true);
 

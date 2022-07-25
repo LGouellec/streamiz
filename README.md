@@ -1,4 +1,13 @@
-# .NET Stream Processing Library for Apache Kafka <sup>TM</sup> &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/LGouellec/streamiz-kafka-net/blob/master/LICENSE) &middot; [![Join the chat at https://discord.gg/J7Jtxum](https://img.shields.io/discord/704268523169382421.svg?logoColor=white)](https://discord.gg/J7Jtxum) ![build](https://github.com/LGouellec/kafka-streams-dotnet/workflows/build/badge.svg?branch=master) ![Nuget](https://img.shields.io/nuget/dt/Streamiz.Kafka.Net) ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Streamiz.Kafka.Net)
+# .NET Stream Processing Library for Apache Kafka <sup>TM</sup> &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/LGouellec/streamiz-kafka-net/blob/master/LICENSE) &middot; [![Join the chat at https://discord.gg/J7Jtxum](https://img.shields.io/discord/704268523169382421.svg?logoColor=white)](https://discord.gg/J7Jtxum) ![build](https://github.com/LGouellec/kafka-streams-dotnet/workflows/build/badge.svg?branch=master)
+
+| Package  | Nuget version  | Downloads |
+|---|---|---|
+| Streamiz.Kafka.Net   | ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Streamiz.Kafka.Net)  | ![Nuget](https://img.shields.io/nuget/dt/Streamiz.Kafka.Net) |
+| Streamiz.Kafka.Net.SchemaRegistry.SerDes   | ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Streamiz.Kafka.Net.SchemaRegistry.SerDes)  | ![Nuget](https://img.shields.io/nuget/dt/Streamiz.Kafka.Net.SchemaRegistry.SerDes) |
+| Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro  | ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro)  | ![Nuget](https://img.shields.io/nuget/dt/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro) |
+| Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf   | ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf)  | ![Nuget](https://img.shields.io/nuget/dt/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf) |
+| Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json   | ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json) | ![Nuget](https://img.shields.io/nuget/dt/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json) |
+| Streamiz.Kafka.Net.Metrics.Prometheus   | ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Streamiz.Kafka.Net.Metrics.Prometheus)  | ![Nuget](https://img.shields.io/nuget/dt/Streamiz.Kafka.Net.Metrics.Prometheus) |
 
 ## Quality Statistics
 
@@ -22,19 +31,40 @@
 
 Streamiz Kafka .NET is .NET stream processing library for Apache Kafka. 
 
+```
+KAFKA is a registered trademark of The Apache Software Foundation and
+has been licensed for use by Streamiz. Streamiz has no
+affiliation with and is not endorsed by The Apache Software Foundation.
+```
+
 It's allowed to develop .NET applications that transform input Kafka topics into output Kafka topics. 
 It's supported .NET Standard 2.1. 
-
-**So this library can be used by >= .NET Core 3.0 and/or .NET 5.0 applications.**
 
 It's a rewriting inspired by [Kafka Streams](https://github.com/apache/kafka). Finally it will provide the same functionality as [Kafka Streams](https://github.com/apache/kafka).
 
 This project is being written. Thanks for you contribution !
 
-# Timeline
+# Try it with Gitpod
 
-- June/July 2021 - 1.2.0 - Persistent state store (eg: RocksDB Store), Repartition and Changelog topics
-- End 2021 - 1.3.0 - Processor API, Metrics, Interactive Queries, Standby Replica
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/LGouellec/kafka-streams-dotnet)
+
+## Step 1
+
+Waiting run task is complete. The task is consider complete some seconds after viewing this message `"🚀 Enjoy Streamiz the .NET Stream processing library for Apache Kafka (TM)"`
+
+## Step 2
+
+Switch to `producer` terminal and send sentences or word. The sample case is "Count the number words" similar to [here](https://developpaper.com/kafka-stream-word-count-instance/)
+
+## Step 3
+
+Switch to `consumer`terminal and check aggregation result
+
+
+# ROADMAP
+
+- 1.4.0 - Async processor, Processor API
+- 1.5.0 - Interactive Queries, Standby Replica
 
 # Documentation
 
@@ -58,20 +88,14 @@ static async System.Threading.Tasks.Task Main(string[] args)
 { 
     var config = new StreamConfig<StringSerDes, StringSerDes>();
     config.ApplicationId = "test-app";
-    config.BootstrapServers = "192.168.56.1:9092";
-    config.SaslMechanism = SaslMechanism.Plain;
-    config.SaslUsername = "admin";
-    config.SaslPassword = "admin";
-    config.SecurityProtocol = SecurityProtocol.SaslPlaintext;
-    config.AutoOffsetReset = AutoOffsetReset.Earliest;
-    config.NumStreamThreads = 2;
+    config.BootstrapServers = "localhost:9092";
     
     StreamBuilder builder = new StreamBuilder();
 
     var kstream = builder.Stream<string, string>("stream");
     var ktable = builder.Table("table", InMemory<string, string>.As("table-store"));
 
-    kstream.Join<string, string, StringSerDes, StringSerDes>(ktable, (v, v1) => $"{v}-{v1}")
+    kstream.Join(ktable, (v, v1) => $"{v}-{v1}")
            .To("join-topic");
 
     Topology t = builder.Build();
@@ -84,30 +108,6 @@ static async System.Threading.Tasks.Task Main(string[] args)
     await stream.StartAsync();
 }
 ```
-
-
-# TODO implementation
-
-- [X] Global state store
-- [X] Refactor Subtopology & StreamTask assignment
-- [X] Refactor Topology description for corresponding to java implementation
-- [X] Refactor Partition grouper + record queue
-- [X] Statefull processors impl
-- [ ] Transform and Through Processor
-- [ ] Supress Processor (.suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded())))
-- [X] Rocks DB state implementation
-- [X] Changelog Topic
-- [ ] Task restoring
-- [ ] Repartition topic
-- [ ] Repartition Processor [KAFKA-8611](https://issues.apache.org/jira/browse/KAFKA-8611) | [PR #7170](https://github.com/apache/kafka/pull/7170)
-- [ ] Processor API
-- [ ] Sample projects (Micro-services, console sample, topology implementation, etc ..) which use Streamiz package ([see](https://github.com/LGouellec/kafka-streams-dotnet-samples))
-- [X] Protobuf SerDes which interact Confluent Schema Registry
-- [ ] Json SerDes which interact Confluent Schema Registry
-- [ ] Optimizing Kafka Streams Topologies
-- [ ] Standby Replica
-- [ ] Interactive Queries
-- [ ] Metrics
 
 # Contributing
 

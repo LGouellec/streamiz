@@ -7,7 +7,10 @@ using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Stream.Internal;
 
 namespace Streamiz.Kafka.Net.Mock
 {
@@ -15,13 +18,18 @@ namespace Streamiz.Kafka.Net.Mock
     {
         private readonly IStreamConfig configuration;
         private readonly IStreamConfig topicConfiguration;
-        private readonly IPipeBuilder pipeBuilder = null;
-        private readonly IThread threadTopology = null;
-        private readonly IKafkaSupplier kafkaSupplier = null;
+        private readonly IPipeBuilder pipeBuilder;
+        private readonly IThread threadTopology;
+        private readonly GlobalStreamThread globalStreamThread;
+        private readonly IThread externalStreamThread;
+        private readonly IKafkaSupplier kafkaSupplier;
         private readonly CancellationToken token;
         private readonly TimeSpan startTimeout;
         private readonly InternalTopologyBuilder internalTopologyBuilder;
+        private readonly StreamMetricsRegistry metricsRegistry;
+        private readonly bool hasGlobalTopology;
         private ITopicManager internalTopicManager;
+        private List<IPipeOutput> asyncPipeOutput = new();
 
         public ClusterInMemoryTopologyDriver(string clientId, InternalTopologyBuilder topologyBuilder, IStreamConfig configuration, IStreamConfig topicConfiguration, CancellationToken token)
             : this(clientId, topologyBuilder, configuration, topicConfiguration, TimeSpan.FromSeconds(30), token)
@@ -44,20 +52,54 @@ namespace Streamiz.Kafka.Net.Mock
             this.topicConfiguration = topicConfiguration;
             this.token = token;
             internalTopologyBuilder = topologyBuilder;
-
+            metricsRegistry = new StreamMetricsRegistry(clientId, MetricsRecordingLevel.DEBUG);
+            kafkaSupplier.MetricsRegistry = metricsRegistry;
+            
             pipeBuilder = new KafkaPipeBuilder(kafkaSupplier);
 
-            // ONLY FOR CHECK IF TOLOGY IS CORRECT
+            topologyBuilder.RewriteTopology(configuration);
+            
+            // ONLY FOR CHECK IF TOPOLOGY IS CORRECT
             topologyBuilder.BuildTopology();
 
             threadTopology = StreamThread.Create(
                 $"{this.configuration.ApplicationId.ToLower()}-stream-thread-0",
                 clientId,
                 topologyBuilder,
+                metricsRegistry,
                 this.configuration,
                 kafkaSupplier,
                 kafkaSupplier.GetAdmin(configuration.ToAdminConfig($"{clientId}-admin")),
                 0);
+            
+            ProcessorTopology globalTaskTopology = topologyBuilder.BuildGlobalStateTopology();
+            hasGlobalTopology = globalTaskTopology != null;
+            if (hasGlobalTopology)
+            {
+                string globalThreadId = $"{clientId}-GlobalStreamThread";
+                GlobalStreamThreadFactory globalStreamThreadFactory = new GlobalStreamThreadFactory(
+                    globalTaskTopology,
+                    globalThreadId,
+                    kafkaSupplier.GetGlobalConsumer(configuration.ToGlobalConsumerConfig(globalThreadId)),
+                    configuration,
+                    kafkaSupplier.GetAdmin(configuration.ToAdminConfig(clientId)),
+                    metricsRegistry);
+                globalStreamThread = globalStreamThreadFactory.GetGlobalStreamThread();
+            }
+
+            if (topologyBuilder.ExternalCall)
+            {
+                var threadId = $"{clientId}-external-stream-thread";
+                var externalStreamConfig = configuration.Clone();
+                externalStreamConfig.ApplicationId += "-external";
+                externalStreamThread = new ExternalStreamThread(
+                    threadId,
+                    clientId,
+                    kafkaSupplier,
+                    topologyBuilder,
+                    metricsRegistry,
+                    externalStreamConfig);
+            }
         }
 
         public bool IsRunning { get; private set; }
@@ -68,12 +110,14 @@ namespace Streamiz.Kafka.Net.Mock
 
         private void InitializeInternalTopicManager()
         {
-            // Create internal topics (changelogs) if need
+            // Create internal topics (changelogs & repartition) if need
             var adminClientInternalTopicManager = kafkaSupplier.GetAdmin(configuration.ToAdminConfig(StreamThread.GetSharedAdminClientId($"{configuration.ApplicationId.ToLower()}-admin-internal-topic-manager")));
             internalTopicManager = new DefaultTopicManager(configuration, adminClientInternalTopicManager);
 
             InternalTopicManagerUtils
-                .CreateChangelogTopicsAsync(internalTopicManager, internalTopologyBuilder)
+                .New()
+                .CreateSourceTopics(internalTopologyBuilder, kafkaSupplier)
+                .CreateInternalTopicsAsync(internalTopicManager, internalTopologyBuilder)
                 .GetAwaiter()
                 .GetResult();
         }
@@ -102,6 +146,7 @@ namespace Streamiz.Kafka.Net.Mock
         public TestOutputTopic<K, V> CreateOutputTopic<K, V>(string topicName, TimeSpan consumeTimeout, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
         {
             var pipeOutput = pipeBuilder.Output(topicName, consumeTimeout, topicConfiguration, token);
+            asyncPipeOutput.Add(pipeOutput);
             return new TestOutputTopic<K, V>(pipeOutput, topicConfiguration, keySerdes, valueSerdes);
         }
 
@@ -109,6 +154,12 @@ namespace Streamiz.Kafka.Net.Mock
         {
             IsRunning = false;
             threadTopology.Dispose();
+            globalStreamThread?.Dispose();
+            externalStreamThread?.Dispose();
+            
+            foreach(var asyncPipe in asyncPipeOutput)
+                asyncPipe.Dispose();
+            
             (kafkaSupplier as MockKafkaSupplier)?.Destroy();
         }
 
@@ -132,7 +183,8 @@ namespace Streamiz.Kafka.Net.Mock
             bool isRunningState = false;
             DateTime dt = DateTime.Now;
 
-            threadTopology.StateChanged += (thread, old, @new) =>
+            void stateChangedHandeler(IThread thread, ThreadStateTransitionValidator old,
+                ThreadStateTransitionValidator @new)
             {
                 if (@new is Processors.ThreadState && ((Processors.ThreadState)@new) == Processors.ThreadState.RUNNING)
                 {
@@ -149,9 +201,16 @@ namespace Streamiz.Kafka.Net.Mock
                     IsRunning = false;
                     IsError = false;
                 }
-            };
+            }
 
+            threadTopology.StateChanged += stateChangedHandeler;
+            if(externalStreamThread != null)
+                externalStreamThread.StateChanged += stateChangedHandeler;
+            
             InitializeInternalTopicManager();
+            
+            globalStreamThread?.Start(token);
+            externalStreamThread?.Start(token);
 
             threadTopology.Start(token);
             while (!isRunningState)

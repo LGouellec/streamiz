@@ -16,7 +16,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         [Test]
         public void SerializeData()
         {
-            byte[] b = new byte[] { 4, 1, 2, 3 };
+            byte[] b = new byte[] {4, 1, 2, 3};
             var arraySerdes = new ByteArraySerDes();
             var r = arraySerdes.Serialize(b, new Confluent.Kafka.SerializationContext());
             Assert.IsNotNull(r);
@@ -27,7 +27,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         [Test]
         public void DeserializeNullData()
         {
-            var arraySerdes = new ByteArraySerDes(); 
+            var arraySerdes = new ByteArraySerDes();
             var r = arraySerdes.Deserialize(null, new Confluent.Kafka.SerializationContext());
             Assert.IsNull(r);
         }
@@ -35,12 +35,12 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         [Test]
         public void DeserializeData()
         {
-            byte[] b = new byte[] { 4, 1, 2, 3 };
+            byte[] b = new byte[] {4, 1, 2, 3};
             var arraySerdes = new ByteArraySerDes();
-            var r = arraySerdes.Deserialize(arraySerdes.Serialize(b, new Confluent.Kafka.SerializationContext()), new Confluent.Kafka.SerializationContext());
+            var r = arraySerdes.Deserialize(arraySerdes.Serialize(b, new Confluent.Kafka.SerializationContext()),
+                new Confluent.Kafka.SerializationContext());
             Assert.IsNotNull(r);
             Assert.AreEqual(b, r);
         }
-
     }
 }

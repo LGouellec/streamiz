@@ -8,6 +8,7 @@ using Streamiz.Kafka.Net.Table;
 using System;
 using System.Linq;
 using System.Threading;
+using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.TestDriver
 {
@@ -95,7 +96,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             Assert.IsNotNull(store);
             Assert.IsInstanceOf<MockReadOnlyKeyValueStore<string, string>>(store);
             input.PipeInput("coucou", "1");
-            Thread.Sleep(100);
+            Thread.Sleep(300);
 
             Assert.AreEqual(1, ((MockReadOnlyKeyValueStore<string, string>)store).All().Count());
             Assert.AreEqual("1", ((MockReadOnlyKeyValueStore<string, string>)store).Get("coucou"));
@@ -125,7 +126,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             input.PipeInput("coucou", "1");
             Thread.Sleep(100);
 
-            Assert.AreEqual(1, ((MockReadOnlyKeyValueStore<string, string>)store).All().Count());
+            Assert.AreEqual(1, ((MockReadOnlyKeyValueStore<string, string>) store).All().Count());
             Assert.AreEqual("1", ((MockReadOnlyKeyValueStore<string, string>)store).Get("coucou"));
 
             input.PipeInput("coucou", "2");
@@ -157,7 +158,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             Assert.IsNotNull(store);
             Assert.IsInstanceOf<MockReadOnlyKeyValueStore<string, string>>(store);
             input.PipeInput("coucou", "1");
-            Thread.Sleep(100);
+            Thread.Sleep(1000);
 
             Assert.AreEqual(1, ((MockReadOnlyKeyValueStore<string, string>)store).All().Count());
             Assert.AreEqual("1", ((MockReadOnlyKeyValueStore<string, string>)store).Get("coucou"));
@@ -244,5 +245,45 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             source.Cancel();
             driver.Dispose();
         }
+        
+        [Test]
+        public void JoinGlobakKTable()
+        {
+            var source = new CancellationTokenSource();
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-config";
+            config.PollMs = 10;
+            var topicConfiguration = config.Clone();
+            topicConfiguration.ApplicationId = $"test-driver-{config.ApplicationId}";
+
+            var builder = new StreamBuilder();
+            
+            var globalktable = builder.GlobalTable("test", InMemory<string, string>.As("global-store"));
+            builder.Stream<string ,string>("source")
+                .Join(globalktable, 
+                    (k,v) => k,
+                    (v1, v2) => $"{v1}-{v2}")
+                .To("sink");
+            
+            var driver = new ClusterInMemoryTopologyDriver("client", builder.Build().Builder, config, topicConfiguration, TimeSpan.FromSeconds(1), source.Token);
+            driver.StartDriver();
+            
+            var inputTest = driver.CreateInputTopic("test", new StringSerDes(), new StringSerDes());
+            var inputSource = driver.CreateInputTopic("source", new StringSerDes(), new StringSerDes());
+            var output = driver.CreateOutputTopic("sink", TimeSpan.FromSeconds(1), new StringSerDes(), new StringSerDes());
+
+            inputTest.PipeInput("coucou", "Sylvain");
+            Thread.Sleep(100);
+            inputSource.PipeInput("coucou", "Coucou");
+            Thread.Sleep(300);
+
+            var records = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(output, 1);
+
+            Assert.AreEqual(1, records.Count);
+            Assert.AreEqual("Coucou-Sylvain", records.First().Message.Value);
+            source.Cancel();
+            driver.Dispose();
+        }
+        
     }
 }

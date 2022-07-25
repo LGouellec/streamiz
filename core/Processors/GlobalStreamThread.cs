@@ -1,5 +1,4 @@
 ﻿using Confluent.Kafka;
-using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -7,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -15,7 +15,7 @@ namespace Streamiz.Kafka.Net.Processors
         private class StateConsumer
         {
             private readonly IConsumer<byte[], byte[]> globalConsumer;
-            private readonly ILog log = Logger.GetLogger(typeof(StateConsumer));
+            private readonly ILogger log = Logger.GetLogger(typeof(StateConsumer));
             private readonly IGlobalStateMaintainer globalStateMaintainer;
             private readonly TimeSpan pollTime;
             private readonly TimeSpan flushInterval;
@@ -39,7 +39,7 @@ namespace Streamiz.Kafka.Net.Processors
             public void Initialize()
             {
                 IDictionary<TopicPartition, long> partitionOffsets = globalStateMaintainer.Initialize();
-                globalConsumer.Assign(partitionOffsets.Keys.Select(x => new TopicPartitionOffset(x, Offset.Beginning)));
+                globalConsumer.Assign(partitionOffsets.Keys.Select(x => new TopicPartitionOffset(x, partitionOffsets[x])));
 
                 lastFlush = DateTime.Now;
             }
@@ -63,7 +63,7 @@ namespace Streamiz.Kafka.Net.Processors
                 }
                 catch (Exception e)
                 {
-                    log.Error("Updating global state failed.", e);
+                    log.LogError(e, "Updating global state failed");
                     throw new StreamsException("Updating global state failed.", e);
                 }
             }
@@ -72,15 +72,18 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 try
                 {
+                    globalConsumer.Unassign();
                     globalConsumer.Close();
+                    globalConsumer.Dispose();
                 }
                 catch (Exception e)
                 {
                     // just log an error if the consumer throws an exception during close
                     // so we can always attempt to close the state stores.
-                    log.Error("Failed to close global consumer due to the following error:", e);
+                    log.LogError(e, "Failed to close global consumer due to the following error:");
                 }
 
+                globalStateMaintainer.FlushState();
                 globalStateMaintainer.Close();
             }
         }
@@ -89,7 +92,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public event GlobalThreadStateListener StateChanged;
 
-        private readonly ILog log = Logger.GetLogger(typeof(GlobalStreamThread));
+        private readonly ILogger log = Logger.GetLogger(typeof(GlobalStreamThread));
         private readonly Thread thread;
         private readonly string logPrefix;
         private readonly IConsumer<byte[], byte[]> globalConsumer;
@@ -126,25 +129,34 @@ namespace Streamiz.Kafka.Net.Processors
             }
             finally
             {
-                Dispose(true, false);
+
+                try
+                {
+                    stateConsumer.Close();
+                }
+                catch (Exception e)
+                {
+                    log.LogError($"{logPrefix}exception caught during disposing of GlobalStreamThread.", e);
+                    // ignore exception
+                    // https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1065
+                }
+
+                Dispose(false);
             }
         }
 
         public void Start(CancellationToken token)
         {
-            log.Info($"{logPrefix}Starting");
+            log.LogInformation("{LogPrefix}Starting", logPrefix);
 
             try
             {
                 stateConsumer = InitializeStateConsumer();
             }
-            catch
-            {
-                SetState(GlobalThreadState.PENDING_SHUTDOWN);
-                SetState(GlobalThreadState.DEAD);
-
-                log.Warn($"{logPrefix}Error happened during initialization of the global state store; this thread has shutdown");
-
+            catch(Exception e){
+                
+                log.LogWarning(
+                    $"{logPrefix}Error happened during initialization of the global state store; this thread has shutdown : {e}");
                 throw;
             }
 
@@ -199,12 +211,14 @@ namespace Streamiz.Kafka.Net.Processors
                 }
                 else if (!oldState.IsValidTransition(newState))
                 {
-                    log.Error($"{logPrefix}Unexpected state transition from {oldState} to {newState}");
+                    log.LogError("{LogPrefix}Unexpected state transition from {OldState} to {NewState}", logPrefix, oldState,
+                        newState);
                     throw new StreamsException($"Unexpected state transition from {oldState} to {newState}");
                 }
                 else
                 {
-                    log.Info($"{logPrefix}State transition from {oldState} to {newState}");
+                    log.LogInformation("{LogPrefix}State transition from {OldState} to {NewState}", logPrefix, oldState,
+                        newState);
                 }
 
                 State = newState;
@@ -219,37 +233,26 @@ namespace Streamiz.Kafka.Net.Processors
 
         public void Dispose()
         {
-            Dispose(true, true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing, bool waitForThread)
+        protected virtual void Dispose(bool waitForThread)
         {
             if (!disposed)
             {
                 // we don't have any unmanaged resources to dispose of so we can ignore value of `disposing`
 
                 SetState(GlobalThreadState.PENDING_SHUTDOWN);
-                log.Info($"{logPrefix}Shutting down");
+                log.LogInformation("{LogPrefix}Shutting down", logPrefix);
 
                 if (waitForThread)
                 {
                     thread.Join();
                 }
 
-                try
-                {
-                    stateConsumer.Close();
-                }
-                catch (Exception e)
-                {
-                    log.Error($"{logPrefix}exception caught during disposing of GlobalStreamThread.", e);
-                    // ignore exception
-                    // https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1065
-                }
-
                 SetState(GlobalThreadState.DEAD);
-                log.Info($"{logPrefix}Shutdown complete");
+                log.LogInformation("{LogPrefix}Shutdown complete", logPrefix);
 
                 disposed = true;
             }

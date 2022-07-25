@@ -4,15 +4,15 @@ using NUnit.Framework;
 using RocksDbSharp;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
-using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State.RocksDb;
 using Streamiz.Kafka.Net.Tests.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using Streamiz.Kafka.Net.Metrics;
 
 
 namespace Streamiz.Kafka.Net.Tests.Public
@@ -63,7 +63,6 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     .SetAllowMmapReads(false)
                     .SetAllowMmapWrites(false)
                     .SetArenaBlockSize(arenaBlockSize)
-                    .SetBaseBackgroundCompactions(baseBackgroundCompactions)
                     .SetBloomLocality(bloomLocality)
                     .SetBytesPerSync(bytesPerSync)
                     // .SetCompactionFilter(IntPtr.Zero)
@@ -85,7 +84,6 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     .SetErrorIfExists()
                     //.SetFifoCompactionOptions(IntPtr.Zero)
                     .SetHardPendingCompactionBytesLimit(1)
-                    .SetHardRateLimit(40597)
                     .SetHashLinkListRep(12)
                     .SetHashSkipListRep(56, 4, 2)
                     //.SetInfoLog(IntPtr.Zero)
@@ -108,7 +106,6 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     .SetMaxFileOpeningThreads(2)
                     .SetMaxLogFileSize(1)
                     .SetMaxManifestFileSize(131)
-                    .SetMaxMemCompactionLevel(12)
                     .SetMaxOpenFiles(20)
                     .SetMaxSequentialSkipInIterations(13)
                     .SetMaxSuccessiveMerges(12)
@@ -125,12 +122,9 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     .SetNumLevels(1)
                     .SetOptimizeFiltersForHits(56)
                     .SetParanoidChecks()
-                    .SetSkipLogErrorOnRecovery(true)
                     .SetSoftPendingCompactionBytesLimit(134)
-                    .SetSoftRateLimit(131)
                     .SetStatsDumpPeriodSec(532)
                     .SetTableCacheNumShardbits(12)
-                    .SetTableCacheRemoveScanCountLimit(66)
                     .SetTargetFileSizeBase(6)
                     .SetTargetFileSizeMultiplier(2)
                     .SetUint64addMergeOperator()
@@ -144,8 +138,6 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     .SetWALTtlSeconds(1454151413)
                     .SetWriteBufferSize(45678976543)
                     .SetPrefixExtractor(SliceTransform.CreateNoOp())
-                    .SetPurgeRedundantKvsWhileFlush(false)
-                    .SetRateLimitDelayMaxMilliseconds(1762)
                     .SetRecycleLogFileNum(1)
                     .SetReportBgIoStats(true)
                     .SetPlainTableFactory(1, 23, 4, 2)
@@ -154,12 +146,17 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             id = new TaskId { Id = 0, Partition = 0 };
             partition = new TopicPartition("source", 0);
-            stateManager = new ProcessorStateManager(id, new List<TopicPartition> { partition }, null);
+            stateManager = new ProcessorStateManager(
+                id,
+                new List<TopicPartition> { partition },
+                null,
+                new MockChangelogRegister(),
+                new MockOffsetCheckpointManager());
 
             task = new Mock<AbstractTask>();
             task.Setup(k => k.Id).Returns(id);
 
-            context = new ProcessorContext(task.Object, config, stateManager);
+            context = new ProcessorContext(task.Object, config, stateManager, new StreamMetricsRegistry());
 
             store = new RocksDbKeyValueStore("test-store");
             store.Init(context, store);

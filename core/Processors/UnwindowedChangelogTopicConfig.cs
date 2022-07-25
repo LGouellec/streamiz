@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    public class UnwindowedChangelogTopicConfig : InternalTopicConfig
+    internal class UnwindowedChangelogTopicConfig : InternalTopicConfig
     {
         public static IDictionary<string, string> UNWINDOWED_STORE_CHANGELOG_TOPIC_DEFAULT_OVERRIDES = new Dictionary<string, string>(INTERNAL_TOPIC_DEFAULT_OVERRIDES)
         {

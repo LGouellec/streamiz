@@ -11,6 +11,7 @@ using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Table;
 using System.Collections.Generic;
 using System.Linq;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -34,7 +35,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Count(m);
 
             var topology = builder.Build();
-            TaskId id = new TaskId { Id = 0, Partition = 0 };
+            TaskId id = new TaskId { Id = 1, Partition = 0 };
             var processorTopology = topology.Builder.BuildTopology(id);
 
             var supplier = new SyncKafkaSupplier();
@@ -42,7 +43,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
 
             
-            var part = new TopicPartition("topic", 0);
+            var part = new TopicPartition("-KTABLE-AGGREGATE-STATE-STORE-0000000005-repartition", 0);
             StreamTask task = new StreamTask(
                 "thread-0",
                 id,
@@ -51,24 +52,22 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 consumer,
                 config,
                 supplier,
-                null);
+                null,
+                new MockChangelogRegister(),
+                new StreamMetricsRegistry());
             task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
+            task.RestorationIfNeeded();
+            task.CompleteRestoration();
 
-            Assert.AreEqual(2, task.Context.States.StateStoreNames.Count());
+            Assert.AreEqual(1, task.Context.States.StateStoreNames.Count());
             var nameStore1 = task.Context.States.StateStoreNames.ElementAt(0);
-            var nameStore2 = task.Context.States.StateStoreNames.ElementAt(1);
             Assert.IsNotNull(nameStore1);
-            Assert.IsNotNull(nameStore2);
             Assert.AreNotEqual(string.Empty, nameStore1);
-            Assert.AreNotEqual(string.Empty, nameStore2);
             var store1 = task.GetStore(nameStore1);
-            var store2 = task.GetStore(nameStore2);
-            Assert.IsInstanceOf<ITimestampedKeyValueStore<string, string>>(store1);
-            Assert.IsInstanceOf<ITimestampedKeyValueStore<string, long>>(store2);
-            Assert.AreEqual(0, (store1 as ITimestampedKeyValueStore<string, string>).ApproximateNumEntries());
-            Assert.AreEqual(0, (store2 as ITimestampedKeyValueStore<string, long>).ApproximateNumEntries());
+            Assert.IsInstanceOf<ITimestampedKeyValueStore<string, long>>(store1);
+            Assert.AreEqual(0, (store1 as ITimestampedKeyValueStore<string, long>).ApproximateNumEntries());
         }
 
         [Test]
@@ -120,7 +119,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Table<string, string>("topic")
-                .GroupBy((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
+                .GroupBy<char, string, CharSerDes, StringSerDes>((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
                 .Count(InMemory<char, long>.As("count-store").WithKeySerdes(new CharSerDes()));
 
             var topology = builder.Build();
@@ -148,7 +147,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Table<string, string>("topic")
-                .GroupBy((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
+                .GroupBy<char, string, CharSerDes, StringSerDes>((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
                 .Count(InMemory<char, long>.As("count-store").WithKeySerdes(new CharSerDes()));
 
             var topology = builder.Build();
@@ -176,7 +175,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Table<string, string>("topic")
-                .GroupBy((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
+                .GroupBy<char, string, CharSerDes, StringSerDes>((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
                 .Count(InMemory<char, long>.As("count-store").WithKeySerdes(new CharSerDes()));
 
             var topology = builder.Build();

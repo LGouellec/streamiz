@@ -1,5 +1,6 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net.Kafka;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Mock.Sync
 {
@@ -40,6 +41,8 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             globalConsumer.SetRebalanceListener(null);
             return globalConsumer;
         }
+
+        public StreamMetricsRegistry MetricsRegistry { get; set; }
 
         public virtual IProducer<byte[], byte[]> GetProducer(ProducerConfig config)
         {

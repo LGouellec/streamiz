@@ -3,9 +3,6 @@ using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
-using Streamiz.Kafka.Net.Processors.Internal;
-using Streamiz.Kafka.Net.SerDes;
-using Streamiz.Kafka.Net.Table;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -50,7 +47,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 NumberPartitions = 1
             });
 
-            var r = manager.ApplyAsync(topics).GetAwaiter().GetResult().ToList();
+            var r = manager.ApplyAsync(0, topics).GetAwaiter().GetResult().ToList();
 
             Assert.AreEqual(2, r.Count);
             Assert.AreEqual("topic", r[0]);
@@ -79,7 +76,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 NumberPartitions = 1
             });
 
-            var r = manager.ApplyAsync(topics).GetAwaiter().GetResult().ToList();
+            var r = manager.ApplyAsync(0, topics).GetAwaiter().GetResult().ToList();
 
             Assert.AreEqual(2, r.Count);
             Assert.AreEqual("topic", r[0]);
@@ -96,7 +93,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             DefaultTopicManager manager = new DefaultTopicManager(config2, kafkaSupplier.GetAdmin(config));
 
-            ((SyncProducer)kafkaSupplier.GetProducer(new ProducerConfig())).CreateTopic("topic");
+            ((SyncProducer) kafkaSupplier.GetProducer(new ProducerConfig())).CreateTopic("topic");
 
             IDictionary<string, InternalTopicConfig> topics = new Dictionary<string, InternalTopicConfig>();
             topics.Add("topic", new UnwindowedChangelogTopicConfig
@@ -110,7 +107,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 NumberPartitions = 1
             });
 
-            var r = manager.ApplyAsync(topics).GetAwaiter().GetResult().ToList();
+            var r = manager.ApplyAsync(0, topics).GetAwaiter().GetResult().ToList();
 
             Assert.AreEqual(1, r.Count);
             Assert.AreEqual("topic1", r[0]);
@@ -127,7 +124,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             DefaultTopicManager manager = new DefaultTopicManager(config2, kafkaSupplier.GetAdmin(config));
 
             // Create topic with just one partition
-            ((SyncProducer)kafkaSupplier.GetProducer(new ProducerConfig())).CreateTopic("topic");
+            ((SyncProducer) kafkaSupplier.GetProducer(new ProducerConfig())).CreateTopic("topic");
 
             IDictionary<string, InternalTopicConfig> topics = new Dictionary<string, InternalTopicConfig>();
             topics.Add("topic", new UnwindowedChangelogTopicConfig
@@ -136,7 +133,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 NumberPartitions = 4
             });
 
-            Assert.Throws<StreamsException>(() => manager.ApplyAsync(topics).GetAwaiter().GetResult());
+            Assert.Throws<StreamsException>(() => manager.ApplyAsync(0, topics).GetAwaiter().GetResult());
         }
 
         [Test]
@@ -156,7 +153,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 NumberPartitions = 1
             });
 
-            var r = Parallel.ForEach(new List<int> { 1, 2, 3, 4 }, (i) => manager.ApplyAsync(topics).GetAwaiter().GetResult());
+            var r = Parallel.ForEach(new List<int> {1, 2, 3, 4},
+                (i) => manager.ApplyAsync(0, topics).GetAwaiter().GetResult());
             Assert.IsTrue(r.IsCompleted);
         }
 

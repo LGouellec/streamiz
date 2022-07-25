@@ -1,21 +1,25 @@
-﻿using log4net;
-using Streamiz.Kafka.Net.Crosscutting;
+﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.State.Enumerator;
 using Streamiz.Kafka.Net.State.Internal;
 using System;
+using System.Threading;
+using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 
 namespace Streamiz.Kafka.Net.State.RocksDb.Internal
 {
     internal class AbstractRocksDBSegmentedBytesStore<S> : ISegmentedBytesStore
         where S : ISegment
     {
-        protected readonly ILog logger = null;
+        protected readonly ILogger logger = null;
 
         private readonly BytesComparer bytesComparer = new BytesComparer();
         private readonly ISegments<S> segments;
         private readonly IKeySchema keySchema;
         private ProcessorContext context;
+        private Sensor expiredRecordSensor;
 
         private bool isOpen = false;
         private long observedStreamTime = -1;
@@ -85,9 +89,13 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
         public void Init(ProcessorContext context, IStateStore root)
         {
             this.context = context;
-
+            expiredRecordSensor = TaskMetrics.DroppedRecordsSensor(
+                Thread.CurrentThread.Name,
+                context.Id,
+                context.Metrics);
+            
             segments.OpenExisting(context, observedStreamTime);
-            context.Register(root, (k, v) => Put(k, v));
+            context.Register(root, (k, v, t) => Put(k, v));
 
             isOpen = true;
         }
@@ -100,7 +108,8 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
             var segment = segments.GetOrCreateSegmentIfLive(segId, context, observedStreamTime);
             if (segment == null)
             {
-                logger.Warn("Skipping record for expired segment.");
+                expiredRecordSensor.Record(1.0, context.Timestamp);
+                logger.LogWarning("Skipping record for expired segment");
             }
             else
             {
@@ -154,10 +163,10 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
         {
             if (bytesComparer.Compare(keyFrom, keyTo) > 0)
             {
-                logger.Warn("Returning empty iterator for fetch with invalid key range: from > to. " +
-                    "This may be due to range arguments set in the wrong order, " +
-                    "or serdes that don't preserve ordering when lexicographically comparing the serialized bytes. " +
-                    "Note that the built-in numerical serdes do not follow this for negative numbers");
+                logger.LogWarning("Returning empty iterator for fetch with invalid key range: from > to. " +
+                               "This may be due to range arguments set in the wrong order, " +
+                               "or serdes that don't preserve ordering when lexicographically comparing the serialized bytes. " +
+                               "Note that the built-in numerical serdes do not follow this for negative numbers");
                 return new EmptyKeyValueEnumerator<Bytes, byte[]>();
             }
 

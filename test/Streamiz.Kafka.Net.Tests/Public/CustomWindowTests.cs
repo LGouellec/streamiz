@@ -1,5 +1,4 @@
-﻿using Avro.Util;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.SerDes;
@@ -10,7 +9,6 @@ using Streamiz.Kafka.Net.Tests.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using TimeZoneConverter;
 using System.Runtime.InteropServices;
 
@@ -185,7 +183,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var stream = builder.Stream<string, int>(inputTopic);
             var sumStream = stream
                 .SelectKey((k, v) => 1)
-                .GroupByKey()
+                .GroupByKey<Int32SerDes, Int32SerDes>()
                 .WindowedBy(new DailyTimeWindows(zone, windowStartHour, grace))
                 .Reduce(
                     (v1, v2) => v1 + v2,

@@ -1,6 +1,8 @@
 ﻿using Confluent.Kafka;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 
 namespace Streamiz.Kafka.Net.Crosscutting
 {
@@ -17,6 +19,12 @@ namespace Streamiz.Kafka.Net.Crosscutting
             return l;
         }
 
+        internal static int? PartitionCountForTopic(this Metadata metadata, string topic)
+        {
+            var topicInfo = metadata.Topics.FirstOrDefault(t => t.Topic.Equals(topic));
+            return topicInfo?.Partitions.Count;
+        }
+        
         // NOT USED FOR MOMENT
         //internal static IEnumerable<PartitionMetadata> PartitionsForTopic(this Metadata clusterMetadata, string topic)
         //{
@@ -36,23 +44,32 @@ namespace Streamiz.Kafka.Net.Crosscutting
         internal static IEnumerable<ConsumeResult<K, V>> ConsumeRecords<K, V>(this IConsumer<K, V> consumer, TimeSpan timeout, long maxRecords)
         {
             List<ConsumeResult<K, V>> records = new List<ConsumeResult<K, V>>();
-            DateTime dt = DateTime.Now;
-            TimeSpan ts = TimeSpan.Zero;
+            DateTime dt = DateTime.Now, now;
+            TimeSpan ts = timeout;
             do
             {
                 var r = consumer.Consume(ts);
+                now = DateTime.Now;
                 if (r != null)
                 {
                     records.Add(r);
                 }
                 else
                 {
-                    ts = (dt.Add(timeout) - DateTime.Now);
+                    var diffTs = Math.Max((dt.Add(timeout) - now).TotalMilliseconds, 0);
+                    ts = TimeSpan.FromMilliseconds(1 / (2 * Math.Log(diffTs) + 1) * 1000);
+                    
+                    if (consumer.Assignment  != null && !consumer.Assignment.Any()) // if consumer has no assignment, sleep Max (ts / 2, 100 ms)
+                        Thread.Sleep(Math.Max((int)ts.TotalMilliseconds / 2, 100));
+                    
+                    if (ts.TotalMilliseconds == 0) // if not enough time, do not call Consume(0); => break;
+                        break;
                 }
 
-                if (records.Count >= maxRecords)
+                if (records.Count >= maxRecords) // if the batch is full, break;
                     break;
-            } while (dt.Add(timeout) > DateTime.Now);
+                
+            } while (dt.Add(timeout) > now);
 
             return records;
         }

@@ -1,5 +1,6 @@
-﻿using Confluent.Kafka;
-using Streamiz.Kafka.Net.State;
+﻿using System;
+using Confluent.Kafka;
+using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Table;
 
 namespace Streamiz.Kafka.Net.Kafka
@@ -44,5 +45,11 @@ namespace Streamiz.Kafka.Net.Kafka
         /// <param name="config">Global consumer configuration can't be null</param>
         /// <returns>Return a kafka global consumer built</returns>
         IConsumer<byte[], byte[]> GetGlobalConsumer(ConsumerConfig config);
+        
+        /// <summary>
+        /// Get or set the metrics registry.
+        /// This registry will be capture all librdkafka statistics if <see cref="IStreamConfig.ExposeLibrdKafkaStats"/> is enable and forward these into the metrics reporter
+        /// </summary>
+        StreamMetricsRegistry MetricsRegistry { get; set; }
     }
 }

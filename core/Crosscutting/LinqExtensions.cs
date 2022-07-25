@@ -1,10 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
 
 namespace Streamiz.Kafka.Net.Crosscutting
 {
     internal static class LinqExtensions
     {
+        internal static void RemoveAll<T>(this IList<T> list, IEnumerable<T> toRemove)
+        {
+            foreach (var t in toRemove)
+                list.Remove(t);
+        }
+        
         internal static void AddRange<T>(this ISet<T> set, IEnumerable<T> values)
         {
             foreach (var v in values)
@@ -46,7 +54,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
             foreach (var item in source)
             {
                 if (function.Invoke(item))
-                    results.Add(KeyValuePair.Create(item.Key, interceptedValue));
+                    results.Add(new KeyValuePair<K, V>(item.Key, interceptedValue));
                 else
                     results.Add(item);
             }
@@ -69,6 +77,31 @@ namespace Streamiz.Kafka.Net.Crosscutting
         {
             foreach (var i in collections)
                 action(i);
+        }
+
+        internal static bool ContainsAll<T>(this IEnumerable<T> source, IEnumerable<T> sink)
+        {
+            bool res = true;
+            foreach (var t in source)
+            {
+                res = sink.Contains(t);
+                if (!res)
+                    return false;
+            }
+
+            return true;
+        }
+
+        internal static S Random<S>(this IEnumerable<S> source) 
+            where S : class
+        {
+            if (source.Any())
+            {
+                var items = source.ToList();
+                return items[RandomGenerator.GetInt32(items.Count)];
+            }
+
+            return null;
         }
     }
 }

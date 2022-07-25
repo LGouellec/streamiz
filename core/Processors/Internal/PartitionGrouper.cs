@@ -1,7 +1,7 @@
-﻿using Confluent.Kafka;
+﻿using System.Collections.Generic;
+using Confluent.Kafka;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
-using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {

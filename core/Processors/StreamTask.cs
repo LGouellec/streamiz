@@ -5,15 +5,18 @@ using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.Stream.Internal;
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
 {
     internal class StreamTask : AbstractTask
     {
         private readonly IKafkaSupplier kafkaSupplier;
+        private readonly StreamMetricsRegistry streamMetricsRegistry;
         private readonly IRecordCollector collector;
         private readonly IDictionary<TopicPartition, long> consumedOffsets;
         private readonly PartitionGrouper partitionGrouper;
@@ -27,13 +30,26 @@ namespace Streamiz.Kafka.Net.Processors
         private IProducer<byte[], byte[]> producer;
         private bool transactionInFlight = false;
         private readonly string threadId;
+        
+        private readonly Sensor closeTaskSensor;
+        private readonly Sensor activeBufferedRecordSensor;
+        private readonly Sensor processSensor;
+        private readonly Sensor processLatencySensor;
+        private readonly Sensor enforcedProcessingSensor;
+        private readonly Sensor commitSensor;
+        private readonly Sensor activeRestorationSensor;
+        private readonly Sensor restorationRecordsSendsor;
 
 
-        public StreamTask(string threadId, TaskId id, IEnumerable<TopicPartition> partitions, ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer)
-            : base(id, partitions, processorTopology, consumer, configuration)
+        public StreamTask(string threadId, TaskId id, IEnumerable<TopicPartition> partitions,
+            ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration,
+            IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer, IChangelogRegister changelogRegister,
+            StreamMetricsRegistry streamMetricsRegistry)
+            : base(id, partitions, processorTopology, consumer, configuration, changelogRegister)
         {
             this.threadId = threadId;
             this.kafkaSupplier = kafkaSupplier;
+            this.streamMetricsRegistry = streamMetricsRegistry;
             consumedOffsets = new Dictionary<TopicPartition, long>();
             maxTaskIdleMs = configuration.MaxTaskIdleMs;
             maxBufferedSize = configuration.BufferedRecordsPerPartition;
@@ -52,10 +68,12 @@ namespace Streamiz.Kafka.Net.Processors
                 this.producer = producer;
             }
 
-            collector = new RecordCollector(logPrefix, configuration, id);
+            var droppedRecordsSensor = TaskMetrics.DroppedRecordsSensor(this.threadId, Id, this.streamMetricsRegistry);
+            collector = new RecordCollector(logPrefix, configuration, id, droppedRecordsSensor);
             collector.Init(ref this.producer);
 
-            Context = new ProcessorContext(this, configuration, stateMgr).UseRecordCollector(collector);
+            Context = new ProcessorContext(this, configuration, stateMgr, streamMetricsRegistry)
+                .UseRecordCollector(collector);
             Context.FollowMetadata = followMetadata;
 
             var partitionsQueue = new Dictionary<TopicPartition, RecordQueue>();
@@ -63,23 +81,39 @@ namespace Streamiz.Kafka.Net.Processors
             foreach (var p in partitions)
             {
                 var sourceProcessor = processorTopology.GetSourceProcessor(p.Topic);
+                sourceProcessor.SetTaskId(id);
                 var sourceTimestampExtractor = sourceProcessor.Extractor ?? configuration.DefaultTimestampExtractor;
                 var queue = new RecordQueue(
                     logPrefix,
                     $"record-queue-{p.Topic}-{id.Id}-{id.Partition}",
                     sourceTimestampExtractor,
                     p,
-                    sourceProcessor);
+                    sourceProcessor,
+                    droppedRecordsSensor);
                 partitionsQueue.Add(p, queue);
                 processors.Add(sourceProcessor);
             }
 
             partitionGrouper = new PartitionGrouper(partitionsQueue);
+
+            closeTaskSensor = ThreadMetrics.ClosedTaskSensor(this.threadId, streamMetricsRegistry); 
+            activeBufferedRecordSensor = TaskMetrics.ActiveBufferedRecordsSensor(this.threadId, Id, streamMetricsRegistry);
+            processSensor = TaskMetrics.ProcessSensor(this.threadId, Id, streamMetricsRegistry);
+            processLatencySensor = TaskMetrics.ProcessLatencySensor(this.threadId, Id, streamMetricsRegistry);
+            enforcedProcessingSensor = TaskMetrics.EnforcedProcessingSensor(this.threadId, Id, streamMetricsRegistry);
+            commitSensor = TaskMetrics.CommitSensor(this.threadId, Id, streamMetricsRegistry);
+            activeRestorationSensor = TaskMetrics.ActiveRestorationSensor(this.threadId, Id, streamMetricsRegistry);
+            restorationRecordsSendsor = TaskMetrics.RestorationRecordsSensor(this.threadId, Id, streamMetricsRegistry);
         }
 
         internal IConsumerGroupMetadata GroupMetadata { get; set; }
 
         #region Private
+
+        private IDictionary<TopicPartition, long> CheckpointableOffsets
+            => collector.CollectorOffsets
+                        .Union(consumedOffsets.AsEnumerable())
+                        .ToDictionary();
 
         private IEnumerable<TopicPartitionOffset> GetPartitionsWithOffset()
         {
@@ -91,49 +125,58 @@ namespace Streamiz.Kafka.Net.Processors
 
         private void Commit(bool startNewTransaction)
         {
-            log.Debug($"{logPrefix}Comitting");
+            log.LogDebug($"{logPrefix}Comitting");
 
-            FlushState();
-            if (eosEnabled)
+            if (state == TaskState.CLOSED)
+                throw new IllegalStateException($"Illegal state {state} while committing active task {Id}");
+            else if (state == TaskState.SUSPENDED || state == TaskState.CREATED
+                || state == TaskState.RUNNING || state == TaskState.RESTORING)
             {
-                producer.SendOffsetsToTransaction(GetPartitionsWithOffset(), GroupMetadata, configuration.TransactionTimeout);
-                producer.CommitTransaction(configuration.TransactionTimeout);
-                transactionInFlight = false;
-                if (startNewTransaction)
+                FlushState();
+                if (eosEnabled)
                 {
-                    producer.BeginTransaction();
-                    transactionInFlight = true;
-                }
-                consumedOffsets.Clear();
-            }
-            else
-            {
-                try
-                {
-                    consumer.Commit(GetPartitionsWithOffset());
+                    producer.SendOffsetsToTransaction(GetPartitionsWithOffset(), GroupMetadata, configuration.TransactionTimeout);
+                    producer.CommitTransaction(configuration.TransactionTimeout);
+                    transactionInFlight = false;
+                    if (startNewTransaction)
+                    {
+                        producer.BeginTransaction();
+                        transactionInFlight = true;
+                    }
                     consumedOffsets.Clear();
                 }
-                catch (TopicPartitionOffsetException e)
+                else
                 {
-                    log.Info($"{logPrefix}Committing failed with a non-fatal error: {e.Message}, we can ignore this since commit may succeed still");
+                    try
+                    {
+                        consumer.Commit(GetPartitionsWithOffset());
+                        consumedOffsets.Clear();
+                    }
+                    catch (TopicPartitionOffsetException e)
+                    {
+                        log.LogInformation($"{logPrefix}Committing failed with a non-fatal error: {e.Message}, we can ignore this since commit may succeed still");
+                    }
+                    catch (KafkaException e)
+                    {
+                        // TODO : get info about offset committing
+                        log.LogError($"{logPrefix}Error during committing offset ......", e);
+                    }
                 }
-                catch (KafkaException e)
-                {
-                    // TODO : get info about offset committing
-                    log.Error($"{logPrefix}Error during committing offset ......", e);
-                }
+                commitNeeded = false;
+                commitRequested = false;
+                commitSensor.Record();
             }
-            commitNeeded = false;
-            commitRequested = false;
+            else
+                throw new IllegalStateException($"Unknown state {state} while committing active task {Id}");
         }
 
         private IProducer<byte[], byte[]> CreateEOSProducer()
         {
             IProducer<byte[], byte[]> tmpProducer = null;
             var newConfig = configuration.Clone();
-            log.Info($"${logPrefix}Creating producer client for task {Id}");
+            log.LogInformation($"${logPrefix}Creating producer client for task {Id}");
             newConfig.TransactionalId = $"{newConfig.ApplicationId}-{Id}";
-            tmpProducer = kafkaSupplier.GetProducer(newConfig.ToProducerConfig(StreamThread.GetTaskProducerClientId(threadId, Id)));
+            tmpProducer = kafkaSupplier.GetProducer(newConfig.ToProducerConfig(StreamThread.GetTaskProducerClientId(threadId, Id)).Wrap(threadId, Id));
             return tmpProducer;
         }
 
@@ -163,10 +206,25 @@ namespace Streamiz.Kafka.Net.Processors
 
         #region Abstract
 
+        public override IDictionary<TopicPartition, long> PurgeOffsets
+        {
+            get
+            {
+                var purgeableConsumedOffsets = new Dictionary<TopicPartition, long>();
+                foreach(var kv in consumedOffsets)
+                    if (Topology.RepartitionTopics.Contains(kv.Key.Topic))
+                        purgeableConsumedOffsets.AddOrUpdate(kv.Key, kv.Value + 1);
+                return purgeableConsumedOffsets;
+            }
+        }
+
         public override PartitionGrouper Grouper => partitionGrouper;
 
         public override bool CanProcess(long now)
         {
+            if (state == TaskState.CLOSED || state == TaskState.RESTORING || state == TaskState.CREATED)
+                return false;
+
             if (partitionGrouper.AllPartitionsBuffered)
             {
                 idleStartTime = -1;
@@ -181,6 +239,7 @@ namespace Streamiz.Kafka.Net.Processors
 
                 if (now - idleStartTime >= maxTaskIdleMs)
                 {
+                    enforcedProcessingSensor.Record();
                     return true;
                 }
                 else
@@ -197,21 +256,43 @@ namespace Streamiz.Kafka.Net.Processors
 
         public override void Close()
         {
-            IsClosed = true;
-            log.Info($"{logPrefix}Closing");
+            log.LogInformation($"{logPrefix}Closing");
 
             Suspend();
 
-            foreach (var kp in processors)
+            if (state == TaskState.CREATED || state == TaskState.RESTORING || state == TaskState.RUNNING)
             {
-                kp.Close();
+                throw new IllegalStateException($"Illegal state {state} while closing active task {Id}");
             }
+            else if (state == TaskState.CLOSED)
+            {
+                log.LogInformation($"{logPrefix}Skip closing since state is {state}");
+                return;
+            }
+            else if (state == TaskState.SUSPENDED)
+            {
+                foreach (var kp in processors)
+                {
+                    kp.Close();
+                }
 
-            partitionGrouper.Close();
+                partitionGrouper.Close();
 
-            collector.Close();
-            CloseStateManager();
-            log.Info($"{logPrefix}Closed");
+                collector.Close();
+                CloseStateManager();
+
+                TransitTo(TaskState.CLOSED);
+                
+                closeTaskSensor.Record();
+                log.LogInformation($"{logPrefix}Closed");
+                IsClosed = true;
+            }
+            else
+            {
+                throw new IllegalStateException($"Unknow state {state} while suspending active task {Id}");
+            }
+            
+            streamMetricsRegistry.RemoveTaskSensors(threadId, Id.ToString());
         }
 
         public override void Commit() => Commit(true);
@@ -221,9 +302,28 @@ namespace Streamiz.Kafka.Net.Processors
             return Context.GetStateStore(name);
         }
 
+        public override void RestorationIfNeeded()
+        {
+            if(state == TaskState.CREATED)
+            {
+                if (stateMgr.ChangelogPartitions.Any())
+                {
+                    stateMgr.InitializeOffsetsFromCheckpoint();
+
+                    TransitTo(TaskState.RESTORING);
+                    activeRestorationSensor.Record();
+                    log.LogInformation($"{logPrefix}Restoration will start soon.");
+                }
+                else
+                {
+                    TransitTo(TaskState.RUNNING);
+                }
+            }
+        }
+
         public override void InitializeTopology()
         {
-            log.Debug($"{logPrefix}Initializing topology with theses source processors : {string.Join(", ", processors.Select(p => p.Name))}.");
+            log.LogDebug($"{logPrefix}Initializing topology with theses source processors : {string.Join(", ", processors.Select(p => p.Name))}.");
             foreach (var p in processors)
             {
                 p.Init(Context);
@@ -240,39 +340,55 @@ namespace Streamiz.Kafka.Net.Processors
 
         public override bool InitializeStateStores()
         {
-            log.Debug($"{logPrefix}Initializing state stores.");
+            log.LogDebug($"{logPrefix}Initializing state stores.");
             RegisterStateStores();
             return false;
         }
 
         public override void Resume()
         {
-            log.Debug($"{logPrefix}Resuming");
-            if (eosEnabled)
+            if (state == TaskState.CREATED ||
+                state == TaskState.RESTORING ||
+                state == TaskState.RUNNING)
             {
-                if (producer != null)
+                log.LogDebug($"{logPrefix}Skip resuming since state is {state}");
+            }
+            else if (state == TaskState.SUSPENDED)
+            {
+                log.LogDebug($"{logPrefix}Resuming");
+                InitializeStateStores();
+                if (eosEnabled)
                 {
-                    throw new IllegalStateException("Task producer should be null.");
-                }
+                    if (producer != null)
+                    {
+                        throw new IllegalStateException("Task producer should be null.");
+                    }
 
-                producer = CreateEOSProducer();
-                InitializeTransaction();
-                collector.Init(ref producer);
+                    producer = CreateEOSProducer();
+                    InitializeTransaction();
+                    collector.Init(ref producer);
+                }
+                TransitTo(TaskState.CREATED);
+            }
+            else if (state == TaskState.CLOSED)
+            {
+                throw new IllegalStateException($"Illegal state {state} while resuming active task {Id}");
+            }
+            else
+            {
+                throw new IllegalStateException($"Unknow state {state} while resuming active task {Id}");
             }
         }
 
         public override void Suspend()
         {
-            log.Debug($"{logPrefix}Suspending");
+            log.LogDebug($"{logPrefix}Suspending");
 
-            try
+            if (state == TaskState.CREATED || state == TaskState.RESTORING)
             {
-                Commit(false);
-            }
-            finally
-            {
-                partitionGrouper.Clear();
+                log.LogInformation($"{logPrefix}Suspended {(state == TaskState.CREATED ? "created" : "restoring")}");
 
+                // TODO : remove when stream task refactoring is finished
                 if (eosEnabled)
                 {
                     if (transactionInFlight)
@@ -283,6 +399,52 @@ namespace Streamiz.Kafka.Net.Processors
                     collector.Close();
                     producer = null;
                 }
+                
+                FlushState();
+                CloseStateManager();
+
+                TransitTo(TaskState.SUSPENDED);
+            }
+            else if (state == TaskState.RUNNING)
+            {
+                try
+                {
+                    Commit(false);
+                }
+                finally
+                {
+                    partitionGrouper.Clear();
+
+                    if (eosEnabled)
+                    {
+                        if (transactionInFlight)
+                        {
+                            producer.AbortTransaction(configuration.TransactionTimeout);
+                        }
+
+                        collector.Close();
+                        producer = null;
+                    }
+                    
+                    FlushState();
+                    CloseStateManager();
+                }
+
+                log.LogInformation($"{logPrefix}Suspended running");
+                TransitTo(TaskState.SUSPENDED);
+            }
+            else if (state == TaskState.SUSPENDED)
+            {
+                log.LogInformation($"{logPrefix}Skip suspended since state is {state}");
+                return;
+            }
+            else if (state == TaskState.CLOSED)
+            {
+                throw new IllegalStateException($"Illegal state {state} while suspending active task {Id}");
+            }
+            else
+            {
+                throw new IllegalStateException($"Unknow state {state} while suspending active task {Id}");
             }
         }
 
@@ -290,6 +452,14 @@ namespace Streamiz.Kafka.Net.Processors
         {
             base.FlushState();
             collector?.Flush();
+        }
+
+        public override void MayWriteCheckpoint(bool force = false)
+        {
+            if (commitNeeded || force)
+                stateMgr.UpdateChangelogOffsets(CheckpointableOffsets);
+
+            WriteCheckpoint(force);
         }
 
         #endregion
@@ -304,12 +474,12 @@ namespace Streamiz.Kafka.Net.Processors
             else
             {
                 Context.SetRecordMetaData(record.Record);
-                
+
                 var recordInfo = $"Topic:{record.Record.Topic}|Partition:{record.Record.Partition.Value}|Offset:{record.Record.Offset}|Timestamp:{record.Record.Message.Timestamp.UnixTimestampMs}";
 
-                log.Debug($"{logPrefix}Start processing one record [{recordInfo}]");
-                record.Processor.Process(record.Record);
-                log.Debug($"{logPrefix}Completed processing one record [{recordInfo}]");
+                log.LogDebug($"{logPrefix}Start processing one record [{recordInfo}]");
+                long latency = ActionHelper.MeasureLatency(() => record.Processor.Process(record.Record));
+                log.LogDebug($"{logPrefix}Completed processing one record [{recordInfo}]");
 
                 consumedOffsets.AddOrUpdate(record.Record.TopicPartition, record.Record.Offset);
                 commitNeeded = true;
@@ -318,7 +488,10 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     consumer.Resume(record.Record.TopicPartition.ToSingle());
                 }
-
+                
+                processSensor.Record();
+                processLatencySensor.Record(latency);
+                activeBufferedRecordSensor.Record(Grouper.NumBuffered());
                 return true;
             }
         }
@@ -332,7 +505,7 @@ namespace Streamiz.Kafka.Net.Processors
                 consumer.Pause(record.TopicPartition.ToSingle());
             }
 
-            log.Debug($"{logPrefix}Added record into the buffered queue of partition {Partition}, new queue size is {newQueueSize}");
+            log.LogDebug($"{logPrefix}Added record into the buffered queue of partition {record.TopicPartition}, new queue size is {newQueueSize}");
         }
 
         public void AddRecords(IEnumerable<ConsumeResult<byte[], byte[]>> records)
@@ -342,5 +515,28 @@ namespace Streamiz.Kafka.Net.Processors
                 AddRecord(r);
             }
         }
-    }
+
+        public void CompleteRestoration()
+        {
+            if(state == TaskState.RUNNING)
+            {
+                activeRestorationSensor.Record(0);
+                restorationRecordsSendsor.Record(0);
+            }
+            else if(state == TaskState.RESTORING)
+            {
+                TransitTo(TaskState.RUNNING);
+                activeRestorationSensor.Record(0);
+                log.LogInformation($"{logPrefix}Restored and ready to run");
+            }
+            else if(state == TaskState.CREATED || state == TaskState.SUSPENDED || state == TaskState.CLOSED)
+            {
+                throw new IllegalStateException($"Illegal state {state} while completing restoration for active task {Id}");
+            }
+            else
+            {
+                throw new IllegalStateException($"Illegal state {state} while completing restoration for active task {Id}");
+            }
+        }
+    }   
 }

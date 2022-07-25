@@ -1,4 +1,5 @@
 ﻿
+using Confluent.Kafka;
 using Streamiz.Kafka.Net.Mock.Pipes;
 using Streamiz.Kafka.Net.SerDes;
 using System;
@@ -17,7 +18,7 @@ namespace Streamiz.Kafka.Net.Mock
     /// <code>
     /// var topic = driver.CreateMultiInputTopic&lt;string, string&gt;("test1", "test2");
     /// topic.PipeInput("test1", "key1", "hello");
-    /// topic.PipeInput("test2", "key1", "coucou");
+    /// topic.PipeInput("test2", "key1", "coucou", new Headers());
     /// topic.Flush();
     /// </code>
     /// </example>
@@ -119,7 +120,7 @@ namespace Streamiz.Kafka.Net.Mock
             {
                 DateTime ts = record.Timestamp.HasValue ? record.Timestamp.Value : LastDate;
                 var tuple = GetBytes(topic, record.Key, record.Value);
-                pipes[topic].Pipe(tuple.Item1, tuple.Item2, ts);
+                pipes[topic].Pipe(tuple.Item1, tuple.Item2, ts, record.Headers);
             }
             else
             {
@@ -150,8 +151,9 @@ namespace Streamiz.Kafka.Net.Mock
         /// <param name="topic">topic name</param>
         /// <param name="key">key record</param>
         /// <param name="value">value record</param>
-        public void PipeInput(string topic, K key, V value)
-            => PipeInput(topic, new TestRecord<K, V> { Value = value, Key = key });
+        /// <param name="headers">headers record</param>
+        public void PipeInput(string topic, K key, V value, Headers headers = default)
+            => PipeInput(topic, new TestRecord<K, V> { Value = value, Key = key, Headers = headers ?? new Headers() });
 
         /// <summary>
         /// Send an input record with the given record on the topic and then commit the records.
@@ -160,8 +162,9 @@ namespace Streamiz.Kafka.Net.Mock
         /// <param name="key">key record</param>
         /// <param name="value">value record</param>
         /// <param name="timestamp">Timestamp to record</param>
-        public void PipeInput(string topic, K key, V value, DateTime timestamp)
-            => PipeInput(topic, new TestRecord<K, V> { Key = key, Value = value, Timestamp = timestamp });
+        /// <param name="headers">headers record</param>
+        public void PipeInput(string topic, K key, V value, DateTime timestamp, Headers headers = default)
+            => PipeInput(topic, new TestRecord<K, V> { Key = key, Value = value, Timestamp = timestamp, Headers = headers ?? new Headers() });
 
         #endregion
 
@@ -177,6 +180,19 @@ namespace Streamiz.Kafka.Net.Mock
             foreach (var d in datas)
             {
                 PipeInput(topic, new TestRecord<K, V> { Value = d.Item2, Key = d.Item1 });
+            }
+        }
+
+        /// <summary>
+        /// Send multiple input records to specific topic
+        /// </summary>
+        /// <param name="topic">topic name</param>
+        /// <param name="datas">list of key/value/headers records</param>
+        public void PipeInputs(string topic, params (K, V, Headers)[] datas)
+        {
+            foreach (var d in datas)
+            {
+                PipeInput(topic, new TestRecord<K, V> { Value = d.Item2, Key = d.Item1, Headers = d.Item3 });
             }
         }
 

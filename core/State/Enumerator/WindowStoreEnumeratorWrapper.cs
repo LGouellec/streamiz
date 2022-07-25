@@ -1,6 +1,5 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.State.Helper;
-using Streamiz.Kafka.Net.State.RocksDb.Internal;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -25,7 +24,7 @@ namespace Streamiz.Kafka.Net.State.Enumerator
                     if (current.HasValue)
                     {
                         long ts = WindowKeyHelper.ExtractStoreTimestamp(current.Value.Key.Get);
-                        return KeyValuePair.Create(ts, current.Value.Value);
+                        return new KeyValuePair<long, byte[]>(ts, current.Value.Value);
                     }
                     else
                         return null;
@@ -67,7 +66,7 @@ namespace Streamiz.Kafka.Net.State.Enumerator
                     {
                         var key = bytesEnumerator.Current?.Key.Get;
                         var k = WindowKeyHelper.FromStoreBytesKey(key, windowSize);
-                        return KeyValuePair.Create(k, bytesEnumerator.Current.Value.Value);
+                        return new KeyValuePair<Windowed<Bytes>, byte[]>(k, bytesEnumerator.Current.Value.Value);
                     }
                     else
                         return null;

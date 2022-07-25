@@ -1,43 +1,51 @@
 ﻿using Confluent.Kafka;
-using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Kafka.Internal
 {
+    // TODO : Need to refactor, not necessary now to have one producer by thread if EOS is enable, see EOS_V2
     internal class RecordCollector : IRecordCollector
     {
         // IF EOS DISABLED, ONE PRODUCER BY TASK BUT ONE INSTANCE RECORD COLLECTOR BY TASK
         // WHEN CLOSING TASK, WE MUST DISPOSE PRODUCER WHEN NO MORE INSTANCE OF RECORD COLLECTOR IS PRESENT
         // IT'S A GARBAGE COLLECTOR LIKE
         private static IDictionary<string, int> instanceProducer = new Dictionary<string, int>();
-        private static object _lock = new object();
+        private object _lock = new();
 
         private IProducer<byte[], byte[]> producer;
         private readonly IStreamConfig configuration;
         private readonly TaskId id;
+        private readonly Sensor droppedRecordsSensor;
+        private Exception exception = null;
 
         private readonly string logPrefix;
-        private readonly ILog log = Logger.GetLogger(typeof(RecordCollector));
+        private readonly ILogger log = Logger.GetLogger(typeof(RecordCollector));
+        private readonly ConcurrentDictionary<TopicPartition, long> collectorsOffsets = new ConcurrentDictionary<TopicPartition, long>();
 
+        public IDictionary<TopicPartition, long> CollectorOffsets => collectorsOffsets.ToDictionary();
 
-        public RecordCollector(string logPrefix, IStreamConfig configuration, TaskId id) 
+        public RecordCollector(string logPrefix, IStreamConfig configuration, TaskId id, Sensor droppedRecordsSensor) 
         {
             this.logPrefix = $"{logPrefix}";
             this.configuration = configuration;
             this.id = id;
+            this.droppedRecordsSensor = droppedRecordsSensor;
         }
 
         public void Init(ref IProducer<byte[], byte[]> producer)
         {
             this.producer = producer;
 
-            string producerName = producer.Name.Split("#")[0];
+            string producerName = producer.Name.Split('#')[0];
             lock (_lock)
             {
                 if (instanceProducer.ContainsKey(producerName))
@@ -49,16 +57,17 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
         public void Close()
         {
-            log.Debug($"{logPrefix}Closing producer");
+            log.LogDebug("{LogPrefix}Closing producer", logPrefix);
             if(producer != null)
             {
                 lock (_lock)
                 {
-                    string producerName = producer.Name.Split("#")[0];
-                    if (--instanceProducer[producerName] <= 0)
+                    string producerName = producer.Name.Split('#')[0];
+                    if (instanceProducer.ContainsKey(producerName) && --instanceProducer[producerName] <= 0)
                     {
                         producer.Dispose();
                         producer = null;
+                        CheckForException();
                     }
                 }
             }
@@ -66,12 +75,13 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
         public void Flush()
         {
-            log.Debug($"{logPrefix}Flusing producer");
+            log.LogDebug("{LogPrefix}Flushing producer", logPrefix);
             if (producer != null)
             {
                 try
                 {
                     producer.Flush();
+                    CheckForException();
                 }catch(ObjectDisposedException)
                 {
                     // has been disposed
@@ -117,50 +127,58 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             var k = key != null ? keySerializer.Serialize(key, new SerializationContext(MessageComponentType.Key, topic, headers)) : null;
             var v = value != null ? valueSerializer.Serialize(value, new SerializationContext(MessageComponentType.Value, topic, headers)) : null;
 
+            CheckForException();
+            
             void HandleError(DeliveryReport<byte[], byte[]> report){
                 if (report.Error.IsError)
                 {
                     StringBuilder sb = new StringBuilder();
-                    sb.AppendLine($"{logPrefix}Error encountered sending record to topic {topic} for task {id} due to:");
+                    sb.AppendLine($"{logPrefix}Error encountered sending record (key {key}, value {value}) to topic {topic} for task {id} due to:");
                     sb.AppendLine($"{logPrefix}Error Code : {report.Error.Code.ToString()}");
                     sb.AppendLine($"{logPrefix}Message : {report.Error.Reason}");
 
                     if (IsFatalError(report))
                     {
                         sb.AppendLine($"{logPrefix}Written offsets would not be recorded and no more records would be sent since this is a fatal error.");
-                        log.Error(sb.ToString());
-                        throw new StreamsException(sb.ToString());
+                        log.LogError(sb.ToString());
+                        lock(_lock)
+                            exception = new StreamsException(sb.ToString());
                     }
                     else if (IsRecoverableError(report))
                     {
                         sb.AppendLine($"{logPrefix}Written offsets would not be recorded and no more records would be sent since the producer is fenced, indicating the task may be migrated out");
-                        log.Error(sb.ToString());
-                        throw new TaskMigratedException(sb.ToString());
+                        log.LogError(sb.ToString());
+                        lock(_lock)
+                            exception = new TaskMigratedException(sb.ToString());
                     }
                     else
                     {
                         if (configuration.ProductionExceptionHandler(report) == ExceptionHandlerResponse.FAIL)
                         {
                             sb.AppendLine($"{logPrefix}Exception handler choose to FAIL the processing, no more records would be sent.");
-                            log.Error(sb.ToString());
-                            throw new ProductionException(sb.ToString());
+                            log.LogError(sb.ToString());
+                            lock(_lock)
+                                exception = new ProductionException(sb.ToString());
                         }
                         else
                         {
                             sb.AppendLine($"{logPrefix}Exception handler choose to CONTINUE processing in spite of this error but written offsets would not be recorded.");
-                            log.Error(sb.ToString());
+                            log.LogError(sb.ToString());
+                            droppedRecordsSensor.Record();
                         }
                     }
                 }
                 else if (report.Status == PersistenceStatus.NotPersisted || report.Status == PersistenceStatus.PossiblyPersisted)
                 {
-                    log.Warn($"{logPrefix}Record not persisted or possibly persisted: (timestamp {report.Message.Timestamp.UnixTimestampMs}) topic=[{topic}] partition=[{report.Partition}] offset=[{report.Offset}]. May config Retry configuration, depends your use case.");
+                    log.LogWarning("{logPrefix}Record not persisted or possibly persisted: (timestamp {Timestamp}) topic=[{Topic}] partition=[{Partition}] offset=[{Offset}]. May config Retry configuration, depends your use case",
+                        logPrefix, report.Message.Timestamp.UnixTimestampMs, topic, report.Partition, report.Offset);
                 }
                 else if (report.Status == PersistenceStatus.Persisted)
                 {
-                    log.Debug($"{logPrefix}Record persisted: (timestamp {report.Message.Timestamp.UnixTimestampMs}) topic=[{topic}] partition=[{report.Partition}] offset=[{report.Offset}]");
+                    log.LogDebug("{LogPrefix}Record persisted: (timestamp {Timestamp}) topic=[{Topic}] partition=[{Partition}] offset=[{Offset}]",
+                        logPrefix, report.Message.Timestamp.UnixTimestampMs, topic, report.Partition, report.Offset);
+                    collectorsOffsets.AddOrUpdate(report.TopicPartition, report.Offset.Value);
                 }
-
             }
 
             try
@@ -176,10 +194,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                             Headers = headers,
                             Timestamp = new Timestamp(timestamp, TimestampType.CreateTime)
                         },
-                        (report) =>
-                        {
-                            HandleError(report);
-                        });
+                        HandleError);
                 }
                 else
                 {
@@ -192,10 +207,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                                Headers = headers,
                                Timestamp = new Timestamp(timestamp, TimestampType.CreateTime)
                            },
-                           (report) =>
-                           {
-                               HandleError(report);
-                           });
+                           HandleError);
                 }
             }
             catch (ProduceException<byte[], byte[]> produceException)
@@ -208,6 +220,16 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 {
                     throw new StreamsException($"Error encountered trying to send record to topic {topic} [{logPrefix}] : {produceException.Message}");
                 }
+            }
+        }
+        
+        private void CheckForException() {
+            lock (_lock)
+            {
+                if (exception == null) return;
+                var e = exception;
+                exception = null;
+                throw e;
             }
         }
     }

@@ -1,11 +1,12 @@
-﻿using Streamiz.Kafka.Net.Processors;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 using Streamiz.Kafka.Net.Table;
 using Streamiz.Kafka.Net.Table.Internal;
-using System;
-using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
@@ -15,14 +16,17 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         private readonly Grouped<K, V> grouped;
         private readonly List<string> sourceNodes;
         private readonly string name;
-        private readonly StreamGraphNode node;
+        private readonly bool repartitionRequired;
+        private StreamGraphNode node;
+        private StreamGraphNode repartitionNode;
 
-        public GroupedStreamAggregateBuilder(InternalStreamBuilder builder, Grouped<K, V> grouped, List<string> sourceNodes, string name, StreamGraphNode node)
+        public GroupedStreamAggregateBuilder(InternalStreamBuilder builder, Grouped<K, V> grouped, List<string> sourceNodes, string name, bool repartitionRequired, StreamGraphNode node)
         {
             this.builder = builder;
             this.grouped = grouped;
             this.sourceNodes = sourceNodes;
             this.name = name;
+            this.repartitionRequired = repartitionRequired;
             this.node = node;
         }
 
@@ -34,8 +38,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             ISerDes<K> keySerdes,
             ISerDes<VR> valueSerdes)
         {
-            // if repartition required TODO
-            // ELSE
+            var sourceName = Repartition(storeBuilder);
+            
             StatefulProcessorNode<K, V, ITimestampedKeyValueStore<K, VR>> statefulProcessorNode =
                new StatefulProcessorNode<K, V, ITimestampedKeyValueStore<K, VR>>(
                    functionName,
@@ -47,7 +51,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             return new KTable<K, V, VR>(functionName,
                                     keySerdes,
                                     valueSerdes,
-                                    sourceNodes,
+                                    sourceName.Equals(name) ? sourceNodes : sourceName.ToSingle().ToList(),
                                     queryableStoreName,
                                     aggregateSupplier,
                                     statefulProcessorNode,
@@ -62,8 +66,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             ISerDes<KR> keySerdes,
             ISerDes<VR> valueSerdes)
         {
-            // if repartition required TODO
-            // ELSE
+            var sourceName = Repartition(storeBuilder);
+            
             StatefulProcessorNode<K, V, ITimestampedWindowStore<K, VR>> statefulProcessorNode =
                new StatefulProcessorNode<K, V, ITimestampedWindowStore<K, VR>>(
                    functionName,
@@ -75,11 +79,28 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             return new KTableGrouped<K, KR, V, VR>(functionName,
                                     keySerdes,
                                     valueSerdes,
-                                    sourceNodes,
+                                    sourceName.Equals(name) ? sourceNodes : sourceName.ToSingle().ToList(),
                                     queryableStoreName,
                                     aggregateSupplier,
                                     statefulProcessorNode,
                                     builder);
+        }
+
+        private string Repartition(StoreBuilder storeBuilder)
+        {
+            if (repartitionRequired)
+            {
+                (string sourceName, RepartitionNode<K,V> repartNode) = KStream<K, V>.CreateRepartitionSource(grouped.Named ?? storeBuilder.Name, grouped.Key, grouped.Value, builder);
+
+                if (repartitionNode == null || grouped.Named == null)
+                    repartitionNode = repartNode;
+                
+                builder.AddGraphNode(node, repartitionNode);
+                node = repartitionNode;
+                return sourceName;
+            }
+
+            return name;
         }
     }
 }

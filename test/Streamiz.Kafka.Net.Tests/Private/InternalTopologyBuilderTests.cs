@@ -1,8 +1,5 @@
 ﻿using NUnit.Framework;
 using Streamiz.Kafka.Net.Table;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -21,7 +18,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             builder.Table("source", inmemory);
 
             var topology = builder.Build();
-            
+
             topology.Builder.RewriteTopology(config);
             topology.Builder.BuildTopology();
 

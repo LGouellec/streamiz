@@ -28,11 +28,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
             streamConfigMock = new Mock<IStreamConfig>();
             streamConfigMock.Setup(x => x.PollMs).Returns(1);
             streamConfigMock.Setup(x => x.CommitIntervalMs).Returns(1);
-            streamConfigMock.Setup(x => x.MetadataRequestTimeoutMs).Returns(1);
             globalStateMaintainerMock.Setup(x => x.Initialize()).Returns(new Dictionary<TopicPartition, long>());
 
             cancellationTokenSource = new CancellationTokenSource();
-            globalStreamThread = new GlobalStreamThread("global", globalConsumerMock.Object, streamConfigMock.Object, globalStateMaintainerMock.Object);
+            globalStreamThread = new GlobalStreamThread("global", globalConsumerMock.Object, streamConfigMock.Object,
+                globalStateMaintainerMock.Object);
         }
 
         [TearDown]
@@ -115,8 +115,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void ShouldAssignTopicsToConsumer()
         {
-            var partitionOffsetDictionary = new Dictionary<TopicPartition, long>() {
-                { new TopicPartition("topic", 0), 0L }
+            var partitionOffsetDictionary = new Dictionary<TopicPartition, long>()
+            {
+                {new TopicPartition("topic", 0), Offset.Beginning}
             };
             globalStateMaintainerMock.Setup(x => x.Initialize()).Returns(partitionOffsetDictionary);
 
@@ -135,7 +136,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             globalConsumerMock.SetupSequence(x => x.Consume(It.IsAny<TimeSpan>()))
                 .Returns(result1)
                 .Returns(result2)
-                .Returns((ConsumeResult<byte[], byte[]>)null);
+                .Returns((ConsumeResult<byte[], byte[]>) null);
 
             globalStreamThread.Start(cancellationTokenSource.Token);
 

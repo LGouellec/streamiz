@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Kafka.Internal;
+using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -14,6 +15,8 @@ using Streamiz.Kafka.Net.State.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 
 namespace Streamiz.Kafka.Net.Tests.Stores
 {
@@ -30,11 +33,14 @@ namespace Streamiz.Kafka.Net.Tests.Stores
 
         private SyncKafkaSupplier kafkaSupplier = null;
         private IRecordCollector recordCollector = null;
+
         private StringSerDes stringSerDes = new StringSerDes();
+        private ValueAndTimestampSerDes<string> valueAndTimestampSerDes;
 
         [SetUp]
         public void Begin()
         {
+            valueAndTimestampSerDes = new ValueAndTimestampSerDes<string>(stringSerDes);
             config = new StreamConfig();
             config.ApplicationId = $"unit-test-changelogging-tkv";
 
@@ -47,19 +53,24 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             producerConfig.ClientId = "producer-1";
             var producerClient = kafkaSupplier.GetProducer(producerConfig);
 
-            recordCollector = new RecordCollector("p-1", config, id);
+            recordCollector = new RecordCollector("p-1", config, id, new NoRunnableSensor("s", "s", MetricsRecordingLevel.DEBUG));
             recordCollector.Init(ref producerClient);
 
             var changelogsTopics = new Dictionary<string, string>{
                 { "test-store", "test-store-changelog"}
             };
 
-            stateManager = new ProcessorStateManager(id, new List<TopicPartition> { partition }, changelogsTopics);
+            stateManager = new ProcessorStateManager(
+                id,
+                new List<TopicPartition> { partition },
+                changelogsTopics,
+                new MockChangelogRegister(),
+                new MockOffsetCheckpointManager());
 
             task = new Mock<AbstractTask>();
             task.Setup(k => k.Id).Returns(id);
 
-            context = new ProcessorContext(task.Object, config, stateManager);
+            context = new ProcessorContext(task.Object, config, stateManager, new StreamMetricsRegistry());
             context.UseRecordCollector(recordCollector);
 
             var inmemorystore = new InMemoryKeyValueStore("test-store");
@@ -71,10 +82,10 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             => Bytes.Wrap(stringSerDes.Serialize(key, new SerializationContext()));
 
         private byte[] CreateValue(string value)
-            => stringSerDes.Serialize(value, new SerializationContext());
+            => valueAndTimestampSerDes.Serialize(ValueAndTimestamp<string>.Make(value, DateTime.Now.GetMilliseconds()), new SerializationContext());
 
         private string FromValue(byte[] valueBytes)
-            => stringSerDes.Deserialize(valueBytes, new SerializationContext());
+            => valueAndTimestampSerDes.Deserialize(valueBytes, new SerializationContext()).Value;
 
         private string FromKey(byte[] keyBytes)
             => stringSerDes.Deserialize(keyBytes, new SerializationContext());
@@ -120,7 +131,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             var r = consumer.Consume();
 
             Assert.AreEqual("test", FromKey(r.Message.Key));
-            Assert.AreEqual("value", FromValue(r.Message.Value));
+            Assert.AreEqual("value", FromKey(r.Message.Value));
 
             var list = store.All().ToList();
 

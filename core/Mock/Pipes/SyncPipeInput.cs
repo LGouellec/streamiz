@@ -1,23 +1,22 @@
 ﻿using Confluent.Kafka;
-using Streamiz.Kafka.Net.Crosscutting;
-using Streamiz.Kafka.Net.Processors;
 using System;
-using System.Collections.Generic;
+using Streamiz.Kafka.Net.Mock.Sync;
 
 namespace Streamiz.Kafka.Net.Mock.Pipes
 {
     internal class SyncPipeInput : IPipeInput
     {
-        private readonly StreamTask task;
+        private readonly ISyncPublisher publisher;
         private readonly string topic;
 
-        public SyncPipeInput(StreamTask task, string topic)
+        public SyncPipeInput(ISyncPublisher publisher, string topic)
         {
-            this.task = task;
+            this.publisher = publisher;
             this.topic = topic;
         }
 
         public string TopicName => topic;
+        public event PipeFlushed Flushed;
 
         public void Dispose()
         {
@@ -26,19 +25,13 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
 
         public void Flush()
         {
-            long now = DateTime.Now.GetMilliseconds();
-            while (task.CanProcess(now))
-                task.Process();
+            publisher.Flush();
+            Flushed?.Invoke();
         }
 
-        public void Pipe(byte[] key, byte[] value, DateTime timestamp)
+        public void Pipe(byte[] key, byte[] value, DateTime timestamp, Headers headers)
         {
-            task.AddRecord(new ConsumeResult<byte[], byte[]>
-            {
-                Topic = topic,
-                TopicPartitionOffset = new TopicPartitionOffset(new TopicPartition(topic, task.Id.Partition), 0),
-                Message = new Message<byte[], byte[]> { Key = key, Value = value, Timestamp = new Timestamp(timestamp) }
-            });
+            publisher.PublishRecord(topic, key, value, timestamp, headers);
         }
     }
 }

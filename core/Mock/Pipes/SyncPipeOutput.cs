@@ -1,5 +1,4 @@
 ﻿using Confluent.Kafka;
-using log4net;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock.Sync;
 using System;
@@ -40,7 +39,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
             consumer.Dispose();
         }
 
-        public KeyValuePair<byte[], byte[]> Read()
+        public ConsumeResult<byte[], byte[]> Read()
         {
             int count = 0;
             while (count <= 10 && !token.IsCancellationRequested)
@@ -48,9 +47,8 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
                 var record = consumer.Consume(timeout);
                 if (record != null)
                 {
-                    KeyValuePair<byte[], byte[]> kv = KeyValuePair.Create(record.Message.Key, record.Message.Value);
                     consumer.Commit(record);
-                    return kv;
+                    return record;
                 }
                 else
                 {
@@ -62,18 +60,17 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
             throw new StreamsException($"No record found in topic {topicName} after {timeout.TotalSeconds}s !");
         }
 
-        public IEnumerable<KeyValuePair<byte[], byte[]>> ReadList()
+        public IEnumerable<ConsumeResult<byte[], byte[]>> ReadList()
         {
-            List<KeyValuePair<byte[], byte[]>> records = new List<KeyValuePair<byte[], byte[]>>();
+            List<ConsumeResult<byte[], byte[]>> records = new List<ConsumeResult<byte[], byte[]>>();
             ConsumeResult<byte[], byte[]> record = null;
             do
             {
                 record = consumer.Consume(timeout);
                 if (record != null)
                 {
-                    KeyValuePair<byte[], byte[]> kv = KeyValuePair.Create(record.Message.Key, record.Message.Value);
                     consumer.Commit(record);
-                    records.Add(kv);
+                    records.Add(record);
                 }
             } while (!token.IsCancellationRequested && record != null);
             return records;

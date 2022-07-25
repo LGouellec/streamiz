@@ -1,13 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;net5.0</TargetFrameworks>
-    <Version>1.1.5</Version>
+    <TargetFrameworks>netstandard2.0;net5.0;net6.0</TargetFrameworks>
     <Company>@LGouellec</Company>
     <Authors>@LGouellec</Authors>
     <Copyright>Copyright 2020</Copyright>
-    <RootNamespace>Streamiz.Kafka.Net.SchemaRegistry.Mock</RootNamespace>
-    <AssemblyName>Streamiz.Kafka.Net.SchemaRegistry.Mock</AssemblyName>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/LGouellec/kafka-streams-dotnet</PackageProjectUrl>
@@ -17,19 +14,26 @@
     <PackageIconUrl>https://raw.githubusercontent.com/LGouellec/kafka-streams-dotnet/master/resources/logo-kafka-stream-net.png</PackageIconUrl>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\key.snk</AssemblyOriginatorKeyFile>
-    <DelaySign>false</DelaySign>
+    <Version>1.3.0</Version>
+    <PackageVersion>1.3.0</PackageVersion>
+    <AssemblyVersion>1.3.0</AssemblyVersion>
+    <FileVersion>1.3.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\netstandard2.1\Streamiz.Kafka.Net.SchemaRegistry.Mock.xml</DocumentationFile>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
   <ItemGroup>
     <None Include="..\..\key.snk" Link="key.snk" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Confluent.SchemaRegistry" Version="1.6.2" />
+    <PackageReference Include="Confluent.SchemaRegistry" Version="1.9.0" />
   </ItemGroup>
 
   <ItemGroup>

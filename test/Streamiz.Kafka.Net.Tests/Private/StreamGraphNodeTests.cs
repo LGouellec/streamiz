@@ -2,10 +2,7 @@
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -18,11 +15,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var source = new StreamSourceNode<string, string>(
                 "topic",
                 "source-01",
-                new Stream.Internal.ConsumedInternal<string, string>("source-01", new StringSerDes(), new StringSerDes(), null));
+                new Stream.Internal.ConsumedInternal<string, string>("source-01", new StringSerDes(),
+                    new StringSerDes(), null));
             root.AppendChild(source);
-            
+
             Assert.IsFalse(root.IsEmpty);
-            Assert.AreEqual(new string[] { "ROOT-NODE" }, source.ParentNodeNames());
+            Assert.AreEqual(new string[] {"ROOT-NODE"}, source.ParentNodeNames());
         }
 
         [Test]
@@ -32,7 +30,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var source = new StreamSourceNode<string, string>(
                 "topic",
                 "source-01",
-                new Stream.Internal.ConsumedInternal<string, string>("source-01", new StringSerDes(), new StringSerDes(), null));
+                new Stream.Internal.ConsumedInternal<string, string>("source-01", new StringSerDes(),
+                    new StringSerDes(), null));
             root.AppendChild(source);
             root.RemoveChild(source);
 
@@ -46,15 +45,16 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var source = new StreamSourceNode<string, string>(
                 "topic",
                 "source-01",
-                new Stream.Internal.ConsumedInternal<string, string>("source-01", new StringSerDes(), new StringSerDes(), null));
+                new Stream.Internal.ConsumedInternal<string, string>("source-01", new StringSerDes(),
+                    new StringSerDes(), null));
             root.AppendChild(source);
             root.ClearChildren();
 
             Assert.IsTrue(root.IsEmpty);
         }
-        
+
         [Test]
-        public void WriteTopologyTest() 
+        public void WriteTopologyTest()
         {
             var builder = new InternalTopologyBuilder();
             List<StreamGraphNode> nodes = new List<StreamGraphNode>();
@@ -63,7 +63,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var source = new StreamSourceNode<string, string>(
                 "topic",
                 "source-01",
-                new Stream.Internal.ConsumedInternal<string, string>("source-01", new StringSerDes(), new StringSerDes(), null));
+                new Stream.Internal.ConsumedInternal<string, string>("source-01", new StringSerDes(),
+                    new StringSerDes(), null));
             root.AppendChild(source);
             nodes.Add(source);
 
@@ -79,11 +80,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 new Stream.Internal.Produced<string, string>(
                     new StringSerDes(),
                     new StringSerDes())
-                );
+            );
             filter.AppendChild(to);
             nodes.Add(to);
 
-            builder.BuildAndOptimizeTopology(root, nodes);
+            builder.BuildTopology(root, nodes);
 
             Assert.IsTrue(root.AllParentsWrittenToTopology);
             Assert.IsTrue(source.AllParentsWrittenToTopology);
@@ -91,9 +92,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.IsTrue(to.AllParentsWrittenToTopology);
 
             var topology = builder.BuildTopology();
-            Assert.IsTrue(topology.SourceOperators.ContainsKey("source-01"));
+            Assert.IsTrue(topology.SourceOperators.ContainsKey("topic"));
             Assert.IsTrue(topology.ProcessorOperators.ContainsKey("filter-02"));
-            Assert.IsTrue(topology.SinkOperators.ContainsKey("to-03"));
+            Assert.IsTrue(topology.SinkOperators.ContainsKey("topic2"));
         }
     }
 }

@@ -43,14 +43,18 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             {
                 foreach (var specs in topics)
                 {
-                    cluster.CreateTopic(specs.Name, specs.NumPartitions);
+                    if(specs.NumPartitions > 0)
+                        cluster.CreateTopic(specs.Name, specs.NumPartitions);
+                    else
+                        cluster.CreateTopic(specs.Name);
                 }
             });
         }
 
         public Task<List<DeleteRecordsResult>> DeleteRecordsAsync(IEnumerable<TopicPartitionOffset> topicPartitionOffsets, DeleteRecordsOptions options = null)
         {
-            throw new NotImplementedException();
+            var result = cluster.DeleteRecords(topicPartitionOffsets);
+            return Task.FromResult(result);
         }
 
         public Task DeleteTopicsAsync(IEnumerable<string> topics, DeleteTopicsOptions options = null)
@@ -74,7 +78,16 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                                 Value = cluster.DEFAULT_NUMBER_PARTITIONS.ToString(),
                                 Source = ConfigSource.DefaultConfig
                             }
-                        }
+                        },
+                        {"replication.factor", new ConfigEntryResult{
+                                IsDefault = true,
+                                IsReadOnly = true,
+                                IsSensitive = false,
+                                Name = "replication.factor",
+                                Value = "1",
+                                Source = ConfigSource.DefaultConfig
+                            }
+                        },
                     }
                 }
             });

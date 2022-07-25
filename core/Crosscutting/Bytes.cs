@@ -119,6 +119,11 @@ namespace Streamiz.Kafka.Net.Crosscutting
             return new Bytes(bytes);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
         public virtual int CompareTo(Bytes other)
         {
             BytesComparer comparer = new BytesComparer();

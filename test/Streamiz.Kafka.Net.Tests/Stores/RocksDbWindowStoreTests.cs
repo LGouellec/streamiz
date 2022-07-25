@@ -2,6 +2,7 @@
 using Moq;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
@@ -11,10 +12,10 @@ using Streamiz.Kafka.Net.State.RocksDb.Internal;
 using Streamiz.Kafka.Net.Tests.Helpers;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Tests.Stores
 {
@@ -40,12 +41,17 @@ namespace Streamiz.Kafka.Net.Tests.Stores
 
             id = new TaskId { Id = 0, Partition = 0 };
             partition = new TopicPartition("source", 0);
-            stateManager = new ProcessorStateManager(id, new List<TopicPartition> { partition }, null);
+            stateManager = new ProcessorStateManager(
+                id,
+                new List<TopicPartition> { partition },
+                null,
+                new MockChangelogRegister(),
+                new MockOffsetCheckpointManager());
 
             task = new Mock<AbstractTask>();
             task.Setup(k => k.Id).Returns(id);
 
-            context = new ProcessorContext(task.Object, config, stateManager);
+            context = new ProcessorContext(task.Object, config, stateManager, new StreamMetricsRegistry());
 
             store = new RocksDbWindowStore(
                 new RocksDbSegmentedBytesStore("test-w-store", (long)defaultRetention.TotalMilliseconds, 5000, new RocksDbWindowKeySchema()),

@@ -4,13 +4,8 @@ using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.Enumerator;
-using Streamiz.Kafka.Net.State.InMemory;
 using Streamiz.Kafka.Net.State.InMemory.Internal;
-using Streamiz.Kafka.Net.State.Internal;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 
 namespace Streamiz.Kafka.Net.Tests.Private
@@ -52,8 +47,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             InMemoryKeyValueEnumerator enumerator2 = new InMemoryKeyValueEnumerator(list2, forward);
             compositeEnumerator
                 = new CompositeKeyValueEnumerator<Bytes, byte[]>(
-                    new List<IKeyValueEnumerator<Bytes, byte[]>> { enumerator1, enumerator2 });
-
+                    new List<IKeyValueEnumerator<Bytes, byte[]>> {enumerator1, enumerator2});
         }
 
         [TearDown]
@@ -87,10 +81,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     Assert.AreEqual($"key{i}", Deserialize(compositeEnumerator.PeekNextKey().Get));
                     Assert.AreEqual($"value{i}", Deserialize(compositeEnumerator.Current.Value.Value));
                 }
+
                 Assert.AreEqual(4, i);
                 compositeEnumerator.Reset();
                 ++j;
-            }            
+            }
         }
     }
 }

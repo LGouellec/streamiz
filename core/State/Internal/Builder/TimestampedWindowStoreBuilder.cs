@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Streamiz.Kafka.Net.Crosscutting;
+﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State.Logging;
+using Streamiz.Kafka.Net.State.Metered;
 using Streamiz.Kafka.Net.State.Supplier;
 
 namespace Streamiz.Kafka.Net.State.Internal.Builder
@@ -25,7 +24,12 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
         public override ITimestampedWindowStore<K, V> Build()
         {
             var store = supplier.Get();
-            return new TimestampedWindowStore<K, V>(WrapLogging(store), supplier.WindowSize.Value, keySerdes, valueSerdes);
+            return new MeteredTimestampedWindowStore<K, V>(
+                WrapLogging(store),
+                supplier.WindowSize.Value,
+                keySerdes,
+                valueSerdes,
+                supplier.MetricsScope);
         }
 
         private IWindowStore<Bytes, byte[]> WrapLogging(IWindowStore<Bytes, byte[]> inner)
@@ -33,8 +37,7 @@ namespace Streamiz.Kafka.Net.State.Internal.Builder
             if (!LoggingEnabled)
                 return inner;
 
-            // TODO:
-            return inner;
+            return new ChangeLoggingTimestampedWindowBytesStore(inner);
         }
     }
 }

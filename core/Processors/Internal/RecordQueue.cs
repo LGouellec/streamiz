@@ -1,9 +1,10 @@
-﻿using Confluent.Kafka;
-using log4net;
+﻿using System;
+using System.Collections.Generic;
+using Confluent.Kafka;
+using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
-using System;
-using System.Collections.Generic;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -11,24 +12,27 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         IRecordQueue<ConsumeResult<byte[], byte[]>>,
         IComparable<RecordQueue>
     {
+        // TODO : add config to treat unorder event into one recordqueue, but impossible to combine with EOS
+
         // LOGGER + NAME
         private readonly string logPrefix;
-        private readonly ILog log = Logger.GetLogger(typeof(RecordQueue));
+        private readonly ILogger log = Logger.GetLogger(typeof(RecordQueue));
 
         private readonly List<ConsumeResult<byte[], byte[]>> queue;
-        private ConsumeResult<byte[], byte[]> currentRecord = null;
+        private ConsumeResult<byte[], byte[]> currentRecord;
         private long partitionTime = -1;
 
         private readonly ITimestampExtractor timestampExtractor;
         private readonly TopicPartition topicPartition;
         private readonly ISourceProcessor sourceProcessor;
+        private readonly Sensor droppedRecordsSensor;
 
-        public RecordQueue(
-            string logPrefix,
+        public RecordQueue(string logPrefix,
             string nameQueue,
             ITimestampExtractor timestampExtractor,
             TopicPartition topicPartition,
-            ISourceProcessor sourceProcessor)
+            ISourceProcessor sourceProcessor,
+            Sensor droppedRecordsSensor)
         {
             this.logPrefix = $"{logPrefix}- recordQueue [{nameQueue}] ";
             queue = new List<ConsumeResult<byte[], byte[]>>();
@@ -36,6 +40,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             this.timestampExtractor = timestampExtractor;
             this.topicPartition = topicPartition;
             this.sourceProcessor = sourceProcessor;
+            this.droppedRecordsSensor = droppedRecordsSensor;
         }
 
         public long HeadRecordTimestamp
@@ -51,20 +56,23 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public int Queue(ConsumeResult<byte[], byte[]> item)
         {
-            log.Debug($"{logPrefix}Adding new record in queue.");
+            log.LogDebug("{LogPrefix}Adding new record in queue", logPrefix);
             queue.Add(item);
             UpdateHeadRecord();
-            log.Debug($"{logPrefix}Record added in queue. New size : {Size}");
+            log.LogDebug("{LogPrefix}Record added in queue. New size : {Size}", logPrefix, Size);
             return Size;
         }
 
         public ConsumeResult<byte[], byte[]> Poll()
         {
-            log.Debug($"{logPrefix}Polling record in queue.");
+            log.LogDebug("{LogPrefix}Polling record in queue", logPrefix);
             var record = currentRecord;
             currentRecord = null;
             UpdateHeadRecord();
-            log.Debug($"{logPrefix}{(record == null ? "No r" : "R")}ecord polled. ({(record != null ? $"Record info [Topic:{record.Topic}|Partition:{record.Partition}|Offset:{record.Offset}]" : "")})");
+            log.LogDebug("{LogPrefix}{Record}record polled. ({RecordInfo})", logPrefix, record == null ? "No r" : "R",
+                record != null
+                    ? $"Record info [Topic:{record.Topic}|Partition:{record.Partition}|Offset:{record.Offset}]"
+                    : "");
             return record;
         }
 
@@ -73,7 +81,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             queue.Clear();
             currentRecord = null;
             partitionTime = -1;
-            log.Debug($"{logPrefix} cleared !");
+            log.LogDebug("{LogPrefix} cleared !", logPrefix);
         }
 
         #endregion
@@ -94,10 +102,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     throw new StreamsException("Fatal error in Timestamp extractor callback", e);
                 }
 
-                log.Debug("");
+                log.LogDebug("");
                 if (timestamp < 0)
                 {
-                    log.Warn($"Skipping record due to negative extracted timestamp. topic=[{record.Topic}] partition=[{record.Partition}] offset=[{record.Offset}] extractedTimestamp=[{timestamp}] extractor=[{timestampExtractor.GetType().Name}]");
+                    log.LogWarning(
+                        "Skipping record due to negative extracted timestamp. topic=[{Topic}] partition=[{Partition}] offset=[{Offset}] extractedTimestamp=[{Timestamp}] extractor=[{TimestampExtractor}]",
+                        record.Topic, record.Partition, record.Offset, timestamp, timestampExtractor.GetType().Name);
+                    droppedRecordsSensor.Record();
                     continue;
                 }
 

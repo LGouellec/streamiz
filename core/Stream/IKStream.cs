@@ -6,6 +6,8 @@ using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Streamiz.Kafka.Net.SerDes.Internal;
 
 namespace Streamiz.Kafka.Net.Stream
 {
@@ -55,6 +57,14 @@ namespace Streamiz.Kafka.Net.Stream
         IKStream<K, V>[] Branch(string named, params Func<K, V, bool>[] predicates);
 
         /// <summary>
+        /// Merge this stream and the given stream into one larger stream.
+        /// </summary>
+        /// <param name="stream">a stream which is to be merged into this stream</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A merged <see cref="IKStream{K, V}"/> containing all records from this and the provided <see cref="IKStream{K, V}"/> streams</returns>
+        IKStream<K, V> Merge(IKStream<K, V> stream, string named = null);
+
+        /// <summary>
         /// Create a new <see cref="IKStream{K, V}"/>
         /// that consists of all records of this stream which satisfy the given predicate.
         /// All records that DO NOT satisfy the predicate are dropped.
@@ -90,6 +100,19 @@ namespace Streamiz.Kafka.Net.Stream
         void To(string topicName, string named = null);
 
         /// <summary>
+        /// Materialize this stream to a topic using serializers specified in the method parameters.
+        /// The specified topic should be manually created before it is used(i.e., before the Kafka Streams application is
+        /// started).
+        /// </summary>
+        /// <param name="topicName">the topic name</param>
+        /// <param name="keySerdes">Key serializer</param>
+        /// <param name="valueSerdes">Value serializer</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> if <paramref name="topicName"/> is null</exception>
+        /// /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if <paramref name="topicName"/> is incorrect</exception>
+        void To(string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null);
+
+        /// <summary>
         /// Dynamically materialize this stream to topics using default serializers specified in the config and producer's.
         /// The topic names for each record to send to is dynamically determined based on the <code>Func&lt;K, V, IRecordContext, string&gt;</code>.
         /// </summary>
@@ -99,11 +122,32 @@ namespace Streamiz.Kafka.Net.Stream
 
         /// <summary>
         /// Dynamically materialize this stream to topics using default serializers specified in the config and producer's.
+        /// The topic names for each record to send to is dynamically determined based on the <code>Func&lt;K, V, IRecordContext, string&gt;</code>.
+        /// </summary>
+        /// <param name="topicExtractor">Extractor function to determine the name of the Kafka topic to write to for each record</param>
+        /// <param name="keySerdes">Key serializer</param>
+        /// <param name="valueSerdes">Value serializer</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        void To(Func<K, V, IRecordContext, string> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null);
+
+        /// <summary>
+        /// Dynamically materialize this stream to topics using default serializers specified in the config and producer's.
         /// The topic names for each record to send to is dynamically determined based on the <see cref="ITopicNameExtractor&lt;K, V&gt;"/>}.
         /// </summary>
         /// <param name="topicExtractor">The extractor to determine the name of the Kafka topic to write to for each record</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         void To(ITopicNameExtractor<K, V> topicExtractor, string named = null);
+
+        /// <summary>
+        /// Dynamically materialize this stream to a topic using serializers specified in the method parameters.
+        /// The topic names for each record to send to is dynamically determined based on the <see cref="ITopicNameExtractor&lt;K, V&gt;"/>}.
+        /// </summary>
+        /// <param name="topicExtractor">The extractor to determine the name of the Kafka topic to write to for each record</param>4
+        /// <param name="keySerdes">Key serializer</param>
+        /// <param name="valueSerdes">Value serializer</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        void To(ITopicNameExtractor<K, V> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null);
+
 
         /// <summary>
         /// Materialize this stream to a topic using <typeparamref name="KS"/> and <typeparamref name="VS"/> serializers specified in the method parameters.
@@ -503,6 +547,33 @@ namespace Streamiz.Kafka.Net.Stream
         IKGroupedStream<KR, V> GroupBy<KR, KRS>(IKeyValueMapper<K, V, KR> keySelector, string named = null) where KRS : ISerDes<KR>, new();
 
         /// <summary>
+        /// Group the records of this <see cref="IKStream{K, V}"/> on a new key that is selected using the provided <see cref="IKeyValueMapper{K, V, VR}"/> and default serializers and deserializers.
+        /// Grouping a stream on the record key is required before an aggregation operator can be applied to the data <see cref="IKGroupedStream{KR, V}"/>
+        /// The provider <see cref="IKeyValueMapper{K, V, VR}"/> selects a new key (which may or may not be of the same type) while preserving the
+        /// original values.
+        /// If the new record key is null the record will not be included in the resulting.
+        /// Because a new key is selected, an internal repartitioning topic may need to be created in Kafka if a
+        /// later operator depends on the newly selected key.
+        /// This topic will be named "${applicationId}-&lt;name&gt;-repartition", where "applicationId" is user-specified in
+        /// <see cref="IStreamConfig"/> via parameter <see cref="IStreamConfig.ApplicationId"/>.
+        /// "&lt;name&gt;" is an internally generated name, and "-repartition" is a fixed suffix.
+        /// All data of this stream will be redistributed through the repartitioning topic by writing all records to it,
+        /// and rereading all records from it, such that the resulting <see cref="IKGroupedStream{KR, V}"/> is partitioned on the new key.
+        /// This operation is equivalent to calling <see cref="IKStream{K, V}.SelectKey{KR}(Func{K, V, KR}, string)"/> followed by <see cref="IKStream{K, V}.GroupByKey(string)"/>.
+        /// If the key type is changed, it is recommended to use <see cref="IKStream{K, V}.GroupBy{KR}(Func{K, V, KR}, string)"/> instead.
+        /// </summary>
+        /// <typeparam name="KR">the key type of the result</typeparam>
+        /// <typeparam name="KRS">New serializer for <typeparamref name="KR"/> type</typeparam>
+        /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
+        /// <param name="keySelector">A <see cref="IKeyValueMapper{K, V, VR}"/> selector that computes a new key for grouping</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKGroupedStream{KR, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
+        IKGroupedStream<KR, V> GroupBy<KR, KRS, VS>(IKeyValueMapper<K, V, KR> keySelector, string named = null)
+            where KRS : ISerDes<KR>, new()
+            where VS : ISerDes<V>, new();
+
+        /// <summary>
         /// Group the records of this <see cref="IKStream{K, V}"/> on a new key that is selected using the provided <code>Func&lt;K, V, VR&gt;</code> and default serializers and deserializers.
         /// Grouping a stream on the record key is required before an aggregation operator can be applied to the data <see cref="IKGroupedStream{KR, V}"/>
         /// The provider <code>Func&lt;K, V, VR&gt;</code> selects a new key (which may or may not be of the same type) while preserving the
@@ -526,6 +597,33 @@ namespace Streamiz.Kafka.Net.Stream
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
         IKGroupedStream<KR, V> GroupBy<KR, KRS>(Func<K, V, KR> keySelector, string named = null) where KRS : ISerDes<KR>, new();
 
+                /// <summary>
+        /// Group the records of this <see cref="IKStream{K, V}"/> on a new key that is selected using the provided <code>Func&lt;K, V, VR&gt;</code> and default serializers and deserializers.
+        /// Grouping a stream on the record key is required before an aggregation operator can be applied to the data <see cref="IKGroupedStream{KR, V}"/>
+        /// The provider <code>Func&lt;K, V, VR&gt;</code> selects a new key (which may or may not be of the same type) while preserving the
+        /// original values.
+        /// If the new record key is null the record will not be included in the resulting.
+        /// Because a new key is selected, an internal repartitioning topic may need to be created in Kafka if a
+        /// later operator depends on the newly selected key.
+        /// This topic will be named "${applicationId}-&lt;name&gt;-repartition", where "applicationId" is user-specified in
+        /// <see cref="IStreamConfig"/> via parameter <see cref="IStreamConfig.ApplicationId"/>.
+        /// "&lt;name&gt;" is an internally generated name, and "-repartition" is a fixed suffix.
+        /// All data of this stream will be redistributed through the repartitioning topic by writing all records to it,
+        /// and rereading all records from it, such that the resulting <see cref="IKGroupedStream{KR, V}"/> is partitioned on the new key.
+        /// This operation is equivalent to calling <see cref="IKStream{K, V}.SelectKey{KR}(Func{K, V, KR}, string)"/> followed by <see cref="IKStream{K, V}.GroupByKey(string)"/>.
+        /// If the key type is changed, it is recommended to use <see cref="IKStream{K, V}.GroupBy{KR}(Func{K, V, KR}, string)"/> instead.
+        /// </summary>
+        /// <typeparam name="KR">the key type of the result</typeparam>
+        /// <typeparam name="KRS">New serializer for <typeparamref name="KR"/> type</typeparam>
+        /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
+        /// <param name="keySelector">A function selector that computes a new key for grouping</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKGroupedStream{KR, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
+        IKGroupedStream<KR, V> GroupBy<KR, KRS, VS>(Func<K, V, KR> keySelector, string named = null) 
+                    where KRS : ISerDes<KR>, new()
+                    where VS : ISerDes<V>, new();
+        
         /// <summary>
         /// Group the records by their current key into a <see cref="IKGroupedStream{K, V}"/> while preserving the original values
         /// and default serializers and deserializers.
@@ -1460,5 +1558,136 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">a name config used to name the processor in the topology</param>
         /// <returns>a <see cref="IKTable{K, V}"/> that contains the same records as this <see cref="IKStream{K, V}"/></returns>>
         IKTable<K, V> ToTable(Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        
+        /// <summary>
+        /// Materialize this stream to an auto-generated repartition topic and create a new <see cref="IKStream{K,V}"/>
+        /// from the auto-generated topic using default serializers, deserializers, and producer's partitioner.
+        /// The number of partitions is determined based on the upstream topics partition numbers.
+        /// <para>
+        /// The created topic is considered as an internal topic and is meant to be used only by the current Kafka Streams instance.
+        /// Similar to auto-repartitioning, the topic will be created with infinite retention time and data will be automatically purged by Kafka Streams.
+        /// The topic will be named as "${applicationId}-&lt;name&gt;-repartition", where "applicationId" is user-specified in
+        /// <see cref="IStreamConfig.ApplicationId"/>.
+        /// "&lt;name&gt;" is an internally generated name, and "-repartition" is a fixed suffix.
+        /// </para>
+        /// </summary>
+        /// <param name="repartitioned">Repartition instructions parameter</param>
+        /// <returns><see cref="IKStream{K,V}"/> that contains the exact same repartitioned records as this stream.</returns>
+        IKStream<K, V> Repartition(Repartitioned<K, V> repartitioned = null);
+
+        /// <summary>
+        /// Transform each record of the input stream into a new record in the output stream (both key and value type can be
+        /// altered arbitrarily) with an asynchronous function. 
+        /// The provided async mapper is applied to each input record and computes a new output record.
+        /// Thus, an input record &lt;<typeparamref name="K"/>, <typeparamref name="V"/>&gt; can be transformed into an output record &lt;<typeparamref name="K1"/>, <typeparamref name="V1"/>&gt;.
+        /// This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.
+        /// By default, the retry policy is null (so means without policy). You can use <see cref="RetryPolicyBuilder"/> to specify your own behavior regarding your retriable logic about this asynchronous processing.
+        /// <paramref name="requestSerDes"/> and <paramref name="responseSerDes"/> will be use for serialize and deserialize records from reauest source topic and to response sink topic.
+        /// If you still this parameters null, we will try to use the default key/value serdes on the configuration.
+        /// </summary>
+        /// <typeparam name="K1">the key type of the result stream</typeparam>
+        /// <typeparam name="V1">the value type of the result stream</typeparam>
+        /// <param name="asyncMapper">A asynchronous function to map a new key/value pair record</param>
+        /// <param name="retryPolicy">Retry policy behavior for this async processing</param>
+        /// <param name="requestSerDes">Serdes used for serialized/deserialized key and value for the request topic</param>
+        /// <param name="responseSerDes">Serdes used for serialized/deserialized new key and value for the response topic</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKStream{K1, V1}"/> that contains records with new key and value (possibly both of different type)</returns>
+        IKStream<K1, V1> MapAsync<K1, V1>(
+            Func<ExternalRecord<K, V>, ExternalContext, Task<KeyValuePair<K1, V1>>> asyncMapper,
+            RetryPolicy retryPolicy = null,
+            RequestSerDes<K, V> requestSerDes = null,
+            ResponseSerDes<K1, V1> responseSerDes = null,
+            string named = null);
+        
+        /// <summary>
+        /// Transform each record of the input stream into zero or more records in the output stream (both key and value
+        /// can be altered arbitrarily) with an asynchronous function.
+        /// The provided async mapper is applied to each input record and computes a new list of output records.
+        /// Thus, an input record &lt;<typeparamref name="K"/>, <typeparamref name="V"/>&gt; can be transformed into an enumerable list of output records &lt;<typeparamref name="K1"/>, <typeparamref name="V1"/>&gt;.
+        /// This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.
+        /// By default, the retry policy is null (so means without policy). You can use <see cref="RetryPolicyBuilder"/> to specify your own behavior regarding your retriable logic about this asynchronous processing.
+        /// <paramref name="requestSerDes"/> and <paramref name="responseSerDes"/> will be use for serialize and deserialize records from reauest source topic and to response sink topic.
+        /// If you still this parameters null, we will try to use the default key/value serdes on the configuration.
+        /// </summary>
+        /// <typeparam name="K1">the key type of the result stream</typeparam>
+        /// <typeparam name="V1">the value type of the result stream</typeparam>
+        /// <param name="asyncMapper">A asynchronous function to map an enumerable collection of key/value pair</param>
+        /// <param name="retryPolicy">Retry policy behavior for this async processing</param>
+        /// <param name="requestSerDes">Serdes used for serialized/deserialized key and value for the request topic</param>
+        /// <param name="responseSerDes">Serdes used for serialized/deserialized new key and value for the response topic</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKStream{K1, V1}"/> that contains records with new key and value (possibly both of different type)</returns>
+        IKStream<K1, V1> FlatMapAsync<K1, V1>(
+            Func<ExternalRecord<K, V>, ExternalContext, Task<IEnumerable<KeyValuePair<K1, V1>>>> asyncMapper,
+            RetryPolicy retryPolicy = null,
+            RequestSerDes<K, V> requestSerDes = null,
+            ResponseSerDes<K1, V1> responseSerDes = null,
+            string named = null);
+        
+        /// <summary>
+        /// Transform each record of the input stream into a new record in the output stream (value type can be
+        /// altered arbitrarily) with an asynchronous function. 
+        /// The provided async mapper is applied to each input record and computes a new output record.
+        /// Thus, an input record &lt;<typeparamref name="K"/>, <typeparamref name="V"/>&gt; can be transformed into an output record &lt;<typeparamref name="K"/>, <typeparamref name="V1"/>&gt;.
+        /// This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.
+        /// By default, the retry policy is null (so means without policy). You can use <see cref="RetryPolicyBuilder"/> to specify your own behavior regarding your retriable logic about this asynchronous processing.
+        /// <paramref name="requestSerDes"/> and <paramref name="responseSerDes"/> will be use for serialize and deserialize records from reauest source topic and to response sink topic.
+        /// If you still this parameters null, we will try to use the default key/value serdes on the configuration.
+        /// </summary>
+        /// <typeparam name="V1">the value type of the result stream</typeparam>
+        /// <param name="asyncMapper">A asynchronous function to map a new key/value pair record</param>
+        /// <param name="retryPolicy">Retry policy behavior for this async processing</param>
+        /// <param name="requestSerDes">Serdes used for serialized/deserialized key and value for the request topic</param>
+        /// <param name="responseSerDes">Serdes used for serialized/deserialized new key and value for the response topic</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKStream{K, V1}"/> that contains records with new key and value (possibly both of different type)</returns>
+        IKStream<K, V1> MapValuesAsync<V1>(
+            Func<ExternalRecord<K, V>, ExternalContext, Task<V1>> asyncMapper,
+            RetryPolicy retryPolicy = null,
+            RequestSerDes<K, V> requestSerDes = null,
+            ResponseSerDes<K, V1> responseSerDes = null,
+            string named = null);
+        
+        /// <summary>
+        /// Transform each record of the input stream into zero or more records in the output stream (bot
+        /// can be altered arbitrarily) with an asynchronous function.
+        /// The provided async mapper is applied to each input record and computes a new list of output records.
+        /// Thus, an input record &lt;<typeparamref name="K"/>, <typeparamref name="V"/>&gt; can be transformed into an enumerable list of output records &lt;<typeparamref name="K"/>, <typeparamref name="V1"/>&gt;.
+        /// This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.
+        /// By default, the retry policy is null (so means without policy). You can use <see cref="RetryPolicyBuilder"/> to specify your own behavior regarding your retriable logic about this asynchronous processing.
+        /// <paramref name="requestSerDes"/> and <paramref name="responseSerDes"/> will be use for serialize and deserialize records from reauest source topic and to response sink topic.
+        /// If you still this parameters null, we will try to use the default key/value serdes on the configuration.
+        /// </summary>
+        /// <typeparam name="V1">the value type of the result stream</typeparam>
+        /// <param name="asyncMapper">A asynchronous function to map an enumerable collection of key/value pair</param>
+        /// <param name="retryPolicy">Retry policy behavior for this async processing</param>
+        /// <param name="requestSerDes">Serdes used for serialized/deserialized key and value for the request topic</param>
+        /// <param name="responseSerDes">Serdes used for serialized/deserialized new key and value for the response topic</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A <see cref="IKStream{K, V1}"/> that contains records with new key and value (possibly both of different type)</returns>
+        IKStream<K, V1> FlatMapValuesAsync<V1>(
+            Func<ExternalRecord<K, V>, ExternalContext, Task<IEnumerable<V1>>> asyncMapper,
+            RetryPolicy retryPolicy = null,
+            RequestSerDes<K, V> requestSerDes = null,
+            ResponseSerDes<K, V1> responseSerDes = null,
+            string named = null);
+
+        /// <summary>
+        /// Perform an asynchronous action on each record of {@code KStream}. Note that this is a terminal operation that returns void.
+        /// This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.
+        /// By default, the retry policy is null (so means without policy). You can use <see cref="RetryPolicyBuilder"/> to specify your own behavior regarding your retriable logic about this asynchronous processing.
+        /// <paramref name="requestSerDes"/> will be use for serialize and deserialize records from reauest source topic.
+        /// If you still this parameters null, we will try to use the default key/value serdes on the configuration.
+        /// </summary>
+        /// <param name="asyncAction">An asynchronous action to perform on each record</param>
+        /// <param name="retryPolicy">Retry policy behavior for this async processing</param>
+        /// <param name="requestSerDes">Serdes used for serialized/deserialized key and value for the request topic</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        void ForeachAsync(
+            Func<ExternalRecord<K, V>, ExternalContext, Task> asyncAction,
+            RetryPolicy retryPolicy = null,
+            RequestSerDes<K, V> requestSerDes = null,
+            string named = null);
     }
 }

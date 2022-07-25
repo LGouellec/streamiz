@@ -1,11 +1,11 @@
-﻿using log4net;
-using Streamiz.Kafka.Net.Crosscutting;
+﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.State.Enumerator;
 using Streamiz.Kafka.Net.State.InMemory.Internal;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Streamiz.Kafka.Net.State.InMemory
 {
@@ -15,7 +15,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
     /// </summary>
     public class InMemoryKeyValueStore : IKeyValueStore<Bytes, byte[]>
     {
-        private static readonly ILog log = Logger.GetLogger(typeof(InMemoryKeyValueStore));
+        private static readonly ILogger log = Logger.GetLogger(typeof(InMemoryKeyValueStore));
         private BytesComparer bytesComparer = new BytesComparer();
         private int size = 0;
         private readonly IDictionary<Bytes, byte[]> map = new Dictionary<Bytes, byte[]>(new BytesComparer());
@@ -57,7 +57,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// Users only need to implement this function but should NEVER need to call this api explicitly
         /// as it will be called by the library automatically when necessary
         /// </summary>
-        public void Close()
+        public virtual void Close()
         {
             map.Clear();
             size = 0;
@@ -69,7 +69,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// </summary>
         /// <param name="key">The key</param>
         /// <returns>Return old value or null if key not found</returns>
-        public byte[] Delete(Bytes key)
+        public virtual byte[] Delete(Bytes key)
         {
             byte[] v = map.ContainsKey(key) ? map[key] : null;
             size -= map.Remove(key) ? 1 : 0;
@@ -79,20 +79,20 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// <summary>
         /// Flush any cached data. Nothing for moment in <see cref="InMemoryKeyValueStore"/>
         /// </summary>
-        public void Flush() { /* Nothing => IN MEMORY */ }
+        public virtual void Flush() { /* Nothing => IN MEMORY */ }
 
         /// <summary>
         /// Get the value corresponding to this key.
         /// </summary>
         /// <param name="key">The key to fetch</param>
         /// <returns>The value or null if no value is found</returns>
-        public byte[] Get(Bytes key) => map.ContainsKey(key) ? map[key] : null;
+        public virtual byte[] Get(Bytes key) => map.ContainsKey(key) ? map[key] : null;
 
         /// <summary>
         /// Return an iterator over all keys in this store. No ordering guarantees are provided.
         /// </summary>
         /// <returns>An iterator of all key/value pairs in the store.</returns>
-        public IEnumerable<KeyValuePair<Bytes, byte[]>> All()
+        public virtual IEnumerable<KeyValuePair<Bytes, byte[]>> All()
             => All(true);
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// </summary>
         /// <returns>A reverse enumerator of all key/value pairs in the store.</returns>
         /// <exception cref="InvalidStateStoreException">if the store is not initialized</exception>
-        public IEnumerable<KeyValuePair<Bytes, byte[]>> ReverseAll()
+        public virtual IEnumerable<KeyValuePair<Bytes, byte[]>> ReverseAll()
             => All(false);
 
         /// <summary>
@@ -110,7 +110,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// <param name="from">The first key that could be in the range, where iteration starts from.</param>
         /// <param name="to">The last key that could be in the range, where iteration ends.</param>
         /// <returns>The enumerator for this range, from smallest to largest bytes.</returns>
-        public IKeyValueEnumerator<Bytes, byte[]> Range(Bytes from, Bytes to)
+        public virtual IKeyValueEnumerator<Bytes, byte[]> Range(Bytes from, Bytes to)
             => Range(from, to, true);
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// <param name="to">The last key that could be in the range, where iteration ends.</param>
         /// <returns>The reverse enumerator for this range, from smallest to largest bytes.</returns>
         /// <exception cref="InvalidStateStoreException">if the store is not initialized</exception>
-        public IKeyValueEnumerator<Bytes, byte[]> ReverseRange(Bytes from, Bytes to)
+        public virtual IKeyValueEnumerator<Bytes, byte[]> ReverseRange(Bytes from, Bytes to)
             => Range(from, to, false);
 
         /// <summary>
@@ -135,7 +135,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
             if (root != null)
             {
                 // register the store
-                context.Register(root, (key, value) => Put(key, value));
+                context.Register(root, (key, value, timestamp) => Put(key, value));
             }
 
             IsOpen = true;
@@ -146,7 +146,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// </summary>
         /// <param name="key">The key to associate the value to</param>
         /// <param name="value">The value to update, it can be null.if the serialized bytes are also null it is interpreted as deletes</param>
-        public void Put(Bytes key, byte[] value)
+        public virtual void Put(Bytes key, byte[] value)
         {
             if (value == null)
                 size -= map.Remove(key) ? 1 : 0;
@@ -158,7 +158,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// Update all the given key/value pairs.
         /// </summary>
         /// <param name="entries">A list of entries to put into the store</param>
-        public void PutAll(IEnumerable<KeyValuePair<Bytes, byte[]>> entries)
+        public virtual void PutAll(IEnumerable<KeyValuePair<Bytes, byte[]>> entries)
         {
             foreach (var kp in entries)
                 Put(kp.Key, kp.Value);
@@ -170,7 +170,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// <param name="key">The key to associate the value to</param>
         /// <param name="value">The value to update, it can be null.if the serialized bytes are also null it is interpreted as deletes</param>
         /// <returns>The old value or null if there is no such key.</returns>
-        public byte[] PutIfAbsent(Bytes key, byte[] value)
+        public virtual byte[] PutIfAbsent(Bytes key, byte[] value)
         {
             var old = Get(key);
             if (old == null)
@@ -183,10 +183,10 @@ namespace Streamiz.Kafka.Net.State.InMemory
         {
             if (bytesComparer.Compare(from, to) > 0)
             {
-                log.Warn("Returning empty iterator for fetch with invalid key range: from > to. " +
-                    "This may be due to range arguments set in the wrong order, " +
-                    "or serdes that don't preserve ordering when lexicographically comparing the serialized bytes. " +
-                    "Note that the built-in numerical serdes do not follow this for negative numbers");
+                log.LogWarning("Returning empty iterator for fetch with invalid key range: from > to. " +
+                            "This may be due to range arguments set in the wrong order, " +
+                            "or serdes that don't preserve ordering when lexicographically comparing the serialized bytes. " +
+                            "Note that the built-in numerical serdes do not follow this for negative numbers");
                 return new EmptyKeyValueEnumerator<Bytes, byte[]>();
             }
 

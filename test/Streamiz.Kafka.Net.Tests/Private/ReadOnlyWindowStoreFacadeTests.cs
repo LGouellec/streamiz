@@ -5,6 +5,7 @@ using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.InMemory;
 using Streamiz.Kafka.Net.State.Internal;
 using System;
+using Streamiz.Kafka.Net.State.Metered;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -18,7 +19,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
         public void Setup()
         {
             inmemorystore = new InMemoryWindowStore("store", TimeSpan.FromMinutes(20), 1000 * 2);
-            store = new TimestampedWindowStore<string, int>(inmemorystore, 1000 * 2, new StringSerDes(), new ValueAndTimestampSerDes<int>(new Int32SerDes()));
+            store = new MeteredTimestampedWindowStore<string, int>(inmemorystore, 1000 * 2, new StringSerDes(),
+                new ValueAndTimestampSerDes<int>(new Int32SerDes()), "in-memory-window");
             facade = new ReadOnlyWindowStoreFacade<string, int>(store);
         }
 
@@ -96,7 +98,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.AreEqual("coucou-bis", list[1].Key.Key);
             Assert.AreEqual(TimeSpan.FromSeconds(2), list[1].Key.Window.TotalTime);
             Assert.AreEqual(dt.AddMilliseconds(100).GetMilliseconds(), list[1].Key.Window.StartMs);
-
         }
     }
 }

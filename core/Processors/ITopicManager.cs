@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    public interface ITopicManager : IDisposable
+    internal interface ITopicManager : IDisposable
     {
         IAdminClient AdminClient { get; }
 
-        Task<IEnumerable<string>> ApplyAsync(IDictionary<string, InternalTopicConfig> topics);
+        Task<IEnumerable<string>> ApplyAsync(int topologyId, IDictionary<string, InternalTopicConfig> topics);
     }
 }

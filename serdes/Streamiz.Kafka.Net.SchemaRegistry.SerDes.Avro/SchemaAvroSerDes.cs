@@ -1,4 +1,3 @@
-﻿using Confluent.SchemaRegistry;
 using Confluent.SchemaRegistry.Serdes;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.SerDes;
@@ -12,47 +11,16 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
     /// </summary>
     /// <typeparam name="T">type of avro bean
     /// </typeparam>
-    public class SchemaAvroSerDes<T> : SchemaSerDes<T>
+    public class SchemaAvroSerDes<T> : SchemaSerDes<T, AvroSerializerConfig>
     {
-        internal SchemaRegistryConfig GetConfig(ISchemaRegistryConfig config)
+        /// <summary>
+        /// Empty constructor
+        /// </summary>
+        public SchemaAvroSerDes() :
+            base ("avro")
         {
-            SchemaRegistryConfig c = new SchemaRegistryConfig();
-            c.Url = config.SchemaRegistryUrl;
-            if (config.SchemaRegistryMaxCachedSchemas.HasValue)
-            {
-                c.MaxCachedSchemas = config.SchemaRegistryMaxCachedSchemas;
-            }
-
-            if (config.SchemaRegistryRequestTimeoutMs.HasValue)
-            {
-                c.RequestTimeoutMs = config.SchemaRegistryRequestTimeoutMs;
-            }
-            if (!string.IsNullOrEmpty(config.BasicAuthUserInfo))
-            {
-                c.BasicAuthUserInfo = config.BasicAuthUserInfo;
-            }
-
-            if (config.BasicAuthCredentialsSource.HasValue)
-            {
-                c.BasicAuthCredentialsSource = (AuthCredentialsSource)config.BasicAuthCredentialsSource.Value;
-            }
-            return c;
         }
-
-        internal AvroSerializerConfig GetSerializerConfig(ISchemaRegistryConfig config)
-        {
-            AvroSerializerConfig c = new AvroSerializerConfig();
-            if (config.AutoRegisterSchemas.HasValue)
-            {
-                c.AutoRegisterSchemas = config.AutoRegisterSchemas;
-            }
-            if (config.SubjectNameStrategy.HasValue)
-            {
-                c.SubjectNameStrategy = (Confluent.SchemaRegistry.SubjectNameStrategy)config.SubjectNameStrategy.Value;
-            }
-            return c;
-        }
-
+        
         /// <summary>
         /// Initialize method with a current context which contains <see cref="IStreamConfig"/>.
         /// Can be used to initialize the serdes according to some parameters present in the configuration such as the schema.registry.url

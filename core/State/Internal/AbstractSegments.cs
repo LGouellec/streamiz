@@ -1,17 +1,17 @@
-﻿using log4net;
-using Streamiz.Kafka.Net.Crosscutting;
+﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
     internal abstract class AbstractSegments<S> : ISegments<S>
         where S : ISegment
     {
-        protected readonly ILog logger = null;
+        protected readonly ILogger logger;
         protected readonly SortedDictionary<long, S> segments = new SortedDictionary<long, S>(new LongComparer());
 
         protected readonly string name;
@@ -94,7 +94,7 @@ namespace Streamiz.Kafka.Net.State.Internal
                     .ToList()
                     .ForEach(segId => GetOrCreateSegment(segId, context));
             }
-            catch (Exception ex) {
+            catch (Exception) {
                 throw new ProcessorStateException($"{Path.Combine(context.StateDir, name)}  doesn't exist and cannot be created for segments {name}");
             }
 
@@ -130,10 +130,10 @@ namespace Streamiz.Kafka.Net.State.Internal
                     kv.Value.Destroy();
                 }catch (Exception e)
                 {
-                    logger.Error($"Error destroying state store {kv.Value.Name}", e);
+                    logger.LogError(e, "Error destroying state store {Name}", kv.Value.Name);
                 }
             }
-        }
+        } 
 
         private long SegmentIdFromSegmentName(string segmentName)
         {

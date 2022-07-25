@@ -1,4 +1,6 @@
-﻿using Confluent.Kafka;
+﻿using System;
+using System.Threading;
+using Confluent.Kafka;
 using NUnit.Framework;
 
 namespace Streamiz.Kafka.Net.Tests.Helpers
@@ -9,6 +11,17 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
         {
             Assert.AreEqual(expected.Item1, actual.Message.Key);
             Assert.AreEqual(expected.Item2, actual.Message.Value);
+        }
+        
+        public static void WaitUntil(Func<bool> condition, TimeSpan timeout, TimeSpan step)
+        {
+            DateTime start = DateTime.Now;
+            while (!condition())
+            {
+                if (start.Add(timeout) < DateTime.Now)
+                    return;
+                Thread.Sleep((int)step.TotalMilliseconds);
+            }
         }
     }
 }

@@ -19,16 +19,34 @@ namespace Streamiz.Kafka.Net.SerDes
             }
         }
     }
-
-    internal class ValueAndTimestampSerDes<V> : AbstractSerDes<ValueAndTimestamp<V>>
+    
+    /// <summary>
+    /// SerDes for <see cref="ValueAndTimestamp{V}"/>.
+    /// </summary>
+    /// <typeparam name="V">inner value type</typeparam>
+    public class ValueAndTimestampSerDes<V> : AbstractSerDes<ValueAndTimestamp<V>>
     {
-        public ISerDes<V> InnerSerdes { get; internal set; }
+        /// <summary>
+        /// Inner serdes.
+        /// </summary>
+        public ISerDes<V> InnerSerdes { get; }
 
+        /// <summary>
+        /// Constructor with inner serdes
+        /// </summary>
+        /// <param name="innerSerdes">Inner serdes</param>
+        /// <exception cref="StreamsException">exceptiont throws if inner serdes is null</exception>
         public ValueAndTimestampSerDes(ISerDes<V> innerSerdes)
         {
             InnerSerdes = innerSerdes ?? throw new StreamsException($"The inner serdes is not compatible to the actual value type {typeof(V).FullName}. Provide correct Serdes via method parameters(using the DSL)");
         }
 
+        /// <summary>
+        /// Deserialize byte array into a <see cref="ValueAndTimestamp{V}" /> instance.
+        /// </summary>
+        /// <param name="data">data serialized</param>
+        /// <param name="context">serialization context</param>
+        /// <returns>return a value and timestamp record</returns>
         public override ValueAndTimestamp<V> Deserialize(byte[] data, SerializationContext context)
         {
             if (data != null)
@@ -42,6 +60,12 @@ namespace Streamiz.Kafka.Net.SerDes
                 return null;
         }
 
+        /// <summary>
+        /// Serialize a <see cref="ValueAndTimestamp{V}" /> instance into a byte array.
+        /// </summary>
+        /// <param name="data">data to serialize</param>
+        /// <param name="context">serialization context</param>
+        /// <returns>serialized bytes</returns>
         public override byte[] Serialize(ValueAndTimestamp<V> data, SerializationContext context)
         {
             if (data != null)
@@ -62,5 +86,15 @@ namespace Streamiz.Kafka.Net.SerDes
                 return null;
         }
 
+        /// <summary>
+        /// Initialize method with a current context which contains <see cref="IStreamConfig"/>.
+        /// Can be used to initialize the serdes according to some parameters present in the configuration such as the schema.registry.url
+        /// </summary>
+        /// <param name="context">SerDesContext with stream configuration</param>
+        public override void Initialize(SerDesContext context)
+        {
+            base.Initialize(context);
+            InnerSerdes.Initialize(context);
+        }
     }
 }

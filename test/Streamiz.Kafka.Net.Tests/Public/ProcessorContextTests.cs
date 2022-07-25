@@ -1,11 +1,13 @@
 ﻿using Confluent.Kafka;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using System;
 using System.Collections.Generic;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Tests.Public
 {
@@ -18,8 +20,11 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.ApplicationId = "test";
             var stateMgt = new ProcessorStateManager(
                 new TaskId() { Id = 0, Partition = 0 },
-                new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) }, null);
-            ProcessorContext context = new ProcessorContext(null, config, stateMgt);
+                new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) },
+                null,
+                new MockChangelogRegister(),
+                new MockOffsetCheckpointManager());
+            ProcessorContext context = new ProcessorContext(null, config, stateMgt, new StreamMetricsRegistry());
 
             Assert.AreEqual("test", context.ApplicationId);
         }
@@ -32,8 +37,11 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.ApplicationId = "test";
             var stateMgt = new ProcessorStateManager(
                 new TaskId() { Id = 0, Partition = 0 },
-                new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) }, null);
-            ProcessorContext context = new ProcessorContext(null, config, stateMgt);
+                new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) },
+                null,
+                new MockChangelogRegister(),
+                new MockOffsetCheckpointManager());
+            ProcessorContext context = new ProcessorContext(null, config, stateMgt, new StreamMetricsRegistry());
             ConsumeResult<byte[], byte[]> result = new ConsumeResult<byte[], byte[]> { Message = new Message<byte[], byte[]>() };
             result.Topic = "topic";
             result.Partition = 0;
@@ -57,8 +65,10 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var stateMgt = new ProcessorStateManager(
                 new TaskId() { Id = 0, Partition = 0 },
                 new List<Confluent.Kafka.TopicPartition> { new Confluent.Kafka.TopicPartition("test", 0) }, 
-                null);
-            ProcessorContext context = new ProcessorContext(task, config, stateMgt);
+                null,
+                new MockChangelogRegister(),
+                new MockOffsetCheckpointManager());
+            ProcessorContext context = new ProcessorContext(task, config, stateMgt, new StreamMetricsRegistry());
 
             Assert.AreEqual(id, context.Id);
         }
@@ -73,8 +83,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 "thread",
                 taskId,
                 new List<TopicPartition>(),
-                new Stream.Internal.ProcessorTopology(null, null, null, null, null, null, null),
-                null, config , null, new SyncProducer(config.ToProducerConfig()));
+                new Stream.Internal.ProcessorTopology(null, null, null, null, null, null, null, null),
+                null, config , null, new SyncProducer(config.ToProducerConfig()), new MockChangelogRegister(), new StreamMetricsRegistry());
 
             return streamTask;
         }

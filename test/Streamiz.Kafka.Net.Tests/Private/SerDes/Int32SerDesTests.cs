@@ -1,6 +1,5 @@
 ﻿using NUnit.Framework;
 using Streamiz.Kafka.Net.SerDes;
-using System;
 
 namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 {
@@ -10,7 +9,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         public void SerializeData()
         {
             int i = 100;
-            byte[] b = new byte[] { 100, 0, 0, 0 };
+            byte[] b = new byte[] {100, 0, 0, 0};
             var serdes = new Int32SerDes();
             var r = serdes.Serialize(i, new Confluent.Kafka.SerializationContext());
             Assert.IsNotNull(r);
@@ -22,7 +21,8 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         {
             int i = 300;
             var serdes = new Int32SerDes();
-            var r = serdes.Deserialize(serdes.Serialize(i, new Confluent.Kafka.SerializationContext()), new Confluent.Kafka.SerializationContext());
+            var r = serdes.Deserialize(serdes.Serialize(i, new Confluent.Kafka.SerializationContext()),
+                new Confluent.Kafka.SerializationContext());
             Assert.IsNotNull(r);
             Assert.AreEqual(i, r);
         }

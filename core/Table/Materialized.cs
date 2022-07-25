@@ -100,13 +100,13 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given storeName</returns>
-        public static Materialized<K, V, S> Create(string storeName) => new Materialized<K, V, S>(storeName);
+        public static Materialized<K, V, S> Create(string storeName) => new(storeName);
 
         /// <summary>
         /// Materialize a <see cref="IStateStore"/>. The store name will be a empty string (so, it's not queryable).
         /// </summary>
         /// <returns>a new <see cref="Materialized{K, V, S}"/> instance</returns>
-        public static Materialized<K, V, S> Create() => new Materialized<K, V, S>(string.Empty);
+        public static Materialized<K, V, S> Create() => new(string.Empty);
 
         /// <summary>
         /// Materialize a <see cref="IWindowStore{K, V}"/> using the provided <see cref="IWindowBytesStoreSupplier"/>
@@ -251,12 +251,12 @@ namespace Streamiz.Kafka.Net.Table
         public IDictionary<string, string> TopicConfig { get; protected set; }
 
         /// <summary>
-        /// Is logging enabled
+        /// Is logging enabled (default: false), Warning : will be true in next release.
         /// </summary>
-        public bool LoggingEnabled { get; protected set; }
+        public bool LoggingEnabled { get; protected set; } = true;
 
         /// <summary>
-        /// Is caching enabled
+        /// Is caching enabled. Not use for moment.
         /// </summary>
         public bool CachingEnabled { get; protected set; }
 
@@ -297,9 +297,9 @@ namespace Streamiz.Kafka.Net.Table
         /// <summary>
         /// Enable logging with topic configuration for this <see cref="Materialized{K, V, S}"/>
         /// </summary>
-        /// <param name="config">Topic configuration dictionnary</param>
+        /// <param name="config">Topic configuration dictionnary, can be null</param>
         /// <returns>Itself</returns>
-        public Materialized<K, V, S> WithLoggingEnabled(IDictionary<string, string> config)
+        public Materialized<K, V, S> WithLoggingEnabled(IDictionary<string, string> config = null)
         {
             LoggingEnabled = true;
             TopicConfig = config ?? new Dictionary<string, string>();

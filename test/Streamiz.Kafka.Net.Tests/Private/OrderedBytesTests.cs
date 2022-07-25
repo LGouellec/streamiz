@@ -17,9 +17,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
             long to = DateTime.Now.GetMilliseconds();
 
             byte[] maxSuffix = ByteBuffer.Build(12)
-               .PutLong(to)
-               .PutInt(int.MaxValue)
-               .ToArray();
+                .PutLong(to)
+                .PutInt(int.MaxValue)
+                .ToArray();
 
             var bytes2 = OrderedBytes.UpperRange(Bytes.Wrap(bytes), maxSuffix);
             var bytes3 = OrderedBytes.LowerRange(Bytes.Wrap(bytes), new byte[12]);

@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using Moq;
+using Avro.Util;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
-using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.Enumerator;
 using Streamiz.Kafka.Net.State.InMemory;
@@ -192,8 +192,15 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         [Test]
         public void TestRetention()
         {
+            var metricsRegistry = new StreamMetricsRegistry();
+            var mockContext = new Moq.Mock<ProcessorContext>();
+            mockContext.Setup(c => c.Id).Returns(new TaskId{Id = 0, Partition = 0});
+            mockContext.Setup(c => c.Metrics).Returns(metricsRegistry);
+            mockContext.Setup(c => c.Timestamp).Returns(DateTime.Now.GetMilliseconds());
+            
             var date = DateTime.Now.AddDays(-1);
             var store = new InMemoryWindowStore("store", TimeSpan.Zero, (long)defaultSize.TotalMilliseconds);
+            store.Init(mockContext.Object, null);
             store.Put(new Bytes(new byte[1] { 13}), new byte[0], date.GetMilliseconds());
             Assert.AreEqual(0, store.All().ToList().Count);
         }

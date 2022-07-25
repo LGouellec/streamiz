@@ -1,5 +1,4 @@
-﻿using log4net;
-using RocksDbSharp;
+﻿using RocksDbSharp;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors;
@@ -9,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Streamiz.Kafka.Net.State.RocksDb
 {
@@ -55,9 +55,12 @@ namespace Streamiz.Kafka.Net.State.RocksDb
     
     #endregion
 
+    /// <summary>
+    /// A persistent key-value store based on RocksDB.
+    /// </summary>
     public class RocksDbKeyValueStore : IKeyValueStore<Bytes, byte[]>
     {
-        private static readonly ILog log = Logger.GetLogger(typeof(RocksDbKeyValueStore));
+        private static readonly ILogger log = Logger.GetLogger(typeof(RocksDbKeyValueStore));
         private readonly ISet<WrappedRocksRbKeyValueEnumerator> openIterators = new HashSet<WrappedRocksRbKeyValueEnumerator>();
 
 
@@ -69,20 +72,30 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         private const int MAX_WRITE_BUFFERS = 3;
         private const string DB_FILE_DIR = "rocksdb";
         private readonly string parentDir;
-
         private WriteOptions writeOptions;
 
         internal DirectoryInfo DbDir { get; private set; }
         internal RocksDbSharp.RocksDb Db { get; set; }
         internal IRocksDbAdapter DbAdapter { get; private set; }
-        internal ProcessorContext InternalProcessorContext { get; set; }
+        
+        /// <summary>
+        /// Key bytes comparator
+        /// </summary>
         protected Func<byte[], byte[], int> KeyComparator { get; set; }
 
+        /// <summary>
+        /// Constructor with state store name
+        /// </summary>
+        /// <param name="name">state store name</param>
         public RocksDbKeyValueStore(string name)
             : this(name, DB_FILE_DIR)
-        {
-        }
+        { }
 
+        /// <summary>
+        /// Constructor with state store name and parent directory
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="parentDir"></param>
         public RocksDbKeyValueStore(string name, string parentDir)
         {
             Name = name;
@@ -92,15 +105,35 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         #region Store Impl
 
+        /// <summary>
+        /// State store name
+        /// </summary>
         public string Name { get; }
 
+        /// <summary>
+        /// Definitely True
+        /// </summary>
         public bool Persistent => true;
 
+        /// <summary>
+        /// return if the state store is open or not
+        /// </summary>
         public bool IsOpen { get; private set; }
-
+        
+        /// <summary>
+        /// Return an enumerator over all keys in this store. No ordering guarantees are provided.
+        /// </summary>
+        /// <returns>An enumerator of all key/value pairs in the store.</returns>
+        /// <exception cref="InvalidStateStoreException">if the store is not initialized</exception>
         public IEnumerable<KeyValuePair<Bytes, byte[]>> All()
             => All(true);
-
+        
+        /// <summary>
+        /// Return an approximate count of key-value mappings in this store.
+        /// The count is not guaranteed to be exact in order to accommodate stores
+        /// where an exact count is expensive to calculate.
+        /// </summary>
+        /// <returns>an approximate count of key-value mappings in the store.</returns>
         public long ApproximateNumEntries()
         {
             CheckStateStoreOpen();
@@ -117,6 +150,9 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             return num > 0 ? num : 0;
         }
 
+        /// <summary>
+        /// Close the rocksdb handle. Note if any open iterator is open, close them before closed the state store.
+        /// </summary>
         public void Close()
         {
             if (!IsOpen)
@@ -124,7 +160,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
             if (openIterators.Count != 0)
             {
-                log.Warn($"Closing {openIterators.Count} open iterators for store {Name}");
+                log.LogWarning("Closing {OpenIteratorsCount} open iterators for store {Name}", openIterators.Count, Name);
                 for (int i = 0; i < openIterators.Count; ++i)
                     openIterators.ElementAt(i).Dispose();
             }
@@ -136,7 +172,12 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             DbAdapter = null;
             Db = null;
         }
-
+        
+        /// <summary>
+        /// Delete the value from the store (if there is one).
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <returns>The old value or null if there is no such key</returns>
         public byte[] Delete(Bytes key)
         {
             CheckStateStoreOpen();
@@ -154,6 +195,9 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             return oldValue;
         }
 
+        /// <summary>
+        /// Flush any cached data
+        /// </summary>
         public void Flush()
         {
             CheckStateStoreOpen();
@@ -169,7 +213,12 @@ namespace Streamiz.Kafka.Net.State.RocksDb
                 throw new ProcessorStateException("Error while getting value for key from store {Name}", e);
             }
         }
-
+        
+        /// <summary>
+        /// Get the value corresponding to this key.
+        /// </summary>
+        /// <param name="key">the key to fetch</param>
+        /// <returns>The value or null if no value is found.</returns>
         public byte[] Get(Bytes key)
         {
             CheckStateStoreOpen();
@@ -182,21 +231,34 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             }
         }
 
+        /// <summary>
+        /// Initializes this state store and open rocksdb database.
+        /// </summary>
+        /// <param name="context">Processor context</param>
+        /// <param name="root">Root state (always itself)</param>
         public void Init(ProcessorContext context, IStateStore root)
         {
-            InternalProcessorContext = context;
             OpenDatabase(context);
 
-            // TODO : batch behavior
-            context.Register(root, (k, v) => Put(k, v));
+            // TODO : batch restoration behavior
+            context.Register(root, (k, v, t) => Put(k, v));
         }
 
+        /// <summary>
+        /// Update the value associated with this key.
+        /// </summary>
+        /// <param name="key">The key to associate the value to</param>
+        /// <param name="value">The value to update, it can be null if the serialized bytes are also null it is interpreted as deletes</param>
         public void Put(Bytes key, byte[] value)
         {
             CheckStateStoreOpen();
             DbAdapter.Put(key.Get, value);
         }
 
+        /// <summary>
+        /// Update all the given key/value pairs.
+        /// </summary>
+        /// <param name="entries">A list of entries to put into the store. if the serialized bytes are also null it is interpreted as deletes</param>
         public void PutAll(IEnumerable<KeyValuePair<Bytes, byte[]>> entries)
         {
             try
@@ -213,6 +275,12 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             }
         }
 
+        /// <summary>
+        /// Update the value associated with this key, unless a value is already associated with the key.
+        /// </summary>
+        /// <param name="key">The key to associate the value to</param>
+        /// <param name="value">The value to update, it can be null; if the serialized bytes are also null it is interpreted as deletes</param>
+        /// <returns>The old value or null if there is no such key.</returns>
         public byte[] PutIfAbsent(Bytes key, byte[] value)
         {
             var originalValue = Get(key);
@@ -221,13 +289,33 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
             return originalValue;
         }
-
+        
+        /// <summary>
+        /// Get an enumerator over a given range of keys. This enumerator must be closed after use.
+        /// Order is not guaranteed as bytes lexicographical ordering might not represent key order.
+        /// </summary>
+        /// <param name="from">The first key that could be in the range, where iteration starts from.</param>
+        /// <param name="to">The last key that could be in the range, where iteration ends.</param>
+        /// <returns>The enumerator for this range, from smallest to largest bytes.</returns>
         public IKeyValueEnumerator<Bytes, byte[]> Range(Bytes from, Bytes to)
             => Range(from, to, true);
 
+        /// <summary>
+        /// Get a reverser enumerator over a given range of keys. This enumerator must be closed after use.
+        /// Order is not guaranteed as bytes lexicographical ordering might not represent key order.
+        /// </summary>
+        /// <param name="from">The first key that could be in the range, where iteration starts from.</param>
+        /// <param name="to">The last key that could be in the range, where iteration ends.</param>
+        /// <returns>The reverse enumerator for this range, from smallest to largest bytes.</returns>
+        /// <exception cref="InvalidStateStoreException">if the store is not initialized</exception>
         public IKeyValueEnumerator<Bytes, byte[]> ReverseRange(Bytes from, Bytes to)
             => Range(from, to, false);
-
+        
+        /// <summary>
+        /// Return a reverse enumerator over all keys in this store. No ordering guarantees are provided.
+        /// </summary>
+        /// <returns>A reverse enumerator of all key/value pairs in the store.</returns>
+        /// <exception cref="InvalidStateStoreException">if the store is not initialized</exception>
         public IEnumerable<KeyValuePair<Bytes, byte[]>> ReverseAll()
             => All(false);
 
@@ -235,6 +323,10 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         #region Private
 
+        /// <summary>
+        /// Create rocksdb config and open rocksdb database.
+        /// </summary>
+        /// <param name="context"></param>
         protected void OpenDatabase(ProcessorContext context)
         {
             DbOptions dbOptions = new DbOptions();
@@ -266,20 +358,28 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             // (this could be a bug in the RocksDB code and their devs have been contacted).
             rocksDbOptions.IncreaseParallelism(Math.Max(Environment.ProcessorCount, 2));
             
+            // TODO : wrap writeOptions in rocksDbOptions too
             writeOptions.DisableWal(1);
 
             context.Configuration.RocksDbConfigHandler?.Invoke(Name, rocksDbOptions);
-
+            rocksDbOptions.SetMinWriteBufferNumberToMerge(2);
+            
             DbDir = new DirectoryInfo(Path.Combine(context.StateDir, parentDir, Name));
 
             Directory.CreateDirectory(DbDir.FullName);
 
-            OpenRocksDB(dbOptions, columnFamilyOptions);
+            OpenRocksDb(dbOptions, columnFamilyOptions);
 
             IsOpen = true;
         }
 
-        private void OpenRocksDB(DbOptions dbOptions, ColumnFamilyOptions columnFamilyOptions)
+        /// <summary>
+        /// Open rocksdb handle
+        /// </summary>
+        /// <param name="dbOptions">Rocksdb options</param>
+        /// <param name="columnFamilyOptions">Columnfamily options</param>
+        /// <exception cref="ProcessorStateException">throws if the rocksdb can't be open</exception>
+        private void OpenRocksDb(DbOptions dbOptions, ColumnFamilyOptions columnFamilyOptions)
         {
             int maxRetries = 5;
             int i = 0;
@@ -329,10 +429,10 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         {
             if (KeyComparator.Invoke(from.Get, to.Get) > 0)
             {
-                log.Warn("Returning empty iterator for fetch with invalid key range: from > to. "
-                    + "This may be due to range arguments set in the wrong order, " +
-                    "or serdes that don't preserve ordering when lexicographically comparing the serialized bytes. " +
-                    "Note that the built-in numerical serdes do not follow this for negative numbers");
+                log.LogWarning("Returning empty iterator for fetch with invalid key range: from > to. "
+                            + "This may be due to range arguments set in the wrong order, " +
+                            "or serdes that don't preserve ordering when lexicographically comparing the serialized bytes. " +
+                            "Note that the built-in numerical serdes do not follow this for negative numbers");
                 return new EmptyKeyValueEnumerator<Bytes, byte[]>();
             }
 

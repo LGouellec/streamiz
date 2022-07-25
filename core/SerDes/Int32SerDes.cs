@@ -1,7 +1,5 @@
 ﻿using Confluent.Kafka;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.SerDes
 {
@@ -16,7 +14,7 @@ namespace Streamiz.Kafka.Net.SerDes
         /// <param name="data">serialized bytes.</param>
         /// <param name="context">serialization context</param>
         /// <returns>deserialized <see cref="Int32"/> using data; may be null</returns>
-        public override int Deserialize(byte[] data, SerializationContext context) => BitConverter.ToInt32(data);
+        public override int Deserialize(byte[] data, SerializationContext context) => BitConverter.ToInt32(data, 0);
 
         /// <summary>
         /// Convert int32 <code>data</code> into a byte array.

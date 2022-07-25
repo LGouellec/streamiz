@@ -1,20 +1,22 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net.Crosscutting;
-using log4net;
 using System;
 using System.Threading;
+using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Errors;
 
 namespace Streamiz.Kafka.Net.Kafka.Internal
 {
     internal class KafkaLoggerAdapter
     {
-        private readonly ILog log = null;
+        private readonly ILogger log;
 
         public KafkaLoggerAdapter(IStreamConfig configuration)
             : this(configuration, Logger.GetLogger(typeof(KafkaLoggerAdapter)))
-        {}
+        {
+        }
 
-        public KafkaLoggerAdapter(IStreamConfig configuration, ILog log)
+        public KafkaLoggerAdapter(IStreamConfig configuration, ILogger log)
         {
             this.log = log;
         }
@@ -24,13 +26,13 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
         internal void LogConsume(IConsumer<byte[], byte[]> consumer, LogMessage message)
         {
             string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
-            log.Debug($"{logPrefix}Log consumer {GetName(consumer)} - {message.Message}");
+            log.LogDebug("{LogPrefix}Log consumer {ConsumerName} - {Message}", logPrefix, GetName(consumer), message.Message);
         }
 
         internal void ErrorConsume(IConsumer<byte[], byte[]> consumer, Error error)
         {
             string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
-            log.Error($"{logPrefix}Error consumer {GetName(consumer)} - {error.Reason}");
+            log.LogError($"{logPrefix}Error consumer {GetName(consumer)} - {error.Reason}");
         }
 
         #endregion
@@ -40,13 +42,13 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
         internal void LogProduce(IProducer<byte[], byte[]> producer, LogMessage message)
         {
             string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
-            log.Debug($"{logPrefix}Log producer {GetName(producer)} - {message.Message}");
+            log.LogDebug("{LogPrefix}Log producer {ProducerName} - {Message}", logPrefix, GetName(producer), message.Message);
         }
 
         internal void ErrorProduce(IProducer<byte[], byte[]> producer, Error error)
         {
             string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
-            log.Error($"{logPrefix}Error producer {GetName(producer)} - {error.Reason}");
+            log.LogError("{LogPrefix}Error producer {ProducerName} - {ErrorReason}", logPrefix, GetName(producer), error.Reason);
         }
 
         #endregion
@@ -56,13 +58,13 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
         internal void ErrorAdmin(IAdminClient admin, Error error)
         {
             string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
-            log.Error($"{logPrefix}Error admin {GetName(admin)} - {error.Reason}");
+            log.LogError("{LogPrefix}Error admin {ClientName} - {ErrorReason}", logPrefix, GetName(admin), error.Reason);
         }
 
         internal void LogAdmin(IAdminClient admin, LogMessage message)
         {
             string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
-            log.Debug($"{logPrefix}Log admin {GetName(admin)} - {message.Message}");
+            log.LogDebug("{LogPrefix}Log admin {ClientName} - {Message}", logPrefix, GetName(admin), message.Message);
         }
 
         #endregion
@@ -79,6 +81,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             {
                 name = "Unknown";
             }
+
             return name;
         }
     }

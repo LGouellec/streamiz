@@ -1,12 +1,7 @@
 ﻿using NUnit.Framework;
-using NUnit.Framework.Constraints;
 using Streamiz.Kafka.Net.Crosscutting;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Net;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -39,7 +34,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.AreEqual(3, values.Count);
             Assert.AreEqual(1, values[0].Key);
             Assert.AreEqual(2, values[1].Key);
-            Assert.AreEqual(3, values[2].Key);   
+            Assert.AreEqual(3, values[2].Key);
         }
 
         [Test]

@@ -1,5 +1,4 @@
 ﻿using Confluent.Kafka;
-using Moq;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Mock;
@@ -10,6 +9,7 @@ using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-group";
-            config.MaxTaskIdleMs = (long)TimeSpan.FromSeconds(100).TotalMilliseconds;
+            config.MaxTaskIdleMs = (long) TimeSpan.FromSeconds(100).TotalMilliseconds;
 
             var builder = new StreamBuilder();
 
@@ -55,7 +55,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var serdes = new StringSerDes();
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-group";
-            config.MaxTaskIdleMs = (long)TimeSpan.FromSeconds(100).TotalMilliseconds;
+            config.MaxTaskIdleMs = (long) TimeSpan.FromSeconds(100).TotalMilliseconds;
             config.BufferedRecordsPerPartition = maxBuffered;
             config.PollMs = 10;
 
@@ -76,7 +76,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             consumer.Subscribe("output");
             var thread = StreamThread.Create(
                 "thread-0", "c0",
-                topo.Builder, config,
+                topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 
@@ -90,6 +90,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     Value = serdes.Serialize($"coucou{i}", new SerializationContext())
                 });
             }
+
             // CONSUME PAUSE AFTER maxBuffered + 1 messages
             System.Threading.Thread.Sleep(50);
 
@@ -97,15 +98,15 @@ namespace Streamiz.Kafka.Net.Tests.Private
             producer.Produce("topic1", new Confluent.Kafka.Message<byte[], byte[]>
             {
                 Key = serdes.Serialize("key", new SerializationContext()),
-                Value = serdes.Serialize($"coucou{maxBuffered+1}", new SerializationContext())
+                Value = serdes.Serialize($"coucou{maxBuffered + 1}", new SerializationContext())
             });
 
             Assert.AreEqual(1, thread.ActiveTasks.Count());
             var task = thread.ActiveTasks.ToArray()[0];
             Assert.IsNotNull(task.Grouper);
             Assert.IsFalse(task.Grouper.AllPartitionsBuffered);
-            Assert.AreEqual(maxBuffered+1, task.Grouper.NumBuffered());
-            Assert.AreEqual(maxBuffered+1, task.Grouper.NumBuffered(new TopicPartition("topic1", 0)));
+            Assert.AreEqual(maxBuffered + 1, task.Grouper.NumBuffered());
+            Assert.AreEqual(maxBuffered + 1, task.Grouper.NumBuffered(new TopicPartition("topic1", 0)));
             Assert.AreEqual(0, task.Grouper.NumBuffered(new TopicPartition("topic2", 0)));
 
             producer.Produce("topic2", new Confluent.Kafka.Message<byte[], byte[]>
@@ -125,7 +126,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             {
                 var message = records.ToArray()[i];
                 Assert.AreEqual("key", serdes.Deserialize(message.Message.Key, new SerializationContext()));
-                Assert.IsTrue(serdes.Deserialize(message.Message.Value, new SerializationContext()).Contains($"coucou{i}-"));
+                Assert.IsTrue(serdes.Deserialize(message.Message.Value, new SerializationContext())
+                    .Contains($"coucou{i}-"));
             }
 
             token.Cancel();

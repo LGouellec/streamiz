@@ -2,6 +2,7 @@
 using Streamiz.Kafka.Net.State.Enumerator;
 using Streamiz.Kafka.Net.State.Internal;
 using System.Collections.Generic;
+using Streamiz.Kafka.Net.SerDes;
 
 namespace Streamiz.Kafka.Net.State.Logging
 {
@@ -15,7 +16,15 @@ namespace Streamiz.Kafka.Net.State.Logging
         }
 
         private void Publish(Bytes key, byte[] value)
-            => context.Log(Name, key, value, context.RecordContext.Timestamp);
+        {
+            if(value == null)
+                context.Log(Name, key, null, context.RecordContext.Timestamp);
+            else
+            {
+                (long ts, byte[] data) = ValueAndTimestampSerDes.Extract(value);
+                context.Log(Name, key, data, ts);
+            }
+        }
 
         public IEnumerable<KeyValuePair<Bytes, byte[]>> All()
             => wrapped.All();

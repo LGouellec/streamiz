@@ -17,8 +17,9 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void PartitionsAssigned(IConsumer<byte[], byte[]> consumer, List<TopicPartition> partitions)
         {
-            this.consumer.PartitionsAssigned(partitions);
-            wrapped?.PartitionsAssigned(consumer, partitions);
+            if(partitions != null)
+                this.consumer.PartitionsAssigned(partitions);
+            wrapped?.PartitionsAssigned(consumer, partitions ?? new ());
         }
 
         public void PartitionsRevoked(IConsumer<byte[], byte[]> consumer, List<TopicPartitionOffset> partitions)

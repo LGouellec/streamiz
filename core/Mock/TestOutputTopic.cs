@@ -1,5 +1,4 @@
 ﻿using Confluent.Kafka;
-using log4net;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock.Pipes;
@@ -7,6 +6,7 @@ using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Streamiz.Kafka.Net.Mock
 {
@@ -33,7 +33,7 @@ namespace Streamiz.Kafka.Net.Mock
         private readonly IStreamConfig configuration;
         private readonly ISerDes<K> keySerdes;
         private readonly ISerDes<V> valueSerdes;
-        private readonly ILog log = Logger.GetLogger(typeof(TestOutputTopic<K, V>));
+        private readonly ILogger log = Logger.GetLogger(typeof(TestOutputTopic<K, V>));
 
         private TestOutputTopic()
         {
@@ -65,7 +65,7 @@ namespace Streamiz.Kafka.Net.Mock
         /// </summary>
         public int QueueSize => pipe.Size;
 
-        private TestRecord<K, V> ReadRecord()
+        private ConsumeResult<K, V> ReadRecord()
         {
             try
             {
@@ -79,10 +79,22 @@ namespace Streamiz.Kafka.Net.Mock
                     valueSerdes.Deserialize(record.Value, new SerializationContext(MessageComponentType.Value, pipe.TopicName)) :
                     (V)configuration.DefaultValueSerDes.DeserializeObject(record.Value, new SerializationContext(MessageComponentType.Value, pipe.TopicName));
 
-                return new TestRecord<K, V> { Key = key, Value = value };
+                return new ConsumeResult<K, V>{
+                    Message = new Message<K, V>
+                    {
+                        Key = key,
+                        Value = value,
+                        Timestamp = record.Message.Timestamp,
+                        Headers = record.Message.Headers
+                    },
+                    Offset = record.Offset,
+                    Partition = record.Partition,
+                    Topic = record.Topic,
+                    IsPartitionEOF = record.IsPartitionEOF
+                };
             }catch(StreamsException e)
             {
-                log.Warn($"{e.Message}");
+                log.LogWarning(e, "{Message}", e.Message);
                 return null;
             }
         }
@@ -93,22 +105,13 @@ namespace Streamiz.Kafka.Net.Mock
         /// Read one record from the output topic and return record's value.
         /// </summary>
         /// <returns>Next value for output topic.</returns>
-        public V ReadValue() => this.ReadRecord().Value;
+        public V ReadValue() => ReadRecord().Value;
 
         /// <summary>
         /// Read one record from the output topic and return its key and value as pair.
         /// </summary>
         /// <returns>Next output as <see cref="ConsumeResult{TKey, TValue}"/></returns>
-        public ConsumeResult<K, V> ReadKeyValue()
-        {
-            var r = this.ReadRecord();
-
-            return 
-                r != null ? new ConsumeResult<K, V>{
-                                Message = new Message<K, V> { Key = r.Key, Value = r.Value, Timestamp = new Timestamp(r.Timestamp.HasValue ? r.Timestamp.Value : DateTime.Now) }
-                            } 
-                        : null;
-        }
+        public ConsumeResult<K, V> ReadKeyValue() => ReadRecord();
 
         #endregion
 
@@ -136,7 +139,17 @@ namespace Streamiz.Kafka.Net.Mock
                     : default;
 
                 records.Add(new ConsumeResult<K, V>{
-                    Message = new Message<K, V> { Key = key, Value = value, Timestamp = new Timestamp(DateTime.Now) }
+                    Message = new Message<K, V>
+                    {
+                        Key = key,
+                        Value = value,
+                        Timestamp = record.Message.Timestamp,
+                        Headers = record.Message.Headers
+                    },
+                    Offset = record.Offset,
+                    Partition = record.Partition,
+                    Topic = record.Topic,
+                    IsPartitionEOF = record.IsPartitionEOF
                 });
             }
             return records;

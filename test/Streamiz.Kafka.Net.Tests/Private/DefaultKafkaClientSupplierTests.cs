@@ -1,7 +1,8 @@
 ﻿using NUnit.Framework;
 using Streamiz.Kafka.Net.Kafka.Internal;
 using System;
-using System.IO;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -56,6 +57,38 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var produce = supplier.GetProducer(config.ToProducerConfig("produce"));
             Assert.IsNotNull(produce);
             Assert.AreEqual("produce", produce.Name.Split("#")[0]);
+        }
+
+        [Test]
+        public void CreateConsumerWithStats()
+        {
+            config.ExposeLibrdKafkaStats = true;
+            config.ApplicationId = "test-app";
+            config.ClientId = "test-client";
+            var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config), config);
+            supplier.MetricsRegistry = new StreamMetricsRegistry();
+            
+            var consumerConfig = config.ToConsumerConfig("consume");
+            StreamizConsumerConfig wrapper = new StreamizConsumerConfig(consumerConfig, "thread-1");
+
+            var consumer = supplier.GetConsumer(wrapper, new StreamsRebalanceListener(null));
+            Assert.IsNotNull(consumer);
+        }
+        
+        [Test]
+        public void CreateProducerWithStats()
+        {
+            config.ExposeLibrdKafkaStats = true;
+            config.ApplicationId = "test-app";
+            config.ClientId = "test-client";
+            var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config), config);
+            supplier.MetricsRegistry = new StreamMetricsRegistry();
+            
+            var producerConfig = config.ToProducerConfig("producer");
+            StreamizProducerConfig wrapper = new StreamizProducerConfig(producerConfig, "thread-1", new TaskId(){Id = 0, Partition = 0});
+
+            var producer = supplier.GetProducer(wrapper);
+            Assert.IsNotNull(producer);
         }
     }
 }

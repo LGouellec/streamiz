@@ -11,6 +11,7 @@ using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Table;
 using System.Collections.Generic;
 using System.Linq;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -51,7 +52,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 consumer,
                 config,
                 supplier,
-                null);
+                null,
+                new MockChangelogRegister(),
+                new StreamMetricsRegistry());
             task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
@@ -113,7 +116,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic")
-                .GroupBy((k, v) => k.ToCharArray()[0])
+                .GroupBy<char, CharSerDes>((k, v) => k.ToCharArray()[0])
                 .Count(InMemory<char, long>.As("count-store").WithKeySerdes(new CharSerDes()));
 
             var topology = builder.Build();
@@ -141,7 +144,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic")
-                .GroupBy((k, v) => k.ToCharArray()[0])
+                .GroupBy<char, CharSerDes>((k, v) => k.ToCharArray()[0])
                 .Count(InMemory<char, long>.As("count-store").WithKeySerdes(new CharSerDes()));
 
             var topology = builder.Build();

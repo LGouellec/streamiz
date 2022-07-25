@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    public class WindowedChangelogTopicConfig : InternalTopicConfig
+    internal class WindowedChangelogTopicConfig : InternalTopicConfig
     {
         public static IDictionary<string, string> WINDOWED_STORE_CHANGELOG_TOPIC_DEFAULT_OVERRIDES = new Dictionary<string, string>(INTERNAL_TOPIC_DEFAULT_OVERRIDES)
         {
@@ -17,7 +17,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             internal get
             {
-                if (Configs.ContainsKey(InternalTopicConfigCst.RETENTION_MS_CONFIG))
+                if (Configs != null && Configs.ContainsKey(InternalTopicConfigCst.RETENTION_MS_CONFIG))
                     return long.Parse(Configs[InternalTopicConfigCst.RETENTION_MS_CONFIG]);
                 else
                     return retentionsMs;
@@ -37,13 +37,13 @@ namespace Streamiz.Kafka.Net.Processors
             topicConfig.AddRange(defaultConfigs);
             topicConfig.AddRange(Configs);
 
-            long retentionValue = addLong(RetentionMs, additionalRetentionMs);
+            long retentionValue = AddLong(RetentionMs, additionalRetentionMs);
             topicConfig.AddOrUpdate(InternalTopicConfigCst.RETENTION_MS_CONFIG, retentionValue.ToString());
 
             return topicConfig;
         }
 
-        internal static long addLong(long value, long adder)
+        private static long AddLong(long value, long adder)
         {
             if (value > 0 && adder > long.MaxValue - value)
             {

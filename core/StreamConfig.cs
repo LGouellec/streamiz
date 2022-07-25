@@ -5,12 +5,16 @@ using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.RocksDb;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net
 {
@@ -115,6 +119,13 @@ namespace Streamiz.Kafka.Net
         /// <returns>Return <see cref="AdminClientConfig"/> for building <see cref="IAdminClient"/> instance.</returns>
         AdminClientConfig ToAdminConfig(string clientId);
 
+        /// <summary>
+        /// Get the config value of the key. Null if any key found
+        /// </summary>
+        /// <param name="key">Key searched</param>
+        /// <returns>Return the config value of the key, null otherwise</returns>
+        dynamic Get(string key);
+
         #endregion
 
         #region Stream Config Property
@@ -137,7 +148,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Production exception handling function called when kafka produce exception is raise.
         /// </summary>
-        Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler { get; set; } 
+        Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler { get; set; }
 
         /// <summary>
         /// Maximum allowed time between calls to consume messages (e.g., rd_kafka_consumer_poll())
@@ -153,9 +164,14 @@ namespace Streamiz.Kafka.Net
         int? MaxPollIntervalMs { get; set; }
 
         /// <summary>
-        /// The maximum number of records returned in a single call to poll(). (Default: 500)
+        /// The maximum number of records returned in a polling phase. (Default: 500)
         /// </summary>
         long MaxPollRecords { get; set; }
+
+        /// <summary>
+        /// The maximum number of records returned in a polling restore phase. (Default: 1000)
+        /// </summary>
+        long MaxPollRestoringRecords { get; set; }
 
         /// <summary>
         /// The amount of time in milliseconds to block waiting for input.
@@ -167,11 +183,6 @@ namespace Streamiz.Kafka.Net
         /// otherwise the default value is <see cref="StreamConfig.DEFAULT_COMMIT_INTERVAL_MS"/>)
         /// </summary>
         long CommitIntervalMs { get; set; }
-
-        /// <summary>
-        /// The amount of time to wait for response from cluster when getting matadata.
-        /// </summary>
-        int MetadataRequestTimeoutMs { get; set; }
 
         /// <summary>
         /// Timeout used for transaction related operations. (Default : 10 seconds).
@@ -254,6 +265,72 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         long WindowStoreChangelogAdditionalRetentionMs { get; set; }
 
+        /// <summary>
+        /// Manager which track offset saved in local state store
+        /// </summary>
+        IOffsetCheckpointManager OffsetCheckpointManager { get; set; }
+        
+        /// <summary>
+        /// Logger factory which will be used for logging 
+        /// </summary>
+        ILoggerFactory Logger { get; set; }
+        
+        /// <summary>
+        /// Delay between two invocations of MetricsReporter().
+        /// Minimum and default value : 30 seconds
+        /// </summary>
+        long MetricsIntervalMs { get; set; }
+        
+        /// <summary>
+        /// The reporter expose a list of sensors throw by a stream thread every <see cref="MetricsIntervalMs"/>.
+        /// This reporter has the responsibility to export sensors and metrics into another platform.
+        /// Streamiz package provide one reporter for Prometheus (see Streamiz.Kafka.Net.Metrics.Prometheus package).
+        /// </summary>
+        Action<IEnumerable<Sensor>> MetricsReporter { get; set; }
+        
+        /// <summary>
+        /// Boolean which indicate if librdkafka handle statistics should be exposed ot not. (default: false)
+        /// Only mainConsumer and producer will be concerned.
+        /// </summary>
+        bool ExposeLibrdKafkaStats { get; set; }
+        
+        /// <summary>
+        /// The highest recording level for metrics.
+        /// </summary>
+        MetricsRecordingLevel MetricsRecording { get; set; }
+        
+        /// <summary>
+        /// Time wait before completing the start task of <see cref="KafkaStream"/>. (default: 2000)
+        /// </summary>
+        long StartTaskDelayMs { get; set; }
+
+        #endregion
+        
+        #region Middlewares
+        
+        /// <summary>
+        /// Add middleware
+        /// </summary>
+        /// <param name="item">New middleware</param>
+        void AddMiddleware(IStreamMiddleware item);
+
+        /// <summary>
+        /// Clear all middlewares
+        /// </summary>
+        void ClearMiddleware();
+        
+        /// <summary>
+        /// Remove a specific middleware
+        /// </summary>
+        /// <param name="item">middleware to remove</param>
+        /// <returns></returns>
+        bool RemoveMiddleware(IStreamMiddleware item);
+        
+        /// <summary>
+        /// Get all middlewares
+        /// </summary>
+        IEnumerable<IStreamMiddleware> Middlewares { get; }
+        
         #endregion
     }
 
@@ -261,7 +338,7 @@ namespace Streamiz.Kafka.Net
     /// Implementation of <see cref="IStreamConfig"/>. Contains all configuration for your stream.
     /// By default, Kafka Streams does not allow users to overwrite the following properties (Streams setting shown in parentheses)
     ///    - EnableAutoCommit = (false) - Streams client will always disable/turn off auto committing
-    ///    - PartitionAssignmentStrategy = <see cref="PartitionAssignmentStrategy.Range"/> - Streams application must have a partition assignment stategy to RANGE for join processing
+    ///    - PartitionAssignmentStrategy = <see cref="PartitionAssignmentStrategy.CooperativeSticky"/> - Streams application must have a partition assignment stategy to RANGE for join processing
     /// If <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, Kafka Streams does not allow users to overwrite the following properties (Streams setting shown in parentheses):
     ///    - <see cref="IsolationLevel"/> (<see cref="IsolationLevel.ReadCommitted"/>) - Consumers will always read committed data only
     ///    - <see cref="EnableIdempotence"/> (true) - Producer will always have idempotency enabled
@@ -340,10 +417,19 @@ namespace Streamiz.Kafka.Net
         internal static readonly string schemaRegistryUrlCst = "schema.registry.url";
         internal static readonly string schemaRegistryBasicAuthUserInfoCst = "schema.registry.basic.auth.user.info";
         internal static readonly string schemaRegistryBasicAuthCredentialSourceCst = "schema.registry.basic.auth.credentials.source";
-        internal static readonly string schemaRegistryAutoRegisterCst = "schema.registry.auto.register.schema";
         internal static readonly string schemaRegistryRequestTimeoutMsCst = "schema.registry.request.timeout.ms";
         internal static readonly string schemaRegistryMaxCachedSchemasCst = "schema.registry.max.cached.schemas";
-        internal static readonly string avroSerializerSubjectNameStrategyCst= "avro.serializer.subject.name.strategy";
+        internal static readonly string avroSerializerAutoRegisterSchemasCst = "avro.serializer.auto.register.schemas";
+        internal static readonly string avroSerializerSubjectNameStrategyCst = "avro.serializer.subject.name.strategy";
+        internal static readonly string avroSerializerUseLatestVersionCst = "avro.serializer.use.latest.version";
+        internal static readonly string avroSerializerBufferBytesCst = "avro.serializer.buffer.bytes";
+        internal static readonly string protobufAutoRegisterSchemasCst = "protobuf.serializer.auto.register.schemas";
+        internal static readonly string protobufSerializerBufferBytesCst = "protobuf.serializer.buffer.bytes";
+        internal static readonly string protobufSerializerUseLatestVersionCst = "protobuf.serializer.use.latest.version";
+        internal static readonly string protobufSerializerSkipKnownTypesCst = "protobuf.serializer.skip.known.types";
+        internal static readonly string protobufSerializerUseDeprecatedFormatCst = "protobuf.serializer.use.deprecated.format";
+        internal static readonly string protobufSerializerSubjectNameStrategyCst = "protobuf.serializer.subject.name.strategy";
+        internal static readonly string protobufSerializerReferenceSubjectNameStrategyCst = "protobuf.serializer.reference.subject.name.strategy";
         internal static readonly string applicatonIdCst = "application.id";
         internal static readonly string clientIdCst = "client.id";
         internal static readonly string numStreamThreadsCst = "num.stream.threads";
@@ -354,14 +440,25 @@ namespace Streamiz.Kafka.Net
         internal static readonly string transactionTimeoutCst = "transaction.timeout";
         internal static readonly string commitIntervalMsCst = "commit.interval.ms";
         internal static readonly string pollMsCst = "poll.ms";
-        internal static readonly string maxPollRecordsCst = "max.poll.records.ms";
+        internal static readonly string maxPollRecordsCst = "max.poll.records";
+        internal static readonly string maxPollRestoringRecordsCst = "max.poll.restoring.records";
         internal static readonly string maxTaskIdleCst = "max.task.idle.ms";
         internal static readonly string bufferedRecordsPerPartitionCst = "buffered.records.per.partition";
         internal static readonly string followMetadataCst = "follow.metadata";
         internal static readonly string stateDirCst = "state.dir";
         internal static readonly string replicationFactorCst = "replication.factor";
         internal static readonly string windowstoreChangelogAdditionalRetentionMsCst = "windowstore.changelog.additional.retention.ms";
-
+        internal static readonly string offsetCheckpointManagerCst = "offset.checkpoint.manager";
+        internal static readonly string metricsReportCst = "metrics.reporter";
+        internal static readonly string metricsIntervalMsCst = "metrics.interval.ms";
+        internal static readonly string exposeLibrdKafkaCst = "expose.librdkafka.stats";
+        internal static readonly string metricsRecordingLevelCst = "metrics.recording.level";
+        internal static readonly string startTaskDelayMsCst = "start.task.delay.ms";
+        internal static readonly string rocksDbConfigSetterCst = "rocksdb.config.setter";
+        internal static readonly string innerExceptionHandlerCst = "inner.exception.handler";
+        internal static readonly string deserializationExceptionHandlerCst = "deserialization.exception.handler";
+        internal static readonly string productionExceptionHandlerCst = "production.exception.handler";
+        
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
         /// </summary>
@@ -383,7 +480,36 @@ namespace Streamiz.Kafka.Net
         private IDictionary<string, string> _internalProducerConfig = new Dictionary<string, string>();
         private IDictionary<string, string> _internalAdminConfig = new Dictionary<string, string>();
 
+        private readonly List<IStreamMiddleware> middlewares = new();
+
         private bool changeGuarantee = false;
+        
+        #region Middlewares
+        
+        /// <summary>
+        /// Add middleware
+        /// </summary>
+        /// <param name="item">New middleware</param>
+        public void AddMiddleware(IStreamMiddleware item) => middlewares.Add(item);
+
+        /// <summary>
+        /// Clear all middlewares
+        /// </summary>
+        public void ClearMiddleware() => middlewares.Clear();
+
+        /// <summary>
+        /// Remove a specific middleware
+        /// </summary>
+        /// <param name="item">middleware to remove</param>
+        /// <returns></returns>
+        public bool RemoveMiddleware(IStreamMiddleware item) => middlewares.Remove(item);
+        
+        /// <summary>
+        /// Get all middlewares
+        /// </summary>
+        public IEnumerable<IStreamMiddleware> Middlewares => middlewares.AsReadOnly();
+        
+        #endregion
 
         #region ClientConfig
 
@@ -395,6 +521,7 @@ namespace Streamiz.Kafka.Net
         /// <param name="value">New value</param>
         public void AddConfig(string key, string value)
         {
+            Add(key, value);
             AddConsumerConfig(key, value);
             AddAdminConfig(key, value);
             AddProducerConfig(key, value);
@@ -1048,22 +1175,6 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
-        /// Non-topic request timeout in milliseconds. This is for metadata requests, etc.
-        /// default: 60000 importance: low
-        /// </summary>
-        public int MetadataRequestTimeoutMs
-        {
-            get => _config.MetadataRequestTimeoutMs ?? 1000;
-            set
-            {
-                _config.MetadataRequestTimeoutMs = value;
-                _consumerConfig.MetadataRequestTimeoutMs = value;
-                _producerConfig.MetadataRequestTimeoutMs = value;
-                _adminClientConfig.MetadataRequestTimeoutMs = value;
-            }
-        }
-
-        /// <summary>
         /// Period of time in milliseconds at which topic and broker metadata is refreshed
         /// in order to proactively discover any new brokers, topics, partitions or partition
         /// leader changes. Use -1 to disable the intervalled refresh (not recommended).
@@ -1554,7 +1665,7 @@ namespace Streamiz.Kafka.Net
         /// store is an in-memory store of the next offset to (auto-)commit for each partition.
         /// default: true importance: high
         /// </summary>
-        public bool? EnableAutoOffsetStore { get { return _consumerConfig.EnableAutoOffsetStore; } set { _consumerConfig.EnableAutoOffsetStore = value; } }
+        public bool? EnableAutoOffsetStore { get { return _consumerConfig.EnableAutoOffsetStore; } private set { _consumerConfig.EnableAutoOffsetStore = value; } }
 
         /// <summary>
         /// Automatically and periodically commit offsets in the background. Note: setting
@@ -1693,7 +1804,7 @@ namespace Streamiz.Kafka.Net
         /// before constructing message batches (MessageSets) to transmit to brokers. A higher
         /// value allows larger and more effective (less overhead, improved compression)
         /// batches of messages to accumulate at the expense of increased message delivery
-        /// latency. default: 0.5 importance: high
+        /// latency. default: 5 importance: high
         /// </summary>
         public double? LingerMs { get { return _producerConfig.LingerMs; } set { _producerConfig.LingerMs = value; } }
 
@@ -1875,11 +1986,8 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Constructor empty
         /// </summary>
-        public StreamConfig()
-            : this(null)
-        {
-
-        }
+        public StreamConfig() : this(null)
+        { }
 
         /// <summary>
         /// Constructor with a dictionary of properties.
@@ -1902,15 +2010,23 @@ namespace Streamiz.Kafka.Net
             TransactionTimeout = TimeSpan.FromSeconds(10);
             PollMs = 100;
             MaxPollRecords = 500;
+            MaxPollRestoringRecords = 1000;
             MaxTaskIdleMs = 0;
             BufferedRecordsPerPartition = 1000;
-            InnerExceptionHandler = (exception) => ExceptionHandlerResponse.FAIL;
-            ProductionExceptionHandler = (report) => ExceptionHandlerResponse.FAIL;
-            DeserializationExceptionHandler = (context, record, exception) => ExceptionHandlerResponse.FAIL;
+            InnerExceptionHandler = (_) => ExceptionHandlerResponse.FAIL;
+            ProductionExceptionHandler = (_) => ExceptionHandlerResponse.FAIL;
+            DeserializationExceptionHandler = (_, _, _) => ExceptionHandlerResponse.FAIL;
+            RocksDbConfigHandler = (_, _) => { };
             FollowMetadata = false;
             StateDir = Path.Combine(Path.GetTempPath(), "streamiz-kafka-net");
             ReplicationFactor = 1;
             WindowStoreChangelogAdditionalRetentionMs = (long)TimeSpan.FromDays(1).TotalMilliseconds;
+            OffsetCheckpointManager = null;
+            MetricsIntervalMs = (long)TimeSpan.FromSeconds(30).TotalMilliseconds;
+            MetricsRecording = MetricsRecordingLevel.INFO;
+            MetricsReporter = (_) => { }; // nothing by default, maybe another behavior in future
+            ExposeLibrdKafkaStats = false;
+            StartTaskDelayMs = 5000;
 
             if (properties != null)
             {
@@ -1925,13 +2041,20 @@ namespace Streamiz.Kafka.Net
 
             MaxPollIntervalMs = 300000;
             EnableAutoCommit = false;
-            PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.Range;
+            EnableAutoOffsetStore = false;
+            PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.CooperativeSticky;
+
+            Logger = LoggerFactory.Create(builder =>
+            {
+                builder.SetMinimumLevel(LogLevel.Information);
+                builder.AddConsole();
+            });
         }
 
         #endregion
 
         #region IStreamConfig Impl
-
+        
         /// <summary>
         /// Authorize your streams application to follow metadata (timestamp, topic, partition, offset and headers) during processing record.
         /// You can use <see cref="StreamizMetadata"/> to get these metadatas. (Default : false)
@@ -2083,6 +2206,15 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
+        /// The maximum number of records returned in a polling restore phase. (Default: 1000)
+        /// </summary>
+        public long MaxPollRestoringRecords
+        {
+            get => this[maxPollRestoringRecordsCst];
+            set => this.AddOrUpdate(maxPollRestoringRecordsCst, value);
+        }
+
+        /// <summary>
         /// Maximum amount of time a stream task will stay idle when not all of its partition buffers contain records, to avoid potential out-of-order record processing across multiple input streams. (Default: 0)
         /// </summary>
         public long MaxTaskIdleMs
@@ -2129,25 +2261,103 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
+        /// Manager which track offset saved in local state store
+        /// </summary>
+        public IOffsetCheckpointManager OffsetCheckpointManager
+        {
+            get => this[offsetCheckpointManagerCst];
+            set => this.AddOrUpdate(offsetCheckpointManagerCst, value);
+        }
+        
+        /// <summary>
         /// A Rocks DB config handler function
         /// </summary>
-        public Action<string, RocksDbOptions> RocksDbConfigHandler { get; set; }
-
+        public Action<string, RocksDbOptions> RocksDbConfigHandler
+        {
+            get => this[rocksDbConfigSetterCst];
+            set => this.AddOrUpdate(rocksDbConfigSetterCst, value);
+        }
 
         /// <summary>
         /// Inner exception handling function called during processing.
         /// </summary>
-        public Func<Exception, ExceptionHandlerResponse> InnerExceptionHandler { get; set; }
+        public Func<Exception, ExceptionHandlerResponse> InnerExceptionHandler
+        {
+            get => this[innerExceptionHandlerCst];
+            set => this.AddOrUpdate(innerExceptionHandlerCst, value);
+        }
 
         /// <summary>
         /// Deserialization exception handling function called when deserialization exception during kafka consumption is raise.
         /// </summary>
-        public Func<ProcessorContext, ConsumeResult<byte[], byte[]>, Exception, ExceptionHandlerResponse> DeserializationExceptionHandler { get; set; }
+        public Func<ProcessorContext, ConsumeResult<byte[], byte[]>, Exception, ExceptionHandlerResponse> DeserializationExceptionHandler
+        {
+            get => this[deserializationExceptionHandlerCst];
+            set => this.AddOrUpdate(deserializationExceptionHandlerCst, value);
+        }
 
         /// <summary>
         /// Production exception handling function called when kafka produce exception is raise.
         /// </summary>
-        public Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler { get; set; }
+        public Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler  
+        {
+            get => this[productionExceptionHandlerCst];
+            set => this.AddOrUpdate(productionExceptionHandlerCst, value);
+        }
+        
+        /// <summary>
+        /// Delay between two invocations of MetricsReporter().
+        /// Minimum and default value : 30 seconds
+        /// </summary>
+        public long MetricsIntervalMs
+        {
+            get => this[metricsIntervalMsCst];
+            set
+            {
+                if (value < 30000)
+                    value = 30000;
+                this.AddOrUpdate(metricsIntervalMsCst, value);
+            }
+        }
+        
+        /// <summary>
+        /// The reporter expose a list of sensors throw by a stream thread every <see cref="MetricsIntervalMs"/>.
+        /// This reporter has the responsibility to export sensors and metrics into another platform.
+        /// Streamiz package provide one reporter for Prometheus (see Streamiz.Kafka.Net.Metrics.Prometheus package).
+        /// </summary>
+        public Action<IEnumerable<Sensor>> MetricsReporter
+        {
+            get => this[metricsReportCst];
+            set => this.AddOrUpdate(metricsReportCst, value);
+        }
+        
+        /// <summary>
+        /// Boolean which indicate if librdkafka handle statistics should be exposed ot not. (default: false)
+        /// Only mainConsumer and producer will be concerned.
+        /// </summary>
+        public bool ExposeLibrdKafkaStats 
+        {
+            get => this[exposeLibrdKafkaCst];
+            set => this.AddOrUpdate(exposeLibrdKafkaCst, value);
+        }
+        
+        /// <summary>
+        /// The highest recording level for metrics (default: INFO).
+        /// </summary>
+        public MetricsRecordingLevel MetricsRecording 
+        {
+            get => this[metricsRecordingLevelCst];
+            set => this.AddOrUpdate(metricsRecordingLevelCst, value);
+        }
+
+        /// <summary>
+        /// Time wait before completing the start task of <see cref="KafkaStream"/>. (default: 5000)
+        /// </summary>
+        public long StartTaskDelayMs
+        {
+            get => this[startTaskDelayMsCst];
+            set => this.AddOrUpdate(startTaskDelayMsCst, value);
+        }
 
         /// <summary>
         /// Get the configs to the <see cref="IProducer{TKey, TValue}"/>
@@ -2219,6 +2429,30 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
+        /// Get the config value of the key. Null if any key found
+        /// </summary>
+        /// <param name="key">Key searched</param>
+        /// <returns>Return the config value of the key, null otherwise</returns>
+        public dynamic Get(string key)
+        {
+            if (ContainsKey(key))
+            {
+                return this[key];
+            }
+            else
+            {
+                var allConfigs = _adminClientConfig
+                    .Union(_internalAdminConfig)
+                    .Union(_consumerConfig)
+                    .Union(_internalConsumerConfig)
+                    .Union(_producerConfig)
+                    .Union(_internalProducerConfig)
+                    .ToDictionary();
+                return allConfigs.ContainsKey(key) ? allConfigs[key] : null;
+            }
+        }
+
+        /// <summary>
         /// Return new instance of <see cref="StreamConfig"/>.
         /// </summary>
         /// <returns>Return new instance of <see cref="StreamConfig"/>.</returns>
@@ -2269,33 +2503,109 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
-        /// Specifies whether or not the Avro serializer should attempt to auto-register unrecognized schemas with Confluent Schema Registry. default: true
+        ///    BasicAuthUserInfo
         /// </summary>
-        public bool? AutoRegisterSchemas
-        {
-            get => this.ContainsKey(schemaRegistryAutoRegisterCst) ? this[schemaRegistryAutoRegisterCst] : null;
-            set => this.AddOrUpdate(schemaRegistryAutoRegisterCst, value);
-        }
-
-        /// <summary>
-        /// The subject name strategy to use for schema registration / lookup. Possible values: <see cref="Streamiz.Kafka.Net.SubjectNameStrategy" />
-        /// </summary>
-        public SubjectNameStrategy? SubjectNameStrategy 
-        { 
-            get => this.ContainsKey(avroSerializerSubjectNameStrategyCst) ? this[avroSerializerSubjectNameStrategyCst] : null;
-            set => this.AddOrUpdate(avroSerializerSubjectNameStrategyCst, value); 
-        }
-
         public string BasicAuthUserInfo
         {
             get => this.ContainsKey(schemaRegistryBasicAuthUserInfoCst) ? this[schemaRegistryBasicAuthUserInfoCst] : null;
             set => this.AddOrUpdate(schemaRegistryBasicAuthUserInfoCst, value);
         }
 
+        /// <summary>
+        ///    BasicAuthCredentialsSource
+        /// </summary>
         public int? BasicAuthCredentialsSource
         {
             get => this.ContainsKey(schemaRegistryBasicAuthCredentialSourceCst) ? this[schemaRegistryBasicAuthCredentialSourceCst] : null;
             set => this.AddOrUpdate(schemaRegistryBasicAuthCredentialSourceCst, value);
+        }
+
+        /// <summary>
+        /// Specifies whether or not the serializer should attempt to auto-register unrecognized schemas with Confluent Schema Registry. default: true
+        /// </summary>
+        public bool? AutoRegisterSchemas
+        {
+            get => this.ContainsKey(avroSerializerAutoRegisterSchemasCst) ? this[avroSerializerAutoRegisterSchemasCst] : null;
+            set
+            {
+                this.AddOrUpdate(avroSerializerAutoRegisterSchemasCst, value);
+                this.AddOrUpdate(protobufAutoRegisterSchemasCst, value);
+            }
+        }
+
+        /// <summary>
+        /// The subject name strategy to use for schema registration / lookup. Possible values: <see cref="Streamiz.Kafka.Net.SubjectNameStrategy" />
+        /// </summary>
+        public SubjectNameStrategy? SubjectNameStrategy
+        {
+            get => this.ContainsKey(avroSerializerSubjectNameStrategyCst) ? this[avroSerializerSubjectNameStrategyCst] : null;
+            set
+            {
+                this.AddOrUpdate(avroSerializerSubjectNameStrategyCst, value);
+                this.AddOrUpdate(protobufSerializerSubjectNameStrategyCst, value);
+            }
+        }
+
+        /// <summary>
+        ///    Specifies the initial size (in bytes) of the buffer used for message
+        ///    serialization. Use a value high enough to avoid resizing the buffer, but small
+        ///    enough to avoid excessive memory use. Inspect the size of the byte array returned
+        ///    by the Serialize method to estimate an appropriate value. Note: each call to
+        ///    serialize creates a new buffer. default: 1024
+        /// </summary>
+        public int? BufferBytes
+        {
+            get => this.ContainsKey(avroSerializerBufferBytesCst) ? this[avroSerializerBufferBytesCst] : null;
+            set
+            {
+                this.AddOrUpdate(avroSerializerBufferBytesCst, value);
+                this.AddOrUpdate(protobufSerializerBufferBytesCst, value);
+            }
+        }
+
+        /// <summary>
+        ///    Specifies whether or not the serializer should use the latest subject
+        ///    version for serialization. WARNING: There is no check that the latest schema
+        ///    is backwards compatible with the schema of the object being serialized. default:
+        ///    false
+        /// </summary>
+        public bool? UseLatestVersion
+        {
+            get => this.ContainsKey(avroSerializerUseLatestVersionCst) ? this[avroSerializerUseLatestVersionCst] : null;
+            set
+            {
+                this.AddOrUpdate(avroSerializerUseLatestVersionCst, value);
+                this.AddOrUpdate(protobufSerializerUseLatestVersionCst, value);
+            }
+        }
+
+        /// <summary>
+        ///    Specifies whether or not the Protobuf serializer should skip known types when
+        ///    resolving dependencies. default: false
+        /// </summary>
+        public bool? SkipKnownTypes
+        {
+            get => this.ContainsKey(protobufSerializerSkipKnownTypesCst) ? this[protobufSerializerSkipKnownTypesCst] : null;
+            set => this.AddOrUpdate(protobufSerializerSkipKnownTypesCst, value);
+        }
+
+        /// <summary>
+        ///    Specifies whether the Protobuf serializer should serialize message indexes without
+        ///    zig-zag encoding. default: false
+        /// </summary>
+        public bool? UseDeprecatedFormat
+        {
+            get => this.ContainsKey(protobufSerializerUseDeprecatedFormatCst) ? this[protobufSerializerUseDeprecatedFormatCst] : null;
+            set => this.AddOrUpdate(protobufSerializerUseDeprecatedFormatCst, value);
+        }
+
+        /// <summary>
+        ///    Reference subject name strategy. default: ReferenceSubjectNameStrategy.ReferenceName
+        /// </summary>
+        public ReferenceSubjectNameStrategy? ReferenceSubjectNameStrategy
+        {
+            get => this.ContainsKey(protobufSerializerReferenceSubjectNameStrategyCst) ? this[protobufSerializerReferenceSubjectNameStrategyCst] : null;
+            set => this.AddOrUpdate(protobufSerializerReferenceSubjectNameStrategyCst, value);
         }
 
         #endregion
@@ -2309,9 +2619,10 @@ namespace Streamiz.Kafka.Net
         public override string ToString()
         {
             string replaceValue = "********";
-            // todo
             List<string> keysToNotDisplay = new List<string> {
-                "sasl.password"
+                "sasl.password",
+                "ssl.key.password",
+                "ssl.keystore.password"
             };
 
             List<string> keysAlreadyPrint = new List<string>();
@@ -2321,8 +2632,8 @@ namespace Streamiz.Kafka.Net
             // stream config property
             sb.AppendLine();
             sb.AppendLine("\tStream property:");
-            foreach (var kp in this)
-                sb.AppendLine($"\t\t{kp.Key}: \t{kp.Value}");
+            foreach (var kp in Keys)
+                sb.AppendLine($"\t\t{kp}: \t{this[kp]}");
 
             // client config property
             sb.AppendLine("\tClient property:");
@@ -2380,6 +2691,15 @@ namespace Streamiz.Kafka.Net
         }
 
         #endregion
+
+        #region Logger Configuration
+
+        /// <summary>
+        /// Logger factory which will be used for logging
+        /// </summary>
+        public ILoggerFactory Logger { get; set; }
+
+        #endregion
     }
 
     /// <summary>
@@ -2409,15 +2729,10 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Constructor empty
         /// </summary>
-        public StreamConfig()
-            : this(null)
-        {
-
-        }
+        public StreamConfig() : this(null) { }
 
         /// <summary>
         /// Constructor with properties. 
-        /// See <see cref="StreamConfig.StreamConfig(IDictionary{string, dynamic})"/>
         /// <para>
         /// <see cref="IStreamConfig.DefaultKeySerDes"/> is set to <code>new KS();</code>
         /// <see cref="IStreamConfig.DefaultValueSerDes"/> is set to <code>new VS();</code>

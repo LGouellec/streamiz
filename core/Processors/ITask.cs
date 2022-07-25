@@ -8,6 +8,8 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal interface ITask
     {
+        TaskState State { get; }
+
         bool IsClosed { get; }
 
         bool CanProcess(long now);
@@ -15,6 +17,8 @@ namespace Streamiz.Kafka.Net.Processors
         bool CommitNeeded { get; }
 
         void InitializeTopology();
+
+        void RestorationIfNeeded();
 
         bool InitializeStateStores();
 
@@ -42,6 +46,11 @@ namespace Streamiz.Kafka.Net.Processors
         /// Any changelog partitions associated with this task
         /// </summary>        
         ICollection<TopicPartition> ChangelogPartitions { get; }
+
+        /// <summary>
+        /// Any repartitions records to purge after processing and committing
+        /// </summary>
+        IDictionary<TopicPartition, long> PurgeOffsets { get;  }
 
         bool HasStateStores { get; }
 

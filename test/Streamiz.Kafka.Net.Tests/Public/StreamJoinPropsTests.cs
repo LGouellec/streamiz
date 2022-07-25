@@ -4,9 +4,6 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.Supplier;
 using Streamiz.Kafka.Net.Stream;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Streamiz.Kafka.Net.Tests.Public
 {
@@ -17,6 +14,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
         public long Retention => 100;
 
         public string Name => "TEST";
+        
+        public string MetricsScope => "test-window";
 
         public IWindowStore<Bytes, byte[]> Get()
             => null;

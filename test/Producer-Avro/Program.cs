@@ -12,17 +12,13 @@ namespace Producer
         private static ProducerConfig producerConfig = new ProducerConfig
         {
             Acks = Acks.All,
-            BootstrapServers = "192.168.56.1:9092",
-            SaslMechanism = SaslMechanism.Plain,
-            SaslPassword = "admin",
-            SaslUsername = "admin",
-            SecurityProtocol = SecurityProtocol.SaslPlaintext
+            BootstrapServers = "localhost:9092"
         };
 
         private static CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient
                 (new SchemaRegistryConfig
                 {
-                    Url = "http://192.168.56.1:8081"
+                    Url = "http://localhost:8081"
                 });
 
         private static void Main(string[] args)

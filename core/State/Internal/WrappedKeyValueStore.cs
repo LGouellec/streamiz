@@ -9,6 +9,7 @@ namespace Streamiz.Kafka.Net.State.Internal
     {
         protected ISerDes<K> keySerdes;
         protected ISerDes<V> valueSerdes;
+        protected bool initStoreSerdes = false;
 
         public WrappedKeyValueStore(IKeyValueStore<Bytes, byte[]> wrapped, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
             : base(wrapped)
@@ -19,8 +20,16 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public virtual void InitStoreSerDes(ProcessorContext context)
         {
-            keySerdes = keySerdes == null ? context.Configuration.DefaultKeySerDes as ISerDes<K> : keySerdes;
-            valueSerdes = valueSerdes == null ? context.Configuration.DefaultValueSerDes as ISerDes<V> : valueSerdes;
+            if (!initStoreSerdes)
+            {
+                keySerdes ??= context.Configuration.DefaultKeySerDes as ISerDes<K>;
+                valueSerdes ??= context.Configuration.DefaultValueSerDes as ISerDes<V>;
+                
+                keySerdes?.Initialize(new SerDesContext(context.Configuration));
+                valueSerdes?.Initialize(new SerDesContext(context.Configuration));
+
+                initStoreSerdes = true;
+            }
         }
 
         public override void Init(ProcessorContext context, IStateStore root)

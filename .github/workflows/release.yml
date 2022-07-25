@@ -18,6 +18,10 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.101
+    - name: Setup .NET 6.0
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.202
     - name: Install dependencies
       run: dotnet restore
     - name: Build
@@ -25,12 +29,16 @@ jobs:
     - name: Test
       run: dotnet test --no-build --no-restore --verbosity normal --configuration Release
     - name: Pack Core
-      run: dotnet pack core/Streamiz.Kafka.Net.csproj  --configuration Release --include-source --include-symbols --no-build --no-restore
+      run: dotnet pack core/Streamiz.Kafka.Net.csproj  --configuration Release --no-build --no-restore
     - name: Pack Registry Serdes
-      run: dotnet pack serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.csproj  --configuration Release --include-source --include-symbols --no-build --no-restore
+      run: dotnet pack serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.csproj  --configuration Release --no-build --no-restore
     - name: Pack Registry.Avro
-      run: dotnet pack serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.csproj  --configuration Release --include-source --include-symbols --no-build --no-restore
+      run: dotnet pack serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.csproj  --configuration Release --no-build --no-restore
     - name: Pack Registry.Protobuf
-      run: dotnet pack serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf.csproj  --configuration Release --include-source --include-symbols --no-build --no-restore
+      run: dotnet pack serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf.csproj  --configuration Release --no-build --no-restore
+    - name: Pack Registry.Json
+      run: dotnet pack serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json.csproj --configuration Release --no-build --no-restore
+    - name: Pack Metrics Prometheus
+      run: dotnet pack metrics/Streamiz.Kafka.Net.Metrics.Prometheus/Streamiz.Kafka.Net.Metrics.Prometheus.csproj --configuration Release --no-build --no-restore
     - name: Publish in nuget.org
-      run: dotnet nuget push **/*symbols.nupkg -k ${{ secrets.NUGET_PACKAGE_TOKEN }} -s https://api.nuget.org/v3/index.json --no-symbols true      
+      run: dotnet nuget push **/*symbols.nupkg -k ${{ secrets.NUGET_PACKAGE_TOKEN }} -s https://api.nuget.org/v3/index.json -n -d   

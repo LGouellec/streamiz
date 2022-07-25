@@ -1,16 +1,15 @@
 ﻿using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.Mock.Pipes;
-using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Stream;
-using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Streamiz.Kafka.Net.Crosscutting;
 
 namespace Streamiz.Kafka.Net.Mock
 {
@@ -80,7 +79,7 @@ namespace Streamiz.Kafka.Net.Mock
             ASYNC_CLUSTER_IN_MEMORY
         }
 
-        private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
+        private readonly CancellationTokenSource tokenSource = new();
         private readonly InternalTopologyBuilder topologyBuilder;
         private readonly IStreamConfig configuration;
         private readonly IStreamConfig topicConfiguration;
@@ -107,6 +106,7 @@ namespace Streamiz.Kafka.Net.Mock
 
         internal TopologyTestDriver(InternalTopologyBuilder builder, IStreamConfig config, Mode mode, IKafkaSupplier supplier)
         {
+            Logger.LoggerFactory = config.Logger;
             topologyBuilder = builder;
             configuration = config;
 
@@ -119,10 +119,10 @@ namespace Streamiz.Kafka.Net.Mock
 
             var clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{configuration.ApplicationId.ToLower()}-{Guid.NewGuid()}" : configuration.ClientId;
 
+            topologyBuilder.RewriteTopology(configuration);
+            
             // sanity check
             topologyBuilder.BuildTopology();
-
-            topologyBuilder.RewriteTopology(configuration);
 
             switch (mode)
             {

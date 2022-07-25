@@ -1,5 +1,5 @@
-﻿using Streamiz.Kafka.Net.State;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Streamiz.Kafka.Net.State;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -29,17 +29,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 {
                     return stores[(Name, taskId.Partition)];
                 }
-                else
-                {
-                    var store = storeBuilder.Build();
-                    stores.Add((Name, taskId.Partition), store);
-                    return store;
-                }
+
+                var store = storeBuilder.Build();
+                stores.Add((Name, taskId.Partition), store);
+                return store;
             }
-            else
-            {
-                return storeBuilder.Build();
-            }
+
+            return storeBuilder.Build();
         }
     }
 }

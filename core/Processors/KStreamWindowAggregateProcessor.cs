@@ -2,8 +2,7 @@
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using System;
-using System.Collections.Generic;
-using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -44,7 +43,8 @@ namespace Streamiz.Kafka.Net.Processors
         {
             if (key == null)
             {
-                log.Warn($"Skipping record due to null key.value =[{value}] topic =[{Context.RecordContext.Topic}] partition =[{Context.RecordContext.Partition}] offset =[{Context.RecordContext.Offset }]");
+                log.LogWarning($"Skipping record due to null key.value =[{value}] topic =[{Context.RecordContext.Topic}] partition =[{Context.RecordContext.Partition}] offset =[{Context.RecordContext.Offset }]");
+                droppedRecordsSensor.Record();
                 return;
             }
 
@@ -76,9 +76,10 @@ namespace Streamiz.Kafka.Net.Processors
                 }
                 else
                 {
-                    log.Debug($"Skipping record for expired window. key=[{key}] topic=[{Context.Topic}] partition=[{Context.Partition}] offset=[{Context.Offset}] " +
-                            $"timestamp=[{Context.Timestamp}] window=[{windowStart},{windowEnd}) " +
-                            $"expiration=[{closeTime}] streamTime=[{observedStreamTime}]");
+                    log.LogDebug($"Skipping record for expired window. key=[{key}] topic=[{Context.Topic}] partition=[{Context.Partition}] offset=[{Context.Offset}] " +
+                                 $"timestamp=[{Context.Timestamp}] window=[{windowStart},{windowEnd}) " +
+                                 $"expiration=[{closeTime}] streamTime=[{observedStreamTime}]");
+                    droppedRecordsSensor.Record();
                 }
             }
         }

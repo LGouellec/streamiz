@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Streamiz.Kafka.Net.Table.Internal
+﻿namespace Streamiz.Kafka.Net.Table.Internal
 {
     internal class Change<T>
     {
@@ -11,8 +7,8 @@ namespace Streamiz.Kafka.Net.Table.Internal
 
         public Change(T old, T @new)
         {
-            this.OldValue = old;
-            this.NewValue = @new;
+            OldValue = old;
+            NewValue = @new;
         }
 
         public override string ToString() => $"OldValue:{OldValue}|NewValue:{NewValue}";

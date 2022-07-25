@@ -10,15 +10,17 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         private readonly string topicName;
         private readonly IProducer<byte[], byte[]> producer;
         private const int size = 10;
-        private readonly Queue<(byte[], byte[], DateTime)> buffer = new Queue<(byte[], byte[], DateTime)>(size);
+        private readonly Queue<(byte[], byte[], DateTime, Headers)> buffer = new Queue<(byte[], byte[], DateTime, Headers)>(size);
 
         public KafkaPipeInput(string topicName, IStreamConfig configuration, IKafkaSupplier kafkaSupplier)
         {
             this.topicName = topicName;
-            producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig($"pipe-input-{configuration.ApplicationId}-{topicName}"));
+            producer = kafkaSupplier.GetProducer(
+                configuration.ToProducerConfig($"pipe-input-{configuration.ApplicationId}-{topicName}"));
         }
 
         public string TopicName => topicName;
+        public event PipeFlushed Flushed;
 
         public void Dispose()
         {
@@ -34,14 +36,15 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
             {
                 var record = buffer.Dequeue();
                 producer.Produce(topicName,
-                    new Message<byte[], byte[]> { Key = record.Item1, Value = record.Item2, Timestamp = new Timestamp(record.Item3) });
+                    new Message<byte[], byte[]> { Key = record.Item1, Value = record.Item2, Timestamp = new Timestamp(record.Item3), Headers = record.Item4 });
             }
             producer.Flush();
+            Flushed?.Invoke();
         }
 
-        public void Pipe(byte[] key, byte[] value, DateTime timestamp)
+        public void Pipe(byte[] key, byte[] value, DateTime timestamp, Headers headers)
         {
-            buffer.Enqueue((key, value, timestamp));
+            buffer.Enqueue((key, value, timestamp, headers));
             if (buffer.Count >= size)
                 Flush();
         }

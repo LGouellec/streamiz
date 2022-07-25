@@ -13,7 +13,7 @@ using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -63,10 +63,14 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 consumer,
                 config,
                 supplier,
-                null);
+                null,
+                new MockChangelogRegister(),
+                new StreamMetricsRegistry());
             task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
+            task.RestorationIfNeeded();
+            task.CompleteRestoration();
 
             Assert.AreEqual(1, task.Context.States.StateStoreNames.Count());
             var nameStore = task.Context.States.StateStoreNames.ElementAt(0);

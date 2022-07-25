@@ -1,11 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;net5.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net5.0;net6.0</TargetFrameworks>
     <RootNamespace>Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro</RootNamespace>
     <AssemblyName>Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro</AssemblyName>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>1.1.5</Version>
     <Authors>@LGouellec</Authors>
     <PackageId>Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro</PackageId>
     <Product>Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro</Product>
@@ -20,20 +19,27 @@
     <PackageIconUrl>https://raw.githubusercontent.com/LGouellec/kafka-streams-dotnet/master/resources/logo-kafka-stream-net.png</PackageIconUrl>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\key.snk</AssemblyOriginatorKeyFile>
-    <DelaySign>false</DelaySign>
+    <Version>1.3.0</Version>
+    <PackageVersion>1.3.0</PackageVersion>
+    <AssemblyVersion>1.3.0</AssemblyVersion>
+    <FileVersion>1.3.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\netstandard2.1\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.xml</DocumentationFile>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
   
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
   <ItemGroup>
     <None Include="..\..\key.snk" Link="key.snk" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Confluent.SchemaRegistry" Version="1.6.2" />
-    <PackageReference Include="Confluent.SchemaRegistry.Serdes.Avro" Version="1.5.2" />
+    <PackageReference Include="Confluent.SchemaRegistry" Version="1.9.0" />
+    <PackageReference Include="Confluent.SchemaRegistry.Serdes.Avro" Version="1.9.0" />
   </ItemGroup>
 
   <ItemGroup>

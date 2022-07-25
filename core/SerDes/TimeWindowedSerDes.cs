@@ -2,8 +2,6 @@
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.Helper;
 using Streamiz.Kafka.Net.Stream;
-using System;
-using System.IO;
 
 namespace Streamiz.Kafka.Net.SerDes
 {
@@ -59,6 +57,17 @@ namespace Streamiz.Kafka.Net.SerDes
             var bytesKey = innerSerdes.Serialize(data.Key, context);
             var bytes = WindowKeyHelper.ToStoreKeyBinary(bytesKey, data.Window.StartMs, 0);
             return bytes.Get;
+        }
+
+        /// <summary>
+        /// Initialize method with a current context which contains <see cref="IStreamConfig"/>.
+        /// Can be used to initialize the serdes according to some parameters present in the configuration such as the schema.registry.url
+        /// </summary>
+        /// <param name="context">SerDesContext with stream configuration</param>
+        public override void Initialize(SerDesContext context)
+        {
+            base.Initialize(context);
+            innerSerdes.Initialize(context);
         }
     }
 }

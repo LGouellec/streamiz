@@ -1,4 +1,5 @@
-﻿using Streamiz.Kafka.Net.Mock.Pipes;
+﻿using Confluent.Kafka;
+using Streamiz.Kafka.Net.Mock.Pipes;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace Streamiz.Kafka.Net.Mock
     /// Processing messages
     /// <code>
     /// var inputTopic = driver.CreateInputTopic&lt;string, string&gt;("test");
-    /// inputTopic.PipeInput("key1", "hello");
+    /// inputTopic.PipeInput("key1", "hello", new Headers());
     /// </code>
     /// </example>
     /// </summary>
@@ -88,7 +89,7 @@ namespace Streamiz.Kafka.Net.Mock
         {
             DateTime ts = record.Timestamp.HasValue ? record.Timestamp.Value : DateTime.Now;
             var tuple = GetBytes(record.Key, record.Value);
-            pipe.Pipe(tuple.Item1, tuple.Item2, ts);
+            pipe.Pipe(tuple.Item1, tuple.Item2, ts, record.Headers);
             pipe.Flush();
         }
 
@@ -112,8 +113,9 @@ namespace Streamiz.Kafka.Net.Mock
         /// </summary>
         /// <param name="key">key record</param>
         /// <param name="value">value record</param>
-        public void PipeInput(K key, V value)
-            => PipeInput(new TestRecord<K, V> { Value = value, Key = key });
+        /// <param name="headers">headers of the record</param>
+        public void PipeInput(K key, V value, Headers headers = default)
+            => PipeInput(new TestRecord<K, V> { Value = value, Key = key, Headers = headers ?? new Headers() });
 
         /// <summary>
         /// Send an input record with the given record on the topic and then commit the records.
@@ -121,8 +123,9 @@ namespace Streamiz.Kafka.Net.Mock
         /// <param name="key">key record</param>
         /// <param name="value">value record</param>
         /// <param name="timestamp">Timestamp to record</param>
-        public void PipeInput(K key, V value, DateTime timestamp)
-            => PipeInput(new TestRecord<K, V> { Key = key, Value = value, Timestamp = timestamp });
+        /// <param name="headers">headers of the record</param>
+        public void PipeInput(K key, V value, DateTime timestamp, Headers headers = default)
+            => PipeInput(new TestRecord<K, V> { Key = key, Value = value, Timestamp = timestamp, Headers = headers ?? new Headers() });
 
         #endregion
 
@@ -138,7 +141,7 @@ namespace Streamiz.Kafka.Net.Mock
             {
                 DateTime ts = record.Timestamp.HasValue ? record.Timestamp.Value : DateTime.Now;
                 var tuple = GetBytes(record.Key, record.Value);
-                pipe.Pipe(tuple.Item1, tuple.Item2, ts);
+                pipe.Pipe(tuple.Item1, tuple.Item2, ts, record.Headers);
             }
 
             pipe.Flush();
