@@ -205,6 +205,7 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 if (!IsDisposable)
                 {
+                    
                     log.LogInformation($"{logPrefix}Shutting down");
 
                     SetState(ThreadState.PENDING_SHUTDOWN);
@@ -214,6 +215,7 @@ namespace Streamiz.Kafka.Net.Processors
                     CommitOffsets(true);
 
                     var consumer = GetConsumer();
+                    var consumerName = consumer.Name; 
                     consumer.Unsubscribe();
                     consumer.Close();
                     consumer.Dispose();
@@ -230,7 +232,7 @@ namespace Streamiz.Kafka.Net.Processors
 
                     externalProcessorTopologies.Clear();
                     streamMetricsRegistry.RemoveThreadSensors(Name);
-                    streamMetricsRegistry.RemoveLibrdKafkaSensors(Name, consumer.Name);
+                    streamMetricsRegistry.RemoveLibrdKafkaSensors(Name, consumerName);
                     log.LogInformation($"{logPrefix}Shutdown complete");
                     IsDisposable = true;
                 }

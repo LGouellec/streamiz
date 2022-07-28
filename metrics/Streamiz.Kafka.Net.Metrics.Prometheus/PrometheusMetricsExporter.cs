@@ -37,8 +37,7 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
                     gauges.Add(metricKey, gauge);
                 }
 
-                Double value;
-                if(IsNumeric(metric.Value.Value, out value))
+                if(IsNumeric(metric.Value.Value, out var value))
                     gauge.WithLabels(metric.Key.Tags.Values.ToArray()).Set(value);
                 else
                     gauge.WithLabels(metric.Key.Tags.Values.ToArray()).Set(1);

@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.OpenTelemetry;
 using Streamiz.Kafka.Net.Metrics.Prometheus;
 
 namespace sample_stream
@@ -49,7 +50,8 @@ namespace sample_stream
                 builder.AddLog4Net();
             });
             config.MetricsRecording = MetricsRecordingLevel.DEBUG;
-            config.UsePrometheusReporter(9090, true);
+            //config.UsePrometheusReporter(9090, true);
+            config.UseOpenTelemetryReporter();
 
             StreamBuilder builder = new StreamBuilder();
 
