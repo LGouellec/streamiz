@@ -1,12 +1,17 @@
 using System;
+using System.Security.Cryptography;
+using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
+using Streamiz.Kafka.Net.Crosscutting;
 
 namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry
 {
     public static class OpenTelemetryConfigExtension
     {
+        private readonly static ILogger logger = Logger.GetLogger(typeof(OpenTelemetryConfigExtension));
+
         public static IStreamConfig UseOpenTelemetryReporter(
             this IStreamConfig config,
             TimeSpan metricInterval,
@@ -21,13 +26,19 @@ namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry
                         .AddService(serviceName: "Streamiz"));
                 
             actionMeterProviderBuilder?.Invoke(meterProviderBuilder);
-                
+
+            var port = RandomGenerator.GetInt32(10000);
+            if (port < 5000)
+                port += 5000;
+            
+            logger.LogInformation($"Open telemetry remote port is {port}");
+            
             var tracerProvider = meterProviderBuilder.AddPrometheusExporter((options) =>
                 {
                     // for test
                     options.StartHttpListener = true;
                     // Use your endpoint and port here
-                    options.HttpListenerPrefixes = new string[] { $"http://localhost:{9090}/" };
+                    options.HttpListenerPrefixes = new string[] { $"http://localhost:{port}/" };
                     options.ScrapeResponseCacheDurationMilliseconds = 0;
                 })
                 .Build();

@@ -50,57 +50,20 @@ namespace sample_stream
                 builder.AddLog4Net();
             });
             config.MetricsRecording = MetricsRecordingLevel.DEBUG;
-            //config.UsePrometheusReporter(9090, true);
+            
+            var port = RandomGenerator.GetInt32(10000);
+            if (port < 5000)
+                port += 5000;
+            
+            Console.WriteLine($"Prometheus remote port is {port}");
+            //config.UsePrometheusReporter(port, true);
             config.UseOpenTelemetryReporter();
 
-            StreamBuilder builder = new StreamBuilder();
-
-            var client = new MongoClient(
-                "mongodb://admin:admin@localhost:27017"
-            );
-            var database = client.GetDatabase("streamiz");
-
+            var builder = new StreamBuilder();
+            
             builder
                 .Stream<string, string>("input")
-                .MapValuesAsync(async (record, _) => {
-                    var persons = await database
-                        .GetCollection<Person>("adress")
-                        .FindAsync((p) => p.name.Equals(record.Key))
-                        .Result.ToListAsync();
-                    return persons.FirstOrDefault()?.address.city;
-                },
-                    RetryPolicy
-                        .NewBuilder()
-                        .NumberOfRetry(10)
-                        .RetryBackOffMs(100)
-                        .RetriableException<Exception>()
-                        .RetryBehavior(EndRetryBehavior.BUFFERED)
-                        .Build())
-                .To("person-city");
-            
-            // builder
-            //     .Stream<string, string>("input")
-            //     .ForeachAsync(
-            //         async (record, _) =>
-            //         {
-            //             await database
-            //                 .GetCollection<Person>("adress")
-            //                 .InsertOneAsync(new Person()
-            //                 {
-            //                     name = record.Key,
-            //                     address = new Address()
-            //                     {
-            //                         city = record.Value
-            //                     }
-            //                 });
-            //         },
-            //         RetryPolicy
-            //             .NewBuilder()
-            //             .NumberOfRetry(10)
-            //             .RetryBackOffMs(100)
-            //             .RetriableException<Exception>()
-            //             .RetryBehavior(EndRetryBehavior.SKIP)
-            //             .Build());
+                .To("output");
             
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);

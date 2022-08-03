@@ -34,6 +34,7 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
                         new GaugeConfiguration {
                         LabelNames = metric.Key.Tags.Keys.ToArray()
                     });
+                    
                     gauges.Add(metricKey, gauge);
                 }
 

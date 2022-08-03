@@ -8,27 +8,30 @@ namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry
 {
     public class OpenTelemetryMetricsExporter
     {
-        private readonly Meter meter;
+        private Meter meter;
         private readonly IDictionary<string, ObservableGauge<double>> gauges = new Dictionary<string, ObservableGauge<double>>();
         
         public OpenTelemetryMetricsExporter()
         {
-            meter = new Meter("Streamiz");
         }
         
         public void ExposeMetrics(IEnumerable<Sensor> sensors)
         {
+            meter?.Dispose();
+            meter = new Meter("Streamiz");
+            
             string MetricKey(StreamMetric metric) => $"{metric.Group}_{metric.Name}".Replace("-", "_");
             
             var metrics = sensors.SelectMany(s => s.Metrics);
             foreach (var metric in metrics)
             {
                 var metricKey = MetricKey(metric.Value);
-                ObservableGauge<double> gauge;
-                
-                if(!gauges.ContainsKey(metricKey))
-                {
-                    gauge = meter.CreateObservableGauge(
+                var realMetricKey =
+                    $"{metricKey}_{string.Join("_", metric.Key.Tags.Select(kv => $"{kv.Key}={kv.Value}"))}";
+
+                // if(!gauges.ContainsKey(realMetricKey))
+               // {
+                    meter.CreateObservableGauge(
                         metricKey, 
                         () => new[]
                         {
@@ -38,8 +41,8 @@ namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry
                         },
                         description: metric.Key.Description);
                     
-                    gauges.Add(metricKey, gauge);
-                }
+                 //   gauges.Add(realMetricKey, gauge);
+               // }
             }
         }
         
