@@ -1,21 +1,9 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
-using Streamiz.Kafka.Net.Stream;
-using Streamiz.Kafka.Net.Table;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.Intrinsics;
-using System.Threading;
-using Microsoft.Extensions.Logging;
-using Streamiz.Kafka.Net.Crosscutting;
 using System.Threading.Tasks;
-using Streamiz.Kafka.Net.Metrics;
-using Streamiz.Kafka.Net.Metrics.Internal;
-using Streamiz.Kafka.Net.Metrics.Prometheus;
-using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.Table;
 
 namespace sample_stream
 {
@@ -26,34 +14,43 @@ namespace sample_stream
     {
         public static async Task Main(string[] args)
         {
-            var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-app2";
-            config.BootstrapServers = "localhost:9092";
-            config.AutoOffsetReset = AutoOffsetReset.Earliest;
-            config.StateDir = Path.Combine(".");
-            config.CommitIntervalMs = 5000;
-            config.Logger = LoggerFactory.Create(builder =>
-            {
-                builder.SetMinimumLevel(LogLevel.Information);
-                builder.AddLog4Net();
-            });
+            Console.WriteLine("Hello Streams");
 
-            StreamBuilder builder = new StreamBuilder();
-            
-            var table = builder.GlobalTable<string, string>("topic");
-            
-            builder.Stream<string, string>("input")
-                .GroupBy((k,v) => v)
-                .Count()
-                .ToStream()
-                .To("output");
-            
-            Topology t = builder.Build();
-            KafkaStream stream = new KafkaStream(t, config);
-            
-            Console.CancelKeyPress += (o, e) => stream.Dispose();
+            var config = new StreamConfig<StringSerDes, StringSerDes>
+            {
+                ApplicationId = $"test-kstreams-{Guid.NewGuid()}",
+                BootstrapServers = "localhost:9092",
+                AutoOffsetReset = AutoOffsetReset.Earliest,
+                StartTaskDelayMs = (long)TimeSpan.FromDays(1).TotalMilliseconds
+            };
+
+            var builder = JoinStreamWithTable();
+
+            var t = builder.Build();
+            var stream = new KafkaStream(t, config);
+
+            Console.CancelKeyPress += (o, e) => { stream.Dispose(); };
 
             await stream.StartAsync();
+
+            Console.WriteLine("Finished");
+        }
+
+        private static StreamBuilder JoinStreamWithTable()
+        {
+            var builder = new StreamBuilder();
+
+            var table = builder.GlobalTable("JoinSample-1",
+                InMemory<string, string>.As("table-store"));
+
+            var stream = builder.Stream<string, string>("JoinSample-2");
+
+            var joinedStream =
+                stream.LeftJoin(table, (k, v) => k, (v1, v2) => $"{v1}joinedWith{v2}");
+
+            joinedStream.To("JoinedEvent");
+
+            return builder;
         }
     }
 }
