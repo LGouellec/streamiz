@@ -21,9 +21,12 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
             string MetricKey(StreamMetric metric) => $"{metric.Group}_{metric.Name}".Replace("-", "_");
             
             var metrics = sensors.SelectMany(s => s.Metrics);
+            List<string> allMetricsKey = new List<string>();
+            
             foreach (var metric in metrics)
             {
                 var metricKey = MetricKey(metric.Value);
+                allMetricsKey.Add(metricKey);
                 Gauge gauge = null;
                 
                 if (gauges.ContainsKey(metricKey))
@@ -42,6 +45,15 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
                     gauge.WithLabels(metric.Key.Tags.Values.ToArray()).Set(value);
                 else
                     gauge.WithLabels(metric.Key.Tags.Values.ToArray()).Set(1);
+            }
+
+            var metricsRemove = gauges.Keys.Except(allMetricsKey).ToList();
+            foreach (var m in metricsRemove)
+            {
+                gauges[m].Unpublish();
+               // gauges[m].
+                gauges[m].RemoveLabelled();
+                gauges.Remove(m);
             }
         }
 

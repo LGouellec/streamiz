@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using MongoDB.Bson;
@@ -49,7 +50,11 @@ namespace sample_stream
                 builder.AddLog4Net();
             });
             config.MetricsRecording = MetricsRecordingLevel.DEBUG;
-            config.UsePrometheusReporter(9090, true);
+            var rd = new Random();
+            var port = rd.Next(5000, 10000);
+            Console.WriteLine($"Prometheus exporter run on {port}");
+            
+            config.UsePrometheusReporter(port, true);
 
             StreamBuilder builder = new StreamBuilder();
 

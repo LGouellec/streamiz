@@ -402,7 +402,8 @@ namespace Streamiz.Kafka.Net.Processors
                 
                 FlushState();
                 CloseStateManager();
-
+                streamMetricsRegistry.RemoveTaskSensors(threadId, Id.ToString());
+                
                 TransitTo(TaskState.SUSPENDED);
             }
             else if (state == TaskState.RUNNING)
@@ -428,6 +429,7 @@ namespace Streamiz.Kafka.Net.Processors
                     
                     FlushState();
                     CloseStateManager();
+                    streamMetricsRegistry.RemoveTaskSensors(threadId, Id.ToString());
                 }
 
                 log.LogInformation($"{logPrefix}Suspended running");
