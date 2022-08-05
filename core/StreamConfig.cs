@@ -1,20 +1,18 @@
-﻿using Confluent.Kafka;
-
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using Confluent.Kafka;
+using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.RocksDb;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using Microsoft.Extensions.Logging;
-using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net
 {
@@ -303,6 +301,17 @@ namespace Streamiz.Kafka.Net
         /// Time wait before completing the start task of <see cref="KafkaStream"/>. (default: 2000)
         /// </summary>
         long StartTaskDelayMs { get; set; }
+        
+        /// <summary>
+        /// Enables parallel processing for messages (default: false)
+        /// </summary>
+        bool ParallelProcessing { get; set; }
+        
+        /// <summary>
+        /// The max number of concurrent messages processing by thread. (default: 8)
+        /// Only valid if ParallelProcessing is true
+        /// </summary>
+        int MaxDegreeOfParallelism { get; set; }
 
         #endregion
         
@@ -454,6 +463,8 @@ namespace Streamiz.Kafka.Net
         internal static readonly string exposeLibrdKafkaCst = "expose.librdkafka.stats";
         internal static readonly string metricsRecordingLevelCst = "metrics.recording.level";
         internal static readonly string startTaskDelayMsCst = "start.task.delay.ms";
+        internal static readonly string parallelProcessingCst = "parallel.processing";
+        internal static readonly string maxDegreeOfParallelismCst = "max.degree.of.parallelism";
         internal static readonly string rocksDbConfigSetterCst = "rocksdb.config.setter";
         internal static readonly string innerExceptionHandlerCst = "inner.exception.handler";
         internal static readonly string deserializationExceptionHandlerCst = "deserialization.exception.handler";
@@ -2027,6 +2038,8 @@ namespace Streamiz.Kafka.Net
             MetricsReporter = (_) => { }; // nothing by default, maybe another behavior in future
             ExposeLibrdKafkaStats = false;
             StartTaskDelayMs = 5000;
+            ParallelProcessing = false;
+            MaxDegreeOfParallelism = 8;
 
             if (properties != null)
             {
@@ -2357,6 +2370,25 @@ namespace Streamiz.Kafka.Net
         {
             get => this[startTaskDelayMsCst];
             set => this.AddOrUpdate(startTaskDelayMsCst, value);
+        }
+
+        /// <summary>
+        /// Enables parallel processing for messages (default: false)
+        /// </summary>
+        public bool ParallelProcessing
+        {
+            get => this[parallelProcessingCst];
+            set => this.AddOrUpdate(parallelProcessingCst, value);
+        }
+
+        /// <summary>
+        /// The max number of concurrent messages processing by thread. (default: 8)
+        /// Only valid if ParallelProcessing is true
+        /// </summary>
+        public int MaxDegreeOfParallelism
+        {
+            get => this[maxDegreeOfParallelismCst];
+            set => this.AddOrUpdate(maxDegreeOfParallelismCst, value);
         }
 
         /// <summary>
