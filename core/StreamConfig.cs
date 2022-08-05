@@ -465,7 +465,11 @@ namespace Streamiz.Kafka.Net
         internal static readonly string startTaskDelayMsCst = "start.task.delay.ms";
         internal static readonly string parallelProcessingCst = "parallel.processing";
         internal static readonly string maxDegreeOfParallelismCst = "max.degree.of.parallelism";
-
+        internal static readonly string rocksDbConfigSetterCst = "rocksdb.config.setter";
+        internal static readonly string innerExceptionHandlerCst = "inner.exception.handler";
+        internal static readonly string deserializationExceptionHandlerCst = "deserialization.exception.handler";
+        internal static readonly string productionExceptionHandlerCst = "production.exception.handler";
+        
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
         /// </summary>
@@ -1993,7 +1997,8 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Constructor empty
         /// </summary>
-        public StreamConfig() : this(null) { }
+        public StreamConfig() : this(null)
+        { }
 
         /// <summary>
         /// Constructor with a dictionary of properties.
@@ -2019,9 +2024,10 @@ namespace Streamiz.Kafka.Net
             MaxPollRestoringRecords = 1000;
             MaxTaskIdleMs = 0;
             BufferedRecordsPerPartition = 1000;
-            InnerExceptionHandler = (exception) => ExceptionHandlerResponse.FAIL;
-            ProductionExceptionHandler = (report) => ExceptionHandlerResponse.FAIL;
-            DeserializationExceptionHandler = (context, record, exception) => ExceptionHandlerResponse.FAIL;
+            InnerExceptionHandler = (_) => ExceptionHandlerResponse.FAIL;
+            ProductionExceptionHandler = (_) => ExceptionHandlerResponse.FAIL;
+            DeserializationExceptionHandler = (_, _, _) => ExceptionHandlerResponse.FAIL;
+            RocksDbConfigHandler = (_, _) => { };
             FollowMetadata = false;
             StateDir = Path.Combine(Path.GetTempPath(), "streamiz-kafka-net");
             ReplicationFactor = 1;
@@ -2275,28 +2281,42 @@ namespace Streamiz.Kafka.Net
             get => this[offsetCheckpointManagerCst];
             set => this.AddOrUpdate(offsetCheckpointManagerCst, value);
         }
-
-        // TODO : set real config into dictionary ...
         
         /// <summary>
         /// A Rocks DB config handler function
         /// </summary>
-        public Action<string, RocksDbOptions> RocksDbConfigHandler { get; set; }
+        public Action<string, RocksDbOptions> RocksDbConfigHandler
+        {
+            get => this[rocksDbConfigSetterCst];
+            set => this.AddOrUpdate(rocksDbConfigSetterCst, value);
+        }
 
         /// <summary>
         /// Inner exception handling function called during processing.
         /// </summary>
-        public Func<Exception, ExceptionHandlerResponse> InnerExceptionHandler { get; set; }
+        public Func<Exception, ExceptionHandlerResponse> InnerExceptionHandler
+        {
+            get => this[innerExceptionHandlerCst];
+            set => this.AddOrUpdate(innerExceptionHandlerCst, value);
+        }
 
         /// <summary>
         /// Deserialization exception handling function called when deserialization exception during kafka consumption is raise.
         /// </summary>
-        public Func<ProcessorContext, ConsumeResult<byte[], byte[]>, Exception, ExceptionHandlerResponse> DeserializationExceptionHandler { get; set; }
+        public Func<ProcessorContext, ConsumeResult<byte[], byte[]>, Exception, ExceptionHandlerResponse> DeserializationExceptionHandler
+        {
+            get => this[deserializationExceptionHandlerCst];
+            set => this.AddOrUpdate(deserializationExceptionHandlerCst, value);
+        }
 
         /// <summary>
         /// Production exception handling function called when kafka produce exception is raise.
         /// </summary>
-        public Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler { get; set; }
+        public Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler  
+        {
+            get => this[productionExceptionHandlerCst];
+            set => this.AddOrUpdate(productionExceptionHandlerCst, value);
+        }
         
         /// <summary>
         /// Delay between two invocations of MetricsReporter().
@@ -2644,7 +2664,7 @@ namespace Streamiz.Kafka.Net
             // stream config property
             sb.AppendLine();
             sb.AppendLine("\tStream property:");
-            foreach (var kp in this.Keys)
+            foreach (var kp in Keys)
                 sb.AppendLine($"\t\t{kp}: \t{this[kp]}");
 
             // client config property

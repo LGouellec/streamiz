@@ -13,6 +13,7 @@ using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 
+
 namespace Streamiz.Kafka.Net.Processors
 {
     internal abstract class AbstractProcessor<K, V> : IProcessor<K, V>

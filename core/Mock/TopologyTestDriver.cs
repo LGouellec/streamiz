@@ -9,6 +9,7 @@ using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Streamiz.Kafka.Net.Crosscutting;
 
 namespace Streamiz.Kafka.Net.Mock
 {
@@ -105,6 +106,7 @@ namespace Streamiz.Kafka.Net.Mock
 
         internal TopologyTestDriver(InternalTopologyBuilder builder, IStreamConfig config, Mode mode, IKafkaSupplier supplier)
         {
+            Logger.LoggerFactory = config.Logger;
             topologyBuilder = builder;
             configuration = config;
 

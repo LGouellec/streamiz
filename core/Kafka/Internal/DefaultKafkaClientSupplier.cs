@@ -66,20 +66,23 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 builder.SetPartitionsRevokedHandler((c, p) => rebalanceListener.PartitionsRevoked(c, p));
                 builder.SetLogHandler(loggerAdapter.LogConsume);
                 builder.SetErrorHandler(loggerAdapter.ErrorConsume);
-                if (exposeLibrdKafka)
-                {
-                    // TODO : test librdkafka statistics with IntegrationTest (WIP see #82)
-                    var consumerStatisticsHandler = new ConsumerStatisticsHandler(
-                        config.ClientId,
+            }
+            
+            if (exposeLibrdKafka)
+            {
+                // TODO : test librdkafka statistics with IntegrationTest (WIP see #82)
+                var consumerStatisticsHandler = new ConsumerStatisticsHandler(
+                    config.ClientId,
+                    config is StreamizConsumerConfig streamizConsumerConfig  && streamizConsumerConfig.Config != null ?
+                        streamizConsumerConfig.Config.ApplicationId :
                         streamConfig.ApplicationId, 
-                        (config as StreamizConsumerConfig)?.ThreadId);
-                    consumerStatisticsHandler.Register(MetricsRegistry);
-                    builder.SetStatisticsHandler((c, stat) =>
-                    {
-                        var statistics = JsonConvert.DeserializeObject<Statistics>(stat);
-                        consumerStatisticsHandler.Publish(statistics);
-                    });
-                }
+                    (config as StreamizConsumerConfig)?.ThreadId);
+                consumerStatisticsHandler.Register(MetricsRegistry);
+                builder.SetStatisticsHandler((c, stat) =>
+                {
+                    var statistics = JsonConvert.DeserializeObject<Statistics>(stat);
+                    consumerStatisticsHandler.Publish(statistics);
+                });
             }
 
             return builder.Build();
@@ -95,7 +98,9 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 // TODO : test librdkafka statistics with IntegrationTest (WIP see #82)
                 var producerStatisticsHandler = new ProducerStatisticsHandler(
                     config.ClientId,
-                    streamConfig.ApplicationId,
+                    config is StreamizProducerConfig streamizProducerConfig  && streamizProducerConfig.Config != null ?
+                        streamizProducerConfig.Config.ApplicationId :
+                        streamConfig.ApplicationId,
                     (config as StreamizProducerConfig)?.ThreadId,
                     (config as StreamizProducerConfig)?.Id?.ToString());
                 producerStatisticsHandler.Register(MetricsRegistry);

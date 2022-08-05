@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using Prometheus;
 
 namespace Streamiz.Kafka.Net.Metrics.Prometheus
