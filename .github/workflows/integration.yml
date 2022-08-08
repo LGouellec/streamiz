@@ -1,10 +1,8 @@
-name: build
+name: integration
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master, develop ]
+    branches: [ integration ]
 
 jobs:
   build:
@@ -12,15 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup .NET Core 3.1	
-      uses: actions/setup-dotnet@v1	
-      with:	
-        dotnet-version: 3.1.101
-    - name: Setup .NET 5.0
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 5.0.101
     - name: Setup .NET 6.0
       uses: actions/setup-dotnet@v1
       with:
@@ -34,4 +23,4 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
-      run: dotnet test --no-build --no-restore --verbosity normal --configuration Release test/Streamiz.Kafka.Net.Tests/Streamiz.Kafka.Net.Tests.csproj
+      run: dotnet test --no-build --no-restore --verbosity normal --configuration Release test/Streamiz.Kafka.Net.IntegrationTests/Streamiz.Kafka.Net.IntegrationTests.csproj

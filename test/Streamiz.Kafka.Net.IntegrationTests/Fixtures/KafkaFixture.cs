@@ -17,7 +17,7 @@ namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
         {
             container = new TestcontainersBuilder<KafkaTestcontainer>()
                 .WithKafka(new KafkaTestcontainerConfiguration())
-                .WithImage("public.ecr.aws/knowre/cp-kafka:6.1.0")
+                .WithImage("registry.hub.docker.com/confluentinc/cp-kafka:7.2.1")
                 .WithPortBinding(9092)
                 .WithName("kafka-streamiz-integration-tests")
                 .Build();
@@ -25,7 +25,7 @@ namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
 
         public string BootstrapServers => container.BootstrapServers;
 
-        public ReadOnlyDictionary<string, string> ConsumerProperties => new(
+        private ReadOnlyDictionary<string, string> ConsumerProperties => new(
             new Dictionary<string, string>
             {
                 {"bootstrap.servers", container.BootstrapServers},
@@ -34,7 +34,7 @@ namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
             }
         );
 
-        public ProducerConfig ProducerProperties => new()
+        private ProducerConfig ProducerProperties => new()
         {
             BootstrapServers = container.BootstrapServers
         };
@@ -45,11 +45,18 @@ namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
             return consumer;
         }
 
-        internal ConsumeResult<string, byte[]> Consume(string topic)
+        internal ConsumeResult<string, byte[]> Consume(string topic, long timeoutMs = 10000)
         {
-            using var consumer = Consumer();
+            var consumer = Consumer();
+            
             consumer.Subscribe(topic);
-            return consumer.Consume(TimeSpan.FromSeconds(5));
+            var result = consumer.Consume(TimeSpan.FromMilliseconds(timeoutMs));
+            
+            consumer.Unsubscribe();
+            consumer.Close();
+            consumer.Dispose();
+            
+            return result;
         }
 
         internal async Task<DeliveryResult<string, byte[]>> Produce(string topic, string key, byte[] bytes)
@@ -67,7 +74,7 @@ namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
             await container.ExecAsync(new List<string>() {
                 "/bin/sh",
                 "-c",
-                $"/usr/bin/kafka-topics --create --zookeeper {container.IpAddress}:2181 " +
+                $"/usr/bin/kafka-topics --create --bootstrap-server {container.IpAddress}:9092 " +
                     "--replication-factor 1 " +
                     $"--partitions {partitions} " +
                     $"--topic {name}"
@@ -75,7 +82,7 @@ namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
         }
         
         public Task DisposeAsync() => container.DisposeAsync().AsTask();
-        
+
         public Task InitializeAsync() => container.StartAsync();
         
     }
