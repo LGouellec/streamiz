@@ -190,6 +190,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
             stream.AllowAutoCreateTopics = true;
             stream.BatchSize = 100;
             stream.StickyPartitioningLingerMs = 5;
+            stream.ParallelProcessing = true;
+            stream.MaxDegreeOfParallelism = 10;
 
             var producerConfig = stream.ToProducerConfig();
             var consumerConfig = stream.ToConsumerConfig();
@@ -614,6 +616,9 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual(true, stream.AllowAutoCreateTopics);
             Assert.AreEqual(100, stream.BatchSize);
             Assert.AreEqual(5, stream.StickyPartitioningLingerMs);
+            Assert.AreEqual(true, stream.ParallelProcessing);
+            Assert.AreEqual(10, stream.MaxDegreeOfParallelism);
+
             #endregion
         }
     }

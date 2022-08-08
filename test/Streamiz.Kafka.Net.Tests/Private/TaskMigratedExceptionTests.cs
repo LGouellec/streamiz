@@ -253,31 +253,43 @@ namespace Streamiz.Kafka.Net.Tests.Private
         }
 
         [Test]
-        public void ProductionExceptionRecoverableHandlerFailTest()
+        public void ProductionExceptionRecoverableHandlerFailTestWithParallel()
+        {
+            ProductionExceptionRecoverableHandlerFailTest(true);
+        }
+
+        [Test]
+        public void ProductionExceptionRecoverableHandlerFailTestWithoutParallel()
+        {
+            ProductionExceptionRecoverableHandlerFailTest(false);
+        }
+        
+        private void ProductionExceptionRecoverableHandlerFailTest(bool parallelProcessing)
         {
             var _return = new List<KeyValuePair<string, string>>();
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             var dt = DateTime.Now;
             var timeout = TimeSpan.FromSeconds(10);
-
+        
             config.ApplicationId = "test";
             config.BootstrapServers = "127.0.0.1";
             config.PollMs = 10;
             config.ProductionExceptionHandler += (r) => ExceptionHandlerResponse.FAIL;
-
+            config.ParallelProcessing = parallelProcessing;
+        
             var options = new ProducerSyncExceptionOptions {IsRecoverable = true};
             var supplier = new ProducerSyncException(options);
-
+        
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("test")
                 .To("test-output");
-
+        
             builder.Stream<string, string>("test-output")
                 .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
-
+        
             var t = builder.Build();
-
+        
             using (var driver = new TopologyTestDriver(t.Builder, config,
                 TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
             {
@@ -293,34 +305,45 @@ namespace Streamiz.Kafka.Net.Tests.Private
         }
 
         [Test]
-        public void ProduceExceptionRecoverableHandlerFailTest()
+        public void ProduceExceptionRecoverableHandlerFailTestWithoutParallel()
         {
-            bool errorState = false;
+            ProduceExceptionRecoverableHandlerFailTest(false);
+        }
+        
+        [Test] public void ProduceExceptionRecoverableHandlerFailTestWithParallel()
+        {
+            ProduceExceptionRecoverableHandlerFailTest(true);
+        }
+        
+        private void ProduceExceptionRecoverableHandlerFailTest(bool parallelProcessing)
+        {
+            var errorState = false;
             var _return = new List<KeyValuePair<string, string>>();
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             var dt = DateTime.Now;
             var timeout = TimeSpan.FromSeconds(100000);
-
+        
             config.ApplicationId = "test";
             config.BootstrapServers = "127.0.0.1";
             config.PollMs = 10;
             config.ProductionExceptionHandler += (r) => ExceptionHandlerResponse.FAIL;
-
+            config.ParallelProcessing = parallelProcessing;
+        
             var options = new ProducerSyncExceptionOptions {IsRecoverable = true, IsProductionException = true};
             var supplier = new ProducerSyncException(options);
-
+        
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("test")
                 .To("test-output");
-
+        
             builder.Stream<string, string>("test-output")
                 .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
-
+        
             var t = builder.Build();
-
+        
             using (var driver = new TopologyTestDriver(t.Builder, config,
-                TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+                       TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
                 var outputTopic = driver.CreateOuputTopic<string, string>("test-output");
@@ -333,7 +356,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                         break;
                     }
                 }
-
+        
                 var expected = new List<KeyValuePair<string, string>>();
                 expected.Add(KeyValuePair.Create<string, string>(null, "coucou"));
                 Assert.AreEqual(expected, _return);
