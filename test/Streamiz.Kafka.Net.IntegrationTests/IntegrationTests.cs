@@ -8,7 +8,7 @@ using NUnit.Framework;
 
 namespace Streamiz.Kafka.Net.IntegrationTests
 {
-    public class IntegrationTest
+    public class IntegrationTests
     {
         private KafkaFixture kafkaFixture;
 
@@ -87,7 +87,6 @@ namespace Streamiz.Kafka.Net.IntegrationTests
             await kafkaFixture.Produce(
                 "filtered-topic", "a", Encoding.UTF8.GetBytes("a Hello world!")
             );
-            
             
             await stream.StartAsync();
 
