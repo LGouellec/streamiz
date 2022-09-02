@@ -37,6 +37,11 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             throw new NotImplementedException();
         }
 
+        public Task DeleteGroupsAsync(IList<string> groups, DeleteGroupsOptions options = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task CreateTopicsAsync(IEnumerable<TopicSpecification> topics, CreateTopicsOptions options = null)
         {
             return Task.Run(() =>
@@ -55,6 +60,21 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         {
             var result = cluster.DeleteRecords(topicPartitionOffsets);
             return Task.FromResult(result);
+        }
+
+        public Task CreateAclsAsync(IEnumerable<AclBinding> aclBindings, CreateAclsOptions options = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<DescribeAclsResult> DescribeAclsAsync(AclBindingFilter aclBindingFilter, DescribeAclsOptions options = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<List<DeleteAclsResult>> DeleteAclsAsync(IEnumerable<AclBindingFilter> aclBindingFilters, DeleteAclsOptions options = null)
+        {
+            throw new NotImplementedException();
         }
 
         public Task DeleteTopicsAsync(IEnumerable<string> topics, DeleteTopicsOptions options = null)
