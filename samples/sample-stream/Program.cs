@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using MongoDB.Bson;
@@ -20,21 +21,6 @@ namespace sample_stream
     /// </summary>
     internal class Program
     {
-        public class Address
-        {
-            public string city { get; set; }
-            public string zip { get; set; }
-        }
-
-        public class Person
-        {
-            public ObjectId _id { get; set; }
-            public Address address { get; set; }
-            public string name { get; set; }
-            public string phone { get; set; }
-        }
-
-        
         public static async Task Main(string[] args)
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -49,61 +35,22 @@ namespace sample_stream
                 builder.AddLog4Net();
             });
             config.MetricsRecording = MetricsRecordingLevel.DEBUG;
-            config.UsePrometheusReporter(9090, true);
+            var rd = new Random();
+            var port = rd.Next(5000, 10000);
+            Console.WriteLine($"Prometheus exporter run on {port}");
+            
+            config.UsePrometheusReporter(port, true);
 
             StreamBuilder builder = new StreamBuilder();
-
-            var client = new MongoClient(
-                "mongodb://admin:admin@localhost:27017"
-            );
-            var database = client.GetDatabase("streamiz");
-
+            
             builder
                 .Stream<string, string>("input")
-                .MapValuesAsync(async (record, _) => {
-                    var persons = await database
-                        .GetCollection<Person>("adress")
-                        .FindAsync((p) => p.name.Equals(record.Key))
-                        .Result.ToListAsync();
-                    return persons.FirstOrDefault()?.address.city;
-                },
-                    RetryPolicy
-                        .NewBuilder()
-                        .NumberOfRetry(10)
-                        .RetryBackOffMs(100)
-                        .RetriableException<Exception>()
-                        .RetryBehavior(EndRetryBehavior.BUFFERED)
-                        .Build())
                 .To("person-city");
-            
-            // builder
-            //     .Stream<string, string>("input")
-            //     .ForeachAsync(
-            //         async (record, _) =>
-            //         {
-            //             await database
-            //                 .GetCollection<Person>("adress")
-            //                 .InsertOneAsync(new Person()
-            //                 {
-            //                     name = record.Key,
-            //                     address = new Address()
-            //                     {
-            //                         city = record.Value
-            //                     }
-            //                 });
-            //         },
-            //         RetryPolicy
-            //             .NewBuilder()
-            //             .NumberOfRetry(10)
-            //             .RetryBackOffMs(100)
-            //             .RetriableException<Exception>()
-            //             .RetryBehavior(EndRetryBehavior.SKIP)
-            //             .Build());
-            
+
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
             
-            Console.CancelKeyPress += (o, e) => stream.Dispose();
+            Console.CancelKeyPress += (_, _) => stream.Dispose();
 
             await stream.StartAsync();
         }
