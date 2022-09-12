@@ -1,15 +1,15 @@
-﻿using Confluent.Kafka;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Confluent.Kafka;
+using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Kafka.Internal;
-using Streamiz.Kafka.Net.Processors.Internal;
-using Streamiz.Kafka.Net.Stream.Internal;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
+using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.Stream.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -21,24 +21,24 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly IDictionary<TopicPartition, long> consumedOffsets;
         private readonly PartitionGrouper partitionGrouper;
         private readonly IList<IProcessor> processors = new List<IProcessor>();
-        private readonly bool eosEnabled = false;
-        private readonly long maxTaskIdleMs = 0;
+        private readonly bool eosEnabled;
+        private readonly long maxTaskIdleMs;
         private readonly long maxBufferedSize = 100;
-        private readonly bool followMetadata = false;
+        private readonly bool followMetadata;
 
         private long idleStartTime;
         private IProducer<byte[], byte[]> producer;
-        private bool transactionInFlight = false;
+        private bool transactionInFlight;
         private readonly string threadId;
         
-        private readonly Sensor closeTaskSensor;
-        private readonly Sensor activeBufferedRecordSensor;
-        private readonly Sensor processSensor;
-        private readonly Sensor processLatencySensor;
-        private readonly Sensor enforcedProcessingSensor;
-        private readonly Sensor commitSensor;
-        private readonly Sensor activeRestorationSensor;
-        private readonly Sensor restorationRecordsSendsor;
+        private Sensor closeTaskSensor;
+        private Sensor activeBufferedRecordSensor;
+        private Sensor processSensor;
+        private Sensor processLatencySensor;
+        private Sensor enforcedProcessingSensor;
+        private Sensor commitSensor;
+        private Sensor activeRestorationSensor;
+        private Sensor restorationRecordsSendsor;
 
 
         public StreamTask(string threadId, TaskId id, IEnumerable<TopicPartition> partitions,
@@ -95,20 +95,25 @@ namespace Streamiz.Kafka.Net.Processors
             }
 
             partitionGrouper = new PartitionGrouper(partitionsQueue);
-
-            closeTaskSensor = ThreadMetrics.ClosedTaskSensor(this.threadId, streamMetricsRegistry); 
-            activeBufferedRecordSensor = TaskMetrics.ActiveBufferedRecordsSensor(this.threadId, Id, streamMetricsRegistry);
-            processSensor = TaskMetrics.ProcessSensor(this.threadId, Id, streamMetricsRegistry);
-            processLatencySensor = TaskMetrics.ProcessLatencySensor(this.threadId, Id, streamMetricsRegistry);
-            enforcedProcessingSensor = TaskMetrics.EnforcedProcessingSensor(this.threadId, Id, streamMetricsRegistry);
-            commitSensor = TaskMetrics.CommitSensor(this.threadId, Id, streamMetricsRegistry);
-            activeRestorationSensor = TaskMetrics.ActiveRestorationSensor(this.threadId, Id, streamMetricsRegistry);
-            restorationRecordsSendsor = TaskMetrics.RestorationRecordsSensor(this.threadId, Id, streamMetricsRegistry);
+            
+            RegisterSensors();
         }
 
         internal IConsumerGroupMetadata GroupMetadata { get; set; }
 
         #region Private
+
+        private void RegisterSensors()
+        {
+            closeTaskSensor = ThreadMetrics.ClosedTaskSensor(threadId, streamMetricsRegistry);                        
+            activeBufferedRecordSensor = TaskMetrics.ActiveBufferedRecordsSensor(threadId, Id, streamMetricsRegistry);
+            processSensor = TaskMetrics.ProcessSensor(threadId, Id, streamMetricsRegistry);                           
+            processLatencySensor = TaskMetrics.ProcessLatencySensor(threadId, Id, streamMetricsRegistry);             
+            enforcedProcessingSensor = TaskMetrics.EnforcedProcessingSensor(threadId, Id, streamMetricsRegistry);     
+            commitSensor = TaskMetrics.CommitSensor(threadId, Id, streamMetricsRegistry);                             
+            activeRestorationSensor = TaskMetrics.ActiveRestorationSensor(threadId, Id, streamMetricsRegistry);       
+            restorationRecordsSendsor = TaskMetrics.RestorationRecordsSensor(threadId, Id, streamMetricsRegistry);    
+        }
 
         private IDictionary<TopicPartition, long> CheckpointableOffsets
             => collector.CollectorOffsets
@@ -129,8 +134,8 @@ namespace Streamiz.Kafka.Net.Processors
 
             if (state == TaskState.CLOSED)
                 throw new IllegalStateException($"Illegal state {state} while committing active task {Id}");
-            else if (state == TaskState.SUSPENDED || state == TaskState.CREATED
-                || state == TaskState.RUNNING || state == TaskState.RESTORING)
+            if (state == TaskState.SUSPENDED || state == TaskState.CREATED
+                                             || state == TaskState.RUNNING || state == TaskState.RESTORING)
             {
                 FlushState();
                 if (eosEnabled)
@@ -230,7 +235,8 @@ namespace Streamiz.Kafka.Net.Processors
                 idleStartTime = -1;
                 return true;
             }
-            else if (partitionGrouper.NumBuffered() > 0)
+
+            if (partitionGrouper.NumBuffered() > 0)
             {
                 if (idleStartTime == -1)
                 {
@@ -242,16 +248,12 @@ namespace Streamiz.Kafka.Net.Processors
                     enforcedProcessingSensor.Record();
                     return true;
                 }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                idleStartTime = -1;
+
                 return false;
             }
+
+            idleStartTime = -1;
+            return false;
         }
 
         public override void Close()
@@ -264,12 +266,14 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 throw new IllegalStateException($"Illegal state {state} while closing active task {Id}");
             }
-            else if (state == TaskState.CLOSED)
+
+            if (state == TaskState.CLOSED)
             {
                 log.LogInformation($"{logPrefix}Skip closing since state is {state}");
                 return;
             }
-            else if (state == TaskState.SUSPENDED)
+
+            if (state == TaskState.SUSPENDED)
             {
                 foreach (var kp in processors)
                 {
@@ -291,7 +295,7 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 throw new IllegalStateException($"Unknow state {state} while suspending active task {Id}");
             }
-            
+
             streamMetricsRegistry.RemoveTaskSensors(threadId, Id.ToString());
         }
 
@@ -368,6 +372,12 @@ namespace Streamiz.Kafka.Net.Processors
                     InitializeTransaction();
                     collector.Init(ref producer);
                 }
+                
+                RegisterSensors();
+                
+                foreach (var p in processors)
+                    p.Init(Context);
+                
                 TransitTo(TaskState.CREATED);
             }
             else if (state == TaskState.CLOSED)
@@ -403,7 +413,9 @@ namespace Streamiz.Kafka.Net.Processors
                 FlushState();
                 CloseStateManager();
                 streamMetricsRegistry.RemoveTaskSensors(threadId, Id.ToString());
-                
+                foreach (var kp in processors)
+                    kp.Close();
+
                 TransitTo(TaskState.SUSPENDED);
             }
             else if (state == TaskState.RUNNING)
@@ -430,6 +442,8 @@ namespace Streamiz.Kafka.Net.Processors
                     FlushState();
                     CloseStateManager();
                     streamMetricsRegistry.RemoveTaskSensors(threadId, Id.ToString());
+                    foreach (var kp in processors)
+                        kp.Close();
                 }
 
                 log.LogInformation($"{logPrefix}Suspended running");
@@ -438,7 +452,6 @@ namespace Streamiz.Kafka.Net.Processors
             else if (state == TaskState.SUSPENDED)
             {
                 log.LogInformation($"{logPrefix}Skip suspended since state is {state}");
-                return;
             }
             else if (state == TaskState.CLOSED)
             {
@@ -473,29 +486,27 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 return false;
             }
-            else
+
+            Context.SetRecordMetaData(record.Record);
+
+            var recordInfo = $"Topic:{record.Record.Topic}|Partition:{record.Record.Partition.Value}|Offset:{record.Record.Offset}|Timestamp:{record.Record.Message.Timestamp.UnixTimestampMs}";
+
+            log.LogDebug($"{logPrefix}Start processing one record [{recordInfo}]");
+            long latency = ActionHelper.MeasureLatency(() => record.Processor.Process(record.Record));
+            log.LogDebug($"{logPrefix}Completed processing one record [{recordInfo}]");
+
+            consumedOffsets.AddOrUpdate(record.Record.TopicPartition, record.Record.Offset);
+            commitNeeded = true;
+
+            if (record.Queue.Size == maxBufferedSize)
             {
-                Context.SetRecordMetaData(record.Record);
-
-                var recordInfo = $"Topic:{record.Record.Topic}|Partition:{record.Record.Partition.Value}|Offset:{record.Record.Offset}|Timestamp:{record.Record.Message.Timestamp.UnixTimestampMs}";
-
-                log.LogDebug($"{logPrefix}Start processing one record [{recordInfo}]");
-                long latency = ActionHelper.MeasureLatency(() => record.Processor.Process(record.Record));
-                log.LogDebug($"{logPrefix}Completed processing one record [{recordInfo}]");
-
-                consumedOffsets.AddOrUpdate(record.Record.TopicPartition, record.Record.Offset);
-                commitNeeded = true;
-
-                if (record.Queue.Size == maxBufferedSize)
-                {
-                    consumer.Resume(record.Record.TopicPartition.ToSingle());
-                }
-                
-                processSensor.Record();
-                processLatencySensor.Record(latency);
-                activeBufferedRecordSensor.Record(Grouper.NumBuffered());
-                return true;
+                consumer.Resume(record.Record.TopicPartition.ToSingle());
             }
+                
+            processSensor.Record();
+            processLatencySensor.Record(latency);
+            activeBufferedRecordSensor.Record(Grouper.NumBuffered());
+            return true;
         }
 
         public void AddRecord(ConsumeResult<byte[], byte[]> record)
