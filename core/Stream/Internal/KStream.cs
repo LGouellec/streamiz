@@ -671,8 +671,41 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #endregion
         
-        #region Map,FlatMap,MapValues,FlatMapValues,Foreach Async 
+        #region Map,FlatMap,MapValues,FlatMapValues,Foreach Async
 
+        private IKStream<K1, V1> AsyncProcess<K1, V1>(
+            string asyncProcessorName,
+            string requestSinkProcessorName,
+            string requestSourceProcessorName,
+            string responseSinkProcessorName,
+            string responseSourceProcessorName,
+            RequestSerDes<K, V> requestSerDes,
+            ResponseSerDes<K1, V1> responseSerDes,
+            ProcessorParameters<K, V> processorParameters)
+        {
+            AsyncNode<K, V, K1, V1> asyncNode = new AsyncNode<K, V, K1, V1>(
+                asyncProcessorName,
+                requestSinkProcessorName,
+                requestSourceProcessorName,
+                RequestTopic(asyncProcessorName),
+                responseSinkProcessorName,
+                responseSourceProcessorName,
+                ResponseTopic(asyncProcessorName),
+                requestSerDes,
+                responseSerDes,
+                processorParameters);
+            
+            builder.AddGraphNode(Node, asyncNode.RequestNode);
+            builder.AddGraphNode(asyncNode.RequestNode, asyncNode.ResponseNode);
+
+            return new KStream<K1, V1>(requestSourceProcessorName,
+                responseSerDes.ResponseKeySerDes,
+                responseSerDes.ResponseValueSerDes,
+                responseSourceProcessorName.ToSingle().ToList(),
+                asyncNode.ResponseNode,
+                builder);
+        }
+        
         public IKStream<K1, V1> MapAsync<K1, V1>(
             Func<ExternalRecord<K, V>, ExternalContext, Task<KeyValuePair<K1, V1>>> asyncMapper,
             RetryPolicy retryPolicy = null,
@@ -687,28 +720,16 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             
             ProcessorParameters<K, V > processorParameters =
                 new ProcessorParameters<K, V>(new KStreamMapAsync<K, V, K1, V1>(asyncMapper, retryPolicy), processors.asyncProcessorName);
-
-            AsyncNode<K, V, K1, V1> asyncNode = new AsyncNode<K, V, K1, V1>(
+            
+            return AsyncProcess(
                 processors.asyncProcessorName,
                 processors.requestSinkProcessorName,
                 processors.requestSourceProcessorName,
-                RequestTopic(processors.asyncProcessorName),
                 processors.responseSinkProcessorName,
                 processors.responseSourceProcessorName,
-                ResponseTopic(processors.asyncProcessorName),
                 requestSerDes,
                 responseSerDes,
                 processorParameters);
-            
-            builder.AddGraphNode(Node, asyncNode.RequestNode);
-            builder.AddGraphNode(asyncNode.RequestNode, asyncNode.ResponseNode);
-
-            return new KStream<K1, V1>(processors.responseSourceProcessorName,
-                responseSerDes.ResponseKeySerDes,
-                responseSerDes.ResponseValueSerDes,
-                processors.responseSourceProcessorName.ToSingle().ToList(),
-                asyncNode.ResponseNode,
-                builder);
         }
         
         public IKStream<K, V1> MapValuesAsync<V1>(
@@ -726,27 +747,15 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             ProcessorParameters<K, V > processorParameters =
                 new ProcessorParameters<K, V>(new KStreamMapValuesAsync<K, V, V1>(asyncMapper, retryPolicy), processors.asyncProcessorName);
 
-            AsyncNode<K, V, K, V1> asyncNode = new AsyncNode<K, V, K, V1>(
+            return AsyncProcess(
                 processors.asyncProcessorName,
                 processors.requestSinkProcessorName,
                 processors.requestSourceProcessorName,
-                RequestTopic(processors.asyncProcessorName),
                 processors.responseSinkProcessorName,
                 processors.responseSourceProcessorName,
-                ResponseTopic(processors.asyncProcessorName),
                 requestSerDes,
                 responseSerDes,
                 processorParameters);
-            
-            builder.AddGraphNode(Node, asyncNode.RequestNode);
-            builder.AddGraphNode(asyncNode.RequestNode, asyncNode.ResponseNode);
-
-            return new KStream<K, V1>(processors.responseSourceProcessorName,
-                responseSerDes.ResponseKeySerDes,
-                responseSerDes.ResponseValueSerDes,
-                processors.responseSourceProcessorName.ToSingle().ToList(),
-                asyncNode.ResponseNode,
-                builder);
         }
         
         public IKStream<K1, V1> FlatMapAsync<K1, V1>(
@@ -764,26 +773,15 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             ProcessorParameters<K, V > processorParameters =
                 new ProcessorParameters<K, V>(new KStreamFlatMapAsync<K, V, K1, V1>(asyncMapper, retryPolicy), processors.asyncProcessorName);
 
-            AsyncNode<K, V, K1, V1> asyncNode = new AsyncNode<K, V, K1, V1>(
+            return AsyncProcess(
                 processors.asyncProcessorName,
                 processors.requestSinkProcessorName,
                 processors.requestSourceProcessorName,
-                RequestTopic(processors.asyncProcessorName),
                 processors.responseSinkProcessorName,
                 processors.responseSourceProcessorName,
-                ResponseTopic(processors.asyncProcessorName),
                 requestSerDes,
                 responseSerDes,
                 processorParameters);
-            builder.AddGraphNode(Node, asyncNode.RequestNode);
-            builder.AddGraphNode(asyncNode.RequestNode, asyncNode.ResponseNode);
-
-            return new KStream<K1, V1>(processors.responseSourceProcessorName,
-                responseSerDes.ResponseKeySerDes,
-                responseSerDes.ResponseValueSerDes,
-                processors.responseSourceProcessorName.ToSingle().ToList(),
-                asyncNode.ResponseNode,
-                builder);
         }
         
         public IKStream<K, V1> FlatMapValuesAsync<V1>(
@@ -801,26 +799,15 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             ProcessorParameters<K, V > processorParameters =
                 new ProcessorParameters<K, V>(new KStreamFlatMapValuesAsync<K, V, V1>(asyncMapper, retryPolicy), processors.asyncProcessorName);
 
-            AsyncNode<K, V, K, V1> asyncNode = new AsyncNode<K, V, K, V1>(
+            return AsyncProcess(
                 processors.asyncProcessorName,
                 processors.requestSinkProcessorName,
                 processors.requestSourceProcessorName,
-                RequestTopic(processors.asyncProcessorName),
                 processors.responseSinkProcessorName,
                 processors.responseSourceProcessorName,
-                ResponseTopic(processors.asyncProcessorName),
                 requestSerDes,
                 responseSerDes,
                 processorParameters);
-            builder.AddGraphNode(Node, asyncNode.RequestNode);
-            builder.AddGraphNode(asyncNode.RequestNode, asyncNode.ResponseNode);
-
-            return new KStream<K, V1>(processors.responseSourceProcessorName,
-                responseSerDes.ResponseKeySerDes,
-                responseSerDes.ResponseValueSerDes,
-                processors.responseSourceProcessorName.ToSingle().ToList(),
-                asyncNode.ResponseNode,
-                builder);
         }
         
         public void ForeachAsync(

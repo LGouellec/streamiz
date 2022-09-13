@@ -6,6 +6,65 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 {
     internal static class SensorHelper
     {
+        #region RateAndCount
+        
+        internal static Sensor InvocationRateAndCountSensor(string threadId,
+                         string metricName,
+                         string metricDescription,
+                         string descriptionOfRate,
+                         string descriptionOfCount,
+                         MetricsRecordingLevel recordingLevel,
+                         StreamMetricsRegistry streamsMetrics) {
+            
+            Sensor sensor = streamsMetrics.ThreadLevelSensor(threadId, metricName, metricDescription, recordingLevel);
+            
+            AddInvocationRateAndCountToSensor(
+                sensor,
+                StreamMetricsRegistry.THREAD_LEVEL_GROUP,
+                streamsMetrics.ThreadLevelTags(threadId),
+                metricName,
+                descriptionOfRate,
+                descriptionOfCount
+            );
+            return sensor;
+        }
+        
+        #endregion
+            
+        #region Rate & Count and Avg & Max latency
+        
+        internal static Sensor InvocationRateAndCountAndAvgAndMaxLatencySensor( string threadId,
+                                 string metricName,
+                                 string metricDescription,
+                                 string descriptionOfRate,
+                                 string descriptionOfCount,
+                                 string descriptionOfAvg,
+                                 string descriptionOfMax,
+                                 MetricsRecordingLevel recordingLevel,
+                                 StreamMetricsRegistry streamsMetrics) {
+            
+            Sensor sensor = streamsMetrics.ThreadLevelSensor(threadId, metricName, metricDescription, recordingLevel);
+            var tags = streamsMetrics.ThreadLevelTags(threadId);
+
+            AddAvgAndMaxToSensor(sensor,
+                StreamMetricsRegistry.THREAD_LEVEL_GROUP,
+                tags,
+                metricName + StreamMetricsRegistry.LATENCY_SUFFIX,
+                descriptionOfAvg,
+                descriptionOfMax);
+
+            AddInvocationRateAndCountToSensor(sensor,
+                StreamMetricsRegistry.THREAD_LEVEL_GROUP,
+                tags,
+                metricName,
+                descriptionOfRate,
+                descriptionOfCount);
+            
+            return sensor;
+        }
+        
+        #endregion
+        
         internal static void AddInvocationRateAndCountToSensor(Sensor sensor,
             string group,
             IDictionary<string, string> tags,
