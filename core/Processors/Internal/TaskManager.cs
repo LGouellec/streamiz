@@ -7,6 +7,7 @@ using Confluent.Kafka;
 using Confluent.Kafka.Admin;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Processors.Internal

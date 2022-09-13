@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
             : this("+", port, url, registry, useHttps)
         { }
 
-        public PrometheusMetricServer(string hostname, int port, string url = "metrics/", CollectorRegistry registry = null, bool useHttps = false) 
+        private PrometheusMetricServer(string hostname, int port, string url = "metrics/", CollectorRegistry registry = null, bool useHttps = false) 
             : base(hostname, port, url, registry, useHttps)
         {
             var s = useHttps ? "s" : "";
