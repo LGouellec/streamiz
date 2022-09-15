@@ -618,9 +618,10 @@ namespace Streamiz.Kafka.Net
             {
                 int index = start ? (before ? 0 : 1) : (before ? 2 : 3);
                 var methods = typeof(IStreamMiddleware).GetMethods();
-                logger.LogInformation($"{logPrefix}Starting middleware (${methods[index].Name}) ....");
+                logger.LogInformation($"{logPrefix}Starting middleware {methods[index].Name.ToLowerInvariant()}");
                 foreach (var middleware in configuration.Middlewares)
                     methods[index].Invoke(middleware, new object[] {configuration});
+                logger.LogInformation($"{logPrefix}Middleware {methods[index].Name.ToLowerInvariant()} done");
             }
         }
         

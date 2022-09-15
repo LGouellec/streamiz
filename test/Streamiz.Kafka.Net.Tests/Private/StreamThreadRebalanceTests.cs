@@ -2,19 +2,12 @@ using Confluent.Kafka;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.Processors;
-using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
-using Streamiz.Kafka.Net.State.Internal;
-using Streamiz.Kafka.Net.Table;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
-using Avro.Util;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Tests.Helpers;
-using ThreadState = Streamiz.Kafka.Net.Processors.ThreadState;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -109,5 +102,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.AreEqual("coucou", serdes.Deserialize(message.Message.Value, new SerializationContext()));
             // TODO : Finish test with a real cluster Assert.AreEqual(expectedStates, allStates);
         }
+
     }
 }
