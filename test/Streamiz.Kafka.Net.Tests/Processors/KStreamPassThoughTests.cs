@@ -1,14 +1,14 @@
-﻿using Confluent.Kafka;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Confluent.Kafka;
 using NUnit.Framework;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
-using Streamiz.Kafka.Net.Crosscutting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Streamiz.Kafka.Net.Errors;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -24,10 +24,25 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
 
         [Test]
-        public void NoSerdesCompatible()
+        public void NoSerdesCompatibleWithParallel()
         {
-            var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-passto";
+            NoSerdesCompatible(true);
+        }
+
+        [Test]
+        public void NoSerdesCompatibleWithoutParallel()
+        {
+            NoSerdesCompatible(false);
+        }
+        
+        private void NoSerdesCompatible(bool parallelProcessing)
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>
+            {
+                ApplicationId = "test-passto",
+                ParallelProcessing = parallelProcessing
+            };
+
             var builder = new StreamBuilder();
 
             builder
@@ -38,11 +53,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var topology = builder.Build();
             Assert.Throws<StreamsException>(() =>
             {
-                using (var driver = new TopologyTestDriver(topology, config))
-                {
-                    var input = driver.CreateInputTopic<string, string>("topic");
-                    input.PipeInput("test", "1");
-                }
+                using var driver = new TopologyTestDriver(topology, config);
+                var input = driver.CreateInputTopic<string, string>("topic");
+                input.PipeInput("test", "1");
             });
         }
 

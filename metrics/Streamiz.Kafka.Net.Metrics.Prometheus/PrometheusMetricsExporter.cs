@@ -34,11 +34,11 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
                         new GaugeConfiguration {
                         LabelNames = metric.Key.Tags.Keys.ToArray()
                     });
-                    
                     gauges.Add(metricKey, gauge);
                 }
 
-                if(IsNumeric(metric.Value.Value, out var value))
+                Double value;
+                if(IsNumeric(metric.Value.Value, out value))
                     gauge.WithLabels(metric.Key.Tags.Values.ToArray()).Set(value);
                 else
                     gauge.WithLabels(metric.Key.Tags.Values.ToArray()).Set(1);

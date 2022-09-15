@@ -1,13 +1,12 @@
-﻿using Confluent.Kafka;
+﻿using System;
+using System.Collections.Generic;
+using Confluent.Kafka;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Tests.Helpers;
-using System;
-using System.Collections.Generic;
-using Microsoft.Extensions.Logging;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -123,19 +122,31 @@ namespace Streamiz.Kafka.Net.Tests.Private
         }
 
         [Test]
-        public void TicksTest()
+        public void TicksTestWithParallel() 
         {
-            var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-fix-73";
-            config.DefaultTimestampExtractor = new ObjectATimestampTicksExtractor();
+            TicksTest(true);
+        }
 
-            StreamBuilder builder = new StreamBuilder();
+        [Test]
+        public void TicksTestWithoutParallel()
+        {
+            TicksTest(false);
+        }
+
+        private void TicksTest(bool parallelProcessing)
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>
+            {
+                ApplicationId = "test-fix-73",
+                DefaultTimestampExtractor = new ObjectATimestampTicksExtractor(),
+                ParallelProcessing = parallelProcessing
+            };
+
+            var builder = new StreamBuilder();
             BuildTopology(builder);
 
-            using (var driver = new TopologyTestDriver(builder.Build(), config))
-            {
-                Assert.Throws<ArgumentOutOfRangeException>(() => AssertUseCase(driver));
-            }
+            using var driver = new TopologyTestDriver(builder.Build(), config);
+            Assert.Throws<ArgumentOutOfRangeException>(() => AssertUseCase(driver));
         }
     }
 }

@@ -77,7 +77,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 
         public static Sensor CreateTaskSensor(string threadId, StreamMetricsRegistry metricsRegistry)
         {
-            return InvocationRateAndCountSensor(
+            return SensorHelper.InvocationRateAndCountSensor(
                 threadId,
                 CREATE_TASK,
                 CREATE_TASK_DESCRIPTION,
@@ -89,7 +89,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 
         public static Sensor ClosedTaskSensor(string threadId, StreamMetricsRegistry metricsRegistry)
         {
-            return InvocationRateAndCountSensor(
+            return SensorHelper.InvocationRateAndCountSensor(
                 threadId,
                 CLOSE_TASK,
                 CLOSE_TASK_DESCRIPTION,
@@ -105,7 +105,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 
         public static Sensor CommitSensor(string threadId, StreamMetricsRegistry metricsRegistry)
         {
-            return InvocationRateAndCountAndAvgAndMaxLatencySensor(
+            return SensorHelper.InvocationRateAndCountAndAvgAndMaxLatencySensor(
                 threadId,
                 COMMIT,
                 COMMIT_DESCRIPTION,
@@ -124,7 +124,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 
         public static Sensor PollSensor(string threadId, StreamMetricsRegistry metricsRegistry)
         {
-            return InvocationRateAndCountAndAvgAndMaxLatencySensor(
+            return SensorHelper.InvocationRateAndCountAndAvgAndMaxLatencySensor(
                 threadId,
                 POLL,
                 POLL_DESCRIPTION,
@@ -280,69 +280,6 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             
             return sensor;
         }
-        
-        #endregion
-        
-        #region Tools
-        
-        #region RateAndCount
-        
-        internal static Sensor InvocationRateAndCountSensor(string threadId,
-                         string metricName,
-                         string metricDescription,
-                         string descriptionOfRate,
-                         string descriptionOfCount,
-                         MetricsRecordingLevel recordingLevel,
-                         StreamMetricsRegistry streamsMetrics) {
-            
-            Sensor sensor = streamsMetrics.ThreadLevelSensor(threadId, metricName, metricDescription, recordingLevel);
-            
-            SensorHelper.AddInvocationRateAndCountToSensor(
-                sensor,
-                StreamMetricsRegistry.THREAD_LEVEL_GROUP,
-                streamsMetrics.ThreadLevelTags(threadId),
-                metricName,
-                descriptionOfRate,
-                descriptionOfCount
-            );
-            return sensor;
-        }
-        
-        #endregion
-            
-        #region Rate & Count and Avg & Max latency
-        
-        internal static Sensor InvocationRateAndCountAndAvgAndMaxLatencySensor( string threadId,
-                                 string metricName,
-                                 string metricDescription,
-                                 string descriptionOfRate,
-                                 string descriptionOfCount,
-                                 string descriptionOfAvg,
-                                 string descriptionOfMax,
-                                 MetricsRecordingLevel recordingLevel,
-                                 StreamMetricsRegistry streamsMetrics) {
-            
-            Sensor sensor = streamsMetrics.ThreadLevelSensor(threadId, metricName, metricDescription, recordingLevel);
-            var tags = streamsMetrics.ThreadLevelTags(threadId);
-
-            SensorHelper.AddAvgAndMaxToSensor(sensor,
-                StreamMetricsRegistry.THREAD_LEVEL_GROUP,
-                tags,
-                metricName + StreamMetricsRegistry.LATENCY_SUFFIX,
-                descriptionOfAvg,
-                descriptionOfMax);
-
-            SensorHelper.AddInvocationRateAndCountToSensor(sensor,
-                StreamMetricsRegistry.THREAD_LEVEL_GROUP,
-                tags,
-                metricName,
-                descriptionOfRate,
-                descriptionOfCount);
-            
-            return sensor;
-        }
-        
-        #endregion
         
         #endregion
     }

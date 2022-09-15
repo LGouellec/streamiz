@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Streamiz.Kafka.Net.Mock.Kafka
 {
-    internal sealed class MockAdminClient : IAdminClient
+    internal sealed class MockAdminClient : BasedAdminClient
     {
         private readonly MockCluster cluster;
 
@@ -18,26 +18,12 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             this.cluster = cluster;
         }
 
-        public Handle Handle => throw new NotImplementedException();
+        public override Handle Handle => throw new NotImplementedException();
 
-        public string Name { get; }
+        public override string Name { get; }
+        
 
-        public int AddBrokers(string brokers)
-        {
-            return 1;
-        }
-
-        public Task AlterConfigsAsync(Dictionary<ConfigResource, List<ConfigEntry>> configs, AlterConfigsOptions options = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task CreatePartitionsAsync(IEnumerable<PartitionsSpecification> partitionsSpecifications, CreatePartitionsOptions options = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task CreateTopicsAsync(IEnumerable<TopicSpecification> topics, CreateTopicsOptions options = null)
+        public override Task CreateTopicsAsync(IEnumerable<TopicSpecification> topics, CreateTopicsOptions options = null)
         {
             return Task.Run(() =>
             {
@@ -51,18 +37,13 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             });
         }
 
-        public Task<List<DeleteRecordsResult>> DeleteRecordsAsync(IEnumerable<TopicPartitionOffset> topicPartitionOffsets, DeleteRecordsOptions options = null)
+        public new Task<List<DeleteRecordsResult>> DeleteRecordsAsync(IEnumerable<TopicPartitionOffset> topicPartitionOffsets, DeleteRecordsOptions options = null)
         {
             var result = cluster.DeleteRecords(topicPartitionOffsets);
             return Task.FromResult(result);
         }
-
-        public Task DeleteTopicsAsync(IEnumerable<string> topics, DeleteTopicsOptions options = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<List<DescribeConfigsResult>> DescribeConfigsAsync(IEnumerable<ConfigResource> resources, DescribeConfigsOptions options = null)
+        
+        public override Task<List<DescribeConfigsResult>> DescribeConfigsAsync(IEnumerable<ConfigResource> resources, DescribeConfigsOptions options = null)
         {
             return Task.FromResult(new List<DescribeConfigsResult>
             {
@@ -93,12 +74,12 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             });
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             
         }
 
-        public Metadata GetMetadata(string topic, TimeSpan timeout)
+        public override Metadata GetMetadata(string topic, TimeSpan timeout)
         {
             var metadata = cluster.GetClusterMetadata();
             return new Metadata(
@@ -108,17 +89,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                 metadata.OriginatingBrokerName);
         }
 
-        public Metadata GetMetadata(TimeSpan timeout)
+        public override Metadata GetMetadata(TimeSpan timeout)
             => cluster.GetClusterMetadata();
-
-        public GroupInfo ListGroup(string group, TimeSpan timeout)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<GroupInfo> ListGroups(TimeSpan timeout)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -190,10 +190,24 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
 
         [Test]
-        public void TimeWindowingAggKeySerdesUnknow()
+        public void TimeWindowingAggKeySerdesUnknownWithParallel()
         {
-            var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-window-stream";
+            TimeWindowingAggKeySerdesUnknown(true);
+        }
+
+        [Test]
+        public void TimeWindowingAggKeySerdesUnknownWithoutParallel()
+        {
+            TimeWindowingAggKeySerdesUnknown(false);
+        }
+        
+        private void TimeWindowingAggKeySerdesUnknown(bool parallelProcessing)
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>
+            {
+                ApplicationId = "test-window-stream",
+                ParallelProcessing = parallelProcessing
+            };
 
             var builder = new StreamBuilder();
             builder
@@ -210,11 +224,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var topology = builder.Build();
             Assert.Throws<StreamsException>(() =>
             {
-                using (var driver = new TopologyTestDriver(topology, config))
-                {
-                    var input = driver.CreateInputTopic<string, string>("topic");
-                    input.PipeInput("test", "1");
-                }
+                using var driver = new TopologyTestDriver(topology, config);
+                var input = driver.CreateInputTopic<string, string>("topic");
+                input.PipeInput("test", "1");
             });
         }
 

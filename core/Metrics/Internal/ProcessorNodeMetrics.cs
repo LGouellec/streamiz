@@ -109,36 +109,5 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             
             return sensor;
         }
-
-        internal static Sensor InvocationRateAndCountAndAvgAndMaxLatencySensor( string threadId,
-            string metricName,
-            string metricDescription,
-            string descriptionOfRate,
-            string descriptionOfCount,
-            string descriptionOfAvg,
-            string descriptionOfMax,
-            MetricsRecordingLevel recordingLevel,
-            StreamMetricsRegistry streamsMetrics) {
-            
-            Sensor sensor = streamsMetrics.ThreadLevelSensor(threadId, metricName, metricDescription, recordingLevel);
-            var tags = streamsMetrics.ThreadLevelTags(threadId);
-
-            SensorHelper.AddAvgAndMaxToSensor(sensor,
-                StreamMetricsRegistry.THREAD_LEVEL_GROUP,
-                tags,
-                metricName + StreamMetricsRegistry.LATENCY_SUFFIX,
-                descriptionOfAvg,
-                descriptionOfMax);
-
-            SensorHelper.AddInvocationRateAndCountToSensor(sensor,
-                StreamMetricsRegistry.THREAD_LEVEL_GROUP,
-                tags,
-                metricName,
-                descriptionOfRate,
-                descriptionOfCount);
-            
-            return sensor;
-        }
-
     }
 }
