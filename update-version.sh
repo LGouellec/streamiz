@@ -4,6 +4,7 @@ tags=("Version" "PackageVersion" "AssemblyVersion" "FileVersion")
 files=(
   "core/Streamiz.Kafka.Net.csproj"
   "metrics/Streamiz.Kafka.Net.Metrics.Prometheus/Streamiz.Kafka.Net.Metrics.Prometheus.csproj"
+  "metrics/Streamiz.Kafka.Net.Metrics.OpenTelemetry/Streamiz.Kafka.Net.Metrics.OpenTelemetry.csproj"
   "serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.csproj"
   "serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.csproj"
   "serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf.csproj"

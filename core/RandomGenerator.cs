@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 
 namespace Streamiz.Kafka.Net
 {
-    internal static class RandomGenerator
+    public static class RandomGenerator
     {
         /// <summary>
         /// Generates a random integer between 0 and a specified exclusive upper bound using a cryptographically strong random number generator.
