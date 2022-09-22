@@ -8,9 +8,8 @@ using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
-using Streamiz.Kafka.Net.Metrics;
-using Streamiz.Kafka.Net.Metrics.OpenTelemetry;
-using Streamiz.Kafka.Net.Metrics.Prometheus;
+using Confluent.Kafka.Admin;
+using Streamiz.Kafka.Net.Table;
 
 namespace sample_stream
 {
@@ -21,27 +20,45 @@ namespace sample_stream
     {
         public static async Task Main(string[] args)
         {
+            var topicSource = "words";
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-app2";
+            config.ApplicationId = "test-app-reproducer";
             config.BootstrapServers = "localhost:9092";
             config.AutoOffsetReset = AutoOffsetReset.Earliest;
-            config.StateDir = Path.Combine(".");
+            config.StateDir = Path.Combine("./store");
             config.CommitIntervalMs = 5000;
             config.Logger = LoggerFactory.Create(builder =>
             {
                 builder.SetMinimumLevel(LogLevel.Information);
                 builder.AddLog4Net();
             });
-            config.MetricsRecording = MetricsRecordingLevel.DEBUG;
-            config.UseOpenTelemetryReporter();
+            
+            using (IAdminClient client = new AdminClientBuilder(config.ToAdminConfig("topic-creator")).Build())
+            {
+                try
+                {
+                    TopicSpecification tp = new TopicSpecification()
+                    {
+                        Name = topicSource,
+                        NumPartitions = 4
+                    };
+                    await client.CreateTopicsAsync(new List<TopicSpecification> {tp});
+                }catch(Exception e){}
+            }
 
             StreamBuilder builder = new StreamBuilder();
-            builder.Stream<string, string>("topic1").To("topic2");
+            builder
+                .Stream<string, string>(topicSource)
+                .FlatMapValues((k, v) => v.Split((" ")).ToList())
+                .SelectKey((k, v) => v)
+                .GroupByKey()
+                .Count(RocksDb<string, long>.Create("count-store").WithKeySerdes(new StringSerDes())
+                    .WithValueSerdes(new Int64SerDes()));
             
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
             
-            Console.CancelKeyPress += (o, e) => stream.Dispose();
+            Console.CancelKeyPress += (_, _) => stream.Dispose();
 
             await stream.StartAsync();
         }

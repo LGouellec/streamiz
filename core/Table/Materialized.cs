@@ -578,6 +578,8 @@ namespace Streamiz.Kafka.Net.Table
 
         }
 
+        public new static RocksDb<K, V> Create(string storeName) => As(storeName);
+        
         /// <summary>
         /// Materialize a <see cref="RocksDbKeyValueStore"/> with the given name.
         /// </summary>

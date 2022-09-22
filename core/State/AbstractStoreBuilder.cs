@@ -3,9 +3,9 @@ using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
 
-namespace Streamiz.Kafka.Net.State.Internal.Builder
+namespace Streamiz.Kafka.Net.State
 {
-    internal abstract class AbstractStoreBuilder<K, V, T> : StoreBuilder<T>
+    public abstract class AbstractStoreBuilder<K, V, T> : StoreBuilder<T>
         where T : IStateStore
     {
         private IDictionary<string, string> logConfig = new Dictionary<string, string>();

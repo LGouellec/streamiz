@@ -7,12 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\core\Streamiz.Kafka.Net.csproj" />
-    <ProjectReference Include="..\..\metrics\Streamiz.Kafka.Net.Metrics.OpenTelemetry\Streamiz.Kafka.Net.Metrics.OpenTelemetry.csproj" />
-    <ProjectReference Include="..\..\metrics\Streamiz.Kafka.Net.Metrics.Prometheus\Streamiz.Kafka.Net.Metrics.Prometheus.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="log4net.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -22,6 +16,10 @@
     <PackageReference Include="log4net" Version="2.0.12" />
     <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="5.0.3" />
     <PackageReference Include="MongoDB.Driver" Version="2.15.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\core\Streamiz.Kafka.Net.csproj" />
   </ItemGroup>
 
 </Project>

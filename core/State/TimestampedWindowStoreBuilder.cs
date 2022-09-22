@@ -4,9 +4,9 @@ using Streamiz.Kafka.Net.State.Logging;
 using Streamiz.Kafka.Net.State.Metered;
 using Streamiz.Kafka.Net.State.Supplier;
 
-namespace Streamiz.Kafka.Net.State.Internal.Builder
+namespace Streamiz.Kafka.Net.State
 {
-    internal class TimestampedWindowStoreBuilder<K, V>
+    public class TimestampedWindowStoreBuilder<K, V>
         : AbstractStoreBuilder<K, ValueAndTimestamp<V>, ITimestampedWindowStore<K, V>>
     {
         private readonly IWindowBytesStoreSupplier supplier;
