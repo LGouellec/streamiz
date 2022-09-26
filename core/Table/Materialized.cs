@@ -167,12 +167,7 @@ namespace Streamiz.Kafka.Net.Table
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
-            var m = new Materialized<K, V, S>(storeName)
-            {
-                KeySerdes = new KS(),
-                ValueSerdes = new VS()
-            };
-            return m;
+            return Create(storeName).WithKeySerdes(new KS()).WithValueSerdes(new VS());
         }
 
         /// <summary>
@@ -188,12 +183,7 @@ namespace Streamiz.Kafka.Net.Table
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
-            var m = new Materialized<K, V, IWindowStore<Bytes, byte[]>>(supplier)
-            {
-                KeySerdes = new KS(),
-                ValueSerdes = new VS()
-            };
-            return m;
+            return Create(supplier).WithKeySerdes(new KS()).WithValueSerdes(new VS());
         }
 
         /// <summary>
@@ -209,12 +199,7 @@ namespace Streamiz.Kafka.Net.Table
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
-            var m = new Materialized<K, V, ISessionStore<Bytes, byte[]>>(supplier)
-            {
-                KeySerdes = new KS(),
-                ValueSerdes = new VS()
-            };
-            return m;
+            return Create(supplier).WithKeySerdes(new KS()).WithValueSerdes(new VS());
         }
 
         /// <summary>
@@ -228,12 +213,7 @@ namespace Streamiz.Kafka.Net.Table
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
-            var m = new Materialized<K, V, IKeyValueStore<Bytes, byte[]>>(supplier)
-            {
-                KeySerdes = new KS(),
-                ValueSerdes = new VS()
-            };
-            return m;
+            return Create(supplier).WithKeySerdes(new KS()).WithValueSerdes(new VS());
         }
 
         #endregion
@@ -293,7 +273,7 @@ namespace Streamiz.Kafka.Net.Table
         #endregion
 
         #region Methods
-
+        
         /// <summary>
         /// Enable logging with topic configuration for this <see cref="Materialized{K, V, S}"/>
         /// </summary>
@@ -462,6 +442,33 @@ namespace Streamiz.Kafka.Net.Table
 
     #region Child Materialized
 
+    public static class InMemory
+    {
+        /// <summary>
+        /// Materialize a <see cref="InMemoryKeyValueStore"/> with the given name.
+        /// </summary>
+        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
+        /// <returns>a new <see cref="InMemory{K, V}"/> instance with the given storeName</returns>
+        public static InMemory<K, V> @As<K, V>(string storeName = null)
+            => new(storeName ?? string.Empty, new InMemoryKeyValueBytesStoreSupplier(storeName));
+
+        /// <summary>
+        /// Materialize a <see cref="InMemoryKeyValueStore"/> with the given name.
+        /// </summary>
+        /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
+        /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
+        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
+        /// <returns>a new <see cref="InMemory{K, V}"/> instance with the given storeName</returns>
+        public static InMemory<K, V> @As<K, V, KS, VS>(string storeName)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+        {
+            var m = new InMemory<K, V>(storeName, new InMemoryKeyValueBytesStoreSupplier(storeName));
+            m.WithKeySerdes(new KS()).WithValueSerdes(new VS());
+            return m;
+        }
+    }
+    
     /// <summary>
     /// <see cref="InMemory{K, V}"/> is a child class of <see cref="Materialized{K, V, S}"/>. 
     /// It's a class helper for materialize <see cref="IKTable{K, V}"/> with an <see cref="InMemoryKeyValueBytesStoreSupplier"/>
@@ -475,38 +482,13 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         /// <param name="name">State store name for query it</param>
         /// <param name="supplier">Supplier use to build the state store</param>
-        protected InMemory(string name, IStoreSupplier<IKeyValueStore<Bytes, byte[]>> supplier)
+        internal InMemory(string name, IStoreSupplier<IKeyValueStore<Bytes, byte[]>> supplier)
             : base(name, supplier)
         {
         }
 
-        /// <summary>
-        /// Materialize a <see cref="InMemoryKeyValueStore"/> with the given name.
-        /// </summary>
-        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
-        /// <returns>a new <see cref="InMemory{K, V}"/> instance with the given storeName</returns>
-        public static InMemory<K, V> @As(string storeName)
-            => new InMemory<K, V>(storeName, new InMemoryKeyValueBytesStoreSupplier(storeName));
-
-        /// <summary>
-        /// Materialize a <see cref="InMemoryKeyValueStore"/> with the given name.
-        /// </summary>
-        /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
-        /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
-        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
-        /// <returns>a new <see cref="InMemory{K, V}"/> instance with the given storeName</returns>
-        public static InMemory<K, V> @As<KS, VS>(string storeName)
-            where KS : ISerDes<K>, new()
-            where VS : ISerDes<V>, new()
-        {
-            var m = new InMemory<K, V>(storeName, new InMemoryKeyValueBytesStoreSupplier(storeName))
-            {
-                KeySerdes = new KS(),
-                ValueSerdes = new VS()
-            };
-            return m;
-        }
-
+        protected override IStoreSupplier<IKeyValueStore<Bytes, byte[]>> GetDefaultSupplier()
+            => new InMemoryKeyValueBytesStoreSupplier(storeName);
     }
 
     /// <summary>
@@ -556,6 +538,23 @@ namespace Streamiz.Kafka.Net.Table
             };
             return m;
         }
+        
+        #region Override
+        
+        /// <summary>
+        /// Materialize a <see cref="IStateStore"/> with the given name.
+        /// </summary>
+        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
+        /// <returns>a new <see cref="InMemoryWindows{K, V}"/> instance with the given storeName</returns>
+        public new static InMemoryWindows<K, V> Create(string storeName) => As(storeName);
+
+        /// <summary>
+        /// Materialize a <see cref="IStateStore"/>. The store name will be a empty string (so, it's not queryable).
+        /// </summary>
+        /// <returns>a new <see cref="InMemoryWindows{K, V}"/> instance</returns>
+        public new static InMemoryWindows<K, V> Create() => As(string.Empty);
+        
+        #endregion
 
     }
 
@@ -604,6 +603,23 @@ namespace Streamiz.Kafka.Net.Table
             };
             return m;
         }
+        
+        #region Override
+        
+        /// <summary>
+        /// Materialize a <see cref="IStateStore"/> with the given name.
+        /// </summary>
+        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
+        /// <returns>a new <see cref="RocksDb{K, V}"/> instance with the given storeName</returns>
+        public new static RocksDb<K, V> Create(string storeName) => As(storeName);
+
+        /// <summary>
+        /// Materialize a <see cref="IStateStore"/>. The store name will be a empty string (so, it's not queryable).
+        /// </summary>
+        /// <returns>a new <see cref="RocksDb{K, V}"/> instance</returns>
+        public new static RocksDb<K, V> Create() => As(string.Empty);
+        
+        #endregion
     }
 
     /// <summary>
@@ -665,6 +681,23 @@ namespace Streamiz.Kafka.Net.Table
             };
             return m;
         }
+        
+        #region Override
+        
+        /// <summary>
+        /// Materialize a <see cref="IStateStore"/> with the given name.
+        /// </summary>
+        /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
+        /// <returns>a new <see cref="RocksDbWindows{K, V}"/> instance with the given storeName</returns>
+        public new static RocksDbWindows<K, V> Create(string storeName) => As(storeName);
+
+        /// <summary>
+        /// Materialize a <see cref="IStateStore"/>. The store name will be a empty string (so, it's not queryable).
+        /// </summary>
+        /// <returns>a new <see cref="RocksDbWindows{K, V}"/> instance</returns>
+        public new static RocksDbWindows<K, V> Create() => As(string.Empty);
+        
+        #endregion
 
     }
 

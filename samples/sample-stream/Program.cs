@@ -8,9 +8,11 @@ using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
+using Microsoft.VisualBasic;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.OpenTelemetry;
 using Streamiz.Kafka.Net.Metrics.Prometheus;
+using Streamiz.Kafka.Net.Table;
 
 namespace sample_stream
 {
@@ -29,14 +31,21 @@ namespace sample_stream
             config.CommitIntervalMs = 5000;
             config.Logger = LoggerFactory.Create(builder =>
             {
-                builder.SetMinimumLevel(LogLevel.Information);
+                builder.SetMinimumLevel(LogLevel.Debug);
                 builder.AddLog4Net();
             });
             config.MetricsRecording = MetricsRecordingLevel.DEBUG;
-            config.UseOpenTelemetryReporter();
+            config.UsePrometheusReporter(9090);
 
+            var m1 = InMemory.As<string, string>("store");
+            var m2 = InMemory<string, string>.Create("store");
+            
             StreamBuilder builder = new StreamBuilder();
-            builder.Stream<string, string>("topic1").To("topic2");
+            builder.Stream<string, string>("words")
+                .FlatMapValues((v) => v.Split(" "))
+                .SelectKey((k, v) => v)
+                .GroupByKey()
+                .Count(RocksDb<string, long>.Create<StringSerDes, Int64SerDes>("count-store"));
             
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
