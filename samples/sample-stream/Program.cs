@@ -2,7 +2,10 @@
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
 using System;
+using System.IO;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 
 namespace sample_stream
@@ -14,43 +17,38 @@ namespace sample_stream
     {
         public static async Task Main(string[] args)
         {
-            Console.WriteLine("Hello Streams");
-
-            var config = new StreamConfig<StringSerDes, StringSerDes>
+            var config1 = new StreamConfig<StringSerDes, StringSerDes>();
+            config1.ApplicationId = "app-count-word";
+            config1.BootstrapServers = "localhost:9092";
+            config1.AutoOffsetReset = AutoOffsetReset.Earliest;
+            config1.StateDir = Path.Combine("/tmp/state");
+            config1.CommitIntervalMs = 5000;
+            config1.Logger = LoggerFactory.Create(builder =>
             {
-                ApplicationId = $"test-kstreams-{Guid.NewGuid()}",
-                BootstrapServers = "localhost:9092",
-                AutoOffsetReset = AutoOffsetReset.Earliest,
-                StartTaskDelayMs = (long)TimeSpan.FromDays(1).TotalMilliseconds
-            };
+                builder.SetMinimumLevel(LogLevel.Debug);
+                builder.AddLog4Net();
+            });
+            
+            StreamBuilder builder = new StreamBuilder();
+            
+            builder.Stream<string, string>("words")
+                .FlatMapValues((k, v) => v.Split(" "))
+                .SelectKey((k, v) => v)
+                .GroupByKey()
+                .Count(
+                    RocksDb<string, long>
+                        .As("count-store")
+                        .WithKeySerdes(new StringSerDes())
+                        .WithValueSerdes(new Int64SerDes()))
+                .ToStream()
+                .Print(Printed<string, long>.ToOut());
+            
+            var topo = builder.Build();
+            KafkaStream stream = new KafkaStream(topo, config1);
 
-            var builder = JoinStreamWithTable();
-
-            var t = builder.Build();
-            var stream = new KafkaStream(t, config);
-
-            Console.CancelKeyPress += (o, e) => { stream.Dispose(); };
-
+            Console.CancelKeyPress += (o,e) => stream.Dispose();
+            
             await stream.StartAsync();
-
-            Console.WriteLine("Finished");
-        }
-
-        private static StreamBuilder JoinStreamWithTable()
-        {
-            var builder = new StreamBuilder();
-
-            var table = builder.GlobalTable("JoinSample-1",
-                InMemory<string, string>.As("table-store"));
-
-            var stream = builder.Stream<string, string>("JoinSample-2");
-
-            var joinedStream =
-                stream.LeftJoin(table, (k, v) => k, (v1, v2) => $"{v1}joinedWith{v2}");
-
-            joinedStream.To("JoinedEvent");
-
-            return builder;
         }
     }
 }
