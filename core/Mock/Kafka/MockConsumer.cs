@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             this.clientId = clientId;
         }
 
-        public IConsumerRebalanceListener Listener { get; private set; }
+        public IConsumerRebalanceListener Listener { get; internal set; }
 
         #region IConsumer Impl
 

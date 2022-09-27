@@ -89,6 +89,7 @@ namespace Streamiz.Kafka.Net.Processors
 
             var thread = new StreamThread(threadId, customerID, manager, consumer, builder, storeChangelogReader, streamMetricsRegistry, configuration);
             listener.Thread = thread;
+            listener.ExceptionOnAssignment += thread.ManageExceptionDuringAssignment;
 
             return thread;
         }
@@ -128,6 +129,7 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly Sensor processRateSensor;
         private readonly Sensor processRatioSensor;
         private readonly Sensor commitRatioSensor;
+        private Exception exception;
 
         public event ThreadStateListener StateChanged;
 
@@ -183,7 +185,7 @@ namespace Streamiz.Kafka.Net.Processors
         
         public void Run()
         {
-            Exception exception = null;
+            exception = null;
             long totalProcessLatency = 0, totalCommitLatency = 0;
 
             try
@@ -206,7 +208,7 @@ namespace Streamiz.Kafka.Net.Processors
                             ExceptionHandlerResponse response = TreatException(exception);
                             if (response == ExceptionHandlerResponse.FAIL)
                                 break;
-                            else if (response == ExceptionHandlerResponse.CONTINUE)
+                            if (response == ExceptionHandlerResponse.CONTINUE)
                             {
                                 exception = null;
                                 HandleInnerException();
@@ -448,6 +450,14 @@ namespace Streamiz.Kafka.Net.Processors
 
         #endregion
 
+        private void ManageExceptionDuringAssignment(Exception e, IEnumerable<TopicPartition> partitions)
+        {
+            log.LogError(e,
+
+                $"{logPrefix}Encountered the following unexpected Kafka exception during assignment partitions ({string.Join(",", partitions)}), this usually indicate Streams internal errors");
+            exception = e;
+        }
+        
         private void HandleTaskMigrated(TaskMigratedException e)
         {
             log.LogWarning(e,

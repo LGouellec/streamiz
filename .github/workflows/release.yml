@@ -27,7 +27,7 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
-      run: dotnet test --no-build --no-restore --verbosity normal --configuration Release
+      run: dotnet test --no-build --no-restore --verbosity normal --configuration Release test/Streamiz.Kafka.Net.Tests/Streamiz.Kafka.Net.Tests.csproj
     - name: Pack Core
       run: dotnet pack core/Streamiz.Kafka.Net.csproj  --configuration Release --no-build --no-restore
     - name: Pack Registry Serdes

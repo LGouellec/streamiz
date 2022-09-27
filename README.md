@@ -38,11 +38,7 @@ affiliation with and is not endorsed by The Apache Software Foundation.
 ```
 
 It's allowed to develop .NET applications that transform input Kafka topics into output Kafka topics. 
-It's supported .NET Standard 2.1. 
-
-It's a rewriting inspired by [Kafka Streams](https://github.com/apache/kafka). Finally it will provide the same functionality as [Kafka Streams](https://github.com/apache/kafka).
-
-This project is being written. Thanks for you contribution !
+It's supported .NET Standard 2.1. It's a rewriting inspired by [Kafka Streams](https://github.com/apache/kafka).
 
 # Try it with Gitpod
 
@@ -110,10 +106,6 @@ static async System.Threading.Tasks.Task Main(string[] args)
 ```
 
 # Contributing
-
-Owners:
-
-- [lgouellec](https://github.com/LGouellec)  [![Twitter Follow](https://img.shields.io/twitter/follow/LGouellec?style=social)](https://twitter.com/LGouellec)
 
 Maintainers:
 

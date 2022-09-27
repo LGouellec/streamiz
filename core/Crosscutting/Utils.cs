@@ -1,5 +1,6 @@
 ﻿using Streamiz.Kafka.Net.Stream;
 using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Streamiz.Kafka.Net.Crosscutting
@@ -25,6 +26,21 @@ namespace Streamiz.Kafka.Net.Crosscutting
         public static IValueJoiner<V2, V1, VR> Reverse<V1, V2, VR>(this IValueJoiner<V1, V2, VR> joiner)
         {
             return new WrappedValueJoiner<V2, V1, VR>((v2, v1) => joiner.Apply(v1, v2));
+        }
+        
+        public static bool IsNumeric(object expression, out Double number)
+        {
+            if (expression == null)
+            {
+                number = Double.NaN;
+                return false;
+            }
+
+            return Double.TryParse( Convert.ToString( expression
+                    , CultureInfo.InvariantCulture)
+                , System.Globalization.NumberStyles.Any
+                , NumberFormatInfo.InvariantInfo
+                , out number);
         }
     }
 }
