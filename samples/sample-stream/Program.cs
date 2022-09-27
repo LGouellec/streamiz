@@ -3,10 +3,8 @@ using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using Streamiz.Kafka.Net.Metrics;
@@ -57,24 +55,6 @@ namespace sample_stream
             Console.CancelKeyPress += (o,e) => stream.Dispose();
             
             await stream.StartAsync();
-        }
-    }
-    
-    public class ABC : AbstractSerDes<ABC>
-    {
-        public string Name { get; set; }
-        public int Data { get; set; }
-        
-        public override ABC Deserialize(byte[] data, SerializationContext context)
-        {
-            var bytesAsString = Encoding.UTF8.GetString(data);
-            return JsonConvert.DeserializeObject<ABC>(bytesAsString);
-        }
-
-        public override byte[] Serialize(ABC data, SerializationContext context)
-        {
-            var a = JsonConvert.SerializeObject(data);
-            return Encoding.UTF8.GetBytes(a);
         }
     }
 }
