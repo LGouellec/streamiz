@@ -14,11 +14,9 @@ namespace sample_stream
     {
         public static async Task Main(string[] args)
         {
-            Console.WriteLine("Hello Streams");
-
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = $"test-kstreams-{Guid.NewGuid()}",
+                ApplicationId = $"",
                 BootstrapServers = "localhost:9092",
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 StartTaskDelayMs = (long)TimeSpan.FromDays(1).TotalMilliseconds
