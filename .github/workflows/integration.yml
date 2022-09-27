@@ -17,6 +17,8 @@ jobs:
     # BEGIN Dependencies for RocksDB
     - run: sudo apt install -y libc6-dev libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
     - run: sudo apt install -y bzip2 lz4 librocksdb-dev
+    - name: ls files
+      run: ls -al
     # END Dependencies for RocksDB
     - name: Install dependencies
       run: dotnet restore kafka-stream-net.sln -f
