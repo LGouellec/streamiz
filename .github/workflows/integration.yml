@@ -19,7 +19,7 @@ jobs:
     - run: sudo apt install -y bzip2 lz4 librocksdb-dev
     # END Dependencies for RocksDB
     - name: Install dependencies
-      run: dotnet restore
+      run: dotnet restore kafka-stream-net.sln -f
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
