@@ -248,6 +248,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             if (endOffset == null || endOffset == Offset.Unset || endOffset == 0)
                 return true;
             
+           
             if(changelogMetadata.CurrentOffset >= endOffset)
                 return true;
             
