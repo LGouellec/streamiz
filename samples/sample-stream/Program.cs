@@ -43,7 +43,7 @@ namespace sample_stream
                 .SelectKey((k, v) => v)
                 .GroupByKey()
                 .Count(RocksDb.As<string, long, StringSerDes, Int64SerDes>("count-store"));
-            
+
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
             

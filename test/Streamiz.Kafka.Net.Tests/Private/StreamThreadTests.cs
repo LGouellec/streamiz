@@ -115,21 +115,21 @@ namespace Streamiz.Kafka.Net.Tests.Private
         public void GetConsumerClientIdTest()
         {
             var result = StreamThread.GetConsumerClientId("thread-client");
-            Assert.AreEqual($"thread-client-consumer", result);
+            Assert.AreEqual($"thread-client-streamiz-consumer", result);
         }
 
         [Test]
         public void GetRestoreConsumerClientIdTest()
         {
             var result = StreamThread.GetRestoreConsumerClientId("thread-client");
-            Assert.AreEqual($"thread-client-restore-consumer", result);
+            Assert.AreEqual($"thread-client-streamiz-restore-consumer", result);
         }
 
         [Test]
         public void GetSharedAdminClientIdTest()
         {
             var result = StreamThread.GetSharedAdminClientId("thread-client");
-            Assert.AreEqual($"thread-client-admin", result);
+            Assert.AreEqual($"thread-client-streamiz-admin", result);
         }
 
         [Test]
@@ -137,14 +137,14 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             var taskId = new TaskId {Id = 0, Partition = 0};
             var result = StreamThread.GetTaskProducerClientId("thread-client", taskId);
-            Assert.AreEqual($"thread-client-0-0-producer", result);
+            Assert.AreEqual($"thread-client-0-0-streamiz-producer", result);
         }
 
         [Test]
         public void GetThreadProducerClientIdTest()
         {
             var result = StreamThread.GetThreadProducerClientId("thread-client");
-            Assert.AreEqual($"thread-client-producer", result);
+            Assert.AreEqual($"thread-client-streamiz-producer", result);
         }
 
         #endregion
