@@ -186,7 +186,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.BootstrapServers = "127.0.0.1";
 
             var builder = new StreamBuilder();
-            builder.Table("topic", InMemory<string, string>.As("store"));
+            builder.Table("topic", InMemory.As<string,string>("store"));
 
             var t = builder.Build();
             var stream = new KafkaStream(t, config, new SyncKafkaSupplier());
@@ -232,7 +232,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.BootstrapServers = "127.0.0.1";
 
             var builder = new StreamBuilder();
-            builder.Table("topic", InMemory<string, string>.As("store"));
+            builder.Table("topic", InMemory.As<string,string>("store"));
 
             var t = builder.Build();
             var stream = new KafkaStream(t, config, supplier);
@@ -280,7 +280,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var producer = supplier.GetProducer(config.ToProducerConfig());
 
             var builder = new StreamBuilder();
-            builder.Table("topic", InMemory<string, string>.As("store"));
+            builder.Table("topic", InMemory.As<string,string>("store"));
 
             var t = builder.Build();
             var stream = new KafkaStream(t, config, supplier);
@@ -341,7 +341,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var producer = supplier.GetProducer(config.ToProducerConfig());
 
             var builder = new StreamBuilder();
-            builder.Table("topic", InMemory<string, string>.As("store"));
+            builder.Table("topic", InMemory.As<string,string>("store"));
 
             var t = builder.Build();
             var stream = new KafkaStream(t, config, supplier);
@@ -395,7 +395,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.BootstrapServers = "127.0.0.1";
 
             var builder = new StreamBuilder();
-            builder.Table("topic", InMemory<string, string>.As("store"));
+            builder.Table("topic", InMemory.As<string,string>("store"));
 
             var t = builder.Build();
             var stream = new KafkaStream(t, config, new SyncKafkaSupplier());
@@ -420,7 +420,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 .Stream<string, string>("test")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
-                .Count(InMemoryWindows<string, long>.As("store"));
+                .Count(InMemoryWindows.As<string,long>("store"));
 
             var t = builder.Build();
             var stream = new KafkaStream(t, config, new SyncKafkaSupplier());
@@ -473,7 +473,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 .Stream<string, string>("test")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
-                .Count(InMemoryWindows<string, long>.As("store"));
+                .Count(InMemoryWindows.As<string,long>("store"));
 
             var t = builder.Build();
             var stream = new KafkaStream(t, config, supplier);
@@ -540,7 +540,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 .Stream<string, string>("test")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
-                .Count(InMemoryWindows<string, long>.As("store"));
+                .Count(InMemoryWindows.As<string,long>("store"));
 
             var t = builder.Build();
             var stream = new KafkaStream(t, config, new SyncKafkaSupplier());
@@ -586,7 +586,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             builder
                 .Stream<string, string>("test")
                 .GroupByKey()
-                .Count(InMemory<string, long>.As("store"));
+                .Count(InMemory.As<string,long>("store"));
 
             var t = builder.Build();
             var stream = new KafkaStream(t, config, new SyncKafkaSupplier());
@@ -630,7 +630,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.PollMs = 1;
 
             var builder = new StreamBuilder();
-            builder.GlobalTable<string, string>("test", InMemory<string, string>.As("store"));
+            builder.GlobalTable<string, string>("test", InMemory.As<string,string>("store"));
 
             var supplier = new SyncKafkaSupplier();
             var producer = supplier.GetProducer(new ProducerConfig());

@@ -58,7 +58,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             config.ApplicationId = "test-config";
 
             var builder = new StreamBuilder();
-            builder.Table<string, string>("test", InMemory<string, string>.As("store"));
+            builder.Table<string, string>("test", InMemory.As<string, string>("store"));
 
             var driver = new TaskSynchronousTopologyDriver("client", builder.Build().Builder, config, config, default);
             driver.StartDriver();
@@ -80,7 +80,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             config.ApplicationId = "test-config";
 
             var builder = new StreamBuilder();
-            builder.Table<string, string>("test", InMemory<string, string>.As("store"));
+            builder.Table<string, string>("test", InMemory.As<string, string>("store"));
 
             var driver = new TaskSynchronousTopologyDriver("client", builder.Build().Builder, config, config, default);
             driver.StartDriver();
@@ -107,7 +107,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             config.ApplicationId = "test-config";
 
             var builder = new StreamBuilder();
-            builder.Table<string, string>("test", InMemory<string, string>.As("store"));
+            builder.Table<string, string>("test", InMemory.As<string, string>("store"));
 
             var driver = new TaskSynchronousTopologyDriver("client", builder.Build().Builder, config, config, default);
             driver.StartDriver();
@@ -137,7 +137,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             builder.Stream<string, string>("test")
                             .GroupByKey()
                             .WindowedBy(TumblingWindowOptions.Of(2000))
-                            .Count(InMemoryWindows<string, long>.As("store"));
+                            .Count(InMemoryWindows.As<string, long>("store"));
 
             var driver = new TaskSynchronousTopologyDriver("client", builder.Build().Builder, config, config, default);
             driver.StartDriver();
@@ -165,7 +165,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             builder.Stream<string, string>("test")
                             .GroupByKey()
                             .WindowedBy(TumblingWindowOptions.Of(2000))
-                            .Count(InMemoryWindows<string, long>.As("store"));
+                            .Count(InMemoryWindows.As<string, long>("store"));
 
             var driver = new TaskSynchronousTopologyDriver("client", builder.Build().Builder, config, config, default);
             driver.StartDriver();

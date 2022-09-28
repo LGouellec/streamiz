@@ -37,15 +37,12 @@ namespace sample_stream
             config.MetricsRecording = MetricsRecordingLevel.DEBUG;
             config.UsePrometheusReporter(9090);
 
-            var m1 = InMemory.As<string, string>("store");
-            var m2 = InMemory<string, string>.Create("store");
-            
             StreamBuilder builder = new StreamBuilder();
             builder.Stream<string, string>("words")
                 .FlatMapValues((v) => v.Split(" "))
                 .SelectKey((k, v) => v)
                 .GroupByKey()
-                .Count(RocksDb<string, long>.Create<StringSerDes, Int64SerDes>("count-store"));
+                .Count(RocksDb.As<string, long, StringSerDes, Int64SerDes>("count-store"));
             
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);

@@ -22,7 +22,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
     {
         private class StoreThrowExceptionStore : IKeyValueStore<Bytes, byte[]>
         {
-            public string Name { get; }
+            public string Name { get; set; }
             public bool Persistent { get; }
             public bool IsOpen { get; }
             public void Init(ProcessorContext context, IStateStore root)
@@ -93,7 +93,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
         private class StoreThrowExceptionSupplier : IKeyValueBytesStoreSupplier
         {
-            public string Name => "test";
+            public string Name { get; set; } = "test";
 
             public IKeyValueStore<Bytes, byte[]> Get()
                 => new StoreThrowExceptionStore();

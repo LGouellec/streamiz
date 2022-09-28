@@ -165,7 +165,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Reduce(
                     (v1, v2) => v1.Length > v2.Length ? v1 : v2,
-                    InMemoryWindows<string, string>.As("store"))
+                    InMemoryWindows.As<string,string>("store"))
                 .ToStream()
                 .To<StringTimeWindowedSerDes, StringSerDes>("output");
 
@@ -216,7 +216,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Reduce(
                     (v1, v2) => v1.Length > v2.Length ? v1 : v2,
-                    InMemoryWindows<string, string>.As("store"))
+                    InMemoryWindows.As<string,string>("store"))
                 .ToStream()
                 .To("output");
 
@@ -242,7 +242,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Reduce(
                     (v1, v2) => v1.Length > v2.Length ? v1 : v2,
-                    InMemoryWindows<string, string>.As("store"))
+                    InMemoryWindows.As<string,string>("store"))
                 .ToStream()
                 .To<StringTimeWindowedSerDes, StringSerDes>("output");
 
@@ -269,7 +269,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Reduce(
                     (v1, v2) => v1.Length > v2.Length ? v1 : v2,
-                    InMemoryWindows<string, string>.As("store"))
+                    InMemoryWindows.As<string,string>("store"))
                 .ToStream()
                 .To<StringTimeWindowedSerDes, StringSerDes>("output");
 
@@ -303,7 +303,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .WindowedBy(TumblingWindowOptions.Of(2000))
                 .Reduce(
                     (v1, v2) => v1.Length > v2.Length ? v1 : v2,
-                    InMemoryWindows<string, string>.As("store"));
+                    InMemoryWindows.As<string,string>("store"));
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))

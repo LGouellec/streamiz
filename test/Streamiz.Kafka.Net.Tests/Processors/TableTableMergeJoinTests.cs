@@ -18,9 +18,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             StreamBuilder builder = new StreamBuilder();
 
-            var table1 = builder.Table("users", InMemory<string, string>.As("store-users"));
-            var table2 = builder.Table("regions", InMemory<string, string>.As("store-regions"));
-            var table3 = builder.Table("country", InMemory<string, string>.As("store-country"));
+            var table1 = builder.Table("users", InMemory.As<string,string>("store-users"));
+            var table2 = builder.Table("regions", InMemory.As<string,string>("store-regions"));
+            var table3 = builder.Table("country", InMemory.As<string,string>("store-country"));
             var stream = builder.Stream<string, string>("orders");
 
             var tableJoin = table1.LeftJoin(table2, (v1, v2) => $"{v1}-{v2 ?? "?"}");
@@ -65,12 +65,12 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             StreamBuilder builder = new StreamBuilder();
 
-            var table1 = builder.Table("users", InMemory<string, string>.As("store-users"));
-            var table2 = builder.Table("regions", InMemory<string, string>.As("store-regions"));
-            var table3 = builder.Table("country", InMemory<string, string>.As("store-country"));
+            var table1 = builder.Table("users", InMemory.As<string,string>("store-users"));
+            var table2 = builder.Table("regions", InMemory.As<string,string>("store-regions"));
+            var table3 = builder.Table("country", InMemory.As<string,string>("store-country"));
             var stream = builder.Stream<string, string>("orders");
 
-            var tableJoin = table1.LeftJoin(table2, (v1, v2) => $"{v1}-{v2 ?? "?"}", InMemory<string, string>.As("merge1"));
+            var tableJoin = table1.LeftJoin(table2, (v1, v2) => $"{v1}-{v2 ?? "?"}", InMemory.As<string,string>("merge1"));
 
             var tableJoin2 = tableJoin.LeftJoin(table3, (v1, v2) => $"{v1}-{v2 ?? "?"}");
 

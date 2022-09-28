@@ -345,6 +345,9 @@ namespace Streamiz.Kafka.Net.Table
             }
 
             this.retention = retention;
+            if (StoreSupplier is IWindowBytesStoreSupplier windowBytesStoreSupplier)
+                windowBytesStoreSupplier.Retention = (long) retention.TotalMilliseconds;
+            
             return this;
         }
 
@@ -430,6 +433,8 @@ namespace Streamiz.Kafka.Net.Table
             if (!queriable && provider != null && !NoMaterialized)
             {
                 storeName = provider.NewStoreName(generatedStorePrefix);
+                if (StoreSupplier is {Name: null})
+                    StoreSupplier.Name = storeName;
                 queriable = true;
             }
 
@@ -454,7 +459,7 @@ namespace Streamiz.Kafka.Net.Table
     #region Helper Materialized
 
     /// <summary>
-    /// TODO : comment
+    /// <see cref="InMemory"/> is a helper class to build a <see cref="Materialized{K, V, S}"/> for an in-memory store.
     /// </summary>
     public static class InMemory
     {
@@ -462,7 +467,7 @@ namespace Streamiz.Kafka.Net.Table
         /// Materialize a <see cref="InMemoryKeyValueStore"/> with the given name.
         /// </summary>
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
-        /// <returns>a new <see cref="InMemory{K, V}"/> instance with the given storeName</returns>
+        /// <returns>a new materialized instance with the given storeName</returns>
         public static Materialized<K, V, IKeyValueStore<Bytes, byte[]>> @As<K, V>(string storeName = null)
         {
             Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized
@@ -478,7 +483,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
         /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
-        /// <returns>a new <see cref="InMemory{K, V}"/> instance with the given storeName</returns>
+        /// <returns>a new materialized instance with the given storeName</returns>
         public static Materialized<K, V, IKeyValueStore<Bytes, byte[]>> @As<K, V, KS, VS>(string storeName)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
@@ -492,8 +497,7 @@ namespace Streamiz.Kafka.Net.Table
     }
 
     /// <summary>
-    /// <see cref="InMemoryWindows"/> is a helper class of <see cref="Materialized{K, V, S}"/>. 
-    /// It's a class helper for materialize <see cref="IKTable{K, V}"/> with an <see cref="InMemoryWindowStoreSupplier"/>
+    /// <see cref="InMemoryWindows"/> is a helper class to build a <see cref="Materialized{K, V, S}"/> for an in-memory window store. 
     /// </summary>
     public static class InMemoryWindows
     {
@@ -502,7 +506,7 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
         /// <param name="windowSize">the windows size aggregation</param>
-        /// <returns>a new <see cref="InMemoryWindows{K, V}"/> instance with the given storeName and windows size</returns>
+        /// <returns>a new materialized instance with the given storeName and windows size</returns>
         public static Materialized<K, V, IWindowStore<Bytes, byte[]>> @As<K, V>(string storeName, TimeSpan? windowSize = null)
         {
             Materialized<K, V, IWindowStore<Bytes, byte[]>> materialized =
@@ -521,7 +525,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
         /// <param name="windowSize">the windows size aggregation</param>
-        /// <returns>a new <see cref="InMemoryWindows{K, V}"/> instance with the given storeName</returns>
+        /// <returns>a new materialized instance with the given storeName</returns>
         public static Materialized<K, V, IWindowStore<Bytes, byte[]>> @As<K, V, KS, VS>(string storeName, TimeSpan? windowSize = null)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
@@ -537,18 +541,15 @@ namespace Streamiz.Kafka.Net.Table
     }
 
     /// <summary>
-    /// <see cref="RocksDb{K, V}"/> is a child class of <see cref="Materialized{K, V, S}"/>. 
-    /// It's a class helper for materialize <see cref="IKTable{K, V}"/> with an <see cref="RocksDbKeyValueBytesStoreSupplier"/>
+    /// <see cref="RocksDb"/> is a helper class to build a <see cref="Materialized{K, V, S}"/> for a rocksdb store. 
     /// </summary>
-    /// <typeparam name="K">Type of key</typeparam>
-    /// <typeparam name="V">type of value</typeparam>
     public static class RocksDb
     {
         /// <summary>
         /// Materialize a <see cref="RocksDbKeyValueStore"/> with the given name.
         /// </summary>
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
-        /// <returns>a new <see cref="RocksDb{K, V}"/> instance with the given storeName</returns>
+        /// <returns>a new materialized instance with the given storeName</returns>
         public static Materialized<K, V, IKeyValueStore<Bytes, byte[]>> @As<K, V>(string storeName)
         {
             Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized
@@ -559,12 +560,12 @@ namespace Streamiz.Kafka.Net.Table
         }
         
         /// <summary>
-        /// Materialize a <see cref="InMemoryKeyValueStore"/> with the given name.
+        /// Materialize a <see cref="RocksDbKeyValueStore"/> with the given name.
         /// </summary>
         /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
         /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
-        /// <returns>a new <see cref="InMemory{K, V}"/> instance with the given storeName</returns>
+        /// <returns>a new materialized instance with the given storeName</returns>
         public static Materialized<K, V, IKeyValueStore<Bytes, byte[]>> @As<K, V, KS, VS>(string storeName)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
@@ -578,11 +579,9 @@ namespace Streamiz.Kafka.Net.Table
     }
 
     /// <summary>
-    /// <see cref="RocksDbWindows{K, V}"/> is a child class of <see cref="Materialized{K, V, S}"/>. 
+    /// <see cref="RocksDbWindows"/> is a helper class to build a <see cref="Materialized{K, V, S}"/> for a rocksdb window store. 
     /// It's a class helper for materialize <see cref="IKTable{K, V}"/> with an <see cref="RocksDbWindowBytesStoreSupplier"/>
     /// </summary>
-    /// <typeparam name="K">Type of key</typeparam>
-    /// <typeparam name="V">type of value</typeparam>
     public static class RocksDbWindows
     {
         /// <summary>
@@ -591,7 +590,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
         /// <param name="segmentInterval"></param>
         /// <param name="windowSize">the windows size aggregation</param>
-        /// <returns>a new <see cref="RocksDbWindows{K, V}"/> instance with the given storeName and windows size</returns>
+        /// <returns>a new materialized instance with the given storeName and windows size</returns>
         public static Materialized<K, V, IWindowStore<Bytes, byte[]>> @As<K, V>(string storeName,
             TimeSpan? segmentInterval = null, TimeSpan? windowSize = null)
         {
@@ -615,7 +614,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
         /// <param name="segmentInterval"></param>
         /// <param name="windowSize">the windows size aggregation</param>
-        /// <returns>a new <see cref="RocksDbWindows{K, V}"/> instance with the given storeName</returns>
+        /// <returns>a new materialized instance with the given storeName</returns>
         public static Materialized<K, V, IWindowStore<Bytes, byte[]>> @As<K, V, KS, VS>(string storeName, TimeSpan? segmentInterval = null, TimeSpan? windowSize = null)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()

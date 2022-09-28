@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             builder.Stream<string, string>("topic")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(1000))
-                .Count(RocksDbWindows<string, long>.As<StringSerDes, Int64SerDes>("rocksdb-w-store"));
+                .Count(RocksDbWindows.As<string, long, StringSerDes, Int64SerDes>("rocksdb-w-store"));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-rocksdb-window-store";

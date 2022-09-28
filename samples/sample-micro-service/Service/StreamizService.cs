@@ -23,7 +23,7 @@ namespace sample_micro_service.Service
             StreamBuilder builder = new StreamBuilder();
 
             builder
-                .Table("table", RocksDb<string, string>.As("table-store").WithLoggingEnabled())
+                .Table("table", RocksDb.As<string, string>("table-store"))
                 .ToStream()
                 .Print(Printed<string, string>.ToOut());
 

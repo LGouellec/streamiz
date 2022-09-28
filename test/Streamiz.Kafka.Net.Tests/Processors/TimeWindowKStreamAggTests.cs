@@ -163,7 +163,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Aggregate(
                         () => 0,
                         (k, v, agg) => Math.Max(v.Length, agg),
-                        InMemoryWindows<string, int>.As("store").WithValueSerdes<Int32SerDes>())
+                        InMemoryWindows.As<string,int>("store").WithValueSerdes<Int32SerDes>())
                 .ToStream()
                 .To<StringTimeWindowedSerDes, Int32SerDes>("output");
 
@@ -217,7 +217,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Aggregate(
                         () => 0,
                         (k, v, agg) => Math.Max(v.Length, agg),
-                        InMemoryWindows<string, int>.As("store").WithValueSerdes<Int32SerDes>())
+                        InMemoryWindows.As<string,int>("store").WithValueSerdes<Int32SerDes>())
                 .ToStream()
                 .To("output");
 
@@ -244,7 +244,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Aggregate(
                         () => 0,
                         (k, v, agg) => Math.Max(v.Length, agg),
-                        InMemoryWindows<string, int>.As("store").WithValueSerdes<Int32SerDes>())
+                        InMemoryWindows.As<string,int>("store").WithValueSerdes<Int32SerDes>())
                 .ToStream()
                 .To<StringTimeWindowedSerDes, Int32SerDes>("output");
 
@@ -273,7 +273,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Aggregate(
                         () => 0,
                         (k, v, agg) => Math.Max(v.Length, agg),
-                        InMemoryWindows<string, int>.As("store").WithValueSerdes<Int32SerDes>());
+                        InMemoryWindows.As<string,int>("store").WithValueSerdes<Int32SerDes>());
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
@@ -306,7 +306,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Aggregate(
                         () => 0,
                         (k, v, agg) => Math.Max(v.Length, agg),
-                        InMemoryWindows<string, int>.As("store").WithValueSerdes<Int32SerDes>());
+                        InMemoryWindows.As<string,int>("store").WithValueSerdes<Int32SerDes>());
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))

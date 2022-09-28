@@ -90,7 +90,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         {
             if (repartitionRequired)
             {
-                (string sourceName, RepartitionNode<K,V> repartNode) = KStream<K, V>.CreateRepartitionSource(grouped.Named ?? storeBuilder.Name, grouped.Key, grouped.Value, builder);
+                string suffix = grouped.Named ?? storeBuilder.Name;
+                (string sourceName, RepartitionNode<K,V> repartNode) = KStream<K, V>.CreateRepartitionSource(suffix, grouped.Key, grouped.Value, builder);
 
                 if (repartitionNode == null || grouped.Named == null)
                     repartitionNode = repartNode;

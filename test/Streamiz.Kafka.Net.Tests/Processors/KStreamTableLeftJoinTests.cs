@@ -27,7 +27,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             StreamBuilder builder = new StreamBuilder();
 
             var table = builder
-                            .Table("test", InMemory<string, string>.As("store"));
+                            .Table("test", InMemory.As<string, string>("store"));
 
             builder
                 .Stream<string, string>("stream")
@@ -65,7 +65,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             StreamBuilder builder = new StreamBuilder();
 
             var table = builder
-                            .Table("test", InMemory<string, string>.As("store"));
+                            .Table("test", InMemory.As<string, string>("store"));
 
             builder
                 .Stream<string, string>("stream")
@@ -103,7 +103,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             StreamBuilder builder = new StreamBuilder();
 
             var table = builder
-                            .Table("test", InMemory<string, string>.As("store"));
+                            .Table("test", InMemory.As<string, string>("store"));
 
             builder
                 .Stream<string, string>("stream")
@@ -141,7 +141,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             StreamBuilder builder = new StreamBuilder();
 
             var table = builder
-                            .Table("test", InMemory<string, string>.As("store"));
+                            .Table("test", InMemory.As<string,string>("store"));
 
             builder
                 .Stream<string, string>("stream")
