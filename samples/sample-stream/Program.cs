@@ -1,18 +1,15 @@
-﻿using Confluent.Kafka;
+using Confluent.Kafka;
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
-using Streamiz.Kafka.Net.Stream;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using Microsoft.Extensions.Logging;
+using System.Text;
 using System.Threading.Tasks;
-using Microsoft.VisualBasic;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.OpenTelemetry;
 using Streamiz.Kafka.Net.Metrics.Prometheus;
 using Streamiz.Kafka.Net.Table;
+using Streamiz.Kafka.Net.Stream;
 
 namespace sample_stream
 {
@@ -24,10 +21,10 @@ namespace sample_stream
         public static async Task Main(string[] args)
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-app2";
+            config.ApplicationId = "app-count-word";
             config.BootstrapServers = "localhost:9092";
             config.AutoOffsetReset = AutoOffsetReset.Earliest;
-            config.StateDir = Path.Combine(".");
+            config.StateDir = Path.Combine("/tmp/state");
             config.CommitIntervalMs = 5000;
             config.Logger = LoggerFactory.Create(builder =>
             {
@@ -44,11 +41,12 @@ namespace sample_stream
                 .GroupByKey()
                 .Count(RocksDb.As<string, long, StringSerDes, Int64SerDes>("count-store"));
 
-            Topology t = builder.Build();
-            KafkaStream stream = new KafkaStream(t, config);
+            var topo = builder.Build();
             
-            Console.CancelKeyPress += (o, e) => stream.Dispose();
+            KafkaStream stream = new KafkaStream(topo, config);
 
+            Console.CancelKeyPress += (o,e) => stream.Dispose();
+            
             await stream.StartAsync();
         }
     }

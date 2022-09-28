@@ -39,7 +39,13 @@ namespace Streamiz.Kafka.Net.Processors
             public void Initialize()
             {
                 IDictionary<TopicPartition, long> partitionOffsets = globalStateMaintainer.Initialize();
-                globalConsumer.Assign(partitionOffsets.Keys.Select(x => new TopicPartitionOffset(x, partitionOffsets[x])));
+                globalConsumer.Assign(
+                    partitionOffsets
+                        .Keys
+                        .Select(
+                            x => partitionOffsets[x] >= 0 ? 
+                                new TopicPartitionOffset(x, partitionOffsets[x] + 1 )
+                                : new TopicPartitionOffset(x, Offset.Beginning)));
 
                 lastFlush = DateTime.Now;
             }

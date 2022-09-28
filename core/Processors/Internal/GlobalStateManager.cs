@@ -169,7 +169,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             log.LogInformation($"Restoring state for global store {store.Name}");
             var topicPartitions = TopicPartitionsForStore(store).ToList();
             var highWatermarks = OffsetsChangelogs(topicPartitions);
-
+            
             try
             {
                 RestoreState(
@@ -181,6 +181,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             finally
             {
                 globalConsumer.Unassign();
+                log.LogInformation($"Global store {store.Name} is completely restored");
             }
         }
 
@@ -219,7 +220,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private void RestoreState(
             StateRestoreCallback restoreCallback,
             List<TopicPartition> topicPartitions,
-            IDictionary<TopicPartition, (Offset, Offset)> highWatermarks,
+            IDictionary<TopicPartition, (Offset, Offset)> offsetWatermarks,
             Func<ConsumeResult<byte[], byte[]>, ConsumeResult<byte[], byte[]>> recordConverter)
         {
             foreach (var topicPartition in topicPartitions)
@@ -233,11 +234,15 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 
                 globalConsumer.Assign((new TopicPartitionOffset(topicPartition, new Offset(checkpoint))).ToSingle());
                 offset = checkpoint;
-                highWM = highWatermarks[topicPartition].Item2;
+                var lowWM = offsetWatermarks[topicPartition].Item1;
+                highWM = offsetWatermarks[topicPartition].Item2;
 
                 while (offset < highWM - 1)
                 {
                     if (offset == Offset.Beginning && highWM == 0) // no message into local and topics;
+                        break;
+                    
+                    if (lowWM == highWM) // if low offset == high offset
                         break;
                     
                     var records = globalConsumer.ConsumeRecords(TimeSpan.FromMilliseconds(config.PollMs),
@@ -245,10 +250,10 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
                     var convertedRecords = records.Select(r => recordConverter(r)).ToList();
                     
-                    foreach(var record in records)
+                    foreach(var record in convertedRecords)
                         restoreCallback?.Invoke(Bytes.Wrap(record.Message.Key), record.Message.Value, record.Message.Timestamp.UnixTimestampMs);
 
-                    if (records.Any())
+                    if (convertedRecords.Any())
                         offset = records.Last().Offset;
                 }
 
@@ -260,7 +265,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             return topicPartitions
                 .Select(tp => {
-                    var offsets = globalConsumer.GetWatermarkOffsets(tp);
+                    var offsets = globalConsumer.QueryWatermarkOffsets(tp, TimeSpan.FromSeconds(5));
                     return new
                     {
                         TopicPartition = tp,
