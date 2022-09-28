@@ -3,13 +3,11 @@ using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Metrics;
-using Streamiz.Kafka.Net.Metrics.OpenTelemetry;
 using Streamiz.Kafka.Net.Metrics.Prometheus;
 using Streamiz.Kafka.Net.Table;
-using Streamiz.Kafka.Net.Stream;
 
 namespace sample_stream
 {
