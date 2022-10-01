@@ -11,16 +11,17 @@ using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Tests.Helpers.Proto;
 using System;
 using System.Linq;
+using Google.Protobuf;
 
 namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 {
     #region Mock
 
-    internal class MockProtoSerDes : SchemaProtobufSerDes<Helpers.Proto.Person>
+    internal class MockProtoSerDesBase<T> : SchemaProtobufSerDes<T> where T : class, IMessage<T>, new()
     {
         private readonly MockSchemaRegistryClient mockClient;
 
-        public MockProtoSerDes(MockSchemaRegistryClient mockClient)
+        public MockProtoSerDesBase(MockSchemaRegistryClient mockClient)
         {
             this.mockClient = mockClient;
         }
@@ -29,6 +30,20 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         {
             mockClient.UseConfiguration(config);
             return mockClient;
+        }
+    }
+
+    internal class MockProtoSerDes : MockProtoSerDesBase<Helpers.Proto.Person>
+    {
+        public MockProtoSerDes(MockSchemaRegistryClient mockClient) : base(mockClient)
+        {
+        }
+    }
+
+    internal class MockIncludeProtoSerDes : MockProtoSerDesBase<Helpers.Proto.IncludeConflueType>
+    {
+        public MockIncludeProtoSerDes(MockSchemaRegistryClient mockClient) : base(mockClient)
+        {
         }
     }
 
@@ -51,6 +66,26 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         public void SerializeWithoutInit()
         {
             var serdes = new SchemaProtobufSerDes<Helpers.Proto.Person>();
+            Assert.Throws<StreamsException>(() => serdes.Serialize(null, new Confluent.Kafka.SerializationContext()));
+            Assert.Throws<StreamsException>(() =>
+                serdes.SerializeObject(null, new Confluent.Kafka.SerializationContext()));
+        }
+
+
+        [Test]
+        public void DeserializeWithExternalType()
+        {
+            var serdes = new SchemaProtobufSerDes<Helpers.Proto.IncludeConflueType>();
+            Assert.Throws<StreamsException>(() => serdes.Deserialize(null, new Confluent.Kafka.SerializationContext()));
+            Assert.Throws<StreamsException>(() =>
+                serdes.DeserializeObject(null, new Confluent.Kafka.SerializationContext()));
+        }
+
+
+        [Test]
+        public void SerializeWithExternalType()
+        {
+            var serdes = new SchemaProtobufSerDes<Helpers.Proto.IncludeConflueType>();
             Assert.Throws<StreamsException>(() => serdes.Serialize(null, new Confluent.Kafka.SerializationContext()));
             Assert.Throws<StreamsException>(() =>
                 serdes.SerializeObject(null, new Confluent.Kafka.SerializationContext()));
@@ -85,6 +120,42 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             Assert.AreEqual(18, pbis.Age);
             Assert.AreEqual("TEST", pbis.FirstName);
             Assert.AreEqual("TEST", pbis.LastName);
+        }
+
+
+        [Test]
+        public void SerializeExternalTypeOK()
+        {
+            var mockSchemaClient = new MockSchemaRegistryClient();
+            var config = new StreamConfig();
+            var serdes = new MockIncludeProtoSerDes(mockSchemaClient);
+            serdes.Initialize(new Net.SerDes.SerDesContext(config));
+            var value = new Helpers.Proto.IncludeConflueType
+                { INTVALUE = 1,
+                    DECIMALVALUE = new Confluent.Type.Decimal { Precision = 1, Scale = 2, Value = ByteString.CopyFromUtf8("3") } };
+            var bytes = serdes.Serialize(value,
+                new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Value, topic));
+            Assert.IsNotNull(bytes);
+            Assert.IsTrue(bytes.Length > 0);
+        }
+
+        [Test]
+        public void DeserializeExternalTypeOK()
+        {
+            var mockSchemaClient = new MockSchemaRegistryClient();
+            var config = new StreamConfig();
+            var serdes = new MockIncludeProtoSerDes(mockSchemaClient);
+            serdes.Initialize(new Net.SerDes.SerDesContext(config));
+            var value = new Helpers.Proto.IncludeConflueType { INTVALUE = 1,
+                DECIMALVALUE = new Confluent.Type.Decimal { Precision = 1, Scale = 2, Value = ByteString.CopyFromUtf8("3") }};
+            var bytes = serdes.Serialize(value,
+                new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Value, topic));
+            var pbis = serdes.Deserialize(bytes,
+                new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Value, topic));
+            Assert.AreEqual(value.INTVALUE, pbis.INTVALUE);
+            Assert.AreEqual(value.DECIMALVALUE.Precision, pbis.DECIMALVALUE.Precision);
+            Assert.AreEqual(value.DECIMALVALUE.Scale, pbis.DECIMALVALUE.Scale);
+            Assert.AreEqual(value.DECIMALVALUE.Value, pbis.DECIMALVALUE.Value);
         }
 
         [Test]
