@@ -42,9 +42,10 @@ namespace Streamiz.Kafka.Net.Tests.Public
         }
 
         [Test]
-        public void LookupSchemaAsyncEmptyTest()
+        public async Task LookupSchemaAsyncEmptyTest()
         {
-            Assert.IsNull(async () => await client.LookupSchemaAsync("subject", null, false));
+            var result = await client.LookupSchemaAsync("subject", null, false);
+            Assert.IsNull(result);
         }
 
         [Test]
