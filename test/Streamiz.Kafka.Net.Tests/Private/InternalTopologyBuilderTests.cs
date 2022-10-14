@@ -13,7 +13,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var builder = new StreamBuilder();
 
-            var inmemory = InMemory<string, string>.As("table-source");
+            var inmemory = InMemory.As<string, string>("table-source");
             inmemory.WithLoggingEnabled(null);
             builder.Table("source", inmemory);
 

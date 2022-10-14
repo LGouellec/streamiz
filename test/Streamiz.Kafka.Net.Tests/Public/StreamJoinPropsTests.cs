@@ -11,9 +11,9 @@ namespace Streamiz.Kafka.Net.Tests.Public
     {
         public long? WindowSize { get; set; }
 
-        public long Retention => 100;
+        public long Retention { get; set; } = 100;
 
-        public string Name => "TEST";
+        public string Name { get; set; } = "TEST";
         
         public string MetricsScope => "test-window";
 

@@ -115,10 +115,10 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                .MapValues(v => v.Length)
                .GroupBy<string, StringSerDes, Int32SerDes>((k, v) => k.ToUpper());
 
-            stream.Count(InMemory<string, long>.As("count-store"));
+            stream.Count(InMemory.As<string, long>("count-store"));
             stream.Reduce(
                     (v1, v2) => Math.Max(v1, v2),
-                    InMemory<string, int>.As("reduce-store").WithValueSerdes<Int32SerDes>());
+                    InMemory.As<string, int>("reduce-store").WithValueSerdes<Int32SerDes>());
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
@@ -158,7 +158,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                .GroupBy((k, v) => k.ToUpper())
                .Reduce(
                     (v1, v2) => v2.Length > v1.Length ? v2 : v1,
-                    InMemory<string, string>.As("reduce-store"));
+                    InMemory.As<string, string>("reduce-store"));
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
@@ -187,7 +187,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                .Stream<string, string>("topic")
                .GroupBy((k, v) => k.ToUpper())
-               .Reduce(new MyReducer(), InMemory<string, string>.As("reduce-store"));
+               .Reduce(new MyReducer(), InMemory.As<string, string>("reduce-store"));
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
@@ -218,7 +218,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                .GroupBy((k, v) => k.ToUpper())
                .Reduce(
                     new MyReducer(),
-                    InMemory<string, string>.As("reduce-store"),
+                    InMemory.As<string, string>("reduce-store"),
                     "reduce-processor");
 
             var topology = builder.Build();
@@ -252,7 +252,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                .GroupBy((k, v) => k?.ToUpper())
                .Reduce(
                     new MyReducer(),
-                    InMemory<string, string>.As("reduce-store"),
+                    InMemory.As<string, string>("reduce-store"),
                     "reduce-processor");
 
             var topology = builder.Build();

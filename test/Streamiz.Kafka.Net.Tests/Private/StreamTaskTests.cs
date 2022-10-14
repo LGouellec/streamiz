@@ -221,7 +221,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var serdes = new StringSerDes();
             var builder = new StreamBuilder();
 
-            builder.Table<string, string>("topic", InMemory<string, string>.As("store").WithLoggingDisabled())
+            builder.Table<string, string>("topic", InMemory.As<string, string>("store").WithLoggingDisabled())
                 .MapValues((k, v) => v.ToUpper())
                 .ToStream()
                 .To("topic2");
@@ -328,7 +328,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var serdes = new StringSerDes();
             var builder = new StreamBuilder();
 
-            var table = builder.Table("topic", RocksDb<string, string>.As("store").WithLoggingEnabled());
+            var table = builder.Table("topic", RocksDb.As<string, string>("store").WithLoggingEnabled());
 
             TaskId id = new TaskId {Id = 0, Partition = 0};
             var topology = builder.Build();

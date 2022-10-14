@@ -120,7 +120,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Table<string, string>("topic")
                 .GroupBy<char, string, CharSerDes, StringSerDes>((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
-                .Count(InMemory<char, long>.As("count-store").WithKeySerdes(new CharSerDes()));
+                .Count(InMemory.As<char, long>("count-store").WithKeySerdes(new CharSerDes()));
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
@@ -148,7 +148,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Table<string, string>("topic")
                 .GroupBy<char, string, CharSerDes, StringSerDes>((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
-                .Count(InMemory<char, long>.As("count-store").WithKeySerdes(new CharSerDes()));
+                .Count(InMemory.As<char, long>("count-store").WithKeySerdes(new CharSerDes()));
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
@@ -176,7 +176,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Table<string, string>("topic")
                 .GroupBy<char, string, CharSerDes, StringSerDes>((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
-                .Count(InMemory<char, long>.As("count-store").WithKeySerdes(new CharSerDes()));
+                .Count(InMemory.As<char, long>("count-store").WithKeySerdes(new CharSerDes()));
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
@@ -273,7 +273,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Table<string, string>("topic")
                 .GroupBy((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
-                .Count(InMemory<char, long>.As("count-store"));
+                .Count(InMemory.As<char, long>("count-store"));
 
             var topology = builder.Build();
             Assert.Throws<StreamsException>(() =>

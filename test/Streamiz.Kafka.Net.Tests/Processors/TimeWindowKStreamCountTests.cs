@@ -306,7 +306,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Stream<string, string>("topic")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(10)))
-                .Count(InMemoryWindows<string, long>.As("count-store"));
+                .Count(InMemoryWindows.As<string,long>("count-store"));
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
@@ -336,7 +336,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Stream<string, string>("topic")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(5)))
-                .Count(InMemoryWindows<string, long>.As("count-store"));
+                .Count(InMemoryWindows.As<string,long>("count-store"));
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))

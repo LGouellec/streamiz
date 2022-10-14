@@ -26,7 +26,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// <summary>
         /// Name of this state store supplier. This must be a valid Kafka topic name; valid characters are ASCII alphanumerics, '.', '_' and '-'.
         /// </summary>
-        public string Name { get; }
+        public string Name { get; set; }
 
         /// <summary>
         /// Return a new <see cref="IStateStore"/> instance.

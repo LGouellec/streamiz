@@ -21,6 +21,6 @@ namespace Streamiz.Kafka.Net.State.Supplier
         /// <summary>
         /// The time period for which the <see cref="IWindowStore{K, V}"/> will retain historic data.
         /// </summary>
-        public long Retention { get; }
+        public long Retention { get; set; }
     }
 }

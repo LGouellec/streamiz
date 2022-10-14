@@ -30,7 +30,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             StreamBuilder builder = new StreamBuilder();
 
-            var global = builder.GlobalTable("global", InMemory<string, string>.As("global-store"));
+            var global = builder.GlobalTable("global", InMemory.As<string,string>("global-store"));
 
             builder
                 .Stream<string, string>("stream")
@@ -63,7 +63,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             StreamBuilder builder = new StreamBuilder();
 
-            var global = builder.GlobalTable("global", InMemory<string, string>.As("global-store"));
+            var global = builder.GlobalTable("global", InMemory.As<string,string>("global-store"));
 
             builder
                 .Stream<string, string>("stream")
@@ -97,7 +97,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             StreamBuilder builder = new StreamBuilder();
 
-            var global = builder.GlobalTable("global", InMemory<string, string>.As("global-store"));
+            var global = builder.GlobalTable("global", InMemory.As<string,string>("global-store"));
 
             builder
                 .Stream<string, string>("stream")

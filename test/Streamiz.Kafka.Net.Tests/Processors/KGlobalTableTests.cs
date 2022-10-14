@@ -14,7 +14,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var builder = new StreamBuilder();
 
-            var table = builder.GlobalTable("topic", InMemory<string, string>.As("global-store"));
+            var table = builder.GlobalTable("topic", InMemory.As<string, string>("global-store"));
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-globaltable";
 
@@ -36,7 +36,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var builder = new StreamBuilder();
 
-            var table = builder.GlobalTable("topic", RocksDb<string, string>.As("global-store"));
+            var table = builder.GlobalTable("topic", RocksDb.As<string, string>("global-store"));
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-globaltable";
             config.UseRandomRocksDbConfigForTest();
