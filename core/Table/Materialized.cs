@@ -40,7 +40,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <summary>
         /// Retention time
         /// </summary>
-        protected TimeSpan retention;
+        private TimeSpan retention;
 
         #region Ctor
 
@@ -49,7 +49,7 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         /// <param name="storeName">State store name for query it</param>
         /// <param name="storeSupplier">Supplier use to build the state store</param>
-        internal Materialized(string storeName, IStoreSupplier<S> storeSupplier)
+        protected Materialized(string storeName, IStoreSupplier<S> storeSupplier)
         {
             this.storeName = storeName;
             StoreSupplier = storeSupplier;
@@ -60,7 +60,7 @@ namespace Streamiz.Kafka.Net.Table
         /// Protected constructor with store supplier
         /// </summary>
         /// <param name="storeSupplier">Supplier use to build the state store</param>
-        internal Materialized(IStoreSupplier<S> storeSupplier)
+        private Materialized(IStoreSupplier<S> storeSupplier)
             : this(null, storeSupplier)
         {
         }
@@ -69,28 +69,11 @@ namespace Streamiz.Kafka.Net.Table
         /// Protected constructor with state store name
         /// </summary>
         /// <param name="storeName">State store name for query it</param>
-        internal Materialized(string storeName)
+        private Materialized(string storeName)
             : this(storeName, null)
         {
         }
-
-        /// <summary>
-        /// Copy constructor
-        /// </summary>
-        /// <param name="materialized">Materialized to copy</param>
-        protected Materialized(Materialized<K, V, S> materialized)
-             : this(materialized.StoreName, materialized.StoreSupplier)
-        {
-            StoreSupplier = materialized.StoreSupplier;
-            storeName = materialized.storeName;
-            KeySerdes = materialized.KeySerdes;
-            ValueSerdes = materialized.ValueSerdes;
-            LoggingEnabled = materialized.LoggingEnabled;
-            CachingEnabled = materialized.CachingEnabled;
-            TopicConfig = materialized.TopicConfig;
-            retention = materialized.retention;
-        }
-
+        
         #endregion
 
         #region Static
@@ -121,18 +104,18 @@ namespace Streamiz.Kafka.Net.Table
             return m;
         }
 
-        /// <summary>
-        /// Materialize a <see cref="ISessionStore{K, AGG}"/> using the provided <see cref="ISessionBytesStoreSupplier"/>
-        /// Important: Custom subclasses are allowed here, but they should respect the retention contract:
-        /// Session stores are required to retain windows at least as long as (session inactivity gap + session grace period).
-        /// </summary>
-        /// <param name="supplier">the <see cref="ISessionBytesStoreSupplier"/> used to materialize the store</param>
-        /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given supplier</returns>
-        public static Materialized<K, V, ISessionStore<Bytes, byte[]>> Create(ISessionBytesStoreSupplier supplier)
-        {
-            var m = new Materialized<K, V, ISessionStore<Bytes, byte[]>>(supplier);
-            return m;
-        }
+        // /// <summary>
+        // /// Materialize a <see cref="ISessionStore{K, AGG}"/> using the provided <see cref="ISessionBytesStoreSupplier"/>
+        // /// Important: Custom subclasses are allowed here, but they should respect the retention contract:
+        // /// Session stores are required to retain windows at least as long as (session inactivity gap + session grace period).
+        // /// </summary>
+        // /// <param name="supplier">the <see cref="ISessionBytesStoreSupplier"/> used to materialize the store</param>
+        // /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given supplier</returns>
+        // public static Materialized<K, V, ISessionStore<Bytes, byte[]>> Create(ISessionBytesStoreSupplier supplier)
+        // {
+        //     var m = new Materialized<K, V, ISessionStore<Bytes, byte[]>>(supplier);
+        //     return m;
+        // }
 
         /// <summary>
         /// Materialize a <see cref="IKeyValueStore{K, V}"/> using the provided <see cref="IKeyValueBytesStoreSupplier"/>
@@ -186,21 +169,21 @@ namespace Streamiz.Kafka.Net.Table
             return Create(supplier).WithKeySerdes(new KS()).WithValueSerdes(new VS());
         }
 
-        /// <summary>
-        /// Materialize a <see cref="ISessionStore{K, AGG}"/> using the provided <see cref="ISessionBytesStoreSupplier"/>
-        /// Important: Custom subclasses are allowed here, but they should respect the retention contract:
-        /// Session stores are required to retain windows at least as long as (session inactivity gap + session grace period).
-        /// </summary>
-        /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
-        /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
-        /// <param name="supplier">the <see cref="ISessionBytesStoreSupplier"/> used to materialize the store</param>
-        /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given supplier</returns>
-        public static Materialized<K, V, ISessionStore<Bytes, byte[]>> Create<KS, VS>(ISessionBytesStoreSupplier supplier)
-            where KS : ISerDes<K>, new()
-            where VS : ISerDes<V>, new()
-        {
-            return Create(supplier).WithKeySerdes(new KS()).WithValueSerdes(new VS());
-        }
+        // /// <summary>
+        // /// Materialize a <see cref="ISessionStore{K, AGG}"/> using the provided <see cref="ISessionBytesStoreSupplier"/>
+        // /// Important: Custom subclasses are allowed here, but they should respect the retention contract:
+        // /// Session stores are required to retain windows at least as long as (session inactivity gap + session grace period).
+        // /// </summary>
+        // /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
+        // /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
+        // /// <param name="supplier">the <see cref="ISessionBytesStoreSupplier"/> used to materialize the store</param>
+        // /// <returns>a new <see cref="Materialized{K, V, S}"/> instance with the given supplier</returns>
+        // public static Materialized<K, V, ISessionStore<Bytes, byte[]>> Create<KS, VS>(ISessionBytesStoreSupplier supplier)
+        //     where KS : ISerDes<K>, new()
+        //     where VS : ISerDes<V>, new()
+        // {
+        //     return Create(supplier).WithKeySerdes(new KS()).WithValueSerdes(new VS());
+        // }
 
         /// <summary>
         /// Materialize a <see cref="IKeyValueStore{K, V}"/> using the provided <see cref="IKeyValueBytesStoreSupplier"/>

@@ -107,21 +107,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 : base(storeName, storeSupplier)
             {
             }
-
-            public StoreThrowException(IStoreSupplier<IKeyValueStore<Bytes, byte[]>> storeSupplier) 
-                : base(storeSupplier)
-            {
-            }
-
-            public StoreThrowException(string storeName) 
-                : base(storeName)
-            {
-            }
-
-            public StoreThrowException(Materialized<string, string, IKeyValueStore<Bytes, byte[]>> materialized) 
-                : base(materialized)
-            {
-            }
         }
 
         private readonly CancellationTokenSource token1 = new System.Threading.CancellationTokenSource();

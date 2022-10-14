@@ -95,7 +95,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder.Table<string, string, StringSerDes, StringSerDes>
-                ("table-topic", InMemory.As<string,string>("table-topic-store"));
+                ("table-topic", InMemory.As<string,string, StringSerDes, StringSerDes>("table-topic-store"));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-map";
