@@ -20,7 +20,6 @@ namespace sample_stream
             config.ApplicationId = "app-count-word";
             config.BootstrapServers = "localhost:9092";
             config.AutoOffsetReset = AutoOffsetReset.Earliest;
-            config.StateDir = Path.Combine("/tmp/state");
             config.CommitIntervalMs = 5000;
             config.Logger = LoggerFactory.Create(builder =>
             {

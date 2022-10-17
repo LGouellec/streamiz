@@ -80,7 +80,13 @@ namespace Streamiz.Kafka.Net.State.Internal
             IEnumerable<IReadOnlyKeyValueStore<K, V>> stores = GetAllStores();
             try
             {
-                return stores.FirstOrDefault(x => x.Get(key) != null).Get(key);
+                foreach (var store in stores)
+                {
+                    var value = store.Get(key);
+                    if (value != null)
+                        return value;
+                }
+                return default;
             }
             catch (InvalidStateStoreException e)
             {
