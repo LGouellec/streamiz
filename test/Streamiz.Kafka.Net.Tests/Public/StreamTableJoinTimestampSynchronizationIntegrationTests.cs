@@ -59,7 +59,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             // a timestamp extractor on the stream and / or table
             // when doing a KStreams/KTable join the framework will look up for the value of a given key
             // in the KTable at a timestamp <= to the timestamp of the event on the stream side
-            var userRegionsTable = builder.Table<string, string>(userRegionsTopic, stringSerdes, stringSerdes, InMemory<string, string>.As("table-store"), "table", timestampExtractor);
+            var userRegionsTable = builder.Table<string, string>(userRegionsTopic, stringSerdes, stringSerdes, InMemory.As<string,string>("table-store"), "table", timestampExtractor);
             var userClicksStream = builder.Stream<string, string>(userClicksTopic, stringSerdes, stringSerdes, timestampExtractor);
 
             userClicksStream
@@ -75,7 +75,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var builder = new StreamBuilder();
 
-            var userRegionsTable = builder.Table<string, string>(userRegionsTopic, stringSerdes, stringSerdes, InMemory<string, string>.As("table-store"), "table", timestampExtractor);
+            var userRegionsTable = builder.Table<string, string>(userRegionsTopic, stringSerdes, stringSerdes, InMemory.As<string,string>("table-store"), "table", timestampExtractor);
             var userClicksStream = builder.Stream<string, string>(userClicksTopic, stringSerdes, stringSerdes, timestampExtractor);
 
             userClicksStream
@@ -92,7 +92,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var builder = new StreamBuilder();
 
-            var userRegionsTable = builder.Table<string, string>(userRegionsTopic, stringSerdes, stringSerdes, InMemory<string, string>.As("table-store"), "table", timestampExtractor);
+            var userRegionsTable = builder.Table<string, string>(userRegionsTopic, stringSerdes, stringSerdes, InMemory.As<string,string>("table-store"), "table", timestampExtractor);
             var userClicksStream = builder.Stream<string, string>(userClicksTopic, stringSerdes, stringSerdes, timestampExtractor);
 
             // TODO : update when through processor is DONE
@@ -110,7 +110,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var builder = new StreamBuilder();
 
-            var userRegionsTable = builder.Table<string, string>(userRegionsTopic, stringSerdes, stringSerdes, InMemory<string, string>.As("table-store"), "table", timestampExtractor);
+            var userRegionsTable = builder.Table<string, string>(userRegionsTopic, stringSerdes, stringSerdes, InMemory.As<string,string>("table-store"), "table", timestampExtractor);
             var userClicksStream = builder.Stream<string, string>(userClicksTopic, stringSerdes, stringSerdes, timestampExtractor);
 
             userClicksStream

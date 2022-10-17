@@ -1,14 +1,11 @@
-﻿using Confluent.Kafka;
+using Confluent.Kafka;
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
-using Streamiz.Kafka.Net.Metrics;
-using Streamiz.Kafka.Net.Metrics.OpenTelemetry;
 
 namespace sample_stream
 {
@@ -30,24 +27,14 @@ namespace sample_stream
                 builder.SetMinimumLevel(LogLevel.Debug);
                 builder.AddLog4Net();
             });
-            config.MetricsRecording = MetricsRecordingLevel.DEBUG;
-            config.UseOpenTelemetryReporter();
 
             StreamBuilder builder = new StreamBuilder();
-            builder.Stream<string, string>("topic1").To("topic2");
-            
             builder.Stream<string, string>("words")
-                .FlatMapValues((k, v) => v.Split(" "))
+                .FlatMapValues((v) => v.Split(" "))
                 .SelectKey((k, v) => v)
                 .GroupByKey()
-                .Count(
-                    RocksDb<string, long>
-                        .As("count-store")
-                        .WithKeySerdes(new StringSerDes())
-                        .WithValueSerdes(new Int64SerDes()))
-                .ToStream()
-                .Print(Printed<string, long>.ToOut());
-            
+                .Count(RocksDb.As<string, long, StringSerDes, Int64SerDes>("count-store"));
+
             var topo = builder.Build();
             
             KafkaStream stream = new KafkaStream(topo, config);

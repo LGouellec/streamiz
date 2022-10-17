@@ -25,7 +25,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         /// <summary>
         /// State store name
         /// </summary>
-        public string Name { get; }
+        public string Name { get; set; }
 
         /// <summary>
         /// Build the rocksdb state store.

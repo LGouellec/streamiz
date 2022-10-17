@@ -42,9 +42,19 @@ namespace Streamiz.Kafka.Net.Tests.Public
         }
 
         [Test]
-        public void LookupSchemaAsyncTest()
+        public async Task LookupSchemaAsyncEmptyTest()
         {
-            Assert.ThrowsAsync<NotImplementedException>(async () => await client.LookupSchemaAsync("subject", null, false));
+            var result = await client.LookupSchemaAsync("subject", null, false);
+            Assert.IsNull(result);
+        }
+
+        [Test]
+        public async Task LookupSchemaAsyncTest()
+        {
+            await client.RegisterSchemaAsync("order", "schema1");
+            await client.RegisterSchemaAsync("order", "schema2");
+            var r = await client.LookupSchemaAsync("order", null, true);
+            Assert.AreEqual(r.SchemaString, "schema2");
         }
 
         [Test]

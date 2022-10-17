@@ -87,7 +87,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             topicConfiguration.ApplicationId = $"test-driver-{config.ApplicationId}";
 
             var builder = new StreamBuilder();
-            builder.Table<string, string>("test", InMemory<string, string>.As("store"));
+            builder.Table<string, string>("test", InMemory.As<string, string>("store"));
             var driver = new ClusterInMemoryTopologyDriver("client", builder.Build().Builder, config, topicConfiguration, TimeSpan.FromSeconds(1), source.Token);
             driver.StartDriver();
             var input = driver.CreateInputTopic("test", new StringSerDes(), new StringSerDes());
@@ -115,7 +115,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             topicConfiguration.ApplicationId = $"test-driver-{config.ApplicationId}";
 
             var builder = new StreamBuilder();
-            builder.Table("test", InMemory<string, string>.As("store"));
+            builder.Table("test", InMemory.As<string, string>("store"));
             var driver = new ClusterInMemoryTopologyDriver("client", builder.Build().Builder, config, topicConfiguration, TimeSpan.FromSeconds(1), source.Token);
             driver.StartDriver();
             var input = driver.CreateInputTopic("test", new StringSerDes(), new StringSerDes());
@@ -149,7 +149,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             topicConfiguration.ApplicationId = $"test-driver-{config.ApplicationId}";
 
             var builder = new StreamBuilder();
-            builder.Table<string, string>("test", InMemory<string, string>.As("store"));
+            builder.Table<string, string>("test", InMemory.As<string, string>("store"));
             var driver = new ClusterInMemoryTopologyDriver("client", builder.Build().Builder, config, topicConfiguration, TimeSpan.FromSeconds(1), source.Token);
             driver.StartDriver();
             var input = driver.CreateInputTopic("test", new StringSerDes(), new StringSerDes());
@@ -183,7 +183,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             topicConfiguration.ApplicationId = $"test-driver-{config.ApplicationId}";
 
             var builder = new StreamBuilder();
-            builder.Table("test", InMemory<string, string>.As("store"));
+            builder.Table("test", InMemory.As<string, string>("store"));
             var driver = new ClusterInMemoryTopologyDriver("client", builder.Build().Builder, config, topicConfiguration, TimeSpan.FromSeconds(1), source.Token);
             driver.StartDriver();
             var input = driver.CreateInputTopic("test", new StringSerDes(), new StringSerDes());
@@ -214,7 +214,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             topicConfiguration.ApplicationId = $"test-driver-{config.ApplicationId}";
 
             var builder = new StreamBuilder();
-            builder.Table("test", InMemory<string, string>.As("store"));
+            builder.Table("test", InMemory.As<string, string>("store"));
             var driver = new ClusterInMemoryTopologyDriver("client", builder.Build().Builder, config, topicConfiguration, TimeSpan.FromSeconds(1), source.Token);
             driver.StartDriver();
             var input = driver.CreateInputTopic("test", new StringSerDes(), new StringSerDes());
@@ -258,7 +258,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
 
             var builder = new StreamBuilder();
             
-            var globalktable = builder.GlobalTable("test", InMemory<string, string>.As("global-store"));
+            var globalktable = builder.GlobalTable("test", InMemory.As<string, string>("global-store"));
             builder.Stream<string ,string>("source")
                 .Join(globalktable, 
                     (k,v) => k,

@@ -62,7 +62,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var table = builder
                 .Stream<string, string>("test")
                 .Filter((k, v) => v.Length % 2 == 0)
-                .ToTable(InMemory<string, string>.As("table-store"));
+                .ToTable(InMemory.As<string, string>("table-store"));
 
             Topology t = builder.Build();
 

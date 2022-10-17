@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             builder.Stream<string, string>("topic")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(1000))
-                .Count(RocksDbWindows<string, long>.As<StringSerDes, Int64SerDes>("rocksdb-w-store"));
+                .Count(RocksDbWindows.As<string, long, StringSerDes, Int64SerDes>("rocksdb-w-store"));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-rocksdb-window-store";
@@ -43,8 +43,49 @@ namespace Streamiz.Kafka.Net.Tests.Stores
                 Assert.AreEqual(1L, k1[0].Value);
                 Assert.AreEqual(1L, k1[1].Value);
             }
+
             config.RemoveRocksDbFolderForTest();
         }
+
+        [Test]
+        public void WindowingBis()
+        {
+            var builder = new StreamBuilder();
+
+            builder.Stream<string, string>("topic")
+                .GroupByKey()
+                .WindowedBy(TumblingWindowOptions.Of(1000))
+                .Count(
+                    RocksDbWindows
+                        .As<string, long>("rocksdb-w-store")
+                        .WithKeySerdes(new StringSerDes())
+                        .WithValueSerdes(new Int64SerDes()));
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-rocksdb-window-bis-store";
+            config.UseRandomRocksDbConfigForTest();
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                DateTime dt = DateTime.Now;
+                var inputTopic = driver.CreateInputTopic<string, string>("topic");
+                inputTopic.PipeInput("key1", "1", dt);
+                inputTopic.PipeInput("key2", "2", dt);
+
+                var store = driver.GetWindowStore<string, long>("rocksdb-w-store");
+                Assert.IsNotNull(store);
+                var k1 = store.FetchAll(dt.AddMinutes(-10), dt.AddMinutes(10)).ToList();
+
+                Assert.AreEqual(2, k1.Count);
+                Assert.AreEqual(1L, k1[0].Value);
+                Assert.AreEqual(1L, k1[1].Value);
+            }
+
+            config.RemoveRocksDbFolderForTest();
+        }
+
 
         [Test]
         public void StoresPersistentKeyValueStoreTest()
@@ -55,16 +96,16 @@ namespace Streamiz.Kafka.Net.Tests.Stores
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(1000))
                 .Count(
-                      Materialized<string, long, IWindowStore<Bytes, byte[]>>.Create(
-                    Streamiz.Kafka.Net.State.Stores.PersistentWindowStore(
-                        "rocksdb-w-store",
-                        TimeSpan.FromDays(1),
-                        TimeSpan.FromSeconds(1))));
+                    Materialized<string, long, IWindowStore<Bytes, byte[]>>.Create(
+                        Streamiz.Kafka.Net.State.Stores.PersistentWindowStore(
+                            "rocksdb-w-store",
+                            TimeSpan.FromDays(1),
+                            TimeSpan.FromSeconds(1))));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-rocksdb-window-store";
             config.UseRandomRocksDbConfigForTest();
-            
+
             Topology t = builder.Build();
 
             using (var driver = new TopologyTestDriver(t, config))
@@ -81,6 +122,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
 
                 Assert.AreEqual(3, k1.Count);
             }
+
             config.RemoveRocksDbFolderForTest();
         }
     }

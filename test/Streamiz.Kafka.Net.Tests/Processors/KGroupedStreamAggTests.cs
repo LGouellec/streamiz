@@ -145,7 +145,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                .Stream<string, string>("topic")
                .GroupBy((k, v) => k.ToUpper());
 
-            stream.Count(InMemory<string, long>.As("count-store"));
+            stream.Count(InMemory.As<string, long>("count-store"));
             stream.Aggregate(
                     () => new Dictionary<char, int>(),
                     (k, v, old) =>
@@ -160,7 +160,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                         }
                         return old;
                     },
-                    InMemory<string, Dictionary<char, int>>.As("agg-store").WithValueSerdes<DictionarySerDes>()
+                    InMemory.As<string, Dictionary<char, int>>("agg-store").WithValueSerdes<DictionarySerDes>()
                 );
 
             var topology = builder.Build();
@@ -296,7 +296,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                .Aggregate(
                     () => 0L,
                     (k, v, agg) => agg + 1,
-                    InMemory<string, long>.As("agg-store").WithValueSerdes<Int64SerDes>());
+                    InMemory.As<string, long>("agg-store").WithValueSerdes<Int64SerDes>());
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))

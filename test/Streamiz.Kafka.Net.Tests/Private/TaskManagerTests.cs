@@ -355,8 +355,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var builder = new StreamBuilder();
             builder.Table("topic",
                 persistenStateStore
-                    ? RocksDb<string, string>.As("store").WithLoggingEnabled(null)
-                    : InMemory<string, string>.As("store").WithLoggingEnabled(null));
+                    ? RocksDb.As<string, string>("store").WithLoggingEnabled(null)
+                    : InMemory.As<string, string>("store").WithLoggingEnabled(null));
 
             var serdes = new StringSerDes();
 

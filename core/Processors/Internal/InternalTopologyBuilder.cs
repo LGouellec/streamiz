@@ -356,7 +356,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             // need refactor a little for repartition topic/processor source & sink etc .. change topic name
             IProcessor rootProcessor = new RootProcessor();
             IDictionary<string, IProcessor> sources = new Dictionary<string, IProcessor>();
-            IDictionary<string, IProcessor> sinks = new Dictionary<string, IProcessor>();
+            IDictionary<string, List<IProcessor>> sinks = new Dictionary<string, List<IProcessor>>();
             IDictionary<string, IProcessor> processors = new Dictionary<string, IProcessor>();
             IDictionary<string, IStateStore> stateStores = new Dictionary<string, IStateStore>();
             IList<string> repartitionTopics = new List<string>();
@@ -410,7 +410,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private void BuildSinkNode(
             IDictionary<string, IProcessor> processors,
             IList<string> repartitionTopics,
-            IDictionary<string, IProcessor> sinks,
+            IDictionary<string, List<IProcessor>> sinks,
             ISinkNodeFactory factory,
             IProcessor processor)
         {
@@ -425,14 +425,14 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 {
                     var repartitionTopic = DecorateTopic(factory.Topic);
                     repartitionTopics.Add(repartitionTopic);
-                    sinks.Add(repartitionTopic, processor);
+                    sinks.CreateListOrAdd(repartitionTopic, processor);
                     ((ISinkProcessor) processor).UseRepartitionTopic(repartitionTopic);
                 }
                 else
-                    sinks.Add(factory.Topic, processor);
+                    sinks.CreateListOrAdd(factory.Topic, processor);
             }
             else
-                sinks.Add(factory.Name, processor);
+                sinks.CreateListOrAdd(factory.Name, processor);
         }
 
         private void BuildSourceNode(
