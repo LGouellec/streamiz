@@ -63,7 +63,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             topology = new ProcessorTopology(
                 null,
                 new Dictionary<string, IProcessor>(),
-                new Dictionary<string, IProcessor>(),
+                new Dictionary<string, List<IProcessor>>(),
                 new Dictionary<string, IProcessor>(),
                 new Dictionary<string, IStateStore>(),
                 globalStateStores,
