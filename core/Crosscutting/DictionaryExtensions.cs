@@ -118,6 +118,15 @@ namespace Streamiz.Kafka.Net.Crosscutting
                 return source.TryAdd(key, value);
             }
         }
+
+
+        public static void CreateListOrAdd<K, V>(this IDictionary<K, List<V>> source, K key, V value)
+        {
+            if(source.ContainsKey(key))
+                source[key].Add(value);
+            else
+                source.Add(key, new List<V>{value});
+        }
         
     }
 }
