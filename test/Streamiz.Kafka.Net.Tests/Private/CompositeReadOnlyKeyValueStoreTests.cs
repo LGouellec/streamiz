@@ -73,6 +73,20 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.IsNotNull(result);
             Assert.AreEqual("coucou1", result);
         }
+        
+        [Test]
+        public void GetKeyNotPresentTest()
+        {
+            InMemoryKeyValueStore store1 = new InMemoryKeyValueStore("store");
+            InMemoryKeyValueStore store2 = new InMemoryKeyValueStore("store");
+            var provider =
+                new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1,
+                    store2);
+            var composite = new CompositeReadOnlyKeyValueStore<string, string>(provider, storeType, "store");
+            var result = composite.Get("test");
+            Assert.IsNull(result);
+        }
+
 
         [Test]
         public void AllTest()
