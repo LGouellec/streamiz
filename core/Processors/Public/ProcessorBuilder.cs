@@ -15,21 +15,22 @@ namespace Streamiz.Kafka.Net.Processors.Public
 
         public ProcessorBuilder<K, V> Processor(IProcessor<K, V> processor)
         {
+            processorSupplier.Processor = processor;
             return this;
         }
         
-        public ProcessorBuilder<K, V> Processor(Func<Record<K, V>> processor)
+        public ProcessorBuilder<K, V> Processor(Action<Record<K, V>> processor)
         {
+            processorSupplier.Processor = new WrappedProcessor<K, V>(processor);
             return this;
         }
 
-        internal ProcessorBuilder<K, V> StateStore(WindowStoreBuilder<K, V> windowStoreBuilder)
+        public ProcessorBuilder<K, V> StateStore(StoreBuilder storeBuilder)
         {
+            processorSupplier.StoreBuilder = storeBuilder;
             return this;
         }
-        
-        // TODO : KeyStoreBuilder
-        
+
         public ProcessorSupplier<K, V> Build()
         {
             ProcessorSupplier<K, V> processor = processorSupplier;

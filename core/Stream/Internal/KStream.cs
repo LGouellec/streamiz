@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Sources;
+using Streamiz.Kafka.Net.Processors.Public;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
@@ -99,6 +100,20 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         public IKStream<K, V> FilterNot(Func<K, V, bool> predicate, string named = null)
             => DoFilter(predicate, named, true);
 
+        #endregion
+        
+        #region Process
+
+        public void Process(ProcessorSupplier<K, V> processorSupplier, string named = null)
+        {
+            string name = new Named(named).OrElseGenerateWithPrefix(builder, KStream.PROCESSOR_NAME);
+            ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(
+                new KStreamProcessorSupplier<K, V>(processorSupplier), name);
+            StatefulProcessorNode<K, V> processorNode = new StatefulProcessorNode<K, V>(name, processorParameters, processorSupplier.StoreBuilder);
+
+            builder.AddGraphNode(Node, processorNode);
+        }
+        
         #endregion
 
         #region Transform
@@ -871,7 +886,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             var parameters = new ProcessorParameters<K, V>(tableSource, name);
 
             var storeBuilder = new TimestampedKeyValueStoreMaterializer<K, V>(materialized).Materialize();
-            var tableNode = new StatefulProcessorNode<K, V, ITimestampedKeyValueStore<K, V>>(name, parameters, storeBuilder);
+            var tableNode = new StatefulProcessorNode<K, V>(name, parameters, storeBuilder);
             builder.AddGraphNode(tableParentNode, tableNode);
 
             return new KTable<K, V, V>(

@@ -7,7 +7,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Streamiz.Kafka.Net.SerDes.Internal;
+using Streamiz.Kafka.Net.Processors.Public;
 
 namespace Streamiz.Kafka.Net.Stream
 {
@@ -1689,5 +1689,7 @@ namespace Streamiz.Kafka.Net.Stream
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
             string named = null);
+        
+        void Process(ProcessorSupplier<K, V> processorSupplier, string named = null);
     }
 }

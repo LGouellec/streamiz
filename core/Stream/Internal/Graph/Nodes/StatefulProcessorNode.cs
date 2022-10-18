@@ -4,11 +4,10 @@ using Streamiz.Kafka.Net.State;
 
 namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
 {
-    internal class StatefulProcessorNode<K, V, S> : ProcessorGraphNode<K, V>
-        where S : IStateStore
+    internal class StatefulProcessorNode<K, V> : ProcessorGraphNode<K, V>
     {
         private readonly string[] storeNames;
-        private readonly StoreBuilder<S> storeBuilder;
+        private readonly StoreBuilder storeBuilder;
 
         /// <summary>
         /// Create a node representing a stateful processor,
@@ -17,7 +16,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
         /// <param name="nameNode"></param>
         /// <param name="parameters"></param>
         /// <param name="storeBuilder"></param>
-        public StatefulProcessorNode(string nameNode, ProcessorParameters<K, V> parameters, StoreBuilder<S> storeBuilder)
+        public StatefulProcessorNode(string nameNode, ProcessorParameters<K, V> parameters, StoreBuilder storeBuilder)
             : base(nameNode, parameters)
         {
             storeNames = null;

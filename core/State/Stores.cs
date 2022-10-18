@@ -75,5 +75,8 @@ namespace Streamiz.Kafka.Net.State
 
         public static StoreBuilder<ITimestampedWindowStore<K, V>> TimestampedWindowStoreBuilder<K, V>(IWindowBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
             => new TimestampedWindowStoreBuilder<K, V>(supplier, keySerde, valueSerde);
+        
+        public static StoreBuilder<IKeyValueStore<K, V>> KeyValueStoreBuilder<K, V>(IKeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
+            => new KeyValueStoreBuilder<K, V>(supplier, keySerde, valueSerde);
     }
 }

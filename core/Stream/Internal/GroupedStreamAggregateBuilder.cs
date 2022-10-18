@@ -40,8 +40,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         {
             var sourceName = Repartition(storeBuilder);
             
-            StatefulProcessorNode<K, V, ITimestampedKeyValueStore<K, VR>> statefulProcessorNode =
-               new StatefulProcessorNode<K, V, ITimestampedKeyValueStore<K, VR>>(
+            StatefulProcessorNode<K, V> statefulProcessorNode =
+               new StatefulProcessorNode<K, V>(
                    functionName,
                    new ProcessorParameters<K, V>(aggregateSupplier, functionName),
                    storeBuilder);
@@ -68,8 +68,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         {
             var sourceName = Repartition(storeBuilder);
             
-            StatefulProcessorNode<K, V, ITimestampedWindowStore<K, VR>> statefulProcessorNode =
-               new StatefulProcessorNode<K, V, ITimestampedWindowStore<K, VR>>(
+            StatefulProcessorNode<K, V> statefulProcessorNode =
+               new StatefulProcessorNode<K, V>(
                    functionName,
                    new ProcessorParameters<K, V>(aggregateSupplier, functionName),
                    storeBuilder);
