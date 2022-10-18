@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Confluent.Kafka;
 
 namespace Streamiz.Kafka.Net.Processors.Public
@@ -10,7 +11,7 @@ namespace Streamiz.Kafka.Net.Processors.Public
         public K Key { get; }
         public V Value { get; }
 
-        public Record(TopicPartitionOffset topicPartitionOffset, Headers headers, Timestamp timestamp, K key, V value)
+        internal Record(TopicPartitionOffset topicPartitionOffset, Headers headers, Timestamp timestamp, K key, V value)
         {
             TopicPartitionOffset = topicPartitionOffset;
             Headers = headers;

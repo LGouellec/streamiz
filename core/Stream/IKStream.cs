@@ -1691,5 +1691,9 @@ namespace Streamiz.Kafka.Net.Stream
             string named = null);
         
         void Process(ProcessorSupplier<K, V> processorSupplier, string named = null);
+
+        IKStream<K1, V1> Transform<K1, V1>(TransformerSupplier<K, V, K1, V1> transformerSupplier, string named = null);
+        
+        IKStream<K, V1> TransformValues<V1>(TransformerSupplier<K, V, K, V1> transformerSupplier, string named = null);
     }
 }
