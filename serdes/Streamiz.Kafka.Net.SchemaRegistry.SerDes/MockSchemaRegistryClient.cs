@@ -251,7 +251,7 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
             => IsCompatibleAsync(subject, schema.SchemaString);
 
         /// <summary>
-        /// NotImplementedException
+        /// Returns the latest schema registered against the specified subject.
         /// </summary>
         /// <param name="subject"></param>
         /// <param name="schema"></param>
@@ -259,7 +259,7 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
         /// <returns></returns>
         public Task<RegisteredSchema> LookupSchemaAsync(string subject, Schema schema, bool ignoreDeletedSchemas)
         {
-            throw new NotImplementedException();
+            return GetLatestSchemaAsync(subject);
         }
 
         /// <summary>

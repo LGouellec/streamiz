@@ -9,8 +9,6 @@ namespace Streamiz.Kafka.Net.State.InMemory
     /// </summary>
     public class InMemoryWindowStoreSupplier : IWindowBytesStoreSupplier
     {
-        private readonly TimeSpan retention;
-
         /// <summary>
         /// Constructor 
         /// </summary>
@@ -20,7 +18,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         public InMemoryWindowStoreSupplier(string storeName, TimeSpan retention, long? size)
         {
             Name = storeName;
-            this.retention = retention;
+            Retention = (long) retention.TotalMilliseconds;
             WindowSize = size;
         }
         
@@ -32,7 +30,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// <summary>
         /// Name of state store
         /// </summary>
-        public string Name { get; }
+        public string Name { get; set; }
 
         /// <summary>
         /// Window size of state store
@@ -42,14 +40,14 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// <summary>
         /// Retention period of state store
         /// </summary>
-        public long Retention => (long)retention.TotalMilliseconds;
+        public long Retention { get; set; }
 
         /// <summary>
         /// Return a new <see cref="IWindowStore{K, V}"/> instance.
         /// </summary>
         /// <returns>Return a new <see cref="IWindowStore{K, V}"/> instance.</returns>
         public IWindowStore<Bytes, byte[]> Get()
-            => new InMemoryWindowStore(Name, retention, WindowSize.Value);
+            => new InMemoryWindowStore(Name, TimeSpan.FromMilliseconds(Retention), WindowSize.Value);
 
     }
 }

@@ -26,7 +26,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
                 .Stream<string, string>("topic")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(5)))
-                .Count(InMemoryWindows<string, long>.As("count-store"));
+                .Count(InMemoryWindows.As<string, long>("count-store"));
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
@@ -51,7 +51,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
                 .Stream<string, string>("topic")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(5)))
-                .Count(InMemoryWindows<string, long>.As("count-store"));
+                .Count(InMemoryWindows.As<string, long>("count-store"));
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
@@ -75,7 +75,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .Count(InMemory<string, long>.As("count-store"));
+                .Count(InMemory.As<string, long>("count-store"));
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))

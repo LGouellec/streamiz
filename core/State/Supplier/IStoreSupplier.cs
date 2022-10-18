@@ -13,7 +13,7 @@ namespace Streamiz.Kafka.Net.State.Supplier
         /// Return the name of this state store supplier.
         /// This must be a valid Kafka topic name; valid characters are ASCII alphanumerics, '.', '_' and '-'.
         /// </summary>
-        string Name { get; }
+        string Name { get; set; }
 
         /// <summary>
         /// Return a new <see cref="IStateStore"/> instance of type <typeparamref name="T"/>.

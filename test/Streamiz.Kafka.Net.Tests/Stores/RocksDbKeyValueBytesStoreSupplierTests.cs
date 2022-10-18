@@ -16,7 +16,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         {
             var builder = new StreamBuilder();
 
-            builder.Table("table-topic", RocksDb<string, string>.As<StringSerDes, StringSerDes>("table-topic-store"));
+            builder.Table("table-topic", RocksDb.As<string,string, StringSerDes, StringSerDes>("table-topic-store"));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-map";
@@ -47,7 +47,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             var builder = new StreamBuilder();
 
             // Same like that : 
-            // builder.Table("table-topic", RocksDb<string, string>.As("table-topic-store"));
+            // builder.Table("table-topic", RocksDb.As<string,string>("table-topic-store"));
             builder.Table("table-topic",
                 Materialized<string, string, IKeyValueStore<Bytes, byte[]>>.Create(
                     Streamiz.Kafka.Net.State.Stores.PersistentKeyValueStore("table-topic-store")));

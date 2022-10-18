@@ -113,7 +113,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         {
             var info = cluster.GetConsumerInformation(Name);
             return info != null ?
-                info.TopicPartitionsOffset.FirstOrDefault(t => t.TopicPartition.Equals(partition)).OffsetConsumed :
+                info.TopicPartitionsOffset.First(t => t.TopicPartition.Equals(partition)).OffsetConsumed :
                 Offset.Unset;
         }
 

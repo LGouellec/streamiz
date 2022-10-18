@@ -180,6 +180,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var builder = new StreamBuilder();
             var grace = TimeSpan.FromMinutes(30);
 
+            // retention 2jours
             var stream = builder.Stream<string, int>(inputTopic);
             var sumStream = stream
                 .SelectKey((k, v) => 1)
@@ -187,8 +188,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 .WindowedBy(new DailyTimeWindows(zone, windowStartHour, grace))
                 .Reduce(
                     (v1, v2) => v1 + v2,
-                    InMemoryWindows<int, int>
-                        .Create<Int32SerDes, Int32SerDes>()
+                    InMemoryWindows
+                        .As<int, int, Int32SerDes, Int32SerDes>(null)
                         .WithRetention(TimeSpan.FromDays(1) + grace))
                 .ToStream();
 

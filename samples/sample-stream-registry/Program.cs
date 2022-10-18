@@ -29,7 +29,7 @@ namespace sample_stream_registry
             var table = builder.Table("product",
                                 new Int32SerDes(),
                                 new SchemaAvroSerDes<Product>(),
-                                InMemory<int, Product>.As("product-store"));
+                                InMemory.As<int, Product>("product-store"));
 
             var orders = builder.Stream<int, Order, Int32SerDes, SchemaAvroSerDes<Order>>("orders");
             

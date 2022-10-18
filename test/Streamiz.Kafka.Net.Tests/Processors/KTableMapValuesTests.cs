@@ -37,7 +37,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key3", "paper"));
 
             builder.Table<string, string>("table-topic")
-                .MapValues((v) => v.Length, InMemory<string, int>.As("test-store").With<StringSerDes, Int32SerDes>());
+                .MapValues((v) => v.Length, InMemory.As<string,int>("test-store").With<StringSerDes, Int32SerDes>());
                 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "table-test-mapvalues";
@@ -72,7 +72,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key3", "paper"));
 
             builder.Table<string, string>("table-topic")
-                .MapValues((v) => v.ToCharArray()[0].ToString(), InMemory<string, string>.As("test-store"));
+                .MapValues((v) => v.ToCharArray()[0].ToString(), InMemory.As<string,string>("test-store"));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "table-test-mapvalues";

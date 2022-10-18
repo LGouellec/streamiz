@@ -21,28 +21,28 @@ namespace Streamiz.Kafka.Net.Processors
 
         public static string GetTaskProducerClientId(string threadClientId, TaskId taskId)
         {
-            return threadClientId + "-" + taskId + "-producer";
+            return threadClientId + "-" + taskId + "-streamiz-producer";
         }
 
         public static string GetThreadProducerClientId(string threadClientId)
         {
-            return threadClientId + "-producer";
+            return threadClientId + "-streamiz-producer";
         }
 
         public static string GetConsumerClientId(string threadClientId)
         {
-            return threadClientId + "-consumer";
+            return threadClientId + "-streamiz-consumer";
         }
 
         public static string GetRestoreConsumerClientId(string threadClientId)
         {
-            return threadClientId + "-restore-consumer";
+            return threadClientId + "-streamiz-restore-consumer";
         }
 
         // currently admin client is shared among all threads
         public static string GetSharedAdminClientId(string clientId)
         {
-            return clientId + "-admin";
+            return clientId + "-streamiz-admin";
         }
 
         internal static IThread Create(string threadId, string clientId, InternalTopologyBuilder builder,

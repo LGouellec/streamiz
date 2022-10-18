@@ -24,7 +24,7 @@ namespace sample_test_driver
                             .Stream<string, string>("test")
                             .GroupByKey()
                             .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(10)))
-                            .Count(InMemoryWindows<string, long>.As("count-store"));
+                            .Count(InMemoryWindows.As<string, long>("count-store"));
 
             Topology t = builder.Build();
 

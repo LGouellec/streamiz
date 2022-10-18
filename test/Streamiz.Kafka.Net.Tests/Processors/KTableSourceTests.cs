@@ -36,7 +36,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var builder = new StreamBuilder();
 
-            builder.Table("table-topic", InMemory<string, string>.As("table-topic-store"));
+            builder.Table("table-topic", InMemory.As<string,string>("table-topic-store"));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-map";
@@ -66,7 +66,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder.Table("table-topic", 
                 new StringSerDes(), new StringSerDes(),
-                InMemory<string, string>.As("table-topic-store"));
+                InMemory.As<string,string>("table-topic-store"));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-map";
@@ -95,7 +95,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder.Table<string, string, StringSerDes, StringSerDes>
-                ("table-topic", InMemory<string, string>.As("table-topic-store"));
+                ("table-topic", InMemory.As<string,string, StringSerDes, StringSerDes>("table-topic-store"));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-map";
@@ -124,7 +124,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder.Table<string, string, StringSerDes, StringSerDes>
-                ("table-topic", InMemory<string, string>.As("table-topic-store"), "table");
+                ("table-topic", InMemory.As<string,string>("table-topic-store"), "table");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-map";
@@ -153,7 +153,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder.Table<string, string, StringSerDes, StringSerDes>
-                ("table-topic", InMemory<string, string>.As("table-topic-store"), new MyITimestampExtractor());
+                ("table-topic", InMemory.As<string,string>("table-topic-store"), new MyITimestampExtractor());
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-map";
@@ -182,7 +182,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder.Table<string, string, StringSerDes, StringSerDes>
-                ("table-topic", InMemory<string, string>.As("table-topic-store"), "table", new MyITimestampExtractor());
+                ("table-topic", InMemory.As<string,string>("table-topic-store"), "table", new MyITimestampExtractor());
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-map";
@@ -210,7 +210,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var builder = new StreamBuilder();
 
-            builder.Table("table-topic", InMemory<string, string>.As("table-topic-store"));
+            builder.Table("table-topic", InMemory.As<string,string>("table-topic-store"));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-map";
@@ -233,7 +233,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var builder = new StreamBuilder();
 
-            builder.Table("table-topic", InMemory<string, string>.As("table-topic-store"));
+            builder.Table("table-topic", InMemory.As<string,string>("table-topic-store"));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-map";
@@ -269,7 +269,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var builder = new StreamBuilder();
 
-            builder.Table("table-topic", InMemory<string, string>.As("table-topic-store"));
+            builder.Table("table-topic", InMemory.As<string,string>("table-topic-store"));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-map";
@@ -348,7 +348,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var builder = new StreamBuilder();
 
-            builder.Table("table-topic", InMemory<string, string>.As("table-topic-store"));
+            builder.Table("table-topic", InMemory.As<string,string>("table-topic-store"));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-map";
@@ -382,7 +382,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var builder = new StreamBuilder();
 
-            builder.Table("table-topic", InMemory<string, string>.As("table-topic-store"));
+            builder.Table("table-topic", InMemory.As<string,string>("table-topic-store"));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-map";
@@ -416,7 +416,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var builder = new StreamBuilder();
 
-            builder.Table("table-topic", InMemory<string, string>.As("table-topic-store"));
+            builder.Table("table-topic", InMemory.As<string,string>("table-topic-store"));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-map";

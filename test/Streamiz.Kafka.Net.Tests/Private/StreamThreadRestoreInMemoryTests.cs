@@ -45,7 +45,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             mockKafkaSupplier = new MockKafkaSupplier(2, 0);
 
             var builder = new StreamBuilder();
-            builder.Table("topic", InMemory<string, string>.As("store").WithLoggingEnabled());
+            builder.Table("topic", InMemory.As<string, string>("store").WithLoggingEnabled());
 
             var topo = builder.Build();
             topo.Builder.RewriteTopology(config);

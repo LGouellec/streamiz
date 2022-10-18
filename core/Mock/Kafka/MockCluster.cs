@@ -406,7 +406,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                                         if (!partitionsToRevoked.ContainsKey(consumer))
                                             partitionsToRevoked.Add(consumer, new List<TopicPartitionOffset>());
 
-                                        var tpo = consumer.TopicPartitionsOffset.FirstOrDefault(t =>
+                                        var tpo = consumer.TopicPartitionsOffset.First(t =>
                                             t.TopicPartition.Equals(part));
                                         partitionsToRevoked[consumer]
                                             .Add(new TopicPartitionOffset(part, tpo.OffsetConsumed));
@@ -619,7 +619,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                 if (consumerInformation.TopicPartitionsOffset.Contains(new MockTopicPartitionOffset()
                     {Partition = tp.Partition.Value, Topic = tp.Topic}))
                 {
-                    var tpo = consumerInformation.TopicPartitionsOffset.FirstOrDefault(t =>
+                    var tpo = consumerInformation.TopicPartitionsOffset.First(t =>
                         t.Partition.Equals(tp.Partition.Value) && t.Topic.Equals(tp.Topic));
                     tpo.OffsetComitted = offset;
                     tpo.OffsetConsumed = offset;
@@ -646,7 +646,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                 if (consumerInformation.TopicPartitionsOffset.Contains(new MockTopicPartitionOffset()
                     {Partition = tp.Partition.Value, Topic = tp.Topic}))
                 {
-                    var tpo = consumerInformation.TopicPartitionsOffset.FirstOrDefault(t =>
+                    var tpo = consumerInformation.TopicPartitionsOffset.First(t =>
                         t.Partition.Equals(tp.Partition.Value) && t.Topic.Equals(tp.Topic));
                     tpo.OffsetComitted = offset.Offset;
                     tpo.OffsetConsumed = offset.Offset;

@@ -10,7 +10,6 @@ namespace Streamiz.Kafka.Net.State.RocksDb
     /// </summary>
     public class RocksDbWindowBytesStoreSupplier : IWindowBytesStoreSupplier
     {
-        private readonly TimeSpan retention;
         private readonly long segmentInterval;
 
         /// <summary>
@@ -27,7 +26,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             long? size)
         {
             Name = storeName;
-            this.retention = retention;
+            Retention = (long)retention.TotalMilliseconds;
             this.segmentInterval = segmentInterval;
             WindowSize = size;
         }
@@ -45,12 +44,12 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         /// <summary>
         /// Retention of the state store
         /// </summary>
-        public long Retention => (long)retention.TotalMilliseconds;
+        public long Retention { get; set; }
 
         /// <summary>
         /// State store name
         /// </summary>
-        public string Name { get; }
+        public string Name { get; set; }
 
         /// <summary>
         /// Build the rocksdb state store.
