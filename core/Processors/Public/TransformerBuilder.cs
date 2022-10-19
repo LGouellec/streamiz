@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.Processors.Public
             return this;
         }
         
-        public TransformerBuilder<K, V, K1, V1> Transformer(Func<Record<K, V>, KeyValuePair<K1, V1>> transformer)
+        public TransformerBuilder<K, V, K1, V1> Transformer(Func<Record<K, V>, Record<K1, V1>> transformer)
         {
             transformerSupplier.Transformer = new WrappedTransformer<K, V, K1, V1>(transformer);
             return this;

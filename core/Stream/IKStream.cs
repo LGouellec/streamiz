@@ -1689,11 +1689,132 @@ namespace Streamiz.Kafka.Net.Stream
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
             string named = null);
-        
+
+        /// <summary>
+        /// Process all records in this stream, one record at a time, by applying a processor (provided by the given
+        /// <see cref="ProcessorSupplier{K,V}"/>.
+        /// Attaching a state store makes this a stateful record-by-record operation.
+        /// If you choose not to attach one, this operation is similar to the stateless <see cref="Map{KR,VR}(Streamiz.Kafka.Net.Stream.IKeyValueMapper{K,V,System.Collections.Generic.KeyValuePair{KR,VR}},string)"/>
+        /// but allows access to the <see cref="ProcessorContext"/>
+        /// and <see cref="Record{K,V}"/> metadata.
+        /// This is essentially mixing the Processor API into the DSL, and provides all the functionality of the PAPI.
+        /// <para>
+        /// In order for the processor to use state stores, the stores must be added to the topology and connected to the
+        /// processor (though it's not required to connect global state stores; read-only
+        /// access to global state stores is available by default).
+        /// </para>
+        /// <para>
+        /// The strategy is to manually add the <see cref="StoreBuilder"/> via <see cref="ProcessorBuilder{K,V}.StateStore"/>,
+        /// and specify all details regarding the store (name, serdes, type of state store, etc ..). For now, you can provide only one state store by custom processor.
+        /// </para>
+        /// <code>
+        /// var builder = new StreamBuilder();
+        ///             
+        /// builder.Stream&lt;string, string@gt;("topic")
+        ///         .Process(ProcessorBuilder
+        ///                     .New@lt;string, string@gt;()
+        ///                     .Processor(new MyStatefullProcessor())
+        ///                     .StateStore(State.Stores.KeyValueStoreBuilder(
+        ///                             State.Stores.InMemoryKeyValueStore("my-store"),
+        ///                             new StringSerDes(),
+        ///                             new StringSerDes()))
+        ///                     .Build());
+        /// </code>
+        /// <para>
+        /// Even if any upstream operation was key-changing, no auto-repartition is triggered.
+        /// If repartitioning is required, a call to <see cref="Repartition"/> should be performed before <see cref="Process"/>.
+        /// </para>
+        /// </summary>
+        /// <param name="processorSupplier">an instance of <see cref="ProcessorSupplier{K,V}"/> which contains the processor and a potential state store. Use <see cref="ProcessorBuilder"/> to build this supplier.</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         void Process(ProcessorSupplier<K, V> processorSupplier, string named = null);
 
+        /// <summary>
+        /// Transform each record of the input stream into zero or one record in the output stream (both key and value type
+        /// can be altered arbitrarily).
+        /// A <see cref="Transform{K1,V1}"/> (provided by the given <see cref="TransformerSupplier{K,V,K1,V1}"/>) is applied to each input record and
+        /// returns zero or one output record.
+        /// Thus, an input record <see cref="Record{K,V}"/> can be transformed into an output record <see cref="Record{K1,V1}"/>.
+        /// Attaching a state store makes this a stateful record-by-record operation.
+        /// If you choose not to attach one, this operation is similar to the stateless <see cref="Map{K1,V1}(Streamiz.Kafka.Net.Stream.IKeyValueMapper{K,V,System.Collections.Generic.KeyValuePair{K1,V1}},string)"/>
+        /// but allows access to the <see cref="ProcessorContext"/> and record metadata.
+        /// This is essentially mixing the Processor API into the DSL, and provides all the functionality of the PAPI.
+        /// <para>
+        /// In order for the transformer to use state stores, the stores must be added to the topology and connected to the
+        /// transformer (though it's not required to connect global state stores; read-only
+        /// access to global state stores is available by default).
+        /// </para>
+        /// <para>
+        /// The strategy is to manually add the <see cref="StoreBuilder"/> via <see cref="TransformerBuilder{K,V,K1,V1}.StateStore"/>,
+        /// and specify all details regarding the store (name, serdes, type of state store, etc ..). For now, you can provide only one state store by custom transformer.
+        /// </para>
+        /// <code>
+        /// var builder = new StreamBuilder();
+        ///             
+        /// builder.Stream@lt;string, string&gt;("topic")
+        ///     .Transform(TransformerBuilder
+        ///         .New&lt;string, string, string, string&gt;()
+        ///         .Transformer(new MyStatefulTransformer())
+        ///         .StateStore(State.Stores.KeyValueStoreBuilder(
+        ///                 State.Stores.InMemoryKeyValueStore("my-store"),
+        ///                 new StringSerDes(),
+        ///                 new StringSerDes()))
+        ///         .Build())
+        ///     .To("topic-output");
+        /// </code>
+        /// <para>
+        /// The <see cref="TransformProcessor{K,V,K1,V1}"/> must return a <see cref="Record{K1,V1}"/> type in <see cref="TransformProcessor{K,V,K1,V1}.Process(K,V)"/>.
+        /// The return value may be null, in which case no record is emitted.
+        /// </para>
+        /// </summary>
+        /// <param name="transformerSupplier">an instance of <see cref="TransformerSupplier{K,V,K1,V1}"/> which contains the transformer</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <typeparam name="K1">the key type of the new stream</typeparam>
+        /// <typeparam name="V1">the value type of the new stream</typeparam>
+        /// <returns>a <see cref="IKStream{K1,V1}"/> that contains more or less records with new key and value (possibly of different type)</returns>
         IKStream<K1, V1> Transform<K1, V1>(TransformerSupplier<K, V, K1, V1> transformerSupplier, string named = null);
         
+        /// <summary>
+        /// Transform each record of the input stream into zero or one record in the output stream (only value type, the original key will be through to the upstream processors ).
+        /// A <see cref="Transform{K,V1}"/> (provided by the given <see cref="TransformerSupplier{K,V,K,V1}"/>) is applied to each input record and
+        /// returns zero or one output record.
+        /// Thus, an input record <see cref="Record{K,V}"/> can be transformed into an output record <see cref="Record{K,V1}"/>.
+        /// Attaching a state store makes this a stateful record-by-record operation.
+        /// If you choose not to attach one, this operation is similar to the stateless <see cref="MapValues{V}(Streamiz.Kafka.Net.Stream.IValueMapper{V,V1},string)"/>
+        /// but allows access to the <see cref="ProcessorContext"/> and record metadata.
+        /// This is essentially mixing the Processor API into the DSL, and provides all the functionality of the PAPI.
+        /// <para>
+        /// In order for the transformer to use state stores, the stores must be added to the topology and connected to the
+        /// transformer (though it's not required to connect global state stores; read-only
+        /// access to global state stores is available by default).
+        /// </para>
+        /// <para>
+        /// The strategy is to manually add the <see cref="StoreBuilder"/> via <see cref="TransformerBuilder{K,V,K,V1}.StateStore"/>,
+        /// and specify all details regarding the store (name, serdes, type of state store, etc ..). For now, you can provide only one state store by custom transformer.
+        /// </para>
+        /// <code>
+        /// var builder = new StreamBuilder();
+        ///             
+        /// builder.Stream&lt;string, string&gt;("topic")
+        ///     .TransformValues(TransformerBuilder
+        ///         .New&lt;string, string, string, string&gt;()
+        ///         .Transformer(new MyStatefulTransformer())
+        ///         .StateStore(State.Stores.KeyValueStoreBuilder(
+        ///                 State.Stores.InMemoryKeyValueStore("my-store"),
+        ///                 new StringSerDes(),
+        ///                 new StringSerDes()))
+        ///         .Build())
+        ///     .To("topic-output");
+        /// </code>
+        /// <para>
+        /// The <see cref="TransformProcessor{K,V,K,V1}"/> must return a <see cref="Record{K,V1}"/> type in <see cref="TransformProcessor{K,V,K,V1}.Process(K,V)"/>.
+        /// The return value may be null, in which case no record is emitted.
+        /// </para>
+        /// </summary>
+        /// <param name="transformerSupplier">an instance of <see cref="TransformerSupplier{K,V,K,V1}"/> which contains the transformer</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <typeparam name="V1">the value type of the new stream</typeparam>
+        /// <returns>a <see cref="IKStream{K,V1}"/> that contains more or less records with new key and value (possibly of different type)</returns>
         IKStream<K, V1> TransformValues<V1>(TransformerSupplier<K, V, K, V1> transformerSupplier, string named = null);
     }
 }

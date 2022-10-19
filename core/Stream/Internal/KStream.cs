@@ -126,7 +126,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         private IKStream<K1, V1> DoTransform<K1, V1>(TransformerSupplier<K, V, K1, V1> transformerSupplier, bool changeKey, string named =
             null)
         {
-            string name = new Named(named).OrElseGenerateWithPrefix(builder, KStream.PROCESSOR_NAME);
+            string name = new Named(named).OrElseGenerateWithPrefix(builder, changeKey ? KStream.TRANSFORM_NAME : KStream.TRANSFORMVALUES_NAME );
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(
                 new KStreamTransformerSupplier<K, V, K1, V1>(transformerSupplier, changeKey), name);
             StatefulProcessorNode<K, V> processorNode = new StatefulProcessorNode<K, V>(name, processorParameters, transformerSupplier.StoreBuilder);

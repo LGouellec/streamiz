@@ -1,3 +1,4 @@
+using System;
 using Confluent.Kafka;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors.Public;
@@ -34,10 +35,13 @@ namespace Streamiz.Kafka.Net.Processors
             
             var newRecord = transformerSupplier.Transformer.Process(record);
             
-            if (changeKey)
-                Forward(newRecord.Key, newRecord.Value);
-            else
-                Forward(key, newRecord.Value);
+            if (newRecord != null)
+            {
+                if (changeKey)
+                    Forward(newRecord.Key, newRecord.Value);
+                else
+                    Forward(key, newRecord.Value);
+            }
         }
 
         public override void Close()

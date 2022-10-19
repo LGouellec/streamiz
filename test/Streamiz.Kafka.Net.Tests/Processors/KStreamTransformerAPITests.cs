@@ -21,9 +21,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 
             }
 
-            public KeyValuePair<string, string> Process(Record<string, string> record)
+            public Record<string, string> Process(Record<string, string> record)
             {
-                return KeyValuePair.Create(record.Key, record.Value.ToUpper());
+                return Record<string, string>.Create(record.Key, record.Value.ToUpper());
             }
 
             public void Close()
@@ -41,10 +41,10 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 store = (IKeyValueStore<string, string>)context.GetStateStore("my-store");
             }
 
-            public KeyValuePair<string, string> Process(Record<string, string> record)
+            public Record<string, string> Process(Record<string, string> record)
             {
                 store.Put(record.Key, record.Value);
-                return KeyValuePair.Create(record.Key, record.Value.ToUpper());
+                return Record<string, string>.Create(record.Key, record.Value.ToUpper());
             }
 
             public void Close()
@@ -61,7 +61,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder.Stream<string, string>("topic")
                 .Transform(TransformerBuilder
                     .New<string, string, string, string>()
-                    .Transformer((record) => KeyValuePair.Create(record.Key, record.Value.ToUpper()))
+                    .Transformer((record) => Record<string, string>.Create(record.Key, record.Value.ToUpper()))
                     .Build())
                 .To("topic-output");
 
@@ -164,7 +164,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder.Stream<string, string>("topic")
                 .TransformValues(TransformerBuilder
                     .New<string, string, string, string>()
-                    .Transformer((record) => KeyValuePair.Create(record.Key.ToUpper(), record.Value.ToUpper()))
+                    .Transformer((record) => Record<string, string>.Create(record.Value.ToUpper()))
                     .Build())
                 .To("topic-output");
 
@@ -185,6 +185,76 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 Assert.AreEqual("VALUE1", mapRecords["key1"]);
                 Assert.AreEqual("VALUE2", mapRecords["key2"]);
             }
+        }
+
+        [Test]
+        public void TransformerWithRepartitionBefore()
+        {
+            var builder = new StreamBuilder();
+            
+            builder.Stream<string, string>("topic")
+                .SelectKey((k,v) => v)
+                .GroupByKey()
+                .Count()
+                .ToStream()
+                .Transform(TransformerBuilder
+                    .New<string, long, string, string>()
+                    .Transformer((record) => Record<string, string>.Create(record.Key, record.Value.ToString()))
+                    .Build())
+                .To("topic-output");
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-transformer-api";
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("topic");
+                inputTopic.PipeInput("key1", "value1");
+                inputTopic.PipeInput("key2", "value2");
+
+                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var mapRecords = outputTopic.ReadKeyValuesToMap();
+                Assert.AreEqual(2, mapRecords.Count);
+                Assert.AreEqual("1", mapRecords["value1"]);
+                Assert.AreEqual("1", mapRecords["value2"]);
+            } 
+        }
+        
+        [Test]
+        public void TransformerWithRepartitionAfter()
+        {
+            var builder = new StreamBuilder();
+            
+            builder.Stream<string, string>("topic")
+                .Transform(TransformerBuilder
+                    .New<string, string, string, string>()
+                    .Transformer((record) => Record<string, string>.Create(record.Value, record.Value))
+                    .Build())
+                .GroupByKey()
+                .Count()
+                .ToStream()
+                .MapValues((v) => v.ToString())
+                .To("topic-output");
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-transformer-api";
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("topic");
+                inputTopic.PipeInput("key1", "value1");
+                inputTopic.PipeInput("key2", "value2");
+
+                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var mapRecords = outputTopic.ReadKeyValuesToMap();
+                Assert.AreEqual(2, mapRecords.Count);
+                Assert.AreEqual("1", mapRecords["value1"]);
+                Assert.AreEqual("1", mapRecords["value2"]);
+            } 
         }
     }
 }

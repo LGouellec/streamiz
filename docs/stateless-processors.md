@@ -354,3 +354,69 @@ stream..ForeachAsync(
                         .RetryBehavior(EndRetryBehavior.SKIP)
                         .Build());
 ```
+
+## Process
+
+**Terminal operation.** Applies a Processor to each record. `Process(...)` allows you to leverage the Processor API from the DSL.
+
+**Be carefull, if you want interact with an external system.** Please use `ForeachAsync` instead.
+
+- IKStream → void
+
+``` csharp
+var builder = new StreamBuilder();
+            
+builder.Stream<string, string>("topic")
+    .Process(ProcessorBuilder
+        .New<string, string>()
+        .Processor((record) =>
+        {
+           // what you want ...
+        })
+        .Build());
+```
+
+## Transform
+
+Applies a Transformer to each record. `Transform(..)` allows you to leverage the Processor API from the DSL.
+
+Each input record is transformed into zero or one record (similar to the stateless `Map`). The Transformer must return null for zero output. You can modify the record’s key and value, including their types.
+
+**Marks the stream for data re-partitioning:** Applying a grouping or a join after transform will result in re-partitioning of the records. If possible use `TransformValues(...)` instead, which will not cause data re-partitioning.
+
+**Be carefull, if you want interact with an external system.** Please use `MapAsync(...), MapValuesAsync(...), FlatMapAsync(...) or FlatMapValuesAsync(...)` instead.
+
+- IKStream → IKStream
+
+``` csharp
+var builder = new StreamBuilder();
+            
+builder.Stream<string, string>("topic")
+    .Transform(TransformerBuilder
+        .New<string, string, string, string>()
+        .Transformer((record) => 
+                Record<string, string>.Create(record.Key.ToUpper(), record.Value.ToUpper()))
+        .Build())
+    .To("topic-output");
+```
+
+## TransformValues
+
+Applies a Transformer to each record, while retaining the key of the original record (even if you change the key into the output `Record`). `TransformValues(..)` allows you to leverage the Processor API from the DSL.
+
+Each input record is transformed into zero or one output record (similar to the stateless `MapValues`). The Transformer must return null for zero output. You can modify the record’s  value, including his type.
+
+`TransformValues(...)` is preferable to `Transform(...)` because it will not cause data re-partitioning.
+
+- IKStream → IKStream
+
+``` csharp
+var builder = new StreamBuilder();
+            
+builder.Stream<string, string>("topic")
+                .TransformValues(TransformerBuilder
+                    .New<string, string, string, string>()
+                    .Transformer((record) => Record<string, string>.Create(record.Value.ToUpper()))
+                    .Build())
+        .To("topic-output");
+```
