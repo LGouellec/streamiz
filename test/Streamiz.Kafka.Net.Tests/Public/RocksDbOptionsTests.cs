@@ -87,7 +87,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     .SetHashLinkListRep(12)
                     .SetHashSkipListRep(56, 4, 2)
                     //.SetInfoLog(IntPtr.Zero)
-                    .SetInfoLogLevel(RocksLogLevel.NUM_INFO_LOG)
+                    .SetInfoLogLevel(InfoLogLevel.Debug)
                     .SetInplaceUpdateNumLocks(134)
                     .SetIsFdCloseOnExec(false)
                     .SetKeepLogFileNum(1)

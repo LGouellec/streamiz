@@ -872,9 +872,9 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         /// </summary>
         /// <param name="value">log level to set</param>
         /// <returns>the instance of the current object</returns>
-        public RocksDbOptions SetInfoLogLevel(RocksLogLevel value)
+        public RocksDbOptions SetInfoLogLevel(InfoLogLevel value)
         {
-            columnFamilyOptions.SetInfoLogLevel((int)value);
+            columnFamilyOptions.SetInfoLogLevel(value);
             return this;
         }
         

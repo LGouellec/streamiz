@@ -348,7 +348,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             rocksDbOptions.SetMaxWriteBufferNumber(MAX_WRITE_BUFFERS);
             rocksDbOptions.SetCreateIfMissing(true);
             rocksDbOptions.SetErrorIfExists(false);
-            rocksDbOptions.SetInfoLogLevel(RocksLogLevel.ERROR);
+            rocksDbOptions.SetInfoLogLevel(InfoLogLevel.Error);
             // this is the recommended way to increase parallelism in RocksDb
             // note that the current implementation of setIncreaseParallelism affects the number
             // of compaction threads but not flush threads (the latter remains one). Also
