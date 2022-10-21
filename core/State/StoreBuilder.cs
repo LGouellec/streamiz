@@ -7,7 +7,7 @@ namespace Streamiz.Kafka.Net.State
     /// <summary>
     /// Build a <see cref="IStateStore"/> wrapped with optional caching and logging.
     /// </summary>
-    internal interface StoreBuilder
+    public interface StoreBuilder
     {
         bool IsWindowStore { get; }
         long RetentionMs { get; }
@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.State
     /// Build a <see cref="IStateStore"/> wrapped with optional caching and logging.
     /// </summary>
     /// <typeparam name="T">the type of store to build</typeparam>
-    internal interface StoreBuilder<T>  : StoreBuilder
+    public interface StoreBuilder<T>  : StoreBuilder
         where T : IStateStore
     {
         StoreBuilder<T> WithCachingEnabled();

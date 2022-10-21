@@ -2,10 +2,10 @@ using Confluent.Kafka;
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
 using System;
-using System.IO;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Table;
+using System.Linq;
+using Streamiz.Kafka.Net.Stream;
 
 namespace sample_stream
 {
@@ -16,29 +16,30 @@ namespace sample_stream
     {
         public static async Task Main(string[] args)
         {
+            var topicSource = "words";
             var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "app-count-word";
+            config.ApplicationId = "test-app-reproducer";
             config.BootstrapServers = "localhost:9092";
             config.AutoOffsetReset = AutoOffsetReset.Earliest;
             config.CommitIntervalMs = 5000;
-            config.Logger = LoggerFactory.Create(builder =>
-            {
-                builder.SetMinimumLevel(LogLevel.Debug);
-                builder.AddLog4Net();
-            });
+
+            
+
 
             StreamBuilder builder = new StreamBuilder();
-            builder.Stream<string, string>("words")
-                .FlatMapValues((v) => v.Split(" "))
+            builder
+                .Stream<string, string>(topicSource)
+                .FlatMapValues((k, v) => v.Split((" ")).ToList())
                 .SelectKey((k, v) => v)
                 .GroupByKey()
-                .Count(RocksDb.As<string, long, StringSerDes, Int64SerDes>("count-store"));
-
-            var topo = builder.Build();
+                .Count(RocksDb.As<string, long>("count-store")
+                    .WithKeySerdes(new StringSerDes())
+                    .WithValueSerdes(new Int64SerDes()));
             
-            KafkaStream stream = new KafkaStream(topo, config);
-
-            Console.CancelKeyPress += (o,e) => stream.Dispose();
+            Topology t = builder.Build();
+            KafkaStream stream = new KafkaStream(t, config);
+            
+            Console.CancelKeyPress += (_, _) => stream.Dispose();
             
             await stream.StartAsync();
         }

@@ -180,14 +180,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             nodeGroups = null;
         }
 
-        internal void AddStateStore<S>(StoreBuilder<S> storeBuilder, params string[] processorNames)
-            where S : IStateStore
+        internal void AddStateStore(StoreBuilder storeBuilder, params string[] processorNames)
         {
             AddStateStore(storeBuilder, false, processorNames);
         }
 
-        internal void AddStateStore<S>(StoreBuilder<S> storeBuilder, bool allowOverride, params string[] processorNames)
-            where S : IStateStore
+        internal void AddStateStore(StoreBuilder storeBuilder, bool allowOverride, params string[] processorNames)
         {
             if (!allowOverride && stateFactories.ContainsKey(storeBuilder.Name))
             {

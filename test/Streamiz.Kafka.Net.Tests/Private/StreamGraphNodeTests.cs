@@ -3,6 +3,7 @@ using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 using System.Collections.Generic;
+using Streamiz.Kafka.Net.Stream.Internal.Graph;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {

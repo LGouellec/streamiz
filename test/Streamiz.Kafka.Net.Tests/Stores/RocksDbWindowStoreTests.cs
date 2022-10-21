@@ -69,7 +69,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         }
 
         [Test]
-        public void CreateInMemoryWindowStore()
+        public void CreateRocksDbWindowStore()
         {
             Assert.IsTrue(store.Persistent);
             Assert.AreEqual("test-w-store", store.Name);

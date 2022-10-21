@@ -1,0 +1,260 @@
+using System.Collections.Generic;
+using NUnit.Framework;
+using Streamiz.Kafka.Net.Mock;
+using Streamiz.Kafka.Net.Processors.Public;
+using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.Stream;
+
+namespace Streamiz.Kafka.Net.Tests.Processors
+{
+    public class KStreamTransformerAPITests
+    {
+        private class MyTransformer : ITransformer<string, string, string, string>
+        {
+            public MyTransformer()
+            {
+            }
+            
+            public void Init(ProcessorContext context)
+            {
+                
+            }
+
+            public Record<string, string> Process(Record<string, string> record)
+            {
+                return Record<string, string>.Create(record.Key, record.Value.ToUpper());
+            }
+
+            public void Close()
+            {
+                
+            }
+        }
+
+        private class MyStatefulTransformer : ITransformer<string, string, string, string>
+        {
+            private IKeyValueStore<string, string> store;
+            
+            public void Init(ProcessorContext context)
+            {
+                store = (IKeyValueStore<string, string>)context.GetStateStore("my-store");
+            }
+
+            public Record<string, string> Process(Record<string, string> record)
+            {
+                store.Put(record.Key, record.Value);
+                return Record<string, string>.Create(record.Key, record.Value.ToUpper());
+            }
+
+            public void Close()
+            {
+                
+            }
+        }
+
+        [Test]
+        public void TransformerAPILambda()
+        {
+            var builder = new StreamBuilder();
+            
+            builder.Stream<string, string>("topic")
+                .Transform(TransformerBuilder
+                    .New<string, string, string, string>()
+                    .Transformer((record) => Record<string, string>.Create(record.Key, record.Value.ToUpper()))
+                    .Build())
+                .To("topic-output");
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-transformer-api";
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("topic");
+                inputTopic.PipeInput("key1", "value1");
+                inputTopic.PipeInput("key2", "value2");
+
+                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var mapRecords = outputTopic.ReadKeyValuesToMap();
+                Assert.AreEqual(2, mapRecords.Count);
+                Assert.AreEqual("VALUE1", mapRecords["key1"]);
+                Assert.AreEqual("VALUE2", mapRecords["key2"]);
+            }
+        }
+        
+        [Test]
+        public void TransformerAPIProcessor()
+        {
+            var builder = new StreamBuilder();
+            var data = new List<(string, string)>();
+            
+            builder.Stream<string, string>("topic")
+                .Transform(TransformerBuilder
+                    .New<string, string, string, string>()
+                    .Transformer(new MyTransformer())
+                    .Build())
+                .To("topic-output");
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-transformer-api";
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("topic");
+                inputTopic.PipeInput("key1", "value1");
+                inputTopic.PipeInput("key2", "value2");
+
+                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var mapRecords = outputTopic.ReadKeyValuesToMap();
+                Assert.AreEqual(2, mapRecords.Count);
+                Assert.AreEqual("VALUE1", mapRecords["key1"]);
+                Assert.AreEqual("VALUE2", mapRecords["key2"]);
+            }
+        }
+
+        [Test]
+        public void TransformerAPIStatefull()
+        {
+            var builder = new StreamBuilder();
+            
+            builder.Stream<string, string>("topic")
+                .Transform(TransformerBuilder
+                    .New<string, string, string, string>()
+                    .Transformer(new MyStatefulTransformer())
+                    .StateStore(State.Stores.KeyValueStoreBuilder(
+                            State.Stores.InMemoryKeyValueStore("my-store"),
+                            new StringSerDes(),
+                            new StringSerDes()))
+                    .Build())
+                .To("topic-output");
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-transformer-api";
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("topic");
+                inputTopic.PipeInput("key1", "value1");
+                inputTopic.PipeInput("key2", "value2");
+
+                var store = driver.GetKeyValueStore<string, string>("my-store");
+                Assert.AreEqual(2, store.ApproximateNumEntries());
+                Assert.AreEqual("value1", store.Get("key1"));
+                Assert.AreEqual("value2", store.Get("key2"));
+                
+                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var mapRecords = outputTopic.ReadKeyValuesToMap();
+                Assert.AreEqual(2, mapRecords.Count);
+                Assert.AreEqual("VALUE1", mapRecords["key1"]);
+                Assert.AreEqual("VALUE2", mapRecords["key2"]);
+            }
+        }
+
+        [Test]
+        public void TransformerValuesAPILambda()
+        {
+            var builder = new StreamBuilder();
+            
+            builder.Stream<string, string>("topic")
+                .TransformValues(TransformerBuilder
+                    .New<string, string, string, string>()
+                    .Transformer((record) => Record<string, string>.Create(record.Value.ToUpper()))
+                    .Build())
+                .To("topic-output");
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-transformer-api";
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("topic");
+                inputTopic.PipeInput("key1", "value1");
+                inputTopic.PipeInput("key2", "value2");
+
+                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var mapRecords = outputTopic.ReadKeyValuesToMap();
+                Assert.AreEqual(2, mapRecords.Count);
+                Assert.AreEqual("VALUE1", mapRecords["key1"]);
+                Assert.AreEqual("VALUE2", mapRecords["key2"]);
+            }
+        }
+
+        [Test]
+        public void TransformerWithRepartitionBefore()
+        {
+            var builder = new StreamBuilder();
+            
+            builder.Stream<string, string>("topic")
+                .SelectKey((k,v) => v)
+                .GroupByKey()
+                .Count()
+                .ToStream()
+                .Transform(TransformerBuilder
+                    .New<string, long, string, string>()
+                    .Transformer((record) => Record<string, string>.Create(record.Key, record.Value.ToString()))
+                    .Build())
+                .To("topic-output");
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-transformer-api";
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("topic");
+                inputTopic.PipeInput("key1", "value1");
+                inputTopic.PipeInput("key2", "value2");
+
+                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var mapRecords = outputTopic.ReadKeyValuesToMap();
+                Assert.AreEqual(2, mapRecords.Count);
+                Assert.AreEqual("1", mapRecords["value1"]);
+                Assert.AreEqual("1", mapRecords["value2"]);
+            } 
+        }
+        
+        [Test]
+        public void TransformerWithRepartitionAfter()
+        {
+            var builder = new StreamBuilder();
+            
+            builder.Stream<string, string>("topic")
+                .Transform(TransformerBuilder
+                    .New<string, string, string, string>()
+                    .Transformer((record) => Record<string, string>.Create(record.Value, record.Value))
+                    .Build())
+                .GroupByKey()
+                .Count()
+                .ToStream()
+                .MapValues((v) => v.ToString())
+                .To("topic-output");
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-transformer-api";
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("topic");
+                inputTopic.PipeInput("key1", "value1");
+                inputTopic.PipeInput("key2", "value2");
+
+                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var mapRecords = outputTopic.ReadKeyValuesToMap();
+                Assert.AreEqual(2, mapRecords.Count);
+                Assert.AreEqual("1", mapRecords["value1"]);
+                Assert.AreEqual("1", mapRecords["value2"]);
+            } 
+        }
+    }
+}

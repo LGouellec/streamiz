@@ -1,7 +1,7 @@
 ﻿using Streamiz.Kafka.Net.Processors;
 using System;
 
-namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
+namespace Streamiz.Kafka.Net.Stream.Internal.Graph
 {
     internal class KStreamFilter<K, V> : IProcessorSupplier<K, V>
     {

@@ -13,7 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Sources;
+using Streamiz.Kafka.Net.Processors.Public;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
@@ -64,13 +64,13 @@ namespace Streamiz.Kafka.Net.Stream.Internal
     
     internal class KStream<K, V> : AbstractStream<K, V>, IKStream<K, V>
     {
-        internal RepartitionNode<K, V> RepartitionNode { get; private set; }
+        private RepartitionNode<K, V> RepartitionNode { get; set; }
         
         internal KStream(string name, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, List<string> setSourceNodes, StreamGraphNode node, InternalStreamBuilder builder)
             : base(name, keySerdes, valueSerdes, setSourceNodes, node, builder)
         { }
-        
-        internal KStream(string name, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, List<string> setSourceNodes, bool repartitionRequired, StreamGraphNode node, InternalStreamBuilder builder)
+
+        private KStream(string name, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, List<string> setSourceNodes, bool repartitionRequired, StreamGraphNode node, InternalStreamBuilder builder)
             : base(name, keySerdes, valueSerdes, setSourceNodes, repartitionRequired, node, builder)
         { }
 
@@ -100,8 +100,48 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             => DoFilter(predicate, named, true);
 
         #endregion
+        
+        #region Process
+
+        public void Process(ProcessorSupplier<K, V> processorSupplier, string named = null)
+        {
+            string name = new Named(named).OrElseGenerateWithPrefix(builder, KStream.PROCESSOR_NAME);
+            ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(
+                new KStreamProcessorSupplier<K, V>(processorSupplier), name);
+            StatefulProcessorNode<K, V> processorNode = new StatefulProcessorNode<K, V>(name, processorParameters, processorSupplier.StoreBuilder);
+
+            builder.AddGraphNode(Node, processorNode);
+        }
+        
+        #endregion
 
         #region Transform
+
+        public IKStream<K1, V1> Transform<K1, V1>(TransformerSupplier<K, V, K1, V1> transformerSupplier, string named = null)
+            => DoTransform(transformerSupplier, true, named);
+
+        public IKStream<K, V1> TransformValues<V1>(TransformerSupplier<K, V, K, V1> transformerSupplier, string named = null)
+            => DoTransform(transformerSupplier, false, named);
+        
+        private IKStream<K1, V1> DoTransform<K1, V1>(TransformerSupplier<K, V, K1, V1> transformerSupplier, bool changeKey, string named =
+            null)
+        {
+            string name = new Named(named).OrElseGenerateWithPrefix(builder, changeKey ? KStream.TRANSFORM_NAME : KStream.TRANSFORMVALUES_NAME );
+            ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(
+                new KStreamTransformerSupplier<K, V, K1, V1>(transformerSupplier, changeKey), name);
+            StatefulProcessorNode<K, V> processorNode = new StatefulProcessorNode<K, V>(name, processorParameters, transformerSupplier.StoreBuilder);
+
+            builder.AddGraphNode(Node, processorNode);
+            
+            return new KStream<K1, V1>(
+                name,
+                null,
+                null,
+                SetSourceNodes,
+                changeKey,
+                processorNode,
+                builder);
+        }
 
         #endregion
         
@@ -871,7 +911,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             var parameters = new ProcessorParameters<K, V>(tableSource, name);
 
             var storeBuilder = new TimestampedKeyValueStoreMaterializer<K, V>(materialized).Materialize();
-            var tableNode = new StatefulProcessorNode<K, V, ITimestampedKeyValueStore<K, V>>(name, parameters, storeBuilder);
+            var tableNode = new StatefulProcessorNode<K, V>(name, parameters, storeBuilder);
             builder.AddGraphNode(tableParentNode, tableNode);
 
             return new KTable<K, V, V>(

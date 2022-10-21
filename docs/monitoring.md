@@ -4,8 +4,13 @@
 
 The Streamiz library reports a variety of metrics through his own registry. You have to specify a <a href="stream-configuration.html#optional-configuration-parameters" rel="stylesheet">metric reporter</a> (see `IStreamConfig.MetricsReporter`) to export all metrics to a different layer (Prometheus, Elastic, ...). This reporter will be triggered every `IStreamConfig.MetricsIntervalMs` (minimium and default : 30 seconds).
 
-Streamiz provide an implementation for Prometheus. See `Streamiz.Kafka.Net.Metrics.Prometheus` package. 
-You can use extension method to specify prometheus port and some other settings.
+Streamiz provide two implementations :
+- one for Prometheus. See `Streamiz.Kafka.Net.Metrics.Prometheus` package. 
+- an other for OpenTelemetry. See `Streamiz.Kafka.Net.Metrics.OpenTelemetry` package. 
+
+Each package provide an extension method to specify settings.
+
+Example with the `Prometheus` exporter :
 
 ``` csharp
 var config = new StreamConfig<StringSerDes, StringSerDes>();
