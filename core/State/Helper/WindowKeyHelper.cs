@@ -2,6 +2,7 @@
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 using System;
+using System.Diagnostics;
 
 namespace Streamiz.Kafka.Net.State.Helper
 {
@@ -29,10 +30,12 @@ namespace Streamiz.Kafka.Net.State.Helper
         public static byte[] ToBinary<K>(Windowed<K> timeKey, ISerDes<K> serializer, String topic)
         {
             byte[] bytes = serializer.Serialize(timeKey.Key, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Key, topic));
-            ByteBuffer buf = ByteBuffer.Build(bytes.Length + TIMESTAMP_SIZE);
-            buf.Put(bytes);
-            buf.PutLong(timeKey.Window.StartMs);
-            return buf.ToArray();
+            using ByteBuffer buf = ByteBuffer.Build(bytes.Length + TIMESTAMP_SIZE);
+            {
+                buf.Put(bytes);
+                buf.PutLong(timeKey.Window.StartMs);
+                return buf.ToArray();
+            }
         }
 
         public static Windowed<K> From<K>(byte[] binaryKey, long windowSize, ISerDes<K> deserializer, String topic)
@@ -47,9 +50,11 @@ namespace Streamiz.Kafka.Net.State.Helper
         private static Window ExtractWindow(byte[] binaryKey, long windowSize)
         {
             binaryKey ??= Array.Empty<byte>();
-            ByteBuffer buffer = ByteBuffer.Build(binaryKey);
-            long start = buffer.GetLong(binaryKey.Length - TIMESTAMP_SIZE);
-            return TimeWindowForSize(start, windowSize);
+            using ByteBuffer buffer = ByteBuffer.Build(binaryKey);
+            {
+                long start = buffer.GetLong(binaryKey.Length - TIMESTAMP_SIZE);
+                return TimeWindowForSize(start, windowSize);
+            }
         }
 
         public static Bytes ToStoreKeyBinary(Bytes key, long timestamp, int seqnum)
@@ -79,12 +84,13 @@ namespace Streamiz.Kafka.Net.State.Helper
         public static Bytes ToStoreKeyBinary(byte[] serializedKey, long timestamp, int seqnum)
         {
             serializedKey ??= Array.Empty<byte>();
-            ByteBuffer buf = ByteBuffer.Build(serializedKey.Length + TIMESTAMP_SIZE + SEQNUM_SIZE);
-            buf.Put(serializedKey);
-            buf.PutLong(timestamp);
-            buf.PutInt(seqnum);
-
-            return Bytes.Wrap(buf.ToArray());
+            using ByteBuffer buf = ByteBuffer.Build(serializedKey.Length + TIMESTAMP_SIZE + SEQNUM_SIZE);
+            {
+                buf.Put(serializedKey);
+                buf.PutLong(timestamp);
+                buf.PutInt(seqnum);
+                return Bytes.Wrap(buf.ToArray());
+            }
         }
 
         public static byte[] ExtractStoreKeyBytes(byte[] binaryKey)
@@ -103,13 +109,15 @@ namespace Streamiz.Kafka.Net.State.Helper
         public static long ExtractStoreTimestamp(byte[] binaryKey)
         {
             binaryKey ??= Array.Empty<byte>();
-            return ByteBuffer.Build(binaryKey).GetLong(binaryKey.Length - TIMESTAMP_SIZE - SEQNUM_SIZE);
+            using var buffer = ByteBuffer.Build(binaryKey);
+            return buffer.GetLong(binaryKey.Length - TIMESTAMP_SIZE - SEQNUM_SIZE);
         }
 
         public static int ExtractStoreSequence(byte[] binaryKey)
         {
             binaryKey ??= Array.Empty<byte>();
-            return ByteBuffer.Build(binaryKey).GetInt(binaryKey.Length - SEQNUM_SIZE);
+            using var buffer = ByteBuffer.Build(binaryKey);
+            return buffer.GetInt(binaryKey.Length - SEQNUM_SIZE);
         }
 
         public static Windowed<K> FromStoreKey<K>(byte[] binaryKey, long windowSize, ISerDes<K> keySerdes, String topic)
@@ -136,6 +144,7 @@ namespace Streamiz.Kafka.Net.State.Helper
         {
             ByteBuffer buffer = ByteBuffer.Build(binaryKey);
             long start = buffer.GetLong(binaryKey.Length - TIMESTAMP_SIZE - SEQNUM_SIZE);
+            buffer.Dispose();
             return TimeWindowForSize(start, windowSize);
         }
 
