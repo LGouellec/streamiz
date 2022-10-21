@@ -10,7 +10,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
     internal class RocksDbWindowStore
         : WrappedStateStore<RocksDbSegmentedBytesStore>, IWindowStore<Bytes, byte[]>
     {
-        private readonly int seqnum = 0;
+        private int seqnum = 0;
         private readonly long windowSize;
 
         public RocksDbWindowStore(
@@ -19,6 +19,11 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             : base(wrapped)
         {
             this.windowSize = windowSize;
+        }
+
+        private void updateSeqNumber()
+        {
+          //  seqnum = (seqnum + 1) & 0x7FFFFFFF;
         }
 
         public IKeyValueEnumerator<Windowed<Bytes>, byte[]> All()
@@ -46,6 +51,9 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         }
 
         public void Put(Bytes key, byte[] value, long windowStartTimestamp)
-            => wrapped.Put(WindowKeyHelper.ToStoreKeyBinary(key, windowStartTimestamp, seqnum), value);
+        {
+            updateSeqNumber();
+            wrapped.Put(WindowKeyHelper.ToStoreKeyBinary(key, windowStartTimestamp, seqnum), value);
+        }
     }
 }

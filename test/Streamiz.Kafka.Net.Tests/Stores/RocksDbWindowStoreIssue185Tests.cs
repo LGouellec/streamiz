@@ -90,18 +90,98 @@ namespace Streamiz.Kafka.Net.Tests.Stores
                 store.Put(Key("key"), Value("value"+i), dt2.GetMilliseconds());
                 dt2 = date.AddMinutes(i);
             }
-            store.Flush();
             
             var dtTs = date.AddHours(2);
             long after = 10800000, before = 10800000; // window size 3 hours
-
-            var r = store.Fetch(Key("key"), dtTs.GetMilliseconds() - before, dtTs.GetMilliseconds() + after);
+      
+            var r = store.Fetch(
+                Key("key"),
+                dtTs.GetMilliseconds() - before,
+                dtTs.GetMilliseconds() + after);
 
             var elements = r.ToList();
             Console.WriteLine("Elements Fetch count " + elements.Count);
+            Assert.AreEqual(120, elements.Count);
             var allElements = store.All().ToList();
             Console.WriteLine("All Elements Fetch count " + allElements.Count);
+            Assert.AreEqual(120, allElements.Count);
         }
+        
+        [Test]
+        public void FetchWindowMultipleKeys()
+        {
+            var date = DateTime.Now;
+            var dt2 = DateTime.Now;
+            dt2 = date.AddSeconds(30);
+            for (int i = 0; i < 120; ++i)
+            {
+                store.Put(Key("key"), Value("value"+i), dt2.GetMilliseconds());
+                store.Put(Key("key1"), Value("value"+i), dt2.GetMilliseconds());
+                dt2 = date.AddMinutes(i);
+            }
+            
+            var dtTs = date.AddHours(2);
+            long after = 10800000, before = 10800000; // window size 3 hours
+      
+            var r = store.Fetch(
+                Key("key"),
+                dtTs.GetMilliseconds() - before,
+                dtTs.GetMilliseconds() + after);
 
+            var elements = r.ToList();
+            Console.WriteLine("Elements Fetch count " + elements.Count);
+            Assert.AreEqual(120, elements.Count);
+            var allElements = store.All().ToList();
+            Console.WriteLine("All Elements Fetch count " + allElements.Count);
+            Assert.AreEqual(240, allElements.Count);
+        }
+        
+        [Test]
+        public void FetchWindowDifferentKey()
+        {
+            var date = DateTime.Now;
+            var dt2 = DateTime.Now;
+            dt2 = date.AddSeconds(30);
+            for (int i = 0; i < 120; ++i)
+            {
+                store.Put(Key("key"), Value("value"+i), dt2.GetMilliseconds());
+                store.Put(Key("key1"), Value("value"+i), dt2.GetMilliseconds());
+                dt2 = date.AddMinutes(i);
+            }
+            
+            var dtTs = date.AddHours(2);
+            long after = 10800000, before = 10800000; // window size 3 hours
+            
+            var r = store.FetchAll(
+                (dtTs.GetMilliseconds() - before).FromMilliseconds(),
+                (dtTs.GetMilliseconds() + after).FromMilliseconds());
+
+            var elements = r.ToList();
+            Console.WriteLine("Elements Fetch count " + elements.Count);
+            Assert.AreEqual(240, elements.Count);
+            var allElements = store.All().ToList();
+            Console.WriteLine("All Elements Fetch count " + allElements.Count);
+            Assert.AreEqual(240, allElements.Count);
+        }
+        
+        [Test]
+        public void GetWindowStoreWithTimestamp()
+        {
+            var date = DateTime.Now;
+            var dt2 = DateTime.Now;
+            dt2 = date.AddSeconds(30);
+            for (int i = 0; i < 120; ++i)
+            {
+                store.Put(Key("key"), Value("value"+i), dt2.GetMilliseconds());
+                dt2 = date.AddMinutes(i);
+            }
+
+            var r = store.Fetch(
+                Key("key"),
+                date.AddSeconds(30).GetMilliseconds());
+            
+            Assert.IsNotNull(r);
+            Assert.AreEqual("value0", Encoding.UTF8.GetString(r));
+        }
     }
 }
