@@ -14,6 +14,13 @@ namespace Streamiz.Kafka.Net.Tests.Private
             int i = 965;
             var longBytes = BitConverter.GetBytes(l);
             var intBytes = BitConverter.GetBytes(i);
+
+            if (BitConverter.IsLittleEndian)
+            {
+                longBytes = longBytes.Reverse().ToArray();
+                intBytes = intBytes.Reverse().ToArray();
+            }
+
             var readArray = longBytes.Concat(intBytes).ToArray();
             var buffer = ByteBuffer.Build(readArray);
 
@@ -34,6 +41,13 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var longBytes = BitConverter.GetBytes(l);
             var intBytes = BitConverter.GetBytes(i);
+            
+            if (BitConverter.IsLittleEndian)
+            {
+                longBytes = longBytes.Reverse().ToArray();
+                intBytes = intBytes.Reverse().ToArray();
+            }
+
             var totalArray = longBytes.Concat(intBytes).Concat(array).ToArray();
 
             var buffer = ByteBuffer.Build(16);
@@ -51,11 +65,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             long l = 200;
             int i = 42;
             byte[] array = new byte[] {1, 2, 3, 4};
-
-            var longBytes = BitConverter.GetBytes(l);
-            var intBytes = BitConverter.GetBytes(i);
-            var totalArray = longBytes.Concat(intBytes).Concat(array).ToArray();
-
+            
             var buffer = ByteBuffer.Build(0);
             buffer.PutLong(l);
             long l2 = buffer.GetLong(0);
@@ -66,16 +76,17 @@ namespace Streamiz.Kafka.Net.Tests.Private
             buffer.Put(array);
 
             int i2 = buffer.GetInt(sizeof(long));
-
             Assert.AreEqual(i, i2);
-            Assert.IsTrue(totalArray.SequenceEqual(buffer.ToArray()));
+
+            var bytes2 = buffer.GetBytes(sizeof(long) + sizeof(int), 4);
+            Assert.AreEqual(array, bytes2);
         }
 
         [Test]
         public void ByteBufferWriteBytesArray()
         {
             byte[] array = new byte[] {1, 2, 3, 4};
-
+           
             var buffer = ByteBuffer.Build(0);
             buffer.PutInt(array.Length);
             buffer.Put(array);
