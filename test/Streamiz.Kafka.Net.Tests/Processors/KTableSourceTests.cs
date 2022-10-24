@@ -9,6 +9,7 @@ using Streamiz.Kafka.Net.Crosscutting;
 using System;
 using System.Linq;
 using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -312,6 +313,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-map";
+            config.UseRandomRocksDbConfigForTest();
 
             Topology t = builder.Build();
 
@@ -321,6 +323,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 inputTopic.PipeInput("key1", "1");
                 inputTopic.PipeInput("key2", "2");
             }
+
+            config.RemoveRocksDbFolderForTest();
         }
 
         [Test]
@@ -332,7 +336,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-map";
-
+            config.UseRandomRocksDbConfigForTest();
             Topology t = builder.Build();
 
             using (var driver = new TopologyTestDriver(t, config))
@@ -341,6 +345,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 inputTopic.PipeInput("key1", "1");
                 inputTopic.PipeInput("key2", "2");
             }
+            config.RemoveRocksDbFolderForTest();
         }
 
         [Test]

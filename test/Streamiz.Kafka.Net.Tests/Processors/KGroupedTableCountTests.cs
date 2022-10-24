@@ -12,6 +12,7 @@ using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Table;
+using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -25,12 +26,13 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var serdes = new StringSerDes();
 
             config.ApplicationId = "test-count";
-
+            config.UseRandomRocksDbConfigForTest();
+            
             var builder = new StreamBuilder();
             Materialized<string, long, IKeyValueStore<Bytes, byte[]>> m = null;
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
                 .Count(m);
 
@@ -68,6 +70,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var store1 = task.GetStore(nameStore1);
             Assert.IsInstanceOf<ITimestampedKeyValueStore<string, long>>(store1);
             Assert.AreEqual(0, (store1 as ITimestampedKeyValueStore<string, long>).ApproximateNumEntries());
+            config.RemoveRocksDbFolderForTest();
         }
 
         [Test]
@@ -79,12 +82,10 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var builder = new StreamBuilder();
             Materialized<string, long, IKeyValueStore<Bytes, byte[]>> m =
-                Materialized<string, long, IKeyValueStore<Bytes, byte[]>>
-                    .Create("count-store")
-                    .With(null, null);
+                InMemory.As<string, long>("count-store");
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy((k,v) => KeyValuePair.Create(k.ToUpper(), v))
                 .Count(m)
                 .ToStream()
@@ -118,7 +119,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy<char, string, CharSerDes, StringSerDes>((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
                 .Count(InMemory.As<char, long>("count-store").WithKeySerdes(new CharSerDes()));
 
@@ -146,7 +147,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy<char, string, CharSerDes, StringSerDes>((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
                 .Count(InMemory.As<char, long>("count-store").WithKeySerdes(new CharSerDes()));
 
@@ -174,7 +175,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy<char, string, CharSerDes, StringSerDes>((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
                 .Count(InMemory.As<char, long>("count-store").WithKeySerdes(new CharSerDes()));
 
@@ -203,9 +204,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy((k, v) => KeyValuePair.Create(k, v))
-                .Count()
+                .Count(InMemory.As<string, long>("count-store"))
                 .ToStream()
                 .To("output");
 
@@ -215,9 +216,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 var input = driver.CreateInputTopic<string, string>("topic");
                 var output = driver.CreateOuputTopic<string, long, StringSerDes, Int64SerDes>("output");
                 input.PipeInput("test", "1");
-                var r = output.ReadKeyValue();
-                Assert.AreEqual("test", r.Message.Key);
-                Assert.AreEqual(1, r.Message.Value);
+                var r = output.ReadKeyValuesToMap();
+                Assert.IsTrue(r.ContainsKey("test"));
+                Assert.AreEqual(1, r["test"]);
             }
         }
 
@@ -230,9 +231,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy((k, v) => KeyValuePair.Create(k, v))
-                .Count("count-01")
+                .Count(InMemory.As<string, long>("count-store") ,"count-01")
                 .ToStream()
                 .To("output");
 
@@ -242,9 +243,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 var input = driver.CreateInputTopic<string, string>("topic");
                 var output = driver.CreateOuputTopic<string, long, StringSerDes, Int64SerDes>("output");
                 input.PipeInput("test", "1");
-                var r = output.ReadKeyValue();
-                Assert.AreEqual("test", r.Message.Key);
-                Assert.AreEqual(1, r.Message.Value);
+                var r = output.ReadKeyValuesToMap();
+                Assert.IsTrue(r.ContainsKey("test"));
+                Assert.AreEqual(1, r["test"]);
             }
         }
 
@@ -271,7 +272,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
                 .Count(InMemory.As<char, long>("count-store"));
 

@@ -108,7 +108,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
 
             builder.Stream<string, string>("tempTopic")
                 .GroupByKey()
-                .Reduce((v1, v2) => $"{v1}-{v2}")
+                .Reduce((v1, v2) => $"{v1}-{v2}", InMemory.As<string,string>())
                 .ToStream()
                 .To("finalTopic");
 

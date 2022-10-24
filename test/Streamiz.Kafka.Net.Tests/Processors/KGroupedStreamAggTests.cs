@@ -11,6 +11,7 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
+using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -59,6 +60,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var serdes = new StringSerDes();
 
             config.ApplicationId = "test-agg";
+            config.UseRandomRocksDbConfigForTest();
 
             var builder = new StreamBuilder();
             Materialized<string, long, IKeyValueStore<Bytes, byte[]>> m = null;
@@ -66,7 +68,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .Aggregate(() => 0L, (k, v, agg) => agg + 1, m);
+                .Aggregate(
+                    () => 0L, 
+                    (k, v, agg) => agg + 1, m);
 
             var topology = builder.Build();
             Assert.Throws<StreamsException>(() =>
@@ -77,6 +81,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     input.PipeInput("test", "1");
                 }
             });
+            config.RemoveRocksDbFolderForTest();
         }
 
         [Test]
@@ -85,12 +90,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             // WITH NULL SERDES, in running KeySerdes must be StringSerdes, and ValueSerdes Int64SerDes
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-agg";
-
+            
             var builder = new StreamBuilder();
-            Materialized<string, long, IKeyValueStore<Bytes, byte[]>> m =
-                Materialized<string, long, IKeyValueStore<Bytes, byte[]>>
-                    .Create("agg-store")
-                    .With(null, null);
+            var m = InMemory.As<string, long>("agg-store");
 
             builder
                 .Stream<string, string>("topic")
@@ -116,12 +118,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             // WITH NULL SERDES, in running KeySerdes must be StringSerdes, and ValueSerdes Int64SerDes
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-reduce";
-
+            
             var builder = new StreamBuilder();
-            Materialized<string, int, IKeyValueStore<Bytes, byte[]>> m =
-                Materialized<string, int, IKeyValueStore<Bytes, byte[]>>
-                    .Create("reduce-store")
-                    .With(null, null);
+            var m = InMemory.As<string, int>("reduce-store");
 
             Assert.Throws<ArgumentNullException>(() =>
             {
@@ -200,7 +199,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-agg";
-
+            config.UseRandomRocksDbConfigForTest();
             var builder = new StreamBuilder();
 
             builder
@@ -219,8 +218,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                                 old.Add(c, 1);
                         }
                         return old;
-                    }
-                );
+                    });
 
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
@@ -237,11 +235,12 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
                 var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("KSTREAM-AGGREGATE-STATE-STORE-0000000003");
                 Assert.IsNotNull(store);
-                Assert.AreEqual(1, store.ApproximateNumEntries());
                 var el = store.Get("TEST");
                 Assert.IsNotNull(el);
                 Assert.AreEqual(testExpected, el);
             }
+
+            config.RemoveRocksDbFolderForTest();
         }
 
         [Test]
@@ -249,7 +248,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-agg";
-
+            config.UseRandomRocksDbConfigForTest();
+            
             var builder = new StreamBuilder();
 
             builder
@@ -275,11 +275,12 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
                 var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("KSTREAM-AGGREGATE-STATE-STORE-0000000003");
                 Assert.IsNotNull(store);
-                Assert.AreEqual(1, store.ApproximateNumEntries());
                 var el = store.Get("TEST");
                 Assert.IsNotNull(el);
                 Assert.AreEqual(testExpected, el);
             }
+
+            config.RemoveRocksDbFolderForTest();
         }
 
         [Test]
@@ -341,7 +342,10 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupBy((k, v) => k.ToCharArray()[0])
-                .Aggregate(() => 0L, (k, v, agg) => agg + 1);
+                .Aggregate(
+                    () => 0L,
+                    (k, v, agg) => agg + 1,
+                    InMemory.As<char, long>("store"));
 
             var topology = builder.Build();
             Assert.Throws<StreamsException>(() =>

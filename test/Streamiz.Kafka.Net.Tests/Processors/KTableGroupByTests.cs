@@ -4,6 +4,7 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
+using Streamiz.Kafka.Net.Table;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -13,7 +14,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         public void SouldNotAllowSelectorNull()
         {
             var builder = new StreamBuilder();
-            var table = builder.Table<string, string>("topic");
+            var table = builder.Table<string, string>("topic", InMemory.As<string, string>("store"));
             Func<string, string, KeyValuePair<string,string>> selector1 = null;
             IKeyValueMapper<string, string, KeyValuePair<string, string>> selector2 = null;
 
@@ -30,7 +31,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key2", "test"));
             data.Add(KeyValuePair.Create("key3", "paper"));
 
-            var table = builder.Table<string, string>("topic");
+            var table = builder.Table<string, string>("topic", InMemory.As<string, string>("store"));
             table.GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()));
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "table-test-group";

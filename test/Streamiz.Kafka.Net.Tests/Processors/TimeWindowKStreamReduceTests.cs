@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -36,7 +37,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var serdes = new StringSerDes();
 
             config.ApplicationId = "test-window-reduce";
-
+            config.UseRandomRocksDbConfigForTest();
+            
             var builder = new StreamBuilder();
 
             builder
@@ -67,6 +69,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 new StreamMetricsRegistry());
             task.GroupMetadata = consumer as SyncConsumer;
             Assert.Throws<StreamsException>(() => task.InitializeStateStores());
+            config.RemoveRocksDbFolderForTest();
         }
 
         [Test]
@@ -92,10 +95,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var builder = new StreamBuilder();
 
-            var materialized =
-                Materialized<string, string, IWindowStore<Bytes, byte[]>>
-                    .Create("store")
-                    .With(null, null);
+            var materialized = InMemoryWindows.As<string, string>("store");
 
             builder
                 .Stream<string, string>("topic")
@@ -126,7 +126,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Stream<string, string>("topic")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(2000))
-                .Reduce((v1, v2) => v1.Length > v2.Length ? v1 : v2)
+                .Reduce((v1, v2) => v1.Length > v2.Length ? v1 : v2, InMemoryWindows.As<string, string>("store"))
                 .ToStream()
                 .To<StringTimeWindowedSerDes, StringSerDes>("output");
 

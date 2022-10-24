@@ -23,7 +23,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("test")
                 .Filter((k, v) => v.Length % 2 == 0)
-                .ToTable()
+                .ToTable(InMemory.As<string, string>("store"))
                 .ToStream()
                 .To("output");
 

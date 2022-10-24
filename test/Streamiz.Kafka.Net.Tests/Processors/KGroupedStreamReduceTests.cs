@@ -7,6 +7,7 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
+using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -26,7 +27,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var serdes = new StringSerDes();
 
             config.ApplicationId = "test-reduce";
-
+            config.UseRandomRocksDbConfigForTest();
             var builder = new StreamBuilder();
             Materialized<string, int, IKeyValueStore<Bytes, byte[]>> m = null;
 
@@ -45,6 +46,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     input.PipeInput("test", "1");
                 }
             });
+            config.RemoveRocksDbFolderForTest();
         }
 
         [Test]
@@ -55,10 +57,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             config.ApplicationId = "test-reduce";
 
             var builder = new StreamBuilder();
-            Materialized<string, int, IKeyValueStore<Bytes, byte[]>> m =
-                Materialized<string, int, IKeyValueStore<Bytes, byte[]>>
-                    .Create("reduce-store")
-                    .With(null, null);
+            Materialized<string, int, IKeyValueStore<Bytes, byte[]>> m = 
+                InMemory.As<string, int>("reduce-store");
 
             builder
                 .Stream<string, string>("topic")
@@ -88,9 +88,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var builder = new StreamBuilder();
             Materialized<string, int, IKeyValueStore<Bytes, byte[]>> m =
-                Materialized<string, int, IKeyValueStore<Bytes, byte[]>>
-                    .Create("reduce-store")
-                    .With(null, null);
+                InMemory.As<string, int>("reduce-store");
 
             Assert.Throws<ArgumentNullException>(() =>
             {
@@ -301,7 +299,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupBy((k, v) => k.ToCharArray()[0])
-                .Reduce((v1, v2) => v2);
+                .Reduce(
+                    (v1, v2) => v2,
+                    InMemory.As<char, string>());
 
             var topology = builder.Build();
             Assert.Throws<StreamsException>(() =>
