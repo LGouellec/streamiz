@@ -525,26 +525,26 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         public IKStream<K, VR> Join<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner, string named = null)
         {
             return table is AbstractStream<K, V0> ?
-                Join(table, valueJoiner, ((AbstractStream<K, V0>)table).ValueSerdes, named) :
-                Join(table, valueJoiner, null, named);
+                Join(table, valueJoiner, ((AbstractStream<K, V0>)table).ValueSerdes, null, named) :
+                Join(table, valueJoiner, null, null, named);
         }
 
         public IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner, string named = null)
             where V0S : ISerDes<V0>, new()
             where VRS : ISerDes<VR>, new ()
-            => Join(table, valueJoiner, new V0S(), named);
+            => Join(table, valueJoiner, new V0S(), new VRS(), named);
 
-        private IKStream<K, VR> Join<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner, ISerDes<V0> valueSerdes, string named = null)
+        private IKStream<K, VR> Join<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner, ISerDes<V0> valueSerdes, ISerDes<VR> otherValueSerdes, string named = null)
         {
             var joined = new Joined<K, V, V0>(KeySerdes, ValueSerdes, valueSerdes, named);
 
             if (RepartitionRequired)
             {
                 var streamRepartitioned = RepartitionForJoin(named ?? NameNode, joined.KeySerdes, joined.ValueSerdes);
-                return streamRepartitioned.DoStreamTableJoin(table, valueJoiner, joined, false);
+                return streamRepartitioned.DoStreamTableJoin(table, valueJoiner, joined, false, otherValueSerdes);
             }
             
-            return DoStreamTableJoin(table, valueJoiner, joined, false);
+            return DoStreamTableJoin(table, valueJoiner, joined, false, otherValueSerdes);
         }
         
         #endregion
@@ -559,7 +559,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         public IKStream<K, VR> LeftJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, string named = null)
             where VTS : ISerDes<VT>, new()
             where VRS : ISerDes<VR>, new ()
-            => LeftJoin(table, valueJoiner, new VTS(), named);
+            => LeftJoin(table, valueJoiner, new VTS(), new VRS(), named);
 
         public IKStream<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, string named = null)
             => LeftJoin(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), named);
@@ -567,21 +567,21 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         public IKStream<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, string named = null)
         {
             return table is AbstractStream<K, VT> ?
-                LeftJoin(table, valueJoiner, ((AbstractStream<K, VT>)table).ValueSerdes, named) :
-                LeftJoin(table, valueJoiner, null, named);
+                LeftJoin(table, valueJoiner, ((AbstractStream<K, VT>)table).ValueSerdes, null, named) :
+                LeftJoin(table, valueJoiner, null, null, named);
         }
 
-        private IKStream<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, ISerDes<VT> valueSerdes, string named = null)
+        private IKStream<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, ISerDes<VT> valueSerdes, ISerDes<VR> otherValueSerdes, string named = null)
         {
             var joined = new Joined<K, V, VT>(KeySerdes, ValueSerdes, valueSerdes, named);
             
             if (RepartitionRequired)
             {
                 var streamRepartitioned = RepartitionForJoin(named ?? NameNode, joined.KeySerdes, joined.ValueSerdes);
-                return streamRepartitioned.DoStreamTableJoin(table, valueJoiner, joined, true);
+                return streamRepartitioned.DoStreamTableJoin(table, valueJoiner, joined, true, otherValueSerdes);
             }
             
-            return DoStreamTableJoin(table, valueJoiner, joined, true);
+            return DoStreamTableJoin(table, valueJoiner, joined, true, otherValueSerdes);
         }
 
         #endregion
@@ -619,23 +619,29 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         public IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null)
             where V0S : ISerDes<V0>, new()
             where VRS : ISerDes<VR>, new ()
-            => Join(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), new V0S());
+            => Join(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), new V0S(), new VRS());
 
         public IKStream<K, VR> Join<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null)
         {
             return stream is AbstractStream<K, V0> ?
-                Join(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), ((AbstractStream<K, V0>)stream).ValueSerdes) :
-                Join(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), null);
+                Join(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), ((AbstractStream<K, V0>)stream).ValueSerdes, null) :
+                Join(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), null, null);
         }
 
-        private IKStream<K, VR> Join<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props, ISerDes<V0> valueSerdes)
+        private IKStream<K, VR> Join<V0, VR>(
+            IKStream<K, V0> stream,
+            IValueJoiner<V, V0, VR> valueJoiner,
+            JoinWindowOptions windows,
+            StreamJoinProps<K, V, V0> props,
+            ISerDes<V0> valueSerdes,
+            ISerDes<VR> otherValueSerdes)
         {
-            props = props ?? StreamJoinProps.From<K, V, V0>(null);
-            props.RightValueSerdes = props.RightValueSerdes ?? valueSerdes;
-            props.KeySerdes = props.KeySerdes ?? KeySerdes;
-            props.LeftValueSerdes = props.LeftValueSerdes ?? ValueSerdes;
+            props ??= StreamJoinProps.From<K, V, V0>(null);
+            props.RightValueSerdes ??= valueSerdes;
+            props.KeySerdes ??= KeySerdes;
+            props.LeftValueSerdes ??= ValueSerdes;
 
-            return DoJoin(stream, valueJoiner, windows, props, new StreamJoinBuilder(builder, false, false));
+            return DoJoin(stream, valueJoiner, windows, props, new StreamJoinBuilder(builder, false, false), otherValueSerdes);
         }
 
         #endregion
@@ -653,16 +659,16 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         public IKStream<K, VR> LeftJoin<V0, VR, V0S, VRS>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null) 
             where V0S : ISerDes<V0>, new()
             where VRS : ISerDes<VR>, new ()
-            => LeftJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), new V0S());
+            => LeftJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), new V0S(), new VRS());
 
         public IKStream<K, VR> LeftJoin<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null)
         {
             return stream is AbstractStream<K, V0> ?
-                LeftJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), ((AbstractStream<K, V0>)stream).ValueSerdes) :
-                LeftJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), null);
+                LeftJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), ((AbstractStream<K, V0>)stream).ValueSerdes, null) :
+                LeftJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), null, null);
         }
 
-        private IKStream<K, VR> LeftJoin<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props, ISerDes<V0> valueSerdes)
+        private IKStream<K, VR> LeftJoin<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props, ISerDes<V0> valueSerdes, ISerDes<VR> otherValueSerdes)
         {
             props = props ?? StreamJoinProps.From<K, V, V0>(null);
             props.RightValueSerdes = valueSerdes;
@@ -676,7 +682,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 props.LeftValueSerdes = ValueSerdes;
             }
 
-            return DoJoin(stream, valueJoiner, windows, props, new StreamJoinBuilder(builder, true, false));
+            return DoJoin(stream, valueJoiner, windows, props, new StreamJoinBuilder(builder, true, false), otherValueSerdes);
         }
 
         #endregion
@@ -696,17 +702,17 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         public IKStream<K, VR> OuterJoin<V0, VR, V0S, VRS>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null) 
             where V0S : ISerDes<V0>, new()
             where VRS : ISerDes<VR>, new ()
-            => OuterJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), new V0S());
+            => OuterJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), new V0S(), new VRS());
 
 
         public IKStream<K, VR> OuterJoin<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null)
         {
             return stream is AbstractStream<K, V0> ?
-                OuterJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), ((AbstractStream<K, V0>)stream).ValueSerdes) :
-                OuterJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), null);
+                OuterJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), ((AbstractStream<K, V0>)stream).ValueSerdes, null) :
+                OuterJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), null, null);
         }
 
-        private IKStream<K, VR> OuterJoin<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props, ISerDes<V0> valueSerdes)
+        private IKStream<K, VR> OuterJoin<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props, ISerDes<V0> valueSerdes, ISerDes<VR> otherValueSerdes)
         {
             props = props ?? StreamJoinProps.From<K, V, V0>(null);
             props.RightValueSerdes = valueSerdes;
@@ -720,7 +726,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 props.LeftValueSerdes = ValueSerdes;
             }
 
-            return DoJoin(stream, valueJoiner, windows, props, new StreamJoinBuilder(builder, true, true));
+            return DoJoin(stream, valueJoiner, windows, props, new StreamJoinBuilder(builder, true, true), otherValueSerdes);
         }
 
         #endregion
@@ -1067,7 +1073,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             return new ProcessorGraphNode<K, V>(name, processorParameters);
         }
 
-        private KStream<K, VR> DoStreamTableJoin<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner, Joined<K, V, V0> joined, bool leftJoin)
+        private KStream<K, VR> DoStreamTableJoin<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner,
+            Joined<K, V, V0> joined, bool leftJoin, ISerDes<VR> otherValueSerdes)
         {
             var allSourceNodes = EnsureCopartitionWith((AbstractStream<K, V0>)table);
 
@@ -1087,8 +1094,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             builder.AddGraphNode(Node, streamTableJoinNode);
             return new KStream<K, VR>(
                 name,
-                joined.KeySerdes != null ? joined.KeySerdes : KeySerdes,
-                null,
+                joined.KeySerdes ?? KeySerdes,
+                otherValueSerdes,
                 allSourceNodes.ToList(),
                 streamTableJoinNode,
                 builder);
@@ -1110,34 +1117,6 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             builder.AddGraphNode(Node, joinNode);
 
             return new KStream<K, VR>(name, KeySerdes, null, SetSourceNodes, RepartitionRequired, joinNode, builder);
-        }
-
-        private KStream<K, VR> DoJoin<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> joinedProps, StreamJoinBuilder builder)
-        {
-            CheckIfParamNull(stream, "stream");
-            CheckIfParamNull(valueJoiner, "valueJoiner");
-
-            KStream<K, V> joinThis = this;
-            KStream<K, V0> joinOther = (KStream<K, V0>)stream;
-            var name = new Named(joinedProps.Name);
-            
-            if (joinThis.RepartitionRequired)
-            {
-                string leftJoinRepartitinTopicName = name.SuffixWithOrElseGet("-left", NameNode);
-                joinThis = joinThis.RepartitionForJoin(leftJoinRepartitinTopicName, joinedProps.KeySerdes,
-                    joinedProps.LeftValueSerdes);
-            }
-
-            if (joinOther.RepartitionRequired)
-            {
-                string rightJoinRepartitinTopicName = name.SuffixWithOrElseGet("-right", joinOther.NameNode);
-                joinOther = joinOther.RepartitionForJoin(rightJoinRepartitinTopicName, joinedProps.KeySerdes,
-                    joinedProps.RightValueSerdes);
-            }
-
-            joinThis.EnsureCopartitionWith(joinOther);
-            
-            return builder.Join(joinThis, joinOther, valueJoiner, windows, joinedProps);
         }
 
         private KStream<K, V> RepartitionForJoin(
@@ -1169,7 +1148,41 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 RepartitionNode,
                 builder);
         }
-        
+
+        private KStream<K, VR> DoJoin<V0, VR>(
+            IKStream<K, V0> stream,
+            IValueJoiner<V, V0, VR> valueJoiner,
+            JoinWindowOptions windows,
+            StreamJoinProps<K, V, V0> joinedProps,
+            StreamJoinBuilder builder,
+            ISerDes<VR> otherValueSerdes)
+        {
+            CheckIfParamNull(stream, "stream");
+            CheckIfParamNull(valueJoiner, "valueJoiner");
+
+            KStream<K, V> joinThis = this;
+            KStream<K, V0> joinOther = (KStream<K, V0>)stream;
+            var name = new Named(joinedProps.Name);
+            
+            if (joinThis.RepartitionRequired)
+            {
+                string leftJoinRepartitinTopicName = name.SuffixWithOrElseGet("-left", NameNode);
+                joinThis = joinThis.RepartitionForJoin(leftJoinRepartitinTopicName, joinedProps.KeySerdes,
+                    joinedProps.LeftValueSerdes);
+            }
+
+            if (joinOther.RepartitionRequired)
+            {
+                string rightJoinRepartitinTopicName = name.SuffixWithOrElseGet("-right", joinOther.NameNode);
+                joinOther = joinOther.RepartitionForJoin(rightJoinRepartitinTopicName, joinedProps.KeySerdes,
+                    joinedProps.RightValueSerdes);
+            }
+
+            joinThis.EnsureCopartitionWith(joinOther);
+            
+            return builder.Join(joinThis, joinOther, valueJoiner, windows, joinedProps, otherValueSerdes);
+        }
+
         internal static (string, RepartitionNode<K, V>) CreateRepartitionSource(
             string repartitionTopicNameSuffix,
             ISerDes<K> keySerdes,

@@ -29,7 +29,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             KStream<K, V0> joinRight,
             IValueJoiner<V, V0, VR> joiner,
             JoinWindowOptions windows,
-            StreamJoinProps<K, V, V0> joined)
+            StreamJoinProps<K, V, V0> joined,
+            ISerDes<VR> otherValueSerdes)
         {
             var named = new Named(joined.Name);
             var joinLeftSuffix = rightOuter ? "-outer-this-join" : "-this-join";
@@ -118,7 +119,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             return new KStream<K, VR>(
                 joinMergeName,
                 joined.KeySerdes,
-                null,
+                otherValueSerdes,
                 allSourceNodes.ToList(),
                 joinNode,
                 builder);

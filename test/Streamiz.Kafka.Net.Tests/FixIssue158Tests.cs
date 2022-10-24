@@ -1,3 +1,4 @@
+using System;
 using Google.Protobuf.Reflection;
 using Microsoft.VisualBasic;
 using NUnit.Framework;
@@ -74,6 +75,7 @@ namespace Streamiz.Kafka.Net.Tests
                         Person = person,
                         Location = location
                     })
+                .SelectKey((_, v) => v.Person.JobId)
                 .Join<Job, PersonJobLocation, JsonSerDes<Job>, JsonSerDes<PersonJobLocation>>(jobTable,
                     (personLocation, job) => new PersonJobLocation {
                         Person = personLocation.Person,
@@ -88,11 +90,18 @@ namespace Streamiz.Kafka.Net.Tests
                 var personInput = driver.CreateInputTopic("persons", stringSerdes, personSerdes);
                 var locationInput = driver.CreateInputTopic("locations", stringSerdes, locationSerdes);
                 var jobInput = driver.CreateInputTopic("jobs", stringSerdes, jobSerdes);
+
+                var output = driver.CreateOuputTopic("person-job-location",
+                    TimeSpan.FromSeconds(10),
+                    stringSerdes,
+                    new JsonSerDes<PersonJobLocation>());
                 
                 jobInput.PipeInput("job1", new Job(){Salary = 100000F, Title = "Engineer"});
                 locationInput.PipeInput("loc1", new Location() {City = "Paris", ZipCode = "75004"});
                 personInput.PipeInput("person1", new Person(){Age = 24, Name = "Thomas", JobId = "job1", LocationId = "loc1"});
-                
+
+                var record = output.ReadKeyValue();
+                Assert.IsNotNull(record);
             }
         }
     }
