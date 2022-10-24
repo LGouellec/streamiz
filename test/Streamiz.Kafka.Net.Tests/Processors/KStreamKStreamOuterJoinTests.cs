@@ -5,6 +5,7 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Linq;
+using Microsoft.VisualBasic;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -68,7 +69,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic2")
-                .OuterJoin<string, string, StringSerDes>(
+                .OuterJoin<string, string, StringSerDes, StringSerDes>(
                     stream,
                     (s, v) => $"{s}-{v}",
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))
@@ -106,7 +107,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic2")
-                .OuterJoin<string, string, StringSerDes>(
+                .OuterJoin<string, string, StringSerDes, StringSerDes>(
                     stream,
                     new MyJoinerMapper(),
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))

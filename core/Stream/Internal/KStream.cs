@@ -514,9 +514,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Join Table
 
-        public IKStream<K, VR> Join<V0, VR, V0S>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner, string named = null)
+        public IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner, string named = null)
             where V0S : ISerDes<V0>, new()
-            => Join<V0, VR, V0S>(table, new WrappedValueJoiner<V, V0, VR>(valueJoiner), named);
+            where VRS : ISerDes<VR>, new ()
+            => Join<V0, VR, V0S, VRS>(table, new WrappedValueJoiner<V, V0, VR>(valueJoiner), named);
 
         public IKStream<K, VR> Join<V0, VR>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner, string named = null)
             => Join(table, new WrappedValueJoiner<V, V0, VR>(valueJoiner), named);
@@ -528,8 +529,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 Join(table, valueJoiner, null, named);
         }
 
-        public IKStream<K, VR> Join<V0, VR, V0S>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner, string named = null)
+        public IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner, string named = null)
             where V0S : ISerDes<V0>, new()
+            where VRS : ISerDes<VR>, new ()
             => Join(table, valueJoiner, new V0S(), named);
 
         private IKStream<K, VR> Join<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner, ISerDes<V0> valueSerdes, string named = null)
@@ -549,12 +551,14 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region LeftJoin Table
 
-        public IKStream<K, VR> LeftJoin<VT, VR, VTS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, string named = null)
+        public IKStream<K, VR> LeftJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, string named = null)
             where VTS : ISerDes<VT>, new()
-            => LeftJoin<VT, VR, VTS>(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), named);
+            where VRS : ISerDes<VR>, new ()
+            => LeftJoin<VT, VR, VTS, VRS>(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), named);
 
-        public IKStream<K, VR> LeftJoin<VT, VR, VTS>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, string named = null)
+        public IKStream<K, VR> LeftJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, string named = null)
             where VTS : ISerDes<VT>, new()
+            where VRS : ISerDes<VR>, new ()
             => LeftJoin(table, valueJoiner, new VTS(), named);
 
         public IKStream<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, string named = null)
@@ -604,15 +608,17 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Join Stream
 
-        public IKStream<K, VR> Join<V0, VR, V0S>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null)
+        public IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null)
             where V0S : ISerDes<V0>, new()
-            => Join<V0, VR, V0S>(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows, props);
+            where VRS : ISerDes<VR>, new ()
+            => Join<V0, VR, V0S, VRS>(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows, props);
 
         public IKStream<K, VR> Join<V0, VR>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null)
             => Join(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows, props);
 
-        public IKStream<K, VR> Join<V0, VR, V0S>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null)
+        public IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null)
             where V0S : ISerDes<V0>, new()
+            where VRS : ISerDes<VR>, new ()
             => Join(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), new V0S());
 
         public IKStream<K, VR> Join<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null)
@@ -636,13 +642,17 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region LeftJoin Stream
 
-        public IKStream<K, VR> LeftJoin<V0, VR, V0S>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null) where V0S : ISerDes<V0>, new()
-            => LeftJoin<V0, VR, V0S>(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows, props);
+        public IKStream<K, VR> LeftJoin<V0, VR, V0S, VRS>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null) 
+            where V0S : ISerDes<V0>, new()
+            where VRS : ISerDes<VR>, new ()
+            => LeftJoin<V0, VR, V0S, VRS>(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows, props);
 
         public IKStream<K, VR> LeftJoin<V0, VR>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null)
             => LeftJoin(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows, props);
 
-        public IKStream<K, VR> LeftJoin<V0, VR, V0S>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null) where V0S : ISerDes<V0>, new()
+        public IKStream<K, VR> LeftJoin<V0, VR, V0S, VRS>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null) 
+            where V0S : ISerDes<V0>, new()
+            where VRS : ISerDes<VR>, new ()
             => LeftJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), new V0S());
 
         public IKStream<K, VR> LeftJoin<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null)
@@ -673,15 +683,19 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region OuterJoin Stream
 
-        public IKStream<K, VR> OuterJoin<V0, VR, V0S>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null) where V0S : ISerDes<V0>, new()
-            => OuterJoin<V0, VR, V0S>(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows, props);
+        public IKStream<K, VR> OuterJoin<V0, VR, V0S, VRS>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null) 
+            where V0S : ISerDes<V0>, new()
+            where VRS : ISerDes<VR>, new ()
+            => OuterJoin<V0, VR, V0S, VRS>(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows, props);
 
 
         public IKStream<K, VR> OuterJoin<V0, VR>(IKStream<K, V0> stream, Func<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null)
             => OuterJoin(stream, new WrappedValueJoiner<V, V0, VR>(valueJoiner), windows, props);
 
 
-        public IKStream<K, VR> OuterJoin<V0, VR, V0S>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null) where V0S : ISerDes<V0>, new()
+        public IKStream<K, VR> OuterJoin<V0, VR, V0S, VRS>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps props = null) 
+            where V0S : ISerDes<V0>, new()
+            where VRS : ISerDes<VR>, new ()
             => OuterJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), new V0S());
 
 
@@ -883,13 +897,13 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public IKTable<K, V> ToTable(Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
         {
-            materialized = materialized ?? Materialized<K, V, IKeyValueStore<Bytes, byte[]>>.Create();
+            materialized ??= Materialized<K, V, IKeyValueStore<Bytes, byte[]>>.Create();
 
             var name = new Named(named).OrElseGenerateWithPrefix(builder, KStream.TO_KTABLE_NAME);
             materialized.UseProvider(builder, KStream.TO_KTABLE_NAME);
 
-            ISerDes<K> keySerdesOv = materialized.KeySerdes == null ? KeySerdes : materialized.KeySerdes;
-            ISerDes<V> valueSerdesOv = materialized.ValueSerdes == null ? ValueSerdes : materialized.ValueSerdes;
+            ISerDes<K> keySerdesOv = materialized.KeySerdes ?? KeySerdes;
+            ISerDes<V> valueSerdesOv = materialized.ValueSerdes ?? ValueSerdes;
 
             StreamGraphNode tableParentNode = null;
             IEnumerable<string> subTopologySourceNodes = null;
