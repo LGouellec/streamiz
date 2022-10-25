@@ -11,7 +11,7 @@ namespace Streamiz.Kafka.Net.State
     /// <typeparam name="K">type of the key</typeparam>
     /// <typeparam name="V">type of the value</typeparam>
     /// <typeparam name="T">the type of store to build</typeparam>
-    public abstract class AbstractStoreBuilder<K, V, T> : StoreBuilder<T>
+    public abstract class AbstractStoreBuilder<K, V, T> : IStoreBuilder<T>
         where T : IStateStore
     {
         private IDictionary<string, string> logConfig = new Dictionary<string, string>();
@@ -76,7 +76,7 @@ namespace Streamiz.Kafka.Net.State
         /// Activate caching
         /// </summary>
         /// <returns></returns>
-        public StoreBuilder<T> WithCachingEnabled()
+        public IStoreBuilder<T> WithCachingEnabled()
         {
             //enableCaching = true;
             return this;
@@ -86,7 +86,7 @@ namespace Streamiz.Kafka.Net.State
         /// Disable caching
         /// </summary>
         /// <returns></returns>
-        public StoreBuilder<T> WithCachingDisabled()
+        public IStoreBuilder<T> WithCachingDisabled()
         {
             //enableCaching = false;
             return this;
@@ -97,7 +97,7 @@ namespace Streamiz.Kafka.Net.State
         /// </summary>
         /// <param name="config"></param>
         /// <returns></returns>
-        public StoreBuilder<T> WithLoggingEnabled(IDictionary<String, String> config)
+        public IStoreBuilder<T> WithLoggingEnabled(IDictionary<String, String> config)
         {
             enableLogging = true;
             logConfig = config;
@@ -108,7 +108,7 @@ namespace Streamiz.Kafka.Net.State
         /// Disable logging
         /// </summary>
         /// <returns></returns>
-        public StoreBuilder<T> WithLoggingDisabled()
+        public IStoreBuilder<T> WithLoggingDisabled()
         {
             enableLogging = false;
             logConfig.Clear();
@@ -121,6 +121,6 @@ namespace Streamiz.Kafka.Net.State
         /// <returns></returns>
         public abstract T Build();
 
-        IStateStore StoreBuilder.Build() => Build();
+        IStateStore IStoreBuilder.Build() => Build();
     }
 }

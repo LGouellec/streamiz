@@ -18,7 +18,7 @@ namespace Streamiz.Kafka.Net.State.Internal
             this.materializedInternal = materializedInternal;
         }
 
-        public StoreBuilder<ITimestampedWindowStore<K, V>> Materialize()
+        public IStoreBuilder<ITimestampedWindowStore<K, V>> Materialize()
         {
             IWindowBytesStoreSupplier supplier = (IWindowBytesStoreSupplier)materializedInternal.StoreSupplier;
             if (supplier == null)

@@ -18,6 +18,6 @@ namespace Streamiz.Kafka.Net.Processors.Public
         /// <summary>
         /// Current state store builder (may be null)
         /// </summary>
-        public StoreBuilder StoreBuilder { get; internal set; }
+        public IStoreBuilder StoreBuilder { get; internal set; }
     }
 }

@@ -54,8 +54,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             var leftStoreSupplier = joined.LeftStoreSupplier;
             var rightStoreSupplier = joined.RightStoreSupplier;
 
-            StoreBuilder<IWindowStore<K, V>> leftWindowStore;
-            StoreBuilder<IWindowStore<K, V0>> rightWindowStore;
+            IStoreBuilder<IWindowStore<K, V>> leftWindowStore;
+            IStoreBuilder<IWindowStore<K, V0>> rightWindowStore;
 
             AssertUniqueStoreNames(leftStoreSupplier, rightStoreSupplier);
 
@@ -148,7 +148,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             }
         }
 
-        private StoreBuilder<IWindowStore<K, V>> JoinWindowStoreBuilder<K, V>(string storeName,
+        private IStoreBuilder<IWindowStore<K, V>> JoinWindowStoreBuilder<K, V>(string storeName,
                                                                              JoinWindowOptions windows,
                                                                              ISerDes<K> keySerde,
                                                                              ISerDes<V> valueSerde)

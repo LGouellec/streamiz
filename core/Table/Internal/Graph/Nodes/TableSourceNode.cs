@@ -58,7 +58,7 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph.Nodes
         {
             // TODO: we assume source KTables can only be timestamped-key-value stores for now.
             // should be expanded for other types of stores as well.
-            StoreBuilder<State.ITimestampedKeyValueStore<K, V>> storeBuilder = new TimestampedKeyValueStoreMaterializer<K, V>(materialized as Materialized<K, V, IKeyValueStore<Bytes, byte[]>>).Materialize();
+            IStoreBuilder<State.ITimestampedKeyValueStore<K, V>> storeBuilder = new TimestampedKeyValueStoreMaterializer<K, V>(materialized as Materialized<K, V, IKeyValueStore<Bytes, byte[]>>).Materialize();
 
             if (isGlobalKTable)
             {

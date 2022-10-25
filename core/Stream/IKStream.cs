@@ -1818,7 +1818,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// access to global state stores is available by default).
         /// </para>
         /// <para>
-        /// The strategy is to manually add the <see cref="StoreBuilder"/> via <see cref="ProcessorBuilder{K,V}.StateStore"/>,
+        /// The strategy is to manually add the <see cref="IStoreBuilder"/> via <see cref="ProcessorBuilder{K,V}.StateStore"/>,
         /// and specify all details regarding the store (name, serdes, type of state store, etc ..). For now, you can provide only one state store by custom processor.
         /// </para>
         /// <code>
@@ -1863,7 +1863,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// access to global state stores is available by default).
         /// </para>
         /// <para>
-        /// The strategy is to manually add the <see cref="StoreBuilder"/> via <see cref="TransformerBuilder{K,V,K1,V1}.StateStore"/>,
+        /// The strategy is to manually add the <see cref="IStoreBuilder"/> via <see cref="TransformerBuilder{K,V,K1,V1}.StateStore"/>,
         /// and specify all details regarding the store (name, serdes, type of state store, etc ..). For now, you can provide only one state store by custom transformer.
         /// </para>
         /// <code>
@@ -1907,7 +1907,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// access to global state stores is available by default).
         /// </para>
         /// <para>
-        /// The strategy is to manually add the <see cref="StoreBuilder"/> via <see cref="TransformerBuilder{K,V,K,V1}.StateStore"/>,
+        /// The strategy is to manually add the <see cref="IStoreBuilder"/> via <see cref="TransformerBuilder{K,V,K,V1}.StateStore"/>,
         /// and specify all details regarding the store (name, serdes, type of state store, etc ..). For now, you can provide only one state store by custom transformer.
         /// </para>
         /// <code>

@@ -59,7 +59,7 @@ namespace Streamiz.Kafka.Net.Processors.Public
         /// </summary>
         /// <param name="storeBuilder"></param>
         /// <returns></returns>
-        public TransformerBuilder<K, V, K1, V1> StateStore(StoreBuilder storeBuilder)
+        public TransformerBuilder<K, V, K1, V1> StateStore(IStoreBuilder storeBuilder)
         {
             transformerSupplier.StoreBuilder = storeBuilder;
             return this;

@@ -13,7 +13,7 @@ namespace Streamiz.Kafka.Net.State.Internal
             materialized = materializedInternal;
         }
 
-        public StoreBuilder<ITimestampedKeyValueStore<K, V>> Materialize()
+        public IStoreBuilder<ITimestampedKeyValueStore<K, V>> Materialize()
         {
             IKeyValueBytesStoreSupplier supplier = (IKeyValueBytesStoreSupplier)materialized.StoreSupplier;
             if (supplier == null)
@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.State.Internal
                 supplier = Stores.DefaultKeyValueStore(materialized.StoreName);
             }
 
-            StoreBuilder<ITimestampedKeyValueStore<K, V>> builder = Stores.TimestampedKeyValueStoreBuilder(
+            IStoreBuilder<ITimestampedKeyValueStore<K, V>> builder = Stores.TimestampedKeyValueStoreBuilder(
                  supplier,
                  materialized.KeySerdes,
                  materialized.ValueSerdes);
