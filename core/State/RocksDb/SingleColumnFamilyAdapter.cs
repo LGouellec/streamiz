@@ -97,12 +97,18 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         }
 
         public IKeyValueEnumerator<Bytes, byte[]> Range(Bytes from, Bytes to, bool forward)
-            => new RocksDbRangeEnumerator(
-                    db.NewIterator(columnFamilyHandle),
-                    name,
-                    from,
-                    to,
-                    keyComparator,
-                    forward);
+        {
+            //ReadOptions readOptions = new ReadOptions();
+            //readOptions.SetTotalOrderSeek(true);
+           // readOptions.SetIterateLowerBound(from.Get, (ulong)from.Get.Length);
+           // readOptions.SetIterateUpperBound(to.Get, (ulong) to.Get.Length);
+           return new RocksDbRangeEnumerator(
+                db.NewIterator(columnFamilyHandle/*, readOptions*/),
+                name,
+                from,
+                to,
+                keyComparator,
+                forward);
+        }
     }
 }

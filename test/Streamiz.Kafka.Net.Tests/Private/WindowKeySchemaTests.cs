@@ -24,12 +24,15 @@ namespace Streamiz.Kafka.Net.Tests.Private
             string key = "test";
             long ts = DateTime.Now.GetMilliseconds();
             int seq = 0;
-            List<byte> bytes = new List<byte>();
-            bytes.AddRange(Encoding.UTF8.GetBytes(key));
-            bytes.AddRange(BitConverter.GetBytes(ts));
-            bytes.AddRange(BitConverter.GetBytes(seq));
-            long r = WindowKeyHelper.ExtractStoreTimestamp(bytes.ToArray());
-            Assert.AreEqual(ts, r);
+            
+            using var buffer = ByteBuffer.Build(16);
+            {
+                buffer.Put(Encoding.UTF8.GetBytes(key));
+                buffer.PutLong(ts);
+                buffer.PutInt(seq);
+                long r = WindowKeyHelper.ExtractStoreTimestamp(buffer.ToArray());
+                Assert.AreEqual(ts, r);
+            }
         }
 
         [Test]
@@ -38,12 +41,15 @@ namespace Streamiz.Kafka.Net.Tests.Private
             string key = "test";
             long ts = DateTime.Now.GetMilliseconds();
             int seq = 14;
-            List<byte> bytes = new List<byte>();
-            bytes.AddRange(Encoding.UTF8.GetBytes(key));
-            bytes.AddRange(BitConverter.GetBytes(ts));
-            bytes.AddRange(BitConverter.GetBytes(seq));
-            long r = WindowKeyHelper.ExtractStoreSequence(bytes.ToArray());
-            Assert.AreEqual(seq, r);
+            
+            using var buffer = ByteBuffer.Build(16);
+            {
+                buffer.Put(Encoding.UTF8.GetBytes(key));
+                buffer.PutLong(ts);
+                buffer.PutInt(seq);
+                long r = WindowKeyHelper.ExtractStoreSequence(buffer.ToArray());
+                Assert.AreEqual(seq, r);
+            }
         }
     }
 }

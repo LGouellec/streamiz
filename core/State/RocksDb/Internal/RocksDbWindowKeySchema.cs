@@ -49,12 +49,14 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
 
         public Bytes UpperRange(Bytes key, long to)
         {
-            byte[] maxSuffix = ByteBuffer.Build(WindowKeyHelper.SUFFIX_SIZE)
-            .PutLong(to)
-            .PutInt(int.MaxValue)
-            .ToArray();
+            using var buffer = ByteBuffer.Build(WindowKeyHelper.SUFFIX_SIZE);
+            {
+                byte[] maxSuffix = buffer.PutLong(to)
+                    .PutInt(int.MaxValue)
+                    .ToArray();
 
-            return OrderedBytes.UpperRange(key, maxSuffix);
+                return OrderedBytes.UpperRange(key, maxSuffix);
+            }
         }
 
         public Bytes UpperRangeFixedSize(Bytes key, long to)
