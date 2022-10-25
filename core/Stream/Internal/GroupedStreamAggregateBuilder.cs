@@ -32,7 +32,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         internal IKTable<K, VR> Build<VR>(
             string functionName,
-            StoreBuilder<ITimestampedKeyValueStore<K, VR>> storeBuilder,
+            IStoreBuilder<ITimestampedKeyValueStore<K, VR>> storeBuilder,
             IKStreamAggProcessorSupplier<K, K, V, VR> aggregateSupplier,
             string queryableStoreName,
             ISerDes<K> keySerdes,
@@ -60,7 +60,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         internal IKTable<KR, VR> BuildWindow<KR, VR>(
             string functionName,
-            StoreBuilder<ITimestampedWindowStore<K, VR>> storeBuilder,
+            IStoreBuilder<ITimestampedWindowStore<K, VR>> storeBuilder,
             IKStreamAggProcessorSupplier<K, KR, V, VR> aggregateSupplier,
             string queryableStoreName,
             ISerDes<KR> keySerdes,
@@ -86,7 +86,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                                     builder);
         }
 
-        private string Repartition(StoreBuilder storeBuilder)
+        private string Repartition(IStoreBuilder storeBuilder)
         {
             if (repartitionRequired)
             {

@@ -467,7 +467,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
         /// <returns>a new materialized instance with the given storeName</returns>
-        public static Materialized<K, V, IKeyValueStore<Bytes, byte[]>> @As<K, V, KS, VS>(string storeName)
+        public static Materialized<K, V, IKeyValueStore<Bytes, byte[]>> @As<K, V, KS, VS>(string storeName = null)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
@@ -490,7 +490,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
         /// <param name="windowSize">the windows size aggregation</param>
         /// <returns>a new materialized instance with the given storeName and windows size</returns>
-        public static Materialized<K, V, IWindowStore<Bytes, byte[]>> @As<K, V>(string storeName, TimeSpan? windowSize = null)
+        public static Materialized<K, V, IWindowStore<Bytes, byte[]>> @As<K, V>(string storeName = null, TimeSpan? windowSize = null)
         {
             Materialized<K, V, IWindowStore<Bytes, byte[]>> materialized =
                 Materialized<K, V, IWindowStore<Bytes, byte[]>>
@@ -509,7 +509,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
         /// <param name="windowSize">the windows size aggregation</param>
         /// <returns>a new materialized instance with the given storeName</returns>
-        public static Materialized<K, V, IWindowStore<Bytes, byte[]>> @As<K, V, KS, VS>(string storeName, TimeSpan? windowSize = null)
+        public static Materialized<K, V, IWindowStore<Bytes, byte[]>> @As<K, V, KS, VS>(string storeName = null, TimeSpan? windowSize = null)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
@@ -533,7 +533,7 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
         /// <returns>a new materialized instance with the given storeName</returns>
-        public static Materialized<K, V, IKeyValueStore<Bytes, byte[]>> @As<K, V>(string storeName)
+        public static Materialized<K, V, IKeyValueStore<Bytes, byte[]>> @As<K, V>(string storeName = null)
         {
             Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized
                 = Materialized<K, V, IKeyValueStore<Bytes, byte[]>>
@@ -549,7 +549,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
         /// <returns>a new materialized instance with the given storeName</returns>
-        public static Materialized<K, V, IKeyValueStore<Bytes, byte[]>> @As<K, V, KS, VS>(string storeName)
+        public static Materialized<K, V, IKeyValueStore<Bytes, byte[]>> @As<K, V, KS, VS>(string storeName = null)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {
@@ -574,7 +574,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="segmentInterval"></param>
         /// <param name="windowSize">the windows size aggregation</param>
         /// <returns>a new materialized instance with the given storeName and windows size</returns>
-        public static Materialized<K, V, IWindowStore<Bytes, byte[]>> @As<K, V>(string storeName,
+        public static Materialized<K, V, IWindowStore<Bytes, byte[]>> @As<K, V>(string storeName = null,
             TimeSpan? segmentInterval = null, TimeSpan? windowSize = null)
         {
             Materialized<K, V, IWindowStore<Bytes, byte[]>> materialized =
@@ -598,7 +598,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="segmentInterval"></param>
         /// <param name="windowSize">the windows size aggregation</param>
         /// <returns>a new materialized instance with the given storeName</returns>
-        public static Materialized<K, V, IWindowStore<Bytes, byte[]>> @As<K, V, KS, VS>(string storeName, TimeSpan? segmentInterval = null, TimeSpan? windowSize = null)
+        public static Materialized<K, V, IWindowStore<Bytes, byte[]>> @As<K, V, KS, VS>(string storeName = null, TimeSpan? segmentInterval = null, TimeSpan? windowSize = null)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
         {

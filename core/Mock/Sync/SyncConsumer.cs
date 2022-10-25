@@ -37,7 +37,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         private readonly IDictionary<string, SyncConsumerOffset> offsets = new Dictionary<string, SyncConsumerOffset>();
         private readonly IDictionary<TopicPartition, bool> partitionsState = new Dictionary<TopicPartition, bool>();
-
+        
         public IConsumerRebalanceListener Listener { get; private set; }
 
         public SyncConsumer(SyncProducer producer)
@@ -300,7 +300,8 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
             foreach (var kp in offsets)
             {
-                if (Assignment.Select(a => a.Topic).Contains(kp.Key))
+                var clone = Assignment.ToList();
+                if (clone.Select(a => a.Topic).Contains(kp.Key))
                 {
                     if (timeout != TimeSpan.Zero && (dt + timeout) < DateTime.Now)
                         break;

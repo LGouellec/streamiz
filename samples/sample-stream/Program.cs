@@ -22,10 +22,7 @@ namespace sample_stream
             config.BootstrapServers = "localhost:9092";
             config.AutoOffsetReset = AutoOffsetReset.Earliest;
             config.CommitIntervalMs = 5000;
-
             
-
-
             StreamBuilder builder = new StreamBuilder();
             builder
                 .Stream<string, string>(topicSource)

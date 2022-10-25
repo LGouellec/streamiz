@@ -6,7 +6,7 @@ using Confluent.Kafka;
 namespace Streamiz.Kafka.Net.Crosscutting
 {
     /// <summary>
-    /// Dictionnary extensions
+    /// Dictionary extensions
     /// </summary>
     public static class DictionaryExtensions
     {
@@ -15,7 +15,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
         /// </summary>
         /// <typeparam name="K">Key type</typeparam>
         /// <typeparam name="V">Value type</typeparam>
-        /// <param name="map">Source dictionnary</param>
+        /// <param name="map">Source dictionary</param>
         /// <param name="key">New or updated key</param>
         /// <param name="value">Value</param>
         /// <returns>Return true if the key|value was added, false if updated</returns>
@@ -39,7 +39,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
         /// <typeparam name="K">Key type</typeparam>
         /// <typeparam name="V">Value type</typeparam>
         /// <param name="source">Collection source</param>
-        /// <returns>Return dictionnary</returns>
+        /// <returns>Return dictionary</returns>
         public static IDictionary<K, V> ToDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>> source)
         {
             Dictionary<K, V> r = new Dictionary<K, V>();
@@ -119,7 +119,14 @@ namespace Streamiz.Kafka.Net.Crosscutting
             }
         }
 
-
+        /// <summary>
+        /// Create list in the value or append the existing list
+        /// </summary>
+        /// <param name="source">Collection source</param>
+        /// <param name="key">key to add or update</param>
+        /// <param name="value">new value</param>
+        /// <typeparam name="K">Key type</typeparam>
+        /// <typeparam name="V">Value type</typeparam>
         public static void CreateListOrAdd<K, V>(this IDictionary<K, List<V>> source, K key, V value)
         {
             if(source.ContainsKey(key))

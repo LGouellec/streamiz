@@ -185,7 +185,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var stream1 = builder.Stream("test", new StringSerDes(), new StringSerDes());
             var stream2 = builder.Stream("test2", new StringSerDes(), new StringSerDes());
 
-            stream1.Join<string, string, StringSerDes>(stream2,
+            stream1.Join<string, string, StringSerDes, StringSerDes>(stream2,
                 (v, v2) => $"{v}-{v2}",
                 JoinWindowOptions.Of(TimeSpan.FromMinutes(1)))
                 .To("output-join");
