@@ -62,8 +62,9 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             ConsumerBuilder<byte[], byte[]> builder = builderKafkaHandler.GetConsumerBuilder(config);
             if (rebalanceListener != null)
             {
-                builder.SetPartitionsAssignedHandler((c, p) => rebalanceListener.PartitionsAssigned(c, p));
-                builder.SetPartitionsRevokedHandler((c, p) => rebalanceListener.PartitionsRevoked(c, p));
+                builder.SetPartitionsAssignedHandler(rebalanceListener.PartitionsAssigned);
+                builder.SetPartitionsRevokedHandler(rebalanceListener.PartitionsRevoked);
+                builder.SetPartitionsLostHandler(rebalanceListener.PartitionsLost);
                 builder.SetLogHandler(loggerAdapter.LogConsume);
                 builder.SetErrorHandler(loggerAdapter.ErrorConsume);
             }

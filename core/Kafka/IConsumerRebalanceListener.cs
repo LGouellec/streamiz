@@ -39,5 +39,16 @@ namespace Streamiz.Kafka.Net.Kafka
         /// <param name="consumer">consumer handle</param>
         /// <param name="partitions">list of partitions revoked</param>
         void PartitionsRevoked(IConsumer<byte[], byte[]> consumer, List<TopicPartitionOffset> partitions);
+        
+        /// <summary>
+        /// A callback method you can implement to provide handling of cleaning up resources for partitions that have already
+        /// been reassigned to other consumers. This method will not be called during normal execution as the owned partitions would
+        /// first be revoked by calling the <see cref="PartitionsRevoked"/>, before being reassigned
+        /// to other consumers during a rebalance event. However, during exceptional scenarios when the consumer realized that it
+        /// does not own this partition any longer, i.e. not revoked via a normal rebalance event, then this method would be invoked.
+        /// </summary>
+        /// <param name="consumer">consumer handle</param>
+        /// <param name="partitions">The list of partitions that were assigned to the consumer and now have been reassigned to other consumers.</param>
+        void PartitionsLost(IConsumer<byte[], byte[]> consumer, List<TopicPartitionOffset> partitions);
     }
 }
