@@ -37,7 +37,6 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         private readonly IDictionary<string, SyncConsumerOffset> offsets = new Dictionary<string, SyncConsumerOffset>();
         private readonly IDictionary<TopicPartition, bool> partitionsState = new Dictionary<TopicPartition, bool>();
-        private readonly object @lock = new object();
         
         public IConsumerRebalanceListener Listener { get; private set; }
 
