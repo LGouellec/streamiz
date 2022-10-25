@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 namespace Streamiz.Kafka.Net.SerDes
 {
     /// <summary>
-    /// Json SerDes without schema for <typeparam name="T"/>. Internally this serdes use the Newtonsoft library.
+    /// Json SerDes without schema for <typeparamref name="T"/>. Internally this serdes use the Newtonsoft library.
     /// </summary>
     public class JsonSerDes<T> : AbstractSerDes<T>
         where T : class
@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.SerDes
             => data != null ? Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(data)) : null;
 
         /// <summary>
-        /// Deserialize a record value from a byte array into <typeparam name="T"/> object with a json deserializer.
+        /// Deserialize a record value from a byte array into <typeparamref name="T"/> object with a json deserializer.
         /// </summary>
         /// <param name="data">serialized bytes</param>
         /// <param name="context">serialization context</param>

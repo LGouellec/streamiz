@@ -14,12 +14,6 @@ namespace Streamiz.Kafka.Net.Metrics
     /// </summary>
     public class Sensor : IEquatable<Sensor>, IComparable<Sensor>
     {
-        public enum SensorState
-        {
-            RUNNING,
-            REMOVED
-        }
-        
         private readonly Dictionary<MetricName, StreamMetric> metrics;
         private readonly IList<IMeasurableStat> stats;
         private MetricConfig config = new MetricConfig();

@@ -738,6 +738,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <typeparam name="V0">the value type of the table</typeparam>
         /// <typeparam name="VR">the value type of the result stream</typeparam>
         /// <typeparam name="V0S">serdes's value of table</typeparam>
+        /// <typeparam name="VRS">serdes's new value of the result stream</typeparam>
         /// <param name="table">the <see cref="IKTable{K, V0}"/> to be joined with this stream</param>
         /// <param name="valueJoiner">a function joiner that computes the join result for a pair of matching records</param>
         /// <param name="named">a name config used to name the processor in the topology</param>
@@ -767,6 +768,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <typeparam name="V0">the value type of the table</typeparam>
         /// <typeparam name="VR">the value type of the result stream</typeparam>
         /// <typeparam name="V0S">serdes's value of table</typeparam>
+        /// <typeparam name="VRS">serdes's new value of the result stream</typeparam>
         /// <param name="table">the <see cref="IKTable{K, V0}"/> to be joined with this stream</param>
         /// <param name="valueJoiner">a <see cref="IValueJoiner{V, V0, VR}"/> joiner that computes the join result for a pair of matching records</param>
         /// <param name="named">a name config used to name the processor in the topology</param>
@@ -835,7 +837,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <summary>
         /// Join records of this stream with <see cref="IKTable{K, VT}"/>'s records using non-windowed left equi join with default
         /// serializers and deserializers.
-        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S}(IKTable{K, V0}, Func{V, V0, VR}, string)"/> (inner-join), all records from this stream will produce an
+        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S, VRS}(IKTable{K, V0}, Func{V, V0, VR}, string)"/> (inner-join), all records from this stream will produce an
         /// output record (cf. below).
         /// The join is a primary key table lookup join with join attribute <code> stream.key == table.key</code>.
         /// "Table lookup join" means, that results are only computed if KStream records are processed.
@@ -859,6 +861,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <typeparam name="VT">the value type of the table</typeparam>
         /// <typeparam name="VR">the value type of the result stream</typeparam>
         /// <typeparam name="VTS">serdes's value of table</typeparam>
+        /// <typeparam name="VRS">serdes's new value of the result stream</typeparam>
         /// <param name="table">the <see cref="IKTable{K, VT}"/> to be joined with this stream</param>
         /// <param name="valueJoiner">a function joiner that computes the join result for a pair of matching records</param>
         /// <param name="named">a name config used to name the processor in the topology</param>
@@ -870,7 +873,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <summary>
         /// Join records of this stream with <see cref="IKTable{K, VT}"/>'s records using non-windowed left equi join with default
         /// serializers and deserializers.
-        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S}(IKTable{K, V0}, Func{V, V0, VR}, string)"/> (inner-join), all records from this stream will produce an
+        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S, VRS}(IKTable{K, V0}, Func{V, V0, VR}, string)"/> (inner-join), all records from this stream will produce an
         /// output record (cf. below).
         /// The join is a primary key table lookup join with join attribute <code> stream.key == table.key</code>.
         /// "Table lookup join" means, that results are only computed if KStream records are processed.
@@ -894,6 +897,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <typeparam name="VT">the value type of the table</typeparam>
         /// <typeparam name="VR">the value type of the result stream</typeparam>
         /// <typeparam name="VTS">serdes's value of table</typeparam>
+        /// <typeparam name="VRS">serdes's new value of the result stream</typeparam>
         /// <param name="table">the <see cref="IKTable{K, VT}"/> to be joined with this stream</param>
         /// <param name="valueJoiner">a <see cref="IValueJoiner{V, VT, VR}"/> joiner that computes the join result for a pair of matching records</param>
         /// <param name="named">a name config used to name the processor in the topology</param>
@@ -905,7 +909,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <summary>
         /// Join records of this stream with <see cref="IKTable{K, VT}"/>'s records using non-windowed left equi join with default
         /// serializers and deserializers.
-        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S}(IKTable{K, V0}, Func{V, V0, VR}, string)"/> (inner-join), all records from this stream will produce an
+        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S, VRS}(IKTable{K, V0}, Func{V, V0, VR}, string)"/> (inner-join), all records from this stream will produce an
         /// output record (cf. below).
         /// The join is a primary key table lookup join with join attribute <code> stream.key == table.key</code>.
         /// "Table lookup join" means, that results are only computed if KStream records are processed.
@@ -937,7 +941,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <summary>
         /// Join records of this stream with <see cref="IKTable{K, VT}"/>'s records using non-windowed left equi join with default
         /// serializers and deserializers.
-        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S}(IKTable{K, V0}, Func{V, V0, VR}, string)"/> (inner-join), all records from this stream will produce an
+        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S, VRS}(IKTable{K, V0}, Func{V, V0, VR}, string)"/> (inner-join), all records from this stream will produce an
         /// output record (cf. below).
         /// The join is a primary key table lookup join with join attribute <code> stream.key == table.key</code>.
         /// "Table lookup join" means, that results are only computed if KStream records are processed.
@@ -1147,6 +1151,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <typeparam name="V0">the value type of the other stream</typeparam>
         /// <typeparam name="VR">the value type of the result stream</typeparam>
         /// <typeparam name="V0S">the serdes value type of the other stream</typeparam>
+        /// <typeparam name="VRS">serdes's new value of the result stream</typeparam>
         /// <param name="stream">the <see cref="IKStream{K, V0}"/> to be joined with this stream</param>
         /// <param name="valueJoiner">a <see cref="Func{V, V0, VR}"/> joiner function that computes the join result for a pair of matching records</param>
         /// <param name="windows">the specification of the <see cref="JoinWindowOptions"/></param>
@@ -1252,6 +1257,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <typeparam name="V0">the value type of the other stream</typeparam>
         /// <typeparam name="VR">the value type of the result stream</typeparam>
         /// <typeparam name="V0S">the serdes value type of the other stream</typeparam>
+        /// <typeparam name="VRS">serdes's new value of the result stream</typeparam>
         /// <param name="stream">the <see cref="IKStream{K, V0}"/> to be joined with this stream</param>
         /// <param name="valueJoiner">a <see cref="IValueJoiner{V, V0, VR}"/> that computes the join result for a pair of matching records</param>
         /// <param name="windows">the specification of the <see cref="JoinWindowOptions"/></param>
@@ -1319,7 +1325,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <summary>
         /// Join records of this stream with another <see cref="IKStream{K, V0}"/> 's records using windowed left equi join with default
         /// serializers and deserializers.
-        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (inner-join), all records from this stream will
+        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S, VRS}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (inner-join), all records from this stream will
         /// produce at least one output record (cf. below).
         /// The join is computed on the records' key with join attribute <code>thisKStream.key == otherKStream.key</code>.
         /// Furthermore, two records are only joined if their timestamps are close to each other as defined by the given
@@ -1345,6 +1351,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <typeparam name="V0">the value type of the other stream</typeparam>
         /// <typeparam name="VR">the value type of the result stream</typeparam>
         /// <typeparam name="V0S">the serdes value type of other stream</typeparam>
+        /// <typeparam name="VRS">serdes's new value of the result stream</typeparam>
         /// <param name="stream">the <see cref="IKStream{K, V0}"/> to be joined with this stream</param>
         /// <param name="valueJoiner">a <see cref="Func{V, V0, VR}"/> that computes the join result for a pair of matching records</param>
         /// <param name="windows">the specification of the <see cref="JoinWindowOptions"/></param>
@@ -1359,7 +1366,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <summary>
         /// Join records of this stream with another <see cref="IKStream{K, V0}"/> 's records using windowed left equi join with default
         /// serializers and deserializers.
-        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (inner-join), all records from this stream will
+        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S, VRS}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (inner-join), all records from this stream will
         /// produce at least one output record (cf. below).
         /// The join is computed on the records' key with join attribute <code>thisKStream.key == otherKStream.key</code>.
         /// Furthermore, two records are only joined if their timestamps are close to each other as defined by the given
@@ -1396,7 +1403,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <summary>
         /// Join records of this stream with another <see cref="IKStream{K, V0}"/> 's records using windowed left equi join with default
         /// serializers and deserializers.
-        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (inner-join), all records from this stream will
+        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S, VRS}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (inner-join), all records from this stream will
         /// produce at least one output record (cf. below).
         /// The join is computed on the records' key with join attribute <code>thisKStream.key == otherKStream.key</code>.
         /// Furthermore, two records are only joined if their timestamps are close to each other as defined by the given
@@ -1422,6 +1429,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <typeparam name="V0">the value type of the other stream</typeparam>
         /// <typeparam name="VR">the value type of the result stream</typeparam>
         /// <typeparam name="V0S">the serdes value type of other stream</typeparam>
+        /// <typeparam name="VRS">serdes's new value of the result stream</typeparam>
         /// <param name="stream">the <see cref="IKStream{K, V0}"/> to be joined with this stream</param>
         /// <param name="valueJoiner">a <see cref="IValueJoiner{V, V0, VR}"/> that computes the join result for a pair of matching records</param>
         /// <param name="windows">the specification of the <see cref="JoinWindowOptions"/></param>
@@ -1436,7 +1444,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <summary>
         /// Join records of this stream with another <see cref="IKStream{K, V0}"/> 's records using windowed left equi join with default
         /// serializers and deserializers.
-        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (inner-join), all records from this stream will
+        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S, VRS}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (inner-join), all records from this stream will
         /// produce at least one output record (cf. below).
         /// The join is computed on the records' key with join attribute <code>thisKStream.key == otherKStream.key</code>.
         /// Furthermore, two records are only joined if their timestamps are close to each other as defined by the given
@@ -1477,7 +1485,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <summary>
         /// Join records of this stream with another <see cref="IKStream{K, V0}"/> 's records using windowed left equi join with default
         /// serializers and deserializers.
-        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (inner-join) or <see cref="IKStream{K, V}.LeftJoin{V0, VR, V0S}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (left-join),all records from both streams will produce at
+        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S, VRS}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (inner-join) or <see cref="IKStream{K, V}.LeftJoin{V0, VR, V0S, VRS}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (left-join),all records from both streams will produce at
         /// least one output record (cf.below).
         /// The join is computed on the records' key with join attribute <code>thisKStream.key == otherKStream.key</code>.
         /// Furthermore, two records are only joined if their timestamps are close to each other as defined by the given
@@ -1503,6 +1511,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <typeparam name="V0">the value type of the other stream</typeparam>
         /// <typeparam name="VR">the value type of the result stream</typeparam>
         /// <typeparam name="V0S">the serdes value type of other stream</typeparam>
+        /// <typeparam name="VRS">serdes's new value of the result stream</typeparam>
         /// <param name="stream">the <see cref="IKStream{K, V0}"/> to be joined with this stream</param>
         /// <param name="valueJoiner">a <see cref="Func{V, V0, VR}"/> that computes the join result for a pair of matching records</param>
         /// <param name="windows">the specification of the <see cref="JoinWindowOptions"/></param>
@@ -1517,7 +1526,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <summary>
         /// Join records of this stream with another <see cref="IKStream{K, V0}"/> 's records using windowed left equi join with default
         /// serializers and deserializers.
-        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (inner-join) or <see cref="IKStream{K, V}.LeftJoin{V0, VR, V0S}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (left-join),all records from both streams will produce at
+        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S, VRS}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (inner-join) or <see cref="IKStream{K, V}.LeftJoin{V0, VR, V0S, VRS}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (left-join),all records from both streams will produce at
         /// least one output record (cf.below).
         /// The join is computed on the records' key with join attribute <code>thisKStream.key == otherKStream.key</code>.
         /// Furthermore, two records are only joined if their timestamps are close to each other as defined by the given
@@ -1554,7 +1563,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <summary>
         /// Join records of this stream with another <see cref="IKStream{K, V0}"/> 's records using windowed left equi join with default
         /// serializers and deserializers.
-        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (inner-join) or <see cref="IKStream{K, V}.LeftJoin{V0, VR, V0S}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (left-join),all records from both streams will produce at
+        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S, VRS}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (inner-join) or <see cref="IKStream{K, V}.LeftJoin{V0, VR, V0S, VRS}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (left-join),all records from both streams will produce at
         /// least one output record (cf.below).
         /// The join is computed on the records' key with join attribute <code>thisKStream.key == otherKStream.key</code>.
         /// Furthermore, two records are only joined if their timestamps are close to each other as defined by the given
@@ -1580,6 +1589,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <typeparam name="V0">the value type of the other stream</typeparam>
         /// <typeparam name="VR">the value type of the result stream</typeparam>
         /// <typeparam name="V0S">the serdes value type of other stream</typeparam>
+        /// <typeparam name="VRS">serdes's new value of the result stream</typeparam>
         /// <param name="stream">the <see cref="IKStream{K, V0}"/> to be joined with this stream</param>
         /// <param name="valueJoiner">a <see cref="IValueJoiner{V, V0, VR}"/> that computes the join result for a pair of matching records</param>
         /// <param name="windows">the specification of the <see cref="JoinWindowOptions"/></param>
@@ -1594,7 +1604,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <summary>
         /// Join records of this stream with another <see cref="IKStream{K, V0}"/> 's records using windowed left equi join with default
         /// serializers and deserializers.
-        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (inner-join) or <see cref="IKStream{K, V}.LeftJoin{V0, VR, V0S}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (left-join),all records from both streams will produce at
+        /// In contrast to <see cref="IKStream{K, V}.Join{V0, VR, V0S, VRS}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (inner-join) or <see cref="IKStream{K, V}.LeftJoin{V0, VR, V0S, VRS}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> (left-join),all records from both streams will produce at
         /// least one output record (cf.below).
         /// The join is computed on the records' key with join attribute <code>thisKStream.key == otherKStream.key</code>.
         /// Furthermore, two records are only joined if their timestamps are close to each other as defined by the given

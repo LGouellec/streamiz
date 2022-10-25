@@ -7,19 +7,43 @@ using Streamiz.Kafka.Net.State.Supplier;
 
 namespace Streamiz.Kafka.Net.State
 {
+    /// <summary>
+    /// Key/Value store builder
+    /// </summary>
+    /// <typeparam name="K"></typeparam>
+    /// <typeparam name="V"></typeparam>
     public class KeyValueStoreBuilder<K, V>
         : AbstractStoreBuilder<K, V, IKeyValueStore<K, V>>
     {
         private readonly IKeyValueBytesStoreSupplier supplier;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="supplier"></param>
+        /// <param name="keySerde"></param>
+        /// <param name="valueSerde"></param>
         public KeyValueStoreBuilder(IKeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde) 
             : base(supplier.Name, keySerde, valueSerde)
         {
             this.supplier = supplier;
         }
 
+        /// <summary>
+        /// False every time
+        /// </summary>
         public override bool IsWindowStore => false;
+        
+        /// <summary>
+        /// Not supported
+        /// </summary>
+        /// <exception cref="IllegalStateException"></exception>
         public override long RetentionMs => throw new IllegalStateException("RetentionMs is not supported when not a window store");
+        
+        /// <summary>
+        /// Build the state store
+        /// </summary>
+        /// <returns></returns>
         public override IKeyValueStore<K, V> Build()
         {
             var store = supplier.Get();

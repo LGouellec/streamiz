@@ -67,15 +67,51 @@ namespace Streamiz.Kafka.Net.State
         public static IWindowBytesStoreSupplier InMemoryWindowStore(string name, TimeSpan retention, TimeSpan windowSize)
             => new InMemoryWindowStoreSupplier(name, retention, (long)windowSize.TotalMilliseconds);
 
+        /// <summary>
+        /// Creates a <see cref="StoreBuilder"/> that can be used to build a <see cref="IWindowStore{K, V}"/>.
+        /// </summary>
+        /// <param name="supplier">a <see cref="IWindowBytesStoreSupplier"/> (cannot be null)</param>
+        /// <param name="keySerdes">the key serde to use</param>
+        /// <param name="valueSerdes">the value serde to use</param>
+        /// <typeparam name="K">key type</typeparam>
+        /// <typeparam name="V">value type</typeparam>
+        /// <returns>an instance of <see cref="StoreBuilder"/> than can build a <see cref="IWindowStore{K, V}"/></returns>
         public static StoreBuilder<IWindowStore<K, V>> WindowStoreBuilder<K, V>(IWindowBytesStoreSupplier supplier, ISerDes<K> keySerdes, ISerDes<V> valueSerdes)
             => new WindowStoreBuilder<K, V>(supplier, keySerdes, valueSerdes);
 
+        /// <summary>
+        /// Creates a <see cref="StoreBuilder"/> that can be used to build a <see cref="ITimestampedKeyValueStore{K, V}"/>.
+        /// </summary>
+        /// <param name="supplier">a <see cref="IKeyValueBytesStoreSupplier"/> (cannot be null)</param>
+        /// <param name="keySerde">the key serde to use</param>
+        /// <param name="valueSerde">the value serde to use</param>
+        /// <typeparam name="K">key type</typeparam>
+        /// <typeparam name="V">value type</typeparam>
+        /// <returns>an instance of <see cref="StoreBuilder"/> than can build a <see cref="ITimestampedKeyValueStore{K, V}"/></returns>
         public static StoreBuilder<ITimestampedKeyValueStore<K, V>> TimestampedKeyValueStoreBuilder<K, V>(IKeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
             => new TimestampedKeyValueStoreBuilder<K, V>(supplier, keySerde, valueSerde);
 
+        /// <summary>
+        /// Creates a <see cref="StoreBuilder"/> that can be used to build a <see cref="ITimestampedWindowStore{K, V}"/>.
+        /// </summary>
+        /// <param name="supplier">a <see cref="IWindowBytesStoreSupplier"/> (cannot be null)</param>
+        /// <param name="keySerde">the key serde to use</param>
+        /// <param name="valueSerde">the value serde to use</param>
+        /// <typeparam name="K">key type</typeparam>
+        /// <typeparam name="V">value type</typeparam>
+        /// <returns>an instance of <see cref="StoreBuilder"/> than can build a <see cref="ITimestampedWindowStore{K, V}"/></returns>
         public static StoreBuilder<ITimestampedWindowStore<K, V>> TimestampedWindowStoreBuilder<K, V>(IWindowBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
             => new TimestampedWindowStoreBuilder<K, V>(supplier, keySerde, valueSerde);
         
+        /// <summary>
+        /// Creates a <see cref="StoreBuilder"/> that can be used to build a <see cref="IKeyValueStore{K, V}"/>.
+        /// </summary>
+        /// <param name="supplier">a <see cref="IKeyValueBytesStoreSupplier"/> (cannot be null)</param>
+        /// <param name="keySerde">the key serde to use</param>
+        /// <param name="valueSerde">the value serde to use</param>
+        /// <typeparam name="K">key type</typeparam>
+        /// <typeparam name="V">value type</typeparam>
+        /// <returns>an instance of <see cref="StoreBuilder"/> than can build a <see cref="IKeyValueStore{K, V}"/></returns>
         public static StoreBuilder<IKeyValueStore<K, V>> KeyValueStoreBuilder<K, V>(IKeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
             => new KeyValueStoreBuilder<K, V>(supplier, keySerde, valueSerde);
     }
