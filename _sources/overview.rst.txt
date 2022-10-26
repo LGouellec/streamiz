@@ -40,7 +40,7 @@ This tutorial will describe all the steps required to create a first streamiz ap
             .To("test-output");
 
         // Create a table with "test-ktable" topic, and materialize this with in memory store named "test-store"
-        builder.Table("test-ktable", InMemory<string, string>.As("test-store"));
+        builder.Table("test-ktable", InMemory.As<string, string>("test-store"));
 
         // Build topology
         Topology t = builder.Build();

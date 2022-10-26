@@ -48,11 +48,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="stream-configuration.html">Configuring a Stream Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="threading-model.html">Threading model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stateless-processors.html">Stateless processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="statefull-processors.html">Statefull processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stores.html">State stores</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tology-test-driver.html">Test topology driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="monitoring.html">Monitoring Stream Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async-processing.html">Asynchronous processing</a></li>
 </ul>
 
         </div>
@@ -109,7 +111,7 @@
 <span class="w">        </span><span class="p">.</span><span class="n">To</span><span class="p">(</span><span class="s">&quot;test-output&quot;</span><span class="p">);</span><span class="w"></span>
 
 <span class="w">    </span><span class="c1">// Create a table with &quot;test-ktable&quot; topic, and materialize this with in memory store named &quot;test-store&quot;</span>
-<span class="w">    </span><span class="n">builder</span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">&quot;test-ktable&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">InMemory</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;.</span><span class="n">As</span><span class="p">(</span><span class="s">&quot;test-store&quot;</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="n">builder</span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">&quot;test-ktable&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">InMemory</span><span class="p">.</span><span class="n">As</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test-store&quot;</span><span class="p">));</span><span class="w"></span>
 
 <span class="w">    </span><span class="c1">// Build topology</span>
 <span class="w">    </span><span class="n">Topology</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span><span class="w"></span>

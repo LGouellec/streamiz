@@ -21,7 +21,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Stateless processors" href="stateless-processors.html" />
+    <link rel="next" title="Threading model" href="threading-model.html" />
     <link rel="prev" title="Overview" href="overview.html" /> 
 </head>
 
@@ -96,11 +96,13 @@
 <li class="toctree-l2"><a class="reference internal" href="#sample-configuration-implementation">Sample configuration implementation</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="threading-model.html">Threading model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stateless-processors.html">Stateless processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="statefull-processors.html">Statefull processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stores.html">State stores</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tology-test-driver.html">Test topology driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="monitoring.html">Monitoring Stream Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async-processing.html">Asynchronous processing</a></li>
 </ul>
 
         </div>
@@ -381,7 +383,7 @@ Default is 1 day.</p>
 <section id="metricsreporter">
 <h3>MetricsReporter<a class="headerlink" href="#metricsreporter" title="Permalink to this heading">¶</a></h3>
 <p>The reporter expose a list of sensors throw by a stream thread every <code class="docutils literal notranslate"><span class="pre">MetricsIntervalMs</span></code> This reporter has the responsibility to export sensors and metrics into another platform (default: empty).</p>
-<p>Streamiz provide one reporter for Prometheus (see <code class="docutils literal notranslate"><span class="pre">Streamiz.Kafka.Net.Metrics.Prometheus</span></code> package).</p>
+<p>Streamiz provide multiple reporters (see <code class="docutils literal notranslate"><span class="pre">Streamiz.Kafka.Net.Metrics.Prometheus</span></code> and <code class="docutils literal notranslate"><span class="pre">Streamiz.Kafka.Net.Metrics.OpenTelemetry</span></code>). You can easily implement your own reporter and publish your metrics inside one another system.</p>
 </section>
 <section id="exposelibrdkafkastats">
 <h3>ExposeLibrdKafkaStats<a class="headerlink" href="#exposelibrdkafkastats" title="Permalink to this heading">¶</a></h3>
@@ -475,7 +477,7 @@ Possible values: <code class="docutils literal notranslate"><span class="pre">To
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="overview.html" class="btn btn-neutral float-left" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="stateless-processors.html" class="btn btn-neutral float-right" title="Stateless processors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="threading-model.html" class="btn btn-neutral float-right" title="Threading model" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

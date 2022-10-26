@@ -4,8 +4,13 @@
 
 The Streamiz library reports a variety of metrics through his own registry. You have to specify a <a href="stream-configuration.html#optional-configuration-parameters" rel="stylesheet">metric reporter</a> (see `IStreamConfig.MetricsReporter`) to export all metrics to a different layer (Prometheus, Elastic, ...). This reporter will be triggered every `IStreamConfig.MetricsIntervalMs` (minimium and default : 30 seconds).
 
-Streamiz provide an implementation for Prometheus. See `Streamiz.Kafka.Net.Metrics.Prometheus` package. 
-You can use extension method to specify prometheus port and some other settings.
+Streamiz provide two implementations :
+- one for Prometheus. See `Streamiz.Kafka.Net.Metrics.Prometheus` package. 
+- an other for OpenTelemetry. See `Streamiz.Kafka.Net.Metrics.OpenTelemetry` package. 
+
+Each package provide an extension method to specify settings.
+
+Example with the `Prometheus` exporter :
 
 ``` csharp
 var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -597,3 +602,70 @@ Only main consumer and producer librdkafka statistics are exposed for now in Str
 | Metric name      | Description | Tags          |
 | :---             |    :----:   |          ---: |
 | <span style="color: #06389C; font-weight: bold;">partition-last-message-id-acked</span>        | Last acked internal message id (idempotent producer)        | librdkafka_client_id, application_id,partition_id  |
+
+### External Thread metrics
+
+All the following metrics have a recording level of `INFO`.
+
+**Sensor : internal.[THREAD_ID].sensor.commit, Type : stream-thread-metrics**
+
+| Metric name      | Description | Tags          |
+| :---             |    :----:   |          ---: |
+| <span style="color: #06389C; font-weight: bold;">commit-total</span>        | The total number of calls to commit        | thread_id  |
+| <span style="color: #06389C; font-weight: bold;">commit-rate</span>        | The average per-second number of calls to commit       | thread_id  |
+| <span style="color: #06389C; font-weight: bold;">commit-latency-avg</span>        | The average commit latency       | thread_id  |
+| <span style="color: #06389C; font-weight: bold;">commit-latency-max</span>        | The maximum commit latency       | thread_id  |
+
+**Sensor : internal.[THREAD_ID].sensor.poll, Type : stream-thread-metrics**
+
+| Metric name      | Description | Tags          |
+| :---             |    :----:   |          ---: |
+| <span style="color: #06389C; font-weight: bold;">poll-total</span>        | The total number of calls to poll        | thread_id  |
+| <span style="color: #06389C; font-weight: bold;">poll-rate</span>        | The average per-second number of calls to poll       | thread_id  |
+| <span style="color: #06389C; font-weight: bold;">poll-latency-avg</span>        | The average poll latency       | thread_id  |
+| <span style="color: #06389C; font-weight: bold;">poll-latency-max</span>        | The maximum poll latency       | thread_id  |
+
+**Sensor : internal.[THREAD_ID].sensor.process-rate, Type : stream-thread-metrics**
+
+| Metric name      | Description | Tags          |
+| :---             |    :----:   |          ---: |
+| <span style="color: #06389C; font-weight: bold;">process-rate-rate</span>        | The average per-second number of calls to process        | thread_id  |
+| <span style="color: #06389C; font-weight: bold;">process-rate-total</span>       | The total number of calls to process       | thread_id  |
+
+**Sensor : internal.[THREAD_ID].sensor.process-latency, Type : stream-thread-metrics**
+
+| Metric name      | Description | Tags          |
+| :---             |    :----:   |          ---: |
+| <span style="color: #06389C; font-weight: bold;">process-latency-avg</span>        | The average process latency        | thread_id  |
+| <span style="color: #06389C; font-weight: bold;">process-latency-max</span>       | The maximum process latency       | thread_id  |
+
+### External Task metrics
+
+All the following metrics have a recording level of `DEBUG`.
+
+**Sensor : internal.[THREAD_ID].task.[TASK_ID].sensor.process-latency, Type : stream-task-metrics**
+
+| Metric name      | Description | Tags          |
+| :---             |    :----:   |          ---: |
+| <span style="color: #06389C; font-weight: bold;">process-latency-avg</span>        | The average latency of calls to process        | thread_id,task_id  |
+| <span style="color: #06389C; font-weight: bold;">process-latency-max</span>       | The maximum latency of calls to process        | thread_id,task_id  |
+
+**Sensor : internal.[THREAD_ID].task.[TASK_ID].sensor.process, Type : stream-task-metrics**
+
+| Metric name      | Description | Tags          |
+| :---             |    :----:   |          ---: |
+| <span style="color: #06389C; font-weight: bold;">process-rate</span>        | The average number of calls to process per second        | thread_id,task_id  |
+| <span style="color: #06389C; font-weight: bold;">process-total</span>       | The total number of calls to process        | thread_id,task_id  |
+
+**Sensor : internal.[THREAD_ID].task.[TASK_ID].sensor.dropped-records, Type : stream-task-metrics**
+
+| Metric name      | Description | Tags          |
+| :---             |    :----:   |          ---: |
+| <span style="color: #06389C; font-weight: bold;">dropped-records-rate</span>        | The average number of dropped records per second        | thread_id,task_id  |
+| <span style="color: #06389C; font-weight: bold;">dropped-records-total</span>       | The total number of dropped records        | thread_id,task_id  |
+
+**Sensor : internal.[THREAD_ID].task.[TASK_ID].sensor.active-buffer-count, Type : stream-task-metrics**
+
+| Metric name      | Description | Tags          |
+| :---             |    :----:   |          ---: |
+| <span style="color: #06389C; font-weight: bold;">active-buffer-count</span>        | The count of buffered records that are polled from consumer and not yet processed for this active task        | thread_id,task_id  |

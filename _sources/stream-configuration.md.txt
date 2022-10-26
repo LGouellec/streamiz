@@ -276,7 +276,7 @@ Delay between two invocations of `MetricsReporter()`. The minimum and default va
 
 The reporter expose a list of sensors throw by a stream thread every `MetricsIntervalMs` This reporter has the responsibility to export sensors and metrics into another platform (default: empty).
 
-Streamiz provide one reporter for Prometheus (see `Streamiz.Kafka.Net.Metrics.Prometheus` package).
+Streamiz provide multiple reporters (see `Streamiz.Kafka.Net.Metrics.Prometheus` and `Streamiz.Kafka.Net.Metrics.OpenTelemetry`). You can easily implement your own reporter and publish your metrics inside one another system.
 
 ### ExposeLibrdKafkaStats
 

@@ -22,7 +22,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Statefull processors" href="statefull-processors.html" />
-    <link rel="prev" title="Configuring a Stream Application" href="stream-configuration.html" /> 
+    <link rel="prev" title="Threading model" href="threading-model.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -44,6 +44,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stream-configuration.html">Configuring a Stream Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="threading-model.html">Threading model</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Stateless processors</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#branch">Branch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#filter">Filter</a></li>
@@ -60,12 +61,21 @@
 <li class="toctree-l2"><a class="reference internal" href="#selectkey">SelectKey</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#table-to-steam">Table to Steam</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#repartition">Repartition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mapasync">MapAsync</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mapvaluesasync">MapValuesAsync</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#flatmapasync">FlatMapAsync</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#flatmapvaluesasync">FlatMapValuesAsync</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#foreachasync">ForeachAsync</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#process">Process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#transform">Transform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#transformvalues">TransformValues</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="statefull-processors.html">Statefull processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stores.html">State stores</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tology-test-driver.html">Test topology driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="monitoring.html">Monitoring Stream Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async-processing.html">Asynchronous processing</a></li>
 </ul>
 
         </div>
@@ -190,7 +200,7 @@
 <p>You would use foreach to cause side effects based on the input data (similar to peek) and then stop further processing of the input data (unlike peek, which is not a terminal operation).</p>
 <p>Note on processing guarantees: Any side effects of an action (such as writing to external systems) are not trackable by Kafka, which means they will typically not benefit from Kafka’s processing guarantees.</p>
 <ul class="simple">
-<li><p>IKGroupedStream  → IKTable</p></li>
+<li><p>IKStream → void</p></li>
 </ul>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
 
@@ -315,13 +325,181 @@
 </pre></div>
 </div>
 </section>
+<section id="mapasync">
+<h2>MapAsync<a class="headerlink" href="#mapasync" title="Permalink to this heading">¶</a></h2>
+<p>Takes one record and produces one record. You can modify the record key and value, including their types.This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.</p>
+<p>Use cases : Enrichment data from HTTP Api, Database SQL or Nosql, etc …</p>
+<ul class="simple">
+<li><p>IKStream → IKStream</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+
+<span class="c1">// We create a new record keyvalue, with the upper value to key and value</span>
+<span class="n">stream</span><span class="p">.</span><span class="n">MapAsync</span><span class="p">(</span><span class="w"></span>
+<span class="w">        </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="n">record</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"></span>
+<span class="w">            </span><span class="k">await</span><span class="w"> </span><span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">KeyValuePair</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;(</span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span><span class="w"> </span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">)),</span><span class="w"></span>
+<span class="w">        </span><span class="n">RetryPolicy</span><span class="p">.</span><span class="n">NewBuilder</span><span class="p">().</span><span class="n">NumberOfRetry</span><span class="p">(</span><span class="m">10</span><span class="p">).</span><span class="n">Build</span><span class="p">());</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="mapvaluesasync">
+<h2>MapValuesAsync<a class="headerlink" href="#mapvaluesasync" title="Permalink to this heading">¶</a></h2>
+<p>Takes one record and produces one record, while retaining the key of the original record. You can modify the record value and the value type.</p>
+<p>This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.</p>
+<p>Use cases : Enrichment data from HTTP Api, Database SQL or Nosql, etc …</p>
+<ul class="simple">
+<li><p>IKStream → IKStream</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+
+<span class="c1">// New value type =&gt; Int32 which is the length of string value</span>
+<span class="n">stream</span><span class="p">.</span><span class="n">MapValuesAsync</span><span class="p">(</span><span class="w"></span>
+<span class="w">        </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="n">record</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"></span>
+<span class="w">            </span><span class="k">await</span><span class="w"> </span><span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">Length</span><span class="p">),</span><span class="w"></span>
+<span class="w">        </span><span class="n">RetryPolicy</span><span class="p">.</span><span class="n">NewBuilder</span><span class="p">().</span><span class="n">NumberOfRetry</span><span class="p">(</span><span class="m">10</span><span class="p">).</span><span class="n">Build</span><span class="p">());</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="flatmapasync">
+<h2>FlatMapAsync<a class="headerlink" href="#flatmapasync" title="Permalink to this heading">¶</a></h2>
+<p>Takes one record and produces zero, one, or more records. You can modify the record keys and values, including their types.</p>
+<p>This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.</p>
+<p>Use cases : Enrichment data from HTTP Api, Database SQL or Nosql, etc …</p>
+<ul class="simple">
+<li><p>IKStream → IKStream</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+
+<span class="c1">// Here, we generate two output records for each input record.</span>
+<span class="c1">// We also change the key and value types.</span>
+<span class="c1">// Example: (&quot;KEY1&quot;, &quot;co&quot;) -&gt; (&quot;KEY1&quot;, c), (&quot;KEY1&quot;, o)</span>
+<span class="n">stream</span><span class="w"></span>
+<span class="w">   </span><span class="p">.</span><span class="n">FlatMapAsync</span><span class="p">(</span><span class="w"></span>
+<span class="w">        </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="n">record</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"></span>
+<span class="w">            </span><span class="k">await</span><span class="w"> </span><span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">ToCharArray</span><span class="p">().</span><span class="n">Select</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">KeyValuePair</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="kt">char</span><span class="p">&gt;(</span><span class="n">record</span><span class="p">.</span><span class="n">Key</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">))),</span><span class="w"></span>
+<span class="w">        </span><span class="n">RetryPolicy</span><span class="p">.</span><span class="n">NewBuilder</span><span class="p">().</span><span class="n">NumberOfRetry</span><span class="p">(</span><span class="m">10</span><span class="p">).</span><span class="n">Build</span><span class="p">());</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="flatmapvaluesasync">
+<h2>FlatMapValuesAsync<a class="headerlink" href="#flatmapvaluesasync" title="Permalink to this heading">¶</a></h2>
+<p>Takes one record and produces zero, one, or more records, while retaining the key of the original record. You can modify the record values and the value type.</p>
+<p>This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.</p>
+<p>Use cases : Enrichment data from HTTP Api, Database SQL or Nosql, etc …</p>
+<ul class="simple">
+<li><p>IKStream → IKStream</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+
+<span class="c1">// Split a word into characters.</span>
+<span class="n">stream</span><span class="p">..</span><span class="n">FlatMapValuesAsync</span><span class="p">&lt;</span><span class="kt">char</span><span class="p">&gt;(</span><span class="w"></span>
+<span class="w">            </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="n">record</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"></span>
+<span class="w">                </span><span class="k">await</span><span class="w"> </span><span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">ToCharArray</span><span class="p">()),</span><span class="w"></span>
+<span class="w">            </span><span class="n">RetryPolicy</span><span class="p">.</span><span class="n">NewBuilder</span><span class="p">().</span><span class="n">NumberOfRetry</span><span class="p">(</span><span class="m">10</span><span class="p">).</span><span class="n">Build</span><span class="p">());</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="foreachasync">
+<h2>ForeachAsync<a class="headerlink" href="#foreachasync" title="Permalink to this heading">¶</a></h2>
+<p>Perform an asynchronous action on each record of a stream. Note that this is a terminal operation that returns void. This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.</p>
+<p>Use cases : Push data asynchronously into a sink system like Database, HTTP Api, JMS Broker, etc ..</p>
+<ul class="simple">
+<li><p>IKStream → void</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+
+<span class="c1">// try to insert new items into a mongoDb collection</span>
+<span class="n">stream</span><span class="p">..</span><span class="n">ForeachAsync</span><span class="p">(</span><span class="w"></span>
+<span class="w">                    </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="n">record</span><span class="p">,</span><span class="w"> </span><span class="n">_</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"></span>
+<span class="w">                    </span><span class="p">{</span><span class="w"></span>
+<span class="w">                        </span><span class="k">await</span><span class="w"> </span><span class="n">database</span><span class="w"></span>
+<span class="w">                            </span><span class="p">.</span><span class="n">GetCollection</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;(</span><span class="s">&quot;adress&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">                            </span><span class="p">.</span><span class="n">InsertOneAsync</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">Person</span><span class="p">()</span><span class="w"></span>
+<span class="w">                            </span><span class="p">{</span><span class="w"></span>
+<span class="w">                                </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">record</span><span class="p">.</span><span class="n">Key</span><span class="p">,</span><span class="w"></span>
+<span class="w">                                </span><span class="n">address</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Address</span><span class="p">()</span><span class="w"></span>
+<span class="w">                                </span><span class="p">{</span><span class="w"></span>
+<span class="w">                                    </span><span class="n">city</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="w"></span>
+<span class="w">                                </span><span class="p">}</span><span class="w"></span>
+<span class="w">                            </span><span class="p">});</span><span class="w"></span>
+<span class="w">                    </span><span class="p">},</span><span class="w"></span>
+<span class="w">                    </span><span class="n">RetryPolicy</span><span class="w"></span>
+<span class="w">                        </span><span class="p">.</span><span class="n">NewBuilder</span><span class="p">()</span><span class="w"></span>
+<span class="w">                        </span><span class="p">.</span><span class="n">NumberOfRetry</span><span class="p">(</span><span class="m">10</span><span class="p">)</span><span class="w"></span>
+<span class="w">                        </span><span class="p">.</span><span class="n">RetryBackOffMs</span><span class="p">(</span><span class="m">100</span><span class="p">)</span><span class="w"></span>
+<span class="w">                        </span><span class="p">.</span><span class="n">RetriableException</span><span class="p">&lt;</span><span class="n">Exception</span><span class="p">&gt;()</span><span class="w"></span>
+<span class="w">                        </span><span class="p">.</span><span class="n">RetryBehavior</span><span class="p">(</span><span class="n">EndRetryBehavior</span><span class="p">.</span><span class="n">SKIP</span><span class="p">)</span><span class="w"></span>
+<span class="w">                        </span><span class="p">.</span><span class="n">Build</span><span class="p">());</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="process">
+<h2>Process<a class="headerlink" href="#process" title="Permalink to this heading">¶</a></h2>
+<p><strong>Terminal operation.</strong> Applies a Processor to each record. <code class="docutils literal notranslate"><span class="pre">Process(...)</span></code> allows you to leverage the Processor API from the DSL.</p>
+<p><strong>Be carefull, if you want interact with an external system.</strong> Please use <code class="docutils literal notranslate"><span class="pre">ForeachAsync</span></code> instead.</p>
+<ul class="simple">
+<li><p>IKStream → void</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamBuilder</span><span class="p">();</span><span class="w"></span>
+<span class="w">            </span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">.</span><span class="n">Process</span><span class="p">(</span><span class="n">ProcessorBuilder</span><span class="w"></span>
+<span class="w">        </span><span class="p">.</span><span class="n">New</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;()</span><span class="w"></span>
+<span class="w">        </span><span class="p">.</span><span class="n">Processor</span><span class="p">((</span><span class="n">record</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">           </span><span class="c1">// what you want ...</span>
+<span class="w">        </span><span class="p">})</span><span class="w"></span>
+<span class="w">        </span><span class="p">.</span><span class="n">Build</span><span class="p">());</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="transform">
+<h2>Transform<a class="headerlink" href="#transform" title="Permalink to this heading">¶</a></h2>
+<p>Applies a Transformer to each record. <code class="docutils literal notranslate"><span class="pre">Transform(..)</span></code> allows you to leverage the Processor API from the DSL.</p>
+<p>Each input record is transformed into zero or one record (similar to the stateless <code class="docutils literal notranslate"><span class="pre">Map</span></code>). The Transformer must return null for zero output. You can modify the record’s key and value, including their types.</p>
+<p><strong>Marks the stream for data re-partitioning:</strong> Applying a grouping or a join after transform will result in re-partitioning of the records. If possible use <code class="docutils literal notranslate"><span class="pre">TransformValues(...)</span></code> instead, which will not cause data re-partitioning.</p>
+<p><strong>Be carefull, if you want interact with an external system.</strong> Please use <code class="docutils literal notranslate"><span class="pre">MapAsync(...),</span> <span class="pre">MapValuesAsync(...),</span> <span class="pre">FlatMapAsync(...)</span> <span class="pre">or</span> <span class="pre">FlatMapValuesAsync(...)</span></code> instead.</p>
+<ul class="simple">
+<li><p>IKStream → IKStream</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamBuilder</span><span class="p">();</span><span class="w"></span>
+<span class="w">            </span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">.</span><span class="n">Transform</span><span class="p">(</span><span class="n">TransformerBuilder</span><span class="w"></span>
+<span class="w">        </span><span class="p">.</span><span class="n">New</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;()</span><span class="w"></span>
+<span class="w">        </span><span class="p">.</span><span class="n">Transformer</span><span class="p">((</span><span class="n">record</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span>
+<span class="w">                </span><span class="n">Record</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;.</span><span class="n">Create</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Key</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span><span class="w"> </span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">()))</span><span class="w"></span>
+<span class="w">        </span><span class="p">.</span><span class="n">Build</span><span class="p">())</span><span class="w"></span>
+<span class="w">    </span><span class="p">.</span><span class="n">To</span><span class="p">(</span><span class="s">&quot;topic-output&quot;</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="transformvalues">
+<h2>TransformValues<a class="headerlink" href="#transformvalues" title="Permalink to this heading">¶</a></h2>
+<p>Applies a Transformer to each record, while retaining the key of the original record (even if you change the key into the output <code class="docutils literal notranslate"><span class="pre">Record</span></code>). <code class="docutils literal notranslate"><span class="pre">TransformValues(..)</span></code> allows you to leverage the Processor API from the DSL.</p>
+<p>Each input record is transformed into zero or one output record (similar to the stateless <code class="docutils literal notranslate"><span class="pre">MapValues</span></code>). The Transformer must return null for zero output. You can modify the record’s  value, including his type.</p>
+<p><code class="docutils literal notranslate"><span class="pre">TransformValues(...)</span></code> is preferable to <code class="docutils literal notranslate"><span class="pre">Transform(...)</span></code> because it will not cause data re-partitioning.</p>
+<ul class="simple">
+<li><p>IKStream → IKStream</p></li>
+</ul>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamBuilder</span><span class="p">();</span><span class="w"></span>
+<span class="w">            </span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">                </span><span class="p">.</span><span class="n">TransformValues</span><span class="p">(</span><span class="n">TransformerBuilder</span><span class="w"></span>
+<span class="w">                    </span><span class="p">.</span><span class="n">New</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;()</span><span class="w"></span>
+<span class="w">                    </span><span class="p">.</span><span class="n">Transformer</span><span class="p">((</span><span class="n">record</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">Record</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;.</span><span class="n">Create</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">()))</span><span class="w"></span>
+<span class="w">                    </span><span class="p">.</span><span class="n">Build</span><span class="p">())</span><span class="w"></span>
+<span class="w">        </span><span class="p">.</span><span class="n">To</span><span class="p">(</span><span class="s">&quot;topic-output&quot;</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="stream-configuration.html" class="btn btn-neutral float-left" title="Configuring a Stream Application" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="threading-model.html" class="btn btn-neutral float-left" title="Threading model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="statefull-processors.html" class="btn btn-neutral float-right" title="Statefull processors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
