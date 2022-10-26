@@ -10,8 +10,8 @@
     <AssemblyOriginatorKeyFile>..\..\key.snk</AssemblyOriginatorKeyFile>
     <StartupObject></StartupObject>
     <PackageVersion>1.4.0-RC1</PackageVersion>
-    <AssemblyVersion>1.4.0-RC1</AssemblyVersion>
-    <FileVersion>1.4.0-RC1</FileVersion>
+    <AssemblyVersion>1.4.0</AssemblyVersion>
+    <FileVersion>1.4.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

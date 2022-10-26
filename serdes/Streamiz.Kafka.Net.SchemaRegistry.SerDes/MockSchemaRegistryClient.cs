@@ -140,15 +140,43 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="avroSchema"></param>
+        /// <param name="normalize"></param>
+        /// <returns></returns>
         public Task<int> RegisterSchemaAsync(string subject, string avroSchema, bool normalize = false)
             => RegisterSchemaAsync(subject, avroSchema);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="schema"></param>
+        /// <param name="normalize"></param>
+        /// <returns></returns>
         public Task<int> RegisterSchemaAsync(string subject, Schema schema, bool normalize = false)
             => RegisterSchemaAsync(subject, schema);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="avroSchema"></param>
+        /// <param name="normalize"></param>
+        /// <returns></returns>
         public Task<int> GetSchemaIdAsync(string subject, string avroSchema, bool normalize = false)
             => GetSchemaIdAsync(subject, avroSchema);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="schema"></param>
+        /// <param name="normalize"></param>
+        /// <returns></returns>
         public Task<int> GetSchemaIdAsync(string subject, Schema schema, bool normalize = false)
             => GetSchemaIdAsync(subject, schema);
 

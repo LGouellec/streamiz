@@ -1,6 +1,7 @@
 #!/bin/bash
 
-tags=("Version" "PackageVersion" "AssemblyVersion" "FileVersion")
+tags=("Version" "PackageVersion")
+tagsAssembly=("AssemblyVersion" "FileVersion")
 files=(
   "core/Streamiz.Kafka.Net.csproj"
   "metrics/Streamiz.Kafka.Net.Metrics.Prometheus/Streamiz.Kafka.Net.Metrics.Prometheus.csproj"
@@ -15,6 +16,15 @@ files=(
 for tag in ${tags[@]}; do
   for file in ${files[@]}; do
   sed -i '' -e "s/<$tag>\(.*\)<\/$tag>/<$tag>$1<\/$tag>/g" $file
+  done
+  echo "$tag done"
+done
+
+for tag in ${tagsAssembly[@]}; do
+  for file in ${files[@]}; do
+  version=$1
+  newVersion="${version//-RC[0-9]*/}" 
+  sed -i '' -e "s/<$tag>\(.*\)<\/$tag>/<$tag>$newVersion<\/$tag>/g" $file
   done
   echo "$tag done"
 done
