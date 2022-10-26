@@ -3,6 +3,9 @@ using System.Security.Cryptography;
 
 namespace Streamiz.Kafka.Net
 {
+    /// <summary>
+    /// Helper random generator
+    /// </summary>
     public static class RandomGenerator
     {
         /// <summary>

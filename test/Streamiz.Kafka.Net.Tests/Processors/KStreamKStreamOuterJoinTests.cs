@@ -78,7 +78,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             
             builder
                 .Stream<string, string>("topic2")
-                .OuterJoin<string, string, StringSerDes>(
+                .OuterJoin<string, string, StringSerDes, StringSerDes>(
                     stream,
                     (s, v) => $"{s}-{v}",
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(5)), props)
@@ -122,7 +122,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     
             builder
                 .Stream<string, string>("topic2")
-                .OuterJoin<string, string, StringSerDes>(
+                .OuterJoin<string, string, StringSerDes, StringSerDes>(
                     stream,
                     new MyJoinerMapper(),
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(5)), props)

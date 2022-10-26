@@ -29,7 +29,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             KStream<K, V0> joinRight,
             IValueJoiner<V, V0, VR> joiner,
             JoinWindowOptions windows,
-            StreamJoinProps<K, V, V0> joined)
+            StreamJoinProps<K, V, V0> joined,
+            ISerDes<VR> otherValueSerdes)
         {
             var named = new Named(joined.Name);
             var joinLeftSuffix = rightOuter ? "-outer-this-join" : "-this-join";
@@ -53,8 +54,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             var leftStoreSupplier = joined.LeftStoreSupplier;
             var rightStoreSupplier = joined.RightStoreSupplier;
 
-            StoreBuilder<IWindowStore<K, V>> leftWindowStore;
-            StoreBuilder<IWindowStore<K, V0>> rightWindowStore;
+            IStoreBuilder<IWindowStore<K, V>> leftWindowStore;
+            IStoreBuilder<IWindowStore<K, V0>> rightWindowStore;
 
             AssertUniqueStoreNames(leftStoreSupplier, rightStoreSupplier);
 
@@ -118,7 +119,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             return new KStream<K, VR>(
                 joinMergeName,
                 joined.KeySerdes,
-                null,
+                otherValueSerdes,
                 allSourceNodes.ToList(),
                 joinNode,
                 builder);
@@ -147,7 +148,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             }
         }
 
-        private StoreBuilder<IWindowStore<K, V>> JoinWindowStoreBuilder<K, V>(string storeName,
+        private IStoreBuilder<IWindowStore<K, V>> JoinWindowStoreBuilder<K, V>(string storeName,
                                                                              JoinWindowOptions windows,
                                                                              ISerDes<K> keySerde,
                                                                              ISerDes<V> valueSerde)

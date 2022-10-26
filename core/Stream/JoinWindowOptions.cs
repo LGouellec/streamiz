@@ -5,7 +5,7 @@ namespace Streamiz.Kafka.Net.Stream
 {
     /// <summary>
     /// The window specifications used for joins.
-    /// A <see cref="JoinWindowOptions"/> instance defines a maximum time difference for a <see cref="IKStream{K, V}.Join{V0, VR, V0S}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> join over two streams, on the same key.
+    /// A <see cref="JoinWindowOptions"/> instance defines a maximum time difference for a <see cref="IKStream{K, V}.Join{V0, VR, V0S, VRS}(IKStream{K, V0}, Func{V, V0, VR}, JoinWindowOptions, StreamJoinProps)"/> join over two streams, on the same key.
     /// In SQL-style you would express this join as :
     /// <para>
     /// SELECT* FROM stream1, stream2

@@ -6,7 +6,6 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 {
     internal class Joined<K, V, VO>
     {
-
         public ISerDes<K> KeySerdes { get; }
         public ISerDes<V> ValueSerdes { get; }
         public ISerDes<VO> OtherValueSerDes { get; }
@@ -17,10 +16,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                         ISerDes<VO> otherValueSerDes,
                         String name)
         {
-            this.KeySerdes = keySerdes;
-            this.ValueSerdes = valueSerdes;
-            this.OtherValueSerDes = otherValueSerDes;
-            this.Name = name;
+            KeySerdes = keySerdes;
+            ValueSerdes = valueSerdes;
+            OtherValueSerDes = otherValueSerDes;
+            Name = name;
         }
     }
 }

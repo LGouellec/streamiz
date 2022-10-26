@@ -4,8 +4,6 @@ using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 using System;
-using Streamiz.Kafka.Net.State.InMemory;
-using Streamiz.Kafka.Net.Table;
 using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
@@ -81,7 +79,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     
             builder
                 .Stream<string, string>("topic2")
-                .Join<string, string, StringSerDes>(
+                .Join<string, string, StringSerDes, StringSerDes>(
                     stream,
                     (s, v) => $"{s}-{v}",
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(5)),
@@ -124,7 +122,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             
             builder
                 .Stream<string, string>("topic2")
-                .Join<string, string, StringSerDes>(
+                .Join<string, string, StringSerDes, StringSerDes>(
                     stream,
                     new MyJoinerMapper(),
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(5)),

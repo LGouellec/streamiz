@@ -5,19 +5,19 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
 {
     internal class AsyncNode<K, V, K1, V1> : StreamGraphNode
     {
-        private class AsyncNodeRequest<K, V> : StreamGraphNode
+        private class AsyncNodeRequest<TK, TV> : StreamGraphNode
         {
             private string SourceName { get; }
-            private ISerDes<K> KeySerdes { get; }
-            private ISerDes<V> ValueSerdes { get; }
+            private ISerDes<TK> KeySerdes { get; }
+            private ISerDes<TV> ValueSerdes { get; }
             private string SinkName { get; }
             private string RepartitionTopic { get; }
 
             public AsyncNodeRequest(
                 string streamGraphNode,
                 string sourceName,
-                ISerDes<K> keySerdes,
-                ISerDes<V> valueSerdes,
+                ISerDes<TK> keySerdes,
+                ISerDes<TV> valueSerdes,
                 string sinkName,
                 string repartitionTopic)
                 : base(streamGraphNode)
@@ -33,28 +33,28 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
             {
                 builder.AddInternalTopic(RepartitionTopic, null);
                 builder.AddSinkOperator(
-                    new StaticTopicNameExtractor<K, V>(RepartitionTopic),
+                    new StaticTopicNameExtractor<TK, TV>(RepartitionTopic),
                     SinkName,
-                    Produced<K, V>.Create(KeySerdes, ValueSerdes),
+                    Produced<TK, TV>.Create(KeySerdes, ValueSerdes),
                     ParentNodeNames());
                 builder.AddSourceOperator(
                     RepartitionTopic,
                     SourceName,
-                    new ConsumedInternal<K, V>(SourceName, KeySerdes, ValueSerdes, new FailOnInvalidTimestamp()),
+                    new ConsumedInternal<TK, TV>(SourceName, KeySerdes, ValueSerdes, new FailOnInvalidTimestamp()),
                     true);
             }
         }
 
-        private class AsyncNodeResponse<K, V, K1, V1> : StreamGraphNode
+        private class AsyncNodeResponse<TK, TV, TK1, TV1> : StreamGraphNode
         {
             public string SourceName { get; }
-            public ProcessorParameters<K, V> ProcessorParameters { get; }
-            public ISerDes<K1> KeySerdes { get; }
-            public ISerDes<V1> ValueSerdes { get; }
+            public ProcessorParameters<TK, TV> ProcessorParameters { get; }
+            public ISerDes<TK1> KeySerdes { get; }
+            public ISerDes<TV1> ValueSerdes { get; }
             public string SinkName { get; }
             public string RepartitionTopic { get; }
 
-            public AsyncNodeResponse(string streamGraphNode, string sourceName, ProcessorParameters<K, V> processorParameters, ISerDes<K1> keySerdes, ISerDes<V1> valueSerdes, string sinkName, string repartitionTopic)
+            public AsyncNodeResponse(string streamGraphNode, string sourceName, ProcessorParameters<TK, TV> processorParameters, ISerDes<TK1> keySerdes, ISerDes<TV1> valueSerdes, string sinkName, string repartitionTopic)
                 : base(streamGraphNode)
             {
                 SourceName = sourceName;
@@ -69,24 +69,24 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
             {
                 builder.AddInternalTopic(RepartitionTopic, null);
                 builder.AddProcessor(ProcessorParameters.ProcessorName, ProcessorParameters.Processor, ParentNodeNames());
-                builder.AddSinkOperator(new StaticTopicNameExtractor<K1, V1>(RepartitionTopic),
+                builder.AddSinkOperator(new StaticTopicNameExtractor<TK1, TV1>(RepartitionTopic),
                         SinkName,
-                        Produced<K1, V1>.Create(KeySerdes, ValueSerdes),
+                        Produced<TK1, TV1>.Create(KeySerdes, ValueSerdes),
                         ProcessorParameters.ProcessorName);
                 builder.AddSourceOperator(
                         RepartitionTopic,
                         SourceName, 
-                        new ConsumedInternal<K1, V1>(SourceName, KeySerdes, ValueSerdes, new FailOnInvalidTimestamp()));
+                        new ConsumedInternal<TK1, TV1>(SourceName, KeySerdes, ValueSerdes, new FailOnInvalidTimestamp()));
             }
 
         }
 
-        private class AsyncNodeRequestVoid<K, V> : StreamGraphNode
+        private class AsyncNodeRequestVoid<TK, TV> : StreamGraphNode
         {
             public string SourceName { get; }
-            public ProcessorParameters<K, V> ProcessorParameters { get; }
-            public ISerDes<K> KeySerdes { get; }
-            public ISerDes<V> ValueSerdes { get; }
+            public ProcessorParameters<TK, TV> ProcessorParameters { get; }
+            public ISerDes<TK> KeySerdes { get; }
+            public ISerDes<TV> ValueSerdes { get; }
             public string RequestTopic { get; }
             public string SinkName { get; }
 
@@ -95,9 +95,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
                 string sourceName,
                 string requestTopic,
                 string sinkName,
-                ProcessorParameters<K, V> processorParameters,
-                ISerDes<K> keySerdes,
-                ISerDes<V> valueSerdes)
+                ProcessorParameters<TK, TV> processorParameters,
+                ISerDes<TK> keySerdes,
+                ISerDes<TV> valueSerdes)
                 : base(streamGraphNode)
             {
                 SourceName = sourceName;
@@ -111,14 +111,14 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
             public override void WriteToTopology(InternalTopologyBuilder builder)
             {
                 builder.AddInternalTopic(RequestTopic, null);
-                builder.AddSinkOperator(new StaticTopicNameExtractor<K, V>(RequestTopic),
+                builder.AddSinkOperator(new StaticTopicNameExtractor<TK, TV>(RequestTopic),
                     SinkName,
-                    Produced<K, V>.Create(KeySerdes, ValueSerdes),
+                    Produced<TK, TV>.Create(KeySerdes, ValueSerdes),
                     ParentNodeNames());
                 builder.AddSourceOperator(
                     RequestTopic,
                     SourceName, 
-                    new ConsumedInternal<K, V>(SourceName, KeySerdes, ValueSerdes, new FailOnInvalidTimestamp()),
+                    new ConsumedInternal<TK, TV>(SourceName, KeySerdes, ValueSerdes, new FailOnInvalidTimestamp()),
                     true);
                 builder.AddProcessor(ProcessorParameters.ProcessorName, ProcessorParameters.Processor, SourceName);
             }

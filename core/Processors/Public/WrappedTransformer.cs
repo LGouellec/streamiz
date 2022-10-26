@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Processors.Public
 {
-    public class WrappedTransformer<K, V, K1, V1> : ITransformer<K, V, K1, V1>
+    internal class WrappedTransformer<K, V, K1, V1> : ITransformer<K, V, K1, V1>
     {
         private readonly Func<Record<K, V>, Record<K1, V1>> transformer;
 

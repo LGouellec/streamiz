@@ -38,11 +38,15 @@ namespace Streamiz.Kafka.Net.State.Internal
         
         private static ConsumeResult<byte[], byte[]> ToTimestampInstance(ConsumeResult<byte[], byte[]> source)
         {
-            var newValue = source.Message.Value == null ? null : ByteBuffer.Build(8 + 4 + source.Message.Value.Length)
-                .PutLong(source.Message.Timestamp.UnixTimestampMs)
-                .PutInt(source.Message.Value.Length)
-                .Put(source.Message.Value)
-                .ToArray();
+            byte[] newValue = null;
+            if (source.Message.Value != null)
+            {
+                using var buffer = ByteBuffer.Build(sizeof(long) + sizeof(int) + source.Message.Value.Length);
+                newValue = buffer.PutLong(source.Message.Timestamp.UnixTimestampMs)
+                    .PutInt(source.Message.Value.Length)
+                    .Put(source.Message.Value)
+                    .ToArray();
+            }
             
             return new ConsumeResult<byte[], byte[]>
             {

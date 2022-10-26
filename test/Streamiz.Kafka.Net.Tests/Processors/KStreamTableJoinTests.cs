@@ -29,7 +29,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("stream")
-                .Join<string, string, StringSerDes>(table, (s, v) => $"{s}-{v}")
+                .Join<string, string, StringSerDes, StringSerDes>(table, (s, v) => $"{s}-{v}")
                 .To("output");
 
             Topology t = builder.Build();
@@ -63,7 +63,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("stream")
-                .Join<string, string, StringSerDes>(table, new MyJoinValueMapper())
+                .Join<string, string, StringSerDes, StringSerDes>(table, new MyJoinValueMapper())
                 .To("output");
 
             Topology t = builder.Build();

@@ -24,8 +24,8 @@ namespace Streamiz.Kafka.Net.SerDes.Internal
             byte[] oldValueBytes = innerSerdes.Serialize(data.OldValue, context);
             byte[] newValueBytes = innerSerdes.Serialize(data.NewValue, context);
 
-            return ByteBuffer
-                .Build(CalculateCapacity(oldValueBytes, newValueBytes))
+            using var buffer = ByteBuffer.Build(CalculateCapacity(oldValueBytes, newValueBytes));
+            return buffer
                 .PutInt(oldValueBytes?.Length ?? 0)
                 .Put(oldValueBytes)
                 .PutInt(newValueBytes?.Length ?? 0)
@@ -35,17 +35,19 @@ namespace Streamiz.Kafka.Net.SerDes.Internal
 
         public override Change<V> Deserialize(byte[] data, SerializationContext context)
         {
-            var byteBuffer = ByteBuffer.Build(data);
-            var oldValueLength = byteBuffer.GetInt(0);
-            var oldBytes = oldValueLength > 0 ? byteBuffer.GetBytes(SIZE_INT32, oldValueLength) : null;
-            var newValueLength = byteBuffer.GetInt(SIZE_INT32 + oldValueLength);
-            var newBytes = newValueLength > 0
-                ? byteBuffer.GetBytes(SIZE_INT32 + oldValueLength + SIZE_INT32, newValueLength)
-                : null;
-
-            return new Change<V>(
-                innerSerdes.Deserialize(oldBytes, context),
-                innerSerdes.Deserialize(newBytes, context));
+            using var byteBuffer = ByteBuffer.Build(data);
+            {
+                var oldValueLength = byteBuffer.GetInt(0);
+                var oldBytes = oldValueLength > 0 ? byteBuffer.GetBytes(SIZE_INT32, oldValueLength) : null;
+                var newValueLength = byteBuffer.GetInt(SIZE_INT32 + oldValueLength);
+                var newBytes = newValueLength > 0
+                    ? byteBuffer.GetBytes(SIZE_INT32 + oldValueLength + SIZE_INT32, newValueLength)
+                    : null;
+                
+                return new Change<V>(
+                    innerSerdes.Deserialize(oldBytes, context),
+                    innerSerdes.Deserialize(newBytes, context));
+            }
         }
 
         public override void Initialize(SerDesContext context)
