@@ -16,7 +16,7 @@ namespace Streamiz.Kafka.Net.SerDes.Internal
             this.innerSerdes = innerSerdes;
         }
 
-        internal int CalculateCapacity(byte[] old, byte[] @new) =>
+        private int CalculateCapacity(byte[] old, byte[] @new) =>
             SIZE_INT32 + (old?.Length ?? 0) + SIZE_INT32 + (@new?.Length ?? 0);
 
         public override byte[] Serialize(Change<V> data, SerializationContext context)

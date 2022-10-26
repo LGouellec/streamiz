@@ -8,6 +8,7 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
+using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -33,12 +34,13 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var serdes = new StringSerDes();
 
             config.ApplicationId = "test-reduce";
-
+            config.UseRandomRocksDbConfigForTest();
+            
             var builder = new StreamBuilder();
             Materialized<string, int, IKeyValueStore<Bytes, byte[]>> m = null;
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .MapValues((v) => v.Length)
                 .GroupBy((k,v) => KeyValuePair.Create(k.ToUpper(),v))
                 .Reduce((v1, v2) => Math.Max(v1, v2), (v1, v2) => v2, m);
@@ -52,6 +54,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     input.PipeInput("test", "1");
                 }
             });
+            config.RemoveRocksDbFolderForTest();
         }
 
         [Test]
@@ -63,12 +66,10 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var builder = new StreamBuilder();
             Materialized<string, int, IKeyValueStore<Bytes, byte[]>> m =
-                Materialized<string, int, IKeyValueStore<Bytes, byte[]>>
-                    .Create("reduce-store")
-                    .With(null, null);
+                InMemory.As<string, int>("reduce-store");
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .MapValues((v) => v.Length)
                 .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
                 .Reduce((v1, v2) => Math.Max(v1, v2), (v1,v2) => v2, m)
@@ -95,14 +96,12 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var builder = new StreamBuilder();
             Materialized<string, int, IKeyValueStore<Bytes, byte[]>> m =
-                Materialized<string, int, IKeyValueStore<Bytes, byte[]>>
-                    .Create("reduce-store")
-                    .With(null, null);
+                InMemory.As<string, int>("reduce-store");
 
             Assert.Throws<ArgumentNullException>(() =>
             {
                 builder
-                    .Table<string, string>("topic")
+                    .Table<string, string>("topic", InMemory.As<string, string>())
                     .MapValues((v) => v.Length)
                     .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
                     .Reduce((Reducer<int>)null, (Reducer<int>)null, m);
@@ -118,7 +117,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             var table = builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .MapValues(v => v.Length)
                 .GroupBy<string, int, StringSerDes, Int32SerDes>((k, v) => KeyValuePair.Create(k.ToUpper(), v));
 
@@ -162,7 +161,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
                    .Reduce(
                         (v1, v2) => v2.Length > v1.Length ? v2 : v1,
@@ -194,7 +193,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
                .Reduce(new MyAddReducer(), new MySubReducer(), InMemory.As<string, string>("reduce-store"));
 
@@ -223,7 +222,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
                .Reduce(
                     new MyAddReducer(), new MySubReducer(),
@@ -257,7 +256,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy((k, v) => KeyValuePair.Create(k?.ToUpper(), v))
                .Reduce(
                     new MyAddReducer(), new MySubReducer(),
@@ -307,9 +306,12 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
-                .Reduce((v1, v2) => v2, (v1, v2) => v2);
+                .Reduce(
+                    (v1, v2) => v2,
+                    (v1, v2) => v2,
+                    InMemory.As<char, string>("reduce-store"));
 
             var topology = builder.Build();
             Assert.Throws<StreamsException>(() =>

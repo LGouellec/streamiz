@@ -12,6 +12,7 @@ using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Table;
+using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -25,7 +26,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var serdes = new StringSerDes();
 
             config.ApplicationId = "test-count";
-
+            config.UseRandomRocksDbConfigForTest();
             var builder = new StreamBuilder();
             Materialized<string, long, IKeyValueStore<Bytes, byte[]>> m = null;
 
@@ -66,6 +67,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var store = task.GetStore(nameStore);
             Assert.IsInstanceOf<ITimestampedKeyValueStore<string, long>>(store);
             Assert.AreEqual(0, (store as ITimestampedKeyValueStore<string, long>).ApproximateNumEntries());
+            config.RemoveRocksDbFolderForTest();
         }
 
         [Test]
@@ -77,9 +79,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var builder = new StreamBuilder();
             Materialized<string, long, IKeyValueStore<Bytes, byte[]>> m =
-                Materialized<string, long, IKeyValueStore<Bytes, byte[]>>
-                    .Create("count-store")
-                    .With(null, null);
+                InMemory.As<string, long>("count-store");
 
             builder
                 .Stream<string, string>("topic")
@@ -174,7 +174,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .Count()
+                .Count(InMemory.As<string, long>("count-store"))
                 .ToStream()
                 .To("output");
 
@@ -201,7 +201,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder
                 .Stream<string, string>("topic")
                 .GroupByKey()
-                .Count("count-01")
+                .Count(InMemory.As<string, long>("count-store"), "count-01")
                 .ToStream()
                 .To("output");
 

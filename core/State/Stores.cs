@@ -17,7 +17,7 @@ namespace Streamiz.Kafka.Net.State
         /// <param name="name">state store name</param>
         /// <returns><see cref="InMemoryKeyValueBytesStoreSupplier"/> supplier</returns>
         public static IKeyValueBytesStoreSupplier DefaultKeyValueStore(string name)
-            => InMemoryKeyValueStore(name);
+            => PersistentKeyValueStore(name);
 
         /// <summary>
         /// Create a persistent key/value store.
@@ -44,7 +44,7 @@ namespace Streamiz.Kafka.Net.State
         /// <param name="segmentInterval">segment interval</param>
         /// <returns><see cref="InMemoryWindowStoreSupplier"/> supplier</returns>
         public static IWindowBytesStoreSupplier DefaultWindowStore(string name, TimeSpan retention, TimeSpan windowSize, long segmentInterval = 3600000)
-            => InMemoryWindowStore(name, retention, windowSize);
+            => PersistentWindowStore(name, retention, windowSize);
 
         /// <summary>
         /// Create a persistent window store. 

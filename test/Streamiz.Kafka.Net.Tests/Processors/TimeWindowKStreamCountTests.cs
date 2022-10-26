@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -36,7 +37,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var serdes = new StringSerDes();
 
             config.ApplicationId = "test-window-count";
-
+            config.UseRandomRocksDbConfigForTest();
+            
             var builder = new StreamBuilder();
             Materialized<string, long, IWindowStore<Bytes, byte[]>> m = null;
 
@@ -79,6 +81,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var store = task.GetStore(nameStore);
             Assert.IsInstanceOf<ITimestampedWindowStore<string, long>>(store);
             Assert.AreEqual(0, (store as ITimestampedWindowStore<string, long>).All().ToList().Count);
+            config.RemoveRocksDbFolderForTest();
         }
 
         [Test]
@@ -91,9 +94,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             Materialized<string, long, IWindowStore<Bytes, byte[]>> m =
-                Materialized<string, long, IWindowStore<Bytes, byte[]>>
-                    .Create("count-store")
-                    .With(null, null);
+                InMemoryWindows.As<string, long>("count-store");
 
             builder
                 .Stream<string, string>("topic")
@@ -131,7 +132,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Stream<string, string>("topic")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(10)))
-                .Count()
+                .Count(InMemoryWindows.As<string, long>("count-store"))
                 .ToStream()
                 .To<StringTimeWindowedSerDes, Int64SerDes>("output");
 
@@ -168,7 +169,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Stream<string, string>("topic")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(10)))
-                .Count("count-01")
+                .Count(InMemoryWindows.As<string, long>("count-store"), "count-01")
                 .ToStream()
                 .To<StringTimeWindowedSerDes, Int64SerDes>("output");
 
@@ -205,7 +206,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Stream<string, string>("topic")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(10)))
-                .Count(Materialized<string, long, IWindowStore<Bytes, byte[]>>.Create("count-store"))
+                .Count(InMemoryWindows.As<string, long>("count-store"))
                 .ToStream()
                 .To<StringTimeWindowedSerDes, Int64SerDes>("output");
 
@@ -256,7 +257,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Stream<string, string>("topic")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(10)))
-                .Count(Materialized<string, long, IWindowStore<Bytes, byte[]>>.Create("count-store"))
+                .Count(InMemoryWindows.As<string, long>("count-store"))
                 .ToStream()
                 .To("output");
 
@@ -280,7 +281,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Stream<string, string>("topic")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromSeconds(1)))
-                .Count()
+                .Count(InMemoryWindows.As<string, long>("count-store"))
                 .ToStream()
                 .To<StringTimeWindowedSerDes, Int64SerDes>("output");
 

@@ -5,6 +5,7 @@ using Streamiz.Kafka.Net.Processors.Public;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Table;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -195,7 +196,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder.Stream<string, string>("topic")
                 .SelectKey((k,v) => v)
                 .GroupByKey()
-                .Count()
+                .Count(InMemory.As<string, long>())
                 .ToStream()
                 .Transform(TransformerBuilder
                     .New<string, long, string, string>()
@@ -233,7 +234,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     .Transformer((record) => Record<string, string>.Create(record.Value, record.Value))
                     .Build())
                 .GroupByKey()
-                .Count()
+                .Count(InMemory.As<string, long>())
                 .ToStream()
                 .MapValues((v) => v.ToString())
                 .To("topic-output");

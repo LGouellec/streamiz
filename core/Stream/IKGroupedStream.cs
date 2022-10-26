@@ -191,7 +191,8 @@ namespace Streamiz.Kafka.Net.Stream
         /// latest (rolling) aggregate for each key. If the aggregate function returns {@code null}, it is then interpreted as
         /// deletion for the key, and future messages of the same key coming from upstream operators
         /// will be handled as newly initialized value.</returns>
-        IKTable<K, VR> Aggregate<VR>(Func<VR> initializer, Func<K, V, VR, VR> aggregator, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<K, VR> Aggregate<VR>(Func<VR> initializer, Func<K, V, VR, VR> aggregator,
+            Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
         /// Aggregate the values of records in this stream by the grouped key.

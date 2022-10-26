@@ -181,7 +181,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var table = builder
                             .Stream<string, string>("test")
                             .GroupByKey()
-                            .Reduce((v1, v2) => v2.Length > v1.Length ? v2 : v1);
+                            .Reduce((v1, v2) => v2.Length > v1.Length ? v2 : v1,
+                                InMemory.As<string, string>("store"));
 
             builder
                 .Stream<string, string>("stream")
@@ -222,7 +223,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var table = builder
                             .Stream<string, string>("test")
                             .GroupByKey()
-                            .Reduce((v1, v2) => v2.Length > v1.Length ? v2 : v1);
+                            .Reduce((v1, v2) => v2.Length > v1.Length ? v2 : v1,
+                                InMemory.As<string, string>("store"));
 
             builder
                 .Stream<string, string>("stream")

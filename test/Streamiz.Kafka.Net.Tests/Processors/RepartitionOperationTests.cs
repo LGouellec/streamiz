@@ -6,6 +6,7 @@ using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Table;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -25,7 +26,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Stream<string, string>("topic")
                 .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v))
                 .GroupByKey()
-                .Count()
+                .Count(InMemory.As<string, long>())
                 .ToStream()
                 .To("output");
 
@@ -59,7 +60,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Stream<string, string>("topic")
                 .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v))
                 .GroupByKey()
-                .Count()
+                .Count(InMemory.As<string, long>())
                 .ToStream()
                 .To("output");
 
@@ -99,10 +100,17 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             
             IKStream<string, string> stream2 = builder.Stream<string, string>("topic2");
 
+            var props = StreamJoinProps.With<string, string, string>(
+                Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("join-store-1", TimeSpan.FromDays(1),
+                    TimeSpan.FromMinutes(1)),
+                Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("join-store-2", TimeSpan.FromDays(1),
+                    TimeSpan.FromMinutes(1))
+                );
+            
             stream1.Join(stream2,
                     (v1, v2) => $"{v1}-{v2}",
-                    JoinWindowOptions.Of(TimeSpan.FromMinutes(1)),
-                    StreamJoinProps.As<string, string, string>("join-store"))
+                    JoinWindowOptions.Of(TimeSpan.FromSeconds(30)),
+                    props)
                 .To("output");
                 
             Topology t = builder.Build();
@@ -142,7 +150,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Stream<string, string>("topic")
                 .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v))
                 .GroupByKey()
-                .Count()
+                .Count(InMemory.As<string, long>())
                 .ToStream()
                 .To("output");
 
@@ -168,7 +176,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
         
         [Test]
-        public void RepartitionInternalTopicOnCascace()
+        public void RepartitionInternalTopicOnCascade()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
@@ -177,7 +185,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             
             StreamBuilder builder = new StreamBuilder();
 
-            var table = builder.Table<string, string>("input-table");
+            var table = builder.Table<string, string>("input-table", InMemory.As<string, string>());
             
             builder
                 .Stream<string, string>("topic")

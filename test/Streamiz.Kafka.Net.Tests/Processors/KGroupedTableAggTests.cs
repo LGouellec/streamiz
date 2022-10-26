@@ -11,6 +11,7 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
+using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -67,12 +68,13 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var serdes = new StringSerDes();
 
             config.ApplicationId = "test-agg";
+            config.UseRandomRocksDbConfigForTest();
 
             var builder = new StreamBuilder();
             Materialized<string, long, IKeyValueStore<Bytes, byte[]>> m = null;
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
                 .Aggregate(() => 0L, (k, v, agg) => agg + 1, (k, v, agg) => agg, m);
 
@@ -85,6 +87,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     input.PipeInput("test", "1");
                 }
             });
+            config.RemoveRocksDbFolderForTest();
         }
 
         [Test]
@@ -96,12 +99,10 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var builder = new StreamBuilder();
             Materialized<string, long, IKeyValueStore<Bytes, byte[]>> m =
-                Materialized<string, long, IKeyValueStore<Bytes, byte[]>>
-                    .Create("agg-store")
-                    .With(null, null);
+                InMemory.As<string, long>("agg-store");
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
                 .Aggregate(() => 0, (k, v, agg) => agg + 1, (k, v, agg) => agg, m)
                 .ToStream()
@@ -127,14 +128,12 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var builder = new StreamBuilder();
             Materialized<string, int, IKeyValueStore<Bytes, byte[]>> m =
-                Materialized<string, int, IKeyValueStore<Bytes, byte[]>>
-                    .Create("reduce-store")
-                    .With(null, null);
+                InMemory.As<string, int>("reduce-store");
 
             Assert.Throws<ArgumentNullException>(() =>
             {
                 builder
-                    .Table<string, string>("topic")
+                    .Table<string, string>("topic", InMemory.As<string, string>())
                     .MapValues((v) => v.Length)
                     .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
                     .Aggregate((Initializer<int>)null, (Aggregator<string, int, int>)null, (Aggregator<string,int,int>)null, m);
@@ -150,7 +149,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             var table = builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v));
 
             table.Count(InMemory.As<string, long>("count-store"));
@@ -209,11 +208,12 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-agg";
-
+            config.UseRandomRocksDbConfigForTest();
+            
             var builder = new StreamBuilder();
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
                 .Aggregate<Dictionary<char, int>, DictionarySerDes>(
                     () => new Dictionary<char, int>(),
@@ -247,11 +247,13 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
                 var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("KTABLE-AGGREGATE-STATE-STORE-0000000005");
                 Assert.IsNotNull(store);
-                Assert.AreEqual(1, store.ApproximateNumEntries());
+                
                 var el = store.Get("TEST");
                 Assert.IsNotNull(el);
                 Assert.AreEqual(testExpected, el);
             }
+
+            config.RemoveRocksDbFolderForTest();
         }
 
         [Test]
@@ -259,11 +261,11 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-agg";
-
+            config.UseRandomRocksDbConfigForTest();
             var builder = new StreamBuilder();
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
                 .Aggregate<Dictionary<char, int>, DictionarySerDes>(
                     new MyInitializer(),
@@ -286,11 +288,13 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
                 var store = driver.GetKeyValueStore<string, Dictionary<char, int>>("KTABLE-AGGREGATE-STATE-STORE-0000000005");
                 Assert.IsNotNull(store);
-                Assert.AreEqual(1, store.ApproximateNumEntries());
+                
                 var el = store.Get("TEST");
                 Assert.IsNotNull(el);
                 Assert.AreEqual(testExpected, el);
             }
+
+            config.RemoveRocksDbFolderForTest();
         }
 
         [Test]
@@ -302,7 +306,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
                 .Aggregate(
                     () => 0L,
@@ -351,9 +355,13 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder
-                .Table<string, string>("topic")
+                .Table<string, string>("topic", InMemory.As<string, string>())
                 .GroupBy((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
-                .Aggregate(() => 0L, (k, v, agg) => agg + 1, (k, v, agg) => agg);
+                .Aggregate(
+                    () => 0L, 
+                    (k, v, agg) => agg + 1,
+                    (k, v, agg) => agg,
+                    InMemory.As<char, long>());
 
             var topology = builder.Build();
             Assert.Throws<StreamsException>(() =>

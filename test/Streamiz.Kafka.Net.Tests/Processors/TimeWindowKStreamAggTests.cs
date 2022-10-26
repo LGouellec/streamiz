@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Tests.Helpers;
 
 
 namespace Streamiz.Kafka.Net.Tests.Processors
@@ -37,7 +38,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var serdes = new StringSerDes();
 
             config.ApplicationId = "test-window-count";
-
+            config.UseRandomRocksDbConfigForTest();
+            
             var builder = new StreamBuilder();
             Materialized<string, int, IWindowStore<Bytes, byte[]>> m = null;
 
@@ -71,6 +73,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 null, new MockChangelogRegister(), new StreamMetricsRegistry());
             task.GroupMetadata = consumer as SyncConsumer;
             Assert.Throws<StreamsException>(() => task.InitializeStateStores());
+            config.RemoveRocksDbFolderForTest();
         }
 
         [Test]
@@ -83,9 +86,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             Materialized<string, int, IWindowStore<Bytes, byte[]>> m =
-                Materialized<string, int, IWindowStore<Bytes, byte[]>>
-                    .Create("count-store")
-                    .With(null, null);
+                InMemoryWindows.As<string, int>("count-store");
 
             builder
                 .Stream<string, string>("topic")
@@ -121,9 +122,10 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .Stream<string, string>("topic")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(20000))
-                .Aggregate<int, Int32SerDes>(
+                .Aggregate(
                         () => 0,
-                        (k, v, agg) => Math.Max(v.Length, agg))
+                        (k, v, agg) => Math.Max(v.Length, agg),
+                        InMemoryWindows.As<string, int>("count-store").WithValueSerdes<Int32SerDes>())
                 .ToStream()
                 .To<StringTimeWindowedSerDes, Int32SerDes>("output");
 

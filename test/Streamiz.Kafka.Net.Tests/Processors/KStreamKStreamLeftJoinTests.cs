@@ -27,12 +27,18 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var stream = builder.Stream<string, string>("topic1");
 
+            var props = StreamJoinProps.With<string, string, string>(
+                Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("join-1-store", TimeSpan.FromDays(1),
+                    TimeSpan.FromSeconds(10)),
+                Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("join-2-store", TimeSpan.FromDays(1),
+                    TimeSpan.FromSeconds(10)));
+            
             builder
                 .Stream<string, string>("topic2")
                 .LeftJoin(
                     stream,
                     (s, v) => $"{s}-{v}",
-                    JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))
+                    JoinWindowOptions.Of(TimeSpan.FromSeconds(5)), props)
                 .To("output-join");
 
             Topology t = builder.Build();
@@ -63,12 +69,18 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var stream = builder.Stream<string, string>("topic1");
 
+            var props = StreamJoinProps.With<string, string, string>(
+                Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("join-1-store", TimeSpan.FromDays(1),
+                    TimeSpan.FromSeconds(10)),
+                Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("join-2-store", TimeSpan.FromDays(1),
+                    TimeSpan.FromSeconds(10)));
+            
             builder
                 .Stream<string, string>("topic2")
                 .LeftJoin<string, string, StringSerDes, StringSerDes>(
                     stream,
                     (s, v) => $"{s}-{v}",
-                    JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))
+                    JoinWindowOptions.Of(TimeSpan.FromSeconds(5)), props)
                 .To("output-join");
 
             Topology t = builder.Build();
@@ -98,13 +110,18 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             StreamBuilder builder = new StreamBuilder();
 
             var stream = builder.Stream<string, string>("topic1");
-
+            var props = StreamJoinProps.With<string, string, string>(
+                Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("join-1-store", TimeSpan.FromDays(1),
+                    TimeSpan.FromSeconds(10)),
+                Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("join-2-store", TimeSpan.FromDays(1),
+                    TimeSpan.FromSeconds(10)));
+            
             builder
                 .Stream<string, string>("topic2")
                 .LeftJoin<string, string, StringSerDes, StringSerDes>(
                     stream,
                     new MyJoinerMapper(),
-                    JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))
+                    JoinWindowOptions.Of(TimeSpan.FromSeconds(5)), props)
                 .To("output-join");
 
             Topology t = builder.Build();
@@ -135,12 +152,18 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var stream = builder.Stream<string, string>("topic1");
 
+            var props = StreamJoinProps.With<string, string, string>(
+                Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("join-1-store", TimeSpan.FromDays(1),
+                    TimeSpan.FromSeconds(10)),
+                Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("join-2-store", TimeSpan.FromDays(1),
+                    TimeSpan.FromSeconds(10)));
+            
             builder
                 .Stream<string, string>("topic2")
                 .LeftJoin(
                     stream,
                     new MyJoinerMapper(),
-                    JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))
+                    JoinWindowOptions.Of(TimeSpan.FromSeconds(5)), props)
                 .To("output-join");
 
             Topology t = builder.Build();
@@ -171,12 +194,18 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var stream = builder.Stream<string, string>("topic1");
 
+            var props = StreamJoinProps.With<string, string, string>(
+                Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("join-1-store", TimeSpan.FromDays(1),
+                    TimeSpan.FromSeconds(10)),
+                Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("join-2-store", TimeSpan.FromDays(1),
+                    TimeSpan.FromSeconds(10)));
+            
             Assert.Throws<ArgumentNullException>(() => builder
                .Stream<string, string>("topic2")
                .LeftJoin(
                    null,
                    new MyJoinerMapper(),
-                   JoinWindowOptions.Of(TimeSpan.FromSeconds(10))));
+                   JoinWindowOptions.Of(TimeSpan.FromSeconds(5)), props));
         }
 
         [Test]
@@ -214,7 +243,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             Assert.Throws<StreamsException>(() => builder
                .Stream<string, string>("topic2")
-               .LeftJoin(stream, new MyJoinerMapper(), JoinWindowOptions.Of(TimeSpan.FromSeconds(10)), joinProps));
+               .LeftJoin(stream, new MyJoinerMapper(), JoinWindowOptions.Of(TimeSpan.FromSeconds(5)), joinProps));
         }
 
         [Test]
@@ -237,7 +266,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             // joinProps use supplier with retention 10 secondes => BAD THING !!
             Assert.Throws<StreamsException>(() => builder
                .Stream<string, string>("topic2")
-               .LeftJoin(stream, new MyJoinerMapper(), JoinWindowOptions.Of(TimeSpan.FromSeconds(10)), joinProps));
+               .LeftJoin(stream, new MyJoinerMapper(), JoinWindowOptions.Of(TimeSpan.FromSeconds(5)), joinProps));
         }
 
         [Test]
@@ -252,12 +281,18 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var stream = builder.Stream<string, string>("topic1");
 
+            var props = StreamJoinProps.With<string, string, string>(
+                Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("join-1-store", TimeSpan.FromDays(1),
+                    TimeSpan.FromSeconds(10)),
+                Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("join-2-store", TimeSpan.FromDays(1),
+                    TimeSpan.FromSeconds(10)));
+                    
             builder
                 .Stream<string, string>("topic2")
                 .LeftJoin(
                     stream,
                     (s, v) => $"{s}-{v}",
-                    JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))
+                    JoinWindowOptions.Of(TimeSpan.FromSeconds(5)), props)
                 .To("output-join");
 
             Topology t = builder.Build();
@@ -286,12 +321,18 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var stream = builder.Stream<string, string>("topic1");
 
+            var props = StreamJoinProps.With<string, string, string>(
+                Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("join-1-store", TimeSpan.FromDays(1),
+                    TimeSpan.FromSeconds(10)),
+                Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("join-2-store", TimeSpan.FromDays(1),
+                    TimeSpan.FromSeconds(10)));
+                    
             builder
                 .Stream<string, string>("topic2")
                 .LeftJoin(
                     stream,
                     (s, v) => $"{s}-{v}",
-                    JoinWindowOptions.Of(TimeSpan.FromSeconds(10)))
+                    JoinWindowOptions.Of(TimeSpan.FromSeconds(5)), props)
                 .To("output-join");
 
             Topology t = builder.Build();
