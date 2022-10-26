@@ -2,7 +2,7 @@
 
 ⚠️ <span style="color:red">**Some things you need to know**</span> ⚠️
 
-- Default state store behavior still in memory (change to rocksdb in 1.4.0 release)
+- From 1.4.0 release, the default state store is a RocksDb state store. (Before 1.4.0, the default state store was a in memory state store.)
 - RocksDb state store is available from 1.2.0 release.
 - By default, a state store is tracked by a changelog topic from 1.2.0 release. (If you don't need, you have to make it explicit).
 
@@ -16,7 +16,7 @@ Usefull with statefull operation like Count, Aggregate, Reduce but also to mater
 Example :
 ``` csharp
 
-builder.Table("test-ktable", InMemory<string, string>.As("test-store"));
+builder.Table("test-ktable", InMemory.As<string, string>("test-store"));
 
 builder
         .Stream<string, string>("topic")
@@ -24,7 +24,7 @@ builder
         .Aggregate(
             () => 0L,
             (k, v, agg) => agg + 1,
-            InMemory<string, long>.As("agg-store").WithValueSerdes<Int64SerDes>()
+            InMemory.As<string, long>("agg-store").WithValueSerdes<Int64SerDes>()
         );
 ```
 
@@ -46,7 +46,7 @@ builder
         .Aggregate(
             () => 0,
             (k, v, agg) => Math.Max(v.Length, agg),
-            InMemoryWindows<string, int>.As("store").WithValueSerdes<Int32SerDes>()
+            InMemoryWindows.As<string, int>("store").WithValueSerdes<Int32SerDes>()
         )
         .ToStream()
         .To<StringTimeWindowedSerDes, Int32SerDes>("output");
@@ -67,7 +67,7 @@ Usefull with statefull operation like Count, Aggregate, Reduce but also to mater
 Example :
 ``` csharp
 
-builder.Table("test-ktable", RocksDb<string, string>.As("test-store"));
+builder.Table("test-ktable", RocksDb.As<string, string>("test-store"));
 
  builder
     .Stream<string, string>("topic")
@@ -75,7 +75,7 @@ builder.Table("test-ktable", RocksDb<string, string>.As("test-store"));
     .Aggregate(
         () => 0L,
         (k, v, agg) => agg + 1,
-        RocksDb<string, long>.As("agg-store").WithValueSerdes<Int64SerDes>()
+        RocksDb.As<string, long>("agg-store").WithValueSerdes<Int64SerDes>()
     );
 ```
 
@@ -98,7 +98,7 @@ builder
         .Aggregate(
             () => 0,
             (k, v, agg) => Math.Max(v.Length, agg),
-            RocksDbWindows<string, int>.As("store").WithValueSerdes<Int32SerDes>()
+            RocksDbWindows.As<string, int>("store").WithValueSerdes<Int32SerDes>()
         )
         .ToStream()
         .To<StringTimeWindowedSerDes, Int32SerDes>("output");
