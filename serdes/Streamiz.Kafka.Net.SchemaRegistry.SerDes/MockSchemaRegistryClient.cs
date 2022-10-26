@@ -110,6 +110,7 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
                 return Task.FromResult((RegisteredSchema)null);
             }
         }
+        
 
         /// <summary>
         /// Gets a schema given a subject and version number.
@@ -138,6 +139,18 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
                 return Task.FromResult((RegisteredSchema)null);
             }
         }
+
+        public Task<int> RegisterSchemaAsync(string subject, string avroSchema, bool normalize = false)
+            => RegisterSchemaAsync(subject, avroSchema);
+
+        public Task<int> RegisterSchemaAsync(string subject, Schema schema, bool normalize = false)
+            => RegisterSchemaAsync(subject, schema);
+
+        public Task<int> GetSchemaIdAsync(string subject, string avroSchema, bool normalize = false)
+            => GetSchemaIdAsync(subject, avroSchema);
+
+        public Task<int> GetSchemaIdAsync(string subject, Schema schema, bool normalize = false)
+            => GetSchemaIdAsync(subject, schema);
 
         /// <summary>
         /// Gets the schema uniquely identified by id.
@@ -262,6 +275,10 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
             return GetLatestSchemaAsync(subject);
         }
 
+        public Task<RegisteredSchema> LookupSchemaAsync(string subject, Schema schema, bool ignoreDeletedSchemas,
+            bool normalize = false)
+            => LookupSchemaAsync(subject, schema, ignoreDeletedSchemas);
+
         /// <summary>
         /// Register an Avro schema or get the schema id if it's already registered.
         /// </summary>
@@ -306,5 +323,7 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
             => RegisterSchemaAsync(subject, schema.SchemaString);
 
         #endregion ISchemaRegistryClient Impl
+        
+        
     }
 }
