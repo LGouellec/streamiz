@@ -27,5 +27,11 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             this.consumer.PartitionsRevoked(partitions);
             wrapped?.PartitionsRevoked(consumer, partitions);
         }
+
+        public void PartitionsLost(IConsumer<byte[], byte[]> consumer, List<TopicPartitionOffset> partitions)
+        {
+            this.consumer.PartitionsRevoked(partitions);
+            wrapped?.PartitionsRevoked(consumer, partitions);
+        }
     }
 }
