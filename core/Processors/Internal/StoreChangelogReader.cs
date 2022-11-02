@@ -317,30 +317,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             
             log.LogDebug($"Added partitions with offsets {string.Join(",", newPartitionsOffsets.Select(c => $"{c.Topic}-{c.Partition}#{c.Offset}"))} " +
                 $"to the restore consumer, current assignment is {string.Join(",", restoreConsumer.Assignment.Select(c => $"{c.Topic}-{c.Partition}"))}");
-
-            // Seek each changelog to current offset (beginning if not present)
-            /*foreach (var metadata in registeredChangelogs)
-            {
-                if (metadata.RestoreEndOffset != Offset.Unset)
-                {
-                    var offset = metadata.StoreMetadata.Offset.HasValue
-                        ? new Offset(metadata.StoreMetadata.Offset.Value + 1)
-                        : new Offset(metadata.BeginOffset.Value);
-                    
-                    restoreConsumer.Seek(
-                        new TopicPartitionOffset(
-                            metadata.StoreMetadata.ChangelogTopicPartition,
-                            offset));
-
-                    if (offset == Offset.Beginning)
-                        log.LogDebug(
-                            $"Start restoring changelog partition {metadata.StoreMetadata.ChangelogTopicPartition} from the beginning offset to end offset {metadata.RestoreEndOffset}.");
-                    else
-                        log.LogDebug(
-                            $"Start restoring changelog partition {metadata.StoreMetadata.ChangelogTopicPartition} from current offset {offset.Value} to end offset {metadata.RestoreEndOffset}.");
-                }
-            }*/
-
+            
             // TODO : call trigger onRestoreStart(...)
         }
 

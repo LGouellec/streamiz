@@ -5,6 +5,7 @@ using System;
 using System.Threading.Tasks;
 using Streamiz.Kafka.Net.Table;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Stream;
 
 namespace sample_stream
@@ -22,6 +23,12 @@ namespace sample_stream
             config.BootstrapServers = "localhost:9092";
             config.AutoOffsetReset = AutoOffsetReset.Earliest;
             config.CommitIntervalMs = 5000;
+            config.Partitioner = Partitioner.Murmur2;
+            config.Logger = LoggerFactory.Create((b) =>
+            {
+                b.SetMinimumLevel(LogLevel.Debug);
+                b.AddLog4Net();
+            });
             
             StreamBuilder builder = new StreamBuilder();
             builder
@@ -29,7 +36,7 @@ namespace sample_stream
                 .FlatMapValues((k, v) => v.Split((" ")).ToList())
                 .SelectKey((k, v) => v)
                 .GroupByKey()
-                .Count(RocksDb.As<string, long>("count-store")
+                .Count(InMemory.As<string, long>("count-store")
                     .WithKeySerdes(new StringSerDes())
                     .WithValueSerdes(new Int64SerDes()));
             
