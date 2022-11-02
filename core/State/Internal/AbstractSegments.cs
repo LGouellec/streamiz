@@ -88,11 +88,11 @@ namespace Streamiz.Kafka.Net.State.Internal
             {
                 var directory = Directory.CreateDirectory(Path.Combine(context.StateDir, name));
                 directory
-                    .GetFiles()
-                    .Select(s => SegmentIdFromSegmentName(s.Name))
-                    .OrderBy(l => l)
-                    .ToList()
-                    .ForEach(segId => GetOrCreateSegment(segId, context));
+                        .GetDirectories()
+                        .Select(s => SegmentIdFromSegmentName(s.Name))
+                        .OrderBy(l => l)
+                        .ToList()
+                        .ForEach(segId => GetOrCreateSegment(segId, context));
             }
             catch (Exception) {
                 throw new ProcessorStateException($"{Path.Combine(context.StateDir, name)}  doesn't exist and cannot be created for segments {name}");
