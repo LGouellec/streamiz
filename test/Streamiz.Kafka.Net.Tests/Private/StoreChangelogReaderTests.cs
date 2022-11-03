@@ -246,5 +246,19 @@ namespace Streamiz.Kafka.Net.Tests.Private
             };
             Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
         }
+        
+        [Test]
+        public void TestBeginOffsetBiggerEndOffset()
+        {
+            ChangelogMetadata metadata = new ChangelogMetadata
+            {
+                RestoreEndOffset = 14,
+                BeginOffset = 15,
+                BufferedRecords = new List<ConsumeResult<byte[], byte[]>>(),
+                StoreMetadata = stateMgr.GetStoreMetadata(new TopicPartition(changelogTopic, 0))
+            };
+            
+          Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
+        }
     }
 }

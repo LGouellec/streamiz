@@ -43,7 +43,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly string threadId;
         private readonly StreamMetricsRegistry metricsRegistry;
         private readonly IDictionary<TopicPartition, ChangelogMetadata> changelogs;
-        private readonly static long DEFAULT_OFFSET_UPDATE_MS = (long)TimeSpan.FromMinutes(5L).TotalMilliseconds;
+        private static readonly long DEFAULT_OFFSET_UPDATE_MS = (long)TimeSpan.FromMinutes(5L).TotalMilliseconds;
         private readonly long pollTimeMs;
         private readonly long maxPollRestoringRecords;
         
@@ -249,7 +249,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 return true;
             
            
-            if(changelogMetadata.CurrentOffset >= endOffset)
+            if(changelogMetadata.CurrentOffset >= endOffset 
+               // changelog topic has a delete policy, begin offset > end offset because the topic is empty #195
+               || changelogMetadata.BeginOffset > changelogMetadata.RestoreEndOffset)
                 return true;
             
             if (!changelogMetadata.BufferedRecords.Any())
@@ -317,30 +319,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             
             log.LogDebug($"Added partitions with offsets {string.Join(",", newPartitionsOffsets.Select(c => $"{c.Topic}-{c.Partition}#{c.Offset}"))} " +
                 $"to the restore consumer, current assignment is {string.Join(",", restoreConsumer.Assignment.Select(c => $"{c.Topic}-{c.Partition}"))}");
-
-            // Seek each changelog to current offset (beginning if not present)
-            /*foreach (var metadata in registeredChangelogs)
-            {
-                if (metadata.RestoreEndOffset != Offset.Unset)
-                {
-                    var offset = metadata.StoreMetadata.Offset.HasValue
-                        ? new Offset(metadata.StoreMetadata.Offset.Value + 1)
-                        : new Offset(metadata.BeginOffset.Value);
-                    
-                    restoreConsumer.Seek(
-                        new TopicPartitionOffset(
-                            metadata.StoreMetadata.ChangelogTopicPartition,
-                            offset));
-
-                    if (offset == Offset.Beginning)
-                        log.LogDebug(
-                            $"Start restoring changelog partition {metadata.StoreMetadata.ChangelogTopicPartition} from the beginning offset to end offset {metadata.RestoreEndOffset}.");
-                    else
-                        log.LogDebug(
-                            $"Start restoring changelog partition {metadata.StoreMetadata.ChangelogTopicPartition} from current offset {offset.Value} to end offset {metadata.RestoreEndOffset}.");
-                }
-            }*/
-
+            
             // TODO : call trigger onRestoreStart(...)
         }
 

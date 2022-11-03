@@ -5,6 +5,7 @@ using System;
 using System.Threading.Tasks;
 using Streamiz.Kafka.Net.Table;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Stream;
 
 namespace sample_stream
@@ -16,14 +17,19 @@ namespace sample_stream
     {
         public static async Task Main(string[] args)
         {
-            var config = new StreamConfig<StringSerDes, StringSerDes>
-            {
-                ApplicationId = "test-app-reproducer",
-                BootstrapServers = "localhost:9092",
-                AutoOffsetReset = AutoOffsetReset.Earliest,
-                CommitIntervalMs = 5000
-            };
 
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-app-reproducer";
+            config.BootstrapServers = "localhost:9092";
+            config.AutoOffsetReset = AutoOffsetReset.Earliest;
+            config.CommitIntervalMs = 5000;
+            config.Partitioner = Partitioner.Murmur2;
+            config.Logger = LoggerFactory.Create((b) =>
+            {
+                b.SetMinimumLevel(LogLevel.Debug);
+                b.AddLog4Net();
+            });
+            
             StreamBuilder builder = new StreamBuilder();
             var stream1 = builder.Stream<string, string>("topic1");
             var stream2 = builder.Stream<string, string>("topic2");
