@@ -257,8 +257,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 BufferedRecords = new List<ConsumeResult<byte[], byte[]>>(),
                 StoreMetadata = stateMgr.GetStoreMetadata(new TopicPartition(changelogTopic, 0))
             };
-          //  storeChangelogReader.Register(new TopicPartition(changelogTopic, 0), stateMgr);
-            var b = storeChangelogReader.HasRestoredToEnd(metadata);
+            
+          Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
         }
     }
 }
