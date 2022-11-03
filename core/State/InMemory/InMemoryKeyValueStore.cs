@@ -1,4 +1,5 @@
-﻿using Streamiz.Kafka.Net.Crosscutting;
+﻿using System.Collections.Concurrent;
+using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.State.Enumerator;
@@ -16,9 +17,9 @@ namespace Streamiz.Kafka.Net.State.InMemory
     public class InMemoryKeyValueStore : IKeyValueStore<Bytes, byte[]>
     {
         private static readonly ILogger log = Logger.GetLogger(typeof(InMemoryKeyValueStore));
-        private BytesComparer bytesComparer = new BytesComparer();
+        private BytesComparer bytesComparer;
         private int size = 0;
-        private readonly IDictionary<Bytes, byte[]> map = new Dictionary<Bytes, byte[]>(new BytesComparer());
+        private readonly ConcurrentDictionary<Bytes, byte[]> map;
 
         /// <summary>
         /// Constructor with the store name
@@ -27,6 +28,8 @@ namespace Streamiz.Kafka.Net.State.InMemory
         public InMemoryKeyValueStore(string name)
         {
             Name = name;
+            bytesComparer = new BytesComparer();
+            map = new(bytesComparer);
         }
 
         /// <summary>
@@ -72,7 +75,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         public virtual byte[] Delete(Bytes key)
         {
             byte[] v = map.ContainsKey(key) ? map[key] : null;
-            size -= map.Remove(key) ? 1 : 0;
+            size -= map.TryRemove(key, out _) ? 1 : 0;
             return v;
         }
 
@@ -149,9 +152,9 @@ namespace Streamiz.Kafka.Net.State.InMemory
         public virtual void Put(Bytes key, byte[] value)
         {
             if (value == null)
-                size -= map.Remove(key) ? 1 : 0;
+                size -= map.TryRemove(key, out byte[] _) ? 1 : 0;
             else
-                size += map.AddOrUpdate(key, value) ? 1 : 0;
+                size += map.TryAddOrUpdate(key, value) ? 1 : 0;
         }
 
         /// <summary>
@@ -190,14 +193,19 @@ namespace Streamiz.Kafka.Net.State.InMemory
                 return new EmptyKeyValueEnumerator<Bytes, byte[]>();
             }
 
-            var submap = (new SortedDictionary<Bytes, byte[]>(map, new BytesComparer())).SubMap(from, to, true, true);
+            var submap = (new SortedDictionary<Bytes, byte[]>(map, bytesComparer)).SubMap(from, to, true, true);
 
             return new InMemoryKeyValueEnumerator(submap, forward);
         }
     
         private IEnumerable<KeyValuePair<Bytes, byte[]>> All(bool forward)
         {
-            var enumerator = forward ? map.GetEnumerator() : map.Reverse().GetEnumerator();
+            var orderdMap = new SortedDictionary<Bytes, byte[]>(map, bytesComparer);
+            
+            var enumerator = forward ? 
+                orderdMap.GetEnumerator() :
+                orderdMap.Reverse().GetEnumerator();
+            
             while (enumerator.MoveNext())
                 yield return enumerator.Current;
         }

@@ -36,8 +36,8 @@ namespace Streamiz.Kafka.Net.Crosscutting
 
         internal static int Compare(byte[] buffer1, byte[] buffer2)
             => Compare(buffer1, 0, buffer1.Length, buffer2, 0, buffer2.Length);
-       
-        internal static int Compare(byte[] buffer1, int offset1, int length1,
+
+        private static int Compare(byte[] buffer1, int offset1, int length1,
                             byte[] buffer2, int offset2, int length2)
         {
             if (buffer1 == buffer2 &&

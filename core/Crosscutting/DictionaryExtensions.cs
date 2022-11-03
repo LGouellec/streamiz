@@ -102,16 +102,15 @@ namespace Streamiz.Kafka.Net.Crosscutting
         /// <typeparam name="K">Key type</typeparam>
         /// <typeparam name="V">Value type</typeparam>
         /// <param name="source">Collection source</param>
-        /// <returns>Return true if the value is added/updated, false otherwise</returns>
+        /// <returns>Return true if the value is added, false otherwise</returns>
         public static bool TryAddOrUpdate<K, V>(this ConcurrentDictionary<K, V> source, K key, V value)
         {
             V valueTmp;
             if (source.ContainsKey(key))
             {
                 if (source.TryGetValue(key, out valueTmp))
-                    return source.TryUpdate(key, value, valueTmp);
-                else
-                    return false;
+                    source.TryUpdate(key, value, valueTmp);
+                return false;
             }   
             else
             {
