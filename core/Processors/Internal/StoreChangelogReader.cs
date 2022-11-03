@@ -43,7 +43,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly string threadId;
         private readonly StreamMetricsRegistry metricsRegistry;
         private readonly IDictionary<TopicPartition, ChangelogMetadata> changelogs;
-        private readonly static long DEFAULT_OFFSET_UPDATE_MS = (long)TimeSpan.FromMinutes(5L).TotalMilliseconds;
+        private static readonly long DEFAULT_OFFSET_UPDATE_MS = (long)TimeSpan.FromMinutes(5L).TotalMilliseconds;
         private readonly long pollTimeMs;
         private readonly long maxPollRestoringRecords;
         
@@ -249,7 +249,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 return true;
             
            
-            if(changelogMetadata.CurrentOffset >= endOffset)
+            if(changelogMetadata.CurrentOffset >= endOffset 
+               // changelog topic has a delete policy, begin offset > end offset because the topic is empty #195
+               || changelogMetadata.BeginOffset > changelogMetadata.RestoreEndOffset)
                 return true;
             
             if (!changelogMetadata.BufferedRecords.Any())

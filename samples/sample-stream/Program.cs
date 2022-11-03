@@ -36,7 +36,7 @@ namespace sample_stream
                 .FlatMapValues((k, v) => v.Split((" ")).ToList())
                 .SelectKey((k, v) => v)
                 .GroupByKey()
-                .Count(InMemory.As<string, long>("count-store")
+                .Count(RocksDb.As<string, long>("count-store")
                     .WithKeySerdes(new StringSerDes())
                     .WithValueSerdes(new Int64SerDes()));
             
