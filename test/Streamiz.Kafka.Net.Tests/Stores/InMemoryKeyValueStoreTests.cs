@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Confluent.Kafka;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
@@ -152,6 +153,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             store.Put(new Bytes(key), value);
             store.Put(new Bytes(key2), value2);
 
+            var l = store.ReverseAll().ToList();
             var enumerator = store.ReverseAll().GetEnumerator();
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual("key2", deserialize(enumerator.Current.Key.Get));

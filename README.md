@@ -37,9 +37,6 @@ has been licensed for use by Streamiz. Streamiz has no
 affiliation with and is not endorsed by The Apache Software Foundation.
 ```
 
-It's allowed to develop .NET applications that transform input Kafka topics into output Kafka topics. 
-It's supported .NET Standard 2.1. It's a rewriting inspired by [Kafka Streams](https://github.com/apache/kafka).
-
 # Try it with Gitpod
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/LGouellec/kafka-streams-dotnet)
@@ -56,11 +53,6 @@ Switch to `producer` terminal and send sentences or word. The sample case is "Co
 
 Switch to `consumer`terminal and check aggregation result
 
-
-# ROADMAP
-
-- 1.4.0 - Async processor, Processor API
-- 1.5.0 - Interactive Queries, Standby Replica
 
 # Documentation
 
@@ -89,7 +81,7 @@ static async System.Threading.Tasks.Task Main(string[] args)
     StreamBuilder builder = new StreamBuilder();
 
     var kstream = builder.Stream<string, string>("stream");
-    var ktable = builder.Table("table", InMemory<string, string>.As("table-store"));
+    var ktable = builder.Table("table", InMemory.As<string, string>("table-store"));
 
     kstream.Join(ktable, (v, v1) => $"{v}-{v1}")
            .To("join-topic");

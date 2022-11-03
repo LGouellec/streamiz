@@ -250,11 +250,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     loadedCheckpoints.Remove(kvStore.Value.ChangelogTopicPartition);
                     log.LogDebug($"Skipping re-initialization of offset from checkpoint for recycled store {kvStore.Value.Store.Name}");
                 }
-
-                if (loadedCheckpoints.Any())
-                {
-                    log.LogWarning($"Some loaded checkpoint offsets cannot find their corresponding state stores: {string.Join(",", loadedCheckpoints.Select(c => $"[{c.Key.Topic}-{c.Key.Partition}]-{c.Value}"))}");
-                }
+            }
+            
+            if (loadedCheckpoints.Any())
+            {
+                log.LogWarning($"Some loaded checkpoint offsets cannot find their corresponding state stores: {string.Join(",", loadedCheckpoints.Select(c => $"[{c.Key.Topic}-{c.Key.Partition}]-{c.Value}"))}");
             }
         }
 

@@ -443,8 +443,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
                 Assert.AreEqual(4, results.Count);
                 Assert.AreEqual("key4", results[0].Key);
-                Assert.AreEqual("key2", results[1].Key);
-                Assert.AreEqual("key3", results[2].Key);
+                Assert.AreEqual("key3", results[1].Key);
+                Assert.AreEqual("key2", results[2].Key);
                 Assert.AreEqual("key1", results[3].Key);
             }
         }
