@@ -8,6 +8,13 @@
         <FileVersion>1.4.0</FileVersion>
         <SignAssembly>true</SignAssembly>
         <AssemblyOriginatorKeyFile>..\..\key.snk</AssemblyOriginatorKeyFile>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <Authors>@LGouellec</Authors>
+        <PackageProjectUrl>https://github.com/LGouellec/kafka-streams-dotnet</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/LGouellec/kafka-streams-dotnet</RepositoryUrl>
+        <PackageTags>kafka kafka-streams kafka-streams-dotnet event-streaming</PackageTags>
+        <PackageReleaseNotes>https://github.com/LGouellec/kafka-streams-dotnet/releases</PackageReleaseNotes>
+        <PackageIconUrl>https://raw.githubusercontent.com/LGouellec/kafka-streams-dotnet/master/resources/logo-kafka-stream-net.png</PackageIconUrl>
     </PropertyGroup>
 
     <ItemGroup>
