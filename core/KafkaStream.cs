@@ -445,8 +445,8 @@ namespace Streamiz.Kafka.Net
                             logger.LogError($"{logPrefix}Error during initializing internal topics : {innerE.Message}");
                             SetState(State.PENDING_SHUTDOWN);
                             SetState(State.ERROR);
-                            return;
                         }
+                        return;
                     }
 
                     RunMiddleware(true, true);

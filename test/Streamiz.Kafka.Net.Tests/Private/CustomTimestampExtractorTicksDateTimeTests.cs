@@ -6,6 +6,7 @@ using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Table;
 using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.Private
@@ -79,9 +80,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 .Map((key, value) => new KeyValuePair<string, ObjectA>(value.Symbol, value))
                 .GroupByKey<StringSerDes, JsonSerDes<ObjectA>>()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(5)))
-                .Aggregate<ObjectB, JsonSerDes<ObjectB>>(
+                .Aggregate(
                     () => new ObjectB(),
-                    (key, ObjectA, ObjectB) => ObjectBHelper.CreateObjectB(key, ObjectA, ObjectB))
+                    (key, ObjectA, ObjectB) => ObjectBHelper.CreateObjectB(key, ObjectA, ObjectB),
+                    InMemoryWindows.As<string, ObjectB>("agg-store")
+                        .WithKeySerdes(new StringSerDes())
+                        .WithValueSerdes(new JsonSerDes<ObjectB>()))
                 .ToStream()
                 .Map((key, ObjectB) => new KeyValuePair<string, ObjectB>(key.Key, ObjectB))
                 .To<StringSerDes, JsonSerDes<ObjectB>>("sink");
