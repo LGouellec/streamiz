@@ -20,24 +20,25 @@ namespace sample_stream
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app-reproducer";
-            config.BootstrapServers = "localhost:9092";
+           config.BootstrapServers = "XXXXXXXXXXX";
+           // config.BootstrapServers = "localhost:9092";
             config.AutoOffsetReset = AutoOffsetReset.Earliest;
-            config.CommitIntervalMs = 5000;
-            config.Partitioner = Partitioner.Murmur2;
+            config.SaslMechanism = SaslMechanism.Plain;
+            config.SecurityProtocol = SecurityProtocol.SaslSsl;
+            config.SaslUsername = "$ConnectionString";
+            config.SaslPassword = "Endpoint=sb://XXXXXXX/;SharedAccessKeyName=XXXXXX;SharedAccessKey=XXXXX";
+            config.SslCaLocation = "./cacert.pem";
+            //config.Debug = "security,broker,protocol";
             config.Logger = LoggerFactory.Create((b) =>
             {
                 b.SetMinimumLevel(LogLevel.Debug);
                 b.AddLog4Net();
             });
-            
+
             StreamBuilder builder = new StreamBuilder();
-            var stream1 = builder.Stream<string, string>("topic1");
-            var stream2 = builder.Stream<string, string>("topic2");
-                
-            stream1.Join(stream2, 
-                (v1,v2) => $"{v1}-{v2}",
-                JoinWindowOptions.Of(TimeSpan.FromHours(1)))
-                .To("topic3");
+            
+            builder.Stream<string, string>("input")
+                .Print(Printed<string, string>.ToOut());
             
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);

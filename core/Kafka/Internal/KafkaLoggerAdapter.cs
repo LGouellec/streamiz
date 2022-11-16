@@ -12,11 +12,11 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
         private readonly ILogger log;
 
         public KafkaLoggerAdapter(IStreamConfig configuration)
-            : this(configuration, Logger.GetLogger(typeof(KafkaLoggerAdapter)))
+            : this(configuration, configuration.Logger.CreateLogger(typeof(KafkaLoggerAdapter)))
         {
         }
 
-        public KafkaLoggerAdapter(IStreamConfig configuration, ILogger log)
+        internal KafkaLoggerAdapter(IStreamConfig configuration, ILogger log)
         {
             this.log = log;
         }

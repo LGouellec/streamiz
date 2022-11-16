@@ -433,9 +433,22 @@ namespace Streamiz.Kafka.Net
                 if (SetState(State.REBALANCING))
                 {
                     logger.LogInformation("{LogPrefix}Starting Streams client with this topology : {Topology}", logPrefix, topology.Describe());
-
-                    await InitializeInternalTopicManagerAsync();
                     
+                    try
+                    {
+                        Task.WaitAll(InitializeInternalTopicManagerAsync());
+                    }
+                    catch (AggregateException e)
+                    {
+                        foreach (var innerE in e.InnerExceptions)
+                        {
+                            logger.LogError($"{logPrefix}Error during initializing internal topics : {innerE.Message}");
+                            SetState(State.PENDING_SHUTDOWN);
+                            SetState(State.ERROR);
+                            return;
+                        }
+                    }
+
                     RunMiddleware(true, true);
                     
                     globalStreamThread?.Start(_cancelSource.Token);
