@@ -98,6 +98,30 @@ static async System.Threading.Tasks.Task Main(string[] args)
 }
 ```
 
+# Compare Kafka Streams vs Streamiz
+
+|                        **_Features_**                        | **Kafka Streams (JAVA) supported** | **Streamiz supported** |                 **Comment**                |
+|:------------------------------------------------------------:|:----------------------------------:|:----------------------:|:------------------------------------------:|
+| Stateless processors                                         |              X                     |         X              |                                            |
+| RocksDb store                                                |              X                     |         X              |                                            |
+| InMemory store                                               |              X                     |         X              |                                            |
+| Transformer, Processor API                                   |              X                     |         X              |                                            |
+| Punctuate                                                    |              X                     |                        | No plan for now                            |
+| KStream-KStream Join                                         |              X                     |         X              |                                            |
+| KTable-KTable Join                                           |              X                     |         X              |                                            |
+| KTable-KTable FK Join                                        |              X                     |                        | Plan for 1.6.0                             |
+| KStream-KTable Join                                          |              X                     |         X              |                                            |
+| KStream-GlobalKTable Join                                    |              X                     |         X              |                                            |
+| KStream Async Processing (external call inside the topology) |                                    |                  X     |  Not supported in Kafka Streams JAVA       |
+| Hopping window                                               |              X                     |         X              |                                            |
+| Tumbling window                                              |              X                     |         X              |                                            |
+| Sliding window                                               |              X                     |                        | No plan for now                            |
+| Session window                                               |              X                     |                        | No plan for now                            |
+| Cache                                                        |              X                     |                        | Plan for 1.5.0                             |
+| Interactive Queries                                          |              X                     |                        | No plan for now                            |
+| State store batch restoring                                  |              X                     |                        | No plan for now                            |
+| Exactly Once (v1 and v2)                                     |              X                     |         X              | EOS V1 supported, EOS V2 not supported yet |
+
 # Contributing
 
 Maintainers:
