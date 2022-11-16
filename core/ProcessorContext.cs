@@ -99,7 +99,7 @@ namespace Streamiz.Kafka.Net
             RecordContext.ChangeTimestamp(ts);
         }
 
-        internal virtual IStateStore GetStateStore(string storeName) => States.GetStore(storeName);
+        public virtual IStateStore GetStateStore(string storeName) => States.GetStore(storeName);
 
         internal void Register(IStateStore store, StateRestoreCallback callback)
         {

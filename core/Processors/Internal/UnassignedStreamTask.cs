@@ -22,7 +22,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             public override void Commit() { }
 
-            internal override IStateStore GetStateStore(string storeName) => null;
+            public override IStateStore GetStateStore(string storeName) => null;
         }
 
         UnassignedStreamTask(string threadId, TaskId id, IEnumerable<TopicPartition> partitions, ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer)
