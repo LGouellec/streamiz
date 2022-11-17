@@ -118,6 +118,7 @@ static async System.Threading.Tasks.Task Main(string[] args)
 | Sliding window                                               |              X                     |                        | No plan for now                            |
 | Session window                                               |              X                     |                        | No plan for now                            |
 | Cache                                                        |              X                     |                        | Plan for 1.5.0                             |
+| Suppress(..)                                                        |              X                     |                        | No plan for now                            |
 | Interactive Queries                                          |              X                     |                        | No plan for now                            |
 | State store batch restoring                                  |              X                     |                        | No plan for now                            |
 | Exactly Once (v1 and v2)                                     |              X                     |         X              | EOS V1 supported, EOS V2 not supported yet |
