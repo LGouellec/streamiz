@@ -26,7 +26,7 @@ namespace Streamiz.Kafka.Net.Processors.Public
                     return null;
                 if (innerTransformer is ICloneableProcessor cloneableProcessor)
                     return (ITransformer<K,V,K1,V1>)cloneableProcessor.Clone();
-                return (ITransformer<K,V,K1,V1>)Activator.CreateInstance(innerTransformer.GetType());
+                return (ITransformer<K,V,K1,V1>)Activator.CreateInstance(innerTransformer.GetType(), TransformerParameters);
             }
             internal set => innerTransformer = value;
         }
@@ -35,5 +35,10 @@ namespace Streamiz.Kafka.Net.Processors.Public
         /// Current state store builder (may be null)
         /// </summary>
         public IStoreBuilder StoreBuilder { get; internal set; }
+
+        /// <summary>
+        /// Transformer parameters 
+        /// </summary>
+        public object[] TransformerParameters { get; internal set; }
     }
 }

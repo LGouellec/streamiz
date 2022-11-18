@@ -38,10 +38,11 @@ namespace Streamiz.Kafka.Net.Processors.Public
         /// </summary>
         /// <typeparam name="Tr">Transformer type class</typeparam>
         /// <returns></returns>
-        public TransformerBuilder<K, V, K1, V1> Transformer<Tr>()
+        public TransformerBuilder<K, V, K1, V1> Transformer<Tr>(params object[] parameters)
             where Tr : ITransformer<K, V, K1, V1>, new()
         {
             transformerSupplier.Transformer = new Tr();
+            transformerSupplier.TransformerParameters = parameters;
             return this;
         }
         

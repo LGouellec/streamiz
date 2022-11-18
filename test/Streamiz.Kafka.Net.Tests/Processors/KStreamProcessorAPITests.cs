@@ -30,8 +30,36 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             }
         }
 
+        private class MyProcessor : IProcessor<string, string>
+        {
+            private readonly List<KeyValuePair<string, string>> data;
+            
+            public MyProcessor()
+            {
+                
+            }
+
+            public MyProcessor(List<KeyValuePair<string, string>> data)
+            {
+                this.data = data;
+            }
+
+            public void Init(ProcessorContext context)
+            {
+                
+            }
+
+            public void Process(Record<string, string> record)
+                => data.Add(new KeyValuePair<string, string>(record.Key, record.Value));
+
+            public void Close()
+            {
+                
+            }
+        }
+
         [Test]
-        public void ProcessorAPILambda()
+        public void ProcessorAPIProcessor()
         {
             var builder = new StreamBuilder();
             var data = new List<KeyValuePair<string, string>>();
@@ -39,10 +67,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder.Stream<string, string>("topic")
                 .Process(ProcessorBuilder
                     .New<string, string>()
-                    .Processor((record) =>
-                    {
-                        data.Add(KeyValuePair.Create(record.Key, record.Value));
-                    })
+                    .Processor<MyProcessor>(data)
                     .Build());
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -63,7 +88,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
         
         [Test]
-        public void ProcessorAPIProcessor()
+        public void ProcessorAPILambda()
         {
             var builder = new StreamBuilder();
             var data = new List<(string, string)>();

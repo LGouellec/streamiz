@@ -24,7 +24,7 @@ namespace Streamiz.Kafka.Net.Processors.Public
                     return null;
                 if (innerProcessor is ICloneableProcessor cloneableProcessor)
                     return (IProcessor<K, V>)cloneableProcessor.Clone();
-                return (IProcessor<K, V>)Activator.CreateInstance(innerProcessor.GetType());
+                return (IProcessor<K, V>)Activator.CreateInstance(innerProcessor.GetType(), ProcessorParameters);
             }
             internal set => innerProcessor = value;
         }
@@ -33,5 +33,10 @@ namespace Streamiz.Kafka.Net.Processors.Public
         /// Current state store builder (may be null)
         /// </summary>
         public IStoreBuilder StoreBuilder { get; internal set; }
+
+        /// <summary>
+        /// Processor parameters
+        /// </summary>
+        public object[] ProcessorParameters { get; internal set; }
     }
 }
