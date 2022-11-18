@@ -94,7 +94,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder.Stream<string, string>("topic")
                 .Transform(TransformerBuilder
                     .New<string, string, string, string>()
-                    .Transformer(new MyTransformer())
+                    .Transformer<MyTransformer>()
                     .Build())
                 .To("topic-output");
 
@@ -125,7 +125,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder.Stream<string, string>("topic")
                 .Transform(TransformerBuilder
                     .New<string, string, string, string>()
-                    .Transformer(new MyStatefulTransformer())
+                    .Transformer<MyStatefulTransformer>()
                     .StateStore(State.Stores.KeyValueStoreBuilder(
                             State.Stores.InMemoryKeyValueStore("my-store"),
                             new StringSerDes(),

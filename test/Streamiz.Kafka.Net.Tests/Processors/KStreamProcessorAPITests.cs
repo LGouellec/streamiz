@@ -10,31 +10,6 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 {
     public class KStreamProcessorAPITests
     {
-        private class MyProcessor : IProcessor<string, string>
-        {
-            private readonly List<(string, string)> data;
-
-            public MyProcessor(List<(string, string)> data)
-            {
-                this.data = data;
-            }
-            
-            public void Init(ProcessorContext context)
-            {
-                
-            }
-
-            public void Process(Record<string, string> record)
-            {
-                data.Add((record.Key, record.Value));
-            }
-
-            public void Close()
-            {
-                
-            }
-        }
-
         private class MyStatefullProcessor : IProcessor<string, string>
         {
             private IKeyValueStore<string, string> store;
@@ -96,7 +71,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder.Stream<string, string>("topic")
                 .Process(ProcessorBuilder
                     .New<string, string>()
-                    .Processor(new MyProcessor(data))
+                    .Processor((r) => data.Add((r.Key, r.Value))) 
                     .Build());
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -124,7 +99,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder.Stream<string, string>("topic")
                 .Process(ProcessorBuilder
                     .New<string, string>()
-                    .Processor(new MyStatefullProcessor())
+                    .Processor<MyStatefullProcessor>()
                     .StateStore(State.Stores.KeyValueStoreBuilder(
                             State.Stores.InMemoryKeyValueStore("my-store"),
                             new StringSerDes(),

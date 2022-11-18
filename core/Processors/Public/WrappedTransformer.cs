@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Processors.Public
 {
-    internal class WrappedTransformer<K, V, K1, V1> : ITransformer<K, V, K1, V1>
+    internal class WrappedTransformer<K, V, K1, V1> : ITransformer<K, V, K1, V1>, ICloneableProcessor
     {
         private readonly Func<Record<K, V>, Record<K1, V1>> transformer;
 
@@ -20,5 +20,8 @@ namespace Streamiz.Kafka.Net.Processors.Public
 
         public void Close()
         { }
+
+        public object Clone()
+            => new WrappedTransformer<K, V, K1, V1>(transformer);
     }
 }

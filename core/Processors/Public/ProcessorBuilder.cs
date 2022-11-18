@@ -30,11 +30,12 @@ namespace Streamiz.Kafka.Net.Processors.Public
         /// <summary>
         /// Set the processor
         /// </summary>
-        /// <param name="processor"></param>
+        /// <typeparam name="Pr">Processor type class</typeparam>
         /// <returns></returns>
-        public ProcessorBuilder<K, V> Processor(IProcessor<K, V> processor)
+        public ProcessorBuilder<K, V> Processor<Pr>()
+            where Pr : IProcessor<K, V>, new()
         {
-            processorSupplier.Processor = processor;
+            processorSupplier.Processor = new Pr();
             return this;
         }
         
