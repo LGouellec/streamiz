@@ -1,4 +1,3 @@
-using System;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
@@ -6,7 +5,7 @@ using Streamiz.Kafka.Net.Processors.Public;
 
 namespace Streamiz.Kafka.Net.Processors
 {
-    internal class KStreamTransformer<K, V, K1, V1> : AbstractProcessor<K, V>
+    internal class KStreamTransformer<K, V, K1, V1> : KStreamPAPI<K, V>
     {
         private readonly ITransformer<K, V, K1, V1> transformer;
         private readonly bool changeKey;
@@ -15,7 +14,7 @@ namespace Streamiz.Kafka.Net.Processors
             TransformerSupplier<K,V,K1,V1> transformerSupplier,
             bool changeKey)
         {
-            this.transformer = transformerSupplier.Transformer;
+            transformer = transformerSupplier.Transformer;
             this.changeKey = changeKey;
         }
 
@@ -25,22 +24,8 @@ namespace Streamiz.Kafka.Net.Processors
             transformer.Init(context);
         }
 
-        public override void Process(K key, V value)
+        public override void Process(Record<K, V> record)
         {
-            if (key == null && StateStores.Count > 0)
-            {
-                log.LogWarning($"Skipping record due to null key because your transformer is stateful. topic=[{Context.Topic}] partition=[{Context.Partition}] offset=[{Context.Offset}]");
-                droppedRecordsSensor.Record();
-                return;
-            }
-            
-            Record<K, V> record = new Record<K, V>(
-                new TopicPartitionOffset(Context.Topic, Context.Partition, Context.Offset),
-                Context.RecordContext.Headers,
-                new Timestamp(Context.RecordContext.Timestamp.FromMilliseconds()),
-                key,
-                value);
-            
             var newRecord = transformer.Process(record);
             
             if (newRecord != null)
@@ -48,7 +33,7 @@ namespace Streamiz.Kafka.Net.Processors
                 if (changeKey)
                     Forward(newRecord.Key, newRecord.Value);
                 else
-                    Forward(key, newRecord.Value);
+                    Forward(record.Key, newRecord.Value);
             }
         }
 
