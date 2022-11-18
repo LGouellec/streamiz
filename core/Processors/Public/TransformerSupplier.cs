@@ -24,6 +24,8 @@ namespace Streamiz.Kafka.Net.Processors.Public
             {
                 if (innerTransformer == null)
                     return null;
+                if (innerTransformer is ICloneableProcessor cloneableProcessor)
+                    return (ITransformer<K,V,K1,V1>)cloneableProcessor.Clone();
                 return (ITransformer<K,V,K1,V1>)Activator.CreateInstance(innerTransformer.GetType());
             }
             internal set => innerTransformer = value;

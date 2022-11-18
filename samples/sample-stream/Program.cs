@@ -53,10 +53,10 @@ namespace sample_stream
                 return 1000 * (ts / 1000);
             }
         }
-        
+
+
         public static async Task Main(string[] args)
         {
-
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app-reproducer";
             config.BootstrapServers = "localhost:9092";
@@ -67,6 +67,7 @@ namespace sample_stream
                 b.SetMinimumLevel(LogLevel.Information);
                 b.AddLog4Net();
             });
+            
             config.DefaultTimestampExtractor = new MyTimestampExtractor();
 
             StreamBuilder builder = new StreamBuilder();
