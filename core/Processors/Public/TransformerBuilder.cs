@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using Streamiz.Kafka.Net.State;
 
 namespace Streamiz.Kafka.Net.Processors.Public
@@ -35,11 +36,13 @@ namespace Streamiz.Kafka.Net.Processors.Public
         /// <summary>
         /// Set the transformer
         /// </summary>
-        /// <param name="transformer"></param>
+        /// <typeparam name="Tr">Transformer type class</typeparam>
         /// <returns></returns>
-        public TransformerBuilder<K, V, K1, V1> Transformer(ITransformer<K, V, K1, V1> transformer)
+        public TransformerBuilder<K, V, K1, V1> Transformer<Tr>(params object[] parameters)
+            where Tr : ITransformer<K, V, K1, V1>, new()
         {
-            transformerSupplier.Transformer = transformer;
+            transformerSupplier.Transformer = new Tr();
+            transformerSupplier.TransformerParameters = parameters;
             return this;
         }
         

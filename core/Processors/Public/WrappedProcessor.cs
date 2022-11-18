@@ -2,7 +2,7 @@ using System;
 
 namespace Streamiz.Kafka.Net.Processors.Public
 {
-    internal class WrappedProcessor<K, V> : IProcessor<K, V>
+    internal class WrappedProcessor<K, V> : IProcessor<K, V>, ICloneableProcessor
     {
         private readonly Action<Record<K, V>> intern;
 
@@ -19,5 +19,10 @@ namespace Streamiz.Kafka.Net.Processors.Public
 
         public void Close()
         { }
+
+        public object Clone()
+        {
+            return new WrappedProcessor<K, V>(intern);
+        }
     }
 }

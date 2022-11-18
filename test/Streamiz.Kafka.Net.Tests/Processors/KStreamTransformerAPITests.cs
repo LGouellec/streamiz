@@ -35,11 +35,21 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
         private class MyStatefulTransformer : ITransformer<string, string, string, string>
         {
-            private IKeyValueStore<string, string> store;
+            private string storeName;
+            private IKeyValueStore<string,string> store;
+
+            public MyStatefulTransformer()
+            {
+                
+            }
+            public MyStatefulTransformer(string storeName)
+            {
+                this.storeName = storeName;
+            }
             
             public void Init(ProcessorContext context)
             {
-                store = (IKeyValueStore<string, string>)context.GetStateStore("my-store");
+                store = (IKeyValueStore<string, string>)context.GetStateStore(storeName);
             }
 
             public Record<string, string> Process(Record<string, string> record)
@@ -94,7 +104,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder.Stream<string, string>("topic")
                 .Transform(TransformerBuilder
                     .New<string, string, string, string>()
-                    .Transformer(new MyTransformer())
+                    .Transformer<MyTransformer>()
                     .Build())
                 .To("topic-output");
 
@@ -125,7 +135,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder.Stream<string, string>("topic")
                 .Transform(TransformerBuilder
                     .New<string, string, string, string>()
-                    .Transformer(new MyStatefulTransformer())
+                    .Transformer<MyStatefulTransformer>("my-store")
                     .StateStore(State.Stores.KeyValueStoreBuilder(
                             State.Stores.InMemoryKeyValueStore("my-store"),
                             new StringSerDes(),
@@ -141,6 +151,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
+                inputTopic.PipeInput(null, "value");
                 inputTopic.PipeInput("key1", "value1");
                 inputTopic.PipeInput("key2", "value2");
 

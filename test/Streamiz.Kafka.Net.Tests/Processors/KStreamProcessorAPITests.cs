@@ -10,31 +10,6 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 {
     public class KStreamProcessorAPITests
     {
-        private class MyProcessor : IProcessor<string, string>
-        {
-            private readonly List<(string, string)> data;
-
-            public MyProcessor(List<(string, string)> data)
-            {
-                this.data = data;
-            }
-            
-            public void Init(ProcessorContext context)
-            {
-                
-            }
-
-            public void Process(Record<string, string> record)
-            {
-                data.Add((record.Key, record.Value));
-            }
-
-            public void Close()
-            {
-                
-            }
-        }
-
         private class MyStatefullProcessor : IProcessor<string, string>
         {
             private IKeyValueStore<string, string> store;
@@ -55,8 +30,36 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             }
         }
 
+        private class MyProcessor : IProcessor<string, string>
+        {
+            private readonly List<KeyValuePair<string, string>> data;
+            
+            public MyProcessor()
+            {
+                
+            }
+
+            public MyProcessor(List<KeyValuePair<string, string>> data)
+            {
+                this.data = data;
+            }
+
+            public void Init(ProcessorContext context)
+            {
+                
+            }
+
+            public void Process(Record<string, string> record)
+                => data.Add(new KeyValuePair<string, string>(record.Key, record.Value));
+
+            public void Close()
+            {
+                
+            }
+        }
+
         [Test]
-        public void ProcessorAPILambda()
+        public void ProcessorAPIProcessor()
         {
             var builder = new StreamBuilder();
             var data = new List<KeyValuePair<string, string>>();
@@ -64,10 +67,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder.Stream<string, string>("topic")
                 .Process(ProcessorBuilder
                     .New<string, string>()
-                    .Processor((record) =>
-                    {
-                        data.Add(KeyValuePair.Create(record.Key, record.Value));
-                    })
+                    .Processor<MyProcessor>(data)
                     .Build());
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -88,7 +88,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         }
         
         [Test]
-        public void ProcessorAPIProcessor()
+        public void ProcessorAPILambda()
         {
             var builder = new StreamBuilder();
             var data = new List<(string, string)>();
@@ -96,7 +96,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder.Stream<string, string>("topic")
                 .Process(ProcessorBuilder
                     .New<string, string>()
-                    .Processor(new MyProcessor(data))
+                    .Processor((r) => data.Add((r.Key, r.Value))) 
                     .Build());
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -124,7 +124,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             builder.Stream<string, string>("topic")
                 .Process(ProcessorBuilder
                     .New<string, string>()
-                    .Processor(new MyStatefullProcessor())
+                    .Processor<MyStatefullProcessor>()
                     .StateStore(State.Stores.KeyValueStoreBuilder(
                             State.Stores.InMemoryKeyValueStore("my-store"),
                             new StringSerDes(),
@@ -139,6 +139,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
+                inputTopic.PipeInput(null, "value");
                 inputTopic.PipeInput("key1", "value1");
                 inputTopic.PipeInput("key2", "value2");
 
