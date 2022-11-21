@@ -114,7 +114,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 {
                     var task = activeTasks[taskId];
                     task.Suspend();
-                    task.MayWriteCheckpoint(true);
                     if (!revokedTasks.ContainsKey(taskId))
                     {
                         revokedTasks.TryAdd(taskId, task);

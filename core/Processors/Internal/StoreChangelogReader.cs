@@ -123,7 +123,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 // TODO : exception behavior
                 var records = restoreConsumer.ConsumeRecords(TimeSpan.FromMilliseconds(pollTimeMs), maxPollRestoringRecords);
-
+                
                 BufferedRecords(records);
 
                 foreach (var log in RestoringChangelogs)
@@ -315,7 +315,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     c.StoreMetadata.ChangelogTopicPartition, 
                     c.StoreMetadata.Offset.HasValue
                         ? new Offset(c.StoreMetadata.Offset.Value + 1) : Offset.Beginning)).ToList();
+            
             restoreConsumer.IncrementalAssign(newPartitionsOffsets);
+            restoreConsumer.Resume(newPartitionsOffsets.Select(t => t.TopicPartition));
             
             log.LogDebug($"Added partitions with offsets {string.Join(",", newPartitionsOffsets.Select(c => $"{c.Topic}-{c.Partition}#{c.Offset}"))} " +
                 $"to the restore consumer, current assignment is {string.Join(",", restoreConsumer.Assignment.Select(c => $"{c.Topic}-{c.Partition}"))}");

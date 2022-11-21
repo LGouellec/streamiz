@@ -8,6 +8,7 @@ namespace Streamiz.Kafka.Net.State.Internal
 {
     internal static class StateManagerTools
     {
+        // TODO : Make a config variable
         public static long OFFSET_DELTA_THRESHOLD_FOR_CHECKPOINT = 10_000L;
 
         static StateManagerTools()

@@ -411,6 +411,7 @@ namespace Streamiz.Kafka.Net.Processors
                 }
                 
                 FlushState();
+                MayWriteCheckpoint(true);
                 CloseStateManager();
                 streamMetricsRegistry.RemoveTaskSensors(threadId, Id.ToString());
                 foreach (var kp in processors)
@@ -440,6 +441,7 @@ namespace Streamiz.Kafka.Net.Processors
                     }
                     
                     FlushState();
+                    MayWriteCheckpoint(true);
                     CloseStateManager();
                     streamMetricsRegistry.RemoveTaskSensors(threadId, Id.ToString());
                     foreach (var kp in processors)
