@@ -24,7 +24,7 @@ namespace Streamiz.Kafka.Net.SerDes.Internal
             byte[] oldValueBytes = innerSerdes.Serialize(data.OldValue, context);
             byte[] newValueBytes = innerSerdes.Serialize(data.NewValue, context);
 
-            using var buffer = ByteBuffer.Build(CalculateCapacity(oldValueBytes, newValueBytes));
+            using var buffer = ByteBuffer.Build(CalculateCapacity(oldValueBytes, newValueBytes), false);
             return buffer
                 .PutInt(oldValueBytes?.Length ?? 0)
                 .Put(oldValueBytes)
@@ -35,7 +35,7 @@ namespace Streamiz.Kafka.Net.SerDes.Internal
 
         public override Change<V> Deserialize(byte[] data, SerializationContext context)
         {
-            using var byteBuffer = ByteBuffer.Build(data);
+            using var byteBuffer = ByteBuffer.Build(data, false);
             {
                 var oldValueLength = byteBuffer.GetInt(0);
                 var oldBytes = oldValueLength > 0 ? byteBuffer.GetBytes(SIZE_INT32, oldValueLength) : null;

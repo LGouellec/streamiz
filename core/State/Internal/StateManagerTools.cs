@@ -42,7 +42,7 @@ namespace Streamiz.Kafka.Net.State.Internal
             byte[] newValue = null;
             if (source.Message.Value != null)
             {
-                using var buffer = ByteBuffer.Build(sizeof(long) + sizeof(int) + source.Message.Value.Length);
+                using var buffer = ByteBuffer.Build(sizeof(long) + sizeof(int) + source.Message.Value.Length, false);
                 newValue = buffer.PutLong(source.Message.Timestamp.UnixTimestampMs)
                     .PutInt(source.Message.Value.Length)
                     .Put(source.Message.Value)

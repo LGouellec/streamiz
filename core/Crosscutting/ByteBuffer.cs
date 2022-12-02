@@ -27,10 +27,10 @@ namespace Streamiz.Kafka.Net.Crosscutting
             writer = new BinaryWriter(stream);
         }
 
-        internal static ByteBuffer Build(byte[] bytes, bool bigEndian = true)
+        internal static ByteBuffer Build(byte[] bytes, bool bigEndian)
             => new ByteBuffer(bytes, bigEndian);
 
-        internal static ByteBuffer Build(int capacity, bool bigEndian = true)
+        internal static ByteBuffer Build(int capacity, bool bigEndian)
             => new ByteBuffer(capacity, bigEndian);
 
         public void Dispose()

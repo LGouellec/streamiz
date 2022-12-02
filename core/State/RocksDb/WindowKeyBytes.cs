@@ -24,9 +24,9 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         {
             var bytes1 = x.Get;
             var bytes2 = y.Get;
-            using (var buffer1 = ByteBuffer.Build(bytes1))
+            using (var buffer1 = ByteBuffer.Build(bytes1, true))
             {
-                using(var buffer2 = ByteBuffer.Build(bytes2))
+                using(var buffer2 = ByteBuffer.Build(bytes2, true))
                 {
                     var key1 = buffer1.GetBytes(0, bytes1.Length - WindowKeyHelper.SUFFIX_SIZE);
                     var key2 = buffer2.GetBytes(0, bytes2.Length - WindowKeyHelper.SUFFIX_SIZE);

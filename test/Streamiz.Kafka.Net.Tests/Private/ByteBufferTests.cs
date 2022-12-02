@@ -15,14 +15,14 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var longBytes = BitConverter.GetBytes(l);
             var intBytes = BitConverter.GetBytes(i);
 
-            if (BitConverter.IsLittleEndian)
+            if (!BitConverter.IsLittleEndian)
             {
                 longBytes = longBytes.Reverse().ToArray();
                 intBytes = intBytes.Reverse().ToArray();
             }
 
             var readArray = longBytes.Concat(intBytes).ToArray();
-            var buffer = ByteBuffer.Build(readArray);
+            var buffer = ByteBuffer.Build(readArray, false);
 
             long l1 = buffer.GetLong(0);
             int i1 = buffer.GetInt(sizeof(long));
@@ -42,7 +42,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var longBytes = BitConverter.GetBytes(l);
             var intBytes = BitConverter.GetBytes(i);
             
-            if (BitConverter.IsLittleEndian)
+            if (!BitConverter.IsLittleEndian)
             {
                 longBytes = longBytes.Reverse().ToArray();
                 intBytes = intBytes.Reverse().ToArray();
@@ -50,7 +50,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var totalArray = longBytes.Concat(intBytes).Concat(array).ToArray();
 
-            var buffer = ByteBuffer.Build(16);
+            var buffer = ByteBuffer.Build(16, false);
             buffer.PutLong(l);
             buffer.PutInt(i);
             buffer.Put(array);
@@ -66,7 +66,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             int i = 42;
             byte[] array = new byte[] {1, 2, 3, 4};
             
-            var buffer = ByteBuffer.Build(0);
+            var buffer = ByteBuffer.Build(0, false);
             buffer.PutLong(l);
             long l2 = buffer.GetLong(0);
 
@@ -87,13 +87,13 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             byte[] array = new byte[] {1, 2, 3, 4};
            
-            var buffer = ByteBuffer.Build(0);
+            var buffer = ByteBuffer.Build(0, false);
             buffer.PutInt(array.Length);
             buffer.Put(array);
             byte[] array2 = buffer.ToArray();
             buffer.Dispose();
 
-            var buffer2 = ByteBuffer.Build(array2);
+            var buffer2 = ByteBuffer.Build(array2, false);
 
             int sizeArray = buffer2.GetInt(0);
             byte[] contentArray = buffer2.GetBytes(sizeof(int), sizeArray);

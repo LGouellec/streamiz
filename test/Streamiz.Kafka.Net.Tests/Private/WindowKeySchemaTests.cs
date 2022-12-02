@@ -25,7 +25,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             long ts = DateTime.Now.GetMilliseconds();
             int seq = 0;
             
-            using var buffer = ByteBuffer.Build(16);
+            using var buffer = ByteBuffer.Build(16, true);
             {
                 buffer.Put(Encoding.UTF8.GetBytes(key));
                 buffer.PutLong(ts);
@@ -42,7 +42,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             long ts = DateTime.Now.GetMilliseconds();
             int seq = 14;
             
-            using var buffer = ByteBuffer.Build(16);
+            using var buffer = ByteBuffer.Build(16, true);
             {
                 buffer.Put(Encoding.UTF8.GetBytes(key));
                 buffer.PutLong(ts);
