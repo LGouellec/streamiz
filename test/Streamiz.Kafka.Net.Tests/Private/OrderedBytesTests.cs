@@ -16,7 +16,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var bytes = serdes.Serialize("test", new Confluent.Kafka.SerializationContext());
             long to = DateTime.Now.GetMilliseconds();
 
-            byte[] maxSuffix = ByteBuffer.Build(12)
+            byte[] maxSuffix = ByteBuffer.Build(12, true)
                 .PutLong(to)
                 .PutInt(int.MaxValue)
                 .ToArray();

@@ -2,12 +2,15 @@ using Confluent.Kafka;
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Streamiz.Kafka.Net.Table;
 using System.Linq;
 using System.Security.Permissions;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Public;
 using Streamiz.Kafka.Net.State;
@@ -20,34 +23,49 @@ namespace sample_stream
     /// </summary>
     internal class Program
     {
-        private class MyTransformer : ITransformer<string, string, string, string>
+        private static readonly JsonSerializerOptions _jsonSerializerOptions = new();
+
+        public class Tag
         {
-            private IKeyValueStore<string,string> store;
+            public string Field1 { get; set; }
+            public string Field2 { get; set; }
+            public string Field3 { get; set; }
+        }
 
-            public void Init(ProcessorContext context)
-            {
-                store = (IKeyValueStore<string, string>)context.GetStateStore("my-store");
-            }
+        public class Metadata
+        {
+            public Dictionary<string, string> Data { get; set; }
+        }
 
-            public Record<string, string> Process(Record<string, string> record)
-            {
-                if (store.Get(record.Key) != null)
-                    store.Delete(record.Key);
-                
-                store.Put(record.Key, record.Value);
-                
-                return Record<string,string>.Create(record.Key, record.Value);
-            }
-
-            public void Close()
-            {
-                
-            }
+        public class TagInfo
+        {
+            public Tag Tag { get; set; }
+            public Metadata MetaData { get; set; }
         }
         
-
         public static async Task Main(string[] args)
         {
+            string KeyMapping(string key, Tag tag)
+            {
+                return key;
+            }
+            
+            string ValueJoiner(Tag currentValue, string metaValue)
+            {
+                var tag = new TagInfo
+                {
+                    Tag = currentValue,
+                    MetaData = metaValue == null
+                        ? null
+                        : JsonSerializer.Deserialize<Metadata>(metaValue, _jsonSerializerOptions)
+                };
+
+                return JsonSerializer.Serialize(tag, _jsonSerializerOptions);
+            }
+            
+            // globalTopic.PipeInput("key1", "{\"Data\":{\"key1\":\"value1\",\"key2\":\"value2\"}}");
+            // inputTopic.PipeInput("key1", new Tag() {Field1 = "tag1", Field2 = "tag2", Field3 = "tag3"});
+
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app-reproducer";
             config.BootstrapServers = "localhost:9092";
@@ -62,14 +80,14 @@ namespace sample_stream
             
             StreamBuilder builder = new StreamBuilder();
 
-            builder.Stream<string, string>("input")
-                .Filter((k,v) => v != null)
-                .GroupByKey()
-                .Count()
-                .ToStream()
-                .MapValues((v) => v.ToString())
-                .To("output");
-            
+            var globalKTable = builder.GlobalTable("meta", InMemory.As<string, string>("table-store"));
+            var kStream = builder.Stream<string, Tag, StringSerDes, JsonSerDes<Tag>>("stream");
+
+            var targetStream = kStream
+                .LeftJoin(globalKTable, KeyMapping, ValueJoiner);
+
+            targetStream.To<StringSerDes, StringSerDes>("target");
+
             Topology t = builder.Build();
             KafkaStream stream = new KafkaStream(t, config);
             

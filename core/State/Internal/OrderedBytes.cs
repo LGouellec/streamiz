@@ -9,7 +9,7 @@ namespace Streamiz.Kafka.Net.State.Internal
         internal static Bytes UpperRange(Bytes key,  byte[] maxSuffix)
         {
              byte[] bytes = key.Get;
-            using ByteBuffer rangeEnd = ByteBuffer.Build(bytes.Length + maxSuffix.Length);
+            using ByteBuffer rangeEnd = ByteBuffer.Build(bytes.Length + maxSuffix.Length, true);
             {
 
                 int i = 0;
@@ -31,7 +31,7 @@ namespace Streamiz.Kafka.Net.State.Internal
         internal static Bytes LowerRange( Bytes key,  byte[] minSuffix)
         {
              byte[] bytes = key.Get;
-             using ByteBuffer rangeStart = ByteBuffer.Build(bytes.Length + minSuffix.Length);
+             using ByteBuffer rangeStart = ByteBuffer.Build(bytes.Length + minSuffix.Length, true);
              {
                  // any key in the range would start at least with the given prefix to be
                  // in the range, and have at least SUFFIX_SIZE number of trailing zero bytes.
