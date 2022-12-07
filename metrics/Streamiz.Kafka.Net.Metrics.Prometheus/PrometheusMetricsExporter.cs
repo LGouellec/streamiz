@@ -18,31 +18,7 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
 
         public void ExposeMetrics(IEnumerable<Sensor> sensors)
         {
-            string MetricKey(StreamMetric metric) => $"{metric.Group}_{metric.Name}".Replace("-", "_");
-            
-            var metrics = sensors.SelectMany(s => s.Metrics);
-            foreach (var metric in metrics)
-            {
-                var metricKey = MetricKey(metric.Value);
-                Gauge gauge = null;
-                
-                if (gauges.ContainsKey(metricKey))
-                    gauge = gauges[metricKey];
-                else
-                {
-                    gauge = global::Prometheus.Metrics.CreateGauge(metricKey, metric.Key.Description, 
-                        new GaugeConfiguration {
-                        LabelNames = metric.Key.Tags.Keys.ToArray()
-                    });
-                    gauges.Add(metricKey, gauge);
-                }
-
-                Double value;
-                if(IsNumeric(metric.Value.Value, out value))
-                    gauge.WithLabels(metric.Key.Tags.Values.ToArray()).Set(value);
-                else
-                    gauge.WithLabels(metric.Key.Tags.Values.ToArray()).Set(1);
-            }
+            prometheusRunner.Expose(sensors);
         }
 
         private bool IsNumeric(object expression, out Double number)
