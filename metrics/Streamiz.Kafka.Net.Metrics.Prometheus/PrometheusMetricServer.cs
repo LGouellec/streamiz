@@ -26,6 +26,7 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
         {
             var s = useHttps ? "s" : "";
             _httpListener.Prefixes.Add($"http{s}://{hostname}:{port}/{url}");
+            _httpListener.Prefixes.Add($"http{s}://{hostname}:{port}/");
         }
 
         protected override Task StartServer(CancellationToken cancel)
