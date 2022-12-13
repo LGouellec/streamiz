@@ -1732,7 +1732,7 @@ namespace Streamiz.Kafka.Net
         /// Name of partition assignment strategy to use when elected group leader assigns
         /// partitions to group members. default: range,roundrobin importance: medium
         /// </summary>
-        public PartitionAssignmentStrategy? PartitionAssignmentStrategy { get { return _consumerConfig.PartitionAssignmentStrategy; } private set { _consumerConfig.PartitionAssignmentStrategy = value; } }
+        public PartitionAssignmentStrategy? PartitionAssignmentStrategy { get { return _consumerConfig.PartitionAssignmentStrategy; } set { _consumerConfig.PartitionAssignmentStrategy = value; } }
 
         /// <summary>
         /// Action to take when there is no initial offset in offset store or the desired
@@ -2056,6 +2056,7 @@ namespace Streamiz.Kafka.Net
             EnableAutoCommit = false;
             EnableAutoOffsetStore = false;
             PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.CooperativeSticky;
+            Partitioner = Confluent.Kafka.Partitioner.Murmur2Random;
 
             Logger = LoggerFactory.Create(builder =>
             {
