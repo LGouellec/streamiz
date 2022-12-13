@@ -26,23 +26,29 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         }
 
         internal static InternalTopicManagerUtils New() => new InternalTopicManagerUtils();
-        
+
         internal async Task CreateInternalTopicsAsync(
             ITopicManager topicManager,
             InternalTopologyBuilder builder)
         {
             var clusterMetadata = topicManager.AdminClient.GetMetadata(timeout);
-            brokerConfigResource.Name = clusterMetadata.Brokers[0].BrokerId.ToString();
-            var resultsConf = await topicManager.AdminClient.DescribeConfigsAsync(new List<ConfigResource> { brokerConfigResource });
             var internalTopicsGroups = builder.MakeInternalTopicGroups();
-            
+
+            var resultsConf = new List<DescribeConfigsResult>();
+            if (internalTopicsGroups.Any(internalTopic => 
+                    !clusterMetadata.Topics.Exists(t => t.Topic.Equals(internalTopic.Value.SourceTopics.First()))))
+            {
+                brokerConfigResource.Name = clusterMetadata.Brokers[0].BrokerId.ToString();
+                resultsConf = await topicManager.AdminClient.DescribeConfigsAsync(new List<ConfigResource> { brokerConfigResource });
+            }
+
             foreach (var entry in internalTopicsGroups)
             {
                 ComputeRepartitionTopicConfig(entry.Value, internalTopicsGroups, clusterMetadata);
                 ComputeChangelogTopicConfig(entry.Value, clusterMetadata, resultsConf);
-                
-                var internalTopics = entry.Value.ChangelogTopics.Union(entry.Value.RepartitionTopics).ToDictionary(); 
-                
+
+                var internalTopics = entry.Value.ChangelogTopics.Union(entry.Value.RepartitionTopics).ToDictionary();
+
                 await topicManager.ApplyAsync(entry.Key, internalTopics);
                 // refresh metadata
                 clusterMetadata = topicManager.AdminClient.GetMetadata(timeout);
@@ -113,7 +119,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                         foreach (var upstreamSourceTopic in topologyTopicsInfo.SourceTopics)
                         {
                             int? numPartitionCandidate = null;
-                            
+
                             if (repartitionTopics.ContainsKey(upstreamSourceTopic))
                             {
                                 numPartitionCandidate = repartitionTopics[upstreamSourceTopic].NumberPartitions;
@@ -124,12 +130,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                                 if (count == null)
                                     count = ComputePartitionCount(upstreamSourceTopic);
                                 // always null ?
-                                if(count == null)
+                                if (count == null)
                                     throw new StreamsException(
                                         $"No partition count found for source topic {upstreamSourceTopic}, but I should have been.");
                                 numPartitionCandidate = count;
                             }
-                            
+
                             if (numPartitionCandidate != null && (partitionCount == null || numPartitionCandidate > partitionCount))
                                 partitionCount = numPartitionCandidate;
                         }
@@ -137,9 +143,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 }
                 return partitionCount;
             }
-            
+
             #endregion
-            
+
             foreach (var repartitionTopic in repartitionTopics)
             {
                 if (repartitionTopic.Value.NumberPartitions == 0)
@@ -156,7 +162,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 }
             }
         }
-        
+
         internal static int DefaultPartitionNumber(List<DescribeConfigsResult> configsResults)
         {
             string numPartitionsCst = "num.partitions";
@@ -173,9 +179,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             var sourceTopics = builder.BuildTopology().GetSourceTopics().ToList();
             var globalTopo = builder.BuildGlobalStateTopology();
-            if(globalTopo != null)
+            if (globalTopo != null)
                 sourceTopics.AddRange(globalTopo.StoresToTopics.Values);
-            
+
             supplier
                 .GetAdmin(adminConfig)
                 .CreateTopicsAsync(sourceTopics.Select(s => new TopicSpecification()
@@ -183,8 +189,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     Name = s,
                     NumPartitions = -1
                 })).GetAwaiter().GetResult();
-            
-             return this;
+
+            return this;
         }
     }
 }
