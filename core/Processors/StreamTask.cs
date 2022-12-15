@@ -164,7 +164,7 @@ namespace Streamiz.Kafka.Net.Processors
                     catch (KafkaException e)
                     {
                         // TODO : get info about offset committing
-                        log.LogError($"{logPrefix}Error during committing offset ......", e);
+                        log.LogError(e, $"{logPrefix}Error during committing offset ......");
                     }
                 }
                 commitNeeded = false;
