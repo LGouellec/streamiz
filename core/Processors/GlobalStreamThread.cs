@@ -142,7 +142,7 @@ namespace Streamiz.Kafka.Net.Processors
                 }
                 catch (Exception e)
                 {
-                    log.LogError($"{logPrefix}exception caught during disposing of GlobalStreamThread.", e);
+                    log.LogError(e, $"{logPrefix}exception caught during disposing of GlobalStreamThread.");
                     // ignore exception
                     // https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1065
                 }
