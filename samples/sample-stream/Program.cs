@@ -7,6 +7,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Streamiz.Kafka.Net.Table;
 using System.Linq;
+using System.Runtime.Intrinsics;
 using System.Security.Permissions;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
@@ -83,17 +84,21 @@ namespace sample_stream
             var globalKTable = builder.GlobalTable("meta", InMemory.As<string, string>("table-store"));
             var kStream = builder.Stream<string, Tag, StringSerDes, JsonSerDes<Tag>>("stream");
 
+            var table = builder.Table<string, string>("table-topic");
+            var stream = builder.Stream<string, string>("stream-topic");
+            kStream.Join(table, (v1, v2) => $"{v1}-{v2}");
+            
             var targetStream = kStream
                 .LeftJoin(globalKTable, KeyMapping, ValueJoiner);
 
             targetStream.To<StringSerDes, StringSerDes>("target");
 
             Topology t = builder.Build();
-            KafkaStream stream = new KafkaStream(t, config);
+            KafkaStream stream1 = new KafkaStream(t, config);
             
-            Console.CancelKeyPress += (_, _) => stream.Dispose();
+            Console.CancelKeyPress += (_, _) => stream1.Dispose();
             
-            await stream.StartAsync();
+            await stream1.StartAsync();
         }
     }
 }

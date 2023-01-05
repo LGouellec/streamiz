@@ -1896,7 +1896,7 @@ namespace Streamiz.Kafka.Net
         /// Producer compatible Murmur2 hash of key (NULL keys are mapped to single partition),
         /// `murmur2_random` - Java Producer compatible Murmur2 hash of key (NULL keys are
         /// randomly partitioned. This is functionally equivalent to the default partitioner
-        /// in the Java Producer.). default: consistent_random importance: high
+        /// in the Java Producer.). default: murmur2_random importance: high
         /// </summary>
         public Partitioner? Partitioner { get { return _producerConfig.Partitioner; } set { _producerConfig.Partitioner = value; } }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -8,6 +9,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 {
     public class StreamConfigTests
     {
+        [Test]
         public void StreamNoApplicationId()
         {
             var stream = new StreamConfig();
@@ -15,11 +17,12 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.Throws<StreamConfigException>(() => stream.ToConsumerConfig());
         }
 
+        [Test]
         public void StreamConfigurationIsNotCorrect()
         {
             var config = new StreamConfig();
             var builder = new StreamBuilder();
-            Assert.Throws<StreamConfigException>(() => new KafkaStream(builder.Build(), config));
+            Assert.Throws<KeyNotFoundException>(() => new KafkaStream(builder.Build(), config));
         }
 
         [Test]
