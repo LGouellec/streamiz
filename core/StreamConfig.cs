@@ -418,52 +418,52 @@ namespace Streamiz.Kafka.Net
 
         #region Config constants
 
-                internal const string schemaRegistryUrlCst = "schema.registry.url";
-        internal const string schemaRegistryBasicAuthUserInfoCst = "schema.registry.basic.auth.user.info";
-        internal const string schemaRegistryBasicAuthCredentialSourceCst = "schema.registry.basic.auth.credentials.source";
-        internal const string schemaRegistryRequestTimeoutMsCst = "schema.registry.request.timeout.ms";
-        internal const string schemaRegistryMaxCachedSchemasCst = "schema.registry.max.cached.schemas";
-        internal const string avroSerializerAutoRegisterSchemasCst = "avro.serializer.auto.register.schemas";
-        internal const string avroSerializerSubjectNameStrategyCst = "avro.serializer.subject.name.strategy";
-        internal const string avroSerializerUseLatestVersionCst = "avro.serializer.use.latest.version";
-        internal const string avroSerializerBufferBytesCst = "avro.serializer.buffer.bytes";
-        internal const string protobufAutoRegisterSchemasCst = "protobuf.serializer.auto.register.schemas";
-        internal const string protobufSerializerBufferBytesCst = "protobuf.serializer.buffer.bytes";
-        internal const string protobufSerializerUseLatestVersionCst = "protobuf.serializer.use.latest.version";
-        internal const string protobufSerializerSkipKnownTypesCst = "protobuf.serializer.skip.known.types";
-        internal const string protobufSerializerUseDeprecatedFormatCst = "protobuf.serializer.use.deprecated.format";
-        internal const string protobufSerializerSubjectNameStrategyCst = "protobuf.serializer.subject.name.strategy";
-        internal const string protobufSerializerReferenceSubjectNameStrategyCst = "protobuf.serializer.reference.subject.name.strategy";
-        internal const string applicatonIdCst = "application.id";
-        internal const string clientIdCst = "client.id";
-        internal const string numStreamThreadsCst = "num.stream.threads";
-        internal const string defaultKeySerDesCst = "default.key.serdes";
-        internal const string defaultValueSerDesCst = "default.value.serdes";
-        internal const string defaultTimestampExtractorCst = "default.timestamp.extractor";
-        internal const string processingGuaranteeCst = "processing.guarantee";
-        internal const string transactionTimeoutCst = "transaction.timeout";
-        internal const string commitIntervalMsCst = "commit.interval.ms";
-        internal const string pollMsCst = "poll.ms";
-        internal const string maxPollRecordsCst = "max.poll.records";
-        internal const string maxPollRestoringRecordsCst = "max.poll.restoring.records";
-        internal const string maxTaskIdleCst = "max.task.idle.ms";
-        internal const string bufferedRecordsPerPartitionCst = "buffered.records.per.partition";
-        internal const string followMetadataCst = "follow.metadata";
-        internal const string stateDirCst = "state.dir";
-        internal const string replicationFactorCst = "replication.factor";
-        internal const string windowstoreChangelogAdditionalRetentionMsCst = "windowstore.changelog.additional.retention.ms";
-        internal const string offsetCheckpointManagerCst = "offset.checkpoint.manager";
-        internal const string metricsReportCst = "metrics.reporter";
-        internal const string metricsIntervalMsCst = "metrics.interval.ms";
-        internal const string exposeLibrdKafkaCst = "expose.librdkafka.stats";
-        internal const string metricsRecordingLevelCst = "metrics.recording.level";
-        internal const string startTaskDelayMsCst = "start.task.delay.ms";
-        internal const string parallelProcessingCst = "parallel.processing";
-        internal const string maxDegreeOfParallelismCst = "max.degree.of.parallelism";
-        internal const string rocksDbConfigSetterCst = "rocksdb.config.setter";
-        internal const string innerExceptionHandlerCst = "inner.exception.handler";
-        internal const string deserializationExceptionHandlerCst = "deserialization.exception.handler";
-        internal const string productionExceptionHandlerCst = "production.exception.handler";
+        private const string schemaRegistryUrlCst = "schema.registry.url";
+        private const string schemaRegistryBasicAuthUserInfoCst = "schema.registry.basic.auth.user.info";
+        private const string schemaRegistryBasicAuthCredentialSourceCst = "schema.registry.basic.auth.credentials.source";
+        private const string schemaRegistryRequestTimeoutMsCst = "schema.registry.request.timeout.ms";
+        private const string schemaRegistryMaxCachedSchemasCst = "schema.registry.max.cached.schemas";
+        private const string avroSerializerAutoRegisterSchemasCst = "avro.serializer.auto.register.schemas";
+        private const string avroSerializerSubjectNameStrategyCst = "avro.serializer.subject.name.strategy";
+        private const string avroSerializerUseLatestVersionCst = "avro.serializer.use.latest.version";
+        private const string avroSerializerBufferBytesCst = "avro.serializer.buffer.bytes";
+        private const string protobufAutoRegisterSchemasCst = "protobuf.serializer.auto.register.schemas";
+        private const string protobufSerializerBufferBytesCst = "protobuf.serializer.buffer.bytes";
+        private const string protobufSerializerUseLatestVersionCst = "protobuf.serializer.use.latest.version";
+        private const string protobufSerializerSkipKnownTypesCst = "protobuf.serializer.skip.known.types";
+        private const string protobufSerializerUseDeprecatedFormatCst = "protobuf.serializer.use.deprecated.format";
+        private const string protobufSerializerSubjectNameStrategyCst = "protobuf.serializer.subject.name.strategy";
+        private const string protobufSerializerReferenceSubjectNameStrategyCst = "protobuf.serializer.reference.subject.name.strategy";
+        private const string applicatonIdCst = "application.id";
+        private const string clientIdCst = "client.id";
+        private const string numStreamThreadsCst = "num.stream.threads";
+        private const string defaultKeySerDesCst = "default.key.serdes";
+        private const string defaultValueSerDesCst = "default.value.serdes";
+        private const string defaultTimestampExtractorCst = "default.timestamp.extractor";
+        private const string processingGuaranteeCst = "processing.guarantee";
+        private const string transactionTimeoutCst = "transaction.timeout";
+        private const string commitIntervalMsCst = "commit.interval.ms";
+        private const string pollMsCst = "poll.ms";
+        private const string maxPollRecordsCst = "max.poll.records";
+        private const string maxPollRestoringRecordsCst = "max.poll.restoring.records";
+        private const string maxTaskIdleCst = "max.task.idle.ms";
+        private const string bufferedRecordsPerPartitionCst = "buffered.records.per.partition";
+        private const string followMetadataCst = "follow.metadata";
+        private const string stateDirCst = "state.dir";
+        private const string replicationFactorCst = "replication.factor";
+        private const string windowstoreChangelogAdditionalRetentionMsCst = "windowstore.changelog.additional.retention.ms";
+        private const string offsetCheckpointManagerCst = "offset.checkpoint.manager";
+        private const string metricsReportCst = "metrics.reporter";
+        private const string metricsIntervalMsCst = "metrics.interval.ms";
+        private const string exposeLibrdKafkaCst = "expose.librdkafka.stats";
+        private const string metricsRecordingLevelCst = "metrics.recording.level";
+        private const string startTaskDelayMsCst = "start.task.delay.ms";
+        private const string parallelProcessingCst = "parallel.processing";
+        private const string maxDegreeOfParallelismCst = "max.degree.of.parallelism";
+        private const string rocksDbConfigSetterCst = "rocksdb.config.setter";
+        private const string innerExceptionHandlerCst = "inner.exception.handler";
+        private const string deserializationExceptionHandlerCst = "deserialization.exception.handler";
+        private const string productionExceptionHandlerCst = "production.exception.handler";
         
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -2719,12 +2719,17 @@ namespace Streamiz.Kafka.Net
         /// <returns>Return new instance of <see cref="StreamConfig"/>.</returns>
         public IStreamConfig Clone()
         {
-            var config = new StreamConfig(this);
+            var config = new StreamConfig();
 
             config._consumerConfig = new ConsumerConfig(_consumerConfig);
             config._producerConfig = new ProducerConfig(_producerConfig);
             config._adminClientConfig = new AdminClientConfig(_adminClientConfig);
             config._config = new ClientConfig(_config);
+            
+            foreach(var kv in this)
+                DictionaryExtensions.AddOrUpdate(config, kv.Key, kv.Value);
+
+            config.Logger = Logger;
 
             return config;
         }

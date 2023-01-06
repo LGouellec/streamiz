@@ -259,7 +259,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             config.SchemaRegistryUrl = "mock://test";
 
             config.Acks = Acks.All;
-            config.AddConfig("consumer.allow.auto.create.topics", "false");
+            config.AddConfig("consumer.allow.auto.create.topics", false);
             config.MaxTaskIdleMs = 50;
 
             StreamBuilder builder = new StreamBuilder();
