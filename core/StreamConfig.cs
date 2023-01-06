@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
@@ -32,50 +33,35 @@ namespace Streamiz.Kafka.Net
     }
 
     /// <summary>
+    /// 
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property)]
+    public class StreamConfigPropertyAttribute : Attribute
+    {
+        public StreamConfigPropertyAttribute(string keyName)
+        {
+            KeyName = keyName;
+        }
+        
+        public string KeyName { get; set; }
+    }
+    
+    /// <summary>
     /// Interface stream configuration for a <see cref="KafkaStream"/> instance.
     /// See <see cref="StreamConfig"/> to obtain implementation about this interface.
     /// You could develop your own implementation and get it in your <see cref="KafkaStream"/> instance.
     /// </summary>
     public interface IStreamConfig : ICloneable<IStreamConfig>
     {
-        #region AddConfig
-
-        /// <summary>
-        /// Add keyvalue configuration for producer, consumer and admin client.
-        /// [WARNING] : Maybe will change
-        /// </summary>
-        /// <param name="key">New key</param>
-        /// <param name="value">New value</param>
-        void AddConfig(string key, string value);
-
-        /// <summary>
-        /// Add keyvalue configuration for admin client
-        /// [WARNING] : Maybe will change
-        /// </summary>
-        /// <param name="key">New key</param>
-        /// <param name="value">New value</param>
-        void AddAdminConfig(string key, string value);
-
-        /// <summary>
-        /// Add keyvalue configuration for consumer
-        /// [WARNING] : Maybe will change
-        /// </summary>
-        /// <param name="key">New key</param>
-        /// <param name="value">New value</param>
-        void AddConsumerConfig(string key, string value);
-
-        /// <summary>
-        /// Add keyvalue configuration for producer
-        /// [WARNING] : Maybe will change
-        /// </summary>
-        /// <param name="key">New key</param>
-        /// <param name="value">New value</param>
-        void AddProducerConfig(string key, string value);
-
-        #endregion
-
         #region Methods 
 
+        /// <summary>
+        /// Add a new key/value configuration.
+        /// </summary>
+        /// <param name="key">New key</param>
+        /// <param name="value">New value</param>
+        void AddConfig(string key, dynamic value);
+        
         /// <summary>
         /// Get the configs to the <see cref="IProducer{TKey, TValue}"/>
         /// </summary>
@@ -364,6 +350,15 @@ namespace Streamiz.Kafka.Net
     /// </summary>
     public class StreamConfig : Dictionary<string, dynamic>, IStreamConfig, ISchemaRegistryConfig
     {
+        private class KeyValueComparer : IEqualityComparer<KeyValuePair<string, string>>
+        {
+            public bool Equals(KeyValuePair<string, string> x, KeyValuePair<string, string> y)
+                => x.Key.Equals(y.Key);
+
+            public int GetHashCode(KeyValuePair<string, string> obj)
+                => obj.Key.GetHashCode();
+        }
+        
         #region Not used for moment
 
         /// private string applicationServerCst = "application.server";
@@ -423,52 +418,52 @@ namespace Streamiz.Kafka.Net
 
         #region Config constants
 
-        internal static readonly string schemaRegistryUrlCst = "schema.registry.url";
-        internal static readonly string schemaRegistryBasicAuthUserInfoCst = "schema.registry.basic.auth.user.info";
-        internal static readonly string schemaRegistryBasicAuthCredentialSourceCst = "schema.registry.basic.auth.credentials.source";
-        internal static readonly string schemaRegistryRequestTimeoutMsCst = "schema.registry.request.timeout.ms";
-        internal static readonly string schemaRegistryMaxCachedSchemasCst = "schema.registry.max.cached.schemas";
-        internal static readonly string avroSerializerAutoRegisterSchemasCst = "avro.serializer.auto.register.schemas";
-        internal static readonly string avroSerializerSubjectNameStrategyCst = "avro.serializer.subject.name.strategy";
-        internal static readonly string avroSerializerUseLatestVersionCst = "avro.serializer.use.latest.version";
-        internal static readonly string avroSerializerBufferBytesCst = "avro.serializer.buffer.bytes";
-        internal static readonly string protobufAutoRegisterSchemasCst = "protobuf.serializer.auto.register.schemas";
-        internal static readonly string protobufSerializerBufferBytesCst = "protobuf.serializer.buffer.bytes";
-        internal static readonly string protobufSerializerUseLatestVersionCst = "protobuf.serializer.use.latest.version";
-        internal static readonly string protobufSerializerSkipKnownTypesCst = "protobuf.serializer.skip.known.types";
-        internal static readonly string protobufSerializerUseDeprecatedFormatCst = "protobuf.serializer.use.deprecated.format";
-        internal static readonly string protobufSerializerSubjectNameStrategyCst = "protobuf.serializer.subject.name.strategy";
-        internal static readonly string protobufSerializerReferenceSubjectNameStrategyCst = "protobuf.serializer.reference.subject.name.strategy";
-        internal static readonly string applicatonIdCst = "application.id";
-        internal static readonly string clientIdCst = "client.id";
-        internal static readonly string numStreamThreadsCst = "num.stream.threads";
-        internal static readonly string defaultKeySerDesCst = "default.key.serdes";
-        internal static readonly string defaultValueSerDesCst = "default.value.serdes";
-        internal static readonly string defaultTimestampExtractorCst = "default.timestamp.extractor";
-        internal static readonly string processingGuaranteeCst = "processing.guarantee";
-        internal static readonly string transactionTimeoutCst = "transaction.timeout";
-        internal static readonly string commitIntervalMsCst = "commit.interval.ms";
-        internal static readonly string pollMsCst = "poll.ms";
-        internal static readonly string maxPollRecordsCst = "max.poll.records";
-        internal static readonly string maxPollRestoringRecordsCst = "max.poll.restoring.records";
-        internal static readonly string maxTaskIdleCst = "max.task.idle.ms";
-        internal static readonly string bufferedRecordsPerPartitionCst = "buffered.records.per.partition";
-        internal static readonly string followMetadataCst = "follow.metadata";
-        internal static readonly string stateDirCst = "state.dir";
-        internal static readonly string replicationFactorCst = "replication.factor";
-        internal static readonly string windowstoreChangelogAdditionalRetentionMsCst = "windowstore.changelog.additional.retention.ms";
-        internal static readonly string offsetCheckpointManagerCst = "offset.checkpoint.manager";
-        internal static readonly string metricsReportCst = "metrics.reporter";
-        internal static readonly string metricsIntervalMsCst = "metrics.interval.ms";
-        internal static readonly string exposeLibrdKafkaCst = "expose.librdkafka.stats";
-        internal static readonly string metricsRecordingLevelCst = "metrics.recording.level";
-        internal static readonly string startTaskDelayMsCst = "start.task.delay.ms";
-        internal static readonly string parallelProcessingCst = "parallel.processing";
-        internal static readonly string maxDegreeOfParallelismCst = "max.degree.of.parallelism";
-        internal static readonly string rocksDbConfigSetterCst = "rocksdb.config.setter";
-        internal static readonly string innerExceptionHandlerCst = "inner.exception.handler";
-        internal static readonly string deserializationExceptionHandlerCst = "deserialization.exception.handler";
-        internal static readonly string productionExceptionHandlerCst = "production.exception.handler";
+                internal const string schemaRegistryUrlCst = "schema.registry.url";
+        internal const string schemaRegistryBasicAuthUserInfoCst = "schema.registry.basic.auth.user.info";
+        internal const string schemaRegistryBasicAuthCredentialSourceCst = "schema.registry.basic.auth.credentials.source";
+        internal const string schemaRegistryRequestTimeoutMsCst = "schema.registry.request.timeout.ms";
+        internal const string schemaRegistryMaxCachedSchemasCst = "schema.registry.max.cached.schemas";
+        internal const string avroSerializerAutoRegisterSchemasCst = "avro.serializer.auto.register.schemas";
+        internal const string avroSerializerSubjectNameStrategyCst = "avro.serializer.subject.name.strategy";
+        internal const string avroSerializerUseLatestVersionCst = "avro.serializer.use.latest.version";
+        internal const string avroSerializerBufferBytesCst = "avro.serializer.buffer.bytes";
+        internal const string protobufAutoRegisterSchemasCst = "protobuf.serializer.auto.register.schemas";
+        internal const string protobufSerializerBufferBytesCst = "protobuf.serializer.buffer.bytes";
+        internal const string protobufSerializerUseLatestVersionCst = "protobuf.serializer.use.latest.version";
+        internal const string protobufSerializerSkipKnownTypesCst = "protobuf.serializer.skip.known.types";
+        internal const string protobufSerializerUseDeprecatedFormatCst = "protobuf.serializer.use.deprecated.format";
+        internal const string protobufSerializerSubjectNameStrategyCst = "protobuf.serializer.subject.name.strategy";
+        internal const string protobufSerializerReferenceSubjectNameStrategyCst = "protobuf.serializer.reference.subject.name.strategy";
+        internal const string applicatonIdCst = "application.id";
+        internal const string clientIdCst = "client.id";
+        internal const string numStreamThreadsCst = "num.stream.threads";
+        internal const string defaultKeySerDesCst = "default.key.serdes";
+        internal const string defaultValueSerDesCst = "default.value.serdes";
+        internal const string defaultTimestampExtractorCst = "default.timestamp.extractor";
+        internal const string processingGuaranteeCst = "processing.guarantee";
+        internal const string transactionTimeoutCst = "transaction.timeout";
+        internal const string commitIntervalMsCst = "commit.interval.ms";
+        internal const string pollMsCst = "poll.ms";
+        internal const string maxPollRecordsCst = "max.poll.records";
+        internal const string maxPollRestoringRecordsCst = "max.poll.restoring.records";
+        internal const string maxTaskIdleCst = "max.task.idle.ms";
+        internal const string bufferedRecordsPerPartitionCst = "buffered.records.per.partition";
+        internal const string followMetadataCst = "follow.metadata";
+        internal const string stateDirCst = "state.dir";
+        internal const string replicationFactorCst = "replication.factor";
+        internal const string windowstoreChangelogAdditionalRetentionMsCst = "windowstore.changelog.additional.retention.ms";
+        internal const string offsetCheckpointManagerCst = "offset.checkpoint.manager";
+        internal const string metricsReportCst = "metrics.reporter";
+        internal const string metricsIntervalMsCst = "metrics.interval.ms";
+        internal const string exposeLibrdKafkaCst = "expose.librdkafka.stats";
+        internal const string metricsRecordingLevelCst = "metrics.recording.level";
+        internal const string startTaskDelayMsCst = "start.task.delay.ms";
+        internal const string parallelProcessingCst = "parallel.processing";
+        internal const string maxDegreeOfParallelismCst = "max.degree.of.parallelism";
+        internal const string rocksDbConfigSetterCst = "rocksdb.config.setter";
+        internal const string innerExceptionHandlerCst = "inner.exception.handler";
+        internal const string deserializationExceptionHandlerCst = "deserialization.exception.handler";
+        internal const string productionExceptionHandlerCst = "production.exception.handler";
         
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -486,15 +481,14 @@ namespace Streamiz.Kafka.Net
         private ProducerConfig _producerConfig = null;
         private AdminClientConfig _adminClientConfig = null;
         private ClientConfig _config = null;
-
-        private IDictionary<string, string> _internalConsumerConfig = new Dictionary<string, string>();
-        private IDictionary<string, string> _internalProducerConfig = new Dictionary<string, string>();
-        private IDictionary<string, string> _internalAdminConfig = new Dictionary<string, string>();
-
+        
         private readonly List<IStreamMiddleware> middlewares = new();
 
         private bool changeGuarantee = false;
         
+        private readonly IDictionary<string, PropertyInfo> cacheProperties 
+            = new Dictionary<string, PropertyInfo>();
+
         #region Middlewares
         
         /// <summary>
@@ -525,22 +519,9 @@ namespace Streamiz.Kafka.Net
         #region ClientConfig
 
         /// <summary>
-        /// Add keyvalue configuration for producer, consumer and admin client.
-        /// [WARNING] : Maybe will change
-        /// </summary>
-        /// <param name="key">New key</param>
-        /// <param name="value">New value</param>
-        public void AddConfig(string key, string value)
-        {
-            Add(key, value);
-            AddConsumerConfig(key, value);
-            AddAdminConfig(key, value);
-            AddProducerConfig(key, value);
-        }
-
-        /// <summary>
         /// Timeout for broker API version requests. default: 10000 importance: low
         /// </summary>
+        [StreamConfigProperty("client.api.version.request.timeout.ms")]
         public int? ApiVersionRequestTimeoutMs
         {
             get => _config.ApiVersionRequestTimeoutMs;
@@ -559,6 +540,7 @@ namespace Streamiz.Kafka.Net
         /// a new connection to the broker is made (such as after an upgrade). default: 0
         /// importance: medium
         /// </summary>
+        [StreamConfigProperty("client.api.version.fallback.ms")]
         public int? ApiVersionFallbackMs
         {
             get => _config.ApiVersionFallbackMs;
@@ -581,6 +563,7 @@ namespace Streamiz.Kafka.Net
         /// Valid values are: 0.9.0, 0.8.2, 0.8.1, 0.8.0. Any other value >= 0.10, such as
         /// 0.10.2.1, enables ApiVersionRequests. default: 0.10.0 importance: medium
         /// </summary>
+        [StreamConfigProperty("client.broker.version.fallback")]
         public string BrokerVersionFallback
         {
             get => _config.BrokerVersionFallback;
@@ -596,6 +579,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Protocol used to communicate with brokers. default: plaintext importance: high
         /// </summary>
+        [StreamConfigProperty("client.security.protocol")]
         public SecurityProtocol? SecurityProtocol
         {
             get => _config.SecurityProtocol;
@@ -614,6 +598,7 @@ namespace Streamiz.Kafka.Net
         /// connection using TLS or SSL network protocol. See manual page for `ciphers(1)`
         /// and `SSL_CTX_set_cipher_list(3). default: '' importance: low
         /// </summary>
+        [StreamConfigProperty("client.ssl.cipher.suites")]
         public string SslCipherSuites
         {
             get => _config.SslCipherSuites;
@@ -632,6 +617,7 @@ namespace Streamiz.Kafka.Net
         /// the server use. See manual page for `SSL_CTX_set1_curves_list(3)`. OpenSSL >=
         /// 1.0.2 required. default: '' importance: low
         /// </summary>
+        [StreamConfigProperty("client.ssl.curves.list")]
         public string SslCurvesList
         {
             get => _config.SslCurvesList;
@@ -650,6 +636,7 @@ namespace Streamiz.Kafka.Net
         /// See manual page for `SSL_CTX_set1_sigalgs_list(3)`. OpenSSL >= 1.0.2 required.
         /// default: '' importance: low
         /// </summary>
+        [StreamConfigProperty("client.ssl.sigalgs.list")]
         public string SslSigalgsList
         {
             get => _config.SslSigalgsList;
@@ -666,6 +653,7 @@ namespace Streamiz.Kafka.Net
         /// Path to client's private key (PEM) used for authentication. default: '' importance:
         /// low
         /// </summary>
+        [StreamConfigProperty("client.ssl.key.location")]
         public string SslKeyLocation
         {
             get => _config.SslKeyLocation;
@@ -682,6 +670,7 @@ namespace Streamiz.Kafka.Net
         /// Private key passphrase (for use with `ssl.key.location` and `set_ssl_cert()`)
         /// default: '' importance: low
         /// </summary>
+        [StreamConfigProperty("client.ssl.key.password")]
         public string SslKeyPassword
         {
             get => _config.SslKeyPassword;
@@ -698,6 +687,7 @@ namespace Streamiz.Kafka.Net
         /// Client's private key string (PEM format) used for authentication. default: ''
         /// importance: low
         /// </summary>
+        [StreamConfigProperty("client.ssl.key.pem")]
         public string SslKeyPem
         {
             get => _config.SslKeyPem;
@@ -714,6 +704,7 @@ namespace Streamiz.Kafka.Net
         /// Path to client's public key (PEM) used for authentication. default: '' importance:
         /// low
         /// </summary>
+        [StreamConfigProperty("client.ssl.certificate.location")]
         public string SslCertificateLocation
         {
             get => _config.SslCertificateLocation;
@@ -730,6 +721,7 @@ namespace Streamiz.Kafka.Net
         /// Client's public key string (PEM format) used for authentication. default: ''
         /// importance: low
         /// </summary>
+        [StreamConfigProperty("client.ssl.certificate.pem")]
         public string SslCertificatePem
         {
             get => _config.SslCertificatePem;
@@ -746,6 +738,7 @@ namespace Streamiz.Kafka.Net
         /// File or directory path to CA certificate(s) for verifying the broker's key. default:
         /// '' importance: low
         /// </summary>
+        [StreamConfigProperty("client.ssl.ca.location")]
         public string SslCaLocation
         {
             get => _config.SslCaLocation;
@@ -762,6 +755,7 @@ namespace Streamiz.Kafka.Net
         /// Path to client's keystore (PKCS#12) used for authentication. default: '' importance:
         /// low
         /// </summary>
+        [StreamConfigProperty("client.ssl.keystore.location")]
         public string SslKeystoreLocation
         {
             get => _config.SslKeystoreLocation;
@@ -781,6 +775,7 @@ namespace Streamiz.Kafka.Net
         /// >=0.10.0. If the request is not supported by (an older) broker the `broker.version.fallback`
         /// fallback is used. default: true importance: high
         /// </summary>
+        [StreamConfigProperty("client.api.version.request")]
         public bool? ApiVersionRequest
         {
             get => _config.ApiVersionRequest;
@@ -796,6 +791,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Client's keystore (PKCS#12) password. default: '' importance: low
         /// </summary>
+        [StreamConfigProperty("client.ssl.keystore.password")]
         public string SslKeystorePassword
         {
             get => _config.SslKeystorePassword;
@@ -812,6 +808,7 @@ namespace Streamiz.Kafka.Net
         /// Enable OpenSSL's builtin broker (server) certificate verification. default:
         /// true importance: low
         /// </summary>
+        [StreamConfigProperty("client.enable.ssl.certificate.verification")]
         public bool? EnableSslCertificateVerification
         {
             get => _config.EnableSslCertificateVerification;
@@ -830,6 +827,7 @@ namespace Streamiz.Kafka.Net
         /// No endpoint verification. OpenSSL >= 1.0.2 required. default: none importance:
         /// low
         /// </summary>
+        [StreamConfigProperty("client.ssl.endpoint.identification.algorithm")]
         public SslEndpointIdentificationAlgorithm? SslEndpointIdentificationAlgorithm
         {
             get => _config.SslEndpointIdentificationAlgorithm;
@@ -846,6 +844,7 @@ namespace Streamiz.Kafka.Net
         /// Kerberos principal name that Kafka runs as, not including /hostname@REALM default:
         /// kafka importance: low
         /// </summary>
+        [StreamConfigProperty("client.sasl.kerberos.service.name")]
         public string SaslKerberosServiceName
         {
             get => _config.SaslKerberosServiceName;
@@ -862,6 +861,7 @@ namespace Streamiz.Kafka.Net
         /// This client's Kerberos principal name. (Not supported on Windows, will use the
         /// logon user's principal). default: kafkaclient importance: low
         /// </summary>
+        [StreamConfigProperty("client.sasl.kerberos.principal")]
         public string SaslKerberosPrincipal
         {
             get => _config.SaslKerberosPrincipal;
@@ -882,6 +882,7 @@ namespace Streamiz.Kafka.Net
         /// || kinit -t "%{sasl.kerberos.keytab}" -k %{sasl.kerberos.principal} importance:
         /// low
         /// </summary>
+        [StreamConfigProperty("client.sasl.kerberos.kinit.cmd")]
         public string SaslKerberosKinitCmd
         {
             get => _config.SaslKerberosKinitCmd;
@@ -899,6 +900,7 @@ namespace Streamiz.Kafka.Net
         /// in `sasl.kerberos.kinit.cmd` as ` ... -t "%{sasl.kerberos.keytab}"`. default:
         /// '' importance: low
         /// </summary>
+        [StreamConfigProperty("client.sasl.kerberos.keytab")]
         public string SaslKerberosKeytab
         {
             get => _config.SaslKerberosKeytab;
@@ -915,6 +917,7 @@ namespace Streamiz.Kafka.Net
         /// Minimum time in milliseconds between key refresh attempts. Disable automatic
         /// key refresh by setting this property to 0. default: 60000 importance: low
         /// </summary>
+        [StreamConfigProperty("client.sasl.kerberos.min.time.before.relogin")]
         public int? SaslKerberosMinTimeBeforeRelogin
         {
             get => _config.SaslKerberosMinTimeBeforeRelogin;
@@ -931,6 +934,7 @@ namespace Streamiz.Kafka.Net
         /// SASL username for use with the PLAIN and SASL-SCRAM-.. mechanisms default: ''
         /// importance: high
         /// </summary>
+        [StreamConfigProperty("client.sasl.username")]
         public string SaslUsername
         {
             get => _config.SaslUsername;
@@ -947,6 +951,7 @@ namespace Streamiz.Kafka.Net
         /// SASL password for use with the PLAIN and SASL-SCRAM-.. mechanism default: ''
         /// importance: high
         /// </summary>
+        [StreamConfigProperty("client.sasl.password")]
         public string SaslPassword
         {
             get => _config.SaslPassword;
@@ -971,6 +976,7 @@ namespace Streamiz.Kafka.Net
         /// to the broker via `extension_NAME=value`. For example: `principal=admin extension_traceId=123`
         /// default: '' importance: low
         /// </summary>
+        [StreamConfigProperty("client.sasl.oauthbearer.config")]
         public string SaslOauthbearerConfig
         {
             get => _config.SaslOauthbearerConfig;
@@ -988,6 +994,7 @@ namespace Streamiz.Kafka.Net
         /// has been set. This builtin handler should only be used for development or testing,
         /// and not in production. default: false importance: low
         /// </summary>
+        [StreamConfigProperty("client.sasl.oauthbearer.unsecure.jwt")]
         public bool? EnableSaslOauthbearerUnsecureJwt
         {
             get => _config.EnableSaslOauthbearerUnsecureJwt;
@@ -1001,9 +1008,118 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
+        /// Set to "default" or "oidc" to control which login method to be used. If set to "oidc", the following properties must also be be specified: `sasl.oauthbearer.client.id`, `sasl.oauthbearer.client.secret`, and `sasl.oauthbearer.token.endpoint.url`.
+        /// default: default
+        /// importance: low
+        /// </summary>
+        [StreamConfigProperty("client.sasl.oauthbearer.method")]
+        public Confluent.Kafka.SaslOauthbearerMethod? SaslOauthbearerMethod
+        {
+            get => _config.SaslOauthbearerMethod;
+            set
+            {
+                _config.SaslOauthbearerMethod = value;
+                _consumerConfig.SaslOauthbearerMethod = value;
+                _producerConfig.SaslOauthbearerMethod = value;
+                _adminClientConfig.SaslOauthbearerMethod = value;
+            }
+        }
+
+        /// <summary>
+        /// Public identifier for the application. Must be unique across all clients that the authorization server handles. Only used when `sasl.oauthbearer.method` is set to "oidc".
+        /// default: ''
+        /// importance: low
+        /// </summary>
+        [StreamConfigProperty("client.sasl.oauthbearer.client.id")]
+        public string SaslOauthbearerClientId
+        {
+            get => _config.SaslOauthbearerClientId;
+            set
+            {
+                _config.SaslOauthbearerClientId = value;
+                _consumerConfig.SaslOauthbearerClientId = value;
+                _producerConfig.SaslOauthbearerClientId = value;
+                _adminClientConfig.SaslOauthbearerClientId = value;
+            }
+        }
+
+        /// <summary>
+        /// Client secret only known to the application and the authorization server. This should be a sufficiently random string that is not guessable. Only used when `sasl.oauthbearer.method` is set to "oidc".
+        /// default: ''
+        /// importance: low
+        /// </summary>
+        [StreamConfigProperty("client.sasl.oauthbearer.client.secret")]
+        public string SaslOauthbearerClientSecret
+        {
+            get => _config.SaslOauthbearerClientSecret;
+            set
+            {
+                _config.SaslOauthbearerClientSecret = value;
+                _consumerConfig.SaslOauthbearerClientSecret = value;
+                _producerConfig.SaslOauthbearerClientSecret = value;
+                _adminClientConfig.SaslOauthbearerClientSecret = value;
+            }
+        }
+
+        /// <summary>
+        /// Client use this to specify the scope of the access request to the broker. Only used when `sasl.oauthbearer.method` is set to "oidc".
+        /// default: ''
+        /// importance: low
+        /// </summary>
+        [StreamConfigProperty("client.sasl.oauthbearer.scope")]
+        public string SaslOauthbearerScope
+        {
+            get => _config.SaslOauthbearerScope;
+            set
+            {
+                _config.SaslOauthbearerScope = value;
+                _consumerConfig.SaslOauthbearerScope = value;
+                _producerConfig.SaslOauthbearerScope = value;
+                _adminClientConfig.SaslOauthbearerScope = value;
+            }
+        }
+
+        /// <summary>
+        /// Allow additional information to be provided to the broker. Comma-separated list of key=value pairs. E.g., "supportFeatureX=true,organizationId=sales-emea".Only used when `sasl.oauthbearer.method` is set to "oidc".
+        /// default: ''
+        /// importance: low
+        /// </summary>
+        [StreamConfigProperty("client.sasl.oauthbearer.extensions")]
+        public string SaslOauthbearerExtensions
+        {
+            get => _config.SaslOauthbearerExtensions;
+            set
+            {
+                _config.SaslOauthbearerExtensions = value;
+                _consumerConfig.SaslOauthbearerExtensions = value;
+                _producerConfig.SaslOauthbearerExtensions = value;
+                _adminClientConfig.SaslOauthbearerExtensions = value;
+            }
+        }
+
+        /// <summary>
+        /// OAuth/OIDC issuer token endpoint HTTP(S) URI used to retrieve token. Only used when `sasl.oauthbearer.method` is set to "oidc".
+        /// default: ''
+        /// importance: low
+        /// </summary>
+        [StreamConfigProperty("client.sasl.oauthbearer.token.endpoint.url")]
+        public string SaslOauthbearerTokenEndpointUrl
+        {
+            get => _config.SaslOauthbearerTokenEndpointUrl;
+            set
+            {
+                _config.SaslOauthbearerTokenEndpointUrl = value;
+                _consumerConfig.SaslOauthbearerTokenEndpointUrl = value;
+                _producerConfig.SaslOauthbearerTokenEndpointUrl = value;
+                _adminClientConfig.SaslOauthbearerTokenEndpointUrl = value;
+            }
+        }
+        
+        /// <summary>
         ///  Path to CRL for verifying broker's certificate validity. default: '' importance:
         ///  low
         ///  </summary>
+        [StreamConfigProperty("client.ssl.crl.location")]
         public string SslCrlLocation
         {
             get => _config.SslCrlLocation;
@@ -1023,6 +1139,7 @@ namespace Streamiz.Kafka.Net
         /// is set however the delay will be minimal. The application should mask this signal
         /// as an internal signal handler is installed. default: 0 importance: low
         /// </summary>
+        [StreamConfigProperty("client.internal.termination.signal")]
         public int? InternalTerminationSignal
         {
             get => _config.InternalTerminationSignal;
@@ -1040,6 +1157,7 @@ namespace Streamiz.Kafka.Net
         /// with 0.9 brokers with an aggressive `connection.max.idle.ms` value. default:
         /// true importance: low
         /// </summary>
+        [StreamConfigProperty("client.log.connection.close")]
         public bool? LogConnectionClose
         {
             get => _config.LogConnectionClose;
@@ -1056,6 +1174,7 @@ namespace Streamiz.Kafka.Net
         /// Print internal thread name in log messages (useful for debugging librdkafka internals)
         /// default: true importance: low
         /// </summary>
+        [StreamConfigProperty("client.log.thread.name")]
         public bool? LogThreadName
         {
             get => _config.LogThreadName;
@@ -1073,6 +1192,7 @@ namespace Streamiz.Kafka.Net
         /// SCRAM-SHA-512. **NOTE**: Despite the name, you may not configure more than one
         /// mechanism.
         /// </summary>
+        [StreamConfigProperty("client.sasl.mechanism")]
         public SaslMechanism? SaslMechanism
         {
             get => _config.SaslMechanism;
@@ -1094,6 +1214,7 @@ namespace Streamiz.Kafka.Net
         /// If there are less than min.insync.replicas (broker configuration) in the ISR
         /// set the produce request will fail.
         /// </summary>
+        [StreamConfigProperty("producer.acks")]
         public Acks? Acks
         {
             get => _config.Acks;
@@ -1113,6 +1234,7 @@ namespace Streamiz.Kafka.Net
         /// in protocol ProduceRequests, the broker will enforce the the topic's `max.message.bytes`
         /// limit (see Apache Kafka documentation). default: 1000000 importance: medium
         /// </summary>
+        [StreamConfigProperty("client.message.max.bytes")]
         public int? MessageMaxBytes
         {
             get => _config.MessageMaxBytes;
@@ -1130,6 +1252,7 @@ namespace Streamiz.Kafka.Net
         /// be passed by reference (zero-copy) at the expense of larger iovecs. default:
         /// 65535 importance: low
         /// </summary>
+        [StreamConfigProperty("client.message.copy.max.bytes")]
         public int? MessageCopyMaxBytes
         {
             get => _config.MessageCopyMaxBytes;
@@ -1149,6 +1272,7 @@ namespace Streamiz.Kafka.Net
         /// automatically unless the configuration property is explicitly set. default: 100000000
         /// importance: medium
         /// </summary>
+        [StreamConfigProperty("client.receive.message.max.bytes")]
         public int? ReceiveMessageMaxBytes
         {
             get => _config.ReceiveMessageMaxBytes;
@@ -1168,6 +1292,7 @@ namespace Streamiz.Kafka.Net
         /// of outstanding consumer fetch request per broker to one. default: 1000000 importance:
         /// low
         /// </summary>
+        [StreamConfigProperty("client.max.in.flight")]
         public int? MaxInFlight
         {
             get => _config.MaxInFlight;
@@ -1194,6 +1319,7 @@ namespace Streamiz.Kafka.Net
         /// refreshed every interval but no more often than every 10s. default: 300000 importance:
         /// low
         /// </summary>
+        [StreamConfigProperty("client.topic.metadata.refresh.interval.ms")]
         public int? TopicMetadataRefreshIntervalMs
         {
             get => _config.TopicMetadataRefreshIntervalMs;
@@ -1210,6 +1336,7 @@ namespace Streamiz.Kafka.Net
         /// Metadata cache max age. Defaults to topic.metadata.refresh.interval.ms * 3 default:
         /// 900000 importance: low
         /// </summary>
+        [StreamConfigProperty("client.metadata.max.age.ms")]
         public int? MetadataMaxAgeMs
         {
             get => _config.MetadataMaxAgeMs;
@@ -1228,6 +1355,7 @@ namespace Streamiz.Kafka.Net
         /// refreshed. This is used to recover quickly from transitioning leader brokers.
         /// default: 250 importance: low
         /// </summary>
+        [StreamConfigProperty("client.topic.metadata.refresh.fast.interval.ms")]
         public int? TopicMetadataRefreshFastIntervalMs
         {
             get => _config.TopicMetadataRefreshFastIntervalMs;
@@ -1244,6 +1372,7 @@ namespace Streamiz.Kafka.Net
         /// Sparse metadata requests (consumes less network bandwidth) default: true importance:
         /// low
         /// </summary>
+        [StreamConfigProperty("client.topic.metadata.refresh.sparse")]
         public bool? TopicMetadataRefreshSparse
         {
             get => _config.TopicMetadataRefreshSparse;
@@ -1261,6 +1390,7 @@ namespace Streamiz.Kafka.Net
         /// names that should be ignored in broker metadata information as if the topics
         /// did not exist. default: '' importance: low
         /// </summary>
+        [StreamConfigProperty("client.topic.blacklist")]
         public string TopicBlacklist
         {
             get => _config.TopicBlacklist;
@@ -1278,6 +1408,7 @@ namespace Streamiz.Kafka.Net
         /// broker,topic,msg. Consumer: consumer,cgrp,topic,fetch default: '' importance:
         /// medium
         /// </summary>
+        [StreamConfigProperty("client.debug")]
         public string Debug
         {
             get => _config.Debug;
@@ -1298,6 +1429,7 @@ namespace Streamiz.Kafka.Net
         /// explicitly set `rd_kafka_AdminOptions_set_operation_timeout()` value. default:
         /// 60000 importance: low
         /// </summary>
+        [StreamConfigProperty("client.socket.timeout.ms")]
         public int? SocketTimeoutMs
         {
             get => _config.SocketTimeoutMs;
@@ -1314,6 +1446,7 @@ namespace Streamiz.Kafka.Net
         /// Broker socket send buffer size. System default is used if 0. default: 0 importance:
         /// low
         /// </summary>
+        [StreamConfigProperty("client.socket.send.buffer.bytes")]
         public int? SocketSendBufferBytes
         {
             get => _config.SocketSendBufferBytes;
@@ -1330,6 +1463,7 @@ namespace Streamiz.Kafka.Net
         /// Broker socket receive buffer size. System default is used if 0. default: 0 importance:
         /// low
         /// </summary>
+        [StreamConfigProperty("client.socket.receive.buffer.bytes")]
         public int? SocketReceiveBufferBytes
         {
             get => _config.SocketReceiveBufferBytes;
@@ -1346,6 +1480,7 @@ namespace Streamiz.Kafka.Net
         /// Enable TCP keep-alives (SO_KEEPALIVE) on broker sockets default: false importance:
         /// low
         /// </summary>
+        [StreamConfigProperty("client.socket.keepalive.enable")]
         public bool? SocketKeepaliveEnable
         {
             get => _config.SocketKeepaliveEnable;
@@ -1362,6 +1497,7 @@ namespace Streamiz.Kafka.Net
         /// Disable the Nagle algorithm (TCP_NODELAY) on broker sockets. default: false importance:
         /// low
         /// </summary>
+        [StreamConfigProperty("client.socket.nagle.disable")]
         public bool? SocketNagleDisable
         {
             get => _config.SocketNagleDisable;
@@ -1381,6 +1517,7 @@ namespace Streamiz.Kafka.Net
         /// in case of request timeouts. NOTE: The connection is automatically re-established.
         /// default: 1 importance: low
         /// </summary>
+        [StreamConfigProperty("client.socket.max.fails")]
         public int? SocketMaxFails
         {
             get => _config.SocketMaxFails;
@@ -1397,6 +1534,7 @@ namespace Streamiz.Kafka.Net
         /// How long to cache the broker address resolving results (milliseconds). default:
         /// 1000 importance: low
         /// </summary>
+        [StreamConfigProperty("client.broker.address.ttl")]
         public int? BrokerAddressTtl
         {
             get => _config.BrokerAddressTtl;
@@ -1412,6 +1550,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Allowed broker IP address families: any, v4, v6 default: any importance: low
         /// </summary>
+        [StreamConfigProperty("client.broker.address.family")]
         public BrokerAddressFamily? BrokerAddressFamily
         {
             get => _config.BrokerAddressFamily;
@@ -1431,6 +1570,7 @@ namespace Streamiz.Kafka.Net
         /// of 0 disables the backoff and reconnects immediately. default: 100 importance:
         /// medium
         /// </summary>
+        [StreamConfigProperty("client.reconnect.backoff.ms")]
         public int? ReconnectBackoffMs
         {
             get => _config.ReconnectBackoffMs;
@@ -1447,6 +1587,7 @@ namespace Streamiz.Kafka.Net
         /// The maximum time to wait before reconnecting to a broker after the connection
         /// has been closed. default: 10000 importance: medium
         /// </summary>
+        [StreamConfigProperty("client.reconnect.backoff.max.ms")]
         public int? ReconnectBackoffMaxMs
         {
             get => _config.ReconnectBackoffMaxMs;
@@ -1463,6 +1604,7 @@ namespace Streamiz.Kafka.Net
         /// librdkafka statistics emit interval. The granularity is 1000ms.
         /// A value of 0 disables statistics. default: 0 importance: high
         /// </summary>
+        [StreamConfigProperty("client.statistics.interval.ms")]
         public int? StatisticsIntervalMs
         {
             get => _config.StatisticsIntervalMs;
@@ -1482,6 +1624,7 @@ namespace Streamiz.Kafka.Net
         /// in a temporary queue until the log queue has been set. default: false importance:
         /// low
         /// </summary>
+        [StreamConfigProperty("client.log.queue")]
         public bool? LogQueue
         {
             get => _config.LogQueue;
@@ -1500,6 +1643,7 @@ namespace Streamiz.Kafka.Net
         /// extension is specified the platform-specific extension (such as .dll or .so)
         /// will be appended automatically. default: '' importance: low
         /// </summary>
+        [StreamConfigProperty("client.plugin.library.paths")]
         public string PluginLibraryPaths
         {
             get => _config.PluginLibraryPaths;
@@ -1517,6 +1661,7 @@ namespace Streamiz.Kafka.Net
         /// where this client is physically located. It corresponds with the broker config
         /// `broker.rack`. default: '' importance: low
         /// </summary>
+        [StreamConfigProperty("client.rack")]
         public string ClientRack
         {
             get => _config.ClientRack;
@@ -1536,6 +1681,7 @@ namespace Streamiz.Kafka.Net
         /// and the OpenSSL library's default CA location is used instead. Store names are
         /// typically one or more of: MY, Root, Trust, CA. default: Root importance: low
         /// </summary>
+        [StreamConfigProperty("client.ssl.ca.certificate.stores")]
         public string SslCaCertificateStores
         {
             get => _config.SslCaCertificateStores;
@@ -1554,6 +1700,7 @@ namespace Streamiz.Kafka.Net
         /// on your platform). If disabled the application must call srand() prior to calling
         /// rd_kafka_new(). default: true importance: low
         /// </summary>
+        [StreamConfigProperty("client.enable.random.seed")]
         public bool? EnableRandomSeed
         {
             get => _config.EnableRandomSeed;
@@ -1577,6 +1724,7 @@ namespace Streamiz.Kafka.Net
         /// propagation time is calculated from the time the topic is first referenced in
         /// the client, e.g., on produce(). default: 30000 importance: low
         /// </summary>
+        [StreamConfigProperty("client.topic.metadata.propagation.max.ms")]
         public int? TopicMetadataPropagationMaxMs
         {
             get => _config.TopicMetadataPropagationMaxMs;
@@ -1592,21 +1740,14 @@ namespace Streamiz.Kafka.Net
         #endregion
 
         #region ConsumerConfig
-
-        /// <summary>
-        /// Add keyvalue configuration for consumer
-        /// [WARNING] : Maybe will change
-        /// </summary>
-        /// <param name="key">New key</param>
-        /// <param name="value">New value</param>
-        public void AddConsumerConfig(string key, string value) => _internalConsumerConfig.AddOrUpdate(key, value);
-
+        
         /// <summary>
         /// Controls how to read messages written transactionally: `read_committed` - only
         /// return transactional messages which have been committed. `read_uncommitted` -
         /// return all messages, even transactional messages which have been aborted. default:
         /// read_committed importance: high
         /// </summary>
+        [StreamConfigProperty("consumer.isolation.level")]
         public IsolationLevel? IsolationLevel
         {
             get { return _consumerConfig.IsolationLevel; }
@@ -1623,6 +1764,7 @@ namespace Streamiz.Kafka.Net
         /// How long to postpone the next fetch request for a topic+partition in case of
         /// a fetch error. default: 500 importance: medium
         /// </summary>
+        [StreamConfigProperty("consumer.fetch.error.backoff.ms")]
         public int? FetchErrorBackoffMs { get { return _consumerConfig.FetchErrorBackoffMs; } set { _consumerConfig.FetchErrorBackoffMs = value; } }
 
         /// <summary>
@@ -1630,6 +1772,7 @@ namespace Streamiz.Kafka.Net
         /// the accumulated data will be sent to the client regardless of this setting. default:
         /// 1 importance: low
         /// </summary>
+        [StreamConfigProperty("consumer.fetch.min.bytes")]
         public int? FetchMinBytes { get { return _consumerConfig.FetchMinBytes; } set { _consumerConfig.FetchMinBytes = value; } }
 
         /// <summary>
@@ -1642,6 +1785,7 @@ namespace Streamiz.Kafka.Net
         /// is automatically adjusted upwards to be at least `message.max.bytes` (consumer
         /// config). default: 52428800 importance: medium
         /// </summary>
+        [StreamConfigProperty("consumer.fetch.max.bytes")]
         public int? FetchMaxBytes { get { return _consumerConfig.FetchMaxBytes; } set { _consumerConfig.FetchMaxBytes = value; } }
 
         /// <summary>
@@ -1650,12 +1794,14 @@ namespace Streamiz.Kafka.Net
         /// value it will gradually try to increase it until the entire message can be fetched.
         /// default: 1048576 importance: medium
         /// </summary>
+        [StreamConfigProperty("consumer.max.partition.fetch.bytes")]
         public int? MaxPartitionFetchBytes { get { return _consumerConfig.MaxPartitionFetchBytes; } set { _consumerConfig.MaxPartitionFetchBytes = value; } }
 
         /// <summary>
         /// Maximum time the broker may wait to fill the response with fetch.min.bytes. default:
         /// 100 importance: low
         /// </summary>
+        [StreamConfigProperty("consumer.fetch.wait.max.ms")]
         public int? FetchWaitMaxMs { get { return _consumerConfig.FetchWaitMaxMs; } set { _consumerConfig.FetchWaitMaxMs = value; } }
 
         /// <summary>
@@ -1663,12 +1809,14 @@ namespace Streamiz.Kafka.Net
         /// This value may be overshot by fetch.message.max.bytes. This property has higher
         /// priority than queued.min.messages. default: 1048576 importance: medium
         /// </summary>
+        [StreamConfigProperty("consumer.queued.max.messages.kbytes")]
         public int? QueuedMaxMessagesKbytes { get { return _consumerConfig.QueuedMaxMessagesKbytes; } set { _consumerConfig.QueuedMaxMessagesKbytes = value; } }
 
         /// <summary>
         /// Minimum number of messages per topic+partition librdkafka tries to maintain in
         /// the local consumer queue. default: 100000 importance: medium
         /// </summary>
+        [StreamConfigProperty("consumer.queued.min.messages")]
         public int? QueuedMinMessages { get { return _consumerConfig.QueuedMinMessages; } set { _consumerConfig.QueuedMinMessages = value; } }
 
         /// <summary>
@@ -1676,6 +1824,7 @@ namespace Streamiz.Kafka.Net
         /// store is an in-memory store of the next offset to (auto-)commit for each partition.
         /// default: true importance: high
         /// </summary>
+        [StreamConfigProperty("consumer.enable.auto.offset.store")]
         public bool? EnableAutoOffsetStore { get { return _consumerConfig.EnableAutoOffsetStore; } private set { _consumerConfig.EnableAutoOffsetStore = value; } }
 
         /// <summary>
@@ -1684,6 +1833,7 @@ namespace Streamiz.Kafka.Net
         /// start offsets. To circumvent this behaviour set specific start offsets per partition
         /// in the call to assign(). default: true importance: high
         /// </summary>
+        [StreamConfigProperty("consumer.enable.auto.commit")]
         public bool? EnableAutoCommit { get { return _consumerConfig.EnableAutoCommit; } private set { _consumerConfig.EnableAutoCommit = value; } }
 
         /// <summary>
@@ -1697,6 +1847,7 @@ namespace Streamiz.Kafka.Net
         /// to processing has finished. The interval is checked two times per second. See
         /// KIP-62 for more information. default: 300000 importance: high
         /// </summary>
+        [StreamConfigProperty("consumer.max.poll.interval.ms")]
         public int? MaxPollIntervalMs { get { return _consumerConfig.MaxPollIntervalMs; } set { _consumerConfig.MaxPollIntervalMs = value; } }
 
         /// <summary>
@@ -1705,16 +1856,19 @@ namespace Streamiz.Kafka.Net
         /// ten to more quickly recover in case of coordinator reassignment. default: 600000
         /// importance: low
         /// </summary>
+        [StreamConfigProperty("consumer.coordinator.query.interval.ms")]
         public int? CoordinatorQueryIntervalMs { get { return _consumerConfig.CoordinatorQueryIntervalMs; } set { _consumerConfig.CoordinatorQueryIntervalMs = value; } }
 
         /// <summary>
         /// Group protocol type default: consumer importance: low
         /// </summary>
+        [StreamConfigProperty("consumer.group.protocol.type")]
         public string GroupProtocolType { get { return _consumerConfig.GroupProtocolType; } set { _consumerConfig.GroupProtocolType = value; } }
 
         /// <summary>
         /// Group session keepalive heartbeat interval. default: 3000 importance: low
         /// </summary>
+        [StreamConfigProperty("consumer.heartbeat.interval.ms")]
         public int? HeartbeatIntervalMs { get { return _consumerConfig.HeartbeatIntervalMs; } set { _consumerConfig.HeartbeatIntervalMs = value; } }
 
         /// <summary>
@@ -1726,12 +1880,14 @@ namespace Streamiz.Kafka.Net
         /// and `group.max.session.timeout.ms`. Also see `max.poll.interval.ms`. default:
         /// 10000 importance: high
         /// </summary>
+        [StreamConfigProperty("consumer.session.timeout.ms")]
         public int? SessionTimeoutMs { get { return _consumerConfig.SessionTimeoutMs; } set { _consumerConfig.SessionTimeoutMs = value; } }
 
         /// <summary>
         /// Name of partition assignment strategy to use when elected group leader assigns
         /// partitions to group members. default: range,roundrobin importance: medium
         /// </summary>
+        [StreamConfigProperty("consumer.partition.assignment.strategy")]
         public PartitionAssignmentStrategy? PartitionAssignmentStrategy { get { return _consumerConfig.PartitionAssignmentStrategy; } set { _consumerConfig.PartitionAssignmentStrategy = value; } }
 
         /// <summary>
@@ -1741,6 +1897,7 @@ namespace Streamiz.Kafka.Net
         /// the largest offset, 'error' - trigger an error which is retrieved by consuming
         /// messages and checking 'message->err'. default: largest importance: high
         /// </summary>
+        [StreamConfigProperty("consumer.auto.offset.reset")]
         public AutoOffsetReset? AutoOffsetReset { get { return _consumerConfig.AutoOffsetReset; } set { _consumerConfig.AutoOffsetReset = value; } }
 
         /// <summary>
@@ -1750,12 +1907,14 @@ namespace Streamiz.Kafka.Net
         /// consumption. Allowed values: headers, timestamp, topic, all, none default: all
         /// importance: low
         /// </summary>
+        [StreamConfigProperty("consumer.consume.result.fields")]
         public string ConsumeResultFields { set { _consumerConfig.ConsumeResultFields = value; } }
 
         /// <summary>
         /// Emit RD_KAFKA_RESP_ERR__PARTITION_EOF event whenever the consumer reaches the
         /// end of a partition. default: false importance: low
         /// </summary>
+        [StreamConfigProperty("consumer.enable.partition.eof")]
         public bool? EnablePartitionEof { get { return _consumerConfig.EnablePartitionEof; } set { _consumerConfig.EnablePartitionEof = value; } }
 
         /// <summary>
@@ -1763,6 +1922,7 @@ namespace Streamiz.Kafka.Net
         /// to the messages occurred. This check comes at slightly increased CPU usage. default:
         /// false importance: medium
         /// </summary>
+        [StreamConfigProperty("consumer.check.crcs")]
         public bool? CheckCrcs { get { return _consumerConfig.CheckCrcs; } set { _consumerConfig.CheckCrcs = value; } }
 
         /// <summary>
@@ -1773,20 +1933,13 @@ namespace Streamiz.Kafka.Net
         /// broker versions only the broker configuration applies. default: false importance:
         /// low
         /// </summary>
+        [StreamConfigProperty("consumer.allow.auto.create.topics")]
         public bool? AllowAutoCreateTopics { get { return _consumerConfig.AllowAutoCreateTopics; } set { _consumerConfig.AllowAutoCreateTopics = value; } }
 
         #endregion
 
         #region ProducerConfig
-
-        /// <summary>
-        /// Add keyvalue configuration for producer
-        /// [WARNING] : Maybe will change
-        /// </summary>
-        /// <param name="key">New key</param>
-        /// <param name="value">New value</param>
-        public void AddProducerConfig(string key, string value) => _internalProducerConfig.AddOrUpdate(key, value);
-
+        
         /// <summary>
         /// The threshold of outstanding not yet transmitted broker requests needed to backpressure
         /// the producer's message accumulator. If the number of not yet transmitted requests
@@ -1794,13 +1947,15 @@ namespace Streamiz.Kafka.Net
         /// been triggered (for example, in accordance with linger.ms) will be delayed. A
         /// lower number yields larger and more effective batches. A higher value can improve
         /// latency when using compression on slow machines. default: 1 importance: low
-        /// </summary>     
+        /// </summary>
+        [StreamConfigProperty("producer.queue.buffering.backpressure.threshold")]
         public int? QueueBufferingBackpressureThreshold { get { return _producerConfig.QueueBufferingBackpressureThreshold; } set { _producerConfig.QueueBufferingBackpressureThreshold = value; } }
 
         /// <summary>
         /// The backoff time in milliseconds before retrying a protocol request. default:
         /// 100 importance: medium
         /// </summary>
+        [StreamConfigProperty("producer.retry.backoff.ms")]
         public int? RetryBackoffMs { get { return _producerConfig.RetryBackoffMs; } set { _producerConfig.RetryBackoffMs = value; } }
 
         /// <summary>
@@ -1808,6 +1963,7 @@ namespace Streamiz.Kafka.Net
         /// reordering unless `enable.idempotence` is set to true. default: 2 importance:
         /// high
         /// </summary>
+        [StreamConfigProperty("producer.message.send.max.retries")]
         public int? MessageSendMaxRetries { get { return _producerConfig.MessageSendMaxRetries; } set { _producerConfig.MessageSendMaxRetries = value; } }
 
         /// <summary>
@@ -1817,6 +1973,7 @@ namespace Streamiz.Kafka.Net
         /// batches of messages to accumulate at the expense of increased message delivery
         /// latency. default: 5 importance: high
         /// </summary>
+        [StreamConfigProperty("producer.linger.ms")]
         public double? LingerMs { get { return _producerConfig.LingerMs; } set { _producerConfig.LingerMs = value; } }
 
         /// <summary>
@@ -1824,12 +1981,14 @@ namespace Streamiz.Kafka.Net
         /// by all topics and partitions. This property has higher priority than queue.buffering.max.messages.
         /// default: 1048576 importance: high
         /// </summary>
+        [StreamConfigProperty("producer.queue.buffering.max.kbytes")]
         public int? QueueBufferingMaxKbytes { get { return _producerConfig.QueueBufferingMaxKbytes; } set { _producerConfig.QueueBufferingMaxKbytes = value; } }
 
         /// <summary>
         /// Maximum number of messages allowed on the producer queue. This queue is shared
         /// by all topics and partitions. default: 100000 importance: high
         /// </summary>
+        [StreamConfigProperty("producer.queue.buffering.max.messages")]
         public int? QueueBufferingMaxMessages { get { return _producerConfig.QueueBufferingMaxMessages; } set { _producerConfig.QueueBufferingMaxMessages = value; } }
 
         /// <summary>
@@ -1839,6 +1998,7 @@ namespace Streamiz.Kafka.Net
         /// Messages failing due to `message.timeout.ms` are not covered by this guarantee.
         /// Requires `enable.idempotence=true`. default: false importance: low
         /// </summary>
+        [StreamConfigProperty("producer.enable.gapless.guarantee")]
         public bool? EnableGaplessGuarantee { get { return _producerConfig.EnableGaplessGuarantee; } set { _producerConfig.EnableGaplessGuarantee = value; } }
 
         /// <summary>
@@ -1850,6 +2010,7 @@ namespace Streamiz.Kafka.Net
         /// Producer instantation will fail if user-supplied configuration is incompatible.
         /// default: false importance: high
         /// </summary>
+        [StreamConfigProperty("producer.enable.idempotence")]
         public bool? EnableIdempotence
         {
             get { return _producerConfig.EnableIdempotence; }
@@ -1871,6 +2032,7 @@ namespace Streamiz.Kafka.Net
         /// then the producer is limited to idempotent delivery (if enable.idempotence is
         /// set). Requires broker version >= 0.11.0. default: '' importance: high
         /// </summary>
+        [StreamConfigProperty("producer.transaction.id")]
         public string TransactionalId { get { return _producerConfig.TransactionalId; } set { _producerConfig.TransactionalId = value; } }
 
         /// <summary>
@@ -1878,6 +2040,7 @@ namespace Streamiz.Kafka.Net
         /// for all topics, may be overridden by the topic configuration property `compression.codec`.
         /// default: none importance: medium
         /// </summary>
+        [StreamConfigProperty("producer.compression.type")]
         public CompressionType? CompressionType { get { return _producerConfig.CompressionType; } set { _producerConfig.CompressionType = value; } }
 
         ///  <summary>
@@ -1887,6 +2050,7 @@ namespace Streamiz.Kafka.Net
         ///  for lz4; only 0 for snappy; -1 = codec-dependent default compression level. default:
         ///  -1 importance: medium
         ///  </summary>
+        [StreamConfigProperty("producer.compression.level")]
         public int? CompressionLevel { get { return _producerConfig.CompressionLevel; } set { _producerConfig.CompressionLevel = value; } }
 
         /// <summary>
@@ -1898,6 +2062,7 @@ namespace Streamiz.Kafka.Net
         /// randomly partitioned. This is functionally equivalent to the default partitioner
         /// in the Java Producer.). default: murmur2_random importance: high
         /// </summary>
+        [StreamConfigProperty("producer.partitioner")]
         public Partitioner? Partitioner { get { return _producerConfig.Partitioner; } set { _producerConfig.Partitioner = value; } }
 
         /// <summary>
@@ -1908,6 +2073,7 @@ namespace Streamiz.Kafka.Net
         /// exceeded. The message timeout is automatically adjusted to `transaction.timeout.ms`
         /// if `transactional.id` is configured. default: 300000 importance: high
         /// </summary>
+        [StreamConfigProperty("producer.message.timeout.ms")]
         public int? MessageTimeoutMs { get { return _producerConfig.MessageTimeoutMs; } set { _producerConfig.MessageTimeoutMs = value; } }
 
         /// <summary>
@@ -1915,6 +2081,7 @@ namespace Streamiz.Kafka.Net
         /// by the broker and relies on `request.required.acks` being != 0. default: 5000
         /// importance: medium
         /// </summary>
+        [StreamConfigProperty("producer.request.timeout.ms")]
         public int? RequestTimeoutMs { get { return _producerConfig.RequestTimeoutMs; } set { _producerConfig.RequestTimeoutMs = value; } }
 
         /// <summary>
@@ -1923,6 +2090,7 @@ namespace Streamiz.Kafka.Net
         /// throughput and reduce memory usage. Allowed values: key, value, timestamp, headers,
         /// all, none. default: all importance: low
         /// </summary>
+        [StreamConfigProperty("producer.delivery.report.fields")]
         public string DeliveryReportFields { get { return _producerConfig.DeliveryReportFields; } set { _producerConfig.DeliveryReportFields = value; } }
 
         /// <summary>
@@ -1930,6 +2098,7 @@ namespace Streamiz.Kafka.Net
         /// set this parameter to true. Set it to false for "fire and forget" semantics and
         /// a small boost in performance. default: true importance: low
         /// </summary>
+        [StreamConfigProperty("producer.enable.delivery.reports")]
         public bool? EnableDeliveryReports { get { return _producerConfig.EnableDeliveryReports; } set { _producerConfig.EnableDeliveryReports = value; } }
 
         /// <summary>
@@ -1938,6 +2107,7 @@ namespace Streamiz.Kafka.Net
         /// to true. If set to false, you will need to call the Poll function manually. default:
         /// true importance: low
         /// </summary>
+        [StreamConfigProperty("producer.enable.background.poll")]
         public bool? EnableBackgroundPoll { get { return _producerConfig.EnableBackgroundPoll; } set { _producerConfig.EnableBackgroundPoll = value; } }
 
         /// <summary>
@@ -1950,12 +2120,14 @@ namespace Streamiz.Kafka.Net
         /// timeout (`socket.timeout.ms` must be at least 100ms lower than `transaction.timeout.ms`).
         /// default: 60000 importance: medium
         /// </summary>
+        [StreamConfigProperty("producer.transaction.timeout.ms")]
         public int? TransactionTimeoutMs { get { return _producerConfig.TransactionTimeoutMs; } set { _producerConfig.TransactionTimeoutMs = value; } }
 
         /// <summary>
         /// Maximum number of messages batched in one MessageSet. The total MessageSet size
         /// is also limited by message.max.bytes. default: 10000 importance: medium
         /// </summary>
+        [StreamConfigProperty("producer.batch.num.messages")]
         public int? BatchNumMessages { get { return _producerConfig.BatchNumMessages; } set { _producerConfig.BatchNumMessages = value; } }
 
         /// <summary>
@@ -1966,6 +2138,7 @@ namespace Streamiz.Kafka.Net
         /// is also limited by batch.num.messages and message.max.bytes. default: 1000000
         /// importance: medium
         /// </summary>
+        [StreamConfigProperty("producer.batch.size")]
         public int? BatchSize { get { return _producerConfig.BatchSize; } set { _producerConfig.BatchSize = value; } }
 
         /// <summary>
@@ -1976,24 +2149,27 @@ namespace Streamiz.Kafka.Net
         /// use. These messages would otherwise be assigned randomly. A higher value allows
         /// for more effective batching of these messages. default: 10 importance: low
         /// </summary>
+        [StreamConfigProperty("producer.sticky.partitioning.linger.ms")]
         public int? StickyPartitioningLingerMs { get { return _producerConfig.StickyPartitioningLingerMs; } set { _producerConfig.StickyPartitioningLingerMs = value; } }
 
         #endregion
 
         #region AdminConfig
-
-        /// <summary>
-        /// Add keyvalue configuration for admin client
-        /// [WARNING] : Maybe will change
-        /// </summary>
-        /// <param name="key">New key</param>
-        /// <param name="value">New value</param>
-        public void AddAdminConfig(string key, string value) => _internalAdminConfig.AddOrUpdate(key, value);
-
+        
         #endregion
 
         #region Ctor
 
+        private void InitializeReflectedProperties()
+        {
+            foreach (var p in this.GetType().GetProperties())
+            {
+                var streamConfigAttr = p.GetCustomAttribute<StreamConfigPropertyAttribute>();
+                if (streamConfigAttr != null)
+                    cacheProperties.Add(streamConfigAttr.KeyName, p);
+            }
+        }
+        
         /// <summary>
         /// Constructor empty
         /// </summary>
@@ -2012,6 +2188,8 @@ namespace Streamiz.Kafka.Net
         /// <param name="properties">Dictionary of stream properties</param>
         public StreamConfig(IDictionary<string, dynamic> properties)
         {
+            InitializeReflectedProperties();
+            
             ClientId = null;
             NumStreamThreads = 1;
             DefaultKeySerDes = new ByteArraySerDes();
@@ -2041,12 +2219,6 @@ namespace Streamiz.Kafka.Net
             ParallelProcessing = false;
             MaxDegreeOfParallelism = 8;
 
-            if (properties != null)
-            {
-                foreach (var k in properties)
-                    DictionaryExtensions.AddOrUpdate(this, k.Key, k.Value);
-            }
-
             _consumerConfig = new ConsumerConfig();
             _producerConfig = new ProducerConfig();
             _adminClientConfig = new AdminClientConfig();
@@ -2063,16 +2235,47 @@ namespace Streamiz.Kafka.Net
                 builder.SetMinimumLevel(LogLevel.Information);
                 builder.AddConsole();
             });
+            
+            if (properties != null)
+            {
+                foreach (var k in properties)
+                    AddConfig(k.Key, k.Value);
+            }
         }
 
         #endregion
 
         #region IStreamConfig Impl
+
+        /// <summary>
+        /// Add a new key/value configuration.
+        /// </summary>
+        /// <param name="key">New key</param>
+        /// <param name="value">New value</param>
+        public void AddConfig(string key, dynamic value)
+        {
+            if(cacheProperties.ContainsKey(key))
+                cacheProperties[key].SetValue(this, value);
+            else
+            {
+                if (key.StartsWith("stream."))
+                    this.AddOrUpdate(key.Replace("stream.", string.Empty), (object) value);
+                else if (key.StartsWith("client."))
+                    _config.Set(key.Replace("client.", string.Empty), value.ToString());
+                else if (key.StartsWith("consumer."))
+                    _consumerConfig.Set(key.Replace("consumer.", string.Empty), value.ToString());
+                else if (key.StartsWith("producer."))
+                    _adminClientConfig.Set(key.Replace("producer.", string.Empty), value.ToString());
+                else if (key.StartsWith("admin."))
+                    _producerConfig.Set(key.Replace("admin.", string.Empty), value.ToString());
+            }
+        }
         
         /// <summary>
         /// Authorize your streams application to follow metadata (timestamp, topic, partition, offset and headers) during processing record.
         /// You can use <see cref="StreamizMetadata"/> to get these metadatas. (Default : false)
         /// </summary>
+        [StreamConfigProperty("stream." + followMetadataCst)]
         public bool FollowMetadata
         {
             get => this[followMetadataCst];
@@ -2082,6 +2285,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// The number of threads to execute stream processing.
         /// </summary>
+        [StreamConfigProperty("stream." + numStreamThreadsCst)]
         public int NumStreamThreads
         {
             get => this[numStreamThreadsCst];
@@ -2097,6 +2301,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// An ID prefix string used for the client IDs of internal consumer, producer and restore-consumer, with pattern '&lt;client.id&gt;-StreamThread-&lt;threadSequenceNumber&gt;-&lt;consumer|producer|restore-consumer&gt;'.
         /// </summary>
+        [StreamConfigProperty("stream." + clientIdCst)]
         public string ClientId
         {
             get => this[clientIdCst];
@@ -2106,6 +2311,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// An identifier for the stream processing application. Must be unique within the Kafka cluster. It is used as 1) the default client-id prefix, 2) the group-id for membership management, 3) the changelog topic prefix.
         /// </summary>
+        [StreamConfigProperty("stream." + applicatonIdCst)]
         public string ApplicationId
         {
             get => this[applicatonIdCst];
@@ -2115,6 +2321,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Default key serdes for consumer and materialized state store
         /// </summary>
+        [StreamConfigProperty("stream." + defaultKeySerDesCst)]
         public ISerDes DefaultKeySerDes
         {
             get => this[defaultKeySerDesCst];
@@ -2124,6 +2331,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Default value serdes for consumer and materialized state store
         /// </summary>
+        [StreamConfigProperty("stream." + defaultValueSerDesCst)]
         public ISerDes DefaultValueSerDes
         {
             get => this[defaultValueSerDesCst];
@@ -2133,6 +2341,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Default timestamp extractor class that implements the <see cref="ITimestampExtractor"/> interface.
         /// </summary>
+        [StreamConfigProperty("stream." + defaultTimestampExtractorCst)]
         public ITimestampExtractor DefaultTimestampExtractor
         {
             get => this[defaultTimestampExtractorCst];
@@ -2143,6 +2352,7 @@ namespace Streamiz.Kafka.Net
         /// Initial list of brokers as a CSV list of broker host or host:port. default:
         /// '' importance: high
         /// </summary>
+        [StreamConfigProperty("stream.bootstrap.servers")]
         public string BootstrapServers
         {
             get => _config.BootstrapServers;
@@ -2160,6 +2370,7 @@ namespace Streamiz.Kafka.Net
         /// Note that exactly-once processing requires a cluster of at least three brokers by default what is the recommended setting for production; for development you can change this, by adjusting broker setting
         /// <code>transaction.state.log.replication.factor</code> and <code>transaction.state.log.min.isr</code>.
         /// </summary>
+        [StreamConfigProperty("stream." + processingGuaranteeCst)]
         public ProcessingGuarantee Guarantee
         {
             get => this[processingGuaranteeCst];
@@ -2185,6 +2396,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Timeout used for transaction related operations. (Default : 10 seconds).
         /// </summary>
+        [StreamConfigProperty("stream." + transactionTimeoutCst)]
         public TimeSpan TransactionTimeout
         {
             get => this[transactionTimeoutCst];
@@ -2195,6 +2407,7 @@ namespace Streamiz.Kafka.Net
         /// The frequency with which to save the position of the processor. (Note, if <see cref="IStreamConfig.Guarantee"/> is set to <see cref="ProcessingGuarantee.EXACTLY_ONCE"/>, the default value is <see cref="StreamConfig.EOS_DEFAULT_COMMIT_INTERVAL_MS"/>,
         /// otherwise the default value is <see cref="StreamConfig.DEFAULT_COMMIT_INTERVAL_MS"/>)
         /// </summary>
+        [StreamConfigProperty("stream." + commitIntervalMsCst)]
         public long CommitIntervalMs
         {
             get => this[commitIntervalMsCst];
@@ -2204,6 +2417,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// The amount of time in milliseconds to block waiting for input. (Default : 100)
         /// </summary>
+        [StreamConfigProperty("stream." + pollMsCst)]
         public long PollMs
         {
             get => this[pollMsCst];
@@ -2213,6 +2427,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// The maximum number of records returned in a single call to poll(). (Default: 500)
         /// </summary>
+        [StreamConfigProperty("stream." + maxPollRecordsCst)]
         public long MaxPollRecords
         {
             get => this[maxPollRecordsCst];
@@ -2222,6 +2437,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// The maximum number of records returned in a polling restore phase. (Default: 1000)
         /// </summary>
+        [StreamConfigProperty("stream." + maxPollRestoringRecordsCst)]
         public long MaxPollRestoringRecords
         {
             get => this[maxPollRestoringRecordsCst];
@@ -2231,6 +2447,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Maximum amount of time a stream task will stay idle when not all of its partition buffers contain records, to avoid potential out-of-order record processing across multiple input streams. (Default: 0)
         /// </summary>
+        [StreamConfigProperty("stream." + maxTaskIdleCst)]
         public long MaxTaskIdleMs
         {
             get => this[maxTaskIdleCst];
@@ -2240,6 +2457,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Maximum number of records to buffer per partition. (Default: 1000)
         /// </summary>
+        [StreamConfigProperty("stream." + bufferedRecordsPerPartitionCst)]
         public long BufferedRecordsPerPartition
         {
             get => this[bufferedRecordsPerPartitionCst];
@@ -2250,6 +2468,7 @@ namespace Streamiz.Kafka.Net
         /// Directory location for state store. This path must be unique for each streams instance sharing the same underlying filesystem.
         /// Default value : $TMP_DIR_ENVIRONMENT$/streamiz-kafka-net
         /// </summary>
+        [StreamConfigProperty("stream." + stateDirCst)]
         public string StateDir
         {
             get => this[stateDirCst];
@@ -2259,6 +2478,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// The replication factor for change log topics topics created by the stream processing application. Default is 1.
         /// </summary>
+        [StreamConfigProperty("stream." + replicationFactorCst)]
         public int ReplicationFactor
         {
             get => this[replicationFactorCst];
@@ -2268,6 +2488,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Added to a windows maintainMs to ensure data is not deleted from the log prematurely. Allows for clock drift. Default is 1 day.
         /// </summary>
+        [StreamConfigProperty("stream." + windowstoreChangelogAdditionalRetentionMsCst)]
         public long WindowStoreChangelogAdditionalRetentionMs
         {
             get => this[windowstoreChangelogAdditionalRetentionMsCst];
@@ -2277,6 +2498,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Manager which track offset saved in local state store
         /// </summary>
+        [StreamConfigProperty("stream." + offsetCheckpointManagerCst)]
         public IOffsetCheckpointManager OffsetCheckpointManager
         {
             get => this[offsetCheckpointManagerCst];
@@ -2286,6 +2508,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// A Rocks DB config handler function
         /// </summary>
+        [StreamConfigProperty("stream." + rocksDbConfigSetterCst)]
         public Action<string, RocksDbOptions> RocksDbConfigHandler
         {
             get => this[rocksDbConfigSetterCst];
@@ -2295,6 +2518,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Inner exception handling function called during processing.
         /// </summary>
+        [StreamConfigProperty("stream." + innerExceptionHandlerCst)]
         public Func<Exception, ExceptionHandlerResponse> InnerExceptionHandler
         {
             get => this[innerExceptionHandlerCst];
@@ -2304,6 +2528,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Deserialization exception handling function called when deserialization exception during kafka consumption is raise.
         /// </summary>
+        [StreamConfigProperty("stream." + deserializationExceptionHandlerCst)]
         public Func<ProcessorContext, ConsumeResult<byte[], byte[]>, Exception, ExceptionHandlerResponse> DeserializationExceptionHandler
         {
             get => this[deserializationExceptionHandlerCst];
@@ -2313,6 +2538,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Production exception handling function called when kafka produce exception is raise.
         /// </summary>
+        [StreamConfigProperty("stream." + productionExceptionHandlerCst)]
         public Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler  
         {
             get => this[productionExceptionHandlerCst];
@@ -2323,6 +2549,7 @@ namespace Streamiz.Kafka.Net
         /// Delay between two invocations of MetricsReporter().
         /// Minimum and default value : 30 seconds
         /// </summary>
+        [StreamConfigProperty("stream." + metricsIntervalMsCst)]
         public long MetricsIntervalMs
         {
             get => this[metricsIntervalMsCst];
@@ -2339,6 +2566,7 @@ namespace Streamiz.Kafka.Net
         /// This reporter has the responsibility to export sensors and metrics into another platform.
         /// Streamiz package provide one reporter for Prometheus (see Streamiz.Kafka.Net.Metrics.Prometheus package).
         /// </summary>
+        [StreamConfigProperty("stream." + metricsReportCst)]
         public Action<IEnumerable<Sensor>> MetricsReporter
         {
             get => this[metricsReportCst];
@@ -2349,6 +2577,7 @@ namespace Streamiz.Kafka.Net
         /// Boolean which indicate if librdkafka handle statistics should be exposed ot not. (default: false)
         /// Only mainConsumer and producer will be concerned.
         /// </summary>
+        [StreamConfigProperty("stream." + exposeLibrdKafkaCst)]
         public bool ExposeLibrdKafkaStats 
         {
             get => this[exposeLibrdKafkaCst];
@@ -2358,6 +2587,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// The highest recording level for metrics (default: INFO).
         /// </summary>
+        [StreamConfigProperty("stream." + metricsRecordingLevelCst)]
         public MetricsRecordingLevel MetricsRecording 
         {
             get => this[metricsRecordingLevelCst];
@@ -2367,6 +2597,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Time wait before completing the start task of <see cref="KafkaStream"/>. (default: 5000)
         /// </summary>
+        [StreamConfigProperty("stream." + startTaskDelayMsCst)]
         public long StartTaskDelayMs
         {
             get => this[startTaskDelayMsCst];
@@ -2376,6 +2607,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Enables parallel processing for messages (default: false)
         /// </summary>
+        [StreamConfigProperty("stream." + parallelProcessingCst)]
         public bool ParallelProcessing
         {
             get => this[parallelProcessingCst];
@@ -2386,6 +2618,7 @@ namespace Streamiz.Kafka.Net
         /// The max number of concurrent messages processing by thread. (default: 8)
         /// Only valid if ParallelProcessing is true
         /// </summary>
+        [StreamConfigProperty("stream." + maxDegreeOfParallelismCst)]
         public int MaxDegreeOfParallelism
         {
             get => this[maxDegreeOfParallelismCst];
@@ -2405,8 +2638,7 @@ namespace Streamiz.Kafka.Net
         /// <returns>Return <see cref="ProducerConfig"/> for building <see cref="IProducer{TKey, TValue}"/> instance.</returns>
         public ProducerConfig ToProducerConfig(string clientId)
         {
-            var c = _producerConfig.Union(_internalProducerConfig).ToDictionary();
-            ProducerConfig config = new ProducerConfig(c);
+            ProducerConfig config = new ProducerConfig(_producerConfig.Union(_config).Distinct(new KeyValueComparer()).ToDictionary());
             config.ClientId = clientId;
             return config;
         }
@@ -2427,8 +2659,7 @@ namespace Streamiz.Kafka.Net
             if (!ContainsKey(applicatonIdCst))
                 throw new StreamConfigException($"Key {applicatonIdCst} was not found. She is mandatory for getting consumer config");
 
-            var c = _consumerConfig.Union(_internalConsumerConfig).ToDictionary();
-            var config = new ConsumerConfig(c);
+            var config = new ConsumerConfig(_consumerConfig.Union(_config).Distinct(new KeyValueComparer()).ToDictionary());
             config.GroupId = ApplicationId;
             config.ClientId = clientId;
             return config;
@@ -2455,8 +2686,7 @@ namespace Streamiz.Kafka.Net
         /// <returns>Return <see cref="AdminClientConfig"/> for building <see cref="IAdminClient"/> instance.</returns>
         public AdminClientConfig ToAdminConfig(string clientId)
         {
-            var c = _adminClientConfig.Union(_internalAdminConfig).ToDictionary();
-            var config = new AdminClientConfig(c);
+            var config = new AdminClientConfig(_adminClientConfig.Union(_config).Distinct(new KeyValueComparer()).ToDictionary());
             config.ClientId = clientId;
             return config;
         }
@@ -2475,11 +2705,9 @@ namespace Streamiz.Kafka.Net
             else
             {
                 var allConfigs = _adminClientConfig
-                    .Union(_internalAdminConfig)
                     .Union(_consumerConfig)
-                    .Union(_internalConsumerConfig)
                     .Union(_producerConfig)
-                    .Union(_internalProducerConfig)
+                    .Distinct(new KeyValueComparer())
                     .ToDictionary();
                 return allConfigs.ContainsKey(key) ? allConfigs[key] : null;
             }
@@ -2492,9 +2720,6 @@ namespace Streamiz.Kafka.Net
         public IStreamConfig Clone()
         {
             var config = new StreamConfig(this);
-            config._internalConsumerConfig = new Dictionary<string, string>(_internalConsumerConfig);
-            config._internalAdminConfig = new Dictionary<string, string>(_internalAdminConfig);
-            config._internalProducerConfig = new Dictionary<string, string>(_internalProducerConfig);
 
             config._consumerConfig = new ConsumerConfig(_consumerConfig);
             config._producerConfig = new ProducerConfig(_producerConfig);
@@ -2511,6 +2736,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Specifies the timeout for requests to Confluent Schema Registry. default: 30000
         /// </summary>
+        [StreamConfigProperty("stream." + schemaRegistryRequestTimeoutMsCst)]
         public int? SchemaRegistryRequestTimeoutMs
         {
             get => this.ContainsKey(schemaRegistryRequestTimeoutMsCst) ? this[schemaRegistryRequestTimeoutMsCst] : null;
@@ -2520,6 +2746,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Specifies the maximum number of schemas CachedSchemaRegistryClient should cache locally. default: 1000
         /// </summary>
+        [StreamConfigProperty("stream." + schemaRegistryMaxCachedSchemasCst)]
         public int? SchemaRegistryMaxCachedSchemas
         {
             get => this.ContainsKey(schemaRegistryMaxCachedSchemasCst) ? this[schemaRegistryMaxCachedSchemasCst] : null;
@@ -2529,6 +2756,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// A comma-separated list of URLs for schema registry instances that are used register or lookup schemas.
         /// </summary>
+        [StreamConfigProperty("stream." + schemaRegistryUrlCst)]
         public string SchemaRegistryUrl
         {
             get => this.ContainsKey(schemaRegistryUrlCst) ? this[schemaRegistryUrlCst] : null;
@@ -2538,6 +2766,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         ///    BasicAuthUserInfo
         /// </summary>
+        [StreamConfigProperty("stream." + schemaRegistryBasicAuthUserInfoCst)]
         public string BasicAuthUserInfo
         {
             get => this.ContainsKey(schemaRegistryBasicAuthUserInfoCst) ? this[schemaRegistryBasicAuthUserInfoCst] : null;
@@ -2547,6 +2776,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         ///    BasicAuthCredentialsSource
         /// </summary>
+        [StreamConfigProperty("stream." + schemaRegistryBasicAuthCredentialSourceCst)]
         public int? BasicAuthCredentialsSource
         {
             get => this.ContainsKey(schemaRegistryBasicAuthCredentialSourceCst) ? this[schemaRegistryBasicAuthCredentialSourceCst] : null;
@@ -2556,6 +2786,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Specifies whether or not the serializer should attempt to auto-register unrecognized schemas with Confluent Schema Registry. default: true
         /// </summary>
+        [StreamConfigProperty("stream.auto.register.schemas")]
         public bool? AutoRegisterSchemas
         {
             get => this.ContainsKey(avroSerializerAutoRegisterSchemasCst) ? this[avroSerializerAutoRegisterSchemasCst] : null;
@@ -2569,6 +2800,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// The subject name strategy to use for schema registration / lookup. Possible values: <see cref="Streamiz.Kafka.Net.SubjectNameStrategy" />
         /// </summary>
+        [StreamConfigProperty("stream.subject.name.strategy")]
         public SubjectNameStrategy? SubjectNameStrategy
         {
             get => this.ContainsKey(avroSerializerSubjectNameStrategyCst) ? this[avroSerializerSubjectNameStrategyCst] : null;
@@ -2586,6 +2818,7 @@ namespace Streamiz.Kafka.Net
         ///    by the Serialize method to estimate an appropriate value. Note: each call to
         ///    serialize creates a new buffer. default: 1024
         /// </summary>
+        [StreamConfigProperty("stream.serializer.buffer.bytes")]
         public int? BufferBytes
         {
             get => this.ContainsKey(avroSerializerBufferBytesCst) ? this[avroSerializerBufferBytesCst] : null;
@@ -2602,6 +2835,7 @@ namespace Streamiz.Kafka.Net
         ///    is backwards compatible with the schema of the object being serialized. default:
         ///    false
         /// </summary>
+        [StreamConfigProperty("stream.serializer.use.last.version")]
         public bool? UseLatestVersion
         {
             get => this.ContainsKey(avroSerializerUseLatestVersionCst) ? this[avroSerializerUseLatestVersionCst] : null;
@@ -2616,6 +2850,7 @@ namespace Streamiz.Kafka.Net
         ///    Specifies whether or not the Protobuf serializer should skip known types when
         ///    resolving dependencies. default: false
         /// </summary>
+        [StreamConfigProperty("stream.serializer.skip.known.types")]
         public bool? SkipKnownTypes
         {
             get => this.ContainsKey(protobufSerializerSkipKnownTypesCst) ? this[protobufSerializerSkipKnownTypesCst] : null;
@@ -2626,6 +2861,7 @@ namespace Streamiz.Kafka.Net
         ///    Specifies whether the Protobuf serializer should serialize message indexes without
         ///    zig-zag encoding. default: false
         /// </summary>
+        [StreamConfigProperty("stream.serializer.use.deprecated.format")]
         public bool? UseDeprecatedFormat
         {
             get => this.ContainsKey(protobufSerializerUseDeprecatedFormatCst) ? this[protobufSerializerUseDeprecatedFormatCst] : null;
@@ -2635,6 +2871,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         ///    Reference subject name strategy. default: ReferenceSubjectNameStrategy.ReferenceName
         /// </summary>
+        [StreamConfigProperty("stream.serializer.reference.subject.name.strategy")]
         public ReferenceSubjectNameStrategy? ReferenceSubjectNameStrategy
         {
             get => this.ContainsKey(protobufSerializerReferenceSubjectNameStrategyCst) ? this[protobufSerializerReferenceSubjectNameStrategyCst] : null;
@@ -2680,7 +2917,6 @@ namespace Streamiz.Kafka.Net
             // consumer config property
             sb.AppendLine("\tConsumer property:");
             var consumersConfig = _consumerConfig
-                                    .Union(_internalConsumerConfig)
                                     .Except((i) => keysAlreadyPrint.Contains(i.Key))
                                     .Intercept((kp) => keysToNotDisplay.Contains(kp.Key), replaceValue);
             if (consumersConfig.Any())
@@ -2694,7 +2930,6 @@ namespace Streamiz.Kafka.Net
             // producer config property
             sb.AppendLine("\tProducer property:");
             var producersConfig = _producerConfig
-                                    .Union(_internalProducerConfig)
                                     .Except((i) => keysAlreadyPrint.Contains(i.Key))
                                     .Intercept((kp) => keysToNotDisplay.Contains(kp.Key), replaceValue);
             if (producersConfig.Any())
@@ -2709,7 +2944,6 @@ namespace Streamiz.Kafka.Net
             // admin config property
             sb.AppendLine("\tAdmin client property:");
             var adminsConfig = _adminClientConfig
-                                    .Union(_internalAdminConfig)
                                     .Except((i) => keysAlreadyPrint.Contains(i.Key))
                                     .Intercept((kp) => keysToNotDisplay.Contains(kp.Key), replaceValue);
             if (adminsConfig.Any())
