@@ -31,7 +31,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
         {
             var stream = new StreamConfig();
             stream.ApplicationId = "unittest";
-            stream.AddConfig("client.sasl.password", "coucou");
+            stream.AddConfig("sasl.password", "coucou");
 
             var adminConfig = stream.ToAdminConfig("admin");
             var consumerConfig = stream.ToConsumerConfig();
@@ -94,11 +94,11 @@ namespace Streamiz.Kafka.Net.Tests.Public
             
             var configuration = new Dictionary<string, dynamic>
             {
-                ["stream.application.id"] = "test-app",
-                ["stream.deserialization.exception.handler"] = f,
-                ["stream.metrics.interval.ms"] = 100000,
-                ["stream.follow.metadata"] = true,
-                ["stream.bootstrap.servers"] = "localhost:9092"
+                ["application.id"] = "test-app",
+                ["deserialization.exception.handler"] = f,
+                ["metrics.interval.ms"] = 100000,
+                ["follow.metadata"] = true,
+                ["bootstrap.servers"] = "localhost:9092"
             };
 
             var streamConfig = new StreamConfig(configuration);
@@ -119,14 +119,14 @@ namespace Streamiz.Kafka.Net.Tests.Public
             
             var streamConfig = new StreamConfig();
             
-            streamConfig.AddConfig("stream.application.id", "test-app");
-            streamConfig.AddConfig("stream.deserialization.exception.handler", f);
-            streamConfig.AddConfig("stream.metrics.interval.ms", 100000);
-            streamConfig.AddConfig("stream.follow.metadata", true);
-            streamConfig.AddConfig("stream.bootstrap.servers", "localhost:9092");
-            streamConfig.AddConfig("consumer.auto.offset.reset", AutoOffsetReset.Latest);
-            streamConfig.AddConfig("producer.acks", Acks.Leader);
-            streamConfig.AddConfig("client.sasl.mechanism", SaslMechanism.ScramSha512);
+            streamConfig.AddConfig("application.id", "test-app");
+            streamConfig.AddConfig("deserialization.exception.handler", f);
+            streamConfig.AddConfig("metrics.interval.ms", 100000);
+            streamConfig.AddConfig("follow.metadata", true);
+            streamConfig.AddConfig("bootstrap.servers", "localhost:9092");
+            streamConfig.AddConfig("auto.offset.reset", AutoOffsetReset.Latest);
+            streamConfig.AddConfig("acks", Acks.Leader);
+            streamConfig.AddConfig("sasl.mechanism", SaslMechanism.ScramSha512);
 
             var consumerConfig = streamConfig.ToConsumerConfig();
             var producerConfig = streamConfig.ToProducerConfig();
