@@ -2301,7 +2301,7 @@ namespace Streamiz.Kafka.Net
             }
         };
 
-        protected void SetObject(ClientConfig properties, string name, object val)
+        private void SetObject(ClientConfig properties, string name, object val)
         {
             if (val is Enum)
             {
