@@ -2268,7 +2268,53 @@ namespace Streamiz.Kafka.Net
         #endregion
 
         #region IStreamConfig Impl
+        
+        private static Dictionary<string, string> EnumNameToConfigValueSubstitutes = new Dictionary<string, string>()
+        {
+            {
+                "saslplaintext",
+                "sasl_plaintext"
+            },
+            {
+                "saslssl",
+                "sasl_ssl"
+            },
+            {
+                "consistentrandom",
+                "consistent_random"
+            },
+            {
+                "murmur2random",
+                "murmur2_random"
+            },
+            {
+                "readcommitted",
+                "read_committed"
+            },
+            {
+                "readuncommitted",
+                "read_uncommitted"
+            },
+            {
+                "cooperativesticky",
+                "cooperative-sticky"
+            }
+        };
 
+        protected void SetObject(ClientConfig properties, string name, object val)
+        {
+            if (val is Enum)
+            {
+                string lowerInvariant = val.ToString().ToLowerInvariant();
+                if (EnumNameToConfigValueSubstitutes.TryGetValue(lowerInvariant, out string str))
+                    properties.Set(name, str);
+                else
+                    properties.Set(name, lowerInvariant);
+            }
+            else
+                properties.Set(name, val.ToString());
+        }
+        
         /// <summary>
         /// Add a new key/value configuration.
         /// </summary>
@@ -2281,13 +2327,13 @@ namespace Streamiz.Kafka.Net
             else
             {
                 if (key.StartsWith("main.consumer."))
-                    _overrideMainConsumerConfig.Set(key.Replace("main.consumer.", string.Empty), value.ToString());
+                    SetObject(_overrideMainConsumerConfig, key.Replace("main.consumer.", string.Empty), value);
                 else  if (key.StartsWith("global.consumer."))
-                    _overrideGlobalConsumerConfig.Set(key.Replace("global.consumer.", string.Empty), value.ToString());
+                    SetObject(_overrideGlobalConsumerConfig, key.Replace("global.consumer.", string.Empty), value);
                 else if (key.StartsWith("restore.consumer."))
-                    _overrideRestoreConsumerConfig.Set(key.Replace("restore.consumer.", string.Empty), value.ToString());
+                    SetObject(_overrideRestoreConsumerConfig, key.Replace("restore.consumer.", string.Empty), value);
                 else if (key.StartsWith("producer."))
-                    _overrideProducerConfig.Set(key.Replace("producer.", string.Empty), value.ToString());
+                    SetObject(_overrideProducerConfig, key.Replace("producer.", string.Empty), value);
             }
         }
         
@@ -2990,6 +3036,36 @@ namespace Streamiz.Kafka.Net
             }
             else
                 sb.AppendLine($"\t\tNone");
+            
+            // override main consumer config property
+            if (_overrideMainConsumerConfig.Any())
+            {
+                sb.AppendLine("\tOverride Main Consumer property:");
+                var overrideMainConsumer = _overrideMainConsumerConfig
+                    .Intercept((kp) => keysToNotDisplay.Contains(kp.Key), replaceValue);
+                foreach (var kp in overrideMainConsumer)
+                    sb.AppendLine($"\t\t{kp.Key}: \t{kp.Value}");
+            }
+            
+            // override restore consumer config property
+            if (_overrideRestoreConsumerConfig.Any())
+            {
+                sb.AppendLine("\tOverride Restore Consumer property:");
+                var overrideRestoreConsumer = _overrideRestoreConsumerConfig
+                    .Intercept((kp) => keysToNotDisplay.Contains(kp.Key), replaceValue);
+                foreach (var kp in overrideRestoreConsumer)
+                    sb.AppendLine($"\t\t{kp.Key}: \t{kp.Value}");
+            }
+            
+            // override global consumer config property
+            if (_overrideGlobalConsumerConfig.Any())
+            {
+                sb.AppendLine("\tOverride Global Consumer property:");
+                var overrideGlobalConsumer = _overrideGlobalConsumerConfig
+                    .Intercept((kp) => keysToNotDisplay.Contains(kp.Key), replaceValue);
+                foreach (var kp in overrideGlobalConsumer)
+                    sb.AppendLine($"\t\t{kp.Key}: \t{kp.Value}");
+            }
 
             // producer config property
             sb.AppendLine("\tProducer property:");
@@ -3003,8 +3079,18 @@ namespace Streamiz.Kafka.Net
             }
             else
                 sb.AppendLine($"\t\tNone");
-
-
+            
+            
+            // override producer config property
+            if (_overrideProducerConfig.Any())
+            {
+                sb.AppendLine("\tOverride Producer property:");
+                var overrideProducer = _overrideProducerConfig
+                    .Intercept((kp) => keysToNotDisplay.Contains(kp.Key), replaceValue);
+                foreach (var kp in overrideProducer)
+                    sb.AppendLine($"\t\t{kp.Key}: \t{kp.Value}");
+            }
+            
             // admin config property
             sb.AppendLine("\tAdmin client property:");
             var adminsConfig = _adminClientConfig
