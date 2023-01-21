@@ -64,7 +64,15 @@ namespace Streamiz.Kafka.Net
         #region Methods 
 
         /// <summary>
-        /// Add a new key/value configuration.
+        /// Add a new key/value configuration for a <see cref="KafkaStream"/> instance.
+        /// The consumer/producer prefix can also be used to distinguish these custom config values passed to different clients with the same config name.
+        /// <para>
+        /// Example :
+        /// StreamConfig config = new StreamConfig();
+        /// config.Add(StreamConfig.MainConsumerPrefix("fetch.min.bytes"), 1000);
+        /// config.Add(StreamConfig.RestoreConsumerPrefix("fetch.max.bytes"), 1000000);
+        /// config.Add(StreamConfig.ProducerPrefix("acks"), Acks.All);
+        /// </para>
         /// </summary>
         /// <param name="key">New key</param>
         /// <param name="value">New value</param>
@@ -493,6 +501,11 @@ namespace Streamiz.Kafka.Net
         public static readonly long EOS_DEFAULT_COMMIT_INTERVAL_MS = 100L;
 
         #endregion
+        
+        private const string mainConsumerPrefix = "main.consumer.";
+        private const string globalConsumerPrefix = "global.consumer.";
+        private const string restoreConsumerPrefix = "restore.consumer.";
+        private const string producerPrefix = "producer.";
 
         private ConsumerConfig _consumerConfig = null;
         private ProducerConfig _producerConfig = null;
@@ -2326,14 +2339,14 @@ namespace Streamiz.Kafka.Net
                 cacheProperties[key].SetValue(this, value);
             else
             {
-                if (key.StartsWith("main.consumer."))
-                    SetObject(_overrideMainConsumerConfig, key.Replace("main.consumer.", string.Empty), value);
-                else  if (key.StartsWith("global.consumer."))
-                    SetObject(_overrideGlobalConsumerConfig, key.Replace("global.consumer.", string.Empty), value);
-                else if (key.StartsWith("restore.consumer."))
-                    SetObject(_overrideRestoreConsumerConfig, key.Replace("restore.consumer.", string.Empty), value);
-                else if (key.StartsWith("producer."))
-                    SetObject(_overrideProducerConfig, key.Replace("producer.", string.Empty), value);
+                if (key.StartsWith(mainConsumerPrefix))
+                    SetObject(_overrideMainConsumerConfig, key.Replace(mainConsumerPrefix, string.Empty), value);
+                else  if (key.StartsWith(globalConsumerPrefix))
+                    SetObject(_overrideGlobalConsumerConfig, key.Replace(globalConsumerPrefix, string.Empty), value);
+                else if (key.StartsWith(restoreConsumerPrefix))
+                    SetObject(_overrideRestoreConsumerConfig, key.Replace(restoreConsumerPrefix, string.Empty), value);
+                else if (key.StartsWith(producerPrefix))
+                    SetObject(_overrideProducerConfig, key.Replace(producerPrefix, string.Empty), value);
             }
         }
         
@@ -3115,6 +3128,22 @@ namespace Streamiz.Kafka.Net
         /// Logger factory which will be used for logging
         /// </summary>
         public ILoggerFactory Logger { get; set; }
+
+        #endregion
+        
+        #region Prefix
+
+        public string MainConsumerPrefix(string key)
+            => $"{mainConsumerPrefix}{key}";
+        
+        public string GlobalConsumerPrefix(string key)
+            => $"{globalConsumerPrefix}{key}";
+        
+        public string RestoreConsumerPrefix(string key)
+            => $"{restoreConsumerPrefix}{key}";
+        
+        public string ProducerPrefix(string key)
+            => $"{producerPrefix}{key}";
 
         #endregion
     }
