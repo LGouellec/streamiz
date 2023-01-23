@@ -15,8 +15,8 @@ namespace Streamiz.Kafka.Net.Processors
         public override void Process(K key, V value)
         {
             LogProcessingKeyValue(key, value);
-            foreach (var newPair in this.mapper.Apply(key, value))
-                this.Forward(newPair.Key, newPair.Value);
+            foreach (var newPair in mapper.Apply(key, value))
+                Forward(newPair.Key, newPair.Value);
         }
     }
 }

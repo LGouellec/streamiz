@@ -11,7 +11,7 @@ namespace Streamiz.Kafka.Net.Processors.Public
             this.transformer = transformer;
         }
 
-        public void Init(ProcessorContext context)
+        public void Init(ProcessorContext<K1, V1> context)
         { }
 
         public Record<K1, V1> Process(Record<K, V> record)

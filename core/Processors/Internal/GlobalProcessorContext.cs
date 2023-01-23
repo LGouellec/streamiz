@@ -16,7 +16,5 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public override TaskId Id => new TaskId { Id = -1, Partition = -1 };
 
         public override string StateDir => $"{Path.Combine(Configuration.StateDir, Configuration.ApplicationId, "global")}";
-        
-        public override void Commit() { /* nothing */ }
     }
 }

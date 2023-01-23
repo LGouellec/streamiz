@@ -17,7 +17,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
             }
             
-            public void Init(ProcessorContext context)
+            public void Init(ProcessorContext<string, string> context)
             {
                 
             }
@@ -47,7 +47,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 this.storeName = storeName;
             }
             
-            public void Init(ProcessorContext context)
+            public void Init(ProcessorContext<string, string> context)
             {
                 store = (IKeyValueStore<string, string>)context.GetStateStore(storeName);
             }

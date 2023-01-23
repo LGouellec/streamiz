@@ -19,9 +19,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 FollowMetadata = false;
             }
-
-            public override void Commit() { }
-
+            
             public override IStateStore GetStateStore(string storeName) => null;
         }
 

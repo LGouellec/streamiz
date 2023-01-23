@@ -209,7 +209,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             foreach (var t in ActiveTasks)
             {
                 CurrentTask = t;
-                if (t.CommitNeeded)
+                if (t.CommitNeeded || t.CommitRequested)
                 {
                     purgeOffsets.AddRange(t.PurgeOffsets);
                     t.Commit();

@@ -21,7 +21,8 @@ namespace Streamiz.Kafka.Net.Processors
         public override void Init(ProcessorContext context)
         {
             base.Init(context);
-            transformer.Init(context);
+            var wrappedContext = new ProcessorContext<K1,V1>(context);
+            transformer.Init(wrappedContext);
         }
 
         public override void Process(Record<K, V> record)
