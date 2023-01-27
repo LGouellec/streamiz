@@ -218,6 +218,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             stream.EnableSaslOauthbearerUnsecureJwt = true;
             stream.EnableSslCertificateVerification = false;
             stream.FetchErrorBackoffMs = 10;
+            stream.LogProcessingSummary = TimeSpan.FromSeconds(30);
             stream.FetchMaxBytes = 10;
             stream.FetchMinBytes = 10;
             stream.FetchWaitMaxMs = 10;
@@ -634,6 +635,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual(100, stream.ApiVersionRequestTimeoutMs);
             Assert.AreEqual(Confluent.Kafka.AutoOffsetReset.Latest, stream.AutoOffsetReset);
             Assert.AreEqual(42, stream.BatchNumMessages);
+            Assert.AreEqual(TimeSpan.FromSeconds(30), stream.LogProcessingSummary);
             Assert.AreEqual("127.0.0.1:9092", stream.BootstrapServers);
             Assert.AreEqual(Confluent.Kafka.BrokerAddressFamily.V4, stream.BrokerAddressFamily);
             Assert.AreEqual(100, stream.BrokerAddressTtl);

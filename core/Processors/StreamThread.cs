@@ -113,6 +113,9 @@ namespace Streamiz.Kafka.Net.Processors
         private CancellationToken token;
         private DateTime lastCommit = DateTime.Now;
         private DateTime lastMetrics = DateTime.Now;
+        private DateTime lastSummaryMs;
+        private long summaryProcessed;
+        private long summaryComitted;
 
         private int numIterations = 1;
         private long lastPollMs;
@@ -185,6 +188,7 @@ namespace Streamiz.Kafka.Net.Processors
         public void Run()
         {
             exception = null;
+            lastSummaryMs = DateTime.Now;
             long totalProcessLatency = 0, totalCommitLatency = 0;
 
             try
@@ -261,6 +265,7 @@ namespace Streamiz.Kafka.Net.Processors
                                             processed = 0;
 
                                         totalProcessed += processed;
+                                        summaryProcessed += processed;
                                         totalProcessLatency += processLatency;
 
                                         if (processed == 0)
@@ -283,6 +288,7 @@ namespace Streamiz.Kafka.Net.Processors
                                     totalCommitLatency += commitLatency;
                                     if (commited > 0)
                                     {
+                                        summaryComitted += commited;
                                         commitSensor.Record(commitLatency / (double) commited, now);
                                         numIterations = numIterations > 1 ? numIterations / 2 : numIterations;
                                     }
@@ -317,12 +323,23 @@ namespace Streamiz.Kafka.Net.Processors
                                 totalProcessLatency = 0;
                                 totalCommitLatency = 0;
 
-                                if (lastMetrics.Add(TimeSpan.FromMilliseconds(streamConfig.MetricsIntervalMs)) <
-                                    DateTime.Now)
+                                var dt = DateTime.Now;
+                                if (lastMetrics.Add(TimeSpan.FromMilliseconds(streamConfig.MetricsIntervalMs)) < dt)
                                 {
                                     MetricUtils.ExportMetrics(streamMetricsRegistry, streamConfig, Name);
-                                    lastMetrics = DateTime.Now;
+                                    lastMetrics = dt;
                                 }
+
+                                if (lastSummaryMs.Add(streamConfig.LogProcessingSummary) < dt)
+                                {
+                                    log.LogInformation(
+                                        $"Processed {summaryProcessed} total records and committed {summaryComitted} total tasks since the last update");
+                                    summaryProcessed = 0;
+                                    summaryComitted = 0;
+                                    lastSummaryMs = dt;
+                                }
+                                    
+
                             }
                             else
                                 Thread.Sleep((int) consumeTimeout.TotalMilliseconds);
