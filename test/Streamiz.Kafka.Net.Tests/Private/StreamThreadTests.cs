@@ -194,6 +194,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config.PollMs = 1;
             config.MetricsReporter = (sensor) => { metricsReporterCalled = true; };
             config["metrics.interval.ms"] = 10;
+            config.LogProcessingSummary = TimeSpan.FromSeconds(1);
             
             var serdes = new StringSerDes();
             var builder = new StreamBuilder();
@@ -224,7 +225,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 Value = serdes.Serialize("coucou", new SerializationContext())
             });
             //WAIT STREAMTHREAD PROCESS MESSAGE
-            System.Threading.Thread.Sleep(100);
+            System.Threading.Thread.Sleep(2000);
             var message = consumer.Consume(100);
 
             source.Cancel();

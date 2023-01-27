@@ -323,7 +323,12 @@ namespace Streamiz.Kafka.Net
         /// Only valid if ParallelProcessing is true
         /// </summary>
         int MaxDegreeOfParallelism { get; set; }
-
+        
+        /// <summary>
+        /// Aims to log (info level) processing summary records per thread every X minutes. (default: 1 minute)
+        /// </summary>
+        TimeSpan LogProcessingSummary { get; set; }
+        
         #endregion
         
         #region Middlewares
@@ -489,6 +494,7 @@ namespace Streamiz.Kafka.Net
         private const string innerExceptionHandlerCst = "inner.exception.handler";
         private const string deserializationExceptionHandlerCst = "deserialization.exception.handler";
         private const string productionExceptionHandlerCst = "production.exception.handler";
+        private const string logProcessingSummaryCst = "log.processing.summary";
         
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -2248,6 +2254,7 @@ namespace Streamiz.Kafka.Net
             OffsetCheckpointManager = null;
             MetricsIntervalMs = (long)TimeSpan.FromSeconds(30).TotalMilliseconds;
             MetricsRecording = MetricsRecordingLevel.INFO;
+            LogProcessingSummary = TimeSpan.FromMinutes(1);
             MetricsReporter = (_) => { }; // nothing by default, maybe another behavior in future
             ExposeLibrdKafkaStats = false;
             StartTaskDelayMs = 5000;
@@ -2702,6 +2709,16 @@ namespace Streamiz.Kafka.Net
         {
             get => this[maxDegreeOfParallelismCst];
             set => this.AddOrUpdate(maxDegreeOfParallelismCst, value);
+        }
+        
+        /// <summary>
+        /// Aims to log (info level) processing summary records per thread every X minutes. (default: 1 minute)
+        /// </summary>
+        [StreamConfigProperty("" + logProcessingSummaryCst)]
+        public TimeSpan LogProcessingSummary
+        {
+            get => this[logProcessingSummaryCst];
+            set => this.AddOrUpdate(logProcessingSummaryCst, value);
         }
 
         /// <summary>
