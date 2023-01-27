@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using DotNet.Testcontainers.Containers.Builders;
@@ -59,6 +60,45 @@ namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
             return result;
         }
 
+        internal bool ConsumeUntil(string topic, int size, long timeoutMs)
+        {
+            bool sizeCompleted = false;
+            int numberRecordsConsumed = 0;
+            
+            var consumer = Consumer();
+            consumer.Subscribe(topic);
+            
+            DateTime dt = DateTime.Now, now;
+            TimeSpan ts = TimeSpan.FromMilliseconds(timeoutMs);
+            do
+            {
+                var r = consumer.Consume(ts);
+                now = DateTime.Now;
+                if (r != null)
+                    ++numberRecordsConsumed;
+                else
+                {
+                    Thread.Sleep(10);
+                    
+                    if (ts.TotalMilliseconds == 0) // if not enough time, do not call Consume(0); => break;
+                        break;
+                }
+
+                if (numberRecordsConsumed >= size) // if the batch is full, break;
+                    break;
+                
+            } while (dt.Add(ts) > now);
+            
+            consumer.Unsubscribe();
+            consumer.Close();
+            consumer.Dispose();
+
+            if (numberRecordsConsumed == size)
+                sizeCompleted = true;
+            
+            return sizeCompleted;
+        }
+        
         internal async Task<DeliveryResult<string, byte[]>> Produce(string topic, string key, byte[] bytes)
         {
             using var producer = new ProducerBuilder<string, byte[]>(ProducerProperties).Build();
@@ -67,6 +107,20 @@ namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
                 Key = key,
                 Value = bytes
             });
+        }
+        
+        internal async Task Produce(string topic, IEnumerable<(string, byte[])> records)
+        {
+            var newPropers = new ProducerConfig(ProducerProperties);
+            newPropers.LingerMs = 100;
+            
+            using var producer = new ProducerBuilder<string, byte[]>(newPropers).Build();
+            foreach(var r in records)
+                await producer.ProduceAsync(topic, new Message<string, byte[]>()
+                {
+                    Key = r.Item1,
+                    Value = r.Item2
+                });
         }
 
         public async Task CreateTopic(string name, int partitions = 1)

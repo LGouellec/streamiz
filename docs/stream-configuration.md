@@ -335,17 +335,17 @@ In this example, the Kafka consumer session timeout is configured to be 60000 mi
     config.SessionTimeoutMs = 60000;
 ```
 
-In case of the configuration is not wrapped in StreamConfig yet, you can directly add your configuration via the following methods.
+In case of the configuration is not wrapped in StreamConfig yet or because you want to override differnetly the configuration of the main consumer and the configuration of the restore consumer , you can directly add your configuration via the following methods.
 ``` csharp
     var config = new StreamConfig();
-    // add key/value config for consumer
-    config.AddConsumerConfig("key", "value");
-    // add key/value config for admin client
-    config.AddAdminConfig("key", "value");
-    // add key/value config for producer
-    config.AddProducerConfig("key", "value");
-    // add key/value config for consumer, producer and admin client
-    config.AddConfig("key", "value");
+    // add key/value for the main consumer (prefix : "main.consumer."), similar to config.Add("main.consumer.fetch.min.bytes", 1000);
+    config.Add(StreamConfig.MainConsumerPrefix("fetch.min.bytes"), 1000);
+    // add key/value for the restore consumer (prefix : "restore.consumer."), similar to config.Add("restore.consumer.fetch.max.bytes", 1000000);
+    config.Add(StreamConfig.RestoreConsumerPrefix("fetch.max.bytes"), 1000000);
+    // add key/value for the global consumer (prefix : "global.consumer."), similar to config.Add("global.consumer.fetch.max.bytes", 1000000);
+    config.Add(StreamConfig.GlobalConsumerPrefix("fetch.max.bytes"), 1000000);
+    // add key/value for the producer (prefix : "producer."), similar to config.Add("producer.acks", Acks.All);
+    config.Add(StreamConfig.ProducerPrefix("acks"), Acks.All);
 ```
 
 ## Sample configuration implementation

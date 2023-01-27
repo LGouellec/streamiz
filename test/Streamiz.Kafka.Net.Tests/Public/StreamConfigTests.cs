@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Confluent.Kafka;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -13,7 +14,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
         public void StreamNoApplicationId()
         {
             var stream = new StreamConfig();
-            stream.AddConfig("sasl.password", "coucou");
+            stream.AddConfig("client.sasl.password", "coucou");
             Assert.Throws<StreamConfigException>(() => stream.ToConsumerConfig());
         }
 
@@ -83,6 +84,105 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual(150, stream.PollMs);
             Assert.AreEqual(10, stream.MaxPollRecords);
             Assert.AreEqual(100, stream.MaxPollIntervalMs);
+        }
+
+        [Test]
+        public void StreamConfigWithDict()
+        {
+            Func<ProcessorContext, ConsumeResult<byte[], byte[]>, Exception, ExceptionHandlerResponse> f = (_, _, _) =>
+                ExceptionHandlerResponse.CONTINUE;
+            
+            var configuration = new Dictionary<string, dynamic>
+            {
+                ["application.id"] = "test-app",
+                ["deserialization.exception.handler"] = f,
+                ["metrics.interval.ms"] = 100000,
+                ["follow.metadata"] = true,
+                ["bootstrap.servers"] = "localhost:9092"
+            };
+
+            var streamConfig = new StreamConfig(configuration);
+            var consumerConfig = streamConfig.ToConsumerConfig();
+            
+            Assert.AreEqual("localhost:9092", consumerConfig.BootstrapServers);
+            Assert.AreEqual("test-app", consumerConfig.GroupId);
+            Assert.AreEqual(ExceptionHandlerResponse.CONTINUE, streamConfig.DeserializationExceptionHandler.Invoke(null, null, null));
+            Assert.AreEqual(true, streamConfig.FollowMetadata);
+            Assert.AreEqual(100000, streamConfig.MetricsIntervalMs);
+        }
+
+        [Test]
+        public void StreamConfigWithAddConfig()
+        {
+            Func<ProcessorContext, ConsumeResult<byte[], byte[]>, Exception, ExceptionHandlerResponse> f = (_, _, _) =>
+                ExceptionHandlerResponse.CONTINUE;
+            
+            var streamConfig = new StreamConfig();
+            
+            streamConfig.AddConfig("application.id", "test-app");
+            streamConfig.AddConfig("deserialization.exception.handler", f);
+            streamConfig.AddConfig("metrics.interval.ms", 100000);
+            streamConfig.AddConfig("follow.metadata", true);
+            streamConfig.AddConfig("bootstrap.servers", "localhost:9092");
+            streamConfig.AddConfig("auto.offset.reset", AutoOffsetReset.Latest);
+            streamConfig.AddConfig("acks", Acks.Leader);
+            streamConfig.AddConfig("sasl.mechanism", SaslMechanism.ScramSha512);
+
+            var consumerConfig = streamConfig.ToConsumerConfig();
+            var producerConfig = streamConfig.ToProducerConfig();
+            
+            Assert.AreEqual("localhost:9092", consumerConfig.BootstrapServers);
+            Assert.AreEqual("test-app", consumerConfig.GroupId);
+            Assert.AreEqual(ExceptionHandlerResponse.CONTINUE, streamConfig.DeserializationExceptionHandler.Invoke(null, null, null));
+            Assert.AreEqual(true, streamConfig.FollowMetadata);
+            Assert.AreEqual(100000, streamConfig.MetricsIntervalMs);
+            Assert.AreEqual(Acks.Leader, producerConfig.Acks);
+            Assert.AreEqual(AutoOffsetReset.Latest, consumerConfig.AutoOffsetReset);
+            Assert.AreEqual(SaslMechanism.ScramSha512, consumerConfig.SaslMechanism);
+            Assert.AreEqual(SaslMechanism.ScramSha512, producerConfig.SaslMechanism);
+        }
+
+        [Test]
+        public void StreamConfigOverrideConfig()
+        {
+            Func<ProcessorContext, ConsumeResult<byte[], byte[]>, Exception, ExceptionHandlerResponse> f = (_, _, _) =>
+                ExceptionHandlerResponse.CONTINUE;
+            
+            var streamConfig = new StreamConfig();
+            
+            streamConfig.AddConfig("application.id", "test-app");
+            streamConfig.AddConfig("bootstrap.servers", "localhost:9092");
+            streamConfig.AddConfig("acks", Acks.Leader);
+            streamConfig.AddConfig("producer.acks", Acks.All);
+            streamConfig.AddConfig("fetch.max.bytes", 52428800);
+            streamConfig.AddConfig("restore.consumer.fetch.max.bytes", 52428800*2);
+            streamConfig.AddConfig("fetch.min.bytes", 2);
+            streamConfig.AddConfig("main.consumer.fetch.min.bytes", 1000);
+            streamConfig.AddConfig("fetch.wait.max.ms", 150);
+            streamConfig.AddConfig("global.consumer.fetch.wait.max.ms", 1000);
+
+            var consumerConfig = streamConfig.ToConsumerConfig();
+            var restoreConsumerConfig = streamConfig.ToRestoreConsumerConfig("restore-client");
+            var globalConsumerConfig = streamConfig.ToGlobalConsumerConfig("global-client");
+            var producerConfig = streamConfig.ToProducerConfig();
+            
+            Assert.AreEqual("localhost:9092", consumerConfig.BootstrapServers);
+            Assert.AreEqual("test-app", consumerConfig.GroupId);
+            Assert.AreEqual(Acks.All, producerConfig.Acks);
+            Assert.AreEqual(1000, consumerConfig.FetchMinBytes);
+            Assert.AreEqual(2, restoreConsumerConfig.FetchMinBytes);
+            Assert.AreEqual(2, globalConsumerConfig.FetchMinBytes);
+            Assert.AreEqual(150, consumerConfig.FetchWaitMaxMs);
+            Assert.AreEqual(150, restoreConsumerConfig.FetchWaitMaxMs);
+            Assert.AreEqual(1000, globalConsumerConfig.FetchWaitMaxMs);
+            Assert.AreEqual(52428800, consumerConfig.FetchMaxBytes);
+            Assert.AreEqual(52428800*2, restoreConsumerConfig.FetchMaxBytes);
+            Assert.AreEqual(52428800, globalConsumerConfig.FetchMaxBytes);
+
+            Assert.IsTrue(streamConfig.ToString().Contains("Override Main Consumer property"));
+            Assert.IsTrue(streamConfig.ToString().Contains("Override Restore Consumer property"));
+            Assert.IsTrue(streamConfig.ToString().Contains("Override Global Consumer property"));
+            Assert.IsTrue(streamConfig.ToString().Contains("Override Producer property"));
         }
 
         [Test]
@@ -156,6 +256,12 @@ namespace Streamiz.Kafka.Net.Tests.Public
             stream.SaslKerberosServiceName = "kerberos";
             stream.SaslMechanism = Confluent.Kafka.SaslMechanism.ScramSha512;
             stream.SaslOauthbearerConfig = "ouath";
+            stream.SaslOauthbearerMethod = SaslOauthbearerMethod.Oidc;
+            stream.SaslOauthbearerClientId = "librdkafka_client";
+            stream.SaslOauthbearerClientSecret = "secret";
+            stream.SaslOauthbearerScope = "prd";
+            stream.SaslOauthbearerExtensions = "ext";
+            stream.SaslOauthbearerTokenEndpointUrl = "http://localhost:8081";
             stream.SaslPassword = "test";
             stream.SaslUsername = "admin";
             stream.SecurityProtocol = Confluent.Kafka.SecurityProtocol.SaslPlaintext;
@@ -251,6 +357,12 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual("kerberos", producerConfig.SaslKerberosServiceName);
             Assert.AreEqual(Confluent.Kafka.SaslMechanism.ScramSha512, producerConfig.SaslMechanism);
             Assert.AreEqual("ouath", producerConfig.SaslOauthbearerConfig);
+            Assert.AreEqual(SaslOauthbearerMethod.Oidc, stream.SaslOauthbearerMethod);
+            Assert.AreEqual("librdkafka_client", stream.SaslOauthbearerClientId);
+            Assert.AreEqual("secret", stream.SaslOauthbearerClientSecret);
+            Assert.AreEqual("prd", stream.SaslOauthbearerScope);
+            Assert.AreEqual("ext", stream.SaslOauthbearerExtensions);
+            Assert.AreEqual("http://localhost:8081", stream.SaslOauthbearerTokenEndpointUrl);
             Assert.AreEqual("test", producerConfig.SaslPassword);
             Assert.AreEqual("admin", producerConfig.SaslUsername);
             Assert.AreEqual(Confluent.Kafka.SecurityProtocol.SaslPlaintext, producerConfig.SecurityProtocol);

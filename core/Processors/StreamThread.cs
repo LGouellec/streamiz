@@ -68,8 +68,7 @@ namespace Streamiz.Kafka.Net.Processors
                 producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig(GetThreadProducerClientId(threadId)).Wrap(threadId));
             }
 
-            var restoreConfig = configuration.ToConsumerConfig(GetRestoreConsumerClientId(customerID));
-            restoreConfig.GroupId = $"{configuration.ApplicationId}-restore-group";
+            var restoreConfig = configuration.ToRestoreConsumerConfig(GetRestoreConsumerClientId(customerID));
             var restoreConsumer = kafkaSupplier.GetRestoreConsumer(restoreConfig);
 
             var storeChangelogReader = new StoreChangelogReader(
