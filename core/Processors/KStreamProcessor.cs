@@ -14,7 +14,8 @@ namespace Streamiz.Kafka.Net.Processors
         public override void Init(ProcessorContext context)
         {
             base.Init(context);
-            processor.Init(context);
+            var newContext = new ProcessorContext<K, V>(context);
+            processor.Init(newContext);
         }
 
         public override void Close()

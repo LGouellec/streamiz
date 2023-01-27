@@ -15,7 +15,7 @@ namespace Streamiz.Kafka.Net.Processors.Public
         /// </para>
         /// </summary>
         /// <param name="context">the context; may not be null</param>
-        void Init(ProcessorContext context);
+        void Init(ProcessorContext<K, V> context);
         
         /// <summary>
         /// Process the record with the given key and value.

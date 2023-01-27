@@ -143,6 +143,8 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 try
                 {
+                    // feature disabled when the processing is asynchronous
+                    Context.CurrentProcessor = null;
                     Parallel.ForEach(processors,
                         new ParallelOptions { MaxDegreeOfParallelism = Context.Configuration.MaxDegreeOfParallelism },
                         action);
@@ -156,6 +158,7 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 foreach (var processor in processors)
                 {
+                    Context.CurrentProcessor = processor;
                     action.Invoke(processor);
                 }
             }
@@ -256,8 +259,11 @@ namespace Streamiz.Kafka.Net.Processors
 
         public void Process(object key, object value)
         {
-            if((key == null || key is K) && (value == null || value is V))
-                Process((K)key, (V)value);
+            if ((key == null || key is K) && (value == null || value is V))
+            {
+                Context.CurrentProcessor = this;
+                Process((K) key, (V) value);
+            }
         }
 
         #endregion

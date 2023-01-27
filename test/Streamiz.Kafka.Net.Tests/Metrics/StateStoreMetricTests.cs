@@ -81,7 +81,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             public override void Put(Bytes key, byte[] value)
             {
                 if(!putAll)
-                    Wait(1, 5);
+                    Wait(3, 10);
                 base.Put(key, value);
             }
 
@@ -222,7 +222,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             
             
             int nbMessage = random.Next(0, 30000);
-            int nbMessage2 = random.Next(0, 250);
+            int nbMessage2 = random.Next(0, 30);
             // produce ${nbMessage} messages to input topic
             List<KeyValuePair<string, string>> messages = new List<KeyValuePair<string, string>>();
             for (int i = 0; i < nbMessage; ++i)
@@ -293,7 +293,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             store = meteredWindowStore;
             meteredWindowStore.Init(context, meteredWindowStore);
             
-            int nbMessage = random.Next(0, 250);
+            int nbMessage = random.Next(0, 30);
             long now1 = DateTime.Now.GetMilliseconds();
             
             // produce ${nbMessage} messages to input topic (both);

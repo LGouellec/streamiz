@@ -69,7 +69,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             var record = currentRecord;
             currentRecord = null;
             UpdateHeadRecord();
-            log.LogDebug("{LogPrefix}{Record}record polled. ({RecordInfo})", logPrefix, record == null ? "No r" : "R",
+            log.LogDebug("{LogPrefix}{Record}ecord polled. ({RecordInfo})", logPrefix, record == null ? "No r" : "R",
                 record != null
                     ? $"Record info [Topic:{record.Topic}|Partition:{record.Partition}|Offset:{record.Offset}]"
                     : "");

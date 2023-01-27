@@ -1,4 +1,5 @@
-﻿using Confluent.Kafka;
+﻿using System;
+using Confluent.Kafka;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Processors;
@@ -15,16 +16,17 @@ namespace Streamiz.Kafka.Net
     /// </summary>
     public class ProcessorContext
     {
-        internal static readonly ByteArraySerDes BYTEARRAY_VALUE_SERDES = new ByteArraySerDes();
-        internal static readonly BytesSerDes BYTES_KEY_SERDES = new BytesSerDes();
+        private static readonly ByteArraySerDes BYTEARRAY_VALUE_SERDES = new();
+        private static readonly BytesSerDes BYTES_KEY_SERDES = new();
 
+        internal virtual IProcessor CurrentProcessor { get; set; }
         internal AbstractTask Task { get; }
-        internal SerDesContext SerDesContext { get; }
-        internal IStreamConfig Configuration { get; }
-        internal IRecordContext RecordContext { get; private set; }
+        internal virtual SerDesContext SerDesContext { get; }
+        internal virtual IStreamConfig Configuration { get; }
+        internal virtual IRecordContext RecordContext { get; private set; }
         internal IRecordCollector RecordCollector { get; private set; }
-        internal IStateManager States { get; }
-        internal bool FollowMetadata { get; set; }
+        internal virtual IStateManager States { get; }
+        internal virtual bool FollowMetadata { get; set; }
         
         /// <summary>
         /// Return the <see cref="StreamMetricsRegistry"/> instance.
@@ -123,10 +125,5 @@ namespace Streamiz.Kafka.Net
 
         internal string ChangelogFor(string storeName)
             => States.ChangelogFor(storeName);
-        
-        /// <summary>
-        /// Requests a commit
-        /// </summary>
-        public virtual void Commit() => Task.RequestCommit();
     }
 }

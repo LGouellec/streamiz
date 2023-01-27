@@ -11,7 +11,7 @@ namespace Streamiz.Kafka.Net.Processors.Public
             this.intern = intern;
         }
 
-        public void Init(ProcessorContext context)
+        public void Init(ProcessorContext<K, V> context)
         { }
 
         public void Process(Record<K, V> record)
