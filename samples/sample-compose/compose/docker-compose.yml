@@ -1,0 +1,92 @@
+version: '3.9'
+
+services:
+  # OpenTelemetry Collector
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+      - ./otel_data:/etc/output:rw # Store the logs
+    # ports:
+    #   - "8888:8888"   # Prometheus metrics exposed by the collector
+    #   - "8889:8889"   # Prometheus exporter metrics
+    #   - "4317:4317"   # OTLP gRPC receiver
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+
+  streamiz:
+    build:
+      context: ../src
+      dockerfile: Dockerfile
+    depends_on:
+      - schema-registry
+      - otel-collector
+    environment:
+      "OtelCollectorUrl": 'http://otel-collector:4317'
+      "StreamConfig:BootstrapServers": 'kafka-broker:9092'
+      "StreamConfig:SchemaRegistryUrl": 'http://schema-registry:8081'
+    ports:
+      - "8060:8060"
+
+  zookeeper:
+    image: zookeeper:3.4.9
+    volumes:
+      - ./kcluster/zookeeper/data:/data
+      - ./kcluster/zookeeper/datalog:/datalog
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  kafka-broker:
+    image: confluentinc/cp-kafka:5.5.1
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker:9092,PLAINTEXT_INTERNAL://kafka-broker:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAKFKA_DELETE_TOPIC_ENABLE: 'true'
+      KAFKA_LOG_DIRS: '/var/lib/kafka/data'
+    volumes:
+      - ./kcluster/kafka-broker/data:/var/lib/kafka/data
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:5.5.1
+    container_name: schema-registry
+    depends_on:
+      - zookeeper
+      - kafka-broker
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-broker:29092
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    depends_on:
+      - schema-registry
+      - zookeeper
+      - kafka-broker
+    ports:
+      - 8080:8080
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: http://kafka-broker:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081

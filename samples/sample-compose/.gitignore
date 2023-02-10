@@ -1,0 +1,5 @@
+compose/kcluster
+compose/otel_data
+compose/prometheus_data
+/**/bin/
+/**/obj/

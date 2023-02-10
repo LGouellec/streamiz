@@ -1,0 +1,8 @@
+<Project>
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>true</ImplicitUsings>
+        <LangVersion>11.0</LangVersion>
+    </PropertyGroup>
+</Project>
