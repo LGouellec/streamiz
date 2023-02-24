@@ -2,19 +2,9 @@ using Confluent.Kafka;
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Streamiz.Kafka.Net.Table;
-using System.Linq;
-using System.Runtime.Intrinsics;
-using System.Security.Permissions;
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Streamiz.Kafka.Net.Mock;
-using Streamiz.Kafka.Net.Processors;
-using Streamiz.Kafka.Net.Processors.Public;
-using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 
 namespace sample_stream
@@ -24,75 +14,64 @@ namespace sample_stream
     /// </summary>
     internal class Program
     {
-        private static readonly JsonSerializerOptions _jsonSerializerOptions = new();
-
-        public class Tag
+        private class OrderShoe
         {
-            public string Field1 { get; set; }
-            public string Field2 { get; set; }
-            public string Field3 { get; set; }
+            private readonly Order order;
+            private readonly Shoe shoe;
+
+            public OrderShoe(Program.Order order, Program.Shoe shoe)
+            {
+                this.order = order;
+                this.shoe = shoe;
+            }
         }
 
-        public class Metadata
+        private class Shoe
         {
-            public Dictionary<string, string> Data { get; set; }
+            public string id { get; set; }
+            public string brand { get; set; }
+            public string name { get; set; }
+            public int sale_price { get; set; }
+            public float rating { get; set; }
         }
 
-        public class TagInfo
+        private class Order
         {
-            public Tag Tag { get; set; }
-            public Metadata MetaData { get; set; }
+            public int order_id { get; set; }
+            public string product_id { get; set; }
+            public string customer_id { get; set; }
+            public long ts { get; set; }
         }
         
         public static async Task Main(string[] args)
         {
-            string KeyMapping(string key, Tag tag)
+            var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                return key;
-            }
-            
-            string ValueJoiner(Tag currentValue, string metaValue)
-            {
-                var tag = new TagInfo
+                ApplicationId = "test-app-reproducer",
+                BootstrapServers = "localhost:9092",
+                AutoOffsetReset = AutoOffsetReset.Earliest,
+                CommitIntervalMs = 3000,
+                StateDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()),
+                Logger = LoggerFactory.Create((b) =>
                 {
-                    Tag = currentValue,
-                    MetaData = metaValue == null
-                        ? null
-                        : JsonSerializer.Deserialize<Metadata>(metaValue, _jsonSerializerOptions)
-                };
+                    b.SetMinimumLevel(LogLevel.Error);
+                    b.AddLog4Net();
+                })
+            };
 
-                return JsonSerializer.Serialize(tag, _jsonSerializerOptions);
-            }
+            var builder = new StreamBuilder();
+
+            var shoes = builder.Stream<String, Shoe, StringSerDes, JsonSerDes<Shoe>>("shoes");
+            var orders = builder.Stream<String, Order, StringSerDes, JsonSerDes<Order>>("orders");
+
+            orders
+                .SelectKey((k, v) => v.product_id.ToString())
+                .Join<Shoe, OrderShoe, JsonSerDes<Shoe>, JsonSerDes<OrderShoe>>(
+                    shoes,
+                    (order, shoe) => new OrderShoe(order, shoe),
+                    JoinWindowOptions.Of(TimeSpan.FromHours(1)))
+                .To<StringSerDes, JsonSerDes<OrderShoe>>("order-shoes");
             
-            // globalTopic.PipeInput("key1", "{\"Data\":{\"key1\":\"value1\",\"key2\":\"value2\"}}");
-            // inputTopic.PipeInput("key1", new Tag() {Field1 = "tag1", Field2 = "tag2", Field3 = "tag3"});
-
-            var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-app-reproducer";
-            config.BootstrapServers = "localhost:9092";
-            config.AutoOffsetReset = AutoOffsetReset.Earliest;
-            config.CommitIntervalMs = 3000;
-            config.StateDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            config.Logger = LoggerFactory.Create((b) =>
-            {
-                b.SetMinimumLevel(LogLevel.Debug);
-                b.AddLog4Net();
-            });
-            
-            StreamBuilder builder = new StreamBuilder();
-
-            var globalKTable = builder.GlobalTable("meta", InMemory.As<string, string>("table-store"));
-            var kStream = builder.Stream<string, Tag, StringSerDes, JsonSerDes<Tag>>("stream");
-
-            var table = builder.Table<string, string>("table-topic");
-            var stream = builder.Stream<string, string>("stream-topic");
-            kStream.Join(table, (v1, v2) => $"{v1}-{v2}");
-            
-            var targetStream = kStream
-                .LeftJoin(globalKTable, KeyMapping, ValueJoiner);
-
-            targetStream.To<StringSerDes, StringSerDes>("target");
-
             Topology t = builder.Build();
             KafkaStream stream1 = new KafkaStream(t, config);
             
@@ -101,4 +80,5 @@ namespace sample_stream
             await stream1.StartAsync();
         }
     }
+    
 }

@@ -47,6 +47,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public IConsumer<byte[], byte[]> Consumer { get; internal set; }
         public IEnumerable<TaskId> ActiveTaskIds => activeTasks.Keys;
         public IEnumerable<TaskId> RevokeTaskIds => revokedTasks.Keys;
+        
+        internal static readonly object rebalanceLock = new();
         public bool RebalanceInProgress { get; internal set; }
 
         internal TaskManager(InternalTopologyBuilder builder, TaskCreator taskCreator, IAdminClient adminClient,
@@ -127,12 +129,18 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public StreamTask ActiveTaskFor(TopicPartition partition)
         {
-            if (partitionsToTaskId.ContainsKey(partition))
+            lock (rebalanceLock)
             {
-                return activeTasks[partitionsToTaskId[partition]];
-            }
+                if (partitionsToTaskId.TryGetValue(partition, out TaskId taskId))
+                {
+                    if (activeTasks.TryGetValue(taskId, out StreamTask task))
+                    {
+                        return task;
+                    }
+                }
 
-            return null;
+                return null;
+            }
         }
 
         public void Close()
@@ -217,7 +225,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     ++committed;
                 }
             }
-            CurrentTask = null;
+
+                CurrentTask = null;
 
             if (committed > 0) // try to purge the committed records for repartition topics if possible
                 PurgeCommittedRecords(purgeOffsets);

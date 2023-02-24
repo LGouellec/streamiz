@@ -163,8 +163,17 @@ namespace Streamiz.Kafka.Net.Processors
                     }
                     catch (KafkaException e)
                     {
-                        // TODO : get info about offset committing
-                        log.LogError(e, $"{logPrefix}Error during committing offset ......");
+                        if (!e.Error.IsFatal)
+                        {
+                            if (e.Error.Code ==
+                                ErrorCode.IllegalGeneration) // Broker: Specified group generation id is not valid
+                            {
+                                log.LogDebug($"{logPrefix}Error with a non-fatal error during committing offset (ignore this, and try to commit during next time): {e.Message}");
+                                return;
+                            }
+                        }
+                        else
+                            throw;
                     }
                 }
                 commitNeeded = false;

@@ -224,122 +224,123 @@ namespace Streamiz.Kafka.Net.Processors
                         {
                             if (!manager.RebalanceInProgress)
                             {
-                                RestorePhase();
-
-                                long now = DateTime.Now.GetMilliseconds();
-                                long startMs = now;
-                                IEnumerable<ConsumeResult<byte[], byte[]>> records =
-                                    new List<ConsumeResult<byte[], byte[]>>();
-
-                                long pollLatency = ActionHelper.MeasureLatency(() =>
+                                lock (TaskManager.rebalanceLock)
                                 {
-                                    records = PollRequest(GetTimeout());
-                                });
-                                pollSensor.Record(pollLatency, now);
+                                    RestorePhase();
 
-                                DateTime n = DateTime.Now;
-                                var count = AddToTasks(records);
-                                if (count > 0)
-                                {
-                                    log.LogDebug($"Add {count} records in tasks in {DateTime.Now - n}");
-                                    pollRecordsSensor.Record(count, now);
-                                }
+                                    long now = DateTime.Now.GetMilliseconds();
+                                    long startMs = now;
+                                    IEnumerable<ConsumeResult<byte[], byte[]>> records =
+                                        new List<ConsumeResult<byte[], byte[]>>();
 
-                                n = DateTime.Now;
-                                int processed = 0, totalProcessed = 0;
-                                long timeSinceLastPoll = 0;
-                                do
-                                {
-                                    processed = 0;
-                                    now = DateTime.Now.GetMilliseconds();
-                                    for (int i = 0; i < numIterations; ++i)
+                                    long pollLatency = ActionHelper.MeasureLatency(() =>
                                     {
-                                        long processLatency = 0;
+                                        records = PollRequest(GetTimeout());
+                                    });
+                                    pollSensor.Record(pollLatency, now);
 
-                                        if (!manager.RebalanceInProgress)
-                                            processLatency = ActionHelper.MeasureLatency(() =>
-                                            {
-                                                processed = manager.Process(now);
-                                            });
-                                        else
-                                            processed = 0;
+                                    DateTime n = DateTime.Now;
+                                    var count = AddToTasks(records);
+                                    if (count > 0)
+                                    {
+                                        log.LogDebug($"Add {count} records in tasks in {DateTime.Now - n}");
+                                        pollRecordsSensor.Record(count, now);
+                                    }
 
-                                        totalProcessed += processed;
-                                        summaryProcessed += processed;
-                                        totalProcessLatency += processLatency;
+                                    n = DateTime.Now;
+                                    int processed = 0, totalProcessed = 0;
+                                    long timeSinceLastPoll = 0;
+                                    do
+                                    {
+                                        processed = 0;
+                                        now = DateTime.Now.GetMilliseconds();
+                                        for (int i = 0; i < numIterations; ++i)
+                                        {
+                                            long processLatency = 0;
 
-                                        if (processed == 0)
+                                            if (!manager.RebalanceInProgress)
+                                                processLatency = ActionHelper.MeasureLatency(() =>
+                                                {
+                                                    processed = manager.Process(now);
+                                                });
+                                            else
+                                                processed = 0;
+
+                                            totalProcessed += processed;
+                                            summaryProcessed += processed;
+                                            totalProcessLatency += processLatency;
+
+                                            if (processed == 0)
+                                                break;
+
+                                            processLatencySensor.Record((double) processLatency / processed, now);
+                                            processRateSensor.Record(processed, now);
+
+                                            // NOT AVAILABLE NOW, NEED PROCESSOR API
+                                            //if (processed > 0)
+                                            //    manager.MaybeCommitPerUserRequested();
+                                            //else
+                                            //    break;
+                                        }
+
+                                        timeSinceLastPoll = Math.Max(DateTime.Now.GetMilliseconds() - lastPollMs, 0);
+
+                                        int commited = 0;
+                                        long commitLatency = ActionHelper.MeasureLatency(() => commited = Commit());
+                                        totalCommitLatency += commitLatency;
+                                        if (commited > 0)
+                                        {
+                                            summaryComitted += commited;
+                                            commitSensor.Record(commitLatency / (double) commited, now);
+                                            numIterations = numIterations > 1 ? numIterations / 2 : numIterations;
+                                        }
+                                        else if (timeSinceLastPoll > streamConfig.MaxPollIntervalMs.Value / 2)
+                                        {
+                                            numIterations = numIterations > 1 ? numIterations / 2 : numIterations;
                                             break;
+                                        }
+                                        else if (processed > 0)
+                                        {
+                                            numIterations++;
+                                        }
 
-                                        processLatencySensor.Record((double) processLatency / processed, now);
-                                        processRateSensor.Record(processed, now);
+                                    } while (processed > 0);
 
-                                        // NOT AVAILABLE NOW, NEED PROCESSOR API
-                                        //if (processed > 0)
-                                        //    manager.MaybeCommitPerUserRequested();
-                                        //else
-                                        //    break;
-                                    }
+                                    if (State == ThreadState.RUNNING)
+                                        totalCommitLatency += ActionHelper.MeasureLatency(() => Commit());
 
-                                    timeSinceLastPoll = Math.Max(DateTime.Now.GetMilliseconds() - lastPollMs, 0);
+                                    if (State == ThreadState.PARTITIONS_ASSIGNED)
+                                        SetState(ThreadState.RUNNING);
 
-                                    int commited = 0;
-                                    long commitLatency = ActionHelper.MeasureLatency(() => commited = Commit());
-                                    totalCommitLatency += commitLatency;
-                                    if (commited > 0)
+                                    now = DateTime.Now.GetMilliseconds();
+                                    double runOnceLatency = (double) now - startMs;
+
+                                    if (totalProcessed > 0)
+                                        log.LogDebug($"Processing {totalProcessed} records in {DateTime.Now - n}");
+
+                                    processRecordsSensor.Record(totalProcessed, now);
+                                    processRatioSensor.Record(totalProcessLatency / runOnceLatency, now);
+                                    pollRatioSensor.Record(pollLatency / runOnceLatency, now);
+                                    commitRatioSensor.Record(totalCommitLatency / runOnceLatency, now);
+                                    totalProcessLatency = 0;
+                                    totalCommitLatency = 0;
+
+                                    var dt = DateTime.Now;
+                                    if (lastMetrics.Add(TimeSpan.FromMilliseconds(streamConfig.MetricsIntervalMs)) < dt)
                                     {
-                                        summaryComitted += commited;
-                                        commitSensor.Record(commitLatency / (double) commited, now);
-                                        numIterations = numIterations > 1 ? numIterations / 2 : numIterations;
+                                        MetricUtils.ExportMetrics(streamMetricsRegistry, streamConfig, Name);
+                                        lastMetrics = dt;
                                     }
-                                    else if (timeSinceLastPoll > streamConfig.MaxPollIntervalMs.Value / 2)
+
+                                    if (lastSummaryMs.Add(streamConfig.LogProcessingSummary) < dt)
                                     {
-                                        numIterations = numIterations > 1 ? numIterations / 2 : numIterations;
-                                        break;
+                                        log.LogInformation(
+                                            $"Processed {summaryProcessed} total records and committed {summaryComitted} total tasks since the last update");
+                                        summaryProcessed = 0;
+                                        summaryComitted = 0;
+                                        lastSummaryMs = dt;
                                     }
-                                    else if (processed > 0)
-                                    {
-                                        numIterations++;
-                                    }
-
-                                } while (processed > 0);
-
-                                if (State == ThreadState.RUNNING)
-                                    totalCommitLatency += ActionHelper.MeasureLatency(() => Commit());
-
-                                if (State == ThreadState.PARTITIONS_ASSIGNED)
-                                    SetState(ThreadState.RUNNING);
-
-                                now = DateTime.Now.GetMilliseconds();
-                                double runOnceLatency = (double) now - startMs;
-
-                                if (totalProcessed > 0)
-                                    log.LogDebug($"Processing {totalProcessed} records in {DateTime.Now - n}");
-
-                                processRecordsSensor.Record(totalProcessed, now);
-                                processRatioSensor.Record(totalProcessLatency / runOnceLatency, now);
-                                pollRatioSensor.Record(pollLatency / runOnceLatency, now);
-                                commitRatioSensor.Record(totalCommitLatency / runOnceLatency, now);
-                                totalProcessLatency = 0;
-                                totalCommitLatency = 0;
-
-                                var dt = DateTime.Now;
-                                if (lastMetrics.Add(TimeSpan.FromMilliseconds(streamConfig.MetricsIntervalMs)) < dt)
-                                {
-                                    MetricUtils.ExportMetrics(streamMetricsRegistry, streamConfig, Name);
-                                    lastMetrics = dt;
                                 }
-
-                                if (lastSummaryMs.Add(streamConfig.LogProcessingSummary) < dt)
-                                {
-                                    log.LogInformation(
-                                        $"Processed {summaryProcessed} total records and committed {summaryComitted} total tasks since the last update");
-                                    summaryProcessed = 0;
-                                    summaryComitted = 0;
-                                    lastSummaryMs = dt;
-                                }
-                                    
-
                             }
                             else
                                 Thread.Sleep((int) consumeTimeout.TotalMilliseconds);
@@ -410,24 +411,14 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     if (task.IsClosed)
                     {
-                        log.LogInformation(
-                            
-                                "Stream task {TaskId} is already closed, probably because it got unexpectedly migrated to another thread already. Notifying the thread to trigger a new rebalance immediately",
-                                task.Id);
-                        // TODO gesture this behaviour
-                        //throw new TaskMigratedException(task);
+                        var message =
+                            $"Stream task {task.Id} is already closed, probably because it got unexpectedly migrated to another thread already. Notifying the thread to trigger a new rebalance immediately"; 
+                        log.LogInformation(message);
+                        throw new TaskMigratedException(message);
                     }
-                    else
-                        task.AddRecord(record);
+
+                    task.AddRecord(record);
                 }
-                else if (consumer.Assignment.Contains(record.TopicPartition))
-                {
-                    log.LogError(
-                        "Unable to locate active task for received-record partition {TopicPartition}. Current tasks: {TaskIDs}. Current Consumer Assignment : {Assignment}",
-                        record.TopicPartition, string.Join(",", manager.ActiveTaskIds),
-                        string.Join(",", consumer.Assignment.Select(t => $"{t.Topic}-[{t.Partition}]")));
-                    throw new NullReferenceException($"Task was unexpectedly missing for partition {record.TopicPartition}");
-                }                
             }
             return count;
         }

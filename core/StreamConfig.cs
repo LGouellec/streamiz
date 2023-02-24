@@ -1926,7 +1926,7 @@ namespace Streamiz.Kafka.Net
 
         /// <summary>
         /// Name of partition assignment strategy to use when elected group leader assigns
-        /// partitions to group members. default: range,roundrobin importance: medium
+        /// partitions to group members. default: range importance: medium
         /// </summary>
         [StreamConfigProperty("partition.assignment.strategy")]
         public PartitionAssignmentStrategy? PartitionAssignmentStrategy { get { return _consumerConfig.PartitionAssignmentStrategy; } set { _consumerConfig.PartitionAssignmentStrategy = value; } }
@@ -2269,7 +2269,7 @@ namespace Streamiz.Kafka.Net
             MaxPollIntervalMs = 300000;
             EnableAutoCommit = false;
             EnableAutoOffsetStore = false;
-            PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.CooperativeSticky;
+            PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.Range;
             Partitioner = Confluent.Kafka.Partitioner.Murmur2Random;
 
             Logger = LoggerFactory.Create(builder =>
