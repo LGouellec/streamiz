@@ -2,9 +2,11 @@ using Confluent.Kafka;
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Processors.Public;
 using Streamiz.Kafka.Net.Stream;
 
 namespace sample_stream
@@ -51,26 +53,44 @@ namespace sample_stream
                 BootstrapServers = "localhost:9092",
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 CommitIntervalMs = 3000,
+                Guarantee = ProcessingGuarantee.AT_LEAST_ONCE,
+                MaxPollRecords = 1,
                 StateDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()),
                 Logger = LoggerFactory.Create((b) =>
                 {
-                    b.SetMinimumLevel(LogLevel.Error);
+                    b.SetMinimumLevel(LogLevel.Debug);
                     b.AddLog4Net();
                 })
             };
-
+            
             var builder = new StreamBuilder();
-
-            var shoes = builder.Stream<String, Shoe, StringSerDes, JsonSerDes<Shoe>>("shoes");
-            var orders = builder.Stream<String, Order, StringSerDes, JsonSerDes<Order>>("orders");
-
-            orders
-                .SelectKey((k, v) => v.product_id.ToString())
-                .Join<Shoe, OrderShoe, JsonSerDes<Shoe>, JsonSerDes<OrderShoe>>(
-                    shoes,
-                    (order, shoe) => new OrderShoe(order, shoe),
-                    JoinWindowOptions.Of(TimeSpan.FromHours(1)))
-                .To<StringSerDes, JsonSerDes<OrderShoe>>("order-shoes");
+            //
+            // var shoes = builder.Stream<String, Shoe, StringSerDes, JsonSerDes<Shoe>>("shoes");
+            // var orders = builder.Stream<String, Order, StringSerDes, JsonSerDes<Order>>("orders");
+            //
+            // orders
+            //     .SelectKey((k, v) => v.product_id.ToString())
+            //     .Join<Shoe, OrderShoe, JsonSerDes<Shoe>, JsonSerDes<OrderShoe>>(
+            //         shoes,
+            //         (order, shoe) => new OrderShoe(order, shoe),
+            //         JoinWindowOptions.Of(TimeSpan.FromHours(1)))
+            //     .To<StringSerDes, JsonSerDes<OrderShoe>>("order-shoes");
+            //
+            
+            
+            // More link to the issue 232
+            builder
+                .Stream<String, Shoe, StringSerDes, JsonSerDes<Shoe>>("shoes")
+                .Transform(
+                    TransformerBuilder
+                        .New<string, Shoe, string, Shoe>()
+                        .Transformer((r) =>
+                        {
+                            Console.WriteLine();
+                            return Record<string,Shoe>.Create(r.Key, r.Value);
+                        })
+                        .Build())
+                .To<StringSerDes, JsonSerDes<Shoe>>("shoes2");
             
             Topology t = builder.Build();
             KafkaStream stream1 = new KafkaStream(t, config);
