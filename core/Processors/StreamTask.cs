@@ -159,7 +159,7 @@ namespace Streamiz.Kafka.Net.Processors
                     }
                     catch (TopicPartitionOffsetException e)
                     {
-                        log.LogInformation($"{logPrefix}Committing failed with a non-fatal error: {e.Message}, we can ignore this since commit may succeed still");
+                        log.LogError($"{logPrefix}Committing failed with a non-fatal error: {e.Message}, we can ignore this since commit may succeed still");
                     }
                     catch (KafkaException e)
                     {
@@ -168,9 +168,10 @@ namespace Streamiz.Kafka.Net.Processors
                             if (e.Error.Code ==
                                 ErrorCode.IllegalGeneration) // Broker: Specified group generation id is not valid
                             {
-                                log.LogDebug($"{logPrefix}Error with a non-fatal error during committing offset (ignore this, and try to commit during next time): {e.Message}");
+                                log.LogWarning($"{logPrefix}Error with a non-fatal error during committing offset (ignore this, and try to commit during next time): {e.Message}");
                                 return;
                             }
+                            log.LogWarning($"{logPrefix}Error with a non-fatal error during committing offset (ignore this, and try to commit during next time): {e.Message}");
                         }
                         else
                             throw;
@@ -449,7 +450,7 @@ namespace Streamiz.Kafka.Net.Processors
                         producer = null;
                     }
                     
-                    FlushState();
+                    // duplicate FlushState();
                     MayWriteCheckpoint(true);
                     CloseStateManager();
                     streamMetricsRegistry.RemoveTaskSensors(threadId, Id.ToString());

@@ -47,8 +47,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public IConsumer<byte[], byte[]> Consumer { get; internal set; }
         public IEnumerable<TaskId> ActiveTaskIds => activeTasks.Keys;
         public IEnumerable<TaskId> RevokeTaskIds => revokedTasks.Keys;
-        
-        internal static readonly object rebalanceLock = new();
         public bool RebalanceInProgress { get; internal set; }
 
         internal TaskManager(InternalTopologyBuilder builder, TaskCreator taskCreator, IAdminClient adminClient,
@@ -80,7 +78,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     var t = revokedTasks[taskId];
                     t.Resume();
                     activeTasks.TryAdd(taskId, t);
-                    revokedTasks.TryRemove(taskId, out StreamTask removeTask);
+                    revokedTasks.TryRemove(taskId, out _);
                     partitionsToTaskId.TryAdd(partition, taskId);
                 }
                 else if (!activeTasks.ContainsKey(taskId))
@@ -112,35 +110,30 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             foreach (var p in assignment)
             {
                 var taskId = builder.GetTaskIdFromPartition(p);
-                if (activeTasks.ContainsKey(taskId))
+                if (activeTasks.TryGetValue(taskId, out StreamTask task))
                 {
-                    var task = activeTasks[taskId];
                     task.Suspend();
-                    if (!revokedTasks.ContainsKey(taskId))
-                    {
-                        revokedTasks.TryAdd(taskId, task);
-                    }
                     
-                    partitionsToTaskId.TryRemove(p, out TaskId removeId);
-                    activeTasks.TryRemove(taskId, out StreamTask removeTask);
+                    if (!revokedTasks.TryGetValue(taskId, out _))
+                        revokedTasks.TryAdd(taskId, task);
+
+                    partitionsToTaskId.TryRemove(p, out _);
+                    activeTasks.TryRemove(taskId, out _);
                 }
             }
         }
 
         public StreamTask ActiveTaskFor(TopicPartition partition)
         {
-            lock (rebalanceLock)
+            if (partitionsToTaskId.TryGetValue(partition, out TaskId taskId))
             {
-                if (partitionsToTaskId.TryGetValue(partition, out TaskId taskId))
+                if (activeTasks.TryGetValue(taskId, out StreamTask task))
                 {
-                    if (activeTasks.TryGetValue(taskId, out StreamTask task))
-                    {
-                        return task;
-                    }
+                    return task;
                 }
-
-                return null;
             }
+
+            return null;
         }
 
         public void Close()
