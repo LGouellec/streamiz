@@ -514,6 +514,32 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Join Table
 
+        public IKStream<K, VR> Join<V0, VR>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner,
+            StreamTableJoinProps<K, V, V0> props, string named = null)
+        {
+            KeySerdes = props.KeySerdes;
+            ValueSerdes = props.LeftValueSerdes;
+            return Join(
+                table,
+      new WrappedValueJoiner<V, V0, VR>(valueJoiner),
+                props.RightValueSerdes,
+                null,
+                named);
+        }
+
+        public IKStream<K, VR> Join<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner,
+            StreamTableJoinProps<K, V, V0> props, string named = null)
+        {
+            KeySerdes = props.KeySerdes;
+            ValueSerdes = props.LeftValueSerdes;
+            return Join(
+                table,
+                valueJoiner,
+                props.RightValueSerdes,
+                null,
+                named);
+        }
+
         public IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner, string named = null)
             where V0S : ISerDes<V0>, new()
             where VRS : ISerDes<VR>, new ()

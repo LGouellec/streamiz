@@ -718,6 +718,12 @@ namespace Streamiz.Kafka.Net.Stream
         
         #region Join Table
 
+        IKStream<K, VR> Join<V0, VR>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner,
+            StreamTableJoinProps<K, V, V0> props, string named = null);
+
+        IKStream<K, VR> Join<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner,
+            StreamTableJoinProps<K, V, V0> props, string named = null);
+
         /// <summary>
         /// Join records of this stream with <see cref="IKTable{K, V0}"/>'s records using non-windowed inner equi join with default
         /// serializers and deserializers.
