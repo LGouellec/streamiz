@@ -72,15 +72,5 @@ namespace Streamiz.Kafka.Net.Processors.Public
         public static Record<K, V> Create(V value)
             => new(value);
 
-        /// <summary>
-        /// Duplicate this record with a new set of headers
-        /// </summary>
-        /// <param name="headers">The headers you wish to assign to this record.</param>
-        /// <returns>a new record with the same key/value and updated headers</returns>
-        public Record<K, V> WithHeaders(Headers headers)
-        {
-            Headers = headers;
-            return this;
-        }
     }
 }

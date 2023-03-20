@@ -33,5 +33,11 @@ namespace Streamiz.Kafka.Net.Processors
         /// </summary>
         /// <param name="ts">new timestamp</param>
         void ChangeTimestamp(long ts);
+
+        /// <summary>
+        /// Change current list of headers
+        /// </summary>
+        /// <param name="headers">new headers</param>
+        void SetHeaders(Headers headers);
     }
 }

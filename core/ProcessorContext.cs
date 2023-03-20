@@ -101,6 +101,11 @@ namespace Streamiz.Kafka.Net
             RecordContext.ChangeTimestamp(ts);
         }
 
+        internal void SetHeaders(Headers headers)
+        {
+            RecordContext.SetHeaders(headers);
+        }
+
         public virtual IStateStore GetStateStore(string storeName) => States.GetStore(storeName);
 
         internal void Register(IStateStore store, StateRestoreCallback callback)
