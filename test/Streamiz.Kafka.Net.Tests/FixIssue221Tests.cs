@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.SerDes;
@@ -33,6 +34,18 @@ namespace Streamiz.Kafka.Net.Tests
         [Test]
         public void FixIssue221()
         {
+            BuildTopology();
+        }
+   
+        [Test]
+        public void FixIssue221LeftJoin()
+        {
+            BuildTopology(true);
+        }
+
+
+        private void BuildTopology(bool leftJoin = false)
+        {
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-issue-221";
 
@@ -44,14 +57,27 @@ namespace Streamiz.Kafka.Net.Tests
             var locationSerdes = new JsonSerDes<Location>();
             
             var personStream = builder.Stream("person", stringSerdes, personSerdes);
-            var locationTable = builder.Table("location", intSerdes, locationSerdes);
+            var locationTable = builder.Table(
+                "location",
+                intSerdes,
+                locationSerdes,
+                InMemory.As<Int32, Location>("location-store"));
 
-            personStream
-                .Map((_, v) => KeyValuePair.Create(v.LocationId, v))
-                .Join(locationTable, 
-                    ((person, location) => new PersonLocation{Location = location, Person = person}), 
-                    new StreamTableJoinProps<int, Person, Location>(intSerdes, personSerdes, locationSerdes))
-                .To<Int32SerDes, JsonSerDes<PersonLocation>>("person-location");
+            var stream = personStream
+                .Map((_, v) => KeyValuePair.Create(v.LocationId, v));
+
+            IKStream<Int32, PersonLocation> personLocationStream;
+            
+            if (leftJoin)
+                personLocationStream = stream.LeftJoin(locationTable,
+                    ((person, location) => new PersonLocation {Location = location, Person = person}),
+                    new StreamTableJoinProps<int, Person, Location>(intSerdes, personSerdes, locationSerdes));
+            else
+                personLocationStream = stream.Join(locationTable,
+                        ((person, location) => new PersonLocation {Location = location, Person = person}),
+                        new StreamTableJoinProps<int, Person, Location>(intSerdes, personSerdes, locationSerdes));
+
+            personLocationStream.To<Int32SerDes, JsonSerDes<PersonLocation>>("person-location");
             
             var topology = builder.Build();
             using (var driver = new TopologyTestDriver(topology, config))
@@ -71,6 +97,5 @@ namespace Streamiz.Kafka.Net.Tests
                 Assert.IsNotNull(record);
             }
         }
-   
     }
 }
