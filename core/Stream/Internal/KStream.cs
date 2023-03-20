@@ -514,6 +514,32 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Join Table
 
+        public IKStream<K, VR> Join<V0, VR>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner,
+            StreamTableJoinProps<K, V, V0> streamTableJoinProps, string named = null)
+        {
+            KeySerdes = streamTableJoinProps.KeySerdes;
+            ValueSerdes = streamTableJoinProps.LeftValueSerdes;
+            return Join(
+                table,
+      new WrappedValueJoiner<V, V0, VR>(valueJoiner),
+                streamTableJoinProps.RightValueSerdes,
+                null,
+                named);
+        }
+
+        public IKStream<K, VR> Join<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner,
+            StreamTableJoinProps<K, V, V0> streamTableJoinProps, string named = null)
+        {
+            KeySerdes = streamTableJoinProps.KeySerdes;
+            ValueSerdes = streamTableJoinProps.LeftValueSerdes;
+            return Join(
+                table,
+                valueJoiner,
+                streamTableJoinProps.RightValueSerdes,
+                null,
+                named);
+        }
+
         public IKStream<K, VR> Join<V0, VR, V0S, VRS>(IKTable<K, V0> table, Func<V, V0, VR> valueJoiner, string named = null)
             where V0S : ISerDes<V0>, new()
             where VRS : ISerDes<VR>, new ()
@@ -551,6 +577,32 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region LeftJoin Table
 
+        public IKStream<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner,
+            StreamTableJoinProps<K, V, VT> streamTableJoinProps, string named = null)
+        {
+            KeySerdes = streamTableJoinProps.KeySerdes;
+            ValueSerdes = streamTableJoinProps.LeftValueSerdes;
+            return LeftJoin(
+                table,
+                new WrappedValueJoiner<V, VT, VR>(valueJoiner),
+                streamTableJoinProps.RightValueSerdes,
+                null,
+                named);
+        }
+
+        public IKStream<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner,
+            StreamTableJoinProps<K, V, VT> streamTableJoinProps, string named = null)
+        {
+            KeySerdes = streamTableJoinProps.KeySerdes;
+            ValueSerdes = streamTableJoinProps.LeftValueSerdes;
+            return LeftJoin(
+                table,
+                valueJoiner,
+                streamTableJoinProps.RightValueSerdes,
+                null,
+                named);
+        }
+        
         public IKStream<K, VR> LeftJoin<VT, VR, VTS, VRS>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, string named = null)
             where VTS : ISerDes<VT>, new()
             where VRS : ISerDes<VR>, new ()

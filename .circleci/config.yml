@@ -9,7 +9,7 @@
         - image: mcr.microsoft.com/dotnet/sdk:6.0
       steps:
         - checkout
-        - run: dotnet tool install --global dotnet-sonarscanner --version 5.5.3
+        - run: dotnet tool install --global dotnet-sonarscanner --version 5.11.0
         - run: echo 'export PATH="$PATH:/root/.dotnet/tools"' >> $BASH_ENV
         - run: echo "deb http://ftp.us.debian.org/debian stretch main contrib non-free" >> /etc/apt/sources.list
         - run: apt update
