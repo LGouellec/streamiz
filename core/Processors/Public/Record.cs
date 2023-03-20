@@ -18,7 +18,7 @@ namespace Streamiz.Kafka.Net.Processors.Public
         /// <summary>
         /// Headers of the record (readonly)
         /// </summary>
-        public Headers Headers { get; internal set; }
+        public Headers Headers { get; }
         
         /// <summary>
         /// Timestamp of the record (readonly)
