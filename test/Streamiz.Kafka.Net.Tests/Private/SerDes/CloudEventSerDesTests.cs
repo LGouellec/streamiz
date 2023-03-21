@@ -30,7 +30,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var serdes = new CloudEventSerDes<Order>();
             var r = serdes.Serialize(
                 order,
-                new SerializationContext(MessageComponentType.Value, "orders"));
+                new SerializationContext(MessageComponentType.Value, "orders", new Headers()));
             
             Assert.IsNotNull(r);
         }

@@ -9,6 +9,7 @@ using Streamiz.Kafka.Net.Errors;
 
 namespace Streamiz.Kafka.Net.SerDes.CloudEvents
 {
+
     /// <summary>
     /// Only for value
     /// </summary>
@@ -17,23 +18,28 @@ namespace Streamiz.Kafka.Net.SerDes.CloudEvents
     {
         private readonly CloudEventFormatter formatter;
         private readonly Func<CloudEvent, T> deserializer;
+        private readonly ContentMode mode;
         private readonly Func<T, string> exportCloudEventId;
 
         public CloudEventSerDes()
             : this(
                 new JsonEventFormatter(), 
-            @event => JsonSerializer.Deserialize<T>(JsonDocument.Parse(@event?.Data?.ToString())))
+            @event => JsonSerializer.Deserialize<T>(JsonDocument.Parse(@event?.Data?.ToString())),
+                ContentMode.Binary)
         { }
 
         public CloudEventSerDes(
             CloudEventFormatter formatter, 
-            Func<CloudEvent, T> deserializer)
-        : this(formatter, deserializer, _ => Guid.NewGuid().ToString())
+            Func<CloudEvent, T> deserializer,
+            ContentMode mode
+            )
+        : this(formatter, deserializer, mode, _ => Guid.NewGuid().ToString())
         { }
         
         public CloudEventSerDes(
             CloudEventFormatter formatter, 
             Func<CloudEvent, T> deserializer, 
+            ContentMode mode,
             Func<T, string> exportCloudEventId)
         {
             Validation.CheckNotNull(formatter, nameof(formatter));
@@ -42,6 +48,7 @@ namespace Streamiz.Kafka.Net.SerDes.CloudEvents
             
             this.formatter = formatter;
             this.deserializer = deserializer;
+            this.mode = mode;
             this.exportCloudEventId = exportCloudEventId;
         }
         
@@ -63,7 +70,7 @@ namespace Streamiz.Kafka.Net.SerDes.CloudEvents
             };
             cloudEvent.DataContentType = formatter.GetOrInferDataContentType(cloudEvent);
             
-            var tmpMessage = cloudEvent.ToKafkaMessage(ContentMode.Binary, formatter);
+            var tmpMessage = cloudEvent.ToKafkaMessage(mode, formatter);
             UpdateCurrentHeader(tmpMessage, context);
             return tmpMessage.Value;
         }
