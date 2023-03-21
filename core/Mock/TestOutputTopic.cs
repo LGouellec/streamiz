@@ -72,12 +72,12 @@ namespace Streamiz.Kafka.Net.Mock
                 var record = pipe.Read();
 
                 var key = keySerdes != null ?
-                    keySerdes.Deserialize(record.Key, new SerializationContext(MessageComponentType.Key, pipe.TopicName)) :
-                    (K)configuration.DefaultKeySerDes.DeserializeObject(record.Key, new SerializationContext(MessageComponentType.Key, pipe.TopicName));
+                    keySerdes.Deserialize(record.Key, new SerializationContext(MessageComponentType.Key, pipe.TopicName, record.Message.Headers)) :
+                    (K)configuration.DefaultKeySerDes.DeserializeObject(record.Key, new SerializationContext(MessageComponentType.Key, pipe.TopicName, record.Message.Headers));
 
                 var value = valueSerdes != null ?
-                    valueSerdes.Deserialize(record.Value, new SerializationContext(MessageComponentType.Value, pipe.TopicName)) :
-                    (V)configuration.DefaultValueSerDes.DeserializeObject(record.Value, new SerializationContext(MessageComponentType.Value, pipe.TopicName));
+                    valueSerdes.Deserialize(record.Value, new SerializationContext(MessageComponentType.Value, pipe.TopicName, record.Message.Headers)) :
+                    (V)configuration.DefaultValueSerDes.DeserializeObject(record.Value, new SerializationContext(MessageComponentType.Value, pipe.TopicName, record.Message.Headers));
 
                 return new ConsumeResult<K, V>{
                     Message = new Message<K, V>
@@ -128,14 +128,14 @@ namespace Streamiz.Kafka.Net.Mock
             {
                 var key = record.Key != null ?
                     (keySerdes != null ? 
-                        keySerdes.Deserialize(record.Key, new SerializationContext(MessageComponentType.Key, pipe.TopicName)) :
-                        (K)configuration.DefaultKeySerDes.DeserializeObject(record.Key, new SerializationContext(MessageComponentType.Key, pipe.TopicName))) 
+                        keySerdes.Deserialize(record.Key, new SerializationContext(MessageComponentType.Key, pipe.TopicName, record.Message.Headers)) :
+                        (K)configuration.DefaultKeySerDes.DeserializeObject(record.Key, new SerializationContext(MessageComponentType.Key, pipe.TopicName, record.Message.Headers))) 
                     : default;
 
                 var value = record.Value != null ?
                     (valueSerdes != null ?
-                        valueSerdes.Deserialize(record.Value, new SerializationContext(MessageComponentType.Value, pipe.TopicName)) :
-                        (V)configuration.DefaultValueSerDes.DeserializeObject(record.Value, new SerializationContext(MessageComponentType.Value, pipe.TopicName))) 
+                        valueSerdes.Deserialize(record.Value, new SerializationContext(MessageComponentType.Value, pipe.TopicName, record.Message.Headers)) :
+                        (V)configuration.DefaultValueSerDes.DeserializeObject(record.Value, new SerializationContext(MessageComponentType.Value, pipe.TopicName, record.Message.Headers))) 
                     : default;
 
                 records.Add(new ConsumeResult<K, V>{

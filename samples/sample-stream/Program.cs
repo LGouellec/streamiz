@@ -11,9 +11,11 @@ using System.Runtime.Intrinsics;
 using System.Security.Permissions;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Public;
+using Streamiz.Kafka.Net.SerDes.CloudEvents;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 
@@ -24,74 +26,34 @@ namespace sample_stream
     /// </summary>
     internal class Program
     {
-        private static readonly JsonSerializerOptions _jsonSerializerOptions = new();
-
-        public class Tag
+        class Order
         {
-            public string Field1 { get; set; }
-            public string Field2 { get; set; }
-            public string Field3 { get; set; }
+            public int OrderId { get; set; }
+            public string ProductId { get; set; }
+            public DateTime OrderTime { get; set; }
         }
-
-        public class Metadata
-        {
-            public Dictionary<string, string> Data { get; set; }
-        }
-
-        public class TagInfo
-        {
-            public Tag Tag { get; set; }
-            public Metadata MetaData { get; set; }
-        }
+        
         
         public static async Task Main(string[] args)
         {
-            string KeyMapping(string key, Tag tag)
-            {
-                return key;
-            }
-            
-            string ValueJoiner(Tag currentValue, string metaValue)
-            {
-                var tag = new TagInfo
-                {
-                    Tag = currentValue,
-                    MetaData = metaValue == null
-                        ? null
-                        : JsonSerializer.Deserialize<Metadata>(metaValue, _jsonSerializerOptions)
-                };
-
-                return JsonSerializer.Serialize(tag, _jsonSerializerOptions);
-            }
-            
-            // globalTopic.PipeInput("key1", "{\"Data\":{\"key1\":\"value1\",\"key2\":\"value2\"}}");
-            // inputTopic.PipeInput("key1", new Tag() {Field1 = "tag1", Field2 = "tag2", Field3 = "tag3"});
-
-            var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-app-reproducer";
+            var config = new StreamConfig();
+            config.ApplicationId = "test-app-cloud-events";
             config.BootstrapServers = "localhost:9092";
             config.AutoOffsetReset = AutoOffsetReset.Earliest;
             config.CommitIntervalMs = 3000;
             config.StateDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             config.Logger = LoggerFactory.Create((b) =>
             {
-                b.SetMinimumLevel(LogLevel.Debug);
+                b.SetMinimumLevel(LogLevel.Information);
                 b.AddLog4Net();
             });
             
             StreamBuilder builder = new StreamBuilder();
 
-            var globalKTable = builder.GlobalTable("meta", InMemory.As<string, string>("table-store"));
-            var kStream = builder.Stream<string, Tag, StringSerDes, JsonSerDes<Tag>>("stream");
-
-            var table = builder.Table<string, string>("table-topic");
-            var stream = builder.Stream<string, string>("stream-topic");
-            kStream.Join(table, (v1, v2) => $"{v1}-{v2}");
-            
-            var targetStream = kStream
-                .LeftJoin(globalKTable, KeyMapping, ValueJoiner);
-
-            targetStream.To<StringSerDes, StringSerDes>("target");
+            builder
+                .Stream<string, Order, StringSerDes, JsonSerDes<Order>>("order")
+                .Filter((k, v) => v.OrderId >= 200)
+                .To<StringSerDes, CloudEventSerDes<Order>>("order-filtered");
 
             Topology t = builder.Build();
             KafkaStream stream1 = new KafkaStream(t, config);

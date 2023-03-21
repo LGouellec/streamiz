@@ -41,6 +41,7 @@
     <ProjectReference Include="..\..\serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json.csproj" />
     <ProjectReference Include="..\..\serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf.csproj" />
     <ProjectReference Include="..\..\serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.csproj" />
+    <ProjectReference Include="..\..\serdes\Streamiz.Kafka.Net.SerDes.CloudEvents\Streamiz.Kafka.Net.SerDes.CloudEvents.csproj" />
   </ItemGroup>
 
   <ItemGroup>
