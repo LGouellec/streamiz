@@ -3,6 +3,7 @@ using System.Linq;
 using CloudNative.CloudEvents;
 using Confluent.Kafka;
 using NUnit.Framework;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.SerDes.CloudEvents;
@@ -127,6 +128,56 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             Assert.AreEqual("123", records[0].Message.Value.ProductId);
         }
 
+        [Test]
+        public void KeyException()
+        {
+            var context = new SerializationContext(MessageComponentType.Key, "orders", new Headers());
+            
+            var serdes = new CloudEventSerDes<String>();
+            
+            Assert.Throws<StreamsException>(() => serdes.Serialize(
+                "hello",
+                context
+            ));
+            
+            Assert.Throws<StreamsException>(() => serdes.Deserialize(
+                new byte[0],
+                context
+            ));
+        }
         
+        [Test]
+        public void NullPayload()
+        {
+
+            var context = new SerializationContext(MessageComponentType.Value, "orders", new Headers());
+            
+            var serdes = new CloudEventSerDes<Order>();
+            var r = serdes.Serialize(
+                null,
+                context
+            );
+            
+            Assert.IsNull(r);
+
+            var newOrder = serdes.Deserialize(
+                r, 
+                context);
+
+            Assert.IsNull(newOrder);
+        }
+
+
+        [Test]
+        public void DeserializeNotCloudEventMessage()
+        {
+            var context = new SerializationContext(MessageComponentType.Value, "orders", new Headers());
+            
+            var serdes = new CloudEventSerDes<Order>();
+
+            Assert.Throws<InvalidOperationException>(() => serdes.Deserialize(
+                new byte[1] {1},
+                context));
+        }
     }
 }

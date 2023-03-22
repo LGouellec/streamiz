@@ -163,12 +163,7 @@ namespace Streamiz.Kafka.Net.SerDes.CloudEvents
 
             var cloudEvent = tmpMessage.ToCloudEvent(formatter);
 
-            return cloudEvent.Data switch
-            {
-                JsonElement => deserializer(cloudEvent),
-                T eventData => eventData,
-                _ => null
-            };
+            return deserializer(cloudEvent);
         }
 
         /// <summary>
