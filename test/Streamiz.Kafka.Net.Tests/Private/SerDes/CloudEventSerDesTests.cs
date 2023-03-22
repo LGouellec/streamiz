@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using CloudNative.CloudEvents;
 using Confluent.Kafka;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Mock;
@@ -90,5 +91,42 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             Assert.AreEqual(240, records[0].Message.Value.OrderId);
             Assert.AreEqual("123", records[0].Message.Value.ProductId);
         }
+        
+        [Test]
+        public void CompleteWorkflowWithOverrideConfiguration()
+        {
+            Func<Order, string> exportOrderId = (o) =>
+            {
+                return o.OrderId.ToString();
+            };
+            var config = new StreamConfig();
+            config.ApplicationId = "test-workflow-cloudevent-serdes";
+            config.DefaultKeySerDes = new StringSerDes();
+            config.DefaultValueSerDes = new CloudEventSerDes<Order>();
+            
+            config.Add(CloudEventSerDesConfig.CloudEventContentMode, ContentMode.Structured);
+            config.Add(CloudEventSerDesConfig.CloudEventExportId, exportOrderId);
+            
+            var builder = new StreamBuilder();
+            builder
+                .Stream<string, Order>("order")
+                .Filter((k, v) => v.OrderId >= 200)
+                .To("order-filtered");
+
+            var topo = builder.Build();
+            using var driver = new TopologyTestDriver(topo, config);
+            var input = driver.CreateInputTopic<string, Order>("order");
+            var output = driver.CreateOuputTopic<string, Order>("order-filtered");
+            input.PipeInput("order1", new Order() {OrderId = 240, OrderTime = DateTime.Now, ProductId = "123"});
+            input.PipeInput("order2", new Order() {OrderId = 40, OrderTime = DateTime.Now, ProductId = "456"});
+
+            var records = output.ReadKeyValueList().ToList();
+            Assert.AreEqual(1, records.Count);
+            Assert.AreEqual("order1", records[0].Message.Key);
+            Assert.AreEqual(240, records[0].Message.Value.OrderId);
+            Assert.AreEqual("123", records[0].Message.Value.ProductId);
+        }
+
+        
     }
 }
