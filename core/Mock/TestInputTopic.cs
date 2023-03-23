@@ -50,10 +50,10 @@ namespace Streamiz.Kafka.Net.Mock
 
         internal IPipeInput Pipe => pipe;
 
-        private (byte[], byte[]) GetBytes(K key, V value)
+        private (byte[], byte[]) GetBytes(K key, V value, Headers headers)
         {
             byte[] k = GetKeyBytes(key);
-            byte[] v = GetValueBytes(value);
+            byte[] v = GetValueBytes(value, headers);
             return (k, v);
         }
 
@@ -70,14 +70,14 @@ namespace Streamiz.Kafka.Net.Mock
                 return null;
         }
 
-        private byte[] GetValueBytes(V value)
+        private byte[] GetValueBytes(V value, Headers headers)
         {
             if (value != null)
             {
                 if (valueSerdes != null)
-                    return valueSerdes.Serialize(value, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Value, pipe.TopicName));
+                    return valueSerdes.Serialize(value, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Value, pipe.TopicName, headers));
                 else
-                    return configuration.DefaultValueSerDes.SerializeObject(value, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Value, pipe.TopicName));
+                    return configuration.DefaultValueSerDes.SerializeObject(value, new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Value, pipe.TopicName, headers));
             }
             else
                 return null;
@@ -88,7 +88,7 @@ namespace Streamiz.Kafka.Net.Mock
         private void PipeInput(TestRecord<K, V> record)
         {
             DateTime ts = record.Timestamp.HasValue ? record.Timestamp.Value : DateTime.Now;
-            var tuple = GetBytes(record.Key, record.Value);
+            var tuple = GetBytes(record.Key, record.Value, record.Headers);
             pipe.Pipe(tuple.Item1, tuple.Item2, ts, record.Headers);
             pipe.Flush();
         }
@@ -140,7 +140,7 @@ namespace Streamiz.Kafka.Net.Mock
             foreach (var record in records)
             {
                 DateTime ts = record.Timestamp.HasValue ? record.Timestamp.Value : DateTime.Now;
-                var tuple = GetBytes(record.Key, record.Value);
+                var tuple = GetBytes(record.Key, record.Value, record.Headers);
                 pipe.Pipe(tuple.Item1, tuple.Item2, ts, record.Headers);
             }
 

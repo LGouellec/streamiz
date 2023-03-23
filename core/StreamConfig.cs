@@ -2354,6 +2354,8 @@ namespace Streamiz.Kafka.Net
                     SetObject(_overrideRestoreConsumerConfig, key.Replace(restoreConsumerPrefix, string.Empty), value);
                 else if (key.StartsWith(producerPrefix))
                     SetObject(_overrideProducerConfig, key.Replace(producerPrefix, string.Empty), value);
+                else
+                    this.AddOrUpdate(key, (object)value);
             }
         }
         

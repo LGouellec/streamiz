@@ -36,6 +36,8 @@ jobs:
       run: dotnet pack serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf.csproj  --configuration Release --no-build --no-restore
     - name: Pack Registry.Json
       run: dotnet pack serdes/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json.csproj --configuration Release --no-build --no-restore
+    - name: Pack CloudEvents
+      run: dotnet pack serdes/Streamiz.Kafka.Net.SerDes.CloudEvents/Streamiz.Kafka.Net.SerDes.CloudEvents.Json.csproj --configuration Release --no-build --no-restore
     - name: Pack Metrics Prometheus
       run: dotnet pack metrics/Streamiz.Kafka.Net.Metrics.Prometheus/Streamiz.Kafka.Net.Metrics.Prometheus.csproj --configuration Release --no-build --no-restore
     - name: Pack Metrics OpenTelemetry
