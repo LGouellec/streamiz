@@ -21,11 +21,16 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public int Partition { get; }
 
-        public Headers Headers { get; }
+        public Headers Headers { get; internal set; }
 
         public void ChangeTimestamp(long ts)
         {
             Timestamp = ts;
+        }
+
+        public void SetHeaders(Headers headers)
+        {
+            Headers = headers;
         }
     }
 }

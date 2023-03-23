@@ -71,5 +71,6 @@ namespace Streamiz.Kafka.Net.Processors.Public
         /// <returns>return a new value record</returns>
         public static Record<K, V> Create(V value)
             => new(value);
+
     }
 }
