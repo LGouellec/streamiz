@@ -315,9 +315,12 @@ namespace Streamiz.Kafka.Net
 
             int numStreamThreads = topology.Builder.HasNoNonGlobalTopology ? 0 : configuration.NumStreamThreads;
 
+            string Protect(string str)
+                => str.Replace("\n", "\\n");
+            
             GeneralClientMetrics.StreamsAppSensor(
                 configuration.ApplicationId,
-                topology.Describe().ToString(),
+                Protect(topology.Describe().ToString()),
                 () => StreamState != null && StreamState.IsRunning() ? 1 : 0,
                 () => threads.Count(t => t.State != ThreadState.DEAD && t.State != ThreadState.PENDING_SHUTDOWN),
                 metricsRegistry);
@@ -633,7 +636,7 @@ namespace Streamiz.Kafka.Net
                 var methods = typeof(IStreamMiddleware).GetMethods();
                 logger.LogInformation($"{logPrefix}Starting middleware {methods[index].Name.ToLowerInvariant()}");
                 foreach (var middleware in configuration.Middlewares)
-                    methods[index].Invoke(middleware, new object[] {configuration});
+                    methods[index].Invoke(middleware, new object[] {configuration, _cancelSource.Token});
                 logger.LogInformation($"{logPrefix}Middleware {methods[index].Name.ToLowerInvariant()} done");
             }
         }

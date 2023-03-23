@@ -46,7 +46,7 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
             foreach (var metric in sensors.SelectMany(s => s.Metrics))
             {
                 var metricKey = MetricKey(metric.Value);
-                var newGauge = new Gauge2(metricKey, metric.Key.Description, metric.Value.Tags);
+                var newGauge = new Gauge(metricKey, metric.Key.Description, metric.Value.Tags);
                 MetricsServer.AddGauge(newGauge, metric);
             }
         }

@@ -1,3 +1,4 @@
+using System.Threading;
 using OpenTelemetry.Metrics;
 
 namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry
@@ -14,19 +15,19 @@ namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry
             this.openTelemetryMetricsExporter = openTelemetryMetricsExporter;
         }
         
-        public void BeforeStart(IStreamConfig config)
+        public void BeforeStart(IStreamConfig config, CancellationToken token)
         {
         }
 
-        public void AfterStart(IStreamConfig config)
+        public void AfterStart(IStreamConfig config, CancellationToken token)
         {
         }
 
-        public void BeforeStop(IStreamConfig config)
+        public void BeforeStop(IStreamConfig config, CancellationToken token)
         {
         }
 
-        public void AfterStop(IStreamConfig config)
+        public void AfterStop(IStreamConfig config, CancellationToken token)
         {
             meterProvider.ForceFlush();
             meterProvider.Dispose();
