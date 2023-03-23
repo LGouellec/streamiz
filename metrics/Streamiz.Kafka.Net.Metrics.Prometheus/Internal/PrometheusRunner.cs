@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
-using Prometheus;
+using System.Threading;
 
 namespace Streamiz.Kafka.Net.Metrics.Prometheus
 {
-    public class PrometheusRunner : IStreamMiddleware
+    internal class PrometheusRunner : IStreamMiddleware
     {
         private PrometheusMetricServer MetricsServer { get; }
 
@@ -15,22 +15,22 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
 
         #region IStreamMiddleware impl
         
-        public void BeforeStart(IStreamConfig config)
+        public void BeforeStart(IStreamConfig config, CancellationToken token)
         {
-            MetricsServer.Start();
+            MetricsServer.Start(token);
         }
 
-        public void AfterStart(IStreamConfig config)
+        public void AfterStart(IStreamConfig config, CancellationToken token)
         {
             // nothing
         }
 
-        public void BeforeStop(IStreamConfig config)
+        public void BeforeStop(IStreamConfig config, CancellationToken token)
         {
             // nothing 
         }
 
-        public void AfterStop(IStreamConfig config)
+        public void AfterStop(IStreamConfig config, CancellationToken token)
         {
             MetricsServer.Stop();
         }
@@ -41,21 +41,13 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
         {
             string MetricKey(StreamMetric metric) => $"{metric.Group}_{metric.Name}".Replace("-", "_");
             
-            var registry = global::Prometheus.Metrics.NewCustomRegistry();
-            var metricFactory = global::Prometheus.Metrics.WithCustomRegistry(registry);
-            
-            MetricsServer.ClearGauges(registry);
+            MetricsServer.ClearGauges();
 
             foreach (var metric in sensors.SelectMany(s => s.Metrics))
             {
                 var metricKey = MetricKey(metric.Value);
-                
-                var gauge = metricFactory.CreateGauge(metricKey, metric.Key.Description, 
-                    new GaugeConfiguration {
-                        LabelNames = metric.Key.Tags.Keys.ToArray()
-                    });
-
-                MetricsServer.AddGauge(gauge, metric);
+                var newGauge = new Gauge2(metricKey, metric.Key.Description, metric.Value.Tags);
+                MetricsServer.AddGauge(newGauge, metric);
             }
         }
     }
