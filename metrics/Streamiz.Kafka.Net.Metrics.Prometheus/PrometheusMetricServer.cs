@@ -4,32 +4,57 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Prometheus;
+using Streamiz.Kafka.Net.Crosscutting;
 
 namespace Streamiz.Kafka.Net.Metrics.Prometheus
 {
-    public class PrometheusMetricServer : MetricServer
+    public class PrometheusMetricServer : IDisposable
     {
-        private readonly HttpListener _httpListener = new HttpListener();
-        private static readonly object @lock = new object();
+        private readonly HttpListener _httpListener = new ();
+        private static readonly object @lock = new();
         private readonly IList<(Gauge, StreamMetric)> gauges = new List<(Gauge, StreamMetric)>();
-        private CollectorRegistry collectorRegistry;
+        private Task? task;
 
-        public PrometheusMetricServer(int port, string url = "metrics/", CollectorRegistry registry = null, bool useHttps = false) 
-            : this("+", port, url, registry, useHttps)
+        public PrometheusMetricServer(int port, string url = "metrics/", bool useHttps = false) 
+            : this("+", port, url, useHttps)
         { }
 
-        private PrometheusMetricServer(string hostname, int port, string url = "metrics/", CollectorRegistry registry = null, bool useHttps = false) 
-            : base(hostname, port, url, registry, useHttps)
+        private PrometheusMetricServer(string hostname, int port, string url = "metrics/", bool useHttps = false)
         {
             var s = useHttps ? "s" : "";
             _httpListener.Prefixes.Add($"http{s}://{hostname}:{port}/{url}");
             _httpListener.Prefixes.Add($"http{s}://{hostname}:{port}/");
         }
 
-        protected override Task StartServer(CancellationToken cancel)
+        public void Start(CancellationToken token)
+        {
+            if (task != null)
+                throw new InvalidOperationException("The metric server has already been started.");
+            
+            task = StartServer(token);
+        }
+
+        public async Task StopAsync()
+        {
+            try
+            {
+                if (task == null)
+                    return;
+                await task.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException ex)
+            {
+            }
+        }
+
+        public void Stop() => StopAsync().GetAwaiter().GetResult();
+
+        void IDisposable.Dispose() => Stop();
+        
+        protected Task StartServer(CancellationToken cancel)
         {
             // This will ensure that any failures to start are nicely thrown from StartServerAsync.
             _httpListener.Start();
@@ -59,35 +84,41 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
 
                                 try
                                 {
+                                    List<Gauge> tmpGauges = null;
+                                    
                                     lock (@lock)
                                     {
                                         foreach (var metric in gauges)
                                         {
                                             Double value;
-                                            if(Crosscutting.Utils.IsNumeric(metric.Item2.Value, out value))
-                                                metric.Item1.WithLabels(metric.Item2.Tags.Values.ToArray()).Set(value);
+                                            if(Utils.IsNumeric(metric.Item2.Value, out value))
+                                                metric.Item1.SetValue(value);
                                             else
-                                                metric.Item1.WithLabels(metric.Item2.Tags.Values.ToArray()).Set(1);
+                                                metric.Item1.SetValue(1);
                                         }
+
+                                        tmpGauges = gauges.Select(g => g.Item1).ToList();
                                     }
 
-                                    using (MemoryStream ms = new MemoryStream())
+                                    using (var ms = new MemoryStream())
                                     {
-                                        if (collectorRegistry != null)
-                                        {
-                                            await collectorRegistry.CollectAndExportAsTextAsync(ms, cancel);
+                                        foreach (var metric in tmpGauges)
+                                            ExportMetricAsTest(ms, metric);
+                                        
+                                        await ms.FlushAsync(cancel);
 
-                                            ms.Position = 0;
+                                        ms.Seek(0, SeekOrigin.Begin);
 
-                                            response.ContentType = PrometheusConstants.ExporterContentType;
-                                            response.StatusCode = 200;
-                                            await ms.CopyToAsync(response.OutputStream, 81920, cancel);
-                                        }
+                                        response.ContentType = "text/plain";
+                                        response.StatusCode = 200;
+                                        //var memoryBuffer = ms.GetBuffer();
+                                        //response.OutputStream.Write(memoryBuffer, 0, memoryBuffer.Length);
+                                        await ms.CopyToAsync(response.OutputStream, 2048*2*2, cancel);
                                     }
 
                                     response.OutputStream.Dispose();
                                 }
-                                catch (ScrapeFailedException ex)
+                                catch (Exception ex)
                                 {
                                     // This can only happen before anything is written to the stream, so it
                                     // should still be safe to update the status code and report an error.
@@ -95,8 +126,8 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
 
                                     if (!string.IsNullOrWhiteSpace(ex.Message))
                                     {
-                                        using(var writer = new StreamWriter(response.OutputStream))
-                                            writer.Write(ex.Message);
+                                        using var writer = new StreamWriter(response.OutputStream);
+                                        await writer.WriteAsync(ex.Message);
                                     }
                                 }
                             }
@@ -105,7 +136,7 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
                                 if (!_httpListener.IsListening)
                                     return; // We were shut down.
 
-                                Trace.WriteLine(string.Format("Error in {0}: {1}", nameof(MetricServer), ex));
+                                Trace.WriteLine(string.Format("Error in {0}: {1}", nameof(PrometheusMetricServer), ex));
 
                                 try
                                 {
@@ -133,14 +164,22 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
             }, TaskCreationOptions.LongRunning);
         }
 
-        public void ClearGauges(CollectorRegistry collectorRegistry)
+        private void ExportMetricAsTest(MemoryStream ms, Gauge metric)
         {
-            this.collectorRegistry = collectorRegistry;
+            var tags = string.Join(",", metric.Labels.Select(kv => $"{kv.Key}=\"{kv.Value}\""));
+            var formattedMetric =
+                metric.Key + "{" + tags + "} " + metric.Value + Environment.NewLine;
+            var buffer = Encoding.UTF8.GetBytes(formattedMetric);
+            ms.Write(buffer, 0, buffer.Length);
+        }
+
+        internal void ClearGauges()
+        {
             lock (@lock)
                 gauges.Clear();
         }
 
-        public void AddGauge(Gauge gauge, KeyValuePair<MetricName, StreamMetric> metric)
+        internal void AddGauge(Gauge gauge, KeyValuePair<MetricName, StreamMetric> metric)
         {
             lock(@lock)
                 gauges.Add((gauge, metric.Value));

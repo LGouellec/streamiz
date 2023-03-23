@@ -1,3 +1,5 @@
+using System.Threading;
+
 namespace Streamiz.Kafka.Net
 {
     /// <summary>
@@ -9,21 +11,25 @@ namespace Streamiz.Kafka.Net
         /// Middleware function called before starting streaming application
         /// </summary>
         /// <param name="config">Actual configuration</param>
-        void BeforeStart(IStreamConfig config);
+        /// <param name="token">Token for propagates notification that the stream should be canceled.</param>
+        void BeforeStart(IStreamConfig config, CancellationToken token);
         /// <summary>
         /// Middleware function called after starting streaming application
         /// </summary>
         /// <param name="config">Actual configuration</param>
-        void AfterStart(IStreamConfig config);
+        /// <param name="token">Token for propagates notification that the stream should be canceled.</param>
+        void AfterStart(IStreamConfig config, CancellationToken token);
         /// <summary>
         /// Middleware function called before stopping streaming application
         /// </summary>
         /// <param name="config">Actual configuration</param>
-        void BeforeStop(IStreamConfig config);
+        /// <param name="token">Token for propagates notification that the stream should be canceled.</param>
+        void BeforeStop(IStreamConfig config, CancellationToken token);
         /// <summary>
         /// Middleware function called after stopping streaming application
         /// </summary>
         /// <param name="config">Actual configuration</param>
-        void AfterStop(IStreamConfig config);
+        /// <param name="token">Token for propagates notification that the stream should be canceled.</param>
+        void AfterStop(IStreamConfig config, CancellationToken token);
     }
 }
