@@ -104,7 +104,7 @@ static async System.Threading.Tasks.Task Main(string[] args)
 |:------------------------------------------------------------:|:----------------------------------:|:----------------------:|:------------------------------------------:|
 | Stateless processors                                         |              X                     |         X              |                                            |
 | RocksDb store                                                |              X                     |         X              |                                            |
-| Standby replicas                                             |              X                     |                       |                        | No plan for now 
+| Standby replicas                                             |              X                     |                       |    No plan for now                            |
 | InMemory store                                               |              X                     |         X              |                                            |
 | Transformer, Processor API                                   |              X                     |         X              |                                            |
 | Punctuate                                                    |              X                     |                        | No plan for now                            |
