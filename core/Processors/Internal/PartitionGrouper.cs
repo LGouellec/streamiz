@@ -96,7 +96,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 return record;
             }
         }
-
+        internal long StreamTime => streamTime;
+        
         internal void Clear()
         {
             foreach (var kp in partitionsQueue)

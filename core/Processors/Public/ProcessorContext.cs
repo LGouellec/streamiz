@@ -1,3 +1,4 @@
+using System;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -66,5 +67,13 @@ namespace Streamiz.Kafka.Net.Processors.Public
         /// </summary>
         public virtual void Commit() 
             => context.Task.RequestCommit();
+
+        public TaskScheduled Schedule(TimeSpan interval, PunctuationType punctuationType, Action<long> punctuator)
+        {
+            if (interval.TotalMilliseconds < 10)
+                throw new ArgumentException("The minimum supported scheduling interval is 10 milliseconds.");
+            
+            return context.Task.RegisterScheduleTask(interval, punctuationType, punctuator);   
+        }
     }
 }

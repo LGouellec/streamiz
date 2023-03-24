@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
@@ -9,6 +10,7 @@ using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.Processors.Public;
 using Streamiz.Kafka.Net.Stream.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
@@ -25,6 +27,8 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly long maxTaskIdleMs;
         private readonly long maxBufferedSize = 100;
         private readonly bool followMetadata;
+        private readonly List<TaskScheduled> streamTimePunctuationQueue = new();
+        private readonly List<TaskScheduled> systemTimePunctuationQueue = new();
 
         private long idleStartTime;
         private IProducer<byte[], byte[]> producer;
@@ -207,6 +211,28 @@ namespace Streamiz.Kafka.Net.Processors
 
         }
 
+        private TaskScheduled ScheduleTask(long startTime, TimeSpan interval, PunctuationType punctuationType, Action<long> punctuator)
+        {
+            var taskScheduled = new TaskScheduled(
+                startTime,
+                interval,
+                punctuator);
+
+            switch (punctuationType)
+            {
+                case PunctuationType.STREAM_TIME:
+                    streamTimePunctuationQueue.Add(taskScheduled);
+                    break;
+                case PunctuationType.WALL_CLOCK_TIME:
+                    systemTimePunctuationQueue.Add(taskScheduled);
+                    break;
+                default:
+                    throw new ArgumentException($"Punctuation type {punctuationType} not recognized !");
+            }
+
+            return taskScheduled;
+        }
+
         #endregion
 
         #region Abstract
@@ -279,7 +305,10 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     kp.Close();
                 }
-
+                
+                streamTimePunctuationQueue.ForEach(t => t.Close());
+                systemTimePunctuationQueue.ForEach(t => t.Close());
+                
                 partitionGrouper.Close();
 
                 collector.Close();
@@ -297,6 +326,8 @@ namespace Streamiz.Kafka.Net.Processors
             }
 
             streamMetricsRegistry.RemoveTaskSensors(threadId, Id.ToString());
+            streamTimePunctuationQueue.Clear();
+            systemTimePunctuationQueue.Clear();
         }
 
         public override void Commit() => Commit(true);
@@ -479,6 +510,22 @@ namespace Streamiz.Kafka.Net.Processors
             WriteCheckpoint(force);
         }
 
+        public override TaskScheduled RegisterScheduleTask(TimeSpan interval, PunctuationType punctuationType,
+            Action<long> punctuator)
+        {
+            switch (punctuationType)
+            {
+                case PunctuationType.STREAM_TIME:
+                    // align punctuation to 0L, punctuate as soon as we have data
+                    return ScheduleTask(0L, interval, punctuationType, punctuator);
+                case PunctuationType.WALL_CLOCK_TIME:
+                    // align punctuation to now, punctuate after interval has elapsed
+                    return ScheduleTask(DateTime.Now.GetMilliseconds() + (long)interval.TotalMilliseconds, interval, punctuationType, punctuator);
+                default:
+                    return null;
+            }
+        }
+
         #endregion
 
         public bool Process()
@@ -552,6 +599,41 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 throw new IllegalStateException($"Illegal state {state} while completing restoration for active task {Id}");
             }
+        }
+
+        public bool PunctuateSystemTime()
+        {
+            long systemTime = DateTime.Now.GetMilliseconds();
+
+            bool punctuated = false;
+
+            foreach (var taskScheduled in systemTimePunctuationQueue
+                .Where(t => t.CanExecute(systemTime)))
+            {
+                taskScheduled.Execute(systemTime);
+                punctuated = true;
+            }
+
+            systemTimePunctuationQueue.RemoveAll(t => t.IsCancelled || t.IsCompleted);
+            return punctuated;
+        }
+
+        public bool PunctuateStreamTime()
+        {
+            if (partitionGrouper.StreamTime < 0)
+                return false;
+
+            bool punctuated = false;
+
+            foreach (var taskScheduled in streamTimePunctuationQueue
+                .Where(t => t.CanExecute(partitionGrouper.StreamTime)))
+            {
+                taskScheduled.Execute(partitionGrouper.StreamTime);
+                punctuated = true;
+            }
+
+            streamTimePunctuationQueue.RemoveAll(t => t.IsCancelled || t.IsCompleted);
+            return punctuated;
         }
     }   
 }
