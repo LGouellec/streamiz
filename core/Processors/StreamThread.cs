@@ -340,6 +340,7 @@ namespace Streamiz.Kafka.Net.Processors
                                 
                                 totalProcessLatency = 0;
                                 totalCommitLatency = 0;
+                                totalPunctuateLatency = 0;
 
                                 var dt = DateTime.Now;
                                 if (lastMetrics.Add(TimeSpan.FromMilliseconds(streamConfig.MetricsIntervalMs)) < dt)
