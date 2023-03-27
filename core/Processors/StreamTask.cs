@@ -226,8 +226,6 @@ namespace Streamiz.Kafka.Net.Processors
                 case PunctuationType.WALL_CLOCK_TIME:
                     systemTimePunctuationQueue.Add(taskScheduled);
                     break;
-                default:
-                    throw new ArgumentException($"Punctuation type {punctuationType} not recognized !");
             }
 
             return taskScheduled;
