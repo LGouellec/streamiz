@@ -4,19 +4,26 @@ using Streamiz.Kafka.Net.Errors;
 
 namespace Streamiz.Kafka.Net.Processors.Public
 {
+    /// <summary>
+    /// Task scheduled cancellable returned in <see cref="ProcessorContext{K,V}.Schedule"/>
+    /// </summary>
     public class TaskScheduled
     {
         private long lastTime;
         private readonly TimeSpan interval;
         private readonly Action<long> punctuator;
 
-        public TaskScheduled(long startTime, TimeSpan interval, Action<long> punctuator)
+        internal TaskScheduled(long startTime, TimeSpan interval, Action<long> punctuator)
         {
             lastTime = startTime;
             this.interval = interval;
             this.punctuator = punctuator;
         }
 
+        /// <summary>
+        /// Cancel the scheduled operation to avoid future calls.
+        /// </summary>
+        /// <exception cref="StreamsException">If the task is already cancelled</exception>
         public void Cancel()
         {
             if (!IsCancelled)
@@ -25,7 +32,14 @@ namespace Streamiz.Kafka.Net.Processors.Public
                 throw new StreamsException("This scheduled task is already cancelled !");
         }
 
+        /// <summary>
+        /// Return if the task is cancelled
+        /// </summary>
         public bool IsCancelled { get; set; }
+        
+        /// <summary>
+        /// Return if the task is completed
+        /// </summary>
         public bool IsCompleted { get; set; }
 
         internal bool CanExecute(long now)

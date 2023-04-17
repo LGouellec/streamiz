@@ -430,7 +430,6 @@ namespace Streamiz.Kafka.Net
                     Dispose();
                 });
             }
-
             await Task.Factory.StartNew(async () =>
             {
                 if (SetState(State.REBALANCING))

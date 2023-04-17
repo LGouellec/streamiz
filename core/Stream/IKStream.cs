@@ -2003,7 +2003,7 @@ namespace Streamiz.Kafka.Net.Stream
         ///     .To("topic-output");
         /// </code>
         /// <para>
-        /// The <see cref="TransformProcessor{K,V,K1,V1}"/> must return a <see cref="Record{K1,V1}"/> type in <see cref="TransformProcessor{K,V,K1,V1}.Process(K,V)"/>.
+        /// The <see cref="ITransformer{K,V,K1,V1}"/> must return a <see cref="Record{K1,V1}"/> type in <see cref="ITransformer{K,V,K1,V1}.Process"/>.
         /// The return value may be null, in which case no record is emitted.
         /// </para>
         /// </summary>
@@ -2020,7 +2020,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// returns zero or one output record.
         /// Thus, an input record <see cref="Record{K,V}"/> can be transformed into an output record <see cref="Record{K,V1}"/>.
         /// Attaching a state store makes this a stateful record-by-record operation.
-        /// If you choose not to attach one, this operation is similar to the stateless <see cref="MapValues{V}(Streamiz.Kafka.Net.Stream.IValueMapper{V,V1},string)"/>
+        /// If you choose not to attach one, this operation is similar to the stateless <see cref="MapValues{V1}(Streamiz.Kafka.Net.Stream.IValueMapper{V,V1},string)"/>
         /// but allows access to the <see cref="ProcessorContext"/> and record metadata.
         /// This is essentially mixing the Processor API into the DSL, and provides all the functionality of the PAPI.
         /// <para>
@@ -2047,7 +2047,7 @@ namespace Streamiz.Kafka.Net.Stream
         ///     .To("topic-output");
         /// </code>
         /// <para>
-        /// The <see cref="TransformProcessor{K,V,K,V1}"/> must return a <see cref="Record{K,V1}"/> type in <see cref="TransformProcessor{K,V,K,V1}.Process(K,V)"/>.
+        /// The <see cref="ITransformer{K,V,K,V1}"/> must return a <see cref="Record{K,V1}"/> type in <see cref="ITransformer{K,V,K,V1}.Process"/>.
         /// The return value may be null, in which case no record is emitted.
         /// </para>
         /// </summary>

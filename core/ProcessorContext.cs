@@ -106,7 +106,12 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         /// <param name="headers">new headers</param>
         public void SetHeaders(Headers headers) => RecordContext.SetHeaders(headers);
-
+        
+        /// <summary>
+        /// Get the state store given the store name.
+        /// </summary>
+        /// <param name="storeName">The store name</param>
+        /// <returns>The state store instance</returns>
         public virtual IStateStore GetStateStore(string storeName) => States.GetStore(storeName);
 
         internal void Register(IStateStore store, StateRestoreCallback callback)
