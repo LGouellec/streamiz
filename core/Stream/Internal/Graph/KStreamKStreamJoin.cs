@@ -15,8 +15,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph
         {
             this.name = name;
             this.otherWindowName = otherWindowName;
-            this.beforeMs = beforeMs;
-            this.afterMs = afterMs;
+            this.beforeMs = outer ? beforeMs : afterMs;
+            this.afterMs = outer ? afterMs : beforeMs;
             this.joiner = joiner;
             this.outer = outer;
         }
