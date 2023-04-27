@@ -1,6 +1,5 @@
 ﻿using NUnit.Framework;
 using Streamiz.Kafka.Net.Stream;
-using System;
 using System.Linq;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
@@ -16,11 +15,10 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         [Test]
         public void StreamStreamLeftJoin()
         {
-            DateTime dateTime = DateTime.Today;
-            inputTopic2.PipeInput("test", "right-0", dateTime.AddSeconds(0));
-            inputTopic1.PipeInput("test", "left-1", dateTime.AddSeconds(1));
-            inputTopic2.PipeInput("test", "right-2", dateTime.AddSeconds(2));
-            inputTopic2.PipeInput("test", "right-3", dateTime.AddSeconds(3));
+            inputTopic2.PipeInput("test", "right-0", TestTime.AddSeconds(0));
+            inputTopic1.PipeInput("test", "left-1", TestTime.AddSeconds(1));
+            inputTopic2.PipeInput("test", "right-2", TestTime.AddSeconds(2));
+            inputTopic2.PipeInput("test", "right-3", TestTime.AddSeconds(3));
 
             var records = outputTopic.ReadValueList().ToArray();
             Assert.AreEqual(2, records.Length);

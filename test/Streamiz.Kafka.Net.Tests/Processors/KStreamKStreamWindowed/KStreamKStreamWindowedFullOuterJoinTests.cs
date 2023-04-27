@@ -1,6 +1,5 @@
 ﻿using NUnit.Framework;
 using Streamiz.Kafka.Net.Stream;
-using System;
 using System.Linq;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
@@ -16,14 +15,13 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         [Test]
         public void StreamStreamFullOuterJoin()
         {
-            DateTime dateTime = DateTime.Today;
-            inputTopic2.PipeInput("test", "right-0", dateTime.AddSeconds(0));
-            inputTopic1.PipeInput("test", "left-1", dateTime.AddSeconds(1));
-            inputTopic2.PipeInput("test", "right-2", dateTime.AddSeconds(2));
-            inputTopic2.PipeInput("test", "right-3", dateTime.AddSeconds(3));
-            inputTopic1.PipeInput("test", "left-5.1", dateTime.AddSeconds(5.1));
-            inputTopic1.PipeInput("test", "left-5.2", dateTime.AddSeconds(5.2));
-            inputTopic2.PipeInput("test", "right-6", dateTime.AddSeconds(6));
+            inputTopic2.PipeInput("test", "right-0", TestTime.AddSeconds(0));
+            inputTopic1.PipeInput("test", "left-1", TestTime.AddSeconds(1));
+            inputTopic2.PipeInput("test", "right-2", TestTime.AddSeconds(2));
+            inputTopic2.PipeInput("test", "right-3", TestTime.AddSeconds(3));
+            inputTopic1.PipeInput("test", "left-5.1", TestTime.AddSeconds(5.1));
+            inputTopic1.PipeInput("test", "left-5.2", TestTime.AddSeconds(5.2));
+            inputTopic2.PipeInput("test", "right-6", TestTime.AddSeconds(6));
 
             var records = outputTopic.ReadValueList().ToArray();
             Assert.AreEqual(8, records.Length);

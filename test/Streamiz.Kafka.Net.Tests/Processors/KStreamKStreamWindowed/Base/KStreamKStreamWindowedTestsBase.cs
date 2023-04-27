@@ -12,6 +12,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         protected TestInputTopic<string, string> inputTopic1;
         protected TestInputTopic<string, string> inputTopic2;
         protected TestOutputTopic<string, string> outputTopic;
+        protected DateTime TestTime { get; } = DateTime.Today;
 
         protected delegate IKStream<string, string> JoinDelegate(IKStream<string, string> stream2, Func<string, string, string> valueJoiner, JoinWindowOptions joinWindow, StreamJoinProps<string, string, string> props);
         protected abstract JoinDelegate GetJoinDelegate(IKStream<string, string> stream1);
