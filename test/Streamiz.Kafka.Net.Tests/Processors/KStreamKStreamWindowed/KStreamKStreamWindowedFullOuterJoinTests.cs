@@ -21,14 +21,21 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             inputTopic1.PipeInput("test", "left-1", dateTime.AddSeconds(1));
             inputTopic2.PipeInput("test", "right-2", dateTime.AddSeconds(2));
             inputTopic2.PipeInput("test", "right-3", dateTime.AddSeconds(3));
+            inputTopic1.PipeInput("test", "left-5.1", dateTime.AddSeconds(5.1));
+            inputTopic1.PipeInput("test", "left-5.2", dateTime.AddSeconds(5.2));
+            inputTopic2.PipeInput("test", "right-6", dateTime.AddSeconds(6));
 
             var records = outputTopic.ReadValueList().ToArray();
-            Assert.AreEqual(4, records.Length);
+            Assert.AreEqual(8, records.Length);
 
             Assert.That(records[0], Is.EqualTo("-right-0"));
             Assert.That(records[1], Is.EqualTo("left-1-"));
             Assert.That(records[2], Is.EqualTo("left-1-right-2"));
             Assert.That(records[3], Is.EqualTo("-right-3"));
+            Assert.That(records[4], Is.EqualTo("left-5.1-"));
+            Assert.That(records[5], Is.EqualTo("left-5.2-"));
+            Assert.That(records[6], Is.EqualTo("left-5.1-right-6"));
+            Assert.That(records[7], Is.EqualTo("left-5.2-right-6"));
         }
     }
 }
