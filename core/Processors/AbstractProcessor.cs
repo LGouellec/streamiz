@@ -113,6 +113,9 @@ namespace Streamiz.Kafka.Net.Processors
                 "{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to each next processor",
                 logPrefix, typeof(K).Name, typeof(V).Name, key, value);
             
+            foreach(var nextProcessor in Next)
+                nextProcessor.Process(key, value);
+            
             Forward(Next, genericProcessor =>
             {
                 if (genericProcessor is IProcessor<K, V> processor)

@@ -30,7 +30,7 @@ namespace sample_stream
     {
         public static async Task Main(string[] args)
         {
-            var config = new StreamConfig();
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-app-218";
             config.BootstrapServers = "localhost:9092";
             config.AutoOffsetReset = AutoOffsetReset.Earliest;
