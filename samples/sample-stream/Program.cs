@@ -10,6 +10,7 @@ using System.Linq;
 using System.Runtime.Intrinsics;
 using System.Security.Permissions;
 using System.Text.Json;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using Streamiz.Kafka.Net.Metrics;
@@ -43,7 +44,7 @@ namespace sample_stream
             });
             config.UsePrometheusReporter(9090);
             config.MetricsRecording = MetricsRecordingLevel.DEBUG;
-            
+
             StreamBuilder builder = new StreamBuilder();
 
             string inputTopic = "words", outputTopic = "words-count";
@@ -67,7 +68,7 @@ namespace sample_stream
             
             Topology t = builder.Build();
             KafkaStream stream1 = new KafkaStream(t, config);
-            
+
             Console.CancelKeyPress += (_, _) => stream1.Dispose();
             
             await stream1.StartAsync();
