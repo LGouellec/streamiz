@@ -6,7 +6,7 @@ namespace Streamiz.Kafka.Net.Processors.Public
     ///   - STREAM_TIME - uses "stream time", which is advanced by the processing of messages
     ///   in accordance with the timestamp as extracted by the <see cref="ITimestampExtractor"/> in use.
     ///   NOTE: Only advanced if messages arrive
-    ///   - WALL_CLOCK_TIME - uses system time (the wall-clock time),
+    ///   - PROCESSING_TIME - uses system time (the wall-clock time),
     ///   which is advanced at the polling interval (<see cref="IStreamConfig.PollMs"/>)
     ///   independent of whether new messages arrive.
     ///   NOTE: This is best effort only as its granularity is limited
@@ -18,7 +18,7 @@ namespace Streamiz.Kafka.Net.Processors.Public
         /// <summary>
         /// Use system time
         /// </summary>
-        WALL_CLOCK_TIME,
+        PROCESSING_TIME,
         /// <summary>
         /// Use stream time
         /// </summary>

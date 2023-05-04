@@ -86,7 +86,7 @@ namespace Streamiz.Kafka.Net.Processors.Public
         ///  - <see cref="PunctuationType.STREAM_TIME"/> uses "stream time", which is advanced by the processing of messages
         ///   in accordance with the timestamp as extracted by the <see cref="ITimestampExtractor"/> in use.
         ///  The first punctuation will be triggered by the first record that is processed (NOTE: Only advanced if messages arrive).
-        ///  - <see cref="PunctuationType.WALL_CLOCK_TIME"/> uses system time (the wall-clock time), which is advanced independent of whether new messages arrive.
+        ///  - <see cref="PunctuationType.PROCESSING_TIME"/> uses system time (the wall-clock time), which is advanced independent of whether new messages arrive.
         ///   The first punctuation will be triggered after interval has elapsed (NOTE: This is best effort only as its granularity is limited by how long an iteration of the
         ///   processing loop takes to complete).
         /// </para>

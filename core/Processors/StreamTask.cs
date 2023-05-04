@@ -216,14 +216,15 @@ namespace Streamiz.Kafka.Net.Processors
             var taskScheduled = new TaskScheduled(
                 startTime,
                 interval,
-                punctuator);
+                punctuator, 
+                Context.CurrentProcessor);
 
             switch (punctuationType)
             {
                 case PunctuationType.STREAM_TIME:
                     streamTimePunctuationQueue.Add(taskScheduled);
                     break;
-                case PunctuationType.WALL_CLOCK_TIME:
+                case PunctuationType.PROCESSING_TIME:
                     systemTimePunctuationQueue.Add(taskScheduled);
                     break;
             }
@@ -357,10 +358,13 @@ namespace Streamiz.Kafka.Net.Processors
         public override void InitializeTopology()
         {
             log.LogDebug($"{logPrefix}Initializing topology with theses source processors : {string.Join(", ", processors.Select(p => p.Name))}.");
+            
+            Context.CurrentProcessor = null;
             foreach (var p in processors)
             {
                 p.Init(Context);
             }
+            Context.CurrentProcessor = null;
 
             if (eosEnabled)
             {
@@ -404,8 +408,12 @@ namespace Streamiz.Kafka.Net.Processors
                 
                 RegisterSensors();
                 
+                Context.CurrentProcessor = null;
+                
                 foreach (var p in processors)
                     p.Init(Context);
+
+                Context.CurrentProcessor = null;
                 
                 TransitTo(TaskState.CREATED);
             }
@@ -516,7 +524,7 @@ namespace Streamiz.Kafka.Net.Processors
                 case PunctuationType.STREAM_TIME:
                     // align punctuation to 0L, punctuate as soon as we have data
                     return ScheduleTask(0L, interval, punctuationType, punctuator);
-                case PunctuationType.WALL_CLOCK_TIME:
+                case PunctuationType.PROCESSING_TIME:
                     // align punctuation to now, punctuate after interval has elapsed
                     return ScheduleTask(DateTime.Now.GetMilliseconds() + (long)interval.TotalMilliseconds, interval, punctuationType, punctuator);
                 default:
@@ -608,9 +616,12 @@ namespace Streamiz.Kafka.Net.Processors
             foreach (var taskScheduled in systemTimePunctuationQueue
                 .Where(t => t.CanExecute(systemTime)))
             {
+                Context.CurrentProcessor = taskScheduled.Processor;
                 taskScheduled.Execute(systemTime);
                 punctuated = true;
             }
+
+            Context.CurrentProcessor = null;
 
             systemTimePunctuationQueue.RemoveAll(t => t.IsCancelled || t.IsCompleted);
             return punctuated;
@@ -626,10 +637,12 @@ namespace Streamiz.Kafka.Net.Processors
             foreach (var taskScheduled in streamTimePunctuationQueue
                 .Where(t => t.CanExecute(partitionGrouper.StreamTime)))
             {
+                Context.CurrentProcessor = taskScheduled.Processor;
                 taskScheduled.Execute(partitionGrouper.StreamTime);
                 punctuated = true;
             }
-
+            Context.CurrentProcessor = null;
+            
             streamTimePunctuationQueue.RemoveAll(t => t.IsCancelled || t.IsCompleted);
             return punctuated;
         }

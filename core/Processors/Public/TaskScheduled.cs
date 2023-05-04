@@ -13,11 +13,12 @@ namespace Streamiz.Kafka.Net.Processors.Public
         private readonly TimeSpan interval;
         private readonly Action<long> punctuator;
 
-        internal TaskScheduled(long startTime, TimeSpan interval, Action<long> punctuator)
+        internal TaskScheduled(long startTime, TimeSpan interval, Action<long> punctuator, IProcessor processor)
         {
             lastTime = startTime;
             this.interval = interval;
             this.punctuator = punctuator;
+            Processor = processor;
         }
 
         /// <summary>
@@ -42,8 +43,10 @@ namespace Streamiz.Kafka.Net.Processors.Public
         /// </summary>
         public bool IsCompleted { get; set; }
 
+        internal IProcessor Processor { get; }
+
         internal bool CanExecute(long now)
-            => now - lastTime >= interval.Milliseconds;
+            => now - lastTime >= interval.TotalMilliseconds;
 
         internal bool Execute(long now)
         {

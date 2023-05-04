@@ -24,7 +24,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             {
                 context.Schedule(
                     TimeSpan.FromMilliseconds(10),
-                    PunctuationType.WALL_CLOCK_TIME,
+                    PunctuationType.PROCESSING_TIME,
                     (now) => {
                         ++count;
                     });

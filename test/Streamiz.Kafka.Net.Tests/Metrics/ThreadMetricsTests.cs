@@ -24,7 +24,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             {
                 context.Schedule(
                     TimeSpan.FromMilliseconds(25),
-                    PunctuationType.WALL_CLOCK_TIME,
+                    PunctuationType.PROCESSING_TIME,
                     (now) =>
                     {
                         Thread.Sleep(5);
