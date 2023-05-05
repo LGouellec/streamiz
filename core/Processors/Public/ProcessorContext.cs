@@ -54,7 +54,9 @@ namespace Streamiz.Kafka.Net.Processors.Public
         public void Forward(K key, V value)
         {
             CheckConfiguration();
+            var oldProcessor = CurrentProcessor;
             CurrentProcessor.Forward(key, value);
+            context.CurrentProcessor = oldProcessor;
         }
 
         /// <summary>
@@ -67,7 +69,9 @@ namespace Streamiz.Kafka.Net.Processors.Public
         public void Forward(K key, V value, string named)
         {
             CheckConfiguration();
+            var oldProcessor = CurrentProcessor;
             CurrentProcessor.Forward(key, value, named);
+            context.CurrentProcessor = oldProcessor;
         }
         
         /// <summary>

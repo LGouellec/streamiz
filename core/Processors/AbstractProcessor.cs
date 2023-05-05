@@ -181,6 +181,8 @@ namespace Streamiz.Kafka.Net.Processors
                 Context.CurrentProcessor = n;
                 n.Init(context);
             }
+            
+            Context.CurrentProcessor = this;
             log.LogDebug("{LogPrefix}Process context initialized", logPrefix);
         }
 

@@ -617,6 +617,7 @@ namespace Streamiz.Kafka.Net.Processors
                 .Where(t => t.CanExecute(systemTime)))
             {
                 Context.CurrentProcessor = taskScheduled.Processor;
+                Context.SetUnknownRecordMetaData(systemTime);
                 taskScheduled.Execute(systemTime);
                 punctuated = true;
             }
@@ -638,6 +639,7 @@ namespace Streamiz.Kafka.Net.Processors
                 .Where(t => t.CanExecute(partitionGrouper.StreamTime)))
             {
                 Context.CurrentProcessor = taskScheduled.Processor;
+                Context.SetUnknownRecordMetaData(partitionGrouper.StreamTime);
                 taskScheduled.Execute(partitionGrouper.StreamTime);
                 punctuated = true;
             }

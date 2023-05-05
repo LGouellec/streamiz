@@ -96,6 +96,12 @@ namespace Streamiz.Kafka.Net
             RecordContext = new RecordContext(result);
         }
 
+        internal void SetUnknownRecordMetaData(long ts)
+        {
+            RecordContext = new RecordContext();
+            RecordContext.ChangeTimestamp(ts);
+        }
+
         internal void ChangeTimestamp(long ts)
         {
             RecordContext.ChangeTimestamp(ts);
