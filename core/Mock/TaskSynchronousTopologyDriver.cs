@@ -175,6 +175,7 @@ namespace Streamiz.Kafka.Net.Mock
                 foreach(var r in records)
                     pipe.Pipe(r.Message.Key, r.Message.Value, r.Message.Timestamp.UnixTimestampMs.FromMilliseconds(), r.Message.Headers);
                 pipe.Flush();
+                pipe.Dispose();
 
                 consumer.Commit(records.Last());
             }
