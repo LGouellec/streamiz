@@ -88,7 +88,8 @@ namespace Streamiz.Kafka.Net.State
         /// <typeparam name="K">key type</typeparam>
         /// <typeparam name="V">value type</typeparam>
         /// <returns>an instance of <see cref="IStoreBuilder"/> than can build a <see cref="ITimestampedKeyValueStore{K, V}"/></returns>
-        public static IStoreBuilder<ITimestampedKeyValueStore<K, V>> TimestampedKeyValueStoreBuilder<K, V>(IKeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
+        public static IStoreBuilder<ITimestampedKeyValueStore<K, V>> TimestampedKeyValueStoreBuilder<K, V>(
+            IKeyValueBytesStoreSupplier supplier, ISerDes<K> keySerde, ISerDes<V> valueSerde)
             => new TimestampedKeyValueStoreBuilder<K, V>(supplier, keySerde, valueSerde);
 
         /// <summary>

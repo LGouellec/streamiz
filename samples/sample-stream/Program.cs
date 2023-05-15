@@ -7,6 +7,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Streamiz.Kafka.Net.Table;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Security.Permissions;
 using System.Text.Json;
@@ -29,6 +30,7 @@ namespace sample_stream
     /// </summary>
     internal class Program
     {
+        private static ILogger logger = Streamiz.Kafka.Net.Crosscutting.Logger.GetLogger(typeof(Program));
         class MyTransformer : ITransformer<string, string, string, int>
         {
             private IKeyValueStore<string,int> store;
@@ -75,17 +77,11 @@ namespace sample_stream
             config.MetricsRecording = MetricsRecordingLevel.DEBUG;
             
             StreamBuilder builder = new StreamBuilder();
-
-            string inputTopic = "words";
             
-            IKStream<string, string> stream = builder.Stream<string, string>(inputTopic);
-            stream.Transform(TransformerBuilder
-                .New<string, string, string, int>()
-                .Transformer<MyTransformer>()
-                .StateStore(Stores.KeyValueStoreBuilder(Stores.InMemoryKeyValueStore("store"), new StringSerDes(), new Int32SerDes()))
-                .Build())
-                .MapValues(c => c.ToString())
-                .To<StringSerDes, StringSerDes>("output");
+            builder.Stream<string, string>("inputs")
+                .Peek((k, v) => logger.LogInformation("key={k} value={v}", k,v))
+                .MapValuesAsync(async (record, _) => await Task.FromResult(record.Value.ToUpper()))
+                .To("output");
             
             Topology t = builder.Build();
             KafkaStream stream1 = new KafkaStream(t, config);
