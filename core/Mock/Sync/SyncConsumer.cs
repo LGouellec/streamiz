@@ -304,7 +304,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
                 foreach (var kp in offsets)
                 {
                     var clone = Assignment.ToList();
-                    if (clone != null && clone.Select(a => a.Topic).Contains(kp.Key))
+                    if (clone.Any() && clone.Select(a => a.Topic).Contains(kp.Key))
                     {
                         if (timeout != TimeSpan.Zero && (dt + timeout) < DateTime.Now)
                             break;
