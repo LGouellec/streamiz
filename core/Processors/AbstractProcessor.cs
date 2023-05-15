@@ -170,6 +170,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             log.LogDebug("{LogPrefix}Initializing process context", logPrefix);
             Context = context;
+            Context.CurrentProcessor = this;
             droppedRecordsSensor = TaskMetrics.DroppedRecordsSensor(
                 Thread.CurrentThread.Name,
                 Context.Id,
@@ -177,8 +178,11 @@ namespace Streamiz.Kafka.Net.Processors
             
             foreach (var n in Next)
             {
+                Context.CurrentProcessor = n;
                 n.Init(context);
             }
+            
+            Context.CurrentProcessor = this;
             log.LogDebug("{LogPrefix}Process context initialized", logPrefix);
         }
 

@@ -10,6 +10,7 @@ using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.Processors.Public;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Tests.Helpers;
 
@@ -17,6 +18,30 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
 {
     public class ThreadMetricsTests
     {
+        class ThreadMetricProcessor : Net.Processors.Public.IProcessor<string, string>
+        {
+            public void Init(ProcessorContext<string, string> context)
+            {
+                context.Schedule(
+                    TimeSpan.FromMilliseconds(25),
+                    PunctuationType.PROCESSING_TIME,
+                    (now) =>
+                    {
+                        Thread.Sleep(5);
+                    });
+            }
+
+            public void Process(Record<string, string> record)
+            {
+                
+            }
+
+            public void Close()
+            {
+                
+            }
+        }
+        
         private StreamMetricsRegistry streamMetricsRegistry = null;
         private readonly CancellationTokenSource token = new System.Threading.CancellationTokenSource();
 
@@ -46,7 +71,12 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             mockKafkaSupplier = new MockKafkaSupplier(numberPartitions);
 
             var builder = new StreamBuilder();
-            builder.Stream<string, string>("topic").To("topic2");
+            var stream = builder.Stream<string, string>("topic");
+            stream.Process(
+                new ProcessorBuilder<string, string>()
+                    .Processor<ThreadMetricProcessor>()
+                    .Build());
+            stream.To("topic2");
 
             var topo = builder.Build();
 
@@ -211,14 +241,36 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
                     ThreadMetrics.PROCESS + StreamMetricsRegistry.LATENCY_SUFFIX + StreamMetricsRegistry.MAX_SUFFIX,
                     StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value > 0d);
             
+            // Punctuate sensor
+            var punctuateSensor = sensors.FirstOrDefault(s => s.Name.Equals(GetSensorName(ThreadMetrics.PUNCTUATE)));
+            Assert.AreEqual(4, punctuateSensor.Metrics.Count());
+            Assert.IsTrue( 
+                (double)punctuateSensor.Metrics[MetricName.NameAndGroup(
+                    ThreadMetrics.PUNCTUATE + StreamMetricsRegistry.TOTAL_SUFFIX, 
+                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value > 0d);
+            Assert.IsTrue(
+                (double)punctuateSensor.Metrics[MetricName.NameAndGroup(
+                    ThreadMetrics.PUNCTUATE + StreamMetricsRegistry.RATE_SUFFIX, 
+                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value > 0d);
+            Assert.IsTrue(
+                (double)punctuateSensor.Metrics[MetricName.NameAndGroup(
+                    ThreadMetrics.PUNCTUATE + StreamMetricsRegistry.LATENCY_SUFFIX + StreamMetricsRegistry.AVG_SUFFIX, 
+                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value > 0d);
+            Assert.IsTrue(
+                (double)punctuateSensor.Metrics[MetricName.NameAndGroup(
+                    ThreadMetrics.PUNCTUATE + StreamMetricsRegistry.LATENCY_SUFFIX + StreamMetricsRegistry.MAX_SUFFIX,
+                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value > 0d);
+            
             // ratio sensors
             var processRatioSensor = sensors.FirstOrDefault(s => s.Name.Equals(GetSensorName(ThreadMetrics.PROCESS + StreamMetricsRegistry.RATIO_SUFFIX)));
             var pollRatioSensor = sensors.FirstOrDefault(s => s.Name.Equals(GetSensorName(ThreadMetrics.POLL + StreamMetricsRegistry.RATIO_SUFFIX)));
             var commitRatioSensor = sensors.FirstOrDefault(s => s.Name.Equals(GetSensorName(ThreadMetrics.COMMIT + StreamMetricsRegistry.RATIO_SUFFIX)));
+            var punctuateRatioSensor = sensors.FirstOrDefault(s => s.Name.Equals(GetSensorName(ThreadMetrics.PUNCTUATE + StreamMetricsRegistry.RATIO_SUFFIX)));
             
             Assert.AreEqual(1, processRatioSensor.Metrics.Count());
             Assert.AreEqual(1, pollRatioSensor.Metrics.Count());
             Assert.AreEqual(1, commitRatioSensor.Metrics.Count());
+            Assert.AreEqual(1, punctuateRatioSensor.Metrics.Count());
 
             var processRatioValue = (double) processRatioSensor.Metrics[MetricName.NameAndGroup(
                 ThreadMetrics.PROCESS + StreamMetricsRegistry.RATIO_SUFFIX,
@@ -231,8 +283,13 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             var commitRatioValue = (double) commitRatioSensor.Metrics[MetricName.NameAndGroup(
                 ThreadMetrics.COMMIT + StreamMetricsRegistry.RATIO_SUFFIX,
                 StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value;
+            
+            var punctuateRatioValue = (double) punctuateRatioSensor.Metrics[MetricName.NameAndGroup(
+                ThreadMetrics.PUNCTUATE + StreamMetricsRegistry.RATIO_SUFFIX,
+                StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value;
 
-            double total = Math.Round(processRatioValue + pollRatioValue + commitRatioValue, 2);
+
+            double total = Math.Round(processRatioValue + pollRatioValue + commitRatioValue + punctuateRatioValue, 2);
             // we accept 10% of lost
             Assert.IsTrue(total >= 0.90d);
         }

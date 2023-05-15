@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Processors.Public;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -94,7 +95,7 @@ namespace Streamiz.Kafka.Net.Processors
         public abstract void Resume();
         public abstract void Suspend();
         public abstract void MayWriteCheckpoint(bool force = false);
-
+        public abstract TaskScheduled RegisterScheduleTask(TimeSpan interval, PunctuationType punctuationType, Action<long> punctuator);
         #endregion
 
         protected void TransitTo(TaskState newState)

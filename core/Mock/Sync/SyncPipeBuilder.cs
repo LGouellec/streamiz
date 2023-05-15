@@ -1,7 +1,9 @@
 ﻿using Streamiz.Kafka.Net.Mock.Pipes;
 using Streamiz.Kafka.Net.Processors;
 using System;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
+using System.Threading.Tasks;
 using Confluent.Kafka;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -34,6 +36,13 @@ namespace Streamiz.Kafka.Net.Mock.Sync
                 long now = DateTime.Now.GetMilliseconds();
                 while (task.CanProcess(now))
                     task.Process();
+                
+                task.PunctuateStreamTime();
+                task.PunctuateSystemTime();
+            }
+
+            public void Close()
+            {
             }
         }
 
@@ -61,6 +70,11 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             {
                 globalTask.FlushState();
             }
+
+            public void Close()
+            {
+                
+            }
         }
         
         private class ExternalTaskPublisher : ISyncPublisher
@@ -87,6 +101,11 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             public void Flush()
             {
                 externalProcessorTopologyExecutor.Flush();
+            }
+
+            public void Close()
+            {
+                
             }
         }
         
