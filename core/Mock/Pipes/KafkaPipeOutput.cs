@@ -79,9 +79,9 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
             if (queue.Count > 0)
                 logger.LogWarning("Dispose pipe queue for topic {TopicName} whereas it's not empty (Size : {QueueCount})",
                     topicName, queue.Count);
-
-            consumer.Unsubscribe();
+            
             readThread.Join();
+            consumer.Unsubscribe();
             consumer.Dispose();
         }
 
