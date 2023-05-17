@@ -2062,7 +2062,7 @@ namespace Streamiz.Kafka.Net.Stream
         #region WithRecordTimestamp
 
         /// <summary>
-        /// Pr an explicit timestamp values for stream record.
+        /// Updates the timestamp of the record with one provided by the <paramref name="timestampExtractor"/> function. Negative timestamps will be ignored.
         /// </summary>
         /// <param name="timestampExtractor"></param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
