@@ -164,5 +164,10 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         {
             throw new NotImplementedException();
         }
+        
+        public void SetSaslCredentials(string username, string password)
+        {
+            
+        }
     }
 }

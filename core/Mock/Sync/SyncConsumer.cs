@@ -353,5 +353,16 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             foreach (var tp in partitions)
                 offsets.Remove(tp.Topic);
         }
+
+        public void SetSaslCredentials(string username, string password)
+        {
+            
+        }
+
+        public TopicPartitionOffset PositionTopicPartitionOffset(TopicPartition topicPartition)
+        {
+            var offset = Position(topicPartition);
+            return new TopicPartitionOffset(topicPartition, offset);
+        }
     }
 }
