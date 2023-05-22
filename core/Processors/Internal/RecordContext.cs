@@ -4,6 +4,15 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 {
     internal class RecordContext : IRecordContext
     {
+        public RecordContext()
+        {
+            Offset = -1;
+            Timestamp = -1;
+            Topic = "";
+            Partition = -1;
+            Headers = new Headers();
+        }
+        
         public RecordContext(ConsumeResult<byte[], byte[]> result)
         {
             Offset = result.Offset;

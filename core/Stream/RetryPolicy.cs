@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.Stream
         private EndRetryBehavior endRetryBehavior = DEFAULT_RETRY_BEHAVIOR;
         private readonly List<Type> retriableExceptions = DEFAULT_RETRIABLE_EXCEPTIONS.ToList();
         private long memoryBufferSize = DEFAULT_MEMORY_BUFFER_SIZE;
-        private long timeoutMs;
+        private long timeoutMs = DEFAULT_TIMEOUT_MS;
 
         internal RetryPolicyBuilder()
         {

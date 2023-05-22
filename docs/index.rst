@@ -71,8 +71,9 @@ Need help
    stream-configuration
    threading-model
    stateless-processors
-   statefull-processors
+   stateful-processors
    stores
    topology-test-driver
    monitoring
    async-processing
+   processor-api

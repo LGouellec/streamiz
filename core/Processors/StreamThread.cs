@@ -115,6 +115,7 @@ namespace Streamiz.Kafka.Net.Processors
         private DateTime lastMetrics = DateTime.Now;
         private DateTime lastSummaryMs;
         private long summaryProcessed;
+        private long summaryPunctuated;
         private long summaryComitted;
 
         private int numIterations = 1;
@@ -124,12 +125,14 @@ namespace Streamiz.Kafka.Net.Processors
         
         private readonly Sensor commitSensor;
         private readonly Sensor pollSensor;
+        private readonly Sensor punctuateSensor;
         private readonly Sensor pollRecordsSensor;
         private readonly Sensor pollRatioSensor;
         private readonly Sensor processLatencySensor;
         private readonly Sensor processRecordsSensor;
         private readonly Sensor processRateSensor;
         private readonly Sensor processRatioSensor;
+        private readonly Sensor punctuateRatioSensor;
         private readonly Sensor commitRatioSensor;
         private Exception exception;
 
@@ -164,6 +167,7 @@ namespace Streamiz.Kafka.Net.Processors
 
             commitSensor = ThreadMetrics.CommitSensor(threadId, streamMetricsRegistry);
             pollSensor = ThreadMetrics.PollSensor(threadId, streamMetricsRegistry);
+            punctuateSensor = ThreadMetrics.PunctuateSensor(threadId, streamMetricsRegistry);
             pollRecordsSensor = ThreadMetrics.PollRecordsSensor(threadId, streamMetricsRegistry);
             pollRatioSensor = ThreadMetrics.PollRatioSensor(threadId, streamMetricsRegistry);
             processLatencySensor = ThreadMetrics.ProcessLatencySensor(threadId, streamMetricsRegistry);
@@ -171,6 +175,7 @@ namespace Streamiz.Kafka.Net.Processors
             processRateSensor = ThreadMetrics.ProcessRateSensor(threadId, streamMetricsRegistry);
             processRatioSensor = ThreadMetrics.ProcessRatioSensor(threadId, streamMetricsRegistry);
             commitRatioSensor = ThreadMetrics.CommitRatioSensor(threadId, streamMetricsRegistry);
+            punctuateRatioSensor = ThreadMetrics.PunctuateRatioSensor(threadId, streamMetricsRegistry);
         }
 
         #region IThread Impl
@@ -189,7 +194,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             exception = null;
             lastSummaryMs = DateTime.Now;
-            long totalProcessLatency = 0, totalCommitLatency = 0;
+            long totalProcessLatency = 0, totalCommitLatency = 0, totalPunctuateLatency = 0;
 
             try
             {
@@ -274,13 +279,24 @@ namespace Streamiz.Kafka.Net.Processors
                                         processLatencySensor.Record((double) processLatency / processed, now);
                                         processRateSensor.Record(processed, now);
 
-                                        // NOT AVAILABLE NOW, NEED PROCESSOR API
+                                        // not available now, when the user request a commit, it will commit for the next occurence
                                         //if (processed > 0)
                                         //    manager.MaybeCommitPerUserRequested();
                                         //else
                                         //    break;
                                     }
 
+                                    int punctuated = 0;
+                                    var punctuateLatency = ActionHelper.MeasureLatency(() =>  {
+                                        punctuated = manager.Punctuate();
+                                    });
+                                    totalPunctuateLatency += punctuateLatency;
+                                    summaryPunctuated += punctuated;
+                                    if (punctuated > 0) {
+                                        punctuateSensor.Record(punctuateLatency / (double) punctuated, now);
+                                    }
+                                    log.LogDebug($"{punctuated} punctuators ran.");
+                                    
                                     timeSinceLastPoll = Math.Max(DateTime.Now.GetMilliseconds() - lastPollMs, 0);
 
                                     int commited = 0;
@@ -320,8 +336,11 @@ namespace Streamiz.Kafka.Net.Processors
                                 processRatioSensor.Record(totalProcessLatency / runOnceLatency, now);
                                 pollRatioSensor.Record(pollLatency / runOnceLatency, now);
                                 commitRatioSensor.Record(totalCommitLatency / runOnceLatency, now);
+                                punctuateRatioSensor.Record(totalPunctuateLatency / runOnceLatency, now);
+                                
                                 totalProcessLatency = 0;
                                 totalCommitLatency = 0;
+                                totalPunctuateLatency = 0;
 
                                 var dt = DateTime.Now;
                                 if (lastMetrics.Add(TimeSpan.FromMilliseconds(streamConfig.MetricsIntervalMs)) < dt)
@@ -333,9 +352,10 @@ namespace Streamiz.Kafka.Net.Processors
                                 if (lastSummaryMs.Add(streamConfig.LogProcessingSummary) < dt)
                                 {
                                     log.LogInformation(
-                                        $"Processed {summaryProcessed} total records and committed {summaryComitted} total tasks since the last update");
+                                        $"Processed {summaryProcessed} total records, ran {summaryPunctuated} punctuators and committed {summaryComitted} total tasks since the last update");
                                     summaryProcessed = 0;
                                     summaryComitted = 0;
+                                    summaryPunctuated = 0;
                                     lastSummaryMs = dt;
                                 }
                                     
