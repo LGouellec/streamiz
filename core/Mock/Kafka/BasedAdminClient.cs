@@ -9,7 +9,12 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
     internal abstract class BasedAdminClient : IAdminClient
     {
         public abstract void Dispose();
-        
+
+        public void SetSaslCredentials(string username, string password)
+        {
+            throw new NotImplementedException();
+        }
+
         public abstract Handle Handle { get; }
         public abstract string Name { get; }
         
@@ -34,6 +39,32 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         }
 
         public Task<List<DeleteAclsResult>> DeleteAclsAsync(IEnumerable<AclBindingFilter> aclBindingFilters, DeleteAclsOptions options = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<DeleteConsumerGroupOffsetsResult> DeleteConsumerGroupOffsetsAsync(string @group, IEnumerable<TopicPartition> partitions,
+            DeleteConsumerGroupOffsetsOptions options = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<List<AlterConsumerGroupOffsetsResult>> AlterConsumerGroupOffsetsAsync(IEnumerable<ConsumerGroupTopicPartitionOffsets> groupPartitions, AlterConsumerGroupOffsetsOptions options = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<List<ListConsumerGroupOffsetsResult>> ListConsumerGroupOffsetsAsync(IEnumerable<ConsumerGroupTopicPartitions> groupPartitions, ListConsumerGroupOffsetsOptions options = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ListConsumerGroupsResult> ListConsumerGroupsAsync(ListConsumerGroupsOptions options = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<DescribeConsumerGroupsResult> DescribeConsumerGroupsAsync(IEnumerable<string> groups, DescribeConsumerGroupsOptions options = null)
         {
             throw new NotImplementedException();
         }

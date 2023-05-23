@@ -38,8 +38,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Confluent.SchemaRegistry" Version="1.9.3" />
-    <PackageReference Include="Confluent.SchemaRegistry.Serdes.Avro" Version="1.9.3" />
+    <PackageReference Include="Confluent.SchemaRegistry" Version="2.1.1" />
+    <PackageReference Include="Confluent.SchemaRegistry.Serdes.Avro" Version="2.1.1" />
   </ItemGroup>
 
   <ItemGroup>
