@@ -18,7 +18,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [SetUp]
         public void Setup()
         {
-            inmemorystore = new InMemoryWindowStore("store", TimeSpan.FromMinutes(20), 1000 * 2);
+            inmemorystore = new InMemoryWindowStore("store", TimeSpan.FromMinutes(20), 1000 * 2, false);
             store = new MeteredTimestampedWindowStore<string, int>(inmemorystore, 1000 * 2, new StringSerDes(),
                 new ValueAndTimestampSerDes<int>(new Int32SerDes()), "in-memory-window");
             facade = new ReadOnlyWindowStoreFacade<string, int>(store);

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Mock;
@@ -41,8 +42,7 @@ namespace Streamiz.Kafka.Net.Tests
         
         #endregion
         
-        [Test]
-        public void StreamStreamJoin()
+        private void StreamStreamJoinBase(bool persistent)
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
@@ -58,10 +58,16 @@ namespace Streamiz.Kafka.Net.Tests
                 .Stream<string, TicketDetails, StringSerDes, JsonSerDes<TicketDetails>>("tickets-details");
             
             var props = StreamJoinProps.With<string, Ticket, TicketDetails>(
-                Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("tickets-store", TimeSpan.FromDays(4),
-                    TimeSpan.FromDays(4)),
-                Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("tickets-details-store", TimeSpan.FromDays(4),
-                    TimeSpan.FromDays(4)));
+                persistent ? 
+                    Streamiz.Kafka.Net.State.Stores.PersistentWindowStore("tickets-store", TimeSpan.FromDays(4),
+                        TimeSpan.FromDays(4), 3600000, true) :
+                    Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("tickets-store", TimeSpan.FromDays(4),
+                    TimeSpan.FromDays(4), true),
+                persistent ? 
+                    Streamiz.Kafka.Net.State.Stores.PersistentWindowStore("tickets-details-store", TimeSpan.FromDays(4),
+                        TimeSpan.FromDays(4), 3600000, true) :
+                    Streamiz.Kafka.Net.State.Stores.InMemoryWindowStore("tickets-details-store", TimeSpan.FromDays(4),
+                    TimeSpan.FromDays(4), true));
             
             var joinValueMapper = new JoinValueMapper();
             var joinWindowOptions = JoinWindowOptions.Of(TimeSpan.FromDays(2));
@@ -98,10 +104,20 @@ namespace Streamiz.Kafka.Net.Tests
                 
                 var records = outputTopic.ReadKeyValueList();
                 Assert.IsNotNull(records);
-                
-                // Should 10 records, but only 8
-                // Needs to develop this feature for fixing #190
+                Assert.AreEqual(10, records.Count());
             }
+        }
+        
+        [Test]
+        public void StreamStreamJoinInMemory()
+        {
+            StreamStreamJoinBase(false);
+        }
+        
+        [Test]
+        public void StreamStreamJoinPersistent()
+        {
+            StreamStreamJoinBase(true);
         }
     }
 }

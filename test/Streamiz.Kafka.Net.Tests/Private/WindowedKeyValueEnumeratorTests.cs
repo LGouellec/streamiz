@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var date = DateTime.Now;
             var key = new Bytes(Encoding.UTF8.GetBytes("key"));
             var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(10),
-                (long) TimeSpan.FromSeconds(1).TotalMilliseconds);
+                (long) TimeSpan.FromSeconds(1).TotalMilliseconds, false);
             store.Put(key, Encoding.UTF8.GetBytes("value"), date.GetMilliseconds());
 
             var enumerator = new MeteredWindowedKeyValueEnumerator<string, string>(
@@ -42,7 +42,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var date = DateTime.Now;
             var key = new Bytes(Encoding.UTF8.GetBytes("key"));
             var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(10),
-                (long) TimeSpan.FromSeconds(1).TotalMilliseconds);
+                (long) TimeSpan.FromSeconds(1).TotalMilliseconds, false);
             store.Put(key, Encoding.UTF8.GetBytes("value"), date.GetMilliseconds());
 
             var enumerator = new MeteredWindowedKeyValueEnumerator<string, string>(
@@ -67,7 +67,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var date = DateTime.Now;
             var key = new Bytes(Encoding.UTF8.GetBytes("key"));
             var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(10),
-                (long) TimeSpan.FromSeconds(1).TotalMilliseconds);
+                (long) TimeSpan.FromSeconds(1).TotalMilliseconds, false);
             store.Put(key, Encoding.UTF8.GetBytes("value"), date.GetMilliseconds());
 
             var enumerator = new MeteredWindowedKeyValueEnumerator<string, string>(
@@ -96,7 +96,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var date = DateTime.Now;
             var key = new Bytes(Encoding.UTF8.GetBytes("key"));
             var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(10),
-                (long) TimeSpan.FromSeconds(1).TotalMilliseconds);
+                (long) TimeSpan.FromSeconds(1).TotalMilliseconds, false);
             store.Put(key, Encoding.UTF8.GetBytes("value"), date.GetMilliseconds());
 
             var enumerator = new MeteredWindowedKeyValueEnumerator<string, string>(

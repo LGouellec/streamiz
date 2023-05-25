@@ -56,7 +56,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
                     (long)defaultRetention.TotalMilliseconds,
                     7200000,
                     new RocksDbWindowKeySchema()),
-                (long)defaultSize.TotalMilliseconds);
+                (long)defaultSize.TotalMilliseconds, false);
 
             store.Init(context, store);
         }

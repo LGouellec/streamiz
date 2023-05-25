@@ -495,7 +495,8 @@ namespace Streamiz.Kafka.Net.Table
             Materialized<K, V, IWindowStore<Bytes, byte[]>> materialized =
                 Materialized<K, V, IWindowStore<Bytes, byte[]>>
                     .Create(new InMemoryWindowStoreSupplier(storeName, TimeSpan.FromDays(1),
-                        windowSize.HasValue ? (long) windowSize.Value.TotalMilliseconds : (long?) null))
+                        windowSize.HasValue ? (long) windowSize.Value.TotalMilliseconds : (long?) null,
+                        false))
                     .WithName(storeName);
             
             return materialized;
@@ -516,7 +517,8 @@ namespace Streamiz.Kafka.Net.Table
             Materialized<K, V, IWindowStore<Bytes, byte[]>> materialized =
                 Materialized<K, V, IWindowStore<Bytes, byte[]>>
                     .Create<KS, VS>(new InMemoryWindowStoreSupplier(storeName, TimeSpan.FromDays(1),
-                        windowSize.HasValue ? (long) windowSize.Value.TotalMilliseconds : (long?) null))
+                        windowSize.HasValue ? (long) windowSize.Value.TotalMilliseconds : (long?) null,
+                        false))
                     .WithName(storeName);
             
             return materialized;
@@ -583,7 +585,8 @@ namespace Streamiz.Kafka.Net.Table
                         storeName,
                         TimeSpan.FromDays(1),
                         segmentInterval.HasValue ? (long)segmentInterval.Value.TotalMilliseconds : 60 * 1000 * 60,
-                        windowSize.HasValue ? (long)windowSize.Value.TotalMilliseconds : (long?)null))
+                        windowSize.HasValue ? (long)windowSize.Value.TotalMilliseconds : (long?)null,
+                        false))
                     .WithName(storeName);
             
             return materialized;
@@ -608,7 +611,8 @@ namespace Streamiz.Kafka.Net.Table
                         storeName,
                         TimeSpan.FromDays(1),
                         segmentInterval.HasValue ? (long)segmentInterval.Value.TotalMilliseconds : 60 * 1000 * 60,
-                        windowSize.HasValue ? (long)windowSize.Value.TotalMilliseconds : (long?)null))
+                        windowSize.HasValue ? (long)windowSize.Value.TotalMilliseconds : (long?)null,
+                        false))
                     .WithName(storeName);
             
             return materialized;
