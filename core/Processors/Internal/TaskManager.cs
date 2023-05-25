@@ -300,7 +300,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 }
             }
 
-            if (allRunning)
+           if (allRunning)
                 Consumer.Resume(Consumer.Assignment);
 
             return allRunning;

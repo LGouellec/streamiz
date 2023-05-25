@@ -56,8 +56,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void FetchTest()
         {
-            InMemoryWindowStore store1 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10);
-            InMemoryWindowStore store2 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10);
+            InMemoryWindowStore store1 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10, false);
+            InMemoryWindowStore store2 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10, false);
             var dt = DateTime.Now.GetMilliseconds();
             var valueSerdes = new ValueAndTimestampSerDes<string>(new StringSerDes());
             var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
@@ -77,8 +77,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void Fetch2Test()
         {
-            InMemoryWindowStore store1 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10);
-            InMemoryWindowStore store2 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10);
+            InMemoryWindowStore store1 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10, false);
+            InMemoryWindowStore store2 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10, false);
             var dt = DateTime.Now;
             var valueSerdes = new ValueAndTimestampSerDes<string>(new StringSerDes());
             var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
@@ -102,8 +102,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void FetchAllTest()
         {
-            InMemoryWindowStore store1 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10);
-            InMemoryWindowStore store2 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10);
+            InMemoryWindowStore store1 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10, false);
+            InMemoryWindowStore store2 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10, false);
             var dt = DateTime.Now;
             var valueSerdes = new ValueAndTimestampSerDes<string>(new StringSerDes());
             var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
@@ -135,8 +135,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void AllTest()
         {
-            InMemoryWindowStore store1 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10);
-            InMemoryWindowStore store2 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10);
+            InMemoryWindowStore store1 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10, false);
+            InMemoryWindowStore store2 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10, false);
             var dt = DateTime.Now;
             var valueSerdes = new ValueAndTimestampSerDes<string>(new StringSerDes());
             var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));

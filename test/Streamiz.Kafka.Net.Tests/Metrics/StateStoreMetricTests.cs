@@ -107,7 +107,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             }
             
             public MockInMemoryWindowStore(string storeName, TimeSpan retention, long size) 
-                : base(storeName, retention, size)
+                : base(storeName, retention, size, false)
             {
             }
 

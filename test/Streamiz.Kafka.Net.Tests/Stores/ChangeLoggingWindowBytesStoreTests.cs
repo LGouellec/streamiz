@@ -69,7 +69,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             context = new ProcessorContext(task.Object, config, stateManager, new StreamMetricsRegistry());
             context.UseRecordCollector(recordCollector);
 
-            var inmemorystore = new InMemoryWindowStore("test-store", TimeSpan.FromDays(1), TimeSpan.FromSeconds(1).Milliseconds);
+            var inmemorystore = new InMemoryWindowStore("test-store", TimeSpan.FromDays(1), TimeSpan.FromSeconds(1).Milliseconds, false);
             store = new ChangeLoggingWindowBytesStore(inmemorystore);
             store.Init(context, store);
         }

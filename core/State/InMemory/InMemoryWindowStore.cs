@@ -23,6 +23,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         private readonly Bytes keyFrom;
         private readonly Bytes keyTo;
         private readonly Func<InMemoryWindowStoreEnumeratorWrapper, bool> closingCallback;
+        protected readonly bool retainDuplicate;
         private readonly bool allKeys;
 
         protected int indexIt = 0;
@@ -51,13 +52,35 @@ namespace Streamiz.Kafka.Net.State.InMemory
                 if (next == null)
                     return false;
 
-                if ((keyFrom == null && keyTo == null) || (next.Value.Key.Equals(keyFrom) || next.Value.Key.Equals(keyTo)))
+                if (allKeys || !retainDuplicate)
+                    return true;
+
+                var key = GetKey(next.Value.Key);
+                if(KeyWithInRange(key))
                     return true;
                 else
                 {
                     next = null;
                     return HasNext;
                 }
+            }
+        }
+
+        private bool KeyWithInRange(Bytes key)
+        {
+            // split all cases for readability and avoid BooleanExpressionComplexity checkstyle warning
+            if (keyFrom == null && keyTo == null) {
+                // fetch all
+                return true;
+            } else if (keyFrom == null) {
+                // start from the beginning
+                return key.CompareTo(GetKey(keyTo)) <= 0;
+            } else if (keyTo == null) {
+                // end to the last
+                return key.CompareTo(GetKey(keyFrom)) >= 0;
+            } else {
+                // key is within the range
+                return key.CompareTo(GetKey(keyFrom)) >= 0 && key.CompareTo(GetKey(keyTo)) <= 0;
             }
         }
 
@@ -85,13 +108,15 @@ namespace Streamiz.Kafka.Net.State.InMemory
             Bytes keyFrom,
             Bytes keyTo,
             List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> dataIterator,
-            Func<InMemoryWindowStoreEnumeratorWrapper, bool> closingCallback)
+            Func<InMemoryWindowStoreEnumeratorWrapper, bool> closingCallback,
+            bool retainDuplicate)
         {
             this.keyFrom = keyFrom;
             this.keyTo = keyTo;
             allKeys = keyFrom == null && keyTo == null;
             iterator = dataIterator;
             this.closingCallback = closingCallback;
+            this.retainDuplicate = retainDuplicate;
         }
 
         public void Close()
@@ -123,8 +148,9 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
             if (allKeys)
                 return new List<KeyValuePair<Bytes, byte[]>>(current.Value);
-            else
-                return new List<KeyValuePair<Bytes, byte[]>>(current.Value.Where(kv => kv.Key.Equals(keyFrom) || kv.Key.Equals(keyTo)));
+            
+            return new List<KeyValuePair<Bytes, byte[]>>(
+                current.Value.Where(kv => GetKey(kv.Key).CompareTo(GetKey(keyFrom)) >= 0 && GetKey(kv.Key).CompareTo(GetKey(keyTo)) <= 0));
         }
 
         protected void Reset()
@@ -137,12 +163,23 @@ namespace Streamiz.Kafka.Net.State.InMemory
             next = null;
             valueIterator = null;
         }
+
+        protected Bytes GetKey(Bytes wrappedKey)
+        {
+            if (retainDuplicate)
+            {
+                var buffer = ByteBuffer.Build(wrappedKey.Get, true);
+                return Bytes.Wrap(buffer.GetBytes(0, wrappedKey.Get.Length - sizeof(Int32)));
+            }
+
+            return wrappedKey;
+        }
     }
 
     internal class WrappedInMemoryWindowStoreEnumerator : InMemoryWindowStoreEnumeratorWrapper, IWindowStoreEnumerator<byte[]>
     {
-        public WrappedInMemoryWindowStoreEnumerator(Bytes keyFrom, Bytes keyTo, List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> dataIterator, Func<InMemoryWindowStoreEnumeratorWrapper, bool> closingCallback)
-            : base(keyFrom, keyTo, dataIterator, closingCallback)
+        public WrappedInMemoryWindowStoreEnumerator(Bytes keyFrom, Bytes keyTo, List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> dataIterator, Func<InMemoryWindowStoreEnumeratorWrapper, bool> closingCallback, bool retainDuplicate)
+            : base(keyFrom, keyTo, dataIterator, closingCallback, retainDuplicate)
         {
         }
 
@@ -178,8 +215,8 @@ namespace Streamiz.Kafka.Net.State.InMemory
     {
         private readonly long windowSize;
 
-        public WrappedWindowedKeyValueEnumerator(Bytes keyFrom, Bytes keyTo, List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> dataIterator, Func<InMemoryWindowStoreEnumeratorWrapper, bool> closingCallback, long windowSize)
-            : base(keyFrom, keyTo, dataIterator, closingCallback)
+        public WrappedWindowedKeyValueEnumerator(Bytes keyFrom, Bytes keyTo, List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> dataIterator, Func<InMemoryWindowStoreEnumeratorWrapper, bool> closingCallback, long windowSize, bool retainDuplicate)
+            : base(keyFrom, keyTo, dataIterator, closingCallback, retainDuplicate)
         {
             this.windowSize = windowSize;
         }
@@ -205,7 +242,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         private Windowed<Bytes> GetWindowedKey()
         {
             TimeWindow timeWindow = new TimeWindow(CurrentTime, CurrentTime + windowSize);
-            return new Windowed<Bytes>(next.Value.Key, timeWindow);
+            return new Windowed<Bytes>(retainDuplicate ? GetKey(next.Value.Key) : next.Value.Key, timeWindow);
         }
 
         object IEnumerator.Current => Current;
@@ -228,10 +265,12 @@ namespace Streamiz.Kafka.Net.State.InMemory
     {
         private readonly TimeSpan retention;
         private readonly long size;
+        private readonly bool retainDuplicates;
         private Sensor expiredRecordSensor;
         private ProcessorContext context;
 
         private long observedStreamTime = -1;
+        private int seqnum = 0;
 
         private readonly ConcurrentDictionary<long, ConcurrentDictionary<Bytes, byte[]>> map =
             new ConcurrentDictionary<long, ConcurrentDictionary<Bytes, byte[]>>();
@@ -240,11 +279,12 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
         private readonly ILogger logger = Logger.GetLogger(typeof(InMemoryWindowStore));
 
-        public InMemoryWindowStore(string storeName, TimeSpan retention, long size)
+        public InMemoryWindowStore(string storeName, TimeSpan retention, long size, bool retainDuplicates)
         {
             Name = storeName;
             this.retention = retention;
             this.size = size;
+            this.retainDuplicates = retainDuplicates;
         }
 
         public string Name { get; }
@@ -253,6 +293,12 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
         public bool IsOpen { get; private set; } = false;
 
+        private void UpdateSeqNumber()
+        {
+            if(retainDuplicates)
+                seqnum = (seqnum + 1) & 0x7FFFFFFF;
+        }
+        
         public virtual IKeyValueEnumerator<Windowed<Bytes>, byte[]> All()
         {
             RemoveExpiredData();
@@ -281,7 +327,12 @@ namespace Streamiz.Kafka.Net.State.InMemory
                 return null;
 
             if (map.ContainsKey(time))
-                return map[time].Get(key);
+            {
+                var keyFrom = retainDuplicates ? WrapWithSeq(key, 0) : key;
+                var keyTo = retainDuplicates ? WrapWithSeq(key, Int32.MaxValue) : key;
+                return map[time]
+                    .FirstOrDefault(kv => kv.Key.CompareTo(keyFrom) >= 0 && kv.Key.CompareTo(keyTo) <= 0).Value;
+            }
             else
                 return null;
         }
@@ -355,21 +406,24 @@ namespace Streamiz.Kafka.Net.State.InMemory
             {
                 if (value != null)
                 {
+                    UpdateSeqNumber();
+                    var keyBytes = retainDuplicates ? WrapWithSeq(key, seqnum) : key;
                     map.AddOrUpdate(windowStartTimestamp,
                         (k) =>
                         {
                             var dic = new ConcurrentDictionary<Bytes, byte[]>();
-                            dic.AddOrUpdate(key, (b) => value, (k, d) => value);
+                            dic.AddOrUpdate(keyBytes, (b) => value, (k, d) => value);
                             return dic;
                         },
                         (k, d) =>
                         {
-                            d.AddOrUpdate(key, (b) => value, (k, d) => value);
+                            d.AddOrUpdate(keyBytes, (b) => value, (k, d) => value);
                             return d;
                         });
                 }
-                else
+                else if(!retainDuplicates)
                 {
+                    // Skip if value is null and duplicates are allowed since this delete is a no-op
                     if (map.ContainsKey(windowStartTimestamp))
                     {
                         ConcurrentDictionary<Bytes, byte[]> tmp = null;
@@ -409,23 +463,38 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
         private IWindowStoreEnumerator<byte[]> CreateNewWindowStoreEnumerator(Bytes key, List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> enumerator)
         {
-            var it = new WrappedInMemoryWindowStoreEnumerator(key, key, enumerator, openIterators.Remove);
+            var keyFrom = retainDuplicates ? WrapWithSeq(key, 0) : key;
+            var keyTo = retainDuplicates ? WrapWithSeq(key, Int32.MaxValue) : key;
+            
+            var it = new WrappedInMemoryWindowStoreEnumerator(keyFrom, keyTo, enumerator, openIterators.Remove, retainDuplicates);
             openIterators.Add(it);
             return it;
         }
 
         private WrappedWindowedKeyValueEnumerator CreateNewWindowedKeyValueEnumerator(Bytes keyFrom, Bytes keyTo, List<KeyValuePair<long, ConcurrentDictionary<Bytes, byte[]>>> enumerator)
         {
+            var from = retainDuplicates && keyFrom != null ? WrapWithSeq(keyFrom, 0) : keyFrom;
+            var to = retainDuplicates && keyTo != null ? WrapWithSeq(keyTo, Int32.MaxValue) : keyTo;
+            
             var it =
                   new WrappedWindowedKeyValueEnumerator(keyFrom,
                                                       keyTo,
                                                       enumerator,
                                                       openIterators.Remove,
-                                                      size);
+                                                      size, 
+                                                      retainDuplicates);
             openIterators.Add(it);
             return it;
         }
 
+        private Bytes WrapWithSeq(Bytes key, int seq)
+        {
+            var buffer = ByteBuffer.Build(key.Get.Length + sizeof(Int32), true);
+            buffer.Put(key.Get);
+            buffer.PutInt(seq);
+            return Bytes.Wrap(buffer.ToArray());
+        }
+        
         #endregion
     }
 }
