@@ -15,7 +15,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             LogProcessingKeyValue(key, value);
             var timestamp = timestampExtractor(key, value);
-            if (timestamp > 0)
+            if (timestamp >= 0)
             {
                 Context.RecordContext.ChangeTimestamp(timestamp);
             }
