@@ -7,5 +7,6 @@ namespace Streamiz.Kafka.Net.Mock.Sync
     {
         public void PublishRecord(string topic, byte[] key, byte[] value, DateTime timestamp, Headers headers);
         public void Flush();
+        public void Close();
     }
 }

@@ -2,6 +2,9 @@ using Streamiz.Kafka.Net.SerDes;
 
 namespace Streamiz.Kafka.Net.Stream
 {
+    /// <summary>
+    /// Class used to configure the key and value serdes in Stream-Table join operation.
+    /// </summary>
     public class StreamTableJoinProps<K, V1, V2>
     {
         internal StreamTableJoinProps(
@@ -20,12 +23,12 @@ namespace Streamiz.Kafka.Net.Stream
         public ISerDes<K> KeySerdes { get; internal set; }
 
         /// <summary>
-        /// Value serdes
+        /// Stream value serdes
         /// </summary>
         public ISerDes<V1> LeftValueSerdes { get; internal set; }
 
         /// <summary>
-        /// Other value serdes
+        /// Table value serdes
         /// </summary>
         public ISerDes<V2> RightValueSerdes { get; internal set; }
     }

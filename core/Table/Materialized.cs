@@ -449,6 +449,8 @@ namespace Streamiz.Kafka.Net.Table
         /// <summary>
         /// Materialize a <see cref="InMemoryKeyValueStore"/> with the given name.
         /// </summary>
+        /// <typeparam name="K">key type</typeparam>
+        /// <typeparam name="V">value type</typeparam>
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
         /// <returns>a new materialized instance with the given storeName</returns>
         public static Materialized<K, V, IKeyValueStore<Bytes, byte[]>> @As<K, V>(string storeName = null)
@@ -463,6 +465,8 @@ namespace Streamiz.Kafka.Net.Table
         /// <summary>
         /// Materialize a <see cref="InMemoryKeyValueStore"/> with the given name.
         /// </summary>
+        /// <typeparam name="K">key type</typeparam>
+        /// <typeparam name="V">value type</typeparam>
         /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
         /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
@@ -504,6 +508,8 @@ namespace Streamiz.Kafka.Net.Table
         /// <summary>
         /// Materialize a <see cref="InMemoryWindowStore"/> with the given name.
         /// </summary>
+        /// <typeparam name="K">key type</typeparam>
+        /// <typeparam name="V">value type</typeparam>
         /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
         /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
@@ -545,6 +551,8 @@ namespace Streamiz.Kafka.Net.Table
         /// <summary>
         /// Materialize a <see cref="RocksDbKeyValueStore"/> with the given name.
         /// </summary>
+        /// <typeparam name="K">key type</typeparam>
+        /// <typeparam name="V">value type</typeparam>
         /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
         /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>
@@ -592,6 +600,8 @@ namespace Streamiz.Kafka.Net.Table
         /// <summary>
         /// Materialize a <see cref="RocksDbWindowStore"/> with the given name.
         /// </summary>
+        /// <typeparam name="K">key type</typeparam>
+        /// <typeparam name="V">value type</typeparam>
         /// <typeparam name="KS">New serializer for <typeparamref name="K"/> type</typeparam>
         /// <typeparam name="VS">New serializer for <typeparamref name="V"/> type</typeparam>
         /// <param name="storeName">the name of the underlying <see cref="IKTable{K, V}"/> state store; valid characters are ASCII alphanumerics, '.', '_' and '-'.</param>

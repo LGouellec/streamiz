@@ -37,6 +37,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         private readonly IDictionary<string, SyncConsumerOffset> offsets = new Dictionary<string, SyncConsumerOffset>();
         private readonly IDictionary<TopicPartition, bool> partitionsState = new Dictionary<TopicPartition, bool>();
+        private readonly object _lock = new();
         
         public IConsumerRebalanceListener Listener { get; private set; }
 
@@ -295,39 +296,42 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         private ConsumeResult<byte[], byte[]> ConsumeInternal(TimeSpan timeout)
         {
-            DateTime dt = DateTime.Now;
-            ConsumeResult<byte[], byte[]> result = null;
-
-            foreach (var kp in offsets)
+            lock (_lock)
             {
-                var clone = Assignment.ToList();
-                if (clone != null && clone.Select(a => a.Topic).Contains(kp.Key))
-                {
-                    if (timeout != TimeSpan.Zero && (dt + timeout) < DateTime.Now)
-                        break;
+                DateTime dt = DateTime.Now;
+                ConsumeResult<byte[], byte[]> result = null;
 
-                    var tp = new TopicPartition(kp.Key, 0);
-                    if (producer != null &&
-                        ((partitionsState.ContainsKey(tp) && !partitionsState[tp]) ||
-                         !partitionsState.ContainsKey(tp)))
+                foreach (var kp in offsets)
+                {
+                    if (Assignment.Any() && Assignment.Select(a => a.Topic).Contains(kp.Key))
                     {
-                        var messages = producer.GetHistory(kp.Key).ToArray();
-                        if (messages.Length > kp.Value.OffsetConsumed)
+                        if (timeout != TimeSpan.Zero && (dt + timeout) < DateTime.Now)
+                            break;
+
+                        var tp = new TopicPartition(kp.Key, 0);
+                        if (producer != null &&
+                            ((partitionsState.ContainsKey(tp) && !partitionsState[tp]) ||
+                             !partitionsState.ContainsKey(tp)))
                         {
-                            result = new ConsumeResult<byte[], byte[]>
+                            var messages = producer.GetHistory(kp.Key).ToArray();
+                            if (messages.Length > kp.Value.OffsetConsumed)
                             {
-                                Offset = kp.Value.OffsetConsumed,
-                                Topic = kp.Key,
-                                Partition = 0,
-                                Message = messages[kp.Value.OffsetConsumed]
-                            };
-                            ++kp.Value.OffsetConsumed;
-                            return result;
+                                result = new ConsumeResult<byte[], byte[]>
+                                {
+                                    Offset = kp.Value.OffsetConsumed,
+                                    Topic = kp.Key,
+                                    Partition = 0,
+                                    Message = messages[kp.Value.OffsetConsumed]
+                                };
+                                ++kp.Value.OffsetConsumed;
+                                return result;
+                            }
                         }
                     }
                 }
+
+                return result;
             }
-            return result;
         }
 
         #endregion
@@ -352,6 +356,17 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             Assignment.RemoveAll(t => partitions.Contains(t));
             foreach (var tp in partitions)
                 offsets.Remove(tp.Topic);
+        }
+
+        public void SetSaslCredentials(string username, string password)
+        {
+            
+        }
+
+        public TopicPartitionOffset PositionTopicPartitionOffset(TopicPartition topicPartition)
+        {
+            var offset = Position(topicPartition);
+            return new TopicPartitionOffset(topicPartition, offset);
         }
     }
 }

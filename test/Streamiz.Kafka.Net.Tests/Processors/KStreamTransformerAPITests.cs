@@ -13,13 +13,15 @@ namespace Streamiz.Kafka.Net.Tests.Processors
     {
         private class MyTransformer : ITransformer<string, string, string, string>
         {
+            private ProcessorContext<string,string> context;
+
             public MyTransformer()
             {
             }
             
             public void Init(ProcessorContext<string, string> context)
             {
-                
+                this.context = context;
             }
 
             public Record<string, string> Process(Record<string, string> record)

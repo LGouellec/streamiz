@@ -26,7 +26,7 @@ namespace Streamiz.Kafka.Net.Processors.Public
     public class ProcessorBuilder<K, V>
     {
         private ProcessorSupplier<K, V> processorSupplier = new();
-
+        
         /// <summary>
         /// Set the processor
         /// </summary>

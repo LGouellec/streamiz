@@ -36,15 +36,15 @@ namespace Streamiz.Kafka.Net
     /// 
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public class StreamConfigPropertyAttribute : Attribute
+    internal class StreamConfigPropertyAttribute : Attribute
     {
-        public StreamConfigPropertyAttribute(string keyName)
+        internal StreamConfigPropertyAttribute(string keyName)
             : this(keyName, false)
         {
 
         }
         
-        public StreamConfigPropertyAttribute(string keyName, bool readOnly)
+        internal StreamConfigPropertyAttribute(string keyName, bool readOnly)
         {
             KeyName = keyName;
             ReadOnly = readOnly;
@@ -2221,9 +2221,7 @@ namespace Streamiz.Kafka.Net
         /// Constructor with a dictionary of properties.
         /// This is stream properties. 
         /// <para>
-        /// If you want to set specific properties for consumer, producer, admin client or global.
-        /// Please use <see cref="IStreamConfig.AddConsumerConfig(string, string)"/>, <see cref="IStreamConfig.AddProducerConfig(string, string)"/>, 
-        /// <see cref="IStreamConfig.AddAdminConfig(string, string)"/> or <see cref="IStreamConfig.AddConfig(string, string)"/>. WARNING : MAYBE WILL CHANGE
+        /// If you want to set specific properties for consumer, producer, admin client or global, please use <see cref="IStreamConfig.AddConfig"/>.
         /// </para>
         /// </summary>
         /// <param name="properties">Dictionary of stream properties</param>
@@ -3152,15 +3150,39 @@ namespace Streamiz.Kafka.Net
         
         #region Prefix
 
+        /// <summary>
+        /// Prefix the key with the main consumer prefix.
+        /// Use this helper method if you want to override one specific configuration especially for the main consumer.
+        /// </summary>
+        /// <param name="key">Key configuration</param>
+        /// <returns>the key for main consumer</returns>
         public string MainConsumerPrefix(string key)
             => $"{mainConsumerPrefix}{key}";
         
+        /// <summary>
+        /// Prefix the key with the global consumer prefix.
+        /// Use this helper method if you want to override one specific configuration especially for the global consumer.
+        /// </summary>
+        /// <param name="key">Key configuration</param>
+        /// <returns>the key for global consumer</returns>
         public string GlobalConsumerPrefix(string key)
             => $"{globalConsumerPrefix}{key}";
         
+        /// <summary>
+        /// Prefix the key with the restore consumer prefix.
+        /// Use this helper method if you want to override one specific configuration especially for the restore consumer.
+        /// </summary>
+        /// <param name="key">Key configuration</param>
+        /// <returns>the key for restore consumer</returns>
         public string RestoreConsumerPrefix(string key)
             => $"{restoreConsumerPrefix}{key}";
         
+        /// <summary>
+        /// Prefix the key with the main producer prefix.
+        /// Use this helper method if you want to override one specific configuration especially for the main producer.
+        /// </summary>
+        /// <param name="key">Key configuration</param>
+        /// <returns>the key for main producer</returns>
         public string ProducerPrefix(string key)
             => $"{producerPrefix}{key}";
 

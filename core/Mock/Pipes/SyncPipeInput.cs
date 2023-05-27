@@ -21,6 +21,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         public void Dispose()
         {
             Flush();
+            publisher.Close();
         }
 
         public void Flush()
