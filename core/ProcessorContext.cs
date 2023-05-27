@@ -96,7 +96,11 @@ namespace Streamiz.Kafka.Net
             RecordContext = new RecordContext(result);
         }
 
-        internal void ChangeTimestamp(long ts)
+        /// <summary>
+        /// Changes the record timestamp to <paramref name="ts"/>
+        /// </summary>
+        /// <param name="ts">The Unix timestamp value to be used by the record context.</param>
+        public void ChangeTimestamp(long ts)
         {
             RecordContext.ChangeTimestamp(ts);
         }
