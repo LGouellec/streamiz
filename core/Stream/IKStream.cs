@@ -2056,7 +2056,19 @@ namespace Streamiz.Kafka.Net.Stream
         /// <typeparam name="V1">the value type of the new stream</typeparam>
         /// <returns>a <see cref="IKStream{K,V1}"/> that contains more or less records with new key and value (possibly of different type)</returns>
         IKStream<K, V1> TransformValues<V1>(TransformerSupplier<K, V, K, V1> transformerSupplier, string named = null);
-    
+
+        #endregion
+
+        #region WithRecordTimestamp
+
+        /// <summary>
+        /// Updates the timestamp of the record with one provided by the <paramref name="timestampExtractor"/> function. Negative timestamps will be ignored.
+        /// </summary>
+        /// <param name="timestampExtractor"></param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>a <see cref="IKStream{K,V1}"/> that has records with timestamp explicitly provided by <paramref name="timestampExtractor"/></returns>
+        IKStream<K, V> WithRecordTimestamp(Func<K, V, long> timestampExtractor, string named = null);
+
         #endregion
     }
 }
