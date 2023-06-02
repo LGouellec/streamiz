@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Confluent.Kafka.Admin;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
@@ -396,7 +397,8 @@ namespace Streamiz.Kafka.Net.Processors
             if(State == ThreadState.PARTITIONS_ASSIGNED || State == ThreadState.RUNNING && manager.NeedRestoration())
             {
                 log.LogDebug($"{logPrefix} State is {State}, initializing and restoring tasks if necessary");
-
+                consumer.Pause(consumer.Assignment);
+                
                 if (manager.TryToCompleteRestoration())
                 {
                     log.LogInformation($"Restoration took {DateTime.Now.GetMilliseconds() - LastPartitionAssignedTime}ms for all tasks {string.Join(",", manager.ActiveTaskIds)}");

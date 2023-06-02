@@ -158,7 +158,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 Stores.DefaultWindowStore(
                     storeName + "-store",
                     TimeSpan.FromMilliseconds(windows.Size + windows.GracePeriodMs),
-                    TimeSpan.FromMilliseconds(windows.Size)
+                    TimeSpan.FromMilliseconds(windows.Size),
+                    Math.Max(windows.Size + windows.GracePeriodMs / 2, 60_000L),
+                    true
                 ),
                 keySerde,
                 valueSerde

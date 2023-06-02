@@ -11,6 +11,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
     public class RocksDbWindowBytesStoreSupplier : IWindowBytesStoreSupplier
     {
         private readonly long segmentInterval;
+        private readonly bool retainDuplicates;
 
         /// <summary>
         /// Constructor with some arguments.
@@ -19,15 +20,18 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         /// <param name="retention">retention of windowing store</param>
         /// <param name="segmentInterval">segment interval</param>
         /// <param name="size">window size</param>
+        /// <param name="retainDuplicates">whether or not to retain duplicates</param>
         public RocksDbWindowBytesStoreSupplier(
             string storeName,
             TimeSpan retention,
             long segmentInterval,
-            long? size)
+            long? size,
+            bool retainDuplicates)
         {
             Name = storeName;
             Retention = (long)retention.TotalMilliseconds;
             this.segmentInterval = segmentInterval;
+            RetainDuplicates = retainDuplicates;
             WindowSize = size;
         }
         
@@ -45,6 +49,13 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         /// Retention of the state store
         /// </summary>
         public long Retention { get; set; }
+        
+        /// <summary>
+        /// Whether or not this store is retaining duplicate keys.
+        /// Usually only true if the store is being used for joins.
+        /// Note this should return false if caching is enabled.
+        /// </summary>
+        public bool RetainDuplicates { get; set; }
 
         /// <summary>
         /// State store name
@@ -63,7 +74,8 @@ namespace Streamiz.Kafka.Net.State.RocksDb
                     Retention,
                     segmentInterval,
                     new RocksDbWindowKeySchema()),
-                WindowSize.HasValue ? WindowSize.Value : (long)TimeSpan.FromMinutes(1).TotalMilliseconds);
+                WindowSize.HasValue ? WindowSize.Value : (long)TimeSpan.FromMinutes(1).TotalMilliseconds,
+                RetainDuplicates);
         }
     }
 }

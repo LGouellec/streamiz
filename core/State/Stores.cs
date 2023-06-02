@@ -42,9 +42,10 @@ namespace Streamiz.Kafka.Net.State
         /// <param name="retention">retention duration</param>
         /// <param name="windowSize">window size</param>
         /// <param name="segmentInterval">segment interval</param>
+        /// <param name="retainDuplicates"> whether or not to retain duplicates. Turning this on will automatically disable caching and means that null values will be ignored.</param>
         /// <returns><see cref="InMemoryWindowStoreSupplier"/> supplier</returns>
-        public static IWindowBytesStoreSupplier DefaultWindowStore(string name, TimeSpan retention, TimeSpan windowSize, long segmentInterval = 3600000)
-            => PersistentWindowStore(name, retention, windowSize);
+        public static IWindowBytesStoreSupplier DefaultWindowStore(string name, TimeSpan retention, TimeSpan windowSize, long segmentInterval = 3600000, bool retainDuplicates = false)
+            => PersistentWindowStore(name, retention, windowSize, segmentInterval, retainDuplicates);
 
         /// <summary>
         /// Create a persistent window store. 
@@ -53,9 +54,10 @@ namespace Streamiz.Kafka.Net.State
         /// <param name="retention">retention duration</param>
         /// <param name="windowSize">window size</param>
         /// <param name="segmentInterval">segment interval (default: 3600000)</param>
+        /// <param name="retainDuplicates"> whether or not to retain duplicates. Turning this on will automatically disable caching and means that null values will be ignored.</param>
         /// <returns><see cref="RocksDbWindowBytesStoreSupplier"/> supplier</returns>
-        public static IWindowBytesStoreSupplier PersistentWindowStore(string name, TimeSpan retention, TimeSpan windowSize, long segmentInterval = 3600000)
-            => new RocksDbWindowBytesStoreSupplier(name, retention, segmentInterval, (long)windowSize.TotalMilliseconds);
+        public static IWindowBytesStoreSupplier PersistentWindowStore(string name, TimeSpan retention, TimeSpan windowSize, long segmentInterval = 3600000, bool retainDuplicates = false)
+            => new RocksDbWindowBytesStoreSupplier(name, retention, segmentInterval, (long)windowSize.TotalMilliseconds, retainDuplicates);
 
         /// <summary>
         /// Create the inmemory window store. 
@@ -63,9 +65,10 @@ namespace Streamiz.Kafka.Net.State
         /// <param name="name">state store name</param>
         /// <param name="retention">retention duration</param>
         /// <param name="windowSize">window size</param>
+        /// <param name="retainDuplicates"> whether or not to retain duplicates. Turning this on will automatically disable caching and means that null values will be ignored.</param>
         /// <returns><see cref="InMemoryWindowStoreSupplier"/> supplier</returns>
-        public static IWindowBytesStoreSupplier InMemoryWindowStore(string name, TimeSpan retention, TimeSpan windowSize)
-            => new InMemoryWindowStoreSupplier(name, retention, (long)windowSize.TotalMilliseconds);
+        public static IWindowBytesStoreSupplier InMemoryWindowStore(string name, TimeSpan retention, TimeSpan windowSize, bool retainDuplicates = false)
+            => new InMemoryWindowStoreSupplier(name, retention, (long)windowSize.TotalMilliseconds, retainDuplicates);
 
         /// <summary>
         /// Creates a <see cref="IStoreBuilder"/> that can be used to build a <see cref="IWindowStore{K, V}"/>.

@@ -256,10 +256,11 @@ namespace Streamiz.Kafka.Net.Mock
 
             foreach (var t in tasks.Values)
             {
+                bool persistent = t.IsPersistent;
                 t.Close();
 
                 // Remove local state store for this task
-                if (t.IsPersistent)
+                if (persistent)
                     Directory.Delete(t.Context.StateDir, true);
             }
 
