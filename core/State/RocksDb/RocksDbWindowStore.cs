@@ -15,9 +15,9 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         private readonly bool retainDuplicates;
 
         public RocksDbWindowStore(
-                    RocksDbSegmentedBytesStore wrapped,
-                    long windowSize,
-                    bool retainDuplicates) 
+            RocksDbSegmentedBytesStore wrapped,
+            long windowSize,
+            bool retainDuplicates)
             : base(wrapped)
         {
             this.windowSize = windowSize;
@@ -26,7 +26,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         private void UpdateSeqNumber()
         {
-            if(retainDuplicates)
+            if (retainDuplicates)
                 seqnum = (seqnum + 1) & 0x7FFFFFFF;
         }
 
@@ -37,7 +37,16 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         }
 
         public byte[] Fetch(Bytes key, long time)
-            => wrapped.Get(WindowKeyHelper.ToStoreKeyBinary(key, time, seqnum));
+        {
+            // Make a test for that
+            if (!retainDuplicates)
+                return wrapped.Get(WindowKeyHelper.ToStoreKeyBinary(key, time, seqnum));
+            
+            using var enumerator = Fetch(key, time, time);
+            if (enumerator.MoveNext())
+                return enumerator.Current.Value.Value;
+            return null;
+        }
 
         public IWindowStoreEnumerator<byte[]> Fetch(Bytes key, DateTime from, DateTime to)
             => Fetch(key, from.GetMilliseconds(), to.GetMilliseconds());

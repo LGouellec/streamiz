@@ -259,5 +259,22 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             Assert.AreEqual(2, items.Count);
             Assert.AreEqual(100, Math.Abs(BitConverter.ToInt32(items[0].Value, 0) - BitConverter.ToInt32(items[1].Value, 0)));
         }
+        
+        [Test]
+        public void FetchDuplicateEvents()
+        {
+            var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(1), (long)defaultSize.TotalMilliseconds, true);
+            var date = DateTime.Now;
+            var key = new Bytes(Encoding.UTF8.GetBytes("test-key"));
+            var key2 = new Bytes(Encoding.UTF8.GetBytes("test-key2"));
+            store.Put(key, BitConverter.GetBytes(100), date.GetMilliseconds());
+            store.Put(key, BitConverter.GetBytes(150), date.GetMilliseconds());
+            store.Put(key2, BitConverter.GetBytes(300), date.GetMilliseconds());
+            
+            var r = store.Fetch(key, date.GetMilliseconds());
+            Assert.IsNotNull(r);
+            // InMemoryStore doesn't keep the order insertion for the same key
+            // Assert.AreEqual(BitConverter.GetBytes(100), r);
+        }
     }
 }
