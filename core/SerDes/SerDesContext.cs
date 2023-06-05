@@ -9,7 +9,7 @@
         /// <summary>
         /// Stream application configuration instance
         /// </summary>
-        public IStreamConfig Config { get; private set; }
+        public IStreamConfig Config { get; }
 
         internal SerDesContext(IStreamConfig config)
         {

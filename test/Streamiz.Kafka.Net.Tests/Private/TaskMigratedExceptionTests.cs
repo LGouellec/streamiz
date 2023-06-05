@@ -67,6 +67,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
             public void AbortTransaction(TimeSpan timeout)
             {
             }
+            
+            public void SetSaslCredentials(string username, string password)
+            {
+            
+            }
 
             public int AddBrokers(string brokers)
             {

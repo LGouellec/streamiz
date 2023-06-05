@@ -52,6 +52,11 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
         public void BeginTransaction()
         {
         }
+        
+        public void SetSaslCredentials(string username, string password)
+        {
+            
+        }
 
         public void CommitTransaction(TimeSpan timeout)
         {

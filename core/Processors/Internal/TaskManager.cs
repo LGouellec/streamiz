@@ -8,7 +8,6 @@ using Confluent.Kafka.Admin;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
-using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -162,42 +161,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             if (currentDeleteTask is {IsCompleted: false})
                 currentDeleteTask.GetAwaiter().GetResult();
         }
-
-        // NOT AVAILABLE NOW, NEED PROCESSOR API
-        //internal int MaybeCommitPerUserRequested()
-        //{
-        //    int committed = 0;
-        //    Exception firstException = null;
-
-        //    foreach(var task in ActiveTasks)
-        //    {
-        //        if(task.CommitNeeded && task.CommitRequested)
-        //        {
-        //            try
-        //            {
-        //                task.Commit();
-        //                ++committed;
-        //                log.Debug($"Committed stream task {task.Id} per user request in");
-        //            }
-        //            catch(Exception e)
-        //            {
-        //                log.Error($"Failed to commit stream task {task.Id} due to the following error: {e}");
-        //                if (firstException == null)
-        //                {
-        //                    firstException = e;
-        //                }
-        //            }
-        //        }
-        //    }
-
-        //    if (firstException != null)
-        //    {
-        //        throw firstException;
-        //    }
-
-        //    return committed;
-        //}
-
+        
         internal int CommitAll()
         {
             int committed = 0;
@@ -252,6 +216,39 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             return processed;
         }
 
+        internal int Punctuate()
+        {
+            int punctuated = 0;
+            foreach (var task in ActiveTasks)
+            {
+                try
+                {
+                    if (task.PunctuateStreamTime())
+                        ++punctuated;
+                    if (task.PunctuateSystemTime())
+                        ++punctuated;
+                }
+                catch (TaskMigratedException)
+                {
+                    log.LogInformation(
+                        $"Failed to punctuate stream task {task.Id} since it got migrated to another thread already. " +
+                        "Will trigger a new rebalance and close all tasks as zombies together.");
+                    throw;
+                }
+                catch (StreamsException e)
+                {
+                    log.LogError($"Failed to punctuate stream task {task.Id} due to the following error: {e.Message}");
+                    throw;
+                }
+                catch (KafkaException e)
+                {
+                    log.LogError($"Failed to punctuate stream task {task.Id} due to the following error: {e.Message}");
+                    throw new StreamsException(e);
+                }
+            }
+            return punctuated;
+        }
+        
         internal void HandleLostAll()
         {
             log.LogDebug("Closing lost active tasks as zombies");
@@ -305,7 +302,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 }
             }
 
-            if (allRunning)
+           if (allRunning)
                 Consumer.Resume(Consumer.Assignment);
 
             return allRunning;

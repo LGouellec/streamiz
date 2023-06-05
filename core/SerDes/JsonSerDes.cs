@@ -11,7 +11,7 @@ namespace Streamiz.Kafka.Net.SerDes
         where T : class
     {
         /// <summary>
-        /// Convert string <code>data</code> into a byte array with a json serializer.
+        /// Convert <typeparamref name="T"/> <code>data</code> into a byte array with a json serializer.
         /// </summary>
         /// <param name="data">object data</param>
         /// <param name="context">serialization context</param>

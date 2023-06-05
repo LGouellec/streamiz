@@ -94,7 +94,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
             var joinL = new KStreamKStreamJoin<K, V, V0, VR>(joinLeftName, rightWindowStore.Name, windows.beforeMs, windows.afterMs, joiner, leftOuter);
             var joinLParams = new ProcessorParameters<K, V>(joinL, joinLeftName);
-            var joinR = new KStreamKStreamJoin<K, V0, V, VR>(joinRightName, leftWindowStore.Name, windows.beforeMs, windows.afterMs, joiner.Reverse(), rightOuter);
+
+            var joinR = new KStreamKStreamJoin<K, V0, V, VR>(joinRightName, leftWindowStore.Name, windows.afterMs, windows.beforeMs, joiner.Reverse(), rightOuter);
             var joinRParams = new ProcessorParameters<K, V0>(joinR, joinRightName);
             var merge = new PassThrough<K, VR>();
             var mergeParams = new ProcessorParameters<K, VR>(merge, joinMergeName);
@@ -157,7 +158,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 Stores.DefaultWindowStore(
                     storeName + "-store",
                     TimeSpan.FromMilliseconds(windows.Size + windows.GracePeriodMs),
-                    TimeSpan.FromMilliseconds(windows.Size)
+                    TimeSpan.FromMilliseconds(windows.Size),
+                    Math.Max(windows.Size + windows.GracePeriodMs / 2, 60_000L),
+                    true
                 ),
                 keySerde,
                 valueSerde

@@ -81,7 +81,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             public override void Put(Bytes key, byte[] value)
             {
                 if(!putAll)
-                    Wait(3, 10);
+                    Wait(10, 20);
                 base.Put(key, value);
             }
 
@@ -107,7 +107,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             }
             
             public MockInMemoryWindowStore(string storeName, TimeSpan retention, long size) 
-                : base(storeName, retention, size)
+                : base(storeName, retention, size, false)
             {
             }
 

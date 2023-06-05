@@ -11,6 +11,7 @@ using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.Processors.Public;
 using Streamiz.Kafka.Net.Stream;
 
 namespace Streamiz.Kafka.Net.Processors
@@ -53,6 +54,12 @@ namespace Streamiz.Kafka.Net.Processors
                 throw new NotImplementedException();
             }
 
+            public override TaskScheduled RegisterScheduleTask(TimeSpan interval, PunctuationType punctuationType,
+                Action<long> punctuator)
+            {
+                throw new NotImplementedException();
+            }
+            
             public override void MayWriteCheckpoint(bool force = false)
             {
                 throw new NotImplementedException();

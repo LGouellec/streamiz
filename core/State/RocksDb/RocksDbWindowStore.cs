@@ -12,18 +12,22 @@ namespace Streamiz.Kafka.Net.State.RocksDb
     {
         private int seqnum = 0;
         private readonly long windowSize;
+        private readonly bool retainDuplicates;
 
         public RocksDbWindowStore(
-                    RocksDbSegmentedBytesStore wrapped,
-                    long windowSize) 
+            RocksDbSegmentedBytesStore wrapped,
+            long windowSize,
+            bool retainDuplicates)
             : base(wrapped)
         {
             this.windowSize = windowSize;
+            this.retainDuplicates = retainDuplicates;
         }
 
-        private void updateSeqNumber()
+        private void UpdateSeqNumber()
         {
-          //  seqnum = (seqnum + 1) & 0x7FFFFFFF;
+            if (retainDuplicates)
+                seqnum = (seqnum + 1) & 0x7FFFFFFF;
         }
 
         public IKeyValueEnumerator<Windowed<Bytes>, byte[]> All()
@@ -33,7 +37,16 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         }
 
         public byte[] Fetch(Bytes key, long time)
-            => wrapped.Get(WindowKeyHelper.ToStoreKeyBinary(key, time, seqnum));
+        {
+            // Make a test for that
+            if (!retainDuplicates)
+                return wrapped.Get(WindowKeyHelper.ToStoreKeyBinary(key, time, seqnum));
+            
+            using var enumerator = Fetch(key, time, time);
+            if (enumerator.MoveNext())
+                return enumerator.Current.Value.Value;
+            return null;
+        }
 
         public IWindowStoreEnumerator<byte[]> Fetch(Bytes key, DateTime from, DateTime to)
             => Fetch(key, from.GetMilliseconds(), to.GetMilliseconds());
@@ -52,8 +65,12 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
         public void Put(Bytes key, byte[] value, long windowStartTimestamp)
         {
-            updateSeqNumber();
-            wrapped.Put(WindowKeyHelper.ToStoreKeyBinary(key, windowStartTimestamp, seqnum), value);
+            // Skip if value is null and duplicates are allowed since this delete is a no-op
+            if (!(value == null && retainDuplicates))
+            {
+                UpdateSeqNumber();
+                wrapped.Put(WindowKeyHelper.ToStoreKeyBinary(key, windowStartTimestamp, seqnum), value);
+            }
         }
     }
 }
