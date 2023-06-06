@@ -434,7 +434,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual(40, consumerConfig.MessageCopyMaxBytes);
             Assert.AreEqual(500, consumerConfig.MessageMaxBytes);
             Assert.AreEqual(6, consumerConfig.MetadataMaxAgeMs);
-            Assert.AreEqual(Confluent.Kafka.PartitionAssignmentStrategy.CooperativeSticky, consumerConfig.PartitionAssignmentStrategy);
+            Assert.AreEqual(Confluent.Kafka.PartitionAssignmentStrategy.Range, consumerConfig.PartitionAssignmentStrategy);
             Assert.AreEqual("D:", consumerConfig.PluginLibraryPaths);
             Assert.AreEqual(800, consumerConfig.QueuedMaxMessagesKbytes);
             Assert.AreEqual(1, consumerConfig.QueuedMinMessages);
