@@ -23,7 +23,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
         {
             var config = new StreamConfig();
             var builder = new StreamBuilder();
-            Assert.Throws<KeyNotFoundException>(() => new KafkaStream(builder.Build(), config));
+            Assert.Throws<StreamConfigException>(() => new KafkaStream(builder.Build(), config));
         }
 
         [Test]

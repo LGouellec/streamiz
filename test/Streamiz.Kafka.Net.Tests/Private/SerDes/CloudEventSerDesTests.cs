@@ -105,8 +105,8 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             config.DefaultKeySerDes = new StringSerDes();
             config.DefaultValueSerDes = new CloudEventSerDes<Order>();
             
-            config.Add(CloudEventSerDesConfig.CloudEventContentMode, ContentMode.Structured);
-            config.Add(CloudEventSerDesConfig.CloudEventExportId, exportOrderId);
+            config.AddConfig(CloudEventSerDesConfig.CloudEventContentMode, ContentMode.Structured);
+            config.AddConfig(CloudEventSerDesConfig.CloudEventExportId, exportOrderId);
             
             var builder = new StreamBuilder();
             builder
