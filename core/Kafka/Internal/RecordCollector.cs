@@ -19,7 +19,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
         // WHEN CLOSING TASK, WE MUST DISPOSE PRODUCER WHEN NO MORE INSTANCE OF RECORD COLLECTOR IS PRESENT
         // IT'S A GARBAGE COLLECTOR LIKE
         private static IDictionary<string, int> instanceProducer = new Dictionary<string, int>();
-        private object _lock = new();
+        private readonly object _lock = new();
 
         private IProducer<byte[], byte[]> producer;
         private readonly IStreamConfig configuration;
