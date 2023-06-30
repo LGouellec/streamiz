@@ -103,8 +103,6 @@ namespace Streamiz.Kafka.Net.Processors
             RegisterSensors();
         }
 
-        internal IConsumerGroupMetadata GroupMetadata { get; set; }
-
         #region Private
 
         private void RegisterSensors()
@@ -144,14 +142,38 @@ namespace Streamiz.Kafka.Net.Processors
                 FlushState();
                 if (eosEnabled)
                 {
-                    producer.SendOffsetsToTransaction(GetPartitionsWithOffset(), GroupMetadata, configuration.TransactionTimeout);
-                    producer.CommitTransaction(configuration.TransactionTimeout);
-                    transactionInFlight = false;
+                    bool repeat = false;
+                    do
+                    {
+                        try
+                        {
+                            var offsets = GetPartitionsWithOffset().ToList();
+                            log.LogDebug($"Send offsets to transactions : {string.Join(",", offsets)}");
+                            producer.SendOffsetsToTransaction(offsets, consumer.ConsumerGroupMetadata,
+                                configuration.TransactionTimeout);
+                            producer.CommitTransaction(configuration.TransactionTimeout);
+                            transactionInFlight = false;
+                        }
+                        catch (KafkaTxnRequiresAbortException e)
+                        {
+                            log.LogWarning(
+                                $"{logPrefix}Committing failed with a non-fatal error: {e.Message}, the transaction will be aborted");
+                            producer.AbortTransaction(configuration.TransactionTimeout);
+                            transactionInFlight = false;
+                        }
+                        catch (KafkaRetriableException e)
+                        {
+                            log.LogDebug($"{logPrefix}Committing failed with a non-fatal error: {e.Message}, going to repeat the operation");
+                            repeat = true;
+                        }
+                    } while (repeat);
+
                     if (startNewTransaction)
                     {
                         producer.BeginTransaction();
                         transactionInFlight = true;
                     }
+
                     consumedOffsets.Clear();
                 }
                 else
@@ -563,10 +585,10 @@ namespace Streamiz.Kafka.Net.Processors
             consumedOffsets.AddOrUpdate(record.Record.TopicPartition, record.Record.Offset);
             commitNeeded = true;
 
-            if (record.Queue.Size == maxBufferedSize)
-            {
-                consumer.Resume(record.Record.TopicPartition.ToSingle());
-            }
+           // if (record.Queue.Size == maxBufferedSize)
+           // {
+           //     consumer.Resume(record.Record.TopicPartition.ToSingle());
+           // }
                 
             processSensor.Record();
             processLatencySensor.Record(latency);
@@ -578,10 +600,10 @@ namespace Streamiz.Kafka.Net.Processors
         {
             int newQueueSize = partitionGrouper.AddRecord(record.TopicPartition, record);
 
-            if (newQueueSize > maxBufferedSize)
+           /* if (newQueueSize > maxBufferedSize)
             {
                 consumer.Pause(record.TopicPartition.ToSingle());
-            }
+            }*/
 
             log.LogDebug($"{logPrefix}Added record into the buffered queue of partition {record.TopicPartition}, new queue size is {newQueueSize}");
         }

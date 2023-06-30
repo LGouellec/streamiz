@@ -11,87 +11,49 @@ using Streamiz.Kafka.Net.Stream;
 
 namespace sample_stream
 {
+    internal static class StringHelper
+    {
+        internal static readonly Random rd = new Random();
+
+        internal static string SubRandom(this string str)
+        {
+            var offset = rd.Next(str.Length - 1);
+            return str.Substring((int)offset, (int)str.Length - offset);
+        }
+    }
+    
     /// <summary>
     /// Sample program with a passtrought stream, instanciate and dispose with CTRL+ C console event.
     /// </summary>
     internal class Program
-    {
-        private class OrderShoe
-        {
-            private readonly Order order;
-            private readonly Shoe shoe;
-
-            public OrderShoe(Program.Order order, Program.Shoe shoe)
-            {
-                this.order = order;
-                this.shoe = shoe;
-            }
-        }
-
-        private class Shoe
-        {
-            public string id { get; set; }
-            public string brand { get; set; }
-            public string name { get; set; }
-            public int sale_price { get; set; }
-            public float rating { get; set; }
-        }
-
-        private class Order
-        {
-            public int order_id { get; set; }
-            public string product_id { get; set; }
-            public string customer_id { get; set; }
-            public long ts { get; set; }
-        }
-        
+    {        
         public static async Task Main(string[] args)
         {
+            // kafka-producer-perf-test --producer-props bootstrap.servers=broker:29092 --topic input --record-size 200 --throughput 500 --num-records 10000000000
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-app-reproducer",
+                ApplicationId = "test-app-reproducer2",
                 BootstrapServers = "localhost:9092",
                 AutoOffsetReset = AutoOffsetReset.Earliest,
-                CommitIntervalMs = 3000,
-                Guarantee = ProcessingGuarantee.AT_LEAST_ONCE,
-                MaxPollRecords = 1,
+                CommitIntervalMs = 2000,
+                Guarantee = ProcessingGuarantee.EXACTLY_ONCE,
+                MaxPollRecords = 500,
+                PartitionAssignmentStrategy = PartitionAssignmentStrategy.CooperativeSticky,
                 StateDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()),
                 Logger = LoggerFactory.Create((b) =>
                 {
-                    b.SetMinimumLevel(LogLevel.Debug);
+                    b.SetMinimumLevel(LogLevel.Information);
                     b.AddLog4Net();
                 })
             };
             
             var builder = new StreamBuilder();
-            //
-            // var shoes = builder.Stream<String, Shoe, StringSerDes, JsonSerDes<Shoe>>("shoes");
-            // var orders = builder.Stream<String, Order, StringSerDes, JsonSerDes<Order>>("orders");
-            //
-            // orders
-            //     .SelectKey((k, v) => v.product_id.ToString())
-            //     .Join<Shoe, OrderShoe, JsonSerDes<Shoe>, JsonSerDes<OrderShoe>>(
-            //         shoes,
-            //         (order, shoe) => new OrderShoe(order, shoe),
-            //         JoinWindowOptions.Of(TimeSpan.FromHours(1)))
-            //     .To<StringSerDes, JsonSerDes<OrderShoe>>("order-shoes");
-            //
-            
-            
-            // More link to the issue 232
+
             builder
-                .Stream<String, Shoe, StringSerDes, JsonSerDes<Shoe>>("shoes")
-                .Transform(
-                    TransformerBuilder
-                        .New<string, Shoe, string, Shoe>()
-                        .Transformer((r) =>
-                        {
-                            Console.WriteLine();
-                            return Record<string,Shoe>.Create(r.Key, r.Value);
-                        })
-                        .Build())
-                .To<StringSerDes, JsonSerDes<Shoe>>("shoes2");
-            
+                .Stream("input", new StringSerDes(), new StringSerDes())
+                .MapValues((v) => v.SubRandom())
+                .To("output", new StringSerDes(), new StringSerDes());
+
             Topology t = builder.Build();
             KafkaStream stream1 = new KafkaStream(t, config);
             

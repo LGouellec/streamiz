@@ -71,7 +71,6 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 config,
                 supplier,
                 null, new MockChangelogRegister(), new StreamMetricsRegistry());
-            task.GroupMetadata = consumer as SyncConsumer;
             Assert.Throws<StreamsException>(() => task.InitializeStateStores());
             config.RemoveRocksDbFolderForTest();
         }

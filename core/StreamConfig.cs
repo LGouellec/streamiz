@@ -2240,7 +2240,7 @@ namespace Streamiz.Kafka.Net
             MaxPollRecords = 500;
             MaxPollRestoringRecords = 1000;
             MaxTaskIdleMs = 0;
-            BufferedRecordsPerPartition = 1000;
+            BufferedRecordsPerPartition = Int32.MaxValue;
             InnerExceptionHandler = (_) => ExceptionHandlerResponse.FAIL;
             ProductionExceptionHandler = (_) => ExceptionHandlerResponse.FAIL;
             DeserializationExceptionHandler = (_, _, _) => ExceptionHandlerResponse.FAIL;
@@ -2267,7 +2267,7 @@ namespace Streamiz.Kafka.Net
             MaxPollIntervalMs = 300000;
             EnableAutoCommit = false;
             EnableAutoOffsetStore = false;
-            PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.Range;
+            PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.CooperativeSticky;
             Partitioner = Confluent.Kafka.Partitioner.Murmur2Random;
 
             Logger = LoggerFactory.Create(builder =>

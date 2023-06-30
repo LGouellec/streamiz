@@ -216,10 +216,8 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 {
                     throw new TaskMigratedException($"Producer got fenced trying to send a record [{logPrefix}] : {produceException.Message}");
                 }
-                else
-                {
-                    throw new StreamsException($"Error encountered trying to send record to topic {topic} [{logPrefix}] : {produceException.Message}");
-                }
+
+                throw new StreamsException($"Error encountered trying to send record to topic {topic} [{logPrefix}] : {produceException.Message}");
             }
         }
         
