@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Processors.Public;
 using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Table;
 
 namespace sample_stream
 {
@@ -32,11 +33,11 @@ namespace sample_stream
             // kafka-producer-perf-test --producer-props bootstrap.servers=broker:29092 --topic input --record-size 200 --throughput 500 --num-records 10000000000
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-app-reproducer2",
+                ApplicationId = "test-app-reproducer-eos",
                 BootstrapServers = "localhost:9092",
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 CommitIntervalMs = 2000,
-                Guarantee = ProcessingGuarantee.EXACTLY_ONCE,
+                Guarantee = ProcessingGuarantee.AT_LEAST_ONCE,
                 MaxPollRecords = 500,
                 PartitionAssignmentStrategy = PartitionAssignmentStrategy.CooperativeSticky,
                 StateDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()),
@@ -51,7 +52,14 @@ namespace sample_stream
 
             builder
                 .Stream("input", new StringSerDes(), new StringSerDes())
-                .MapValues((v) => v.SubRandom())
+                .SelectKey((k,v) => "1")
+                .GroupByKey()
+                .Count(
+                    InMemory.As<string, Int64>()
+                        .WithKeySerdes(new StringSerDes())
+                        .WithValueSerdes(new Int64SerDes()))
+                .ToStream()
+                .MapValues((v) => v.ToString())
                 .To("output", new StringSerDes(), new StringSerDes());
 
             Topology t = builder.Build();
