@@ -193,7 +193,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config.Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
             config.PollMs = 1;
             config.MetricsReporter = (sensor) => { metricsReporterCalled = true; };
-            config["metrics.interval.ms"] = 10;
+            config.MetricsMinIntervalMs = 10;
+            config.AddConfig("metrics.interval.ms", 10);
             config.LogProcessingSummary = TimeSpan.FromSeconds(1);
             
             var serdes = new StringSerDes();

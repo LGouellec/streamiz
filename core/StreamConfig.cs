@@ -378,7 +378,7 @@ namespace Streamiz.Kafka.Net
     /// </code>
     /// </exemple>
     /// </summary>
-    public class StreamConfig : Dictionary<string, dynamic>, IStreamConfig, ISchemaRegistryConfig
+    public class StreamConfig : IStreamConfig, ISchemaRegistryConfig
     {
         private class KeyValueComparer : IEqualityComparer<KeyValuePair<string, string>>
         {
@@ -404,23 +404,23 @@ namespace Streamiz.Kafka.Net
 
         /// private string Optimize
         /// {
-        ///     get => this[topologyOptimizationCst];
-        ///     set => this.AddOrUpdate(topologyOptimizationCst, value);
+        ///     get => configProperties[topologyOptimizationCst];
+        ///     set => configProperties.AddOrUpdate(topologyOptimizationCst, value);
         /// }
 
         /// private string ApplicationServer
         /// {
-        ///     get => this[applicationServerCst];
-        ///     set => this.AddOrUpdate(applicationServerCst, value);
+        ///     get => configProperties[applicationServerCst];
+        ///     set => configProperties.AddOrUpdate(applicationServerCst, value);
         /// }
 
         /// private string ProcessingGuaranteeConfig
         /// {
-        ///     get => this[processingGuaranteeCst];
+        ///     get => configProperties[processingGuaranteeCst];
         ///     set
         ///     {
         ///         if (value.Equals(AT_LEAST_ONCE) || value.Equals(EXACTLY_ONCE))
-        ///             this.AddOrUpdate(processingGuaranteeCst, value);
+        ///             configProperties.AddOrUpdate(processingGuaranteeCst, value);
         ///         else
         ///             throw new InvalidOperationException($"ProcessingGuaranteeConfig value must equal to {AT_LEAST_ONCE} or {EXACTLY_ONCE}");
         ///     }
@@ -428,20 +428,20 @@ namespace Streamiz.Kafka.Net
 
         /// private long PollMsConfig
         /// {
-        ///     get => Convert.ToInt64(this[pollMsCst]);
-        ///     set => this.AddOrUpdate(pollMsCst, value.ToString());
+        ///     get => Convert.ToInt64(configProperties[pollMsCst]);
+        ///     set => configProperties.AddOrUpdate(pollMsCst, value.ToString());
         /// }
 
         /// private long StateCleanupDelayMs
         /// {
-        ///     get => Convert.ToInt64(this[stateCleanupDelayMsCst]);
-        ///     set => this.AddOrUpdate(stateCleanupDelayMsCst, value.ToString());
+        ///     get => Convert.ToInt64(configProperties[stateCleanupDelayMsCst]);
+        ///     set => configProperties.AddOrUpdate(stateCleanupDelayMsCst, value.ToString());
         /// }
 
         /// private long CacheMaxBytesBuffering
         /// {
-        ///     get => Convert.ToInt64(this[cacheMaxBytesBufferingCst]);
-        ///     set => this.AddOrUpdate(cacheMaxBytesBufferingCst, value.ToString());
+        ///     get => Convert.ToInt64(configProperties[cacheMaxBytesBufferingCst]);
+        ///     set => configProperties.AddOrUpdate(cacheMaxBytesBufferingCst, value.ToString());
         /// }
 
         #endregion
@@ -530,8 +530,13 @@ namespace Streamiz.Kafka.Net
         private readonly IDictionary<string, PropertyInfo> cacheProperties 
             = new Dictionary<string, PropertyInfo>();
 
+        private readonly Dictionary<string, dynamic> configProperties 
+            = new Dictionary<string, dynamic>();
+
+        internal long MetricsMinIntervalMs { get; set; } = 30000;
+
         #region Middlewares
-        
+
         /// <summary>
         /// Add middleware
         /// </summary>
@@ -2214,7 +2219,8 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Constructor empty
         /// </summary>
-        public StreamConfig() : this(null)
+        public StreamConfig() 
+            : this(null)
         { }
 
         /// <summary>
@@ -2353,7 +2359,7 @@ namespace Streamiz.Kafka.Net
                 else if (key.StartsWith(producerPrefix))
                     SetObject(_overrideProducerConfig, key.Replace(producerPrefix, string.Empty), value);
                 else
-                    this.AddOrUpdate(key, (object)value);
+                    configProperties.AddOrUpdate(key, (object)value);
             }
         }
         
@@ -2364,8 +2370,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + followMetadataCst)]
         public bool FollowMetadata
         {
-            get => this[followMetadataCst];
-            set => this.AddOrUpdate(followMetadataCst, value);
+            get => configProperties[followMetadataCst];
+            set => configProperties.AddOrUpdate(followMetadataCst, value);
         }
 
         /// <summary>
@@ -2374,11 +2380,11 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + numStreamThreadsCst)]
         public int NumStreamThreads
         {
-            get => this[numStreamThreadsCst];
+            get => configProperties[numStreamThreadsCst];
             set
             {
                 if (value >= 1)
-                    this.AddOrUpdate(numStreamThreadsCst, value);
+                    configProperties.AddOrUpdate(numStreamThreadsCst, value);
                 else
                     throw new StreamConfigException($"NumStreamThreads value must always be greather than 1");
             }
@@ -2390,8 +2396,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + clientIdCst)]
         public string ClientId
         {
-            get => this[clientIdCst];
-            set => this.AddOrUpdate(clientIdCst, value);
+            get => configProperties[clientIdCst];
+            set => configProperties.AddOrUpdate(clientIdCst, value);
         }
 
         /// <summary>
@@ -2400,8 +2406,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + applicatonIdCst)]
         public string ApplicationId
         {
-            get => this[applicatonIdCst];
-            set => this.AddOrUpdate(applicatonIdCst, value);
+            get => configProperties.ContainsKey(applicatonIdCst) ? configProperties[applicatonIdCst] : null;
+            set => configProperties.AddOrUpdate(applicatonIdCst, value);
         }
 
         /// <summary>
@@ -2410,8 +2416,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + defaultKeySerDesCst)]
         public ISerDes DefaultKeySerDes
         {
-            get => this[defaultKeySerDesCst];
-            set => this.AddOrUpdate(defaultKeySerDesCst, value);
+            get => configProperties[defaultKeySerDesCst];
+            set => configProperties.AddOrUpdate(defaultKeySerDesCst, value);
         }
 
         /// <summary>
@@ -2420,8 +2426,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + defaultValueSerDesCst)]
         public ISerDes DefaultValueSerDes
         {
-            get => this[defaultValueSerDesCst];
-            set => this.AddOrUpdate(defaultValueSerDesCst, value);
+            get => configProperties[defaultValueSerDesCst];
+            set => configProperties.AddOrUpdate(defaultValueSerDesCst, value);
         }
 
         /// <summary>
@@ -2430,8 +2436,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + defaultTimestampExtractorCst)]
         public ITimestampExtractor DefaultTimestampExtractor
         {
-            get => this[defaultTimestampExtractorCst];
-            set => this.AddOrUpdate(defaultTimestampExtractorCst, value);
+            get => configProperties[defaultTimestampExtractorCst];
+            set => configProperties.AddOrUpdate(defaultTimestampExtractorCst, value);
         }
 
         /// <summary>
@@ -2459,7 +2465,7 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + processingGuaranteeCst)]
         public ProcessingGuarantee Guarantee
         {
-            get => this[processingGuaranteeCst];
+            get => configProperties[processingGuaranteeCst];
             set
             {
                 changeGuarantee = true;
@@ -2474,7 +2480,7 @@ namespace Streamiz.Kafka.Net
                 else if (value == ProcessingGuarantee.AT_LEAST_ONCE)
                     CommitIntervalMs = DEFAULT_COMMIT_INTERVAL_MS;
 
-                this.AddOrUpdate(processingGuaranteeCst, value);
+                configProperties.AddOrUpdate(processingGuaranteeCst, value);
                 changeGuarantee = false;
             }
         }
@@ -2485,8 +2491,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + transactionTimeoutCst)]
         public TimeSpan TransactionTimeout
         {
-            get => this[transactionTimeoutCst];
-            set => this.AddOrUpdate(transactionTimeoutCst, value);
+            get => configProperties[transactionTimeoutCst];
+            set => configProperties.AddOrUpdate(transactionTimeoutCst, value);
         }
 
         /// <summary>
@@ -2496,8 +2502,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + commitIntervalMsCst)]
         public long CommitIntervalMs
         {
-            get => this[commitIntervalMsCst];
-            set => this.AddOrUpdate(commitIntervalMsCst, value);
+            get => configProperties[commitIntervalMsCst];
+            set => configProperties.AddOrUpdate(commitIntervalMsCst, value);
         }
 
         /// <summary>
@@ -2506,8 +2512,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + pollMsCst)]
         public long PollMs
         {
-            get => this[pollMsCst];
-            set => this.AddOrUpdate(pollMsCst, value);
+            get => configProperties[pollMsCst];
+            set => configProperties.AddOrUpdate(pollMsCst, value);
         }
 
         /// <summary>
@@ -2516,8 +2522,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + maxPollRecordsCst)]
         public long MaxPollRecords
         {
-            get => this[maxPollRecordsCst];
-            set => this.AddOrUpdate(maxPollRecordsCst, value);
+            get => configProperties[maxPollRecordsCst];
+            set => configProperties.AddOrUpdate(maxPollRecordsCst, value);
         }
 
         /// <summary>
@@ -2526,8 +2532,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + maxPollRestoringRecordsCst)]
         public long MaxPollRestoringRecords
         {
-            get => this[maxPollRestoringRecordsCst];
-            set => this.AddOrUpdate(maxPollRestoringRecordsCst, value);
+            get => configProperties[maxPollRestoringRecordsCst];
+            set => configProperties.AddOrUpdate(maxPollRestoringRecordsCst, value);
         }
 
         /// <summary>
@@ -2536,8 +2542,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + maxTaskIdleCst)]
         public long MaxTaskIdleMs
         {
-            get => this[maxTaskIdleCst];
-            set => this.AddOrUpdate(maxTaskIdleCst, value);
+            get => configProperties[maxTaskIdleCst];
+            set => configProperties.AddOrUpdate(maxTaskIdleCst, value);
         }
 
         /// <summary>
@@ -2546,8 +2552,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + bufferedRecordsPerPartitionCst)]
         public long BufferedRecordsPerPartition
         {
-            get => this[bufferedRecordsPerPartitionCst];
-            set => this.AddOrUpdate(bufferedRecordsPerPartitionCst, value);
+            get => configProperties[bufferedRecordsPerPartitionCst];
+            set => configProperties.AddOrUpdate(bufferedRecordsPerPartitionCst, value);
         }
 
         /// <summary>
@@ -2557,8 +2563,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + stateDirCst)]
         public string StateDir
         {
-            get => this[stateDirCst];
-            set => this.AddOrUpdate(stateDirCst, value);
+            get => configProperties[stateDirCst];
+            set => configProperties.AddOrUpdate(stateDirCst, value);
         }
 
         /// <summary>
@@ -2567,8 +2573,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + replicationFactorCst)]
         public int ReplicationFactor
         {
-            get => this[replicationFactorCst];
-            set => this.AddOrUpdate(replicationFactorCst, value);
+            get => configProperties[replicationFactorCst];
+            set => configProperties.AddOrUpdate(replicationFactorCst, value);
         }
 
         /// <summary>
@@ -2577,8 +2583,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + windowstoreChangelogAdditionalRetentionMsCst)]
         public long WindowStoreChangelogAdditionalRetentionMs
         {
-            get => this[windowstoreChangelogAdditionalRetentionMsCst];
-            set => this.AddOrUpdate(windowstoreChangelogAdditionalRetentionMsCst, value);
+            get => configProperties[windowstoreChangelogAdditionalRetentionMsCst];
+            set => configProperties.AddOrUpdate(windowstoreChangelogAdditionalRetentionMsCst, value);
         }
 
         /// <summary>
@@ -2587,8 +2593,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + offsetCheckpointManagerCst)]
         public IOffsetCheckpointManager OffsetCheckpointManager
         {
-            get => this[offsetCheckpointManagerCst];
-            set => this.AddOrUpdate(offsetCheckpointManagerCst, value);
+            get => configProperties[offsetCheckpointManagerCst];
+            set => configProperties.AddOrUpdate(offsetCheckpointManagerCst, value);
         }
         
         /// <summary>
@@ -2597,8 +2603,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + rocksDbConfigSetterCst)]
         public Action<string, RocksDbOptions> RocksDbConfigHandler
         {
-            get => this[rocksDbConfigSetterCst];
-            set => this.AddOrUpdate(rocksDbConfigSetterCst, value);
+            get => configProperties[rocksDbConfigSetterCst];
+            set => configProperties.AddOrUpdate(rocksDbConfigSetterCst, value);
         }
 
         /// <summary>
@@ -2607,8 +2613,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + innerExceptionHandlerCst)]
         public Func<Exception, ExceptionHandlerResponse> InnerExceptionHandler
         {
-            get => this[innerExceptionHandlerCst];
-            set => this.AddOrUpdate(innerExceptionHandlerCst, value);
+            get => configProperties[innerExceptionHandlerCst];
+            set => configProperties.AddOrUpdate(innerExceptionHandlerCst, value);
         }
 
         /// <summary>
@@ -2617,8 +2623,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + deserializationExceptionHandlerCst)]
         public Func<ProcessorContext, ConsumeResult<byte[], byte[]>, Exception, ExceptionHandlerResponse> DeserializationExceptionHandler
         {
-            get => this[deserializationExceptionHandlerCst];
-            set => this.AddOrUpdate(deserializationExceptionHandlerCst, value);
+            get => configProperties[deserializationExceptionHandlerCst];
+            set => configProperties.AddOrUpdate(deserializationExceptionHandlerCst, value);
         }
 
         /// <summary>
@@ -2627,10 +2633,10 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + productionExceptionHandlerCst)]
         public Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler  
         {
-            get => this[productionExceptionHandlerCst];
-            set => this.AddOrUpdate(productionExceptionHandlerCst, value);
+            get => configProperties[productionExceptionHandlerCst];
+            set => configProperties.AddOrUpdate(productionExceptionHandlerCst, value);
         }
-        
+
         /// <summary>
         /// Delay between two invocations of MetricsReporter().
         /// Minimum and default value : 30 seconds
@@ -2638,12 +2644,12 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + metricsIntervalMsCst)]
         public long MetricsIntervalMs
         {
-            get => this[metricsIntervalMsCst];
+            get => configProperties[metricsIntervalMsCst];
             set
             {
-                if (value < 30000)
-                    value = 30000;
-                this.AddOrUpdate(metricsIntervalMsCst, value);
+                if (value < MetricsMinIntervalMs)
+                    value = MetricsMinIntervalMs;
+                configProperties.AddOrUpdate(metricsIntervalMsCst, value);
             }
         }
         
@@ -2655,8 +2661,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + metricsReportCst)]
         public Action<IEnumerable<Sensor>> MetricsReporter
         {
-            get => this[metricsReportCst];
-            set => this.AddOrUpdate(metricsReportCst, value);
+            get => configProperties[metricsReportCst];
+            set => configProperties.AddOrUpdate(metricsReportCst, value);
         }
         
         /// <summary>
@@ -2666,8 +2672,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + exposeLibrdKafkaCst)]
         public bool ExposeLibrdKafkaStats 
         {
-            get => this[exposeLibrdKafkaCst];
-            set => this.AddOrUpdate(exposeLibrdKafkaCst, value);
+            get => configProperties[exposeLibrdKafkaCst];
+            set => configProperties.AddOrUpdate(exposeLibrdKafkaCst, value);
         }
         
         /// <summary>
@@ -2676,8 +2682,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + metricsRecordingLevelCst)]
         public MetricsRecordingLevel MetricsRecording 
         {
-            get => this[metricsRecordingLevelCst];
-            set => this.AddOrUpdate(metricsRecordingLevelCst, value);
+            get => configProperties[metricsRecordingLevelCst];
+            set => configProperties.AddOrUpdate(metricsRecordingLevelCst, value);
         }
 
         /// <summary>
@@ -2686,8 +2692,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + startTaskDelayMsCst)]
         public long StartTaskDelayMs
         {
-            get => this[startTaskDelayMsCst];
-            set => this.AddOrUpdate(startTaskDelayMsCst, value);
+            get => configProperties[startTaskDelayMsCst];
+            set => configProperties.AddOrUpdate(startTaskDelayMsCst, value);
         }
 
         /// <summary>
@@ -2696,8 +2702,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + parallelProcessingCst)]
         public bool ParallelProcessing
         {
-            get => this[parallelProcessingCst];
-            set => this.AddOrUpdate(parallelProcessingCst, value);
+            get => configProperties[parallelProcessingCst];
+            set => configProperties.AddOrUpdate(parallelProcessingCst, value);
         }
 
         /// <summary>
@@ -2707,8 +2713,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + maxDegreeOfParallelismCst)]
         public int MaxDegreeOfParallelism
         {
-            get => this[maxDegreeOfParallelismCst];
-            set => this.AddOrUpdate(maxDegreeOfParallelismCst, value);
+            get => configProperties[maxDegreeOfParallelismCst];
+            set => configProperties.AddOrUpdate(maxDegreeOfParallelismCst, value);
         }
         
         /// <summary>
@@ -2717,8 +2723,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + logProcessingSummaryCst)]
         public TimeSpan LogProcessingSummary
         {
-            get => this[logProcessingSummaryCst];
-            set => this.AddOrUpdate(logProcessingSummaryCst, value);
+            get => configProperties[logProcessingSummaryCst];
+            set => configProperties.AddOrUpdate(logProcessingSummaryCst, value);
         }
 
         /// <summary>
@@ -2755,7 +2761,7 @@ namespace Streamiz.Kafka.Net
         /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
         public ConsumerConfig ToConsumerConfig(string clientId, bool @override = true)
         {
-            if (!ContainsKey(applicatonIdCst))
+            if (!configProperties.ContainsKey(applicatonIdCst))
                 throw new StreamConfigException($"Key {applicatonIdCst} was not found. She is mandatory for getting consumer config");
 
             var config = new ConsumerConfig(_consumerConfig.Union(_config).Distinct(new KeyValueComparer()).ToDictionary());
@@ -2825,8 +2831,8 @@ namespace Streamiz.Kafka.Net
         /// <returns>Return the config value of the key, null otherwise</returns>
         public dynamic Get(string key)
         {
-            if (ContainsKey(key))
-                return this[key];
+            if (configProperties.ContainsKey(key))
+                return configProperties[key];
 
             if (key.StartsWith("main.consumer."))
                 return _overrideMainConsumerConfig.Get(key.Replace("main.consumer.", ""));
@@ -2861,8 +2867,8 @@ namespace Streamiz.Kafka.Net
             config._adminClientConfig = new AdminClientConfig(_adminClientConfig);
             config._config = new ClientConfig(_config);
             
-            foreach(var kv in this)
-                DictionaryExtensions.AddOrUpdate(config, kv.Key, kv.Value);
+            foreach(var kv in configProperties)
+                config.AddConfig(kv.Key, kv.Value);
 
             config.Logger = Logger;
 
@@ -2879,8 +2885,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + schemaRegistryRequestTimeoutMsCst)]
         public int? SchemaRegistryRequestTimeoutMs
         {
-            get => this.ContainsKey(schemaRegistryRequestTimeoutMsCst) ? this[schemaRegistryRequestTimeoutMsCst] : null;
-            set => this.AddOrUpdate(schemaRegistryRequestTimeoutMsCst, value);
+            get => configProperties.ContainsKey(schemaRegistryRequestTimeoutMsCst) ? configProperties[schemaRegistryRequestTimeoutMsCst] : null;
+            set => configProperties.AddOrUpdate(schemaRegistryRequestTimeoutMsCst, value);
         }
 
         /// <summary>
@@ -2889,8 +2895,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + schemaRegistryMaxCachedSchemasCst)]
         public int? SchemaRegistryMaxCachedSchemas
         {
-            get => this.ContainsKey(schemaRegistryMaxCachedSchemasCst) ? this[schemaRegistryMaxCachedSchemasCst] : null;
-            set => this.AddOrUpdate(schemaRegistryMaxCachedSchemasCst, value);
+            get => configProperties.ContainsKey(schemaRegistryMaxCachedSchemasCst) ? configProperties[schemaRegistryMaxCachedSchemasCst] : null;
+            set => configProperties.AddOrUpdate(schemaRegistryMaxCachedSchemasCst, value);
         }
 
         /// <summary>
@@ -2899,8 +2905,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + schemaRegistryUrlCst)]
         public string SchemaRegistryUrl
         {
-            get => this.ContainsKey(schemaRegistryUrlCst) ? this[schemaRegistryUrlCst] : null;
-            set => this.AddOrUpdate(schemaRegistryUrlCst, value);
+            get => configProperties.ContainsKey(schemaRegistryUrlCst) ? configProperties[schemaRegistryUrlCst] : null;
+            set => configProperties.AddOrUpdate(schemaRegistryUrlCst, value);
         }
 
         /// <summary>
@@ -2909,8 +2915,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + schemaRegistryBasicAuthUserInfoCst)]
         public string BasicAuthUserInfo
         {
-            get => this.ContainsKey(schemaRegistryBasicAuthUserInfoCst) ? this[schemaRegistryBasicAuthUserInfoCst] : null;
-            set => this.AddOrUpdate(schemaRegistryBasicAuthUserInfoCst, value);
+            get => configProperties.ContainsKey(schemaRegistryBasicAuthUserInfoCst) ? configProperties[schemaRegistryBasicAuthUserInfoCst] : null;
+            set => configProperties.AddOrUpdate(schemaRegistryBasicAuthUserInfoCst, value);
         }
 
         /// <summary>
@@ -2919,8 +2925,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("" + schemaRegistryBasicAuthCredentialSourceCst)]
         public int? BasicAuthCredentialsSource
         {
-            get => this.ContainsKey(schemaRegistryBasicAuthCredentialSourceCst) ? this[schemaRegistryBasicAuthCredentialSourceCst] : null;
-            set => this.AddOrUpdate(schemaRegistryBasicAuthCredentialSourceCst, value);
+            get => configProperties.ContainsKey(schemaRegistryBasicAuthCredentialSourceCst) ? configProperties[schemaRegistryBasicAuthCredentialSourceCst] : null;
+            set => configProperties.AddOrUpdate(schemaRegistryBasicAuthCredentialSourceCst, value);
         }
 
         /// <summary>
@@ -2929,11 +2935,11 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("auto.register.schemas")]
         public bool? AutoRegisterSchemas
         {
-            get => this.ContainsKey(avroSerializerAutoRegisterSchemasCst) ? this[avroSerializerAutoRegisterSchemasCst] : null;
+            get => configProperties.ContainsKey(avroSerializerAutoRegisterSchemasCst) ? configProperties[avroSerializerAutoRegisterSchemasCst] : null;
             set
             {
-                this.AddOrUpdate(avroSerializerAutoRegisterSchemasCst, value);
-                this.AddOrUpdate(protobufAutoRegisterSchemasCst, value);
+                configProperties.AddOrUpdate(avroSerializerAutoRegisterSchemasCst, value);
+                configProperties.AddOrUpdate(protobufAutoRegisterSchemasCst, value);
             }
         }
 
@@ -2943,11 +2949,11 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("subject.name.strategy")]
         public SubjectNameStrategy? SubjectNameStrategy
         {
-            get => this.ContainsKey(avroSerializerSubjectNameStrategyCst) ? this[avroSerializerSubjectNameStrategyCst] : null;
+            get => configProperties.ContainsKey(avroSerializerSubjectNameStrategyCst) ? configProperties[avroSerializerSubjectNameStrategyCst] : null;
             set
             {
-                this.AddOrUpdate(avroSerializerSubjectNameStrategyCst, value);
-                this.AddOrUpdate(protobufSerializerSubjectNameStrategyCst, value);
+                configProperties.AddOrUpdate(avroSerializerSubjectNameStrategyCst, value);
+                configProperties.AddOrUpdate(protobufSerializerSubjectNameStrategyCst, value);
             }
         }
 
@@ -2961,11 +2967,11 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("serializer.buffer.bytes")]
         public int? BufferBytes
         {
-            get => this.ContainsKey(avroSerializerBufferBytesCst) ? this[avroSerializerBufferBytesCst] : null;
+            get => configProperties.ContainsKey(avroSerializerBufferBytesCst) ? configProperties[avroSerializerBufferBytesCst] : null;
             set
             {
-                this.AddOrUpdate(avroSerializerBufferBytesCst, value);
-                this.AddOrUpdate(protobufSerializerBufferBytesCst, value);
+                configProperties.AddOrUpdate(avroSerializerBufferBytesCst, value);
+                configProperties.AddOrUpdate(protobufSerializerBufferBytesCst, value);
             }
         }
 
@@ -2978,11 +2984,11 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("serializer.use.last.version")]
         public bool? UseLatestVersion
         {
-            get => this.ContainsKey(avroSerializerUseLatestVersionCst) ? this[avroSerializerUseLatestVersionCst] : null;
+            get => configProperties.ContainsKey(avroSerializerUseLatestVersionCst) ? configProperties[avroSerializerUseLatestVersionCst] : null;
             set
             {
-                this.AddOrUpdate(avroSerializerUseLatestVersionCst, value);
-                this.AddOrUpdate(protobufSerializerUseLatestVersionCst, value);
+                configProperties.AddOrUpdate(avroSerializerUseLatestVersionCst, value);
+                configProperties.AddOrUpdate(protobufSerializerUseLatestVersionCst, value);
             }
         }
 
@@ -2993,8 +2999,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("serializer.skip.known.types")]
         public bool? SkipKnownTypes
         {
-            get => this.ContainsKey(protobufSerializerSkipKnownTypesCst) ? this[protobufSerializerSkipKnownTypesCst] : null;
-            set => this.AddOrUpdate(protobufSerializerSkipKnownTypesCst, value);
+            get => configProperties.ContainsKey(protobufSerializerSkipKnownTypesCst) ? configProperties[protobufSerializerSkipKnownTypesCst] : null;
+            set => configProperties.AddOrUpdate(protobufSerializerSkipKnownTypesCst, value);
         }
 
         /// <summary>
@@ -3004,8 +3010,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("serializer.use.deprecated.format")]
         public bool? UseDeprecatedFormat
         {
-            get => this.ContainsKey(protobufSerializerUseDeprecatedFormatCst) ? this[protobufSerializerUseDeprecatedFormatCst] : null;
-            set => this.AddOrUpdate(protobufSerializerUseDeprecatedFormatCst, value);
+            get => configProperties.ContainsKey(protobufSerializerUseDeprecatedFormatCst) ? configProperties[protobufSerializerUseDeprecatedFormatCst] : null;
+            set => configProperties.AddOrUpdate(protobufSerializerUseDeprecatedFormatCst, value);
         }
 
         /// <summary>
@@ -3014,8 +3020,8 @@ namespace Streamiz.Kafka.Net
         [StreamConfigProperty("serializer.reference.subject.name.strategy")]
         public ReferenceSubjectNameStrategy? ReferenceSubjectNameStrategy
         {
-            get => this.ContainsKey(protobufSerializerReferenceSubjectNameStrategyCst) ? this[protobufSerializerReferenceSubjectNameStrategyCst] : null;
-            set => this.AddOrUpdate(protobufSerializerReferenceSubjectNameStrategyCst, value);
+            get => configProperties.ContainsKey(protobufSerializerReferenceSubjectNameStrategyCst) ? configProperties[protobufSerializerReferenceSubjectNameStrategyCst] : null;
+            set => configProperties.AddOrUpdate(protobufSerializerReferenceSubjectNameStrategyCst, value);
         }
 
         #endregion
@@ -3042,8 +3048,8 @@ namespace Streamiz.Kafka.Net
             // stream config property
             sb.AppendLine();
             sb.AppendLine("\tStream property:");
-            foreach (var kp in Keys)
-                sb.AppendLine($"\t\t{kp}: \t{this[kp]}");
+            foreach (var kp in configProperties.Keys)
+                sb.AppendLine($"\t\t{kp}: \t{configProperties[kp]}");
 
             // client config property
             sb.AppendLine("\tClient property:");
