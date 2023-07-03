@@ -2219,7 +2219,8 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Constructor empty
         /// </summary>
-        public StreamConfig() : this(null)
+        public StreamConfig() 
+            : this(null)
         { }
 
         /// <summary>
