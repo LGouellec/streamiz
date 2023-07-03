@@ -6,10 +6,7 @@ using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
-using Confluent.Kafka.Admin;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
@@ -18,7 +15,7 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal class StreamThread : IThread
     {
-        #region Static 
+        #region Static
 
         public static string GetTaskProducerClientId(string threadClientId, TaskId taskId)
         {
@@ -66,7 +63,8 @@ namespace Streamiz.Kafka.Net.Processors
             if (configuration.Guarantee == ProcessingGuarantee.AT_LEAST_ONCE)
             {
                 log.LogInformation("{LogPrefix}Creating shared producer client", logPrefix);
-                producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig(GetThreadProducerClientId(threadId)).Wrap(threadId));
+                producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig(GetThreadProducerClientId(threadId))
+                    .Wrap(threadId));
             }
 
             var restoreConfig = configuration.ToRestoreConsumerConfig(GetRestoreConsumerClientId(customerID));
@@ -78,16 +76,20 @@ namespace Streamiz.Kafka.Net.Processors
                 threadId,
                 streamMetricsRegistry);
 
-            var taskCreator = new TaskCreator(builder, configuration, threadId, kafkaSupplier, producer, storeChangelogReader, streamMetricsRegistry);
+            var taskCreator = new TaskCreator(builder, configuration, threadId, kafkaSupplier, producer,
+                storeChangelogReader, streamMetricsRegistry);
             var manager = new TaskManager(builder, taskCreator, adminClient, storeChangelogReader);
 
             var listener = new StreamsRebalanceListener(manager);
 
             log.LogInformation("{LogPrefix}Creating consumer client", logPrefix);
-            var consumer = kafkaSupplier.GetConsumer(configuration.ToConsumerConfig(GetConsumerClientId(customerID)).Wrap(threadId), listener);
+            var consumer =
+                kafkaSupplier.GetConsumer(
+                    configuration.ToConsumerConfig(GetConsumerClientId(customerID)).Wrap(threadId), listener);
             manager.Consumer = consumer;
 
-            var thread = new StreamThread(threadId, customerID, manager, consumer, builder, storeChangelogReader, streamMetricsRegistry, configuration);
+            var thread = new StreamThread(threadId, customerID, manager, consumer, builder, storeChangelogReader,
+                streamMetricsRegistry, configuration);
             listener.Thread = thread;
             listener.ExceptionOnAssignment += thread.ManageExceptionDuringAssignment;
 
@@ -118,12 +120,13 @@ namespace Streamiz.Kafka.Net.Processors
         private long summaryProcessed;
         private long summaryPunctuated;
         private long summaryComitted;
+        private bool restorationInProgress = false;
 
         private int numIterations = 1;
         private long lastPollMs;
 
         private readonly object stateLock = new object();
-        
+
         private readonly Sensor commitSensor;
         private readonly Sensor pollSensor;
         private readonly Sensor punctuateSensor;
@@ -142,12 +145,15 @@ namespace Streamiz.Kafka.Net.Processors
         private StreamThread(string threadId, string clientId, TaskManager manager, IConsumer<byte[], byte[]> consumer,
             InternalTopologyBuilder builder, IChangelogReader storeChangelogReader,
             StreamMetricsRegistry streamMetricsRegistry, IStreamConfig configuration)
-            : this(threadId, clientId, manager, consumer, builder, storeChangelogReader, streamMetricsRegistry, TimeSpan.FromMilliseconds(configuration.PollMs), configuration.CommitIntervalMs)
+            : this(threadId, clientId, manager, consumer, builder, storeChangelogReader, streamMetricsRegistry,
+                TimeSpan.FromMilliseconds(configuration.PollMs), configuration.CommitIntervalMs)
         {
             streamConfig = configuration;
         }
 
-        private StreamThread(string threadId, string clientId, TaskManager manager, IConsumer<byte[], byte[]> consumer, InternalTopologyBuilder builder, IChangelogReader storeChangelogReader, StreamMetricsRegistry streamMetricsRegistry, TimeSpan timeSpan, long commitInterval)
+        private StreamThread(string threadId, string clientId, TaskManager manager, IConsumer<byte[], byte[]> consumer,
+            InternalTopologyBuilder builder, IChangelogReader storeChangelogReader,
+            StreamMetricsRegistry streamMetricsRegistry, TimeSpan timeSpan, long commitInterval)
         {
             this.manager = manager;
             this.consumer = consumer;
@@ -190,7 +196,7 @@ namespace Streamiz.Kafka.Net.Processors
         public int Id => thread.ManagedThreadId;
 
         public void Dispose() => CloseThread();
-        
+
         public void Run()
         {
             exception = null;
@@ -288,16 +294,19 @@ namespace Streamiz.Kafka.Net.Processors
                                     }
 
                                     int punctuated = 0;
-                                    var punctuateLatency = ActionHelper.MeasureLatency(() =>  {
+                                    var punctuateLatency = ActionHelper.MeasureLatency(() =>
+                                    {
                                         punctuated = manager.Punctuate();
                                     });
                                     totalPunctuateLatency += punctuateLatency;
                                     summaryPunctuated += punctuated;
-                                    if (punctuated > 0) {
+                                    if (punctuated > 0)
+                                    {
                                         punctuateSensor.Record(punctuateLatency / (double) punctuated, now);
                                     }
+
                                     log.LogDebug($"{punctuated} punctuators ran.");
-                                    
+
                                     timeSinceLastPoll = Math.Max(DateTime.Now.GetMilliseconds() - lastPollMs, 0);
 
                                     int commited = 0;
@@ -318,7 +327,6 @@ namespace Streamiz.Kafka.Net.Processors
                                     {
                                         numIterations++;
                                     }
-
                                 } while (processed > 0);
 
                                 if (State == ThreadState.RUNNING)
@@ -338,7 +346,7 @@ namespace Streamiz.Kafka.Net.Processors
                                 pollRatioSensor.Record(pollLatency / runOnceLatency, now);
                                 commitRatioSensor.Record(totalCommitLatency / runOnceLatency, now);
                                 punctuateRatioSensor.Record(totalPunctuateLatency / runOnceLatency, now);
-                                
+
                                 totalProcessLatency = 0;
                                 totalCommitLatency = 0;
                                 totalPunctuateLatency = 0;
@@ -359,8 +367,6 @@ namespace Streamiz.Kafka.Net.Processors
                                     summaryPunctuated = 0;
                                     lastSummaryMs = dt;
                                 }
-                                    
-
                             }
                             else
                                 Thread.Sleep((int) consumeTimeout.TotalMilliseconds);
@@ -373,7 +379,6 @@ namespace Streamiz.Kafka.Net.Processors
                         {
                             exception = e;
                             log.LogError(e,
-
                                 "{LogPrefix}Encountered the following unexpected Kafka exception during processing, this usually indicate Streams internal errors:",
                                 logPrefix);
                         }
@@ -391,18 +396,20 @@ namespace Streamiz.Kafka.Net.Processors
                 CompleteShutdown();
             }
         }
-        
+
         private void RestorePhase()
         {
-            if(State == ThreadState.PARTITIONS_ASSIGNED || State == ThreadState.RUNNING && manager.NeedRestoration())
+            if (State == ThreadState.PARTITIONS_ASSIGNED || State == ThreadState.RUNNING && manager.NeedRestoration())
             {
                 log.LogDebug($"{logPrefix} State is {State}, initializing and restoring tasks if necessary");
-                consumer.Pause(consumer.Assignment);
-                
+                restorationInProgress = true;
+
                 if (manager.TryToCompleteRestoration())
                 {
-                    log.LogInformation($"Restoration took {DateTime.Now.GetMilliseconds() - LastPartitionAssignedTime}ms for all tasks {string.Join(",", manager.ActiveTaskIds)}");
-                    if(State == ThreadState.PARTITIONS_ASSIGNED)
+                    restorationInProgress = false;
+                    log.LogInformation(
+                        $"Restoration took {DateTime.Now.GetMilliseconds() - LastPartitionAssignedTime}ms for all tasks {string.Join(",", manager.ActiveTaskIds)}");
+                    if (State == ThreadState.PARTITIONS_ASSIGNED)
                         SetState(ThreadState.RUNNING);
                 }
 
@@ -412,7 +419,8 @@ namespace Streamiz.Kafka.Net.Processors
 
         private TimeSpan GetTimeout()
         {
-            if (State == ThreadState.PARTITIONS_ASSIGNED || State == ThreadState.PARTITIONS_REVOKED || State == ThreadState.PENDING_SHUTDOWN)
+            if (State == ThreadState.PARTITIONS_ASSIGNED || State == ThreadState.PARTITIONS_REVOKED ||
+                State == ThreadState.PENDING_SHUTDOWN)
                 return TimeSpan.Zero;
             if (State == ThreadState.RUNNING || State == ThreadState.STARTING)
                 return consumeTimeout;
@@ -428,29 +436,20 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 count++;
                 var task = manager.ActiveTaskFor(record.TopicPartition);
-                if(task != null)
+                if (task != null)
                 {
                     if (task.IsClosed)
                     {
-                        log.LogInformation(
-                            
-                                "Stream task {TaskId} is already closed, probably because it got unexpectedly migrated to another thread already. Notifying the thread to trigger a new rebalance immediately",
-                                task.Id);
-                        // TODO gesture this behaviour
-                        //throw new TaskMigratedException(task);
+                        var message =
+                            $"Stream task {task.Id} is already closed, probably because it got unexpectedly migrated to another thread already. Notifying the thread to trigger a new rebalance immediately";
+                        log.LogInformation(message);
+                        throw new TaskMigratedException(message);
                     }
-                    else
-                        task.AddRecord(record);
+
+                    task.AddRecord(record);
                 }
-                else if (consumer.Assignment.Contains(record.TopicPartition))
-                {
-                    log.LogError(
-                        "Unable to locate active task for received-record partition {TopicPartition}. Current tasks: {TaskIDs}. Current Consumer Assignment : {Assignment}",
-                        record.TopicPartition, string.Join(",", manager.ActiveTaskIds),
-                        string.Join(",", consumer.Assignment.Select(t => $"{t.Topic}-[{t.Partition}]")));
-                    throw new NullReferenceException($"Task was unexpectedly missing for partition {record.TopicPartition}");
-                }                
             }
+
             return count;
         }
 
@@ -460,6 +459,7 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 return ExceptionHandlerResponse.FAIL;
             }
+
             var response = streamConfig.InnerExceptionHandler(exception);
             return response;
         }
@@ -478,7 +478,7 @@ namespace Streamiz.Kafka.Net.Processors
             IsRunning = true;
             consumer.Subscribe(builder.GetSourceTopics());
             thread.Start();
-            
+
             ThreadMetrics.CreateStartThreadSensor(threadId, DateTime.Now.GetMilliseconds(), streamMetricsRegistry);
         }
 
@@ -491,17 +491,15 @@ namespace Streamiz.Kafka.Net.Processors
         private void ManageExceptionDuringAssignment(Exception e, IEnumerable<TopicPartition> partitions)
         {
             log.LogError(e,
-
                 $"{logPrefix}Encountered the following unexpected Kafka exception during assignment partitions ({string.Join(",", partitions)}), this usually indicate Streams internal errors");
             exception = e;
         }
-        
+
         private void HandleTaskMigrated(TaskMigratedException e)
         {
             log.LogWarning(e,
-                
-                    "{LogPrefix}Detected that the thread is being fenced. This implies that this thread missed a rebalance and dropped out of the consumer group. Will close out all assigned tasks and rejoin the consumer group",
-                    logPrefix);
+                "{LogPrefix}Detected that the thread is being fenced. This implies that this thread missed a rebalance and dropped out of the consumer group. Will close out all assigned tasks and rejoin the consumer group",
+                logPrefix);
 
             manager.HandleLostAll();
             consumer.Unsubscribe();
@@ -511,9 +509,8 @@ namespace Streamiz.Kafka.Net.Processors
         private void HandleInnerException()
         {
             log.LogWarning(
-                
-                    "{LogPrefix}Detected that the thread throw an inner exception. Your configuration manager has decided to continue running stream processing. So will close out all assigned tasks and rejoin the consumer group",
-                    logPrefix);
+                "{LogPrefix}Detected that the thread throw an inner exception. Your configuration manager has decided to continue running stream processing. So will close out all assigned tasks and rejoin the consumer group",
+                logPrefix);
 
             manager.HandleLostAll();
             consumer.Unsubscribe();
@@ -537,7 +534,8 @@ namespace Streamiz.Kafka.Net.Processors
 
                 if (committed == -1)
                 {
-                    log.LogDebug("Unable to commit as we are in the middle of a rebalance, will try again when it completes");
+                    log.LogDebug(
+                        "Unable to commit as we are in the middle of a rebalance, will try again when it completes");
                 }
                 else
                 {
@@ -594,11 +592,17 @@ namespace Streamiz.Kafka.Net.Processors
                 SetState(ThreadState.DEAD);
             }
         }
-        
+
         private IEnumerable<ConsumeResult<byte[], byte[]>> PollRequest(TimeSpan ts)
         {
-            lastPollMs = DateTime.Now.GetMilliseconds();
-            return consumer.ConsumeRecords(ts, streamConfig.MaxPollRecords);
+            if (!restorationInProgress && !manager.RebalanceInProgress)
+            {
+                lastPollMs = DateTime.Now.GetMilliseconds();
+                return consumer.ConsumeRecords(ts, streamConfig.MaxPollRecords);
+            }
+
+            Thread.Sleep(ts);
+            return new List<ConsumeResult<byte[], byte[]>>();
         }
 
         internal ThreadState SetState(ThreadState newState)
@@ -621,7 +625,8 @@ namespace Streamiz.Kafka.Net.Processors
                 else if (State == ThreadState.DEAD)
                 {
                     log.LogDebug(
-                        "{LogPrefix}Ignoring request to transit from DEAD to {NewState}: no valid next state after DEAD", logPrefix,
+                        "{LogPrefix}Ignoring request to transit from DEAD to {NewState}: no valid next state after DEAD",
+                        logPrefix,
                         newState);
                     // when the state is already in NOT_RUNNING, all its transitions
                     // will be refused but we do not throw exception here
@@ -630,7 +635,8 @@ namespace Streamiz.Kafka.Net.Processors
                 else if (!State.IsValidTransition(newState))
                 {
                     string logPrefix = "";
-                    log.LogError("{LogPrefix}Unexpected state transition from {OldState} to {NewState}", logPrefix, oldState,
+                    log.LogError("{LogPrefix}Unexpected state transition from {OldState} to {NewState}", logPrefix,
+                        oldState,
                         newState);
                     throw new StreamsException($"{logPrefix}Unexpected state transition from {oldState} to {newState}");
                 }
@@ -649,7 +655,8 @@ namespace Streamiz.Kafka.Net.Processors
         }
 
         // FOR TEST
-        internal IEnumerable<TopicPartitionOffset> GetCommittedOffsets(IEnumerable<TopicPartition> partitions, TimeSpan timeout)
+        internal IEnumerable<TopicPartitionOffset> GetCommittedOffsets(IEnumerable<TopicPartition> partitions,
+            TimeSpan timeout)
             => consumer.Committed(partitions, timeout);
     }
 }

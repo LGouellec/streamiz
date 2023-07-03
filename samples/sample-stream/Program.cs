@@ -5,84 +5,63 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Streamiz.Kafka.Net.Table;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
-using System.Security.Permissions;
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualBasic;
-using Streamiz.Kafka.Net.Metrics;
-using Streamiz.Kafka.Net.Metrics.Prometheus;
-using Streamiz.Kafka.Net.Mock;
-using Streamiz.Kafka.Net.Processors;
-using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.Processors.Public;
-using Streamiz.Kafka.Net.SerDes.CloudEvents;
-using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Table;
 
 namespace sample_stream
 {
+    internal static class StringHelper
+    {
+        internal static readonly Random rd = new Random();
+
+        internal static string SubRandom(this string str)
+        {
+            var offset = rd.Next(str.Length - 1);
+            return str.Substring((int)offset, (int)str.Length - offset);
+        }
+    }
+    
     /// <summary>
     /// Sample program with a passtrought stream, instanciate and dispose with CTRL+ C console event.
     /// </summary>
     internal class Program
-    {
-        private static ILogger logger = Streamiz.Kafka.Net.Crosscutting.Logger.GetLogger(typeof(Program));
-        class MyTransformer : ITransformer<string, string, string, int>
-        {
-            private IKeyValueStore<string,int> store;
-
-            public void Init(ProcessorContext<string, int> context)
-            {
-                store = (IKeyValueStore<string, int>)context.GetStateStore("store");
-                context.Schedule(
-                    TimeSpan.FromMinutes(1),
-                    PunctuationType.PROCESSING_TIME,
-                    (ts) =>
-                    {
-                        foreach(var item in store.All())
-                            context.Forward(item.Key, item.Value);
-                    });
-            }
-
-            public Record<string, int> Process(Record<string, string> record)
-            {
-                var oldState = store.Get(record.Key);
-                store.Put(record.Key, oldState + 1 );
-                return null;
-            }
-
-            public void Close()
-            {
-                
-            }
-        }
+    {        
         public static async Task Main(string[] args)
         {
-            var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-app";
-            config.BootstrapServers = "localhost:9092";
-            config.AutoOffsetReset = AutoOffsetReset.Earliest;
-            config.CommitIntervalMs = 3000;
-            config.StateDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            config.Logger = LoggerFactory.Create((b) =>
+            // kafka-producer-perf-test --producer-props bootstrap.servers=broker:29092 --topic input --record-size 200 --throughput 500 --num-records 10000000000
+            var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                b.SetMinimumLevel(LogLevel.Information);
-                b.AddLog4Net();
-            });
-            config.UsePrometheusReporter(9090);
-            config.MetricsRecording = MetricsRecordingLevel.DEBUG;
+                ApplicationId = "test-app-reproducer-eos",
+                BootstrapServers = "localhost:9092",
+                AutoOffsetReset = AutoOffsetReset.Earliest,
+                CommitIntervalMs = 2000,
+                Guarantee = ProcessingGuarantee.AT_LEAST_ONCE,
+                MaxPollRecords = 500,
+                PartitionAssignmentStrategy = PartitionAssignmentStrategy.CooperativeSticky,
+                StateDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()),
+                Logger = LoggerFactory.Create((b) =>
+                {
+                    b.SetMinimumLevel(LogLevel.Information);
+                    b.AddLog4Net();
+                })
+            };
             
-            StreamBuilder builder = new StreamBuilder();
-            
-            builder.Stream<string, string>("inputs")
-                .Peek((k, v) => logger.LogInformation("key={k} value={v}", k,v))
-                .MapValuesAsync(async (record, _) => await Task.FromResult(record.Value.ToUpper()))
-                .To("output");
-            
+            var builder = new StreamBuilder();
+
+            builder
+                .Stream("input", new StringSerDes(), new StringSerDes())
+                .SelectKey((k,v) => "1")
+                .GroupByKey()
+                .Count(
+                    InMemory.As<string, Int64>()
+                        .WithKeySerdes(new StringSerDes())
+                        .WithValueSerdes(new Int64SerDes()))
+                .ToStream()
+                .MapValues((v) => v.ToString())
+                .To("output", new StringSerDes(), new StringSerDes());
+
             Topology t = builder.Build();
             KafkaStream stream1 = new KafkaStream(t, config);
             
@@ -91,4 +70,5 @@ namespace sample_stream
             await stream1.StartAsync();
         }
     }
+    
 }

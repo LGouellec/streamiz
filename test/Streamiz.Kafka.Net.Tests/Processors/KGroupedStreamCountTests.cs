@@ -56,7 +56,6 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 null,
                 new MockChangelogRegister(),
                 new StreamMetricsRegistry());
-            task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
 
