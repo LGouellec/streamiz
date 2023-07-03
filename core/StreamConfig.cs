@@ -2544,6 +2544,7 @@ namespace Streamiz.Kafka.Net
         /// Maximum number of records to buffer per partition. (Default: 1000)
         /// </summary>
         [StreamConfigProperty("" + bufferedRecordsPerPartitionCst)]
+        [Obsolete("Librdkafka clients manage internally a backpressure. So this configuration will be remove in the next release.")]
         public long BufferedRecordsPerPartition
         {
             get => this[bufferedRecordsPerPartitionCst];

@@ -585,10 +585,10 @@ namespace Streamiz.Kafka.Net.Processors
             consumedOffsets.AddOrUpdate(record.Record.TopicPartition, record.Record.Offset);
             commitNeeded = true;
 
-           // if (record.Queue.Size == maxBufferedSize)
-           // {
-           //     consumer.Resume(record.Record.TopicPartition.ToSingle());
-           // }
+            if (record.Queue.Size == maxBufferedSize)
+            {
+                consumer.Resume(record.Record.TopicPartition.ToSingle());
+            }
                 
             processSensor.Record();
             processLatencySensor.Record(latency);
@@ -600,10 +600,10 @@ namespace Streamiz.Kafka.Net.Processors
         {
             int newQueueSize = partitionGrouper.AddRecord(record.TopicPartition, record);
 
-           /* if (newQueueSize > maxBufferedSize)
+            if (newQueueSize > maxBufferedSize)
             {
                 consumer.Pause(record.TopicPartition.ToSingle());
-            }*/
+            }
 
             log.LogDebug($"{logPrefix}Added record into the buffered queue of partition {record.TopicPartition}, new queue size is {newQueueSize}");
         }
