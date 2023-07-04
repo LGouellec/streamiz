@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Configuring a Stream Application &mdash; Streamiz.Kafka.Net  documentation</title>
@@ -13,9 +13,6 @@
   <![endif]-->
   
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
@@ -30,11 +27,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> Streamiz.Kafka.Net
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Streamiz.Kafka.Net
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -98,11 +99,12 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="threading-model.html">Threading model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stateless-processors.html">Stateless processors</a></li>
-<li class="toctree-l1"><a class="reference internal" href="statefull-processors.html">Statefull processors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stateful-processors.html">Stateful processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stores.html">State stores</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tology-test-driver.html">Test topology driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topology-test-driver.html">Test topology driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="monitoring.html">Monitoring Stream Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="async-processing.html">Asynchronous processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processor-api.html">Processor API</a></li>
 </ul>
 
         </div>
@@ -118,7 +120,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Configuring a Stream Application</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/stream-configuration.md.txt" rel="nofollow"> View page source</a>
@@ -169,55 +171,55 @@ ingestion-time processing semantics if log.message.timestamp.type is set to LogA
 The FailOnInvalidTimestamp extractor throws an exception if a record contains an invalid (i.e. negative) built-in timestamp, because Kafka Streams would not process this record but silently drop it. Invalid built-in timestamps can occur for various reasons: if for example, you consume a topic that is written to by pre-0.10 Kafka producer clients or by third-party producer clients that don’t support the new Kafka 0.10 message format yet; another situation where this may happen is after upgrading your Kafka cluster from 0.9 to 0.10, where all the data that was generated with 0.9 does not include the 0.10 message timestamps.</p>
 <p>You can provide your own timestamp extractors, for instance to retrieve timestamps embedded in the payload of messages. If you cannot extract a valid timestamp, you can either throw an exception, return a negative timestamp, or estimate a timestamp.</p>
 <p>Returning a negative timestamp will result in data loss – the corresponding record will not be processed but silently dropped. If you want to estimate a new timestamp, you can use the value provided via previousTimestamp (i.e., a Kafka Streams timestamp estimation). Here is an example of a custom TimestampExtractor implementation:</p>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="nn">System</span><span class="p">;</span><span class="w"></span>
-<span class="k">using</span><span class="w"> </span><span class="nn">Confluent.Kafka</span><span class="p">;</span><span class="w"></span>
-<span class="k">using</span><span class="w"> </span><span class="nn">Streamiz.Kafka.Net.Crosscutting</span><span class="p">;</span><span class="w"></span>
-<span class="k">using</span><span class="w"> </span><span class="nn">Streamiz.Kafka.Net.Processors</span><span class="p">;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="nn">System</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="nn">Confluent.Kafka</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="nn">Streamiz.Kafka.Net.Crosscutting</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="nn">Streamiz.Kafka.Net.Processors</span><span class="p">;</span>
 
-<span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">Foo</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="n">DateTime</span><span class="w"> </span><span class="n">dateCreated</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="k">set</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">Id</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="k">set</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+<span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">Foo</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="n">DateTime</span><span class="w"> </span><span class="n">dateCreated</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="k">set</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">Id</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="k">set</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">GetTimestampInMillis</span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">dateCreated</span><span class="p">.</span><span class="n">GetMilliseconds</span><span class="p">();</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">GetTimestampInMillis</span><span class="p">()</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">dateCreated</span><span class="p">.</span><span class="n">GetMilliseconds</span><span class="p">();</span>
+<span class="p">}</span>
 
-<span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">MyExtractor</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">ITimestampExtractor</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">Extract</span><span class="p">(</span><span class="n">ConsumeResult</span><span class="p">&lt;</span><span class="kt">object</span><span class="p">,</span><span class="w"> </span><span class="kt">object</span><span class="p">&gt;</span><span class="w"> </span><span class="n">record</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">partitionTime</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">MyExtractor</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">ITimestampExtractor</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">Extract</span><span class="p">(</span><span class="n">ConsumeResult</span><span class="o">&lt;</span><span class="kt">object</span><span class="p">,</span><span class="w"> </span><span class="kt">object</span><span class="o">&gt;</span><span class="w"> </span><span class="n">record</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">partitionTime</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="c1">// `Foo` is your own custom class, which we assume has a method that returns</span>
 <span class="w">        </span><span class="c1">// the embedded timestamp (milliseconds since midnight, January 1, 1970 UTC).</span>
-<span class="w">        </span><span class="kt">long</span><span class="w"> </span><span class="n">timestamp</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">-</span><span class="m">1</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="n">Foo</span><span class="w"> </span><span class="n">myPojo</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">(</span><span class="n">Foo</span><span class="p">)</span><span class="n">record</span><span class="p">.</span><span class="n">Message</span><span class="p">.</span><span class="n">Value</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">myPojo</span><span class="w"> </span><span class="p">!=</span><span class="w"> </span><span class="k">null</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="n">timestamp</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">myPojo</span><span class="p">.</span><span class="n">GetTimestampInMillis</span><span class="p">();</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">timestamp</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kt">long</span><span class="w"> </span><span class="n">timestamp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="m">1</span><span class="p">;</span>
+<span class="w">        </span><span class="n">Foo</span><span class="w"> </span><span class="n">myPojo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Foo</span><span class="p">)</span><span class="n">record</span><span class="p">.</span><span class="n">Message</span><span class="p">.</span><span class="n">Value</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">myPojo</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="k">null</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">timestamp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myPojo</span><span class="p">.</span><span class="n">GetTimestampInMillis</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">timestamp</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="m">0</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
 <span class="w">            </span><span class="c1">// Invalid timestamp!  Attempt to estimate a new timestamp,</span>
 <span class="w">            </span><span class="c1">// otherwise fall back to wall-clock time (processing-time).</span>
-<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">partitionTime</span><span class="w"> </span><span class="p">&gt;=</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"></span>
-<span class="w">            </span><span class="p">{</span><span class="w"></span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="n">partitionTime</span><span class="p">;</span><span class="w"></span>
-<span class="w">            </span><span class="p">}</span><span class="w"></span>
-<span class="w">            </span><span class="k">else</span><span class="w"></span>
-<span class="w">            </span><span class="p">{</span><span class="w"></span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">.</span><span class="n">GetMilliseconds</span><span class="p">();</span><span class="w"></span>
-<span class="w">            </span><span class="p">}</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="w">        </span><span class="k">else</span><span class="w"></span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">timestamp</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">partitionTime</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="m">0</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="n">partitionTime</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="k">else</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">.</span><span class="n">GetMilliseconds</span><span class="p">();</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">timestamp</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 <p>You would then define the custom timestamp extractor in your Streams configuration as follows:</p>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="nn">Streamiz.Kafka.Net</span><span class="p">;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="nn">Streamiz.Kafka.Net</span><span class="p">;</span>
 
-<span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">DefaultTimestampExtractor</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">MyExtractor</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">();</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">DefaultTimestampExtractor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">MyExtractor</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
@@ -227,14 +229,14 @@ The FailOnInvalidTimestamp extractor throws an exception if a record contains an
 <p>Whenever data is read from or written to a Kafka topic (e.g., via the StreamsBuilder#Stream&lt;K, V&gt;() and IKStream&lt;K, V&gt;#To() methods).
 Whenever data is read from or written to a state store.</p>
 <p>Example :</p>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">DefaultKeySerDes</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">();</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">();</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">DefaultKeySerDes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Note : In Streamiz Kafka Net package, you have a stream configuration class with generic types parameters to set default (key and value) serdes</p>
 <p>Example :</p>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="c1">// Set defaultkeyserdes to StringSerDes, and defaultvalueserdes to StringSerDes</span>
-<span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">&gt;();</span><span class="w"></span>
+<span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="o">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">StringSerDes</span><span class="o">&gt;</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
@@ -244,14 +246,14 @@ Whenever data is read from or written to a state store.</p>
 <p>Whenever data is read from or written to a Kafka topic (e.g., via the StreamsBuilder#Stream&lt;K, V&gt;() and IKStream&lt;K, V&gt;#To() methods).
 Whenever data is read from or written to a state store.</p>
 <p>Example :</p>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">DefaultValueSerDes</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">();</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">();</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">DefaultValueSerDes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Note : In Streamiz Kafka Net package, you have a stream configuration class with generic types parameters to set default (key and value) serdes</p>
 <p>Example :</p>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="c1">// Set defaultkeyserdes to StringSerDes, and defaultvalueserdes to StringSerDes</span>
-<span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">&gt;();</span><span class="w"></span>
+<span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="o">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">StringSerDes</span><span class="o">&gt;</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
@@ -325,27 +327,27 @@ If this number is exceeded, the consumer pauses for this partition until stream 
 <section id="configuring-log4net">
 <h4>Configuring log4net<a class="headerlink" href="#configuring-log4net" title="Permalink to this heading">¶</a></h4>
 <p>To configure log4net you need to install Microsoft.Extensions.Logging.Log4Net.AspNetCore nuget package in your project and add log4net.config.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>dotnet add package Microsoft.Extensions.Logging.Log4Net.AspNetCore
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>dotnet<span class="w"> </span>add<span class="w"> </span>package<span class="w"> </span>Microsoft.Extensions.Logging.Log4Net.AspNetCore
 </pre></div>
 </div>
 <p>Configure your logger inside your streams config instance :</p>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamsConfig</span><span class="p">();</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamsConfig</span><span class="p">();</span>
 <span class="c1">// .... //</span>
-<span class="n">config</span><span class="p">.</span><span class="n">Logger</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">LoggerFactory</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">builder</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">AddLog4Net</span><span class="p">());</span><span class="w"></span>
+<span class="n">config</span><span class="p">.</span><span class="n">Logger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LoggerFactory</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">builder</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">AddLog4Net</span><span class="p">());</span>
 </pre></div>
 </div>
 <p>Add a log4net.config resources in your project :</p>
-<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;log4net</span> <span class="na">debug=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>
-    <span class="nt">&lt;appender</span> <span class="na">name=</span><span class="s">&quot;ConsoleAppender&quot;</span> <span class="na">type=</span><span class="s">&quot;log4net.Appender.ConsoleAppender&quot;</span><span class="nt">&gt;</span>
-        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;Threshold&quot;</span> <span class="na">value=</span><span class="s">&quot;DEBUG&quot;</span> <span class="nt">/&gt;</span>
-        <span class="nt">&lt;layout</span> <span class="na">type=</span><span class="s">&quot;log4net.Layout.PatternLayout&quot;</span><span class="nt">&gt;</span>
-            <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;ConversionPattern&quot;</span> <span class="na">value=</span><span class="s">&quot;%d [%t] %-5p %c - %m%n&quot;</span> <span class="nt">/&gt;</span>
-        <span class="nt">&lt;/layout&gt;</span>
-    <span class="nt">&lt;/appender&gt;</span>
-    <span class="nt">&lt;root&gt;</span>
-        <span class="nt">&lt;level</span> <span class="na">value=</span><span class="s">&quot;DEBUG&quot;</span> <span class="nt">/&gt;</span>
-        <span class="nt">&lt;appender-ref</span> <span class="na">ref=</span><span class="s">&quot;ConsoleAppender&quot;</span> <span class="nt">/&gt;</span>
-    <span class="nt">&lt;/root&gt;</span>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;log4net</span><span class="w"> </span><span class="na">debug=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nt">&lt;appender</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;ConsoleAppender&quot;</span><span class="w"> </span><span class="na">type=</span><span class="s">&quot;log4net.Appender.ConsoleAppender&quot;</span><span class="nt">&gt;</span>
+<span class="w">        </span><span class="nt">&lt;param</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;Threshold&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;DEBUG&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;layout</span><span class="w"> </span><span class="na">type=</span><span class="s">&quot;log4net.Layout.PatternLayout&quot;</span><span class="nt">&gt;</span>
+<span class="w">            </span><span class="nt">&lt;param</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;ConversionPattern&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;%d [%t] %-5p %c - %m%n&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;/layout&gt;</span>
+<span class="w">    </span><span class="nt">&lt;/appender&gt;</span>
+<span class="w">    </span><span class="nt">&lt;root&gt;</span>
+<span class="w">        </span><span class="nt">&lt;level</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;DEBUG&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;appender-ref</span><span class="w"> </span><span class="na">ref=</span><span class="s">&quot;ConsoleAppender&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;/root&gt;</span>
 <span class="nt">&lt;/log4net&gt;</span>
 </pre></div>
 </div>
@@ -436,37 +438,37 @@ Possible values: <code class="docutils literal notranslate"><span class="pre">To
 <p>You can specify parameters for the Kafka consumers, producers, and admin client that are used internally. The consumer, producer and admin client settings are defined by wrapper properties on ConsumerConfig, ProducerConfig and AdminConfig.</p>
 <p>So, all consumer, producer and admin client settings are accessible directly from StreamConfig instance.</p>
 <p>In this example, the Kafka consumer session timeout is configured to be 60000 milliseconds in the StreamConfig instance.</p>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">SessionTimeoutMs</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="m">60000</span><span class="p">;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">();</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">SessionTimeoutMs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">60000</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>In case of the configuration is not wrapped in StreamConfig yet, you can directly add your configuration via the following methods.</p>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="c1">// add key/value config for consumer</span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">AddConsumerConfig</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value&quot;</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="c1">// add key/value config for admin client</span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">AddAdminConfig</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value&quot;</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="c1">// add key/value config for producer</span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">AddProducerConfig</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value&quot;</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="c1">// add key/value config for consumer, producer and admin client</span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">AddConfig</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value&quot;</span><span class="p">);</span><span class="w"></span>
+<p>In case of the configuration is not wrapped in StreamConfig yet or because you want to override differnetly the configuration of the main consumer and the configuration of the restore consumer , you can directly add your configuration via the following methods.</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">();</span>
+<span class="w">    </span><span class="c1">// add key/value for the main consumer (prefix : &quot;main.consumer.&quot;), similar to config.Add(&quot;main.consumer.fetch.min.bytes&quot;, 1000);</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">StreamConfig</span><span class="p">.</span><span class="n">MainConsumerPrefix</span><span class="p">(</span><span class="s">&quot;fetch.min.bytes&quot;</span><span class="p">),</span><span class="w"> </span><span class="m">1000</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// add key/value for the restore consumer (prefix : &quot;restore.consumer.&quot;), similar to config.Add(&quot;restore.consumer.fetch.max.bytes&quot;, 1000000);</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">StreamConfig</span><span class="p">.</span><span class="n">RestoreConsumerPrefix</span><span class="p">(</span><span class="s">&quot;fetch.max.bytes&quot;</span><span class="p">),</span><span class="w"> </span><span class="m">1000000</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// add key/value for the global consumer (prefix : &quot;global.consumer.&quot;), similar to config.Add(&quot;global.consumer.fetch.max.bytes&quot;, 1000000);</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">StreamConfig</span><span class="p">.</span><span class="n">GlobalConsumerPrefix</span><span class="p">(</span><span class="s">&quot;fetch.max.bytes&quot;</span><span class="p">),</span><span class="w"> </span><span class="m">1000000</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// add key/value for the producer (prefix : &quot;producer.&quot;), similar to config.Add(&quot;producer.acks&quot;, Acks.All);</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">StreamConfig</span><span class="p">.</span><span class="n">ProducerPrefix</span><span class="p">(</span><span class="s">&quot;acks&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">Acks</span><span class="p">.</span><span class="n">All</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="sample-configuration-implementation">
 <h2>Sample configuration implementation<a class="headerlink" href="#sample-configuration-implementation" title="Permalink to this heading">¶</a></h2>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">&gt;();</span><span class="w"></span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">ApplicationId</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;test-app&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">BootstrapServers</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;192.168.56.1:9092&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">SaslMechanism</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">SaslMechanism</span><span class="p">.</span><span class="n">Plain</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">SaslUsername</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;admin&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">SaslPassword</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;admin&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">SecurityProtocol</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">SecurityProtocol</span><span class="p">.</span><span class="n">SaslPlaintext</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">AutoOffsetReset</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">AutoOffsetReset</span><span class="p">.</span><span class="n">Earliest</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">NumStreamThreads</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">SchemaRegistryUrl</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;http://localhost:8081&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">BasicAuthUserInfo</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;user:password&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">BasicAuthCredentialsSource</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="m">0</span><span class="p">;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="o">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">StringSerDes</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">ApplicationId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;test-app&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">BootstrapServers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;192.168.56.1:9092&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">SaslMechanism</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SaslMechanism</span><span class="p">.</span><span class="n">Plain</span><span class="p">;</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">SaslUsername</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;admin&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">SaslPassword</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;admin&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">SecurityProtocol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SecurityProtocol</span><span class="p">.</span><span class="n">SaslPlaintext</span><span class="p">;</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">AutoOffsetReset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AutoOffsetReset</span><span class="p">.</span><span class="n">Earliest</span><span class="p">;</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">NumStreamThreads</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">;</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">SchemaRegistryUrl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;http://localhost:8081&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">BasicAuthUserInfo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;user:password&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">BasicAuthCredentialsSource</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>

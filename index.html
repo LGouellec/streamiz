@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Welcome to Streamiz.Kafka.Net 🚀 &mdash; Streamiz.Kafka.Net  documentation</title>
@@ -13,9 +13,6 @@
   <![endif]-->
   
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
@@ -29,11 +26,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="#" class="icon icon-home"> Streamiz.Kafka.Net
+
+          
+          
+          <a href="#" class="icon icon-home">
+            Streamiz.Kafka.Net
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -45,11 +46,12 @@
 <li class="toctree-l1"><a class="reference internal" href="stream-configuration.html">Configuring a Stream Application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="threading-model.html">Threading model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stateless-processors.html">Stateless processors</a></li>
-<li class="toctree-l1"><a class="reference internal" href="statefull-processors.html">Statefull processors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stateful-processors.html">Stateful processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stores.html">State stores</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tology-test-driver.html">Test topology driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topology-test-driver.html">Test topology driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="monitoring.html">Monitoring Stream Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="async-processing.html">Asynchronous processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processor-api.html">Processor API</a></li>
 </ul>
 
         </div>
@@ -65,7 +67,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="#" class="icon icon-home"></a></li>
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Welcome to Streamiz.Kafka.Net 🚀</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
@@ -102,27 +104,27 @@ So you can found documentation here :</p>
 <li><p>Please retrieve your kafka cluster connection information</p></li>
 </ul>
 <p>Add this code</p>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="n">Task</span><span class="w"> </span><span class="nf">Main</span><span class="p">(</span><span class="kt">string</span><span class="p">[]</span><span class="w"> </span><span class="n">args</span><span class="p">)</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">   </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">&gt;();</span><span class="w"></span>
-<span class="w">   </span><span class="n">config</span><span class="p">.</span><span class="n">ApplicationId</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;test-app&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="w">   </span><span class="n">config</span><span class="p">.</span><span class="n">BootstrapServers</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;localhost:9092&quot;</span><span class="p">;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="n">Task</span><span class="w"> </span><span class="nf">Main</span><span class="p">(</span><span class="kt">string</span><span class="p">[]</span><span class="w"> </span><span class="n">args</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">   </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="o">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">StringSerDes</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="w">   </span><span class="n">config</span><span class="p">.</span><span class="n">ApplicationId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;test-app&quot;</span><span class="p">;</span>
+<span class="w">   </span><span class="n">config</span><span class="p">.</span><span class="n">BootstrapServers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;localhost:9092&quot;</span><span class="p">;</span>
 
-<span class="w">   </span><span class="n">StreamBuilder</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamBuilder</span><span class="p">();</span><span class="w"></span>
+<span class="w">   </span><span class="n">StreamBuilder</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamBuilder</span><span class="p">();</span>
 
-<span class="w">   </span><span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;test&quot;</span><span class="p">)</span><span class="w"></span>
-<span class="w">      </span><span class="p">.</span><span class="n">FilterNot</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;key1&quot;</span><span class="p">))</span><span class="w"></span>
-<span class="w">      </span><span class="p">.</span><span class="n">To</span><span class="p">(</span><span class="s">&quot;test-output&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">   </span><span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">)</span>
+<span class="w">      </span><span class="p">.</span><span class="n">FilterNot</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;key1&quot;</span><span class="p">))</span>
+<span class="w">      </span><span class="p">.</span><span class="n">To</span><span class="p">(</span><span class="s">&quot;test-output&quot;</span><span class="p">);</span>
 
-<span class="w">   </span><span class="n">Topology</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span><span class="w"></span>
-<span class="w">   </span><span class="n">KafkaStream</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">KafkaStream</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="w"> </span><span class="n">config</span><span class="p">);</span><span class="w"></span>
+<span class="w">   </span><span class="n">Topology</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+<span class="w">   </span><span class="n">KafkaStream</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">KafkaStream</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="w"> </span><span class="n">config</span><span class="p">);</span>
 
-<span class="w">   </span><span class="n">Console</span><span class="p">.</span><span class="n">CancelKeyPress</span><span class="w"> </span><span class="p">+=</span><span class="w"> </span><span class="p">(</span><span class="n">o</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">      </span><span class="n">stream</span><span class="p">.</span><span class="n">Dispose</span><span class="p">();</span><span class="w"></span>
-<span class="w">   </span><span class="p">};</span><span class="w"></span>
+<span class="w">   </span><span class="n">Console</span><span class="p">.</span><span class="n">CancelKeyPress</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="p">(</span><span class="n">o</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">stream</span><span class="p">.</span><span class="n">Dispose</span><span class="p">();</span>
+<span class="w">   </span><span class="p">};</span>
 
-<span class="w">   </span><span class="k">await</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">StartAsync</span><span class="p">();</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">   </span><span class="k">await</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">StartAsync</span><span class="p">();</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 <p>You’re done !</p>

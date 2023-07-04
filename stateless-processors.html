@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Stateless processors &mdash; Streamiz.Kafka.Net  documentation</title>
@@ -13,15 +13,12 @@
   <![endif]-->
   
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Statefull processors" href="statefull-processors.html" />
+    <link rel="next" title="Stateful processors" href="stateful-processors.html" />
     <link rel="prev" title="Threading model" href="threading-model.html" /> 
 </head>
 
@@ -30,11 +27,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> Streamiz.Kafka.Net
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Streamiz.Kafka.Net
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -71,11 +72,12 @@
 <li class="toctree-l2"><a class="reference internal" href="#transformvalues">TransformValues</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="statefull-processors.html">Statefull processors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stateful-processors.html">Stateful processors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stores.html">State stores</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tology-test-driver.html">Test topology driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topology-test-driver.html">Test topology driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="monitoring.html">Monitoring Stream Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="async-processing.html">Asynchronous processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processor-api.html">Processor API</a></li>
 </ul>
 
         </div>
@@ -91,7 +93,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Stateless processors</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/stateless-processors.md.txt" rel="nofollow"> View page source</a>
@@ -113,12 +115,12 @@
 <ul class="simple">
 <li><p>IKStream -&gt; IKStream[]</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
-<span class="kt">var</span><span class="w"> </span><span class="n">branches</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">Branch</span><span class="p">(</span><span class="w"></span>
-<span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">),</span><span class="w"></span>
-<span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">),</span><span class="w"></span>
-<span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">),</span><span class="w"></span>
-<span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="k">true</span><span class="p">);</span><span class="w"> </span><span class="c1">// DLQ pattern</span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
+<span class="kt">var</span><span class="w"> </span><span class="n">branches</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">Branch</span><span class="p">(</span>
+<span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">),</span>
+<span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">),</span>
+<span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">),</span>
+<span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">true</span><span class="p">);</span><span class="w"> </span><span class="c1">// DLQ pattern</span>
 <span class="c1">// branches[0] contains all records whose keys start with &quot;A&quot;</span>
 <span class="c1">// branches[1] contains all records whose keys start with &quot;B&quot;</span>
 <span class="c1">// branches[2] contains all records whose keys start with &quot;C&quot;</span>
@@ -133,12 +135,12 @@
 <li><p>IKStream -&gt; IKStream</p></li>
 <li><p>IKTable -&gt; IKTable</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
-<span class="n">IKTable</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="p">=</span><span class="w">  </span><span class="p">...;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
+<span class="n">IKTable</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w">  </span><span class="p">...;</span>
 
 <span class="c1">// A filter that selects  only value which contains &#39;test&#39; string constant</span>
-<span class="n">stream</span><span class="p">.</span><span class="n">Filter</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span><span class="w"></span>
-<span class="n">table</span><span class="p">.</span><span class="n">Filter</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span><span class="w"></span>
+<span class="n">stream</span><span class="p">.</span><span class="n">Filter</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span>
+<span class="n">table</span><span class="p">.</span><span class="n">Filter</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
 </section>
@@ -149,12 +151,12 @@
 <li><p>IKStream -&gt; IKStream</p></li>
 <li><p>IKTable -&gt; IKTable</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
-<span class="n">IKTable</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="p">=</span><span class="w">  </span><span class="p">...;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
+<span class="n">IKTable</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w">  </span><span class="p">...;</span>
 
 <span class="c1">// A inverse filter that selects value which contains not &#39;test&#39; string constant</span>
-<span class="n">stream</span><span class="p">.</span><span class="n">FilterNot</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span><span class="w"></span>
-<span class="n">table</span><span class="p">.</span><span class="n">FilterNot</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span><span class="w"></span>
+<span class="n">stream</span><span class="p">.</span><span class="n">FilterNot</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span>
+<span class="n">table</span><span class="p">.</span><span class="n">FilterNot</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
 </section>
@@ -164,19 +166,19 @@
 <ul class="simple">
 <li><p>IKStream → IKStream</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
 
 <span class="c1">// Here, we generate two output records for each input record.</span>
 <span class="c1">// We also change the key and value types.</span>
 <span class="c1">// Example: (&quot;KEY1&quot;, &quot;Hello&quot;) -&gt; (&quot;HELLO&quot;, 100), (&quot;HELLO&quot;, 900)</span>
-<span class="n">stream</span><span class="w"></span>
-<span class="w">    </span><span class="p">.</span><span class="n">FlatMap</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="n">List</span><span class="p">&lt;</span><span class="n">KeyValuePair</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="p">&gt;&gt;</span><span class="w"> </span><span class="n">results</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">List</span><span class="p">&lt;</span><span class="n">KeyValuePair</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="p">&gt;&gt;();</span><span class="w"></span>
-<span class="w">        </span><span class="n">results</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">KeyValuePair</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span><span class="w"> </span><span class="m">100L</span><span class="p">));</span><span class="w"></span>
-<span class="w">        </span><span class="n">results</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">KeyValuePair</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span><span class="w"> </span><span class="m">900L</span><span class="p">));</span><span class="w"></span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">results</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="p">})</span><span class="w"></span>
+<span class="n">stream</span>
+<span class="w">    </span><span class="p">.</span><span class="n">FlatMap</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">List</span><span class="o">&lt;</span><span class="n">KeyValuePair</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">KeyValuePair</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;&gt;</span><span class="p">();</span>
+<span class="w">        </span><span class="n">results</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">KeyValuePair</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span><span class="w"> </span><span class="m">100L</span><span class="p">));</span>
+<span class="w">        </span><span class="n">results</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">KeyValuePair</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span><span class="w"> </span><span class="m">900L</span><span class="p">));</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">results</span><span class="p">;</span>
+<span class="w">    </span><span class="p">})</span>
 </pre></div>
 </div>
 </section>
@@ -187,10 +189,10 @@
 <ul class="simple">
 <li><p>IKStream → IKStream</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
 
 <span class="c1">// Split a word into characters.</span>
-<span class="n">stream</span><span class="p">.</span><span class="n">FlatMapValues</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">ToCharArray</span><span class="p">())</span><span class="w"></span>
+<span class="n">stream</span><span class="p">.</span><span class="n">FlatMapValues</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">ToCharArray</span><span class="p">())</span>
 </pre></div>
 </div>
 </section>
@@ -202,10 +204,10 @@
 <ul class="simple">
 <li><p>IKStream → void</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
 
 <span class="c1">// Print the contents of the IKStream to the local console</span>
-<span class="n">stream</span><span class="p">.</span><span class="n">Foreach</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;{k} {v}&quot;</span><span class="p">))</span><span class="w"></span>
+<span class="n">stream</span><span class="p">.</span><span class="n">Foreach</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;{k} {v}&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
 </section>
@@ -234,10 +236,10 @@
 <ul class="simple">
 <li><p>IKStream → IKStream</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
 
 <span class="c1">// We create a new record keyvalue, with the value to key and key to value</span>
-<span class="n">stream</span><span class="p">.</span><span class="n">Map</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">KeyValuePair</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">()))</span><span class="w"></span>
+<span class="n">stream</span><span class="p">.</span><span class="n">Map</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">KeyValuePair</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">()))</span>
 </pre></div>
 </div>
 </section>
@@ -249,12 +251,12 @@
 <li><p>IKStream → IKStream</p></li>
 <li><p>IKTable → IKTable</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
-<span class="n">IKTable</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">...;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
+<span class="n">IKTable</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
 
 <span class="c1">// New value type =&gt; Int32 which is the length of string value</span>
-<span class="n">stream</span><span class="p">.</span><span class="n">MapValues</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span><span class="w"></span>
-<span class="n">table</span><span class="p">.</span><span class="n">MapValues</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span><span class="w"></span>
+<span class="n">stream</span><span class="p">.</span><span class="n">MapValues</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span>
+<span class="n">table</span><span class="p">.</span><span class="n">MapValues</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -267,9 +269,9 @@
 <ul class="simple">
 <li><p>IKStream → IKStream</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
 
-<span class="n">stream</span><span class="p">.</span><span class="n">Peek</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;{k} {v}&quot;</span><span class="p">))</span><span class="w"></span>
+<span class="n">stream</span><span class="p">.</span><span class="n">Peek</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;{k} {v}&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
 </section>
@@ -281,10 +283,10 @@
 <ul class="simple">
 <li><p>IKStream → void</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....</span>
 
 <span class="c1">// New value type =&gt; Int32 which is the lenght of string value</span>
-<span class="n">stream</span><span class="p">.</span><span class="n">Print</span><span class="p">(</span><span class="n">Printed</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;.</span><span class="n">ToOut</span><span class="p">())</span><span class="w"></span>
+<span class="n">stream</span><span class="p">.</span><span class="n">Print</span><span class="p">(</span><span class="n">Printed</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">.</span><span class="n">ToOut</span><span class="p">())</span>
 </pre></div>
 </div>
 </section>
@@ -296,10 +298,10 @@
 <ul class="simple">
 <li><p>IKStream → IKStream</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
 
 <span class="c1">// Derive a new record key from the record&#39;s value.</span>
-<span class="n">stream</span><span class="p">.</span><span class="n">SelectKey</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span><span class="w"></span>
+<span class="n">stream</span><span class="p">.</span><span class="n">SelectKey</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -309,10 +311,10 @@
 <ul class="simple">
 <li><p>IKTable → IKStream</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKTable</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKTable</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
 <span class="c1">// Also, a variant of `ToStream` exists that allows you</span>
 <span class="c1">// to select a new key for the resulting stream.</span>
-<span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">table</span><span class="p">.</span><span class="n">ToStream</span><span class="p">();</span><span class="w"></span>
+<span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table</span><span class="p">.</span><span class="n">ToStream</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
@@ -320,8 +322,8 @@
 <h2>Repartition<a class="headerlink" href="#repartition" title="Permalink to this heading">¶</a></h2>
 <p>Manually trigger repartitioning of the stream with desired number of partitions.</p>
 <p>Generated topic is treated as internal topic, as a result data will be purged automatically as any other internal repartition topic. In addition, you can specify the desired number of partitions, which allows to easily scale in/out downstream sub-topologies.</p>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
-<span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">repartitionedStream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">Repartition</span><span class="p">(</span><span class="n">Repartitioned</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;.</span><span class="n">NumberOfPartitions</span><span class="p">(</span><span class="m">10</span><span class="p">));</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
+<span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">repartitionedStream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">Repartition</span><span class="p">(</span><span class="n">Repartitioned</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">.</span><span class="n">NumberOfPartitions</span><span class="p">(</span><span class="m">10</span><span class="p">));</span>
 </pre></div>
 </div>
 </section>
@@ -332,13 +334,13 @@
 <ul class="simple">
 <li><p>IKStream → IKStream</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
 
 <span class="c1">// We create a new record keyvalue, with the upper value to key and value</span>
-<span class="n">stream</span><span class="p">.</span><span class="n">MapAsync</span><span class="p">(</span><span class="w"></span>
-<span class="w">        </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="n">record</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"></span>
-<span class="w">            </span><span class="k">await</span><span class="w"> </span><span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">KeyValuePair</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;(</span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span><span class="w"> </span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">)),</span><span class="w"></span>
-<span class="w">        </span><span class="n">RetryPolicy</span><span class="p">.</span><span class="n">NewBuilder</span><span class="p">().</span><span class="n">NumberOfRetry</span><span class="p">(</span><span class="m">10</span><span class="p">).</span><span class="n">Build</span><span class="p">());</span><span class="w"></span>
+<span class="n">stream</span><span class="p">.</span><span class="n">MapAsync</span><span class="p">(</span>
+<span class="w">        </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="n">record</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span>
+<span class="w">            </span><span class="k">await</span><span class="w"> </span><span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">KeyValuePair</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span><span class="w"> </span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">)),</span>
+<span class="w">        </span><span class="n">RetryPolicy</span><span class="p">.</span><span class="n">NewBuilder</span><span class="p">().</span><span class="n">NumberOfRetry</span><span class="p">(</span><span class="m">10</span><span class="p">).</span><span class="n">Build</span><span class="p">());</span>
 </pre></div>
 </div>
 </section>
@@ -350,13 +352,13 @@
 <ul class="simple">
 <li><p>IKStream → IKStream</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
 
 <span class="c1">// New value type =&gt; Int32 which is the length of string value</span>
-<span class="n">stream</span><span class="p">.</span><span class="n">MapValuesAsync</span><span class="p">(</span><span class="w"></span>
-<span class="w">        </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="n">record</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"></span>
-<span class="w">            </span><span class="k">await</span><span class="w"> </span><span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">Length</span><span class="p">),</span><span class="w"></span>
-<span class="w">        </span><span class="n">RetryPolicy</span><span class="p">.</span><span class="n">NewBuilder</span><span class="p">().</span><span class="n">NumberOfRetry</span><span class="p">(</span><span class="m">10</span><span class="p">).</span><span class="n">Build</span><span class="p">());</span><span class="w"></span>
+<span class="n">stream</span><span class="p">.</span><span class="n">MapValuesAsync</span><span class="p">(</span>
+<span class="w">        </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="n">record</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span>
+<span class="w">            </span><span class="k">await</span><span class="w"> </span><span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">Length</span><span class="p">),</span>
+<span class="w">        </span><span class="n">RetryPolicy</span><span class="p">.</span><span class="n">NewBuilder</span><span class="p">().</span><span class="n">NumberOfRetry</span><span class="p">(</span><span class="m">10</span><span class="p">).</span><span class="n">Build</span><span class="p">());</span>
 </pre></div>
 </div>
 </section>
@@ -368,16 +370,16 @@
 <ul class="simple">
 <li><p>IKStream → IKStream</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
 
 <span class="c1">// Here, we generate two output records for each input record.</span>
 <span class="c1">// We also change the key and value types.</span>
 <span class="c1">// Example: (&quot;KEY1&quot;, &quot;co&quot;) -&gt; (&quot;KEY1&quot;, c), (&quot;KEY1&quot;, o)</span>
-<span class="n">stream</span><span class="w"></span>
-<span class="w">   </span><span class="p">.</span><span class="n">FlatMapAsync</span><span class="p">(</span><span class="w"></span>
-<span class="w">        </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="n">record</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"></span>
-<span class="w">            </span><span class="k">await</span><span class="w"> </span><span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">ToCharArray</span><span class="p">().</span><span class="n">Select</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">KeyValuePair</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="kt">char</span><span class="p">&gt;(</span><span class="n">record</span><span class="p">.</span><span class="n">Key</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">))),</span><span class="w"></span>
-<span class="w">        </span><span class="n">RetryPolicy</span><span class="p">.</span><span class="n">NewBuilder</span><span class="p">().</span><span class="n">NumberOfRetry</span><span class="p">(</span><span class="m">10</span><span class="p">).</span><span class="n">Build</span><span class="p">());</span><span class="w"></span>
+<span class="n">stream</span>
+<span class="w">   </span><span class="p">.</span><span class="n">FlatMapAsync</span><span class="p">(</span>
+<span class="w">        </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="n">record</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span>
+<span class="w">            </span><span class="k">await</span><span class="w"> </span><span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">ToCharArray</span><span class="p">().</span><span class="n">Select</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">KeyValuePair</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="kt">char</span><span class="o">&gt;</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Key</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">))),</span>
+<span class="w">        </span><span class="n">RetryPolicy</span><span class="p">.</span><span class="n">NewBuilder</span><span class="p">().</span><span class="n">NumberOfRetry</span><span class="p">(</span><span class="m">10</span><span class="p">).</span><span class="n">Build</span><span class="p">());</span>
 </pre></div>
 </div>
 </section>
@@ -389,13 +391,13 @@
 <ul class="simple">
 <li><p>IKStream → IKStream</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
 
 <span class="c1">// Split a word into characters.</span>
-<span class="n">stream</span><span class="p">..</span><span class="n">FlatMapValuesAsync</span><span class="p">&lt;</span><span class="kt">char</span><span class="p">&gt;(</span><span class="w"></span>
-<span class="w">            </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="n">record</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"></span>
-<span class="w">                </span><span class="k">await</span><span class="w"> </span><span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">ToCharArray</span><span class="p">()),</span><span class="w"></span>
-<span class="w">            </span><span class="n">RetryPolicy</span><span class="p">.</span><span class="n">NewBuilder</span><span class="p">().</span><span class="n">NumberOfRetry</span><span class="p">(</span><span class="m">10</span><span class="p">).</span><span class="n">Build</span><span class="p">());</span><span class="w"></span>
+<span class="n">stream</span><span class="p">..</span><span class="n">FlatMapValuesAsync</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span><span class="p">(</span>
+<span class="w">            </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="n">record</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span>
+<span class="w">                </span><span class="k">await</span><span class="w"> </span><span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">ToCharArray</span><span class="p">()),</span>
+<span class="w">            </span><span class="n">RetryPolicy</span><span class="p">.</span><span class="n">NewBuilder</span><span class="p">().</span><span class="n">NumberOfRetry</span><span class="p">(</span><span class="m">10</span><span class="p">).</span><span class="n">Build</span><span class="p">());</span>
 </pre></div>
 </div>
 </section>
@@ -406,30 +408,30 @@
 <ul class="simple">
 <li><p>IKStream → void</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">....;</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
 
 <span class="c1">// try to insert new items into a mongoDb collection</span>
-<span class="n">stream</span><span class="p">..</span><span class="n">ForeachAsync</span><span class="p">(</span><span class="w"></span>
-<span class="w">                    </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="n">record</span><span class="p">,</span><span class="w"> </span><span class="n">_</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"></span>
-<span class="w">                    </span><span class="p">{</span><span class="w"></span>
-<span class="w">                        </span><span class="k">await</span><span class="w"> </span><span class="n">database</span><span class="w"></span>
-<span class="w">                            </span><span class="p">.</span><span class="n">GetCollection</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;(</span><span class="s">&quot;adress&quot;</span><span class="p">)</span><span class="w"></span>
-<span class="w">                            </span><span class="p">.</span><span class="n">InsertOneAsync</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">Person</span><span class="p">()</span><span class="w"></span>
-<span class="w">                            </span><span class="p">{</span><span class="w"></span>
-<span class="w">                                </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">record</span><span class="p">.</span><span class="n">Key</span><span class="p">,</span><span class="w"></span>
-<span class="w">                                </span><span class="n">address</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Address</span><span class="p">()</span><span class="w"></span>
-<span class="w">                                </span><span class="p">{</span><span class="w"></span>
-<span class="w">                                    </span><span class="n">city</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="w"></span>
-<span class="w">                                </span><span class="p">}</span><span class="w"></span>
-<span class="w">                            </span><span class="p">});</span><span class="w"></span>
-<span class="w">                    </span><span class="p">},</span><span class="w"></span>
-<span class="w">                    </span><span class="n">RetryPolicy</span><span class="w"></span>
-<span class="w">                        </span><span class="p">.</span><span class="n">NewBuilder</span><span class="p">()</span><span class="w"></span>
-<span class="w">                        </span><span class="p">.</span><span class="n">NumberOfRetry</span><span class="p">(</span><span class="m">10</span><span class="p">)</span><span class="w"></span>
-<span class="w">                        </span><span class="p">.</span><span class="n">RetryBackOffMs</span><span class="p">(</span><span class="m">100</span><span class="p">)</span><span class="w"></span>
-<span class="w">                        </span><span class="p">.</span><span class="n">RetriableException</span><span class="p">&lt;</span><span class="n">Exception</span><span class="p">&gt;()</span><span class="w"></span>
-<span class="w">                        </span><span class="p">.</span><span class="n">RetryBehavior</span><span class="p">(</span><span class="n">EndRetryBehavior</span><span class="p">.</span><span class="n">SKIP</span><span class="p">)</span><span class="w"></span>
-<span class="w">                        </span><span class="p">.</span><span class="n">Build</span><span class="p">());</span><span class="w"></span>
+<span class="n">stream</span><span class="p">..</span><span class="n">ForeachAsync</span><span class="p">(</span>
+<span class="w">                    </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="n">record</span><span class="p">,</span><span class="w"> </span><span class="n">_</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span>
+<span class="w">                    </span><span class="p">{</span>
+<span class="w">                        </span><span class="k">await</span><span class="w"> </span><span class="n">database</span>
+<span class="w">                            </span><span class="p">.</span><span class="n">GetCollection</span><span class="o">&lt;</span><span class="n">Person</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;adress&quot;</span><span class="p">)</span>
+<span class="w">                            </span><span class="p">.</span><span class="n">InsertOneAsync</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">Person</span><span class="p">()</span>
+<span class="w">                            </span><span class="p">{</span>
+<span class="w">                                </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">record</span><span class="p">.</span><span class="n">Key</span><span class="p">,</span>
+<span class="w">                                </span><span class="n">address</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Address</span><span class="p">()</span>
+<span class="w">                                </span><span class="p">{</span>
+<span class="w">                                    </span><span class="n">city</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">record</span><span class="p">.</span><span class="n">Value</span>
+<span class="w">                                </span><span class="p">}</span>
+<span class="w">                            </span><span class="p">});</span>
+<span class="w">                    </span><span class="p">},</span>
+<span class="w">                    </span><span class="n">RetryPolicy</span>
+<span class="w">                        </span><span class="p">.</span><span class="n">NewBuilder</span><span class="p">()</span>
+<span class="w">                        </span><span class="p">.</span><span class="n">NumberOfRetry</span><span class="p">(</span><span class="m">10</span><span class="p">)</span>
+<span class="w">                        </span><span class="p">.</span><span class="n">RetryBackOffMs</span><span class="p">(</span><span class="m">100</span><span class="p">)</span>
+<span class="w">                        </span><span class="p">.</span><span class="n">RetriableException</span><span class="o">&lt;</span><span class="n">Exception</span><span class="o">&gt;</span><span class="p">()</span>
+<span class="w">                        </span><span class="p">.</span><span class="n">RetryBehavior</span><span class="p">(</span><span class="n">EndRetryBehavior</span><span class="p">.</span><span class="n">SKIP</span><span class="p">)</span>
+<span class="w">                        </span><span class="p">.</span><span class="n">Build</span><span class="p">());</span>
 </pre></div>
 </div>
 </section>
@@ -440,16 +442,16 @@
 <ul class="simple">
 <li><p>IKStream → void</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamBuilder</span><span class="p">();</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamBuilder</span><span class="p">();</span>
 <span class="w">            </span>
-<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">.</span><span class="n">Process</span><span class="p">(</span><span class="n">ProcessorBuilder</span><span class="w"></span>
-<span class="w">        </span><span class="p">.</span><span class="n">New</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;()</span><span class="w"></span>
-<span class="w">        </span><span class="p">.</span><span class="n">Processor</span><span class="p">((</span><span class="n">record</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"></span>
-<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">Process</span><span class="p">(</span><span class="n">ProcessorBuilder</span>
+<span class="w">        </span><span class="p">.</span><span class="n">New</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">()</span>
+<span class="w">        </span><span class="p">.</span><span class="n">Processor</span><span class="p">((</span><span class="n">record</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span>
+<span class="w">        </span><span class="p">{</span>
 <span class="w">           </span><span class="c1">// what you want ...</span>
-<span class="w">        </span><span class="p">})</span><span class="w"></span>
-<span class="w">        </span><span class="p">.</span><span class="n">Build</span><span class="p">());</span><span class="w"></span>
+<span class="w">        </span><span class="p">})</span>
+<span class="w">        </span><span class="p">.</span><span class="n">Build</span><span class="p">());</span>
 </pre></div>
 </div>
 </section>
@@ -462,15 +464,15 @@
 <ul class="simple">
 <li><p>IKStream → IKStream</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamBuilder</span><span class="p">();</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamBuilder</span><span class="p">();</span>
 <span class="w">            </span>
-<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">.</span><span class="n">Transform</span><span class="p">(</span><span class="n">TransformerBuilder</span><span class="w"></span>
-<span class="w">        </span><span class="p">.</span><span class="n">New</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;()</span><span class="w"></span>
-<span class="w">        </span><span class="p">.</span><span class="n">Transformer</span><span class="p">((</span><span class="n">record</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span>
-<span class="w">                </span><span class="n">Record</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;.</span><span class="n">Create</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Key</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span><span class="w"> </span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">()))</span><span class="w"></span>
-<span class="w">        </span><span class="p">.</span><span class="n">Build</span><span class="p">())</span><span class="w"></span>
-<span class="w">    </span><span class="p">.</span><span class="n">To</span><span class="p">(</span><span class="s">&quot;topic-output&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">Transform</span><span class="p">(</span><span class="n">TransformerBuilder</span>
+<span class="w">        </span><span class="p">.</span><span class="n">New</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">()</span>
+<span class="w">        </span><span class="p">.</span><span class="n">Transformer</span><span class="p">((</span><span class="n">record</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span>
+<span class="w">                </span><span class="n">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Key</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span><span class="w"> </span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">()))</span>
+<span class="w">        </span><span class="p">.</span><span class="n">Build</span><span class="p">())</span>
+<span class="w">    </span><span class="p">.</span><span class="n">To</span><span class="p">(</span><span class="s">&quot;topic-output&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -482,14 +484,14 @@
 <ul class="simple">
 <li><p>IKStream → IKStream</p></li>
 </ul>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamBuilder</span><span class="p">();</span><span class="w"></span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamBuilder</span><span class="p">();</span>
 <span class="w">            </span>
-<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span><span class="w"></span>
-<span class="w">                </span><span class="p">.</span><span class="n">TransformValues</span><span class="p">(</span><span class="n">TransformerBuilder</span><span class="w"></span>
-<span class="w">                    </span><span class="p">.</span><span class="n">New</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;()</span><span class="w"></span>
-<span class="w">                    </span><span class="p">.</span><span class="n">Transformer</span><span class="p">((</span><span class="n">record</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">Record</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">&gt;.</span><span class="n">Create</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">()))</span><span class="w"></span>
-<span class="w">                    </span><span class="p">.</span><span class="n">Build</span><span class="p">())</span><span class="w"></span>
-<span class="w">        </span><span class="p">.</span><span class="n">To</span><span class="p">(</span><span class="s">&quot;topic-output&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
+<span class="w">                </span><span class="p">.</span><span class="n">TransformValues</span><span class="p">(</span><span class="n">TransformerBuilder</span>
+<span class="w">                    </span><span class="p">.</span><span class="n">New</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">()</span>
+<span class="w">                    </span><span class="p">.</span><span class="n">Transformer</span><span class="p">((</span><span class="n">record</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">()))</span>
+<span class="w">                    </span><span class="p">.</span><span class="n">Build</span><span class="p">())</span>
+<span class="w">        </span><span class="p">.</span><span class="n">To</span><span class="p">(</span><span class="s">&quot;topic-output&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -500,7 +502,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="threading-model.html" class="btn btn-neutral float-left" title="Threading model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="statefull-processors.html" class="btn btn-neutral float-right" title="Statefull processors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="stateful-processors.html" class="btn btn-neutral float-right" title="Stateful processors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

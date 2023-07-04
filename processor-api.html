@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Processor API &mdash; Streamiz.Kafka.Net  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Asynchronous processing" href="async-processing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Streamiz.Kafka.Net
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Streamiz.Kafka.Net</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stream-configuration.html">Configuring a Stream Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="threading-model.html">Threading model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stateless-processors.html">Stateless processors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stateful-processors.html">Stateful processors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stores.html">State stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topology-test-driver.html">Test topology driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="monitoring.html">Monitoring Stream Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async-processing.html">Asynchronous processing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Processor API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#define-a-stream-processor">Define a stream processor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#accessing-processor-context">Accessing Processor Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#state-stores">State stores</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#defining-and-creating-a-state-store">Defining and creating a State Store</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#timestamped-state-stores">Timestamped State Stores</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fault-tolerant-state-stores">Fault-tolerant State Stores</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#enable-or-disable-fault-tolerance-of-state-stores-store-changelogs">Enable or Disable Fault Tolerance of State Stores (Store Changelogs)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#implementing-custom-state-stores">Implementing Custom State Stores</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#connecting-processors-and-state-stores">Connecting Processors and State Stores</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Streamiz.Kafka.Net</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Processor API</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/processor-api.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="processor-api">
+<h1>Processor API<a class="headerlink" href="#processor-api" title="Permalink to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>The Processor API can be used to implement both stateless as well as stateful operations, where the latter is achieved through the use of state stores.</p>
+</section>
+<section id="define-a-stream-processor">
+<h2>Define a stream processor<a class="headerlink" href="#define-a-stream-processor" title="Permalink to this heading">¶</a></h2>
+<p>A stream processor is a node in the processor topology that represents a single processing step. With the Processor API, you can define arbitrary stream processors that processes one received record at a time, and connect these processors with their associated state stores to compose the processor topology.</p>
+<p>You can define a customized stream processor by implementing the <code class="docutils literal notranslate"><span class="pre">IProcessor&lt;K,</span> <span class="pre">V&gt;</span></code> interface or  the <code class="docutils literal notranslate"><span class="pre">ITransformer&lt;Kin,Vin,Kout,Vout&gt;</span></code> interface which provide the <code class="docutils literal notranslate"><span class="pre">Process()</span></code> API method. The <code class="docutils literal notranslate"><span class="pre">Process()</span></code> method is called on each of the received records.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Processor</span></code> interface also has an <code class="docutils literal notranslate"><span class="pre">Init()</span></code> method, which is called by the library during task construction phase. Processor instances should perform any required initialization in this method. The <code class="docutils literal notranslate"><span class="pre">Init()</span></code> method passes in a <code class="docutils literal notranslate"><span class="pre">ProcessorContext&lt;K,V&gt;</span></code> instance, which provides access to the metadata of the currently processed record, including its source Apache Kafka® topic and partition, its corresponding message offset, and further such information. You can also use this context instance to schedule a punctuation function (via <code class="docutils literal notranslate"><span class="pre">ProcessorContext&lt;K,V&gt;#Schedule()</span></code>), to forward a new record as a key-value pair to the downstream processors (via <code class="docutils literal notranslate"><span class="pre">ProcessorContext&lt;K,V&gt;#Forward()</span></code>), and to commit the current processing progress (via <code class="docutils literal notranslate"><span class="pre">ProcessorContext&lt;K,V&gt;#Commit()</span></code>). Any resources you set up in <code class="docutils literal notranslate"><span class="pre">Init()</span></code> can be cleaned up in the <code class="docutils literal notranslate"><span class="pre">Close()</span></code> method.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Transformer</span></code> interface takes two sets of generic parameters: Kin, Vin, Kout, and Vout. These define the input and output types that the processor implementation can handle. KIn and VIn define the key and value types that are passed to <code class="docutils literal notranslate"><span class="pre">Process()</span></code>. Likewise, KOut and VOut define the forwarded key and value types that <code class="docutils literal notranslate"><span class="pre">ProcessorContext#Forward()</span></code> accepts.</p>
+<p>Both the <code class="docutils literal notranslate"><span class="pre">IProcessor&lt;K,V&gt;#Process()</span></code> and <code class="docutils literal notranslate"><span class="pre">ITransformer&lt;Kin,Vin,Kout,Vout&gt;#Process()</span></code> handle records in the form of the Record&lt;K, V&gt; data class. This class gives you access to the main components of a Kafka record: the key, value, timestamp, headers and topic/partition/offset. When forwarding records, you can use the static builder methods to create a new Record from scratch.</p>
+<p>In addition to handling incoming records by using <code class="docutils literal notranslate"><span class="pre">process()</span></code>, you can schedule periodic invocation, named “punctuation”, in your processor’s <code class="docutils literal notranslate"><span class="pre">Init()</span></code> method by calling <code class="docutils literal notranslate"><span class="pre">ProcessorContext&lt;K,V&gt;#Schedule()</span></code> and passing it a Punctuator. The <code class="docutils literal notranslate"><span class="pre">PunctuationType</span></code> determines what notion of time is used for the punctuation scheduling: either event-time or processing-time (by default, event-time is configured to represent event-time via <code class="docutils literal notranslate"><span class="pre">ITimestampExtractor</span></code>). When event-time is used, <code class="docutils literal notranslate"><span class="pre">Punctuate()</span></code> is triggered purely by data, because event-time is determined (and advanced forward) by the timestamps derived from the input data. When there is no new input data arriving, event-time is not advanced and <code class="docutils literal notranslate"><span class="pre">Punctuate()</span></code> is not called.</p>
+<p>For example, if you schedule a Punctuator function every 10 seconds based on PunctuationType.STREAM_TIME and if you process a stream of 60 records with consecutive timestamps from 1 (first record) to 60 seconds (last record), then <code class="docutils literal notranslate"><span class="pre">Punctuate()</span></code> would be called 6 times. This happens regardless of the time required to actually process those records. <code class="docutils literal notranslate"><span class="pre">Punctuate()</span></code> would be called 6 times regardless of whether processing these 60 records takes a second, a minute, or an hour.</p>
+<p>When processing-time (i.e. PunctuationType.PROCESSING_TIME) is used, <code class="docutils literal notranslate"><span class="pre">Punctuate()</span></code> is triggered purely by the wall-clock time. Reusing the example above, if the Punctuator function is scheduled based on PunctuationType.PROCESSING_TIME, and if these 60 records were processed within 20 seconds, <code class="docutils literal notranslate"><span class="pre">Punctuate()</span></code> is called 2 times (one time every 10 seconds). If these 60 records were processed within 5 seconds, then no <code class="docutils literal notranslate"><span class="pre">Punctuate()</span></code> is called at all. Note that you can schedule multiple Punctuator callbacks with different PunctuationType types within the same processor by calling <code class="docutils literal notranslate"><span class="pre">ProcessorContext&lt;K,V&gt;#Schedule()</span></code> multiple times inside <code class="docutils literal notranslate"><span class="pre">Init()</span></code> method.</p>
+</section>
+<section id="accessing-processor-context">
+<h2>Accessing Processor Context<a class="headerlink" href="#accessing-processor-context" title="Permalink to this heading">¶</a></h2>
+<p>As we have mentioned above, a ProcessorContext controls the processing workflow such as scheduling a punctuation function, and committing the current processed state, etc. In fact, this object can also be used to access the metadata related with the application like applicationId, taskId, and stateDir located to store the task’s state, and also the current processed record’s metadata like topic, partition, offset, and timestamp.</p>
+<p>The following example <code class="docutils literal notranslate"><span class="pre">Process()</span></code> function enriches the record differently based on the record context:</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">EnrichTransformer</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">ITransformer</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Init</span><span class="p">(</span><span class="n">ProcessorContext</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">context</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// you can keep the processor context locally to schedule a punctuator,</span>
+<span class="w">            </span><span class="c1">// commit explicitly or forward different message</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="n">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Process</span><span class="p">(</span><span class="n">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">record</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">TopicPartitionOffset</span><span class="p">.</span><span class="n">Topic</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="k">case</span><span class="w"> </span><span class="s">&quot;alerts&quot;</span><span class="p">:</span>
+<span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="n">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Key</span><span class="p">,</span><span class="w"> </span><span class="n">DecorateWithHighPriority</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">));</span>
+<span class="w">                </span><span class="k">case</span><span class="w"> </span><span class="s">&quot;notifications&quot;</span><span class="p">:</span>
+<span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="n">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Key</span><span class="p">,</span><span class="w"> </span><span class="n">DecorateWithMediumPriority</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">));</span>
+<span class="w">                </span><span class="k">default</span><span class="p">:</span>
+<span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="n">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Key</span><span class="p">,</span><span class="w"> </span><span class="n">DecorateWithLowPriority</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">));</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Close</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">Record</span><span class="w"> </span><span class="n">context</span><span class="w"> </span><span class="n">metadata</span><span class="p">:</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">metadata</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">currently</span><span class="w"> </span><span class="n">processing</span><span class="w"> </span><span class="n">record</span><span class="w"> </span><span class="n">may</span><span class="w"> </span><span class="n">not</span><span class="w"> </span><span class="n">always</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">available</span><span class="p">.</span><span class="w"> </span><span class="n">For</span><span class="w"> </span><span class="n">example</span><span class="p">,</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">current</span><span class="w"> </span><span class="n">processing</span><span class="w"> </span><span class="n">record</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">not</span><span class="w"> </span><span class="n">piped</span><span class="w"> </span><span class="k">from</span><span class="w"> </span><span class="n">any</span><span class="w"> </span><span class="n">source</span><span class="w"> </span><span class="n">topic</span><span class="p">,</span><span class="w"> </span><span class="n">but</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">generated</span><span class="w"> </span><span class="k">from</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">punctuation</span><span class="w"> </span><span class="n">function</span><span class="p">,</span><span class="w"> </span><span class="n">then</span><span class="w"> </span><span class="n">its</span><span class="w"> </span><span class="n">metadata</span><span class="w"> </span><span class="n">field</span><span class="w"> </span><span class="n">topic</span><span class="w"> </span><span class="n">will</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">empty</span><span class="p">,</span><span class="w"> </span><span class="n">and</span><span class="w"> </span><span class="n">partition</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="n">will</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">sentinel</span><span class="w"> </span><span class="k">value</span><span class="w"> </span><span class="p">(</span><span class="o">-</span><span class="m">1</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">this</span><span class="w"> </span><span class="k">case</span><span class="p">),</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="n">its</span><span class="w"> </span><span class="n">timestamp</span><span class="w"> </span><span class="n">field</span><span class="w"> </span><span class="n">will</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">triggering</span><span class="w"> </span><span class="n">time</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">punctuation</span><span class="w"> </span><span class="n">function</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">generated</span><span class="w"> </span><span class="k">this</span><span class="w"> </span><span class="n">record</span><span class="p">.</span>
+</pre></div>
+</div>
+</section>
+<section id="state-stores">
+<h2>State stores<a class="headerlink" href="#state-stores" title="Permalink to this heading">¶</a></h2>
+<p>To implement a stateful <code class="docutils literal notranslate"><span class="pre">Processor</span></code> or <code class="docutils literal notranslate"><span class="pre">Transformer</span></code>, you must provide one or more state stores to the processor or transformer (stateless processors or transformers do not need state stores). State stores can be used to remember recently received input records, to track rolling aggregates, to de-duplicate input records, and more.</p>
+<p>The available state store types in Streamiz have fault tolerance enabled by default.</p>
+<section id="defining-and-creating-a-state-store">
+<h3>Defining and creating a State Store<a class="headerlink" href="#defining-and-creating-a-state-store" title="Permalink to this heading">¶</a></h3>
+<p>You can either use one of the available store types or implement your own custom store type. It’s common practice to leverage an existing store type via the <code class="docutils literal notranslate"><span class="pre">Stores</span></code> factory.</p>
+<p>Note that, when using Streamiz, you normally don’t create or instantiate state stores directly in your code. Rather, you define state stores indirectly by creating a so-called <code class="docutils literal notranslate"><span class="pre">StoreBuilder</span></code>. This builder is used by Streamiz as a factory to instantiate the actual state stores locally in application instances when and where needed.</p>
+<p>The following store types are available out of the box.</p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th style="text-align: center;"><strong><em>Store Type</em></strong></th>
+<th style="text-align: center;"><strong>Storage Engine</strong></th>
+<th><strong>Fault-tolerant?</strong></th>
+<th style="text-align: center;"><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">Persistent <code>IKeyValueStore&lt;K, V&gt;</code></td>
+<td style="text-align: center;">RocksDB</td>
+<td>Yes (enabled by default)</td>
+<td style="text-align: center;">- The recommended store type for most use cases.<br>- Stores its data on local disk.<br>- Storage capacity: managed local state can be larger than the memory (heap space) of an application instance, but must fit into the available local disk space.<br><br>Available store variants:<br>- <a href="https://github.com/LGouellec/kafka-streams-dotnet/blob/develop/core/State/IWindowStore.cs">time window key-value store</a><br>- <a href="https://github.com/LGouellec/kafka-streams-dotnet/blob/develop/core/State/ITimestampedKeyValueStore.cs">timestamped key-value store</a><br>- <a href="https://github.com/LGouellec/kafka-streams-dotnet/blob/develop/core/State/ITimestampedWindowStore.cs">timestamped window key-value store</a><br><br>Example : <br> // Creating a persistent key-value store:<br>// here, we create a <code>IKeyValueStore&lt;string, long&gt;</code> named "persistent-counts".<br><br>StoreBuilder countStoreBuilder = Stores.KeyValueStoreBuilder<string, long> (Stores.PersistentKeyValueStore("persistent-counts"),<br>new StringSerDes(),<br>new Int64SerDes());<br></td>
+</tr>
+<tr>
+<td style="text-align: center;">In-memory <code>IKeyValueStore&lt;K,V&gt;</code></td>
+<td style="text-align: center;">--</td>
+<td>Yes (enabled by default)</td>
+<td style="text-align: center;">- Stores its data in memory.<br>- Storage capacity: managed local state must fit into memory of an application instance.<br>- Useful when application instances run in an environment where local disk space is either not available or local disk space is wiped in-between app instance restarts.<br><br>Available store variants:<br>- <a href="https://github.com/LGouellec/kafka-streams-dotnet/blob/develop/core/State/IWindowStore.cs">time window key-value store</a><br>- <a href="https://github.com/LGouellec/kafka-streams-dotnet/blob/develop/core/State/ITimestampedKeyValueStore.cs">timestamped key-value store</a><br>- <a href="https://github.com/LGouellec/kafka-streams-dotnet/blob/develop/core/State/ITimestampedWindowStore.cs">timestamped window key-value store</a><br><br>Example : <br>// Creating an in-memory key-value store:<br>// here, we create a <code>IKeyValueStore&lt;string, long&gt;</code> named "inmemory-count".<br><br>StoreBuilder countStoreBuilder = Stores.KeyValueStoreBuilder<string, long> (Stores.InMemoryKeyValueStore("inmemory-count"),<br>new StringSerDes(),<br>new Int64SerDes());<br></td>
+</tr>
+</tbody>
+</table></section>
+<section id="timestamped-state-stores">
+<h3>Timestamped State Stores<a class="headerlink" href="#timestamped-state-stores" title="Permalink to this heading">¶</a></h3>
+<p>IKTables always store timestamps by default. A timestamped state store improves stream processing semantics and enables management of out-of-order data in source IKTables, detects out-of-order joins and aggregations.</p>
+<p>You can query timestamped state stores with or without a timestamp.</p>
+</section>
+<section id="fault-tolerant-state-stores">
+<h3>Fault-tolerant State Stores<a class="headerlink" href="#fault-tolerant-state-stores" title="Permalink to this heading">¶</a></h3>
+<p>To make state stores fault-tolerant and to allow for state store migration without data loss, a state store can be continuously backed up to a Kafka topic behind the scenes. For example, to migrate a stateful stream task from one machine to another when elastically adding or removing capacity from your application. This topic is sometimes referred to as the state store’s associated changelog topic, or its changelog. For example, if you experience machine failure, the state store and the application’s state can be fully restored from its changelog. You can enable or disable this backup feature for a state store.</p>
+<p>By default, persistent key-value stores are fault-tolerant. They are backed by a compacted changelog topic. The purpose of compacting this topic is to prevent the topic from growing indefinitely, to reduce the storage consumed in the associated Kafka cluster, and to minimize recovery time if a state store needs to be restored from its changelog topic.</p>
+<p>Similarly, persistent window stores are fault-tolerant. They are backed by a topic that uses both compaction and deletion. Because of the structure of the message keys that are being sent to the changelog topics, this combination of deletion and compaction is required for the changelog topics of window stores. For window stores, the message keys are composite keys that include the “normal” key and window timestamps. For these types of composite keys it would not be sufficient to only enable compaction to prevent a changelog topic from growing out of bounds. With deletion enabled, old windows that have expired will be cleaned up by Kafka’s log cleaner as the log segments expire. The default retention setting is <a class="reference external" href="https://github.com/LGouellec/kafka-streams-dotnet/blob/b700b698bb45dee5f51a49876d64c59b17432399/core/Table/Materialized.cs#LL321C45-L321C45">Materialized&lt;K, V, S&gt;#WithRetention()</a> + 1 day. You can override this setting by specifying <a class="reference external" href="https://github.com/LGouellec/kafka-streams-dotnet/blob/b700b698bb45dee5f51a49876d64c59b17432399/core/StreamConfig.cs#LL275C14-L275C55">IStreamConfig.WindowStoreChangelogAdditionalRetentionMs</a> in the StreamConfig.</p>
+<p>When you open an <code class="docutils literal notranslate"><span class="pre">IEnumerator</span></code> from a state store you must call <code class="docutils literal notranslate"><span class="pre">Dispose()</span></code> on the enumerator when you are done working with it to reclaim resources; or you can use the enumerator from within an using statement. If you do not dispose an enumerator, you may encounter an OOM error.</p>
+</section>
+<section id="enable-or-disable-fault-tolerance-of-state-stores-store-changelogs">
+<h3>Enable or Disable Fault Tolerance of State Stores (Store Changelogs)<a class="headerlink" href="#enable-or-disable-fault-tolerance-of-state-stores-store-changelogs" title="Permalink to this heading">¶</a></h3>
+<p>You can enable or disable fault tolerance for a state store by enabling or disabling the change logging of the store through <code class="docutils literal notranslate"><span class="pre">WithLoggingEnabled()</span></code> and <code class="docutils literal notranslate"><span class="pre">WithLoggingDisabled()</span></code>. You can also fine-tune the associated topic’s configuration if needed.</p>
+<p>Example for disabling fault-tolerance:</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">countStoreSupplier</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Stores</span><span class="p">.</span><span class="n">KeyValueStoreBuilder</span><span class="p">(</span>
+<span class="w">  </span><span class="n">Stores</span><span class="p">.</span><span class="n">PersistentKeyValueStore</span><span class="p">(</span><span class="s">&quot;counts&quot;</span><span class="p">),</span>
+<span class="w">    </span><span class="k">new</span><span class="w"> </span><span class="nf">StringSerDes</span><span class="p">(),</span>
+<span class="w">    </span><span class="k">new</span><span class="w"> </span><span class="nf">Int64SerDes</span><span class="p">())</span>
+<span class="w">  </span><span class="p">.</span><span class="n">WithLoggingDisabled</span><span class="p">();</span><span class="w"> </span><span class="c1">// disable backing up the store to a changelog topic</span>
+</pre></div>
+</div>
+<p>Here is an example for enabling fault tolerance, with additional changelog-topic configuration: You can add any log config from kafka.log.LogConfig. Unrecognized configs will be ignored.</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IDictionary</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">changelogConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Dictionary</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="c1">// override min.insync.replicas</span>
+<span class="n">changelogConfig</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="s">&quot;min.insync.replicas&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1&quot;</span><span class="p">);</span>
+
+<span class="kt">var</span><span class="w"> </span><span class="n">countStoreSupplier</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Stores</span><span class="p">.</span><span class="n">KeyValueStoreBuilder</span><span class="p">(</span>
+<span class="w">  </span><span class="n">Stores</span><span class="p">.</span><span class="n">PersistentKeyValueStore</span><span class="p">(</span><span class="s">&quot;counts&quot;</span><span class="p">),</span>
+<span class="w">    </span><span class="k">new</span><span class="w"> </span><span class="nf">StringSerDes</span><span class="p">(),</span>
+<span class="w">    </span><span class="k">new</span><span class="w"> </span><span class="nf">Int64SerDes</span><span class="p">())</span>
+<span class="w">  </span><span class="p">.</span><span class="n">WithLoggingEnabled</span><span class="p">(</span><span class="n">changelogConfig</span><span class="p">);</span><span class="w"> </span><span class="c1">// enable changelogging, with custom changelog settings</span>
+</pre></div>
+</div>
+</section>
+<section id="implementing-custom-state-stores">
+<h3>Implementing Custom State Stores<a class="headerlink" href="#implementing-custom-state-stores" title="Permalink to this heading">¶</a></h3>
+<p>You can use the built-in state store types or implement your own. The primary interface to implement for the store is <code class="docutils literal notranslate"><span class="pre">Streamiz.Kafka.Net.Processors.IStateStore</span></code>. Streamiz also has a few extended interfaces such as <code class="docutils literal notranslate"><span class="pre">IKeyValueStore</span></code> and so on.</p>
+<p>You also need to provide a “factory” for the store by implementing the <code class="docutils literal notranslate"><span class="pre">Streamiz.Kafka.Net.State.IStoreBuilder</span></code> interface, which Streamiz uses to create instances of your store.</p>
+</section>
+<section id="connecting-processors-and-state-stores">
+<h3>Connecting Processors and State Stores<a class="headerlink" href="#connecting-processors-and-state-stores" title="Permalink to this heading">¶</a></h3>
+<p>You can easily create stateful <code class="docutils literal notranslate"><span class="pre">Processor</span></code> or <code class="docutils literal notranslate"><span class="pre">Transformer</span></code> using the <code class="docutils literal notranslate"><span class="pre">ProcessorBuilder</span></code> or <code class="docutils literal notranslate"><span class="pre">TransformerBuilder</span></code>.</p>
+<p>Example :</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="k">private</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">MyStatefullProcessor</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">IProcessor</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="n">IKeyValueStore</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store</span><span class="p">;</span>
+<span class="w">            </span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Init</span><span class="p">(</span><span class="n">ProcessorContext</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">context</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">store</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">IKeyValueStore</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">)</span><span class="n">context</span><span class="p">.</span><span class="n">GetStateStore</span><span class="p">(</span><span class="s">&quot;my-store&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Process</span><span class="p">(</span><span class="n">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">record</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">store</span><span class="p">.</span><span class="n">Put</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Key</span><span class="p">,</span><span class="w"> </span><span class="n">record</span><span class="p">.</span><span class="n">Value</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Close</span><span class="p">()</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// .... </span>
+<span class="kt">var</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamBuilder</span><span class="p">();</span>
+<span class="w">            </span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;inputTopic&quot;</span><span class="p">)</span>
+<span class="w">       </span><span class="p">.</span><span class="n">Process</span><span class="p">(</span><span class="n">ProcessorBuilder</span>
+<span class="w">                    </span><span class="p">.</span><span class="n">New</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">()</span>
+<span class="w">                    </span><span class="p">.</span><span class="n">Processor</span><span class="o">&lt;</span><span class="n">MyStatefullProcessor</span><span class="o">&gt;</span><span class="p">()</span>
+<span class="w">                    </span><span class="p">.</span><span class="n">StateStore</span><span class="p">(</span><span class="n">State</span><span class="p">.</span><span class="n">Stores</span><span class="p">.</span><span class="n">KeyValueStoreBuilder</span><span class="p">(</span>
+<span class="w">                            </span><span class="n">State</span><span class="p">.</span><span class="n">Stores</span><span class="p">.</span><span class="n">InMemoryKeyValueStore</span><span class="p">(</span><span class="s">&quot;my-store&quot;</span><span class="p">),</span>
+<span class="w">                            </span><span class="k">new</span><span class="w"> </span><span class="nf">StringSerDes</span><span class="p">(),</span>
+<span class="w">                            </span><span class="k">new</span><span class="w"> </span><span class="nf">StringSerDes</span><span class="p">()))</span>
+<span class="w">                    </span><span class="p">.</span><span class="n">Build</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="async-processing.html" class="btn btn-neutral float-left" title="Asynchronous processing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, @LGouellec.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
