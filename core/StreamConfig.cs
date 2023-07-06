@@ -92,6 +92,13 @@ namespace Streamiz.Kafka.Net
         ProducerConfig ToProducerConfig(string clientId);
 
         /// <summary>
+        /// Get the configs to the external <see cref="IProducer{TKey, TValue}"/> with specific <paramref name="clientId"/>
+        /// </summary>
+        /// <param name="clientId">Producer client ID</param>
+        /// <returns>Return <see cref="ProducerConfig"/> for building <see cref="IProducer{TKey, TValue}"/> instance.</returns>
+        ProducerConfig ToExternalProducerConfig(string clientId);
+
+        /// <summary>
         /// Get the configs to the <see cref="IConsumer{TKey, TValue}"/>
         /// </summary>
         /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
@@ -120,6 +127,13 @@ namespace Streamiz.Kafka.Net
         /// <param name="clientId">Consumer client ID</param>
         /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
         ConsumerConfig ToGlobalConsumerConfig(string clientId);
+
+        /// <summary>
+        /// Get the configs to the external <see cref="IConsumer{TumerKey, TValue}"/> with specific <paramref name="clientId"/>
+        /// </summary>
+        /// <param name="clientId">Consumer client ID</param>
+        /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
+        ConsumerConfig ToExternalConsumerConfig(string clientId);
 
         /// <summary>
         /// Get the configs to the <see cref="IAdminClient"/> with specific <paramref name="clientId"/>
@@ -512,6 +526,8 @@ namespace Streamiz.Kafka.Net
         private const string globalConsumerPrefix = "global.consumer.";
         private const string restoreConsumerPrefix = "restore.consumer.";
         private const string producerPrefix = "producer.";
+        private const string externalConsumerPrefix = "external.consumer.";
+        private const string externalProducerPrefix = "external.producer.";
 
         private ConsumerConfig _consumerConfig = null;
         private ProducerConfig _producerConfig = null;
@@ -521,7 +537,9 @@ namespace Streamiz.Kafka.Net
         private ConsumerConfig _overrideMainConsumerConfig = new();
         private ConsumerConfig _overrideGlobalConsumerConfig = new();
         private ConsumerConfig _overrideRestoreConsumerConfig = new();
-        private ConsumerConfig _overrideProducerConfig = new();
+        private ConsumerConfig _overrideExternalConsumerConfig = new();
+        private ProducerConfig _overrideProducerConfig = new();
+        private ProducerConfig _overrideExternalProducerConfig = new();
         
         private readonly List<IStreamMiddleware> middlewares = new();
 
@@ -2358,6 +2376,10 @@ namespace Streamiz.Kafka.Net
                     SetObject(_overrideRestoreConsumerConfig, key.Replace(restoreConsumerPrefix, string.Empty), value);
                 else if (key.StartsWith(producerPrefix))
                     SetObject(_overrideProducerConfig, key.Replace(producerPrefix, string.Empty), value);
+                else if(key.StartsWith(externalConsumerPrefix))
+                    SetObject(_overrideExternalConsumerConfig, key.Replace(externalConsumerPrefix, string.Empty), value);
+                else if(key.StartsWith(externalProducerPrefix))
+                    SetObject(_overrideExternalProducerConfig, key.Replace(externalProducerPrefix, string.Empty), value);
                 else
                     configProperties.AddOrUpdate(key, (object)value);
             }
@@ -2749,6 +2771,20 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
+        /// Get the configs to the external <see cref="IProducer{TKey, TValue}"/> with specific <paramref name="clientId"/>
+        /// </summary>
+        /// <param name="clientId">Producer client ID</param>
+        /// <returns>Return <see cref="ProducerConfig"/> for building <see cref="IProducer{TKey, TValue}"/> instance.</returns>
+        public ProducerConfig ToExternalProducerConfig(string clientId)
+        {
+            ProducerConfig config = new ProducerConfig(_producerConfig.Union(_config).Distinct(new KeyValueComparer()).ToDictionary());
+            foreach(var kv in _overrideExternalProducerConfig)
+                config.Set(kv.Key, kv.Value);
+            config.ClientId = clientId;
+            return config;
+        }
+
+        /// <summary>
         /// Get the configs to the <see cref="IConsumer{TKey, TValue}"/>
         /// </summary>
         /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
@@ -2773,6 +2809,27 @@ namespace Streamiz.Kafka.Net
                 foreach (var kv in _overrideMainConsumerConfig)
                     config.Set(kv.Key, kv.Value);
             }
+            config.GroupId = ApplicationId;
+            config.ClientId = clientId;
+            return config;
+        }
+
+        /// <summary>
+        /// Get the configs to the external <see cref="IConsumer{TumerKey, TValue}"/> with specific <paramref name="clientId"/>
+        /// </summary>
+        /// <param name="clientId">Consumer client ID</param>
+        /// <returns>Return <see cref="ConsumerConfig"/> for building <see cref="IConsumer{TKey, TValue}"/> instance.</returns>
+        public ConsumerConfig ToExternalConsumerConfig(string clientId)
+        {
+            if (!configProperties.ContainsKey(applicatonIdCst))
+                throw new StreamConfigException($"Key {applicatonIdCst} was not found. She is mandatory for getting consumer config");
+
+            var config = new ConsumerConfig(_consumerConfig.Union(_config).Distinct(new KeyValueComparer()).ToDictionary());
+            foreach (var kv in _overrideExternalConsumerConfig)
+                config.Set(kv.Key, kv.Value);
+            
+            config.EnableAutoCommit = false;
+            config.EnableAutoOffsetStore = false;
             config.GroupId = ApplicationId;
             config.ClientId = clientId;
             return config;
