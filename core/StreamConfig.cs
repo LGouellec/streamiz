@@ -534,12 +534,12 @@ namespace Streamiz.Kafka.Net
         private AdminClientConfig _adminClientConfig = null;
         private ClientConfig _config = null;
 
-        private ConsumerConfig _overrideMainConsumerConfig = new();
-        private ConsumerConfig _overrideGlobalConsumerConfig = new();
-        private ConsumerConfig _overrideRestoreConsumerConfig = new();
-        private ConsumerConfig _overrideExternalConsumerConfig = new();
-        private ProducerConfig _overrideProducerConfig = new();
-        private ProducerConfig _overrideExternalProducerConfig = new();
+        private readonly ConsumerConfig _overrideMainConsumerConfig = new();
+        private readonly ConsumerConfig _overrideGlobalConsumerConfig = new();
+        private readonly ConsumerConfig _overrideRestoreConsumerConfig = new();
+        private readonly ConsumerConfig _overrideExternalConsumerConfig = new();
+        private readonly ProducerConfig _overrideProducerConfig = new();
+        private readonly ProducerConfig _overrideExternalProducerConfig = new();
         
         private readonly List<IStreamMiddleware> middlewares = new();
 

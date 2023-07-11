@@ -43,8 +43,8 @@ namespace sample_stream
                 StateDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()),
                 Logger = LoggerFactory.Create((b) =>
                 {
-                    b.SetMinimumLevel(LogLevel.Information);
-                    b.AddLog4Net();
+                    b.SetMinimumLevel(LogLevel.Debug);
+                    b.AddConsole();
                 })
             };
             
