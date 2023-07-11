@@ -11,6 +11,7 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
+using Streamiz.Kafka.Net.State.Helper;
 
 namespace Streamiz.Kafka.Net.State.InMemory
 {
@@ -385,7 +386,13 @@ namespace Streamiz.Kafka.Net.State.InMemory
             {
                 // register the store
                 context.Register(root,
-                    (key, value, timestamp) => Put(key, value, timestamp));
+                    (key, value, timestamp) =>
+                    {
+                        Put(
+                            Bytes.Wrap(WindowKeyHelper.ExtractStoreKeyBytes(key.Get)),
+                            value,
+                            WindowKeyHelper.ExtractStoreTimestamp(key.Get));
+                    });
             }
 
             IsOpen = true;
@@ -393,8 +400,6 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
         public virtual void Put(Bytes key, byte[] value, long windowStartTimestamp)
         {
-            RemoveExpiredData();
-
             observedStreamTime = Math.Max(observedStreamTime, windowStartTimestamp);
 
             if (windowStartTimestamp <= observedStreamTime - retention.TotalMilliseconds)

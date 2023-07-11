@@ -2,73 +2,76 @@ using Confluent.Kafka;
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
 using System;
-using System.Collections.Generic;
-using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Streamiz.Kafka.Net.Processors.Public;
+using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 
 namespace sample_stream
 {
-    internal static class StringHelper
+    public static class Program
     {
-        internal static readonly Random rd = new Random();
-
-        internal static string SubRandom(this string str)
-        {
-            var offset = rd.Next(str.Length - 1);
-            return str.Substring((int)offset, (int)str.Length - offset);
-        }
-    }
-    
-    /// <summary>
-    /// Sample program with a passtrought stream, instanciate and dispose with CTRL+ C console event.
-    /// </summary>
-    internal class Program
-    {        
         public static async Task Main(string[] args)
         {
-            // kafka-producer-perf-test --producer-props bootstrap.servers=broker:29092 --topic input --record-size 200 --throughput 500 --num-records 10000000000
+            Console.WriteLine("Hello Streams");
+
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                ApplicationId = "test-app-reproducer-eos",
+                ApplicationId = $"test-windowedtable",
                 BootstrapServers = "localhost:9092",
-                AutoOffsetReset = AutoOffsetReset.Earliest,
-                CommitIntervalMs = 2000,
-                Guarantee = ProcessingGuarantee.AT_LEAST_ONCE,
-                MaxPollRecords = 500,
-                PartitionAssignmentStrategy = PartitionAssignmentStrategy.CooperativeSticky,
-                StateDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()),
-                Logger = LoggerFactory.Create((b) =>
-                {
-                    b.SetMinimumLevel(LogLevel.Information);
-                    b.AddLog4Net();
-                })
+                AutoOffsetReset = AutoOffsetReset.Earliest
             };
-            
+
+            var builder = CreateWindowedStore();
+
+            var t = builder.Build();
+            var windowedTableStream = new KafkaStream(t, config);
+
+            await windowedTableStream.StartAsync();
+
+            //wait for the store to be restored and ready
+            Thread.Sleep(30000);
+
+            GetValueFromWindowedStore(windowedTableStream, DateTime.UtcNow.AddHours(-10), new CancellationToken());
+
+            Console.WriteLine("Finished");
+        }
+
+        private static void GetValueFromWindowedStore(KafkaStream windowedTableStream, DateTime startUtcForWindowLookup, CancellationToken cancellationToken)
+        {
+            var windowedStore = windowedTableStream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.WindowStore<string, int>()));
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var records = windowedStore.FetchAll(startUtcForWindowLookup, DateTime.UtcNow).ToList();
+
+                if (records.Count > 0)
+                {
+                    foreach (var item in records)
+                    {
+                        Console.WriteLine($"Value from windowed store : KEY = {item.Key} VALUE = {item.Value}");
+                    }
+
+                    startUtcForWindowLookup = DateTime.UtcNow;
+                }
+            }
+        }
+
+        private static StreamBuilder CreateWindowedStore()
+        {
             var builder = new StreamBuilder();
 
             builder
-                .Stream("input", new StringSerDes(), new StringSerDes())
-                .SelectKey((k,v) => "1")
+                .Stream<string, string>("topic")
                 .GroupByKey()
-                .Count(
-                    InMemory.As<string, Int64>()
-                        .WithKeySerdes(new StringSerDes())
-                        .WithValueSerdes(new Int64SerDes()))
-                .ToStream()
-                .MapValues((v) => v.ToString())
-                .To("output", new StringSerDes(), new StringSerDes());
+                .WindowedBy(TumblingWindowOptions.Of(60000))
+                .Aggregate(
+                    () => 0,
+                    (k, v, agg) => Math.Max(v.Length, agg),
+                    InMemoryWindows.As<string, int>("store").WithValueSerdes<Int32SerDes>());
 
-            Topology t = builder.Build();
-            KafkaStream stream1 = new KafkaStream(t, config);
-            
-            Console.CancelKeyPress += (_, _) => stream1.Dispose();
-            
-            await stream1.StartAsync();
+            return builder;
         }
     }
-    
 }

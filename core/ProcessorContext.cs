@@ -126,12 +126,14 @@ namespace Streamiz.Kafka.Net
 
         internal void Register(IStateStore store, StateRestoreCallback callback)
         {
-            void StateRestoreCallback(Bytes key, byte[] value, long ts)
+            Action<ConsumeResult<byte[], byte[]>> restoreCallBack = (result) =>
             {
-                ChangeTimestamp(ts);
-                callback(key, value, ts);
-            }
-            States.Register(store, StateRestoreCallback);
+                SetRecordMetaData(result);
+                callback(Bytes.Wrap(result.Message.Key), result.Message.Value,
+                    result.Message.Timestamp.UnixTimestampMs);
+            };
+            
+            States.Register(store, restoreCallBack);
         }
 
         internal void Log(string storeName, Bytes key, byte[] value, long timestamp)
