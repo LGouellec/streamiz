@@ -5,4 +5,4 @@ USER gitpod
 ENV DOTNET_ROOT=/tmp/dotnet
 ENV PATH=$PATH:/tmp/dotnet
 
-RUN sudo apt-get install librocksdb-dev
+RUN sudo apt-get -y install librocksdb-dev
