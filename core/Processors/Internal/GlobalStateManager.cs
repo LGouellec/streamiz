@@ -164,7 +164,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
         }
 
-        public void Register(IStateStore store, StateRestoreCallback callback)
+        public void Register(IStateStore store, Action<ConsumeResult<byte[], byte[]>> callback)
         {
             log.LogInformation($"Restoring state for global store {store.Name}");
             var topicPartitions = TopicPartitionsForStore(store).ToList();
@@ -218,7 +218,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         }
 
         private void RestoreState(
-            StateRestoreCallback restoreCallback,
+            Action<ConsumeResult<byte[], byte[]>> restoreCallback,
             List<TopicPartition> topicPartitions,
             IDictionary<TopicPartition, (Offset, Offset)> offsetWatermarks,
             Func<ConsumeResult<byte[], byte[]>, ConsumeResult<byte[], byte[]>> recordConverter)
@@ -249,9 +249,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                         config.MaxPollRestoringRecords).ToList();
 
                     var convertedRecords = records.Select(r => recordConverter(r)).ToList();
-                    
-                    foreach(var record in convertedRecords)
-                        restoreCallback?.Invoke(Bytes.Wrap(record.Message.Key), record.Message.Value, record.Message.Timestamp.UnixTimestampMs);
+
+                    foreach (var record in convertedRecords)
+                        restoreCallback?.Invoke(record);
 
                     if (convertedRecords.Any())
                         offset = records.Last().Offset;
