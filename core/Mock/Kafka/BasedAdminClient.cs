@@ -69,6 +69,16 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             throw new NotImplementedException();
         }
 
+        public Task<DescribeUserScramCredentialsResult> DescribeUserScramCredentialsAsync(IEnumerable<string> users, DescribeUserScramCredentialsOptions options = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task AlterUserScramCredentialsAsync(IEnumerable<UserScramCredentialAlteration> alterations, AlterUserScramCredentialsOptions options = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task DeleteTopicsAsync(IEnumerable<string> topics, DeleteTopicsOptions options = null)
         {
             throw new NotImplementedException();
@@ -85,6 +95,11 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         }
         
         public Task AlterConfigsAsync(Dictionary<ConfigResource, List<ConfigEntry>> configs, AlterConfigsOptions options = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<List<IncrementalAlterConfigsResult>> IncrementalAlterConfigsAsync(Dictionary<ConfigResource, List<ConfigEntry>> configs, IncrementalAlterConfigsOptions options = null)
         {
             throw new NotImplementedException();
         }

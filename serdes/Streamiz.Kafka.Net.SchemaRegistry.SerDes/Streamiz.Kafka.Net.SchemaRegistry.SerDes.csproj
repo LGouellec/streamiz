@@ -33,7 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Confluent.SchemaRegistry" Version="2.1.1" />
+    <PackageReference Include="Confluent.SchemaRegistry" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>
