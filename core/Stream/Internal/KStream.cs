@@ -104,12 +104,12 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         
         #region Process
 
-        public void Process(ProcessorSupplier<K, V> processorSupplier, string named = null)
+        public void Process(ProcessorSupplier<K, V> processorSupplier, string named = null, params string[] storeNames)
         {
             string name = new Named(named).OrElseGenerateWithPrefix(builder, KStream.PROCESSOR_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(
                 new KStreamProcessorSupplier<K, V>(processorSupplier), name);
-            StatefulProcessorNode<K, V> processorNode = new StatefulProcessorNode<K, V>(name, processorParameters, processorSupplier.StoreBuilder);
+            StatefulProcessorNode<K, V> processorNode = new StatefulProcessorNode<K, V>(name, processorParameters, processorSupplier.StoreBuilder, storeNames);
 
             builder.AddGraphNode(Node, processorNode);
         }

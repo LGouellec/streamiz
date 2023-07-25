@@ -1921,7 +1921,7 @@ namespace Streamiz.Kafka.Net.Stream
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
             string named = null);
-        
+
         #endregion
 
         #region Process
@@ -1963,7 +1963,8 @@ namespace Streamiz.Kafka.Net.Stream
         /// </summary>
         /// <param name="processorSupplier">an instance of <see cref="ProcessorSupplier{K,V}"/> which contains the processor and a potential state store. Use <see cref="ProcessorBuilder"/> to build this supplier.</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
-        void Process(ProcessorSupplier<K, V> processorSupplier, string named = null);
+        /// <param name="storeNames">The names of the state stores used by the processor.</param>
+        void Process(ProcessorSupplier<K, V> processorSupplier, string named = null, params string[] storeNames);
         
         #endregion
 

@@ -1,5 +1,4 @@
-﻿using Streamiz.Kafka.Net.Processors;
-using Streamiz.Kafka.Net.Processors.Internal;
+﻿using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.State;
 
 namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
@@ -16,10 +15,12 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
         /// <param name="nameNode"></param>
         /// <param name="parameters"></param>
         /// <param name="storeBuilder"></param>
-        public StatefulProcessorNode(string nameNode, ProcessorParameters<K, V> parameters, IStoreBuilder storeBuilder)
+        /// <param name="storeNames">The names of the state stores used by the processor.</param>
+
+        public StatefulProcessorNode(string nameNode, ProcessorParameters<K, V> parameters, IStoreBuilder storeBuilder, params string[] storeNames)
             : base(nameNode, parameters)
         {
-            storeNames = null;
+            this.storeNames = storeNames;
             this.storeBuilder = storeBuilder;
         }
 
