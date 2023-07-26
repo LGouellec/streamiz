@@ -1931,7 +1931,7 @@ namespace Streamiz.Kafka.Net
 
         /// <summary>
         /// Name of partition assignment strategy to use when elected group leader assigns
-        /// partitions to group members. default: range,roundrobin importance: medium
+        /// partitions to group members. default: range importance: medium
         /// </summary>
         [StreamConfigProperty("partition.assignment.strategy")]
         public PartitionAssignmentStrategy? PartitionAssignmentStrategy { get { return _consumerConfig.PartitionAssignmentStrategy; } set { _consumerConfig.PartitionAssignmentStrategy = value; } }
@@ -2246,7 +2246,7 @@ namespace Streamiz.Kafka.Net
             MaxPollRecords = 500;
             MaxPollRestoringRecords = 1000;
             MaxTaskIdleMs = 0;
-            BufferedRecordsPerPartition = 1000;
+            BufferedRecordsPerPartition = Int32.MaxValue;
             InnerExceptionHandler = (_) => ExceptionHandlerResponse.FAIL;
             ProductionExceptionHandler = (_) => ExceptionHandlerResponse.FAIL;
             DeserializationExceptionHandler = (_, _, _) => ExceptionHandlerResponse.FAIL;
@@ -2550,6 +2550,7 @@ namespace Streamiz.Kafka.Net
         /// Maximum number of records to buffer per partition. (Default: 1000)
         /// </summary>
         [StreamConfigProperty("" + bufferedRecordsPerPartitionCst)]
+        [Obsolete("Librdkafka clients manage internally a backpressure. So this configuration will be remove in the next release.")]
         public long BufferedRecordsPerPartition
         {
             get => configProperties[bufferedRecordsPerPartitionCst];
