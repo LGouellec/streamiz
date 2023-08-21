@@ -3161,6 +3161,16 @@ namespace Streamiz.Kafka.Net
                     sb.AppendLine($"\t\t{kp.Key}: \t{kp.Value}");
             }
 
+            // override external consumer config property
+            if (_overrideGlobalConsumerConfig.Any())
+            {
+                sb.AppendLine("\tOverride External Consumer property:");
+                var overrideExtConsumer = _overrideExternalConsumerConfig
+                    .Intercept((kp) => keysToNotDisplay.Contains(kp.Key), replaceValue);
+                foreach (var kp in overrideExtConsumer)
+                    sb.AppendLine($"\t\t{kp.Key}: \t{kp.Value}");
+            }
+
             // producer config property
             sb.AppendLine("\tProducer property:");
             var producersConfig = _producerConfig
@@ -3182,6 +3192,16 @@ namespace Streamiz.Kafka.Net
                 var overrideProducer = _overrideProducerConfig
                     .Intercept((kp) => keysToNotDisplay.Contains(kp.Key), replaceValue);
                 foreach (var kp in overrideProducer)
+                    sb.AppendLine($"\t\t{kp.Key}: \t{kp.Value}");
+            }
+
+            // override external producer config property
+            if (_overrideExternalProducerConfig.Any())
+            {
+                sb.AppendLine("\tOverride External Producer property:");
+                var overrideExtProducer = _overrideExternalProducerConfig
+                    .Intercept((kp) => keysToNotDisplay.Contains(kp.Key), replaceValue);
+                foreach (var kp in overrideExtProducer)
                     sb.AppendLine($"\t\t{kp.Key}: \t{kp.Value}");
             }
             
@@ -3240,6 +3260,15 @@ namespace Streamiz.Kafka.Net
         /// <returns>the key for restore consumer</returns>
         public string RestoreConsumerPrefix(string key)
             => $"{restoreConsumerPrefix}{key}";
+
+        /// <summary>
+        /// Prefix the key with the external consumer prefix.
+        /// Use this helper method if you want to override one specific configuration especially for the external consumer.
+        /// </summary>
+        /// <param name="key">Key configuration</param>
+        /// <returns>the key for external consumer</returns>
+        public string ExternalConsumerPrefix(string key)
+            => $"{externalConsumerPrefix}{key}";
         
         /// <summary>
         /// Prefix the key with the main producer prefix.
@@ -3249,6 +3278,15 @@ namespace Streamiz.Kafka.Net
         /// <returns>the key for main producer</returns>
         public string ProducerPrefix(string key)
             => $"{producerPrefix}{key}";
+
+        /// <summary>
+        /// Prefix the key with the external producer prefix.
+        /// Use this helper method if you want to override one specific configuration especially for the external producer.
+        /// </summary>
+        /// <param name="key">Key configuration</param>
+        /// <returns>the key for external producer</returns>
+        public string ExternalProducerPrefix(string key)
+            => $"{externalProducerPrefix}{key}";
 
         #endregion
     }

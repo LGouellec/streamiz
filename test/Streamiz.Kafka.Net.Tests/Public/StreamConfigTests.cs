@@ -196,12 +196,16 @@ namespace Streamiz.Kafka.Net.Tests.Public
             streamConfig.AddConfig("main.consumer.fetch.min.bytes", 1000);
             streamConfig.AddConfig("fetch.wait.max.ms", 150);
             streamConfig.AddConfig("global.consumer.fetch.wait.max.ms", 1000);
+            streamConfig.AddConfig(streamConfig.ExternalConsumerPrefix("fetch.wait.max.ms"), 50);
+            streamConfig.AddConfig(streamConfig.ExternalProducerPrefix("acks"), Acks.None);
 
             var consumerConfig = streamConfig.ToConsumerConfig();
             var restoreConsumerConfig = streamConfig.ToRestoreConsumerConfig("restore-client");
             var globalConsumerConfig = streamConfig.ToGlobalConsumerConfig("global-client");
             var producerConfig = streamConfig.ToProducerConfig();
-            
+            var externalProducerConfig = streamConfig.ToExternalProducerConfig("external-producer");
+            var externalConsumerConfig = streamConfig.ToExternalConsumerConfig("external-consumer");
+
             Assert.AreEqual("localhost:9092", consumerConfig.BootstrapServers);
             Assert.AreEqual("test-app", consumerConfig.GroupId);
             Assert.AreEqual(Acks.All, producerConfig.Acks);
@@ -214,11 +218,15 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual(52428800, consumerConfig.FetchMaxBytes);
             Assert.AreEqual(52428800*2, restoreConsumerConfig.FetchMaxBytes);
             Assert.AreEqual(52428800, globalConsumerConfig.FetchMaxBytes);
+            //Assert.AreEqual(Acks.None, externalProducerConfig.Acks);
+            Assert.AreEqual(50, externalConsumerConfig.FetchWaitMaxMs);
 
             Assert.IsTrue(streamConfig.ToString().Contains("Override Main Consumer property"));
             Assert.IsTrue(streamConfig.ToString().Contains("Override Restore Consumer property"));
             Assert.IsTrue(streamConfig.ToString().Contains("Override Global Consumer property"));
             Assert.IsTrue(streamConfig.ToString().Contains("Override Producer property"));
+            Assert.IsTrue(streamConfig.ToString().Contains("Override External Producer property"));
+            Assert.IsTrue(streamConfig.ToString().Contains("Override External Consumer property"));
         }
 
         [Test]
