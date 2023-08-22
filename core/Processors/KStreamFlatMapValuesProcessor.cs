@@ -1,5 +1,8 @@
 ﻿using Streamiz.Kafka.Net.Stream;
 using System.Collections.Generic;
+using System.Linq;
+using Confluent.Kafka;
+using Streamiz.Kafka.Net.Crosscutting;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -16,8 +19,14 @@ namespace Streamiz.Kafka.Net.Processors
         public override void Process(K key, V value)
         {
             LogProcessingKeyValue(key, value);
+
+            var originalHeader = Context.RecordContext.Headers.Clone();
+            
             foreach (var newValue in this.mapper.Apply(key, value))
-                this.Forward(key, newValue);
+            {
+                Forward(key, newValue);
+                Context.SetHeaders(originalHeader);
+            }
         }
     }
 }
