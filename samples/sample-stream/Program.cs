@@ -10,6 +10,7 @@ using CloudNative.CloudEvents.Kafka;
 using CloudNative.CloudEvents.SystemTextJson;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Table;
 
 namespace sample_stream
 {
@@ -110,8 +111,8 @@ namespace sample_stream
         {
             var builder = new StreamBuilder();
 
-            var inputStream = builder.Stream<string, string>("Input", new StringSerDes(), new StringSerDes());
-
+            var inputStream = builder
+                .Stream<string, string>("Input", new StringSerDes(), new StringSerDes());
             inputStream
                 .FlatMapValues((k, v) => v.Split(",").Select(x => new CloudEvent()
                     {Id = Guid.NewGuid().ToString(), Source = new Uri("abc://a/b/c"), Type = x}))
