@@ -103,8 +103,6 @@ namespace Streamiz.Kafka.Net.Processors
             RegisterSensors();
         }
 
-        internal IConsumerGroupMetadata GroupMetadata { get; set; }
-
         #region Private
 
         private void RegisterSensors()
@@ -144,14 +142,38 @@ namespace Streamiz.Kafka.Net.Processors
                 FlushState();
                 if (eosEnabled)
                 {
-                    producer.SendOffsetsToTransaction(GetPartitionsWithOffset(), GroupMetadata, configuration.TransactionTimeout);
-                    producer.CommitTransaction(configuration.TransactionTimeout);
-                    transactionInFlight = false;
+                    bool repeat = false;
+                    do
+                    {
+                        try
+                        {
+                            var offsets = GetPartitionsWithOffset().ToList();
+                            log.LogDebug($"Send offsets to transactions : {string.Join(",", offsets)}");
+                            producer.SendOffsetsToTransaction(offsets, consumer.ConsumerGroupMetadata,
+                                configuration.TransactionTimeout);
+                            producer.CommitTransaction(configuration.TransactionTimeout);
+                            transactionInFlight = false;
+                        }
+                        catch (KafkaTxnRequiresAbortException e)
+                        {
+                            log.LogWarning(
+                                $"{logPrefix}Committing failed with a non-fatal error: {e.Message}, the transaction will be aborted");
+                            producer.AbortTransaction(configuration.TransactionTimeout);
+                            transactionInFlight = false;
+                        }
+                        catch (KafkaRetriableException e)
+                        {
+                            log.LogDebug($"{logPrefix}Committing failed with a non-fatal error: {e.Message}, going to repeat the operation");
+                            repeat = true;
+                        }
+                    } while (repeat);
+
                     if (startNewTransaction)
                     {
                         producer.BeginTransaction();
                         transactionInFlight = true;
                     }
+
                     consumedOffsets.Clear();
                 }
                 else
@@ -163,12 +185,22 @@ namespace Streamiz.Kafka.Net.Processors
                     }
                     catch (TopicPartitionOffsetException e)
                     {
-                        log.LogInformation($"{logPrefix}Committing failed with a non-fatal error: {e.Message}, we can ignore this since commit may succeed still");
+                        log.LogError($"{logPrefix}Committing failed with a non-fatal error: {e.Message}, we can ignore this since commit may succeed still");
                     }
                     catch (KafkaException e)
                     {
-                        // TODO : get info about offset committing
-                        log.LogError(e, $"{logPrefix}Error during committing offset ......");
+                        if (!e.Error.IsFatal)
+                        {
+                            if (e.Error.Code ==
+                                ErrorCode.IllegalGeneration) // Broker: Specified group generation id is not valid
+                            {
+                                log.LogWarning($"{logPrefix}Error with a non-fatal error during committing offset (ignore this, and try to commit during next time): {e.Message}");
+                                return;
+                            }
+                            log.LogWarning($"{logPrefix}Error with a non-fatal error during committing offset (ignore this, and try to commit during next time): {e.Message}");
+                        }
+                        else
+                            throw;
                     }
                 }
                 commitNeeded = false;
@@ -477,7 +509,7 @@ namespace Streamiz.Kafka.Net.Processors
                         producer = null;
                     }
                     
-                    FlushState();
+                    // duplicate FlushState();
                     MayWriteCheckpoint(true);
                     CloseStateManager();
                     streamMetricsRegistry.RemoveTaskSensors(threadId, Id.ToString());

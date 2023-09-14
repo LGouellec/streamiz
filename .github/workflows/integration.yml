@@ -22,6 +22,6 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build --configuration Debug --no-restore
     - name: Test
-      run: dotnet test --no-build --no-restore --verbosity normal --configuration Release test/Streamiz.Kafka.Net.IntegrationTests/Streamiz.Kafka.Net.IntegrationTests.csproj
+      run: dotnet test --no-build --no-restore --verbosity normal --configuration Debug test/Streamiz.Kafka.Net.IntegrationTests/Streamiz.Kafka.Net.IntegrationTests.csproj

@@ -4,32 +4,30 @@ using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
-using DotNet.Testcontainers.Containers.Builders;
-using DotNet.Testcontainers.Containers.Configurations.MessageBrokers;
-using DotNet.Testcontainers.Containers.Modules.MessageBrokers;
+using Testcontainers.Kafka;
+using Testcontainers;
 
 namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
 {
     public class KafkaFixture
     {
-        private readonly KafkaTestcontainer container;
+        private readonly KafkaContainer container;
         
         public KafkaFixture()
         {
-            container = new TestcontainersBuilder<KafkaTestcontainer>()
-                .WithKafka(new KafkaTestcontainerConfiguration())
-                .WithImage("registry.hub.docker.com/confluentinc/cp-kafka:7.2.1")
+            container = new KafkaBuilder()
+                .WithImage("registry.hub.docker.com/confluentinc/cp-kafka:7.4.0")
                 .WithPortBinding(9092)
                 .WithName("kafka-streamiz-integration-tests")
                 .Build();
         }
 
-        public string BootstrapServers => container.BootstrapServers;
+        public string BootstrapServers => container.GetBootstrapAddress();
 
         private ReadOnlyDictionary<string, string> ConsumerProperties => new(
             new Dictionary<string, string>
             {
-                {"bootstrap.servers", container.BootstrapServers},
+                {"bootstrap.servers", BootstrapServers},
                 {"auto.offset.reset", "earliest"},
                 {"group.id", "sample-consumer"}
             }
@@ -37,7 +35,7 @@ namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
 
         private ProducerConfig ProducerProperties => new()
         {
-            BootstrapServers = container.BootstrapServers
+            BootstrapServers = BootstrapServers
         };
 
         private IConsumer<string, byte[]> Consumer()

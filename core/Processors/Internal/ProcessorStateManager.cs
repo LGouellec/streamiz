@@ -16,7 +16,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             internal IStateStore Store { get; set; }
             internal TopicPartition ChangelogTopicPartition { get; set; }
-            internal StateRestoreCallback RestoreCallback { get; set; }
+            internal Action<ConsumeResult<byte[], byte[]>>  RestoreCallback { get; set; }
             internal Func<ConsumeResult<byte[], byte[]>, ConsumeResult<byte[], byte[]>> RecordConverter { get; set; }
 
             /// <summary>
@@ -97,7 +97,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
         }
 
-        public void Register(IStateStore store, StateRestoreCallback callback)
+        public void Register(IStateStore store, Action<ConsumeResult<byte[], byte[]>>  callback)
         {
             string storeName = store.Name;
             log.LogDebug("{LogPrefix}Registering state store {StoreName} to its state manager", logPrefix, storeName);
@@ -106,6 +106,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 throw new ArgumentException($"{logPrefix} Store {storeName} has already been registered.");
             }
+            
             
             var metadata = IsChangelogStateStore(storeName) ?
                 new StateStoreMetadata
@@ -284,7 +285,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
                 // TODO : bach restoration behavior
                 foreach (var _record in convertedRecords)
-                    storeMetadata.RestoreCallback(Bytes.Wrap(_record.Message.Key), _record.Message.Value, _record.Message.Timestamp.UnixTimestampMs);
+                    storeMetadata.RestoreCallback(_record);
 
                 storeMetadata.Offset = endOffset;
             }

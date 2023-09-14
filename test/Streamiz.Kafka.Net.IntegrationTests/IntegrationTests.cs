@@ -2,27 +2,32 @@ using System;
 using System.Text;
 using System.Threading.Tasks;
 using Confluent.Kafka;
+using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.IntegrationTests.Fixtures;
 using Streamiz.Kafka.Net.SerDes;
 using NUnit.Framework;
 
 namespace Streamiz.Kafka.Net.IntegrationTests
 {
-    public class IntegrationTests
+    public sealed class IntegrationTests
     {
         private KafkaFixture kafkaFixture;
 
-        [OneTimeSetUp]
+        [SetUp]
         public void Setup()
         {
             kafkaFixture = new KafkaFixture();
+            Console.WriteLine("Starting");
             kafkaFixture.InitializeAsync().Wait(TimeSpan.FromMinutes(5));
+            Console.WriteLine("Started");
         }
         
-        [OneTimeTearDown]
+        [TearDown]
         public void TearDown()
         {
+            Console.WriteLine("Pending shutdown");
             kafkaFixture.DisposeAsync().Wait(TimeSpan.FromMinutes(5));
+            Console.WriteLine("Shutdown");
         }
 
         [Test]
@@ -55,6 +60,7 @@ namespace Streamiz.Kafka.Net.IntegrationTests
             stream.Dispose();
             
             Assert.AreEqual("Hello world!", Encoding.UTF8.GetString(result.Message.Value));
+            config.Logger.CreateLogger("ff").LogInformation("test ok");
         }
         
         [Test]
@@ -87,7 +93,7 @@ namespace Streamiz.Kafka.Net.IntegrationTests
             await kafkaFixture.Produce(
                 "filtered-topic", "a", Encoding.UTF8.GetBytes("a Hello world!")
             );
-            
+
             await stream.StartAsync();
 
             var result = kafkaFixture.Consume("filtered-topic2");

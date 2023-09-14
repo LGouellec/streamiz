@@ -52,7 +52,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 null,
                 new MockChangelogRegister()
                 , new StreamMetricsRegistry());
-            task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
             task.RestorationIfNeeded();
@@ -144,7 +143,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 null,
                 new MockChangelogRegister()
                 , new StreamMetricsRegistry());
-            task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
             task.RestorationIfNeeded();
@@ -247,7 +245,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 producer,
                 new MockChangelogRegister()
                 , new StreamMetricsRegistry());
-            task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
             task.RestorationIfNeeded();
@@ -352,7 +349,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 producer,
                 new MockChangelogRegister()
                 , new StreamMetricsRegistry());
-            task.GroupMetadata = consumer as SyncConsumer;
             task.InitializeStateStores();
             task.InitializeTopology();
             task.RestorationIfNeeded();

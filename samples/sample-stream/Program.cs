@@ -2,93 +2,76 @@ using Confluent.Kafka;
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
 using System;
-using System.Collections.Generic;
-using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
-using Streamiz.Kafka.Net.Table;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
-using System.Security.Permissions;
-using System.Text.Json;
-using Microsoft.Extensions.Logging;
-using Microsoft.VisualBasic;
-using Streamiz.Kafka.Net.Metrics;
-using Streamiz.Kafka.Net.Metrics.Prometheus;
-using Streamiz.Kafka.Net.Mock;
-using Streamiz.Kafka.Net.Processors;
-using Streamiz.Kafka.Net.Processors.Internal;
-using Streamiz.Kafka.Net.Processors.Public;
-using Streamiz.Kafka.Net.SerDes.CloudEvents;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Table;
 
 namespace sample_stream
 {
-    /// <summary>
-    /// Sample program with a passtrought stream, instanciate and dispose with CTRL+ C console event.
-    /// </summary>
-    internal class Program
+    public static class Program
     {
-        private static ILogger logger = Streamiz.Kafka.Net.Crosscutting.Logger.GetLogger(typeof(Program));
-        class MyTransformer : ITransformer<string, string, string, int>
-        {
-            private IKeyValueStore<string,int> store;
-
-            public void Init(ProcessorContext<string, int> context)
-            {
-                store = (IKeyValueStore<string, int>)context.GetStateStore("store");
-                context.Schedule(
-                    TimeSpan.FromMinutes(1),
-                    PunctuationType.PROCESSING_TIME,
-                    (ts) =>
-                    {
-                        foreach(var item in store.All())
-                            context.Forward(item.Key, item.Value);
-                    });
-            }
-
-            public Record<string, int> Process(Record<string, string> record)
-            {
-                var oldState = store.Get(record.Key);
-                store.Put(record.Key, oldState + 1 );
-                return null;
-            }
-
-            public void Close()
-            {
-                
-            }
-        }
         public static async Task Main(string[] args)
         {
-            var config = new StreamConfig<StringSerDes, StringSerDes>();
-            config.ApplicationId = "test-app";
-            config.BootstrapServers = "localhost:9092";
-            config.AutoOffsetReset = AutoOffsetReset.Earliest;
-            config.CommitIntervalMs = 3000;
-            config.StateDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            config.Logger = LoggerFactory.Create((b) =>
+            Console.WriteLine("Hello Streams");
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>
             {
-                b.SetMinimumLevel(LogLevel.Information);
-                b.AddLog4Net();
-            });
-            config.UsePrometheusReporter(9090);
-            config.MetricsRecording = MetricsRecordingLevel.DEBUG;
-            
-            StreamBuilder builder = new StreamBuilder();
-            
-            builder.Stream<string, string>("inputs")
-                .Peek((k, v) => logger.LogInformation("key={k} value={v}", k,v))
-                .MapValuesAsync(async (record, _) => await Task.FromResult(record.Value.ToUpper()))
-                .To("output");
-            
-            Topology t = builder.Build();
-            KafkaStream stream1 = new KafkaStream(t, config);
-            
-            Console.CancelKeyPress += (_, _) => stream1.Dispose();
-            
-            await stream1.StartAsync();
+                ApplicationId = $"test-windowedtable",
+                BootstrapServers = "localhost:9092",
+                AutoOffsetReset = AutoOffsetReset.Earliest
+            };
+
+            var builder = CreateWindowedStore();
+
+            var t = builder.Build();
+            var windowedTableStream = new KafkaStream(t, config);
+
+            await windowedTableStream.StartAsync();
+
+            //wait for the store to be restored and ready
+            Thread.Sleep(30000);
+
+            GetValueFromWindowedStore(windowedTableStream, DateTime.UtcNow.AddHours(-10), new CancellationToken());
+
+            Console.WriteLine("Finished");
+        }
+
+        private static void GetValueFromWindowedStore(KafkaStream windowedTableStream, DateTime startUtcForWindowLookup, CancellationToken cancellationToken)
+        {
+            var windowedStore = windowedTableStream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.WindowStore<string, int>()));
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var records = windowedStore.FetchAll(startUtcForWindowLookup, DateTime.UtcNow).ToList();
+
+                if (records.Count > 0)
+                {
+                    foreach (var item in records)
+                    {
+                        Console.WriteLine($"Value from windowed store : KEY = {item.Key} VALUE = {item.Value}");
+                    }
+
+                    startUtcForWindowLookup = DateTime.UtcNow;
+                }
+            }
+        }
+
+        private static StreamBuilder CreateWindowedStore()
+        {
+            var builder = new StreamBuilder();
+
+            builder
+                .Stream<string, string>("topic")
+                .GroupByKey()
+                .WindowedBy(TumblingWindowOptions.Of(60000))
+                .Aggregate(
+                    () => 0,
+                    (k, v, agg) => Math.Max(v.Length, agg),
+                    InMemoryWindows.As<string, int>("store").WithValueSerdes<Int32SerDes>());
+
+            return builder;
         }
     }
 }

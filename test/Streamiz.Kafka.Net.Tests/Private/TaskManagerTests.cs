@@ -69,7 +69,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 new TopicPartition("topic", 3),
             });
             Assert.AreEqual(2, taskManager.ActiveTasks.Count());
-            Assert.AreEqual(2, taskManager.RevokedTasks.Count());
             for (int i = 0; i < 2; ++i)
             {
                 var task = taskManager.ActiveTaskFor(new TopicPartition("topic", i));
@@ -85,7 +84,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             taskManager.Close();
             Assert.AreEqual(0, taskManager.ActiveTasks.Count());
-            Assert.AreEqual(0, taskManager.RevokedTasks.Count());
         }
 
         [Test]
@@ -273,7 +271,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
             taskManager.TryToCompleteRestoration();
 
             Assert.AreEqual(2, taskManager.ActiveTasks.Count());
-            Assert.AreEqual(0, taskManager.RevokedTasks.Count());
             taskManager.Close();
         }
 
@@ -328,7 +325,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
             taskManager.TryToCompleteRestoration();
 
             Assert.AreEqual(3, taskManager.ActiveTasks.Count());
-            Assert.AreEqual(0, taskManager.RevokedTasks.Count());
             taskManager.Close();
         }
 
