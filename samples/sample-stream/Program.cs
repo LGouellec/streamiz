@@ -2,6 +2,7 @@ using Confluent.Kafka;
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Streamiz.Kafka.Net.State;
@@ -23,9 +24,9 @@ namespace sample_stream
                 AutoOffsetReset = AutoOffsetReset.Earliest
             };
 
-            var builder = CreateWindowedStore();
+            var builder1 = CreateWindowedStore();
 
-            var t = builder.Build();
+            var t = builder1.Build();
             var windowedTableStream = new KafkaStream(t, config);
 
             await windowedTableStream.StartAsync();
