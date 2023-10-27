@@ -19,11 +19,10 @@ namespace Streamiz.Kafka.Net.Processors
         public override void Process(K key, V value)
         {
             LogProcessingKeyValue(key, value);
-
-            var originalHeader = Context.RecordContext.Headers.Clone();
             
             foreach (var newValue in this.mapper.Apply(key, value))
             {
+                var originalHeader = Context.RecordContext.Headers.Clone();
                 Forward(key, newValue);
                 Context.SetHeaders(originalHeader);
             }

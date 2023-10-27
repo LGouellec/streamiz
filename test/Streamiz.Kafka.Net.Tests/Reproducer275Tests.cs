@@ -105,11 +105,13 @@ namespace Streamiz.Kafka.Net.Tests
 
                 IList<CloudEvent> result;
 
-                inputTopic.PipeInput("numbers", "one,two");
+                inputTopic.PipeInput("numbers", "one,two,three,four");
                 result = outputTopic.ReadValueList().ToList();
-                Assert.AreEqual(2, result.Count);
-                Assert.AreEqual("one", result[0].Type); // <-- This line fails - it contains the value "two".
-                Assert.AreEqual("two", result[1].Type); // <-- This line passes
+                Assert.AreEqual(4, result.Count);
+                Assert.AreEqual("one", result[0].Type);
+                Assert.AreEqual("two", result[1].Type);
+                Assert.AreEqual("three", result[2].Type);
+                Assert.AreEqual("four", result[3].Type);
             }
         }
 
@@ -130,11 +132,13 @@ namespace Streamiz.Kafka.Net.Tests
 
                 IList<CloudEvent> result;
 
-                inputTopic.PipeInput("numbers", "one,two");
+                inputTopic.PipeInput("numbers", "one,two,three,four");
                 result = outputTopic.ReadValueList().ToList();
-                Assert.AreEqual(2, result.Count);
-                Assert.AreEqual("one", result[0].Type); // <-- This line fails - it contains the value "two".
-                Assert.AreEqual("two", result[1].Type); // <-- This line passes
+                Assert.AreEqual(4, result.Count);
+                Assert.AreEqual("one", result[0].Type); // <-- This line passes
+                Assert.AreEqual("two", result[1].Type); // <-- This line fails - it contains the value "four".
+                Assert.AreEqual("three", result[2].Type); // <-- This line fails - it contains the value "four".
+                Assert.AreEqual("four", result[3].Type); // <-- This line passes
             }
         }
 
