@@ -7,7 +7,13 @@ namespace Streamiz.Kafka.Net.Stream
     /// </summary>
     public class StreamTableJoinProps<K, V1, V2>
     {
-        internal StreamTableJoinProps(
+        /// <summary>
+        /// Creates a <see cref="StreamTableJoinProps{K,V1,V2}"/>
+        /// </summary>
+        /// <typeparam name="K">the key type</typeparam>
+        /// <typeparam name="V1">the value type</typeparam>
+        /// <typeparam name="V2">the other value type</typeparam>
+        public StreamTableJoinProps(
             ISerDes<K> keySerdes,
             ISerDes<V1> valueSerdes,
             ISerDes<V2> otherValueSerdes)

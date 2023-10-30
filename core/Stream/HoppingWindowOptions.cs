@@ -36,10 +36,30 @@ namespace Streamiz.Kafka.Net.Stream
         /// <summary>
         /// Static method to create <see cref="HoppingWindowOptions"/> with size windows and advance interval (aka “hop”)
         /// </summary>
+        /// <param name="sizeMs">Size windows</param>
+        /// <param name="advanceMs">Advance interval</param>
+        /// <param name="graceMs">the time to admit out-of-order events after the end of the window.</param>
+        /// <returns>Return a <see cref="HoppingWindowOptions"/> instance</returns>
+        public static HoppingWindowOptions Of(long sizeMs, long advanceMs,long graceMs)
+            => new HoppingWindowOptions(sizeMs, advanceMs, graceMs, DEFAULT_RETENTION_MS);
+
+        /// <summary>
+        /// Static method to create <see cref="HoppingWindowOptions"/> with size windows and advance interval (aka “hop”)
+        /// </summary>
         /// <param name="size">TimeSpan size windows</param>
         /// <param name="advance">Advance interval</param>
         /// <returns>Return a <see cref="HoppingWindowOptions"/> instance</returns>
         public static HoppingWindowOptions Of(TimeSpan size, TimeSpan advance)
             => Of((long)size.TotalMilliseconds, (long)advance.TotalMilliseconds);
+        
+        /// <summary>
+        /// Static method to create <see cref="HoppingWindowOptions"/> with size windows and advance interval (aka “hop”)
+        /// </summary>
+        /// <param name="size">TimeSpan size windows</param>
+        /// <param name="advance">Advance interval</param>
+        /// <param name="grace">the time to admit out-of-order events after the end of the window.</param>
+        /// <returns>Return a <see cref="HoppingWindowOptions"/> instance</returns>
+        public static HoppingWindowOptions Of(TimeSpan size, TimeSpan advance,TimeSpan grace)
+            => Of((long)size.TotalMilliseconds, (long)advance.TotalMilliseconds,(long)grace.TotalMilliseconds);
     }
 }

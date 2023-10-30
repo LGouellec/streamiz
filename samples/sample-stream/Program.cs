@@ -4,6 +4,8 @@ using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Linq;
 using System.Text.Json;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using CloudNative.CloudEvents;
 using CloudNative.CloudEvents.Kafka;
@@ -21,7 +23,6 @@ namespace sample_stream
         public CloudEventSerDes2()
         {
             var jsonOptions = new JsonSerializerOptions();
-
             formatter = new JsonEventFormatter(jsonOptions, new JsonDocumentOptions());
         }
 
