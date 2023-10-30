@@ -737,6 +737,22 @@ namespace Streamiz.Kafka.Net
 
         #endregion
 
+        #region State Store
+
+        /// <summary>
+        /// Adds a state store to the underlying <see cref="Topology"/>. 
+        /// It is required to connect state stores to <see cref="Streamiz.Kafka.Net.Processors.Public.IProcessor{K, V}"/> 
+        /// or <see cref="Streamiz.Kafka.Net.Processors.Public.ITransformer{K, V, K1, V1}"/>
+        /// before they can be used.
+        /// </summary>
+        /// <param name="storeBuilder">The builder used to obtain the <see cref="IStateStore"/> instance.</param>
+        public void AddStateStore(IStoreBuilder storeBuilder)
+        {
+            internalStreamBuilder.AddStateStore(storeBuilder);
+        }
+
+        #endregion
+
         /// <summary>
         /// Returns the <see cref="Topology"/> that represents the specified processing logic.
         /// Note that using this method means no optimizations are performed.
