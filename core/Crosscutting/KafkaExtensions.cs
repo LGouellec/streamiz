@@ -73,5 +73,19 @@ namespace Streamiz.Kafka.Net.Crosscutting
 
             return records;
         }
+
+        internal static Headers Clone(this Headers headers)
+        {
+            if (headers == null) return new Headers();
+            
+            var originHeader = headers
+                .Select(h => (h.Key, h.GetValueBytes()))
+                .ToList();
+
+            Headers copyHeaders = new Headers();
+            originHeader.ForEach(h => copyHeaders.Add(h.Key, h.Item2));
+            return copyHeaders;
+
+        }
     }
 }

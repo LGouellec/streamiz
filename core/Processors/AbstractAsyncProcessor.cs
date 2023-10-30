@@ -81,9 +81,15 @@ namespace Streamiz.Kafka.Net.Processors
             if (result && task.IsCompleted)
             {
                 LogProcessingKeyValueWithRetryNumber(key, value, context.RetryNumber, true);
-                if(task.Result != null && task.Result.Any())
-                    foreach(var kv in task.Result)
+                if (task.Result != null && task.Result.Any())
+                {
+                    foreach (var kv in task.Result)
+                    {
+                        var cloneHeader = Context.RecordContext.Headers.Clone();
                         Forward(kv.Key, kv.Value);
+                        Context.SetHeaders(cloneHeader);
+                    }
+                }
             }
 
             if (!retry && !result)
