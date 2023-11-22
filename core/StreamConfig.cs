@@ -3039,7 +3039,9 @@ namespace Streamiz.Kafka.Net
             List<string> keysToNotDisplay = new List<string> {
                 "sasl.password",
                 "ssl.key.password",
-                "ssl.keystore.password"
+                "ssl.keystore.password",
+                "ssl.key.pem",
+                "ssl.certificate.pem"
             };
 
             List<string> keysAlreadyPrint = new List<string>();
