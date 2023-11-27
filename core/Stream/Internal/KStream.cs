@@ -104,12 +104,12 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         
         #region Process
 
-        public void Process(ProcessorSupplier<K, V> processorSupplier, string named = null)
+        public void Process(ProcessorSupplier<K, V> processorSupplier, string named = null, params string[] storeNames)
         {
             string name = new Named(named).OrElseGenerateWithPrefix(builder, KStream.PROCESSOR_NAME);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(
                 new KStreamProcessorSupplier<K, V>(processorSupplier), name);
-            StatefulProcessorNode<K, V> processorNode = new StatefulProcessorNode<K, V>(name, processorParameters, processorSupplier.StoreBuilder);
+            StatefulProcessorNode<K, V> processorNode = new StatefulProcessorNode<K, V>(name, processorParameters, processorSupplier.StoreBuilder, storeNames);
 
             builder.AddGraphNode(Node, processorNode);
         }
@@ -118,19 +118,19 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Transform
 
-        public IKStream<K1, V1> Transform<K1, V1>(TransformerSupplier<K, V, K1, V1> transformerSupplier, string named = null)
-            => DoTransform(transformerSupplier, true, named);
+        public IKStream<K1, V1> Transform<K1, V1>(TransformerSupplier<K, V, K1, V1> transformerSupplier, string named = null, params string[] storeNames)
+            => DoTransform(transformerSupplier, true, named, storeNames);
 
-        public IKStream<K, V1> TransformValues<V1>(TransformerSupplier<K, V, K, V1> transformerSupplier, string named = null)
-            => DoTransform(transformerSupplier, false, named);
+        public IKStream<K, V1> TransformValues<V1>(TransformerSupplier<K, V, K, V1> transformerSupplier, string named = null, params string[] storeNames)
+            => DoTransform(transformerSupplier, false, named, storeNames);
         
         private IKStream<K1, V1> DoTransform<K1, V1>(TransformerSupplier<K, V, K1, V1> transformerSupplier, bool changeKey, string named =
-            null)
+            null, params string[] storeNames)
         {
             string name = new Named(named).OrElseGenerateWithPrefix(builder, changeKey ? KStream.TRANSFORM_NAME : KStream.TRANSFORMVALUES_NAME );
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(
                 new KStreamTransformerSupplier<K, V, K1, V1>(transformerSupplier, changeKey), name);
-            StatefulProcessorNode<K, V> processorNode = new StatefulProcessorNode<K, V>(name, processorParameters, transformerSupplier.StoreBuilder);
+            StatefulProcessorNode<K, V> processorNode = new StatefulProcessorNode<K, V>(name, processorParameters, transformerSupplier.StoreBuilder, storeNames);
 
             builder.AddGraphNode(Node, processorNode);
             
