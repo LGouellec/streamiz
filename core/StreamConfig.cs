@@ -279,7 +279,7 @@ namespace Streamiz.Kafka.Net
         string StateDir { get; set; }
 
         /// <summary>
-        /// The replication factor for change log topics topics created by the stream processing application. Default is 1.
+        /// The replication factor for change log topics topics created by the stream processing application. Default is -1, meaning default broker replication factor setting.
         /// </summary>
         int ReplicationFactor { get; set; }
 
@@ -2271,7 +2271,7 @@ namespace Streamiz.Kafka.Net
             RocksDbConfigHandler = (_, _) => { };
             FollowMetadata = false;
             StateDir = Path.Combine(Path.GetTempPath(), "streamiz-kafka-net");
-            ReplicationFactor = 1;
+            ReplicationFactor = -1;
             WindowStoreChangelogAdditionalRetentionMs = (long)TimeSpan.FromDays(1).TotalMilliseconds;
             OffsetCheckpointManager = null;
             MetricsIntervalMs = (long)TimeSpan.FromSeconds(30).TotalMilliseconds;
@@ -2591,7 +2591,7 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
-        /// The replication factor for change log topics topics created by the stream processing application. Default is 1.
+        /// The replication factor for change log topics topics created by the stream processing application. Default is -1, meaning default broker replication factor setting.
         /// </summary>
         [StreamConfigProperty("" + replicationFactorCst)]
         public int ReplicationFactor
@@ -3096,7 +3096,9 @@ namespace Streamiz.Kafka.Net
             List<string> keysToNotDisplay = new List<string> {
                 "sasl.password",
                 "ssl.key.password",
-                "ssl.keystore.password"
+                "ssl.keystore.password",
+                "ssl.key.pem",
+                "ssl.certificate.pem"
             };
 
             List<string> keysAlreadyPrint = new List<string>();

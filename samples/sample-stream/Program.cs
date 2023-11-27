@@ -21,10 +21,7 @@ namespace sample_stream
                 AutoOffsetReset = AutoOffsetReset.Earliest
             };
 
-            var builder = new StreamBuilder();
-            builder.Stream<string, string>("input").To("output");
-
-            var t = builder.Build();
+            var t = BuildTopology();
             var stream = new KafkaStream(t, config);
 
             Console.CancelKeyPress += (_,_) => {
@@ -32,7 +29,30 @@ namespace sample_stream
             };
 
             await stream.StartAsync();
-
+        }
+        
+        private static Topology BuildTopology()
+        {
+            var builder = new StreamBuilder();
+            
+            var globalTable = builder
+                .GlobalTable("Input2", new Int64SerDes(), new StringSerDes());
+            
+            var inputStream = builder
+                .Stream<string, string>("Input", new StringSerDes(), new StringSerDes())
+                .Map((k, v) => KeyValuePair.Create(1L, v.Length))
+                .LeftJoin<long, string, int>(globalTable, (k1, k2) => k1, (sO, g) =>
+                {
+                    return sO;
+                })
+                .GroupByKey<Int64SerDes, Int32SerDes>()
+                .Aggregate(() => new List<int>(), (l, i, arg3) =>
+                {
+                    arg3.Add(i);
+                    return arg3;
+                });
+          
+          return builder.Build();
         }
     }
 }
