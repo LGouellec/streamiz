@@ -2,11 +2,9 @@ using Confluent.Kafka;
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
 using System;
-using System.Threading;
 using System.Threading.Tasks;
-using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
-using Streamiz.Kafka.Net.Table;
+using System.Collections.Generic;
 
 namespace sample_stream
 {
