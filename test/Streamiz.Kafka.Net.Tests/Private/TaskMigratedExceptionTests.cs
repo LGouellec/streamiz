@@ -7,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Crosscutting;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -275,6 +277,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             var dt = DateTime.Now;
             var timeout = TimeSpan.FromSeconds(10);
+            
         
             config.ApplicationId = "test";
             config.BootstrapServers = "127.0.0.1";

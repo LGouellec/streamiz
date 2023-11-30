@@ -244,7 +244,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             {
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine(
-                    $"{logPrefix}Error encountered sending record (key {report.Key}, value {report.Value}) to topic {report.Topic} for task {id} due to:");
+                    $"{logPrefix}Error encountered sending record to topic {report.Topic} for task {id} due to:");
                 sb.AppendLine($"{logPrefix}Error Code : {report.Error.Code.ToString()}");
                 sb.AppendLine($"{logPrefix}Message : {report.Error.Reason}");
 
@@ -351,7 +351,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(
-                $"{logPrefix}Error encountered sending record (key {produceException.DeliveryResult.Key}, value {produceException.DeliveryResult.Value}) to topic {produceException.DeliveryResult.Topic} for task {id} due to:");
+                $"{logPrefix}Error encountered sending record to topic {produceException.DeliveryResult.Topic} for task {id} due to:");
             sb.AppendLine($"{logPrefix}Error Code : {produceException.Error.Code.ToString()}");
             sb.AppendLine($"{logPrefix}Message : {produceException.Error.Reason}");
 
