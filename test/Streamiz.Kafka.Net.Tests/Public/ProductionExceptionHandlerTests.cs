@@ -26,7 +26,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.ApplicationId = "test";
             config.BootstrapServers = "127.0.0.1";
             config.PollMs = 10;
-            config.ProductionExceptionHandler += (r) => ExceptionHandlerResponse.CONTINUE;
+            config.ProductionExceptionHandler += (r) => ProductionExceptionHandlerResponse.CONTINUE;
 
             var supplier = new ProducerSyncException();
             var producer = supplier.GetProducer(config.ToProducerConfig());
@@ -92,7 +92,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.ApplicationId = "test";
             config.BootstrapServers = "127.0.0.1";
             config.PollMs = 10;
-            config.ProductionExceptionHandler += (r) => ExceptionHandlerResponse.FAIL;
+            config.ProductionExceptionHandler += (r) => ProductionExceptionHandlerResponse.FAIL;
 
             var supplier = new ProducerSyncException();
 

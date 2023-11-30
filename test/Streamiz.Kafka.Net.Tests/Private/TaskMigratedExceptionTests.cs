@@ -220,7 +220,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config.ApplicationId = "test";
             config.BootstrapServers = "127.0.0.1";
             config.PollMs = 10;
-            config.ProductionExceptionHandler += (r) => ExceptionHandlerResponse.FAIL;
+            config.ProductionExceptionHandler += (r) => ProductionExceptionHandlerResponse.FAIL;
 
             var options = new ProducerSyncExceptionOptions {IsFatal = true};
             var supplier = new ProducerSyncException(options);
@@ -279,7 +279,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config.ApplicationId = "test";
             config.BootstrapServers = "127.0.0.1";
             config.PollMs = 10;
-            config.ProductionExceptionHandler += (r) => ExceptionHandlerResponse.FAIL;
+            config.ProductionExceptionHandler += (r) => ProductionExceptionHandlerResponse.FAIL;
             config.ParallelProcessing = parallelProcessing;
         
             var options = new ProducerSyncExceptionOptions {IsRecoverable = true};
@@ -331,7 +331,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config.ApplicationId = "test";
             config.BootstrapServers = "127.0.0.1";
             config.PollMs = 10;
-            config.ProductionExceptionHandler += (r) => ExceptionHandlerResponse.FAIL;
+            config.ProductionExceptionHandler += (r) => ProductionExceptionHandlerResponse.FAIL;
             config.ParallelProcessing = parallelProcessing;
         
             var options = new ProducerSyncExceptionOptions {IsRecoverable = true, IsProductionException = true};
@@ -380,7 +380,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config.ApplicationId = "test";
             config.BootstrapServers = "127.0.0.1";
             config.PollMs = 10;
-            config.ProductionExceptionHandler += (r) => ExceptionHandlerResponse.FAIL;
+            config.ProductionExceptionHandler += (r) => ProductionExceptionHandlerResponse.FAIL;
 
             var options = new ProducerSyncExceptionOptions {IsRecoverable = false, IsProductionException = true};
             var supplier = new ProducerSyncException(options);
