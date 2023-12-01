@@ -110,47 +110,49 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 return 0;
             }
 
-            private void HandleError(Action<DeliveryReport<byte[], byte[]>> deliveryHandler)
+            private void HandleError(DeliveryReport<byte[], byte[]> initReport, Action<DeliveryReport<byte[], byte[]>> deliveryHandler)
             {
                 handleError = false;
                 if (options.IsProductionException)
                 {
+                    var result = new DeliveryResult<byte[], byte[]>
+                    {
+                        Message = initReport.Message,
+                        Partition = initReport.Partition,
+                        Topic = initReport.Topic
+                    };
+                    
                     if (options.IsRecoverable)
                     {
-                        throw new ProduceException<byte[], byte[]>(
-                            new Error(ErrorCode.TransactionCoordinatorFenced, "TransactionCoordinatorFenced", false),
-                            new DeliveryResult<byte[], byte[]>());
+                        throw new ProduceException<byte[], byte[]>(new Error(ErrorCode.TransactionCoordinatorFenced,
+                            "TransactionCoordinatorFenced", false), result);
                     }
                     else
                     {
                         throw new ProduceException<byte[], byte[]>(
                             new Error(ErrorCode.Local_InvalidArg, "Invalid arg", false),
-                            new DeliveryResult<byte[], byte[]>());
+                            result);
                     }
                 }
                 else
                 {
                     if (options.IsFatal)
                     {
-                        deliveryHandler(new DeliveryReport<byte[], byte[]>()
-                        {
-                            Error = new Error(ErrorCode.TopicAuthorizationFailed, "TopicAuthorizationFailed", true)
-                        });
+                        initReport.Error = new Error(ErrorCode.TopicAuthorizationFailed, "TopicAuthorizationFailed",
+                            true);
+                        deliveryHandler(initReport);
                     }
                     else if (options.IsRecoverable)
                     {
-                        deliveryHandler(new DeliveryReport<byte[], byte[]>()
-                        {
-                            Error = new Error(ErrorCode.TransactionCoordinatorFenced, "TransactionCoordinatorFenced",
-                                false)
-                        });
+                        initReport.Error = new Error(ErrorCode.TransactionCoordinatorFenced,
+                            "TransactionCoordinatorFenced",
+                            false);
+                        deliveryHandler(initReport);
                     }
                     else
                     {
-                        deliveryHandler(new DeliveryReport<byte[], byte[]>()
-                        {
-                            Error = new Error(ErrorCode.Local_InvalidArg, "Invalid arg", false)
-                        });
+                        initReport.Error = new Error(ErrorCode.Local_InvalidArg, "Invalid arg", false);
+                        deliveryHandler(initReport);
                     }
                 }
             }
@@ -161,7 +163,14 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 if (topic == "test" || !handleError)
                     innerProducer.Produce(topic, message, deliveryHandler);
                 else
-                    HandleError(deliveryHandler);
+                {
+                    var report = new DeliveryReport<byte[], byte[]>
+                    {
+                        Message = message,
+                        Topic = topic
+                    };
+                    HandleError(report, deliveryHandler);
+                }
             }
 
             public void Produce(TopicPartition topicPartition, Message<byte[], byte[]> message,
@@ -170,7 +179,15 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 if (topicPartition.Topic == "test" || !handleError)
                     innerProducer.Produce(topicPartition, message, deliveryHandler);
                 else
-                    HandleError(deliveryHandler);
+                {
+                    var report = new DeliveryReport<byte[], byte[]>
+                    {
+                        Message = message,
+                        Topic = topicPartition.Topic,
+                        Partition = topicPartition.Partition
+                    };
+                    HandleError(report, deliveryHandler);
+                }
             }
 
             public async Task<DeliveryResult<byte[], byte[]>> ProduceAsync(string topic,
@@ -416,5 +433,107 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 Assert.IsTrue(driver.IsError);
             }
         }
+
+
+        [Test]
+        public void ProduceDeliveryRetryFailTest()
+        {
+            bool errorState = false;
+            var _return = new List<KeyValuePair<string, string>>();
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            var dt = DateTime.Now;
+            var timeout = TimeSpan.FromSeconds(10);
+
+            config.ApplicationId = "test";
+            config.BootstrapServers = "127.0.0.1";
+            config.PollMs = 10;
+            config.ProductionExceptionHandler += 
+                (_) => ProductionExceptionHandlerResponse.RETRY;
+
+            var options = new ProducerSyncExceptionOptions();
+            var supplier = new ProducerSyncException(options);
+
+            var builder = new StreamBuilder();
+            builder
+                .Stream<string, string>("test")
+                .To("test-output");
+
+            builder.Stream<string, string>("test-output")
+                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+
+            var t = builder.Build();
+
+            using var driver = new TopologyTestDriver(t.Builder, config,
+                TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier);
+            var inputtopic = driver.CreateInputTopic<string, string>("test");
+            inputtopic.PipeInput("coucou1");
+            inputtopic.PipeInput("coucou2");
+                
+            while (_return.Count == 0)
+            {
+                Thread.Sleep(100);
+                if (DateTime.Now > dt + timeout)
+                {
+                    break;
+                }
+            }
+        
+            var expected = new List<KeyValuePair<string, string>>();
+            expected.Add(KeyValuePair.Create<string, string>(null, "coucou1"));
+            expected.Add(KeyValuePair.Create<string, string>(null, "coucou2"));
+            Assert.AreEqual(expected, _return);
+        }
+        
+        [Test]
+        public void ProduceExceptionRetryFailTest()
+        {
+            bool errorState = false;
+            var _return = new List<KeyValuePair<string, string>>();
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            var dt = DateTime.Now;
+            var timeout = TimeSpan.FromSeconds(10);
+
+            config.ApplicationId = "test";
+            config.BootstrapServers = "127.0.0.1";
+            config.PollMs = 10;
+            config.ProductionExceptionHandler += 
+                (_) => ProductionExceptionHandlerResponse.RETRY;
+
+            var options = new ProducerSyncExceptionOptions() {
+                IsProductionException = true
+            };
+            var supplier = new ProducerSyncException(options);
+
+            var builder = new StreamBuilder();
+            builder
+                .Stream<string, string>("test")
+                .To("test-output");
+
+            builder.Stream<string, string>("test-output")
+                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+
+            var t = builder.Build();
+
+            using var driver = new TopologyTestDriver(t.Builder, config,
+                TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier);
+            var inputtopic = driver.CreateInputTopic<string, string>("test");
+            inputtopic.PipeInput("coucou1");
+            inputtopic.PipeInput("coucou2");
+                
+            while (_return.Count == 0)
+            {
+                Thread.Sleep(100);
+                if (DateTime.Now > dt + timeout)
+                {
+                    break;
+                }
+            }
+        
+            var expected = new List<KeyValuePair<string, string>>();
+            expected.Add(KeyValuePair.Create<string, string>(null, "coucou1"));
+            expected.Add(KeyValuePair.Create<string, string>(null, "coucou2"));
+            Assert.AreEqual(expected, _return);
+        }
+
     }
 }
