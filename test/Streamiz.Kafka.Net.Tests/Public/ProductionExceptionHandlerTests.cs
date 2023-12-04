@@ -26,9 +26,14 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.ApplicationId = "test";
             config.BootstrapServers = "127.0.0.1";
             config.PollMs = 10;
-            config.ProductionExceptionHandler += (r) => ExceptionHandlerResponse.CONTINUE;
+            config.ProductionExceptionHandler += (r) => ProductionExceptionHandlerResponse.CONTINUE;
 
-            var supplier = new ProducerSyncException();
+            var options = new ProducerSyncExceptionOptions()
+            {
+                NumberOfError = 1,
+                WhiteTopics = new List<string> {"test"}
+            };
+            var supplier = new ProducerSyncExceptionSupplier(options);
             var producer = supplier.GetProducer(config.ToProducerConfig());
 
             var builder = new StreamBuilder();
@@ -92,9 +97,14 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.ApplicationId = "test";
             config.BootstrapServers = "127.0.0.1";
             config.PollMs = 10;
-            config.ProductionExceptionHandler += (r) => ExceptionHandlerResponse.FAIL;
+            config.ProductionExceptionHandler += (r) => ProductionExceptionHandlerResponse.FAIL;
 
-            var supplier = new ProducerSyncException();
+            var options = new ProducerSyncExceptionOptions()
+            {
+                NumberOfError = 1,
+                WhiteTopics = new List<string> {"test"}
+            };
+            var supplier = new ProducerSyncExceptionSupplier(options);
 
             var builder = new StreamBuilder();
             builder

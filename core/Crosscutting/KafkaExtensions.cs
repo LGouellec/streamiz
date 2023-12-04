@@ -85,7 +85,15 @@ namespace Streamiz.Kafka.Net.Crosscutting
             Headers copyHeaders = new Headers();
             originHeader.ForEach(h => copyHeaders.Add(h.Key, h.Item2));
             return copyHeaders;
-
+        }
+        
+        internal static Headers AddOrUpdate(this Headers headers, string key, byte[] value)
+        {
+            if (headers == null)
+                headers = new Headers();
+            headers.Remove(key);
+            headers.Add(key, value);
+            return headers;
         }
     }
 }

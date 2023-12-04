@@ -171,7 +171,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Production exception handling function called when kafka produce exception is raise.
         /// </summary>
-        Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler { get; set; }
+        Func<DeliveryReport<byte[], byte[]>, ProductionExceptionHandlerResponse> ProductionExceptionHandler { get; set; }
 
         /// <summary>
         /// Maximum allowed time between calls to consume messages (e.g., rd_kafka_consumer_poll())
@@ -2266,7 +2266,7 @@ namespace Streamiz.Kafka.Net
             MaxTaskIdleMs = 0;
             BufferedRecordsPerPartition = Int32.MaxValue;
             InnerExceptionHandler = (_) => ExceptionHandlerResponse.FAIL;
-            ProductionExceptionHandler = (_) => ExceptionHandlerResponse.FAIL;
+            ProductionExceptionHandler = (_) => ProductionExceptionHandlerResponse.FAIL;
             DeserializationExceptionHandler = (_, _, _) => ExceptionHandlerResponse.FAIL;
             RocksDbConfigHandler = (_, _) => { };
             FollowMetadata = false;
@@ -2654,7 +2654,7 @@ namespace Streamiz.Kafka.Net
         /// Production exception handling function called when kafka produce exception is raise.
         /// </summary>
         [StreamConfigProperty("" + productionExceptionHandlerCst)]
-        public Func<DeliveryReport<byte[], byte[]>, ExceptionHandlerResponse> ProductionExceptionHandler  
+        public Func<DeliveryReport<byte[], byte[]>, ProductionExceptionHandlerResponse> ProductionExceptionHandler  
         {
             get => configProperties[productionExceptionHandlerCst];
             set => configProperties.AddOrUpdate(productionExceptionHandlerCst, value);

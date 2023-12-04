@@ -16,6 +16,9 @@
 
   <ItemGroup>
     <None Include="..\..\key.snk" Link="key.snk" />
+    <None Update="log4net.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +30,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="7.0.0" />
     <PackageReference Include="Moq" Version="4.14.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="nunit" Version="3.12.0" />
