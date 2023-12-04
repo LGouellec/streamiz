@@ -40,6 +40,12 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
             public void AddRecord(RetryRecord record)
             {
+                if (record.Headers.TryGetLastBytes(RETRY_HEADER_KEY, out byte[] previousGuid))
+                {
+                    string oldGuidKey = Encoding.UTF8.GetString(previousGuid);
+                    record.Headers.Remove(oldGuidKey);
+                    records.Remove(oldGuidKey);
+                }
                 var newKey = Guid.NewGuid().ToString();
                 record.Headers.AddOrUpdate(RETRY_HEADER_KEY, Encoding.UTF8.GetBytes(newKey));
                 records.Add(newKey, record);
