@@ -96,7 +96,17 @@ namespace Streamiz.Kafka.Net
             RecordContext = new RecordContext(result);
         }
 
-        internal void ChangeTimestamp(long ts)
+        internal void SetUnknownRecordMetaData(long ts)
+        {
+            RecordContext = new RecordContext();
+            RecordContext.ChangeTimestamp(ts);
+        }
+
+        /// <summary>
+        /// Changes the record timestamp to <paramref name="ts"/>
+        /// </summary>
+        /// <param name="ts">The Unix timestamp value to be used by the record context.</param>
+        public void ChangeTimestamp(long ts)
         {
             RecordContext.ChangeTimestamp(ts);
         }
@@ -106,12 +116,24 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         /// <param name="headers">new headers</param>
         public void SetHeaders(Headers headers) => RecordContext.SetHeaders(headers);
-
+        
+        /// <summary>
+        /// Get the state store given the store name.
+        /// </summary>
+        /// <param name="storeName">The store name</param>
+        /// <returns>The state store instance</returns>
         public virtual IStateStore GetStateStore(string storeName) => States.GetStore(storeName);
 
         internal void Register(IStateStore store, StateRestoreCallback callback)
         {
-            States.Register(store, callback);
+            Action<ConsumeResult<byte[], byte[]>> restoreCallBack = (result) =>
+            {
+                SetRecordMetaData(result);
+                callback(Bytes.Wrap(result.Message.Key), result.Message.Value,
+                    result.Message.Timestamp.UnixTimestampMs);
+            };
+            
+            States.Register(store, restoreCallBack);
         }
 
         internal void Log(string storeName, Bytes key, byte[] value, long timestamp)

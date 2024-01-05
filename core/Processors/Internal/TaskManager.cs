@@ -8,7 +8,6 @@ using Confluent.Kafka.Admin;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
-using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -37,17 +36,15 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly IChangelogReader changelogReader;
         private readonly ConcurrentDictionary<TopicPartition, TaskId> partitionsToTaskId = new ConcurrentDictionary<TopicPartition, TaskId>();
         private readonly ConcurrentDictionary<TaskId, StreamTask> activeTasks = new ConcurrentDictionary<TaskId, StreamTask>();
-        private readonly ConcurrentDictionary<TaskId, StreamTask> revokedTasks = new ConcurrentDictionary<TaskId, StreamTask>();
         private Task<List<DeleteRecordsResult>> currentDeleteTask = null;
         
         public IEnumerable<StreamTask> ActiveTasks => activeTasks.Values.ToList();
-        public IEnumerable<StreamTask> RevokedTasks => revokedTasks.Values.ToList();
         public IDictionary<TaskId, ITask> Tasks => activeTasks.ToDictionary(i => i.Key, i => (ITask)i.Value);
 
         public IConsumer<byte[], byte[]> Consumer { get; internal set; }
         public IEnumerable<TaskId> ActiveTaskIds => activeTasks.Keys;
-        public IEnumerable<TaskId> RevokeTaskIds => revokedTasks.Keys;
         public bool RebalanceInProgress { get; internal set; }
+        internal readonly object _lock = new object();
 
         internal TaskManager(InternalTopologyBuilder builder, TaskCreator taskCreator, IAdminClient adminClient,
             IChangelogReader changelogReader)
@@ -73,15 +70,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             foreach (var partition in new List<TopicPartition>(assignment))
             {
                 var taskId = builder.GetTaskIdFromPartition(partition);
-                if (revokedTasks.ContainsKey(taskId))
-                {
-                    var t = revokedTasks[taskId];
-                    t.Resume();
-                    activeTasks.TryAdd(taskId, t);
-                    revokedTasks.TryRemove(taskId, out StreamTask removeTask);
-                    partitionsToTaskId.TryAdd(partition, taskId);
-                }
-                else if (!activeTasks.ContainsKey(taskId))
+                if (!activeTasks.ContainsKey(taskId))
                 {
                     if (tasksToBeCreated.ContainsKey(taskId))
                         tasksToBeCreated[taskId].Add(partition);
@@ -96,7 +85,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 var tasks = taskCreator.CreateTasks(Consumer, tasksToBeCreated);
                 foreach (var task in tasks)
                 {
-                    task.GroupMetadata = Consumer.ConsumerGroupMetadata;
                     task.InitializeStateStores();
                     task.InitializeTopology();
                     activeTasks.TryAdd(task.Id, task);
@@ -110,26 +98,25 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             foreach (var p in assignment)
             {
                 var taskId = builder.GetTaskIdFromPartition(p);
-                if (activeTasks.ContainsKey(taskId))
+                if (activeTasks.TryGetValue(taskId, out StreamTask task))
                 {
-                    var task = activeTasks[taskId];
-                    task.Suspend();
-                    if (!revokedTasks.ContainsKey(taskId))
-                    {
-                        revokedTasks.TryAdd(taskId, task);
-                    }
-                    
-                    partitionsToTaskId.TryRemove(p, out TaskId removeId);
-                    activeTasks.TryRemove(taskId, out StreamTask removeTask);
+                   task.MayWriteCheckpoint(true);
+                   task.Close();
+
+                    partitionsToTaskId.TryRemove(p, out _);
+                    activeTasks.TryRemove(taskId, out _);
                 }
             }
         }
 
         public StreamTask ActiveTaskFor(TopicPartition partition)
         {
-            if (partitionsToTaskId.ContainsKey(partition))
+            if (partitionsToTaskId.TryGetValue(partition, out TaskId taskId))
             {
-                return activeTasks[partitionsToTaskId[partition]];
+                if (activeTasks.TryGetValue(taskId, out StreamTask task))
+                {
+                    return task;
+                }
             }
 
             return null;
@@ -147,56 +134,14 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             activeTasks.Clear();
             CurrentTask = null;
-
-            foreach (var t in revokedTasks)
-            {
-                t.Value.MayWriteCheckpoint(true);
-                t.Value.Close();
-            }
-
-            revokedTasks.Clear();
+            
             partitionsToTaskId.Clear();
 
             // if one delete request is in progress, we wait the result before closing the manager
             if (currentDeleteTask is {IsCompleted: false})
                 currentDeleteTask.GetAwaiter().GetResult();
         }
-
-        // NOT AVAILABLE NOW, NEED PROCESSOR API
-        //internal int MaybeCommitPerUserRequested()
-        //{
-        //    int committed = 0;
-        //    Exception firstException = null;
-
-        //    foreach(var task in ActiveTasks)
-        //    {
-        //        if(task.CommitNeeded && task.CommitRequested)
-        //        {
-        //            try
-        //            {
-        //                task.Commit();
-        //                ++committed;
-        //                log.Debug($"Committed stream task {task.Id} per user request in");
-        //            }
-        //            catch(Exception e)
-        //            {
-        //                log.Error($"Failed to commit stream task {task.Id} due to the following error: {e}");
-        //                if (firstException == null)
-        //                {
-        //                    firstException = e;
-        //                }
-        //            }
-        //        }
-        //    }
-
-        //    if (firstException != null)
-        //    {
-        //        throw firstException;
-        //    }
-
-        //    return committed;
-        //}
-
+        
         internal int CommitAll()
         {
             int committed = 0;
@@ -217,8 +162,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     ++committed;
                 }
             }
-            CurrentTask = null;
 
+            CurrentTask = null;
+            
             if (committed > 0) // try to purge the committed records for repartition topics if possible
                 PurgeCommittedRecords(purgeOffsets);
             
@@ -229,32 +175,68 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             int processed = 0;
 
-            foreach (var task in ActiveTasks)
+            lock (_lock)
             {
-                try
+                foreach (var task in ActiveTasks)
                 {
-                    CurrentTask = task;
-                    if (task.CanProcess(now) && task.Process())
+                    try
                     {
-                        processed++;
+                        CurrentTask = task;
+                        if (task.CanProcess(now) && task.Process())
+                        {
+                            processed++;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        log.LogError(
+                            e, "Failed to process stream task {TasksId} due to the following error:", task.Id);
+                        throw;
                     }
                 }
-                catch(Exception e)
-                {
-                    log.LogError(
-                        e, "Failed to process stream task {TasksId} due to the following error:", task.Id);
-                    throw;
-                }
             }
+
             CurrentTask = null;
             return processed;
         }
 
+        internal int Punctuate()
+        {
+            int punctuated = 0;
+            foreach (var task in ActiveTasks)
+            {
+                try
+                {
+                    if (task.PunctuateStreamTime())
+                        ++punctuated;
+                    if (task.PunctuateSystemTime())
+                        ++punctuated;
+                }
+                catch (TaskMigratedException)
+                {
+                    log.LogInformation(
+                        $"Failed to punctuate stream task {task.Id} since it got migrated to another thread already. " +
+                        "Will trigger a new rebalance and close all tasks as zombies together.");
+                    throw;
+                }
+                catch (StreamsException e)
+                {
+                    log.LogError($"Failed to punctuate stream task {task.Id} due to the following error: {e.Message}");
+                    throw;
+                }
+                catch (KafkaException e)
+                {
+                    log.LogError($"Failed to punctuate stream task {task.Id} due to the following error: {e.Message}");
+                    throw new StreamsException(e);
+                }
+            }
+            return punctuated;
+        }
+        
         internal void HandleLostAll()
         {
             log.LogDebug("Closing lost active tasks as zombies");
             CurrentTask = null;
-            revokedTasks.Clear();
 
             var enumerator = activeTasks.GetEnumerator();
             while (enumerator.MoveNext())
@@ -265,8 +247,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 {
                     partitionsToTaskId.TryRemove(part, out TaskId taskId);
                 }
-                task.Close();
                 task.MayWriteCheckpoint(true);
+                task.Close();
             }
             activeTasks.Clear();
         }
@@ -302,10 +284,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                         allRunning = false;
                 }
             }
-
-            if (allRunning)
-                Consumer.Resume(Consumer.Assignment);
-
+            
             return allRunning;
         }
 

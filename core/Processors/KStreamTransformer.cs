@@ -29,6 +29,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             var newRecord = transformer.Process(record);
             
+            
             if (newRecord != null)
             {
                 if (changeKey)

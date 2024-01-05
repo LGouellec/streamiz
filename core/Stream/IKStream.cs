@@ -1921,7 +1921,7 @@ namespace Streamiz.Kafka.Net.Stream
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
             string named = null);
-        
+
         #endregion
 
         #region Process
@@ -1963,8 +1963,9 @@ namespace Streamiz.Kafka.Net.Stream
         /// </summary>
         /// <param name="processorSupplier">an instance of <see cref="ProcessorSupplier{K,V}"/> which contains the processor and a potential state store. Use <see cref="ProcessorBuilder"/> to build this supplier.</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
-        void Process(ProcessorSupplier<K, V> processorSupplier, string named = null);
-        
+        /// <param name="storeNames">The names of the state stores used by the processor.</param>
+        void Process(ProcessorSupplier<K, V> processorSupplier, string named = null, params string[] storeNames);
+
         #endregion
 
         #region Transform
@@ -2003,24 +2004,25 @@ namespace Streamiz.Kafka.Net.Stream
         ///     .To("topic-output");
         /// </code>
         /// <para>
-        /// The <see cref="TransformProcessor{K,V,K1,V1}"/> must return a <see cref="Record{K1,V1}"/> type in <see cref="TransformProcessor{K,V,K1,V1}.Process(K,V)"/>.
+        /// The <see cref="ITransformer{K,V,K1,V1}"/> must return a <see cref="Record{K1,V1}"/> type in <see cref="ITransformer{K,V,K1,V1}.Process"/>.
         /// The return value may be null, in which case no record is emitted.
         /// </para>
         /// </summary>
         /// <param name="transformerSupplier">an instance of <see cref="TransformerSupplier{K,V,K1,V1}"/> which contains the transformer</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <param name="storeNames">The names of the state stores used by the processor.</param>
         /// <typeparam name="K1">the key type of the new stream</typeparam>
         /// <typeparam name="V1">the value type of the new stream</typeparam>
         /// <returns>a <see cref="IKStream{K1,V1}"/> that contains more or less records with new key and value (possibly of different type)</returns>
-        IKStream<K1, V1> Transform<K1, V1>(TransformerSupplier<K, V, K1, V1> transformerSupplier, string named = null);
-        
+        IKStream<K1, V1> Transform<K1, V1>(TransformerSupplier<K, V, K1, V1> transformerSupplier, string named = null, params string[] storeNames);
+
         /// <summary>
         /// Transform each record of the input stream into zero or one record in the output stream (only value type, the original key will be through to the upstream processors ).
         /// A <see cref="Transform{K,V1}"/> (provided by the given <see cref="TransformerSupplier{K,V,K,V1}"/>) is applied to each input record and
         /// returns zero or one output record.
         /// Thus, an input record <see cref="Record{K,V}"/> can be transformed into an output record <see cref="Record{K,V1}"/>.
         /// Attaching a state store makes this a stateful record-by-record operation.
-        /// If you choose not to attach one, this operation is similar to the stateless <see cref="MapValues{V}(Streamiz.Kafka.Net.Stream.IValueMapper{V,V1},string)"/>
+        /// If you choose not to attach one, this operation is similar to the stateless <see cref="MapValues{V1}(Streamiz.Kafka.Net.Stream.IValueMapper{V,V1},string)"/>
         /// but allows access to the <see cref="ProcessorContext"/> and record metadata.
         /// This is essentially mixing the Processor API into the DSL, and provides all the functionality of the PAPI.
         /// <para>
@@ -2047,16 +2049,29 @@ namespace Streamiz.Kafka.Net.Stream
         ///     .To("topic-output");
         /// </code>
         /// <para>
-        /// The <see cref="TransformProcessor{K,V,K,V1}"/> must return a <see cref="Record{K,V1}"/> type in <see cref="TransformProcessor{K,V,K,V1}.Process(K,V)"/>.
+        /// The <see cref="ITransformer{K,V,K,V1}"/> must return a <see cref="Record{K,V1}"/> type in <see cref="ITransformer{K,V,K,V1}.Process"/>.
         /// The return value may be null, in which case no record is emitted.
         /// </para>
         /// </summary>
         /// <param name="transformerSupplier">an instance of <see cref="TransformerSupplier{K,V,K,V1}"/> which contains the transformer</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <param name="storeNames">The names of the state stores used by the processor.</param>
         /// <typeparam name="V1">the value type of the new stream</typeparam>
         /// <returns>a <see cref="IKStream{K,V1}"/> that contains more or less records with new key and value (possibly of different type)</returns>
-        IKStream<K, V1> TransformValues<V1>(TransformerSupplier<K, V, K, V1> transformerSupplier, string named = null);
-    
+        IKStream<K, V1> TransformValues<V1>(TransformerSupplier<K, V, K, V1> transformerSupplier, string named = null, params string[] storeNames);
+
+        #endregion
+
+        #region WithRecordTimestamp
+
+        /// <summary>
+        /// Updates the timestamp of the record with one provided by the <paramref name="timestampExtractor"/> function. Negative timestamps will be ignored.
+        /// </summary>
+        /// <param name="timestampExtractor"></param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>a <see cref="IKStream{K,V1}"/> that has records with timestamp explicitly provided by <paramref name="timestampExtractor"/></returns>
+        IKStream<K, V> WithRecordTimestamp(Func<K, V, long> timestampExtractor, string named = null);
+
         #endregion
     }
 }

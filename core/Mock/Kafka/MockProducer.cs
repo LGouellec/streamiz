@@ -102,6 +102,11 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             // TODO
         }
 
+        public void SetSaslCredentials(string username, string password)
+        {
+            
+        }
+        
         #endregion
     }
 }

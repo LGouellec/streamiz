@@ -50,6 +50,8 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             "The fraction of time the thread spent on polling records from consumer";
         internal static readonly string COMMIT_RATIO_DESCRIPTION =
             "The fraction of time the thread spent on committing all tasks";
+        internal static readonly string PUNCTUATE_RATIO_DESCRIPTION =
+            "The fraction of time the thread spent on punctuating active tasks";
         internal static readonly string THREAD_START_TIME_DESCRIPTION =
             "The time that the thread was started";
         
@@ -156,6 +158,25 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             return sensor;
         }
         
+        #endregion
+        
+        #region Punctuate
+        
+        public static Sensor PunctuateSensor(string threadId, StreamMetricsRegistry metricsRegistry) 
+        {
+            return SensorHelper.InvocationRateAndCountAndAvgAndMaxLatencySensor(
+                threadId,
+                PUNCTUATE,
+                PUNCTUATE_DESCRIPTION,
+                PUNCTUATE_RATE_DESCRIPTION,
+                PUNCTUATE_TOTAL_DESCRIPTION,
+                PUNCTUATE_AVG_LATENCY_DESCRIPTION,
+                PUNCTUATE_MAX_LATENCY_DESCRIPTION,
+                MetricsRecordingLevel.INFO,
+                metricsRegistry
+            );
+        }
+            
         #endregion
         
         #region Process
@@ -277,6 +298,26 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
                 tags,
                 COMMIT + StreamMetricsRegistry.RATIO_SUFFIX,
                 COMMIT_RATIO_DESCRIPTION);
+            
+            return sensor;
+        }
+        
+        public static Sensor PunctuateRatioSensor(string threadId, StreamMetricsRegistry metricsRegistry) {
+            
+            var sensor =
+                metricsRegistry.ThreadLevelSensor(
+                    threadId, 
+                    PUNCTUATE + StreamMetricsRegistry.RATIO_SUFFIX,
+                    PUNCTUATE_RATIO_DESCRIPTION,
+                    MetricsRecordingLevel.INFO);
+            var tags = metricsRegistry.ThreadLevelTags(threadId);
+            
+            SensorHelper.AddValueMetricToSensor(
+                sensor,
+                StreamMetricsRegistry.THREAD_LEVEL_GROUP,
+                tags,
+                PUNCTUATE + StreamMetricsRegistry.RATIO_SUFFIX,
+                PUNCTUATE_RATIO_DESCRIPTION);
             
             return sensor;
         }

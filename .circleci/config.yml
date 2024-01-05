@@ -11,7 +11,8 @@
         - checkout
         - run: dotnet tool install --global dotnet-sonarscanner --version 5.11.0
         - run: echo 'export PATH="$PATH:/root/.dotnet/tools"' >> $BASH_ENV
-        - run: echo "deb http://ftp.us.debian.org/debian stretch main contrib non-free" >> /etc/apt/sources.list
+        #- run: echo "deb http://ftp.us.debian.org/debian stretch main contrib non-free" >> /etc/apt/sources.list
+        - run: echo "deb http://ftp.debian.org/debian stable main contrib non-free" >> /etc/apt/sources.list
         - run: apt update
         - run: apt install -y unzip
         # Install JAVA 11

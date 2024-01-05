@@ -335,7 +335,7 @@ namespace Streamiz.Kafka.Net.Processors
             
             currentConsumer = GetConsumer();
             adminClient = kafkaSupplier.GetAdmin(configuration.ToAdminConfig(clientId));
-            producer = kafkaSupplier.GetProducer(configuration.ToProducerConfig($"{thread.Name}-producer").Wrap(Name, configuration));
+            producer = kafkaSupplier.GetProducer(configuration.ToExternalProducerConfig($"{thread.Name}-producer").Wrap(Name, configuration));
             
             SetState(ThreadState.PARTITIONS_ASSIGNED);
             thread.Start();     
@@ -394,7 +394,7 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 if (currentConsumer == null)
                 {
-                    var consumerConfig = configuration.ToConsumerConfig($"{thread.Name}-consumer").Wrap(Name, configuration);
+                    var consumerConfig = configuration.ToExternalConsumerConfig($"{thread.Name}-consumer").Wrap(Name, configuration);
                     currentConsumer = kafkaSupplier.GetConsumer(consumerConfig, null);
                     currentConsumer.Subscribe(externalSourceTopics);
                 }

@@ -88,6 +88,25 @@ namespace Streamiz.Kafka.Net.Stream
         }
 
         /// <summary>
+        /// Specifies that records of the same key are joinable if their timestamps are within timeDifferenceMs,
+        /// i.e., the timestamp of a record from the secondary stream is max timeDifferenceMs earlier or later than 
+        /// the timestamp of the record from the primary stream.
+        /// </summary>
+        /// <param name="timeDifferenceMs">join window interval in milliseconds</param>
+        /// <param name="graceMs">the time to admit out-of-order events after the end of the window.</param>
+        /// <returns>Return <see cref="JoinWindowOptions"/> instance</returns>
+        public static JoinWindowOptions Of(long timeDifferenceMs, long graceMs)
+        {
+            if (graceMs < 0)
+            {
+                throw new ArgumentOutOfRangeException("Grace period must not be negative.");
+            }
+
+            // This is a static factory method, so we initialize grace and retention to the defaults.
+            return new JoinWindowOptions(timeDifferenceMs, timeDifferenceMs, graceMs, DEFAULT_RETENTION_MS);
+        }
+
+        /// <summary>
         /// Specifies that records of the same key are joinable if their timestamps are within timeDifference,
         /// i.e., the timestamp of a record from the secondary stream is max timeDifference earlier or later than
         /// the timestamp of the record from the primary stream.
@@ -96,6 +115,17 @@ namespace Streamiz.Kafka.Net.Stream
         /// <returns></returns>
         public static JoinWindowOptions Of(TimeSpan timeDifference)
             => Of((long)timeDifference.TotalMilliseconds);
+        
+        /// <summary>
+        /// Specifies that records of the same key are joinable if their timestamps are within timeDifference,
+        /// i.e., the timestamp of a record from the secondary stream is max timeDifference earlier or later than
+        /// the timestamp of the record from the primary stream.
+        /// </summary>
+        /// <param name="timeDifference">join window interval</param>
+        /// <param name="grace">the time to admit out-of-order events after the end of the window.</param>
+        /// <returns></returns>
+        public static JoinWindowOptions Of(TimeSpan timeDifference,TimeSpan grace)
+            => Of((long)timeDifference.TotalMilliseconds,(long)grace.TotalMilliseconds);
 
         #endregion
     }

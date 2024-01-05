@@ -22,5 +22,12 @@ namespace Streamiz.Kafka.Net.State.Supplier
         /// The time period for which the <see cref="IWindowStore{K, V}"/> will retain historic data.
         /// </summary>
         public long Retention { get; set; }
+
+        /// <summary>
+        /// Whether or not this store is retaining duplicate keys.
+        /// Usually only true if the store is being used for joins.
+        /// Note this should return false if caching is enabled.
+        /// </summary>
+        public bool RetainDuplicates { get; set; }
     }
 }

@@ -104,9 +104,10 @@ static async System.Threading.Tasks.Task Main(string[] args)
 |:------------------------------------------------------------:|:----------------------------------:|:----------------------:|:------------------------------------------:|
 | Stateless processors                                         |              X                     |         X              |                                            |
 | RocksDb store                                                |              X                     |         X              |                                            |
+| Standby replicas                                             |              X                     |                       |    No plan for now                            |
 | InMemory store                                               |              X                     |         X              |                                            |
 | Transformer, Processor API                                   |              X                     |         X              |                                            |
-| Punctuate                                                    |              X                     |                        | No plan for now                            |
+| Punctuate                                                    |              X                     |         X               |                                            |
 | KStream-KStream Join                                         |              X                     |         X              |                                            |
 | KTable-KTable Join                                           |              X                     |         X              |                                            |
 | KTable-KTable FK Join                                        |              X                     |                        | Plan for 1.6.0                             |
@@ -117,7 +118,7 @@ static async System.Threading.Tasks.Task Main(string[] args)
 | Tumbling window                                              |              X                     |         X              |                                            |
 | Sliding window                                               |              X                     |                        | No plan for now                            |
 | Session window                                               |              X                     |                        | No plan for now                            |
-| Cache                                                        |              X                     |                        | Plan for 1.5.0                             |
+| Cache                                                        |              X                     |                        | Plan for 1.6.0                             |
 | Suppress(..)                                                        |              X                     |                        | No plan for now                            |
 | Interactive Queries                                          |              X                     |                        | No plan for now                            |
 | State store batch restoring                                  |              X                     |                        | No plan for now                            |

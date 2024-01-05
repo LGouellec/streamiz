@@ -15,11 +15,13 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// <param name="storeName">Name of store</param>
         /// <param name="retention">Retention period of data</param>
         /// <param name="size">Size of window</param>
-        public InMemoryWindowStoreSupplier(string storeName, TimeSpan retention, long? size)
+        /// <param name="retainDuplicates">whether or not to retain duplicates</param>
+        public InMemoryWindowStoreSupplier(string storeName, TimeSpan retention, long? size, bool retainDuplicates)
         {
             Name = storeName;
             Retention = (long) retention.TotalMilliseconds;
             WindowSize = size;
+            RetainDuplicates = retainDuplicates;
         }
         
         /// <summary>
@@ -41,13 +43,24 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// Retention period of state store
         /// </summary>
         public long Retention { get; set; }
+        
+        /// <summary>
+        /// Whether or not this store is retaining duplicate keys.
+        /// Usually only true if the store is being used for joins.
+        /// Note this should return false if caching is enabled.
+        /// </summary>
+        public bool RetainDuplicates { get; set; }
 
         /// <summary>
         /// Return a new <see cref="IWindowStore{K, V}"/> instance.
         /// </summary>
         /// <returns>Return a new <see cref="IWindowStore{K, V}"/> instance.</returns>
         public IWindowStore<Bytes, byte[]> Get()
-            => new InMemoryWindowStore(Name, TimeSpan.FromMilliseconds(Retention), WindowSize.Value);
+            => new InMemoryWindowStore(
+                Name,
+                TimeSpan.FromMilliseconds(Retention),
+                WindowSize.Value,
+                RetainDuplicates);
 
     }
 }

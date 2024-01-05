@@ -175,6 +175,7 @@ namespace Streamiz.Kafka.Net.Mock
                 foreach(var r in records)
                     pipe.Pipe(r.Message.Key, r.Message.Value, r.Message.Timestamp.UnixTimestampMs.FromMilliseconds(), r.Message.Headers);
                 pipe.Flush();
+                pipe.Dispose();
 
                 consumer.Commit(records.Last());
             }
@@ -255,10 +256,11 @@ namespace Streamiz.Kafka.Net.Mock
 
             foreach (var t in tasks.Values)
             {
+                bool persistent = t.IsPersistent;
                 t.Close();
 
                 // Remove local state store for this task
-                if (t.IsPersistent)
+                if (persistent)
                     Directory.Delete(t.Context.StateDir, true);
             }
 

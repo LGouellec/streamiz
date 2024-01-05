@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
@@ -9,6 +10,7 @@ using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.Processors.Public;
 using Streamiz.Kafka.Net.Stream.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
@@ -25,6 +27,8 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly long maxTaskIdleMs;
         private readonly long maxBufferedSize = 100;
         private readonly bool followMetadata;
+        private readonly List<TaskScheduled> streamTimePunctuationQueue = new();
+        private readonly List<TaskScheduled> systemTimePunctuationQueue = new();
 
         private long idleStartTime;
         private IProducer<byte[], byte[]> producer;
@@ -99,8 +103,6 @@ namespace Streamiz.Kafka.Net.Processors
             RegisterSensors();
         }
 
-        internal IConsumerGroupMetadata GroupMetadata { get; set; }
-
         #region Private
 
         private void RegisterSensors()
@@ -140,14 +142,38 @@ namespace Streamiz.Kafka.Net.Processors
                 FlushState();
                 if (eosEnabled)
                 {
-                    producer.SendOffsetsToTransaction(GetPartitionsWithOffset(), GroupMetadata, configuration.TransactionTimeout);
-                    producer.CommitTransaction(configuration.TransactionTimeout);
-                    transactionInFlight = false;
+                    bool repeat = false;
+                    do
+                    {
+                        try
+                        {
+                            var offsets = GetPartitionsWithOffset().ToList();
+                            log.LogDebug($"Send offsets to transactions : {string.Join(",", offsets)}");
+                            producer.SendOffsetsToTransaction(offsets, consumer.ConsumerGroupMetadata,
+                                configuration.TransactionTimeout);
+                            producer.CommitTransaction(configuration.TransactionTimeout);
+                            transactionInFlight = false;
+                        }
+                        catch (KafkaTxnRequiresAbortException e)
+                        {
+                            log.LogWarning(
+                                $"{logPrefix}Committing failed with a non-fatal error: {e.Message}, the transaction will be aborted");
+                            producer.AbortTransaction(configuration.TransactionTimeout);
+                            transactionInFlight = false;
+                        }
+                        catch (KafkaRetriableException e)
+                        {
+                            log.LogDebug($"{logPrefix}Committing failed with a non-fatal error: {e.Message}, going to repeat the operation");
+                            repeat = true;
+                        }
+                    } while (repeat);
+
                     if (startNewTransaction)
                     {
                         producer.BeginTransaction();
                         transactionInFlight = true;
                     }
+
                     consumedOffsets.Clear();
                 }
                 else
@@ -159,12 +185,22 @@ namespace Streamiz.Kafka.Net.Processors
                     }
                     catch (TopicPartitionOffsetException e)
                     {
-                        log.LogInformation($"{logPrefix}Committing failed with a non-fatal error: {e.Message}, we can ignore this since commit may succeed still");
+                        log.LogError($"{logPrefix}Committing failed with a non-fatal error: {e.Message}, we can ignore this since commit may succeed still");
                     }
                     catch (KafkaException e)
                     {
-                        // TODO : get info about offset committing
-                        log.LogError(e, $"{logPrefix}Error during committing offset ......");
+                        if (!e.Error.IsFatal)
+                        {
+                            if (e.Error.Code ==
+                                ErrorCode.IllegalGeneration) // Broker: Specified group generation id is not valid
+                            {
+                                log.LogWarning($"{logPrefix}Error with a non-fatal error during committing offset (ignore this, and try to commit during next time): {e.Message}");
+                                return;
+                            }
+                            log.LogWarning($"{logPrefix}Error with a non-fatal error during committing offset (ignore this, and try to commit during next time): {e.Message}");
+                        }
+                        else
+                            throw;
                     }
                 }
                 commitNeeded = false;
@@ -205,6 +241,27 @@ namespace Streamiz.Kafka.Net.Processors
                 }
             }
 
+        }
+
+        private TaskScheduled ScheduleTask(long startTime, TimeSpan interval, PunctuationType punctuationType, Action<long> punctuator)
+        {
+            var taskScheduled = new TaskScheduled(
+                startTime,
+                interval,
+                punctuator, 
+                Context.CurrentProcessor);
+
+            switch (punctuationType)
+            {
+                case PunctuationType.STREAM_TIME:
+                    streamTimePunctuationQueue.Add(taskScheduled);
+                    break;
+                case PunctuationType.PROCESSING_TIME:
+                    systemTimePunctuationQueue.Add(taskScheduled);
+                    break;
+            }
+
+            return taskScheduled;
         }
 
         #endregion
@@ -279,7 +336,10 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     kp.Close();
                 }
-
+                
+                streamTimePunctuationQueue.ForEach(t => t.Close());
+                systemTimePunctuationQueue.ForEach(t => t.Close());
+                
                 partitionGrouper.Close();
 
                 collector.Close();
@@ -297,6 +357,8 @@ namespace Streamiz.Kafka.Net.Processors
             }
 
             streamMetricsRegistry.RemoveTaskSensors(threadId, Id.ToString());
+            streamTimePunctuationQueue.Clear();
+            systemTimePunctuationQueue.Clear();
         }
 
         public override void Commit() => Commit(true);
@@ -328,10 +390,13 @@ namespace Streamiz.Kafka.Net.Processors
         public override void InitializeTopology()
         {
             log.LogDebug($"{logPrefix}Initializing topology with theses source processors : {string.Join(", ", processors.Select(p => p.Name))}.");
+            
+            Context.CurrentProcessor = null;
             foreach (var p in processors)
             {
                 p.Init(Context);
             }
+            Context.CurrentProcessor = null;
 
             if (eosEnabled)
             {
@@ -375,8 +440,12 @@ namespace Streamiz.Kafka.Net.Processors
                 
                 RegisterSensors();
                 
+                Context.CurrentProcessor = null;
+                
                 foreach (var p in processors)
                     p.Init(Context);
+
+                Context.CurrentProcessor = null;
                 
                 TransitTo(TaskState.CREATED);
             }
@@ -440,7 +509,7 @@ namespace Streamiz.Kafka.Net.Processors
                         producer = null;
                     }
                     
-                    FlushState();
+                    // duplicate FlushState();
                     MayWriteCheckpoint(true);
                     CloseStateManager();
                     streamMetricsRegistry.RemoveTaskSensors(threadId, Id.ToString());
@@ -477,6 +546,22 @@ namespace Streamiz.Kafka.Net.Processors
                 stateMgr.UpdateChangelogOffsets(CheckpointableOffsets);
 
             WriteCheckpoint(force);
+        }
+
+        public override TaskScheduled RegisterScheduleTask(TimeSpan interval, PunctuationType punctuationType,
+            Action<long> punctuator)
+        {
+            switch (punctuationType)
+            {
+                case PunctuationType.STREAM_TIME:
+                    // align punctuation to 0L, punctuate as soon as we have data
+                    return ScheduleTask(0L, interval, punctuationType, punctuator);
+                case PunctuationType.PROCESSING_TIME:
+                    // align punctuation to now, punctuate after interval has elapsed
+                    return ScheduleTask(DateTime.Now.GetMilliseconds() + (long)interval.TotalMilliseconds, interval, punctuationType, punctuator);
+                default:
+                    return null;
+            }
         }
 
         #endregion
@@ -552,6 +637,48 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 throw new IllegalStateException($"Illegal state {state} while completing restoration for active task {Id}");
             }
+        }
+
+        public bool PunctuateSystemTime()
+        {
+            long systemTime = DateTime.Now.GetMilliseconds();
+
+            bool punctuated = false;
+
+            foreach (var taskScheduled in systemTimePunctuationQueue
+                .Where(t => t.CanExecute(systemTime)))
+            {
+                Context.CurrentProcessor = taskScheduled.Processor;
+                Context.SetUnknownRecordMetaData(systemTime);
+                taskScheduled.Execute(systemTime);
+                punctuated = true;
+            }
+
+            Context.CurrentProcessor = null;
+
+            systemTimePunctuationQueue.RemoveAll(t => t.IsCancelled || t.IsCompleted);
+            return punctuated;
+        }
+
+        public bool PunctuateStreamTime()
+        {
+            if (partitionGrouper.StreamTime < 0)
+                return false;
+
+            bool punctuated = false;
+
+            foreach (var taskScheduled in streamTimePunctuationQueue
+                .Where(t => t.CanExecute(partitionGrouper.StreamTime)))
+            {
+                Context.CurrentProcessor = taskScheduled.Processor;
+                Context.SetUnknownRecordMetaData(partitionGrouper.StreamTime);
+                taskScheduled.Execute(partitionGrouper.StreamTime);
+                punctuated = true;
+            }
+            Context.CurrentProcessor = null;
+            
+            streamTimePunctuationQueue.RemoveAll(t => t.IsCancelled || t.IsCompleted);
+            return punctuated;
         }
     }   
 }

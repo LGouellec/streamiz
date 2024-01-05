@@ -34,9 +34,27 @@ namespace Streamiz.Kafka.Net.Stream
         /// <summary>
         /// Static method to create <see cref="TumblingWindowOptions"/> with size windows.
         /// </summary>
+        /// <param name="sizeMs">Size windows</param>
+        /// <param name="graceMs">the time to admit out-of-order events after the end of the window.</param>
+        /// <returns>Return a <see cref="TumblingWindowOptions"/> instance</returns>
+        public static TumblingWindowOptions Of(long sizeMs, long graceMs)
+            => new TumblingWindowOptions(sizeMs, sizeMs, graceMs, DEFAULT_RETENTION_MS);
+
+        /// <summary>
+        /// Static method to create <see cref="TumblingWindowOptions"/> with size windows.
+        /// </summary>
         /// <param name="size">TimeSpan size windows</param>
         /// <returns>Return a <see cref="TumblingWindowOptions"/> instance</returns>
         public static TumblingWindowOptions Of(TimeSpan size)
             => Of((long)size.TotalMilliseconds);
+
+        /// <summary>
+        /// Static method to create <see cref="TumblingWindowOptions"/> with size windows.
+        /// </summary>
+        /// <param name="size">TimeSpan size windows</param>
+        /// <param name="grace">the time to admit out-of-order events after the end of the window.</param>
+        /// <returns>Return a <see cref="TumblingWindowOptions"/> instance</returns>
+        public static TumblingWindowOptions Of(TimeSpan size, TimeSpan grace)
+            => Of((long)size.TotalMilliseconds, (long)grace.TotalMilliseconds);
     }
 }
