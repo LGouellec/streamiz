@@ -13,9 +13,9 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State.Cache;
 using Streamiz.Kafka.Net.State.InMemory;
 
-namespace Streamiz.Kafka.Net.Tests
+namespace Streamiz.Kafka.Net.Tests.Stores
 {
-    public class TestCache
+    public class CacheKeyValueStoreTests
     {
         private StreamConfig config = null;
         private CachingKeyValueStore cache = null;
@@ -173,7 +173,36 @@ namespace Streamiz.Kafka.Net.Tests
             Assert.IsNull(inMemoryKeyValue.Get(ToKey("test")));
         }
         
-        // add some tests putall, putifabsent , ApproximateNumEntries , Get 
+        [Test]
+        public void PutAllTest()
+        {
+            context.SetRecordMetaData(new RecordContext(new Headers(), 0, 100, 0, "topic"));
+            var input = new List<KeyValuePair<Bytes, byte[]>>
+            {
+                new(ToKey("test1"), ToValue("value1")),
+                new(ToKey("test2"), ToValue("value2")),
+                new(ToKey("test2"), ToValue("value2bis")),
+                new(ToKey("test3"), ToValue("value3")),
+            };
+            cache.PutAll(input);
+            Assert.AreEqual(3, cache.ApproximateNumEntries());
+            cache.Flush();
+            Assert.AreEqual(0, cache.ApproximateNumEntries());
+            Assert.AreEqual(3, inMemoryKeyValue.ApproximateNumEntries());
+            Assert.AreEqual(ToValue("value1"), inMemoryKeyValue.Get(ToKey("test1")));
+            Assert.AreEqual(ToValue("value2bis"), inMemoryKeyValue.Get(ToKey("test2")));
+            Assert.AreEqual(ToValue("value3"), inMemoryKeyValue.Get(ToKey("test3")));
+        }
+        
+        [Test]
+        public void PutIfAbsentTest()
+        {
+            context.SetRecordMetaData(new RecordContext(new Headers(), 0, 100, 0, "topic"));
+            cache.PutIfAbsent(ToKey("test"), ToValue("value1"));
+            cache.PutIfAbsent(ToKey("test"), ToValue("value2"));
+            cache.Flush();
+            Assert.AreEqual(ToValue("value1"), inMemoryKeyValue.Get(ToKey("test")));
+        }
         // implement and test range methods        
     }
 }

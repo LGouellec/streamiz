@@ -40,6 +40,18 @@ namespace Streamiz.Kafka.Net.State.Cache
             });
         }
 
+        private byte[] GetInternal(Bytes key)
+        {
+            if (cache.TryGetValue(key, out CacheEntryValue priorEntry))
+                return priorEntry.Value;
+            
+            var rawValue = wrapped.Get(key);
+            if (rawValue == null)
+                return null;
+            PutInternal(key, new CacheEntryValue(rawValue));
+            return rawValue;
+        } 
+
         public override void Init(ProcessorContext context, IStateStore root)
         {
             base.Init(context, root);
@@ -85,18 +97,9 @@ namespace Streamiz.Kafka.Net.State.Cache
             while (cache.Count > 0) ;
             base.Flush();
         }
-        
+
         public byte[] Get(Bytes key)
-        {
-            if (cache.TryGetValue(key, out CacheEntryValue priorEntry))
-                return priorEntry.Value;
-            
-            var rawValue = wrapped.Get(key);
-            if (rawValue == null)
-                return null;
-            PutInternal(key, new CacheEntryValue(rawValue));
-            return rawValue;
-        }
+            => GetInternal(key);
         
         public IKeyValueEnumerator<Bytes, byte[]> Range(Bytes from, Bytes to)
         {
@@ -148,9 +151,10 @@ namespace Streamiz.Kafka.Net.State.Cache
 
         public byte[] PutIfAbsent(Bytes key, byte[] value)
         {
-            if(!cache.TryGetValue(key, out byte[] priorEntry))
+            var v = GetInternal(key);
+            if(v == null)
                 Put(key, value);
-            return priorEntry;
+            return v;
         }
 
         public void PutAll(IEnumerable<KeyValuePair<Bytes, byte[]>> entries)
