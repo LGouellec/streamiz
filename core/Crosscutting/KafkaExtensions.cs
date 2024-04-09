@@ -86,6 +86,9 @@ namespace Streamiz.Kafka.Net.Crosscutting
             originHeader.ForEach(h => copyHeaders.Add(h.Key, h.Item2));
             return copyHeaders;
         }
+
+        internal static long GetEstimatedSize(this Headers headers)
+            => headers.Sum(header => header.Key.Length + header.GetValueBytes().LongLength);
         
         internal static Headers AddOrUpdate(this Headers headers, string key, byte[] value)
         {

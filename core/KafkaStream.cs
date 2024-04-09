@@ -324,7 +324,7 @@ namespace Streamiz.Kafka.Net
                 () => StreamState != null && StreamState.IsRunning() ? 1 : 0,
                 () => threads.Count(t => t.State != ThreadState.DEAD && t.State != ThreadState.PENDING_SHUTDOWN),
                 metricsRegistry);
-                
+            
             threads = new IThread[numStreamThreads];
             var threadState = new Dictionary<long, Processors.ThreadState>();
 
