@@ -343,7 +343,7 @@ namespace Streamiz.Kafka.Net
                 GlobalStreamThreadFactory globalStreamThreadFactory = new GlobalStreamThreadFactory(
                     globalTaskTopology,
                     globalThreadId,
-                    kafkaSupplier.GetGlobalConsumer(configuration.ToGlobalConsumerConfig(globalThreadId)),
+                    kafkaSupplier.GetGlobalConsumer(configuration.ToGlobalConsumerConfig(globalThreadId).Wrap(globalThreadId)),
                     configuration,
                     kafkaSupplier.GetAdmin(configuration.ToAdminConfig(clientId)),
                     metricsRegistry);

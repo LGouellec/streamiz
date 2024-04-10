@@ -36,7 +36,7 @@ namespace Streamiz.Kafka.Net.Processors
             stateManager.SetGlobalProcessorContext(context);
             var globalStateUpdateTask = new GlobalStateUpdateTask(stateManager, topology, context);
 
-            return new GlobalStreamThread(threadClientId, globalConsumer, configuration, globalStateUpdateTask);
+            return new GlobalStreamThread(threadClientId, globalConsumer, configuration, globalStateUpdateTask, streamMetricsRegistry);
         }
     }
 }

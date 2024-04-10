@@ -5,6 +5,8 @@ using System;
 using System.Threading.Tasks;
 using Streamiz.Kafka.Net.Stream;
 using System.Collections.Generic;
+using Streamiz.Kafka.Net.Metrics.Prometheus;
+using Streamiz.Kafka.Net.Table;
 
 namespace sample_stream
 {
@@ -18,6 +20,7 @@ namespace sample_stream
                 BootstrapServers = "localhost:9092",
                 AutoOffsetReset = AutoOffsetReset.Earliest
             };
+            config.UsePrometheusReporter(9090, true);
 
             var t = BuildTopology();
             var stream = new KafkaStream(t, config);
@@ -34,21 +37,12 @@ namespace sample_stream
             var builder = new StreamBuilder();
             
             var globalTable = builder
-                .GlobalTable("Input2", new Int64SerDes(), new StringSerDes());
-            
-            var inputStream = builder
-                .Stream<string, string>("Input", new StringSerDes(), new StringSerDes())
-                .Map((k, v) => KeyValuePair.Create(1L, v.Length))
-                .LeftJoin<long, string, int>(globalTable, (k1, k2) => k1, (sO, g) =>
-                {
-                    return sO;
-                })
-                .GroupByKey<Int64SerDes, Int32SerDes>()
-                .Aggregate(() => new List<int>(), (l, i, arg3) =>
-                {
-                    arg3.Add(i);
-                    return arg3;
-                });
+                .GlobalTable("Input2", 
+                    new StringSerDes(),
+                    new StringSerDes(), 
+                    InMemory.As<String, String>()
+                        .WithKeySerdes<StringSerDes>()
+                        .WithValueSerdes<StringSerDes>());
           
           return builder.Build();
         }
