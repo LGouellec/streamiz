@@ -63,7 +63,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
     {
         private static readonly ILogger log = Logger.GetLogger(typeof(RocksDbKeyValueStore));
 
-        private readonly ConcurrentDictionary<WrappedRocksRbKeyValueEnumerator, bool> openIterators = new ConcurrentDictionary<WrappedRocksRbKeyValueEnumerator, bool>();
+        private readonly ConcurrentDictionary<WrappedRocksRbKeyValueEnumerator, bool> openIterators = new();
 
 
         private const Compression COMPRESSION_TYPE = Compression.No;
@@ -329,7 +329,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         /// Create rocksdb config and open rocksdb database.
         /// </summary>
         /// <param name="context"></param>
-        protected void OpenDatabase(ProcessorContext context)
+        internal void OpenDatabase(ProcessorContext context) // visible for testing
         {
             DbOptions dbOptions = new DbOptions();
             ColumnFamilyOptions columnFamilyOptions = new ColumnFamilyOptions();
