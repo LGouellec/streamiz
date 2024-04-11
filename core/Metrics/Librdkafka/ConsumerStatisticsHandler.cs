@@ -7,6 +7,8 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
 {
     internal class ConsumerStatisticsHandler : LibrdKafkaStatisticsHandler
     {
+        private readonly bool isGlobalConsumer;
+        
         private Sensor TotalNumberOfMessagesConsumedSensor;
         private Sensor TotalNumberOfMessageBytesConsumedSensor;
         private Sensor NumberOfOpsWaitinInQueueSensor; // Sensor
@@ -32,8 +34,13 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
         public ConsumerStatisticsHandler(
             string clientId,
             string streamAppId,
-            string threadId = null) : base(clientId, streamAppId, threadId)
-        { }
+            string threadId = null, 
+            bool isGlobalConsumer = false) 
+            : base(clientId, streamAppId, threadId)
+        {
+            this.isGlobalConsumer = isGlobalConsumer;
+        }
+        
 
         public override void Register(StreamMetricsRegistry metricsRegistry)
         {
@@ -118,7 +125,8 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
                             (LibrdKafkaBaseMetrics.TOPIC_TAG, topic.Value.TopicName),
                             (LibrdKafkaBaseMetrics.BROKER_ID_TAG, partition.Value.BrokerId.ToString()), 
                             (LibrdKafkaBaseMetrics.PARTITION_ID_TAG, partition.Value.PartitionId.ToString()))
-                        , partition.Value.ConsumerLag, now);
+                        , !isGlobalConsumer ? partition.Value.ConsumerLag : partition.Value.ConsumerLagStored,
+                        now);
 
                     LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(TotalNumberOfMessagesConsumedByPartitionSensor
                         .Scoped(

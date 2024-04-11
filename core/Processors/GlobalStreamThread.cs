@@ -41,13 +41,16 @@ namespace Streamiz.Kafka.Net.Processors
             public void Initialize()
             {
                 IDictionary<TopicPartition, long> partitionOffsets = globalStateMaintainer.Initialize();
-                globalConsumer.Assign(
-                    partitionOffsets
-                        .Keys
-                        .Select(
-                            x => partitionOffsets[x] >= 0 ? 
-                                new TopicPartitionOffset(x, partitionOffsets[x] + 1 )
-                                : new TopicPartitionOffset(x, Offset.Beginning)));
+                var mappedPartitions = partitionOffsets
+                    .Keys
+                    .Select(
+                        x => partitionOffsets[x] >= 0
+                            ? new TopicPartitionOffset(x, partitionOffsets[x] + 1)
+                            : new TopicPartitionOffset(x, Offset.Beginning)).ToList();
+                
+                globalConsumer.Assign(mappedPartitions);
+                foreach(var tpo in mappedPartitions)
+                    globalConsumer.StoreOffset(tpo);
 
                 lastFlush = DateTime.Now;
             }
@@ -60,6 +63,7 @@ namespace Streamiz.Kafka.Net.Processors
                     foreach (var record in received)
                     {
                         globalStateMaintainer.Update(record);
+                        globalConsumer.StoreOffset(record);
                     }
 
                     DateTime dt = DateTime.Now;
