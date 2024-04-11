@@ -227,14 +227,10 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public void StoreOffset(TopicPartitionOffset offset)
         {
-            // TODO
-            throw new NotImplementedException();
         }
 
         public void StoreOffset(ConsumeResult<byte[], byte[]> result)
         {
-            // TODO
-            throw new NotImplementedException();
         }
 
         public void Subscribe(IEnumerable<string> topics)
