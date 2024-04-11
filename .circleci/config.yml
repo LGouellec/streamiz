@@ -17,12 +17,12 @@
         - run: apt install -y unzip
         # Install JAVA 11
         - run: mkdir -p /usr/share/man/man1 # FIX https://github.com/geerlingguy/ansible-role-java/issues/64
-        - run: apt install -y openjdk-11-jdk
+        - run: apt install -y openjdk-17-jdk
         # BEGIN Dependencies for RocksDB
         - run: apt install -y libc6-dev libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
         - run: apt install -y bzip2 lz4 librocksdb-dev 
         # END Dependencies for RocksDB
-        - run: set JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64/
+        - run: set JAVA_HOME /usr/lib/jvm/java-17-openjdk-amd64/
         - run: export JAVA_HOME
         - run: dotnet sonarscanner begin /k:LGouellec_kafka-streams-dotnet /o:kafka-streams-dotnet /d:sonar.login=${SONAR_TOKEN} /d:sonar.host.url=https://sonarcloud.io /d:sonar.cs.opencover.reportsPaths="**\coverage*.opencover.xml" /d:sonar.coverage.exclusions="**sample*/*.cs,**test*/*.cs,**Tests*.cs,**Mock*.cs"
         - run: dotnet build
