@@ -16,7 +16,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
     // TODO : Need to refactor, not necessary now to have one producer by thread if EOS is enable, see EOS_V2
     internal class RecordCollector : IRecordCollector
     {
-        private class RetryRecord
+        private sealed class RetryRecord
         {
             public byte[] Key { get; set; }
             public byte[] Value { get; set; }
@@ -26,7 +26,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             public string Topic { get; set; }
         }
 
-        private class RetryRecordContext
+        private sealed class RetryRecordContext
         {
             private readonly Dictionary<string, RetryRecord> records;
             private readonly Queue<RetryRecord> queueRecords;
