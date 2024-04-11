@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 
 namespace Streamiz.Kafka.Net.State.RocksDb
 {
@@ -61,7 +62,8 @@ namespace Streamiz.Kafka.Net.State.RocksDb
     public class RocksDbKeyValueStore : IKeyValueStore<Bytes, byte[]>
     {
         private static readonly ILogger log = Logger.GetLogger(typeof(RocksDbKeyValueStore));
-        private readonly ISet<WrappedRocksRbKeyValueEnumerator> openIterators = new HashSet<WrappedRocksRbKeyValueEnumerator>();
+
+        private readonly ConcurrentDictionary<WrappedRocksRbKeyValueEnumerator, bool> openIterators = new();
 
 
         private const Compression COMPRESSION_TYPE = Compression.No;
@@ -160,9 +162,9 @@ namespace Streamiz.Kafka.Net.State.RocksDb
 
             if (openIterators.Count != 0)
             {
-                log.LogWarning("Closing {OpenIteratorsCount} open iterators for store {Name}", openIterators.Count, Name);
-                for (int i = 0; i < openIterators.Count; ++i)
-                    openIterators.ElementAt(i).Dispose();
+                log.LogWarning("Closing {openIteratorsCount} open iterators for store {Name}", openIterators.Count, Name);
+                foreach (KeyValuePair<WrappedRocksRbKeyValueEnumerator, bool> entry in openIterators)
+                    entry.Key.Dispose();
             }
 
             IsOpen = false;
@@ -327,7 +329,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         /// Create rocksdb config and open rocksdb database.
         /// </summary>
         /// <param name="context"></param>
-        protected void OpenDatabase(ProcessorContext context)
+        internal void OpenDatabase(ProcessorContext context) // visible for testing
         {
             DbOptions dbOptions = new DbOptions();
             ColumnFamilyOptions columnFamilyOptions = new ColumnFamilyOptions();
@@ -439,16 +441,20 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             CheckStateStoreOpen();
 
             var rocksEnumerator = DbAdapter.Range(from, to, forward);
-            var wrapped = new WrappedRocksRbKeyValueEnumerator(rocksEnumerator, openIterators.Remove);
-            openIterators.Add(wrapped);
+
+            Func<WrappedRocksRbKeyValueEnumerator, bool> remove = it => openIterators.TryRemove(it, out _);
+            var wrapped = new WrappedRocksRbKeyValueEnumerator(rocksEnumerator, remove);
+            openIterators.TryAdd(wrapped, true);
             return wrapped;
         }
         
         private IEnumerable<KeyValuePair<Bytes, byte[]>> All(bool forward)
         {
             var enumerator = DbAdapter.All(forward);
-            var wrapped = new WrappedRocksRbKeyValueEnumerator(enumerator, openIterators.Remove);
-            openIterators.Add(wrapped);
+
+            Func<WrappedRocksRbKeyValueEnumerator, bool> remove = it => openIterators.TryRemove(it, out _);
+            var wrapped = new WrappedRocksRbKeyValueEnumerator(enumerator, remove);
+            openIterators.AddOrUpdate(wrapped, true);
             return new RocksDbEnumerable(Name, wrapped);
         }
 
