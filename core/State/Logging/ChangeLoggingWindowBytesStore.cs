@@ -13,9 +13,10 @@ namespace Streamiz.Kafka.Net.State.Logging
         private int seqnum = 0;
         private readonly bool retainDuplicates;
         
-        public ChangeLoggingWindowBytesStore(IWindowStore<Bytes, byte[]> wrapped) 
+        public ChangeLoggingWindowBytesStore(IWindowStore<Bytes, byte[]> wrapped, bool retainDuplicates) 
             : base(wrapped)
         {
+            this.retainDuplicates = retainDuplicates;
         }
 
         protected virtual void Publish(Bytes key, byte[] value)
