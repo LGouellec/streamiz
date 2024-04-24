@@ -58,7 +58,7 @@ namespace Streamiz.Kafka.Net.State
             if (!LoggingEnabled)
                 return inner;
 
-            return new ChangeLoggingTimestampedWindowBytesStore(inner);
+            return new ChangeLoggingTimestampedWindowBytesStore(inner, supplier.RetainDuplicates);
         }
     }
 }

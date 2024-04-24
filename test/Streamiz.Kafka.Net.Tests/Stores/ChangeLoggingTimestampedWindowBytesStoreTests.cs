@@ -74,7 +74,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             context.UseRecordCollector(recordCollector);
 
             var inmemorystore = new InMemoryWindowStore("test-store", TimeSpan.FromDays(1), TimeSpan.FromSeconds(1).Milliseconds, false);
-            store = new ChangeLoggingTimestampedWindowBytesStore(inmemorystore);
+            store = new ChangeLoggingTimestampedWindowBytesStore(inmemorystore, false);
             store.Init(context, store);
         }
 
