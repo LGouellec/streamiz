@@ -80,6 +80,9 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
 
         [JsonProperty(PropertyName = "consumer_lag")]
         public long ConsumerLag; // Gauge
+        
+        [JsonProperty(PropertyName = "consumer_lag_stored")]
+        public long ConsumerLagStored; // Gauge
 
         [JsonProperty(PropertyName = "txmsgs")]
         public long TotalNumberOfMessagesProduced; // Gauge

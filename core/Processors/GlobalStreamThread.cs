@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -21,6 +22,7 @@ namespace Streamiz.Kafka.Net.Processors
             private readonly TimeSpan flushInterval;
             private readonly long maxPollRecords;
             private DateTime lastFlush;
+
 
             public StateConsumer(
                 IConsumer<byte[], byte[]> globalConsumer,
@@ -39,13 +41,16 @@ namespace Streamiz.Kafka.Net.Processors
             public void Initialize()
             {
                 IDictionary<TopicPartition, long> partitionOffsets = globalStateMaintainer.Initialize();
-                globalConsumer.Assign(
-                    partitionOffsets
-                        .Keys
-                        .Select(
-                            x => partitionOffsets[x] >= 0 ? 
-                                new TopicPartitionOffset(x, partitionOffsets[x] + 1 )
-                                : new TopicPartitionOffset(x, Offset.Beginning)));
+                var mappedPartitions = partitionOffsets
+                    .Keys
+                    .Select(
+                        x => partitionOffsets[x] >= 0
+                            ? new TopicPartitionOffset(x, partitionOffsets[x] + 1)
+                            : new TopicPartitionOffset(x, Offset.Beginning)).ToList();
+                
+                globalConsumer.Assign(mappedPartitions);
+                foreach(var tpo in mappedPartitions)
+                    globalConsumer.StoreOffset(tpo);
 
                 lastFlush = DateTime.Now;
             }
@@ -58,6 +63,7 @@ namespace Streamiz.Kafka.Net.Processors
                     foreach (var record in received)
                     {
                         globalStateMaintainer.Update(record);
+                        globalConsumer.StoreOffset(record);
                     }
 
                     DateTime dt = DateTime.Now;
@@ -101,23 +107,29 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly ILogger log = Logger.GetLogger(typeof(GlobalStreamThread));
         private readonly Thread thread;
         private readonly string logPrefix;
+        private readonly string threadClientId;
         private readonly IConsumer<byte[], byte[]> globalConsumer;
         private CancellationToken token;
         private readonly object stateLock = new object();
         private readonly IStreamConfig configuration;
         private StateConsumer stateConsumer;
         private readonly IGlobalStateMaintainer globalStateMaintainer;
+        private readonly StreamMetricsRegistry metricsRegistry;
+        private DateTime lastMetrics = DateTime.Now;
 
         public GlobalStreamThread(string threadClientId,
             IConsumer<byte[], byte[]> globalConsumer,
             IStreamConfig configuration,
-            IGlobalStateMaintainer globalStateMaintainer)
+            IGlobalStateMaintainer globalStateMaintainer,
+            StreamMetricsRegistry metricsRegistry)
         {
             logPrefix = $"global-stream-thread {threadClientId} ";
 
+            this.threadClientId = threadClientId;
             this.globalConsumer = globalConsumer;
             this.configuration = configuration;
             this.globalStateMaintainer = globalStateMaintainer;
+            this.metricsRegistry = metricsRegistry;
 
             thread = new Thread(Run);
             State = GlobalThreadState.CREATED;
@@ -131,6 +143,13 @@ namespace Streamiz.Kafka.Net.Processors
                 while (!token.IsCancellationRequested && State.IsRunning())
                 {
                     stateConsumer.PollAndUpdate();
+                    
+                    if (lastMetrics.Add(TimeSpan.FromMilliseconds(configuration.MetricsIntervalMs)) <
+                        DateTime.Now)
+                    {
+                        MetricUtils.ExportMetrics(metricsRegistry, configuration, threadClientId);
+                        lastMetrics = DateTime.Now;
+                    }
                 }
             }
             finally

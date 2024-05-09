@@ -258,7 +258,7 @@ namespace Streamiz.Kafka.Net
         private readonly StreamStateManager manager;
         private readonly StreamMetricsRegistry metricsRegistry;
 
-        private readonly CancellationTokenSource _cancelSource = new CancellationTokenSource();
+        private readonly CancellationTokenSource _cancelSource = new();
 
         internal State StreamState { get; private set; }
 
@@ -343,7 +343,7 @@ namespace Streamiz.Kafka.Net
                 GlobalStreamThreadFactory globalStreamThreadFactory = new GlobalStreamThreadFactory(
                     globalTaskTopology,
                     globalThreadId,
-                    kafkaSupplier.GetGlobalConsumer(configuration.ToGlobalConsumerConfig(globalThreadId)),
+                    kafkaSupplier.GetGlobalConsumer(configuration.ToGlobalConsumerConfig(globalThreadId).Wrap(globalThreadId)),
                     configuration,
                     kafkaSupplier.GetAdmin(configuration.ToAdminConfig(clientId)),
                     metricsRegistry);
@@ -444,7 +444,7 @@ namespace Streamiz.Kafka.Net
                     {
                         foreach (var innerE in e.InnerExceptions)
                         {
-                            logger.LogError($"{logPrefix}Error during initializing internal topics : {innerE.Message}");
+                            logger.Log(LogLevel.Error, innerE, $"{logPrefix}Error during initializing internal topics");
                             SetState(State.PENDING_SHUTDOWN);
                             SetState(State.ERROR);
                         }
@@ -492,6 +492,7 @@ namespace Streamiz.Kafka.Net
                 }
 
                 Close();
+                _cancelSource.Dispose();
             }).Wait(TimeSpan.FromSeconds(30));
         }
 

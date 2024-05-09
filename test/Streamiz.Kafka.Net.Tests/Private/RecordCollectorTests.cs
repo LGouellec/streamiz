@@ -113,6 +113,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             }
             catch { }
 
+            bool error = false;
+            
             try
             {
                 collector.Send(
@@ -126,9 +128,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
             }
             catch
             {
-                Assert.IsTrue(true);
+                error = true;
             }
-
+            
+            Assert.IsTrue(error);
+            
             var consumer = supplier.GetConsumer(config.ToConsumerConfig("consumer"), null);
             consumer.Subscribe("input-topic");
             int count = 0;
@@ -169,6 +173,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             }
             catch { }
 
+            bool error = false;
             try
             {
                 collector.Send(
@@ -182,9 +187,10 @@ namespace Streamiz.Kafka.Net.Tests.Private
             }
             catch
             {
-                Assert.IsTrue(true);
+                error = true;
             }
 
+            Assert.IsTrue(error);
             var consumer = supplier.GetConsumer(config.ToConsumerConfig("consumer"), null);
             consumer.Subscribe("input-topic");
             int count = 0;
