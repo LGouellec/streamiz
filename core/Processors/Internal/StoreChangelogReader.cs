@@ -203,7 +203,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 log.LogDebug($"Restored {numRecords} records from " +
                              $"changelog {changelogMetadata.StoreMetadata.Store.Name} " +
                              $"to store {changelogMetadata.StoreMetadata.ChangelogTopicPartition}, " +
-                             $"end offset is {(changelogMetadata.RestoreEndOffset.HasValue ? changelogMetadata.RestoreEndOffset.Value : "unknown")}, " +
+                             $"end offset is {(changelogMetadata.RestoreEndOffset.HasValue ? changelogMetadata.RestoreEndOffset.Value.ToString() : "unknown")}, " +
                              $"current offset is {currentOffset}");
 
                 changelogMetadata.BufferedLimit = 0;

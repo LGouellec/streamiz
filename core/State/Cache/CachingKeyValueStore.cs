@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.State.Cache.Enumerator;
 using Streamiz.Kafka.Net.State.Cache.Internal;
 using Streamiz.Kafka.Net.State.Enumerator;
 using Streamiz.Kafka.Net.State.Internal;
@@ -13,7 +14,7 @@ namespace Streamiz.Kafka.Net.State.Cache
         WrappedStateStore<IKeyValueStore<Bytes, byte[]>>,
         IKeyValueStore<Bytes, byte[]>, ICachedStateStore<byte[], byte[]>
     {
-        private MemoryCache cache;
+        private MemoryCache<Bytes, CacheEntryValue> cache;
         private Action<KeyValuePair<byte[], Change<byte[]>>> flushListener;
         private bool sendOldValue;
         
@@ -22,6 +23,9 @@ namespace Streamiz.Kafka.Net.State.Cache
         {
             
         }
+        
+        // for testing
+        internal MemoryCache<Bytes, CacheEntryValue> Cache { get; private set; }
 
         public bool SetFlushListener(Action<KeyValuePair<byte[], Change<byte[]>>> listener, bool sendOldChanges)
         {
@@ -33,11 +37,12 @@ namespace Streamiz.Kafka.Net.State.Cache
         // Only for testing
         internal void CreateCache(ProcessorContext context)
         {
-            cache = new MemoryCache(new MemoryCacheOptions {
+            cache = new MemoryCache<Bytes, CacheEntryValue>(new MemoryCacheOptions {
                 SizeLimit = context.Configuration.StateStoreCacheMaxBytes,
+                TrackStatistics = true,
                 CompactionPercentage = .20,
-                ExpirationScanFrequency = TimeSpan.FromMilliseconds(context.Configuration.CommitIntervalMs)
-            });
+                ExpirationScanFrequency = TimeSpan.FromMilliseconds(Math.Max(context.Configuration.CommitIntervalMs / 2, 100))
+            }, new BytesComparer());
         }
 
         private byte[] GetInternal(Bytes key)
@@ -94,7 +99,6 @@ namespace Streamiz.Kafka.Net.State.Cache
         public override void Flush()
         {
             cache.Compact(1); // Compact 100% of the cache
-            while (cache.Count > 0) ;
             base.Flush();
         }
 
@@ -103,23 +107,36 @@ namespace Streamiz.Kafka.Net.State.Cache
         
         public IKeyValueEnumerator<Bytes, byte[]> Range(Bytes from, Bytes to)
         {
-            // finish with Merge enumerator
-            throw new System.NotImplementedException();
+            var storeEnumerator = wrapped.Range(from, to);
+            var cacheEnumerator = new CacheEnumerator<Bytes, CacheEntryValue>(cache.KeyRange(from, to, true, true), cache);
+            
+            return new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, true);
         }
 
         public IKeyValueEnumerator<Bytes, byte[]> ReverseRange(Bytes from, Bytes to)
         {
-            throw new System.NotImplementedException();
+            var storeEnumerator = wrapped.ReverseRange(from, to);
+            var cacheEnumerator = new CacheEnumerator<Bytes, CacheEntryValue>(cache.KeyRange(from, to, true, false), cache);
+            
+            return new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, false);
         }
 
         public IEnumerable<KeyValuePair<Bytes, byte[]>> All()
         {
-            throw new System.NotImplementedException();
+            var storeEnumerator = new WrapEnumerableKeyValueEnumerator<Bytes, byte[]>(wrapped.All());
+            var cacheEnumerator = new CacheEnumerator<Bytes, CacheEntryValue>(cache.KeySetEnumerable(true), cache);
+
+            return new WrapKeyValueEnumeratorEnumerable<Bytes, byte[]>(
+                new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, true));
         }
 
         public IEnumerable<KeyValuePair<Bytes, byte[]>> ReverseAll()
         {
-            throw new System.NotImplementedException();
+            var storeEnumerator = new WrapEnumerableKeyValueEnumerator<Bytes, byte[]>(wrapped.ReverseAll());
+            var cacheEnumerator = new CacheEnumerator<Bytes, CacheEntryValue>(cache.KeySetEnumerable(false), cache);
+
+            return new WrapKeyValueEnumeratorEnumerable<Bytes, byte[]>(
+                new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, false));
         }
 
         public long ApproximateNumEntries() => cache.Count;
@@ -168,15 +185,12 @@ namespace Streamiz.Kafka.Net.State.Cache
             var rawValue = Get(key);
             Put(key, null);
             return rawValue;
-            // First impl
-            // if (cache.TryGetValue(key, out byte[] priorEntry))
-            // {
-            //     cache.Remove(key);
-            //     wrapped.Delete(key);
-            //     return priorEntry;
-            // }
-            //
-            // return wrapped.Delete(key);
+        }
+
+        public new void Close()
+        {
+            cache.Dispose();
+            base.Close();
         }
     }
 }

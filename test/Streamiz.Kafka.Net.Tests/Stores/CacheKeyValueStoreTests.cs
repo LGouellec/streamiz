@@ -201,6 +201,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             cache.Flush();
             Assert.AreEqual(ToValue("value1"), inMemoryKeyValue.Get(ToKey("test")));
         }
+        
         // implement and test range methods        
     }
 }

@@ -449,7 +449,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             var enumerator = DbAdapter.All(forward);
             var wrapped = new WrappedRocksRbKeyValueEnumerator(enumerator, openIterators.Remove);
             openIterators.Add(wrapped);
-            return new RocksDbEnumerable(Name, wrapped);
+            return new KeyValueEnumerable(Name, wrapped);
         }
 
         #endregion

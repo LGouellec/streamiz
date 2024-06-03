@@ -4,8 +4,6 @@
 // The only difference is the compaction process and eviction callback is synchronous whereas the .NET repo is asyncrhonous
 
 using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Primitives;
 
 namespace Streamiz.Kafka.Net.State.Cache.Internal
 {
@@ -20,22 +18,10 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <param name="cache">The <see cref="IMemoryCache"/> instance this method extends.</param>
         /// <param name="key">The key of the value to get.</param>
         /// <returns>The value associated with this key, or <c>null</c> if the key is not present.</returns>
-        public static object? Get(this IMemoryCache cache, object key)
+        public static V Get<K, V>(this IMemoryCache<K, V> cache, K key)
         {
-            cache.TryGetValue(key, out object? value);
+            cache.TryGetValue(key, out V value);
             return value;
-        }
-
-        /// <summary>
-        /// Gets the value associated with this key if present.
-        /// </summary>
-        /// <typeparam name="TItem">The type of the object to get.</typeparam>
-        /// <param name="cache">The <see cref="IMemoryCache"/> instance this method extends.</param>
-        /// <param name="key">The key of the value to get.</param>
-        /// <returns>The value associated with this key, or <c>default(TItem)</c> if the key is not present.</returns>
-        public static TItem? Get<TItem>(this IMemoryCache cache, object key)
-        {
-            return (TItem?)(cache.Get(key) ?? default(TItem));
         }
 
         /// <summary>
@@ -46,9 +32,9 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <param name="key">The key of the value to get.</param>
         /// <param name="value">The value associated with the given key.</param>
         /// <returns><c>true</c> if the key was found. <c>false</c> otherwise.</returns>
-        public static bool TryGetValue<TItem>(this IMemoryCache cache, object key, out TItem? value)
+        public static bool TryGetValue<K, V>(this IMemoryCache<K, V> cache, K key, out V value)
         {
-            if (cache.TryGetValue(key, out object? result))
+            if (cache.TryGetValue(key, out V result))
             {
                 if (result == null)
                 {
@@ -56,7 +42,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
                     return false; // if result == null, is a delete
                 }
 
-                if (result is TItem item)
+                if (result is V item)
                 {
                     value = item;
                     return true;
@@ -75,67 +61,14 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <param name="key">The key of the entry to add.</param>
         /// <param name="value">The value to associate with the key.</param>
         /// <returns>The value that was set.</returns>
-        public static TItem Set<TItem>(this IMemoryCache cache, object key, TItem value)
+        public static V Set<K, V>(this IMemoryCache<K, V> cache, K key, V value)
         {
-            using ICacheEntry entry = cache.CreateEntry(key);
+            using ICacheEntry<K, V> entry = cache.CreateEntry(key);
             entry.Value = value;
 
             return value;
         }
-
-        /// <summary>
-        /// Sets a cache entry with the given key and value that will expire in the given duration.
-        /// </summary>
-        /// <typeparam name="TItem">The type of the object to set.</typeparam>
-        /// <param name="cache">The <see cref="IMemoryCache"/> instance this method extends.</param>
-        /// <param name="key">The key of the entry to add.</param>
-        /// <param name="value">The value to associate with the key.</param>
-        /// <param name="absoluteExpiration">The point in time at which the cache entry will expire.</param>
-        /// <returns>The value that was set.</returns>
-        public static TItem Set<TItem>(this IMemoryCache cache, object key, TItem value, DateTimeOffset absoluteExpiration)
-        {
-            using ICacheEntry entry = cache.CreateEntry(key);
-            entry.AbsoluteExpiration = absoluteExpiration;
-            entry.Value = value;
-
-            return value;
-        }
-
-        /// <summary>
-        /// Sets a cache entry with the given key and value that will expire in the given duration from now.
-        /// </summary>
-        /// <typeparam name="TItem">The type of the object to set.</typeparam>
-        /// <param name="cache">The <see cref="IMemoryCache"/> instance this method extends.</param>
-        /// <param name="key">The key of the entry to add.</param>
-        /// <param name="value">The value to associate with the key.</param>
-        /// <param name="absoluteExpirationRelativeToNow">The duration from now after which the cache entry will expire.</param>
-        /// <returns>The value that was set.</returns>
-        public static TItem Set<TItem>(this IMemoryCache cache, object key, TItem value, TimeSpan absoluteExpirationRelativeToNow)
-        {
-            using ICacheEntry entry = cache.CreateEntry(key);
-            entry.AbsoluteExpirationRelativeToNow = absoluteExpirationRelativeToNow;
-            entry.Value = value;
-
-            return value;
-        }
-
-        /// <summary>
-        /// Sets a cache entry with the given key and value that will expire when <see cref="IChangeToken"/> expires.
-        /// </summary>
-        /// <typeparam name="TItem">The type of the object to set.</typeparam>
-        /// <param name="cache">The <see cref="IMemoryCache"/> instance this method extends.</param>
-        /// <param name="key">The key of the entry to add.</param>
-        /// <param name="value">The value to associate with the key.</param>
-        /// <param name="expirationToken">The <see cref="IChangeToken"/> that causes the cache entry to expire.</param>
-        /// <returns>The value that was set.</returns>
-        public static TItem Set<TItem>(this IMemoryCache cache, object key, TItem value, IChangeToken expirationToken)
-        {
-            using ICacheEntry entry = cache.CreateEntry(key);
-            entry.AddExpirationToken(expirationToken);
-            entry.Value = value;
-
-            return value;
-        }
+        
 
         /// <summary>
         /// Sets a cache entry with the given key and value and apply the values of an existing <see cref="MemoryCacheEntryOptions"/> to the created entry.
@@ -146,9 +79,9 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <param name="value">The value to associate with the key.</param>
         /// <param name="options">The existing <see cref="MemoryCacheEntryOptions"/> instance to apply to the new entry.</param>
         /// <returns>The value that was set.</returns>
-        public static TItem Set<TItem>(this IMemoryCache cache, object key, TItem value, MemoryCacheEntryOptions? options)
+        public static V Set<K, V>(this IMemoryCache<K, V> cache, K key, V value, MemoryCacheEntryOptions? options)
         {
-            using ICacheEntry entry = cache.CreateEntry(key);
+            using ICacheEntry<K, V> entry = cache.CreateEntry(key);
             if (options != null)
             {
                 entry.SetOptions(options);
@@ -167,7 +100,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <param name="key">The key of the entry to look for or create.</param>
         /// <param name="factory">The factory that creates the value associated with this key if the key does not exist in the cache.</param>
         /// <returns>The value associated with this key.</returns>
-        public static TItem? GetOrCreate<TItem>(this IMemoryCache cache, object key, Func<ICacheEntry, TItem> factory)
+        public static V GetOrCreate<K, V>(this IMemoryCache<K, V> cache, K key, Func<ICacheEntry<K, V>, V> factory)
         {
             return GetOrCreate(cache, key, factory, null);
         }
@@ -181,11 +114,11 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <param name="factory">The factory that creates the value associated with this key if the key does not exist in the cache.</param>
         /// <param name="createOptions">The options to be applied to the <see cref="ICacheEntry"/> if the key does not exist in the cache.</param>
         /// <returns>The value associated with this key.</returns>
-        public static TItem? GetOrCreate<TItem>(this IMemoryCache cache, object key, Func<ICacheEntry, TItem> factory, MemoryCacheEntryOptions? createOptions)
+        public static V GetOrCreate<K, V>(this IMemoryCache<K, V> cache, K key, Func<ICacheEntry<K, V>, V> factory, MemoryCacheEntryOptions? createOptions)
         {
-            if (!cache.TryGetValue(key, out object? result))
+            if (!cache.TryGetValue(key, out V result))
             {
-                using ICacheEntry entry = cache.CreateEntry(key);
+                using ICacheEntry<K, V> entry = cache.CreateEntry(key);
 
                 if (createOptions != null)
                 {
@@ -196,47 +129,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
                 entry.Value = result;
             }
 
-            return (TItem?)result;
-        }
-
-        /// <summary>
-        /// Asynchronously gets the value associated with this key if it exists, or generates a new entry using the provided key and a value from the given factory if the key is not found.
-        /// </summary>
-        /// <typeparam name="TItem">The type of the object to get.</typeparam>
-        /// <param name="cache">The <see cref="IMemoryCache"/> instance this method extends.</param>
-        /// <param name="key">The key of the entry to look for or create.</param>
-        /// <param name="factory">The factory task that creates the value associated with this key if the key does not exist in the cache.</param>
-        /// <returns>The task object representing the asynchronous operation.</returns>
-        public static Task<TItem?> GetOrCreateAsync<TItem>(this IMemoryCache cache, object key, Func<ICacheEntry, Task<TItem>> factory)
-        {
-            return GetOrCreateAsync<TItem>(cache, key, factory, null);
-        }
-
-        /// <summary>
-        /// Asynchronously gets the value associated with this key if it exists, or generates a new entry using the provided key and a value from the given factory if the key is not found.
-        /// </summary>
-        /// <typeparam name="TItem">The type of the object to get.</typeparam>
-        /// <param name="cache">The <see cref="IMemoryCache"/> instance this method extends.</param>
-        /// <param name="key">The key of the entry to look for or create.</param>
-        /// <param name="factory">The factory task that creates the value associated with this key if the key does not exist in the cache.</param>
-        /// <param name="createOptions">The options to be applied to the <see cref="ICacheEntry"/> if the key does not exist in the cache.</param>
-        /// <returns>The task object representing the asynchronous operation.</returns>
-        public static async Task<TItem?> GetOrCreateAsync<TItem>(this IMemoryCache cache, object key, Func<ICacheEntry, Task<TItem>> factory, MemoryCacheEntryOptions? createOptions)
-        {
-            if (!cache.TryGetValue(key, out object? result))
-            {
-                using ICacheEntry entry = cache.CreateEntry(key);
-
-                if (createOptions != null)
-                {
-                    entry.SetOptions(createOptions);
-                }
-
-                result = await factory(entry).ConfigureAwait(false);
-                entry.Value = result;
-            }
-
-            return (TItem?)result;
+            return result;
         }
     }
 }

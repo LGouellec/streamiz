@@ -4,14 +4,14 @@
 // The only difference is the compaction process and eviction callback is synchronous whereas the .NET repo is asyncrhonous
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Streamiz.Kafka.Net.Crosscutting;
 
 namespace Streamiz.Kafka.Net.State.Cache.Internal
 {
@@ -19,8 +19,9 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
     /// An implementation of <see cref="IMemoryCache"/> using a dictionary to
     /// store its entries.
     /// </summary>
-    public class MemoryCache : IMemoryCache
+    internal class MemoryCache<K, V> : IMemoryCache<K, V>
     {
+        private readonly IComparer<K> _keyComparer;
         internal readonly ILogger _logger;
 
         private readonly MemoryCacheOptions _options;
@@ -28,7 +29,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         private readonly List<WeakReference<Stats>>? _allStats;
         private readonly Stats? _accumulatedStats;
         private readonly ThreadLocal<Stats>? _stats;
-        private CoherentState _coherentState;
+        private CoherentState<K, V> _coherentState;
         private bool _disposed;
         private DateTime _lastExpirationScan;
 
@@ -36,25 +37,30 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// Creates a new <see cref="MemoryCache"/> instance.
         /// </summary>
         /// <param name="optionsAccessor">The options of the cache.</param>
-        public MemoryCache(IOptions<MemoryCacheOptions> optionsAccessor)
-            : this(optionsAccessor, NullLoggerFactory.Instance) { }
+        public MemoryCache(IOptions<MemoryCacheOptions> optionsAccessor, IComparer<K> keyComparer)
+            : this(optionsAccessor, keyComparer, NullLoggerFactory.Instance)
+        {
+        }
 
         /// <summary>
         /// Creates a new <see cref="MemoryCache"/> instance.
         /// </summary>
         /// <param name="optionsAccessor">The options of the cache.</param>
         /// <param name="loggerFactory">The factory used to create loggers.</param>
-        public MemoryCache(IOptions<MemoryCacheOptions> optionsAccessor, ILoggerFactory loggerFactory)
+        public MemoryCache(IOptions<MemoryCacheOptions> optionsAccessor, IComparer<K> keyComparer, ILoggerFactory loggerFactory)
         {
+            if (keyComparer == null)
+                throw new ArgumentException();
             if (optionsAccessor == null)
                 throw new ArgumentException();
             if (loggerFactory == null)
                 throw new ArgumentException();
 
+            _keyComparer = keyComparer;
             _options = optionsAccessor.Value;
-            _logger = loggerFactory.CreateLogger<MemoryCache>();
+            _logger = loggerFactory.CreateLogger<MemoryCache<K, V>>();
 
-            _coherentState = new CoherentState();
+            _coherentState = new CoherentState<K, V>();
 
             if (_options.TrackStatistics)
             {
@@ -64,7 +70,6 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             }
 
             _lastExpirationScan = UtcNow;
-            TrackLinkedCacheEntries = _options.TrackLinkedCacheEntries; // we store the setting now so it's consistent for entire MemoryCache lifetime
         }
 
         //private DateTime UtcNow => _options.Clock?.UtcNow.UtcDateTime ?? DateTime.UtcNow;
@@ -83,15 +88,37 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <summary>
         /// Gets an enumerable of the all the keys in the <see cref="MemoryCache"/>.
         /// </summary>
-        public IEnumerable<object> Keys
+        public IEnumerable<K> Keys => _coherentState._entries.Keys;
+
+        internal IEnumerable<K> KeySetEnumerable(bool forward)
         {
-            get
-            {
-                foreach (KeyValuePair<object, CacheEntry> pairs in _coherentState._entries)
-                {
-                    yield return pairs.Key;
-                }
-            }
+            return forward ? Keys : Keys.OrderByDescending(k => k, _keyComparer);
+        }
+
+        // TODO: Maybe used Keys accessor ..
+        internal IEnumerable<K> KeyRange(K from, K to, bool inclusive, bool forward)
+        {
+            if (from == null && to == null)
+                return KeySetEnumerable(forward);
+            
+            IEnumerable<K> selectedKeys;
+
+            if (from == null)
+                selectedKeys = _coherentState._entries
+                    .HeadMap(to, inclusive)
+                    .Select(kv => kv.Key);
+            else if (to == null)
+                selectedKeys = _coherentState._entries
+                    .TailMap(from, true)
+                    .Select(kv => kv.Key);
+            else if (_keyComparer.Compare(from, to) > 0)
+                selectedKeys = new List<K>();
+            else
+                selectedKeys = _coherentState._entries
+                    .SubMap(from, to, true, inclusive)
+                    .Select(kv => kv.Key);
+                
+            return forward ? selectedKeys : selectedKeys.OrderByDescending(k => k, _keyComparer);
         }
 
         /// <summary>
@@ -102,18 +129,16 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// </summary>
         internal long Size => _coherentState.Size;
 
-        internal bool TrackLinkedCacheEntries { get; }
-
         /// <inheritdoc />
-        public ICacheEntry CreateEntry(object key)
+        public ICacheEntry<K, V> CreateEntry(K key)
         {
             CheckDisposed();
             ValidateCacheKey(key);
 
-            return new CacheEntry(key, this);
+            return new CacheEntry<K, V>(key, this);
         }
 
-        internal void SetEntry(CacheEntry entry)
+        internal void SetEntry(CacheEntry<K, V> entry)
         {
             if (_disposed)
             {
@@ -128,23 +153,11 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
 
             DateTime utcNow = UtcNow;
 
-            // Applying the option's absolute expiration only if it's not already smaller.
-            // This can be the case if a dependent cache entry has a smaller value, and
-            // it was set by cascading it to its parent.
-            if (entry.AbsoluteExpirationRelativeToNow.Ticks > 0)
-            {
-                long absoluteExpiration = (utcNow + entry.AbsoluteExpirationRelativeToNow).Ticks;
-                if ((ulong)absoluteExpiration < (ulong)entry.AbsoluteExpirationTicks)
-                {
-                    entry.AbsoluteExpirationTicks = absoluteExpiration;
-                }
-            }
-
             // Initialize the last access timestamp at the time the entry is added
             entry.LastAccessed = utcNow;
 
-            CoherentState coherentState = _coherentState; // Clear() can update the reference in the meantime
-            if (coherentState._entries.TryGetValue(entry.Key, out CacheEntry? priorEntry))
+            CoherentState<K, V> coherentState = _coherentState; // Clear() can update the reference in the meantime
+            if (coherentState._entries.TryGetValue(entry.Key, out CacheEntry<K, V> priorEntry))
             {
                 priorEntry.SetExpired(EvictionReason.Replaced);
             }
@@ -168,7 +181,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
                 else
                 {
                     // Try to update with the new entry if a previous entries exist.
-                    entryAdded = coherentState._entries.TryUpdate(entry.Key, entry, priorEntry);
+                    entryAdded = coherentState._entries.AddOrUpdate(entry.Key, entry);
 
                     if (entryAdded)
                     {
@@ -187,11 +200,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
                     }
                 }
 
-                if (entryAdded)
-                {
-                    entry.AttachTokens();
-                }
-                else
+                if (!entryAdded)
                 {
                     if (_options.HasSizeLimit)
                     {
@@ -219,7 +228,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         }
 
         /// <inheritdoc />
-        public bool TryGetValue(object key, out object? result)
+        public bool TryGetValue(K key, out V result)
         {
             if (key == null)
                 throw new ArgumentException();
@@ -228,46 +237,26 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
 
             DateTime utcNow = UtcNow;
 
-            CoherentState coherentState = _coherentState; // Clear() can update the reference in the meantime
-            if (coherentState._entries.TryGetValue(key, out CacheEntry? tmp))
+            CoherentState<K, V> coherentState = _coherentState; // Clear() can update the reference in the meantime
+            if (coherentState._entries.TryGetValue(key, out CacheEntry<K, V> tmp))
             {
-                CacheEntry entry = tmp;
-                // Check if expired due to expiration tokens, timers, etc. and if so, remove it.
-                // Allow a stale Replaced value to be returned due to concurrent calls to SetExpired during SetEntry.
-                if (!entry.CheckExpired(utcNow) || entry.EvictionReason == EvictionReason.Replaced)
+                CacheEntry<K, V> entry = tmp;
+                entry.LastAccessed = utcNow;
+                result = entry.Value;
+                
+                // Hit
+                if (_allStats is not null)
                 {
-                    entry.LastAccessed = utcNow;
-                    result = entry.Value;
-
-                    if (TrackLinkedCacheEntries)
-                    {
-                        // When this entry is retrieved in the scope of creating another entry,
-                        // that entry needs a copy of these expiration tokens.
-                        entry.PropagateOptionsToCurrent();
-                    }
-
-                    StartScanForExpiredItemsIfNeeded(utcNow);
-                    // Hit
-                    if (_allStats is not null)
-                    {
-                        if (IntPtr.Size == 4)
-                            Interlocked.Increment(ref GetStats().Hits);
-                        else
-                            GetStats().Hits++;
-                    }
-
-                    return true;
+                    if (IntPtr.Size == 4)
+                        Interlocked.Increment(ref GetStats().Hits);
+                    else
+                        GetStats().Hits++;
                 }
-                else
-                {
-                    // TODO: For efficiency queue this up for batch removal
-                    coherentState.RemoveEntry(entry, _options);
-                }
+
+                return true;
             }
 
-            StartScanForExpiredItemsIfNeeded(utcNow);
-
-            result = null;
+            result = default(V);
             // Miss
             if (_allStats is not null)
             {
@@ -281,15 +270,15 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         }
 
         /// <inheritdoc />
-        public void Remove(object key)
+        public void Remove(K key)
         {
             if (key == null)
                 throw new ArgumentException();
 
             CheckDisposed();
 
-            CoherentState coherentState = _coherentState; // Clear() can update the reference in the meantime
-            if (coherentState._entries.TryRemove(key, out CacheEntry? entry))
+            CoherentState<K, V> coherentState = _coherentState; // Clear() can update the reference in the meantime
+            if (coherentState._entries.Remove(key, out CacheEntry<K, V> entry))
             {
                 if (_options.HasSizeLimit)
                 {
@@ -310,8 +299,8 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         {
             CheckDisposed();
 
-            CoherentState oldState = Interlocked.Exchange(ref _coherentState, new CoherentState());
-            foreach (KeyValuePair<object, CacheEntry> entry in oldState._entries)
+            CoherentState<K, V> oldState = Interlocked.Exchange(ref _coherentState, new CoherentState<K, V>());
+            foreach (KeyValuePair<K, CacheEntry<K, V>> entry in oldState._entries)
             {
                 entry.Value.SetExpired(EvictionReason.Removed);
                 entry.Value.InvokeEvictionCallbacks();
@@ -339,7 +328,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             return null;
         }
 
-        internal void EntryExpired(CacheEntry entry)
+        internal void EntryExpired(CacheEntry<K, V> entry)
         {
             // TODO: For efficiency consider processing these expirations in batches.
             _coherentState.RemoveEntry(entry, _options);
@@ -360,8 +349,6 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             {
                 _lastExpirationScan = utcNow;
                 ScanForExpiredItems();
-                //Task.Factory.StartNew(state => ((MemoryCache)state!).ScanForExpiredItems(), this,
-                //    CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
             }
         }
 
@@ -389,13 +376,13 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
 
         internal sealed class Stats
         {
-            private readonly MemoryCache? _memoryCache;
+            private readonly MemoryCache<K, V>? _memoryCache;
             public long Hits;
             public long Misses;
 
             public Stats() { }
 
-            public Stats(MemoryCache memoryCache)
+            public Stats(MemoryCache<K, V> memoryCache)
             {
                 _memoryCache = memoryCache;
                 _memoryCache.AddToStats(this);
@@ -435,10 +422,10 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         {
             DateTime utcNow = _lastExpirationScan = UtcNow;
 
-            CoherentState coherentState = _coherentState; // Clear() can update the reference in the meantime
-            foreach (KeyValuePair<object, CacheEntry> item in coherentState._entries)
+            CoherentState<K, V> coherentState = _coherentState; // Clear() can update the reference in the meantime
+            foreach (KeyValuePair<K, CacheEntry<K, V>> item in coherentState._entries)
             {
-                CacheEntry entry = item.Value;
+                CacheEntry<K, V> entry = item.Value;
 
                 if (entry.CheckExpired(utcNow))
                 {
@@ -451,7 +438,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// Returns true if increasing the cache size by the size of entry would
         /// cause it to exceed any size limit on the cache, otherwise, returns false.
         /// </summary>
-        private bool UpdateCacheSizeExceedsCapacity(CacheEntry entry, CoherentState coherentState)
+        private bool UpdateCacheSizeExceedsCapacity(CacheEntry<K, V> entry, CoherentState<K, V> coherentState)
         {
             long sizeLimit = _options.SizeLimitValue;
             if (sizeLimit < 0)
@@ -486,13 +473,12 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             if (_logger.IsEnabled(LogLevel.Debug))
                 _logger.LogDebug("Overcapacity compaction triggered");
 
-            // Spawn background thread for compaction
-            ThreadPool.QueueUserWorkItem(s => ((MemoryCache)s!).OvercapacityCompaction(), this);
+            OvercapacityCompaction();
         }
 
         private void OvercapacityCompaction()
         {
-            CoherentState coherentState = _coherentState; // Clear() can update the reference in the meantime
+            CoherentState<K, V> coherentState = _coherentState; // Clear() can update the reference in the meantime
             long currentSize = coherentState.Size;
 
             if (_logger.IsEnabled(LogLevel.Debug))
@@ -521,25 +507,25 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// ?. Larger objects - estimated by object graph size, inaccurate.
         public void Compact(double percentage)
         {
-            CoherentState coherentState = _coherentState; // Clear() can update the reference in the meantime
+            CoherentState<K, V> coherentState = _coherentState; // Clear() can update the reference in the meantime
             int removalCountTarget = (int)(coherentState.Count * percentage);
             Compact(removalCountTarget, _ => 1, coherentState);
         }
 
-        private void Compact(long removalSizeTarget, Func<CacheEntry, long> computeEntrySize, CoherentState coherentState)
+        private void Compact(long removalSizeTarget, Func<CacheEntry<K, V>, long> computeEntrySize, CoherentState<K, V> coherentState)
         {
-            var entriesToRemove = new List<CacheEntry>();
+            var entriesToRemove = new List<CacheEntry<K, V>>();
             // cache LastAccessed outside of the CacheEntry so it is stable during compaction
-            var lowPriEntries = new List<(CacheEntry entry, DateTimeOffset lastAccessed)>();
-            var normalPriEntries = new List<(CacheEntry entry, DateTimeOffset lastAccessed)>();
-            var highPriEntries = new List<(CacheEntry entry, DateTimeOffset lastAccessed)>();
+            var lowPriEntries = new List<(CacheEntry<K, V> entry, DateTimeOffset lastAccessed)>();
+            var normalPriEntries = new List<(CacheEntry<K, V> entry, DateTimeOffset lastAccessed)>();
+            var highPriEntries = new List<(CacheEntry<K, V> entry, DateTimeOffset lastAccessed)>();
             long removedSize = 0;
 
             // Sort items by expired & priority status
             DateTime utcNow = UtcNow;
-            foreach (KeyValuePair<object, CacheEntry> item in coherentState._entries)
+            foreach (KeyValuePair<K, CacheEntry<K, V>> item in coherentState._entries)
             {
-                CacheEntry entry = item.Value;
+                CacheEntry<K, V> entry = item.Value;
                 if (entry.CheckExpired(utcNow))
                 {
                     entriesToRemove.Add(entry);
@@ -570,7 +556,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             ExpirePriorityBucket(ref removedSize, removalSizeTarget, computeEntrySize, entriesToRemove, normalPriEntries);
             ExpirePriorityBucket(ref removedSize, removalSizeTarget, computeEntrySize, entriesToRemove, highPriEntries);
 
-            foreach (CacheEntry entry in entriesToRemove)
+            foreach (CacheEntry<K, V> entry in entriesToRemove)
             {
                 coherentState.RemoveEntry(entry, _options);
             }
@@ -580,7 +566,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             // ?. Items with the soonest absolute expiration.
             // ?. Items with the soonest sliding expiration.
             // ?. Larger objects - estimated by object graph size, inaccurate.
-            static void ExpirePriorityBucket(ref long removedSize, long removalSizeTarget, Func<CacheEntry, long> computeEntrySize, List<CacheEntry> entriesToRemove, List<(CacheEntry Entry, DateTimeOffset LastAccessed)> priorityEntries)
+            static void ExpirePriorityBucket(ref long removedSize, long removalSizeTarget, Func<CacheEntry<K, V>, long> computeEntrySize, List<CacheEntry<K, V>> entriesToRemove, List<(CacheEntry<K, V> Entry, DateTimeOffset LastAccessed)> priorityEntries)
             {
                 // Do we meet our quota by just removing expired entries?
                 if (removalSizeTarget <= removedSize)
@@ -594,7 +580,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
 
                 // LRU
                 priorityEntries.Sort(static (e1, e2) => e1.LastAccessed.CompareTo(e2.LastAccessed));
-                foreach ((CacheEntry entry, _) in priorityEntries)
+                foreach ((CacheEntry<K, V> entry, _) in priorityEntries)
                 {
                     entry.SetExpired(EvictionReason.Capacity);
                     entriesToRemove.Add(entry);
@@ -639,7 +625,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
                 Throw();
             }
 
-            static void Throw() => throw new ObjectDisposedException(typeof(MemoryCache).FullName);
+            static void Throw() => throw new ObjectDisposedException(typeof(MemoryCache<K, V>).FullName);
         }
 
         private static void ValidateCacheKey(object key)
@@ -664,20 +650,21 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// Clearing the cache simply replaces the object, so that any still in progress updates do not affect the overall size value for
         /// the new backing collection.
         /// </summary>
-        private sealed class CoherentState
+        private sealed class CoherentState<K, V>
         {
-            internal ConcurrentDictionary<object, CacheEntry> _entries = new ConcurrentDictionary<object, CacheEntry>();
+            internal SortedDictionary<K, CacheEntry<K, V>> _entries = new();
+
             internal long _cacheSize;
 
-            private ICollection<KeyValuePair<object, CacheEntry>> EntriesCollection => _entries;
+            private ICollection<KeyValuePair<K, CacheEntry<K, V>>> EntriesCollection => _entries;
 
             internal int Count => _entries.Count;
 
             internal long Size => Volatile.Read(ref _cacheSize);
 
-            internal void RemoveEntry(CacheEntry entry, MemoryCacheOptions options)
+            internal void RemoveEntry(CacheEntry<K, V> entry, MemoryCacheOptions options)
             {
-                if (EntriesCollection.Remove(new KeyValuePair<object, CacheEntry>(entry.Key, entry)))
+                if (EntriesCollection.Remove(new KeyValuePair<K, CacheEntry<K, V>>(entry.Key, entry)))
                 {
                     if (options.SizeLimit.HasValue)
                     {

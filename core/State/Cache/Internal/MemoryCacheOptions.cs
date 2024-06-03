@@ -4,8 +4,6 @@
 // The only difference is the compaction process and eviction callback is synchronous whereas the .NET repo is asyncrhonous
 
 using System;
-using System.ComponentModel;
-using Microsoft.Extensions.Internal;
 using Microsoft.Extensions.Options;
 
 namespace Streamiz.Kafka.Net.State.Cache.Internal
@@ -13,7 +11,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
     /// <summary>
     /// Options class for <see cref="MemoryCache"/>.
     /// </summary>
-    public class MemoryCacheOptions : IOptions<MemoryCacheOptions>
+    internal class MemoryCacheOptions : IOptions<MemoryCacheOptions>
     {
         private long _sizeLimit = NotSet;
         private double _compactionPercentage = 0.05;
@@ -51,14 +49,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
                 _sizeLimit = value ?? NotSet;
             }
         }
-
-        /// <summary>
-        /// Enables ot disables the option to compact the cache when the maximum size is exceeded.
-        /// </summary>
-        [EditorBrowsableAttribute(EditorBrowsableState.Never)]
-        [Obsolete("This property is retained only for compatibility.  Remove use and instead call MemoryCache.Compact as needed.", error: true)]
-        public bool CompactOnMemoryPressure { get; set; }
-
+        
         /// <summary>
         /// Gets or sets the amount to compact the cache by when the maximum size is exceeded.
         /// </summary>
@@ -75,21 +66,12 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
                 _compactionPercentage = value;
             }
         }
-
-        /// <summary>
-        /// Gets or sets whether to track linked entries. Disabled by default.
-        /// </summary>
-        /// <remarks>Prior to .NET 7 this feature was always enabled.</remarks>
-        public bool TrackLinkedCacheEntries { get; set; }
-
+        
         /// <summary>
         /// Gets or sets whether to track memory cache statistics. Disabled by default.
         /// </summary>
         public bool TrackStatistics { get; set; }
 
-        MemoryCacheOptions IOptions<MemoryCacheOptions>.Value
-        {
-            get { return this; }
-        }
+        MemoryCacheOptions IOptions<MemoryCacheOptions>.Value => this;
     }
 }
