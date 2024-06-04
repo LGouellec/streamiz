@@ -13,42 +13,12 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
     /// </summary>
     internal class MemoryCacheOptions : IOptions<MemoryCacheOptions>
     {
-        private long _sizeLimit = NotSet;
         private double _compactionPercentage = 0.05;
-
-        private const int NotSet = -1;
-
-        /// <summary>
-        /// Gets or sets the clock used by the cache for expiration.
-        /// </summary>
-        /// Add in .Net 8
-        //public ISystemClock? Clock { get; set; }
-
-        /// <summary>
-        /// Gets or sets the minimum length of time between successive scans for expired items.
-        /// </summary>
-        public TimeSpan ExpirationScanFrequency { get; set; } = TimeSpan.FromMinutes(1);
-
-        internal bool HasSizeLimit => _sizeLimit >= 0;
-
-        internal long SizeLimitValue => _sizeLimit;
-
+        
         /// <summary>
         /// Gets or sets the maximum size of the cache.
         /// </summary>
-        public long? SizeLimit
-        {
-            get => _sizeLimit < 0 ? null : _sizeLimit;
-            set
-            {
-                if (value < 0)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(value), value, $"{nameof(value)} must be non-negative.");
-                }
-
-                _sizeLimit = value ?? NotSet;
-            }
-        }
+        public long SizeLimit { get; set; }
         
         /// <summary>
         /// Gets or sets the amount to compact the cache by when the maximum size is exceeded.
@@ -67,11 +37,6 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             }
         }
         
-        /// <summary>
-        /// Gets or sets whether to track memory cache statistics. Disabled by default.
-        /// </summary>
-        public bool TrackStatistics { get; set; }
-
         MemoryCacheOptions IOptions<MemoryCacheOptions>.Value => this;
     }
 }

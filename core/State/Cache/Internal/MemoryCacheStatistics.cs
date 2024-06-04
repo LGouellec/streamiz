@@ -8,7 +8,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
     /// <summary>
     /// Holds a snapshot of statistics for a memory cache.
     /// </summary>
-    public class MemoryCacheStatistics
+    internal class MemoryCacheStatistics
     {
         /// <summary>
         /// Initializes an instance of MemoryCacheStatistics.

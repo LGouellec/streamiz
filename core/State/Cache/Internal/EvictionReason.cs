@@ -8,7 +8,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
     /// <summary>
     /// Specify the reasons why an entry was evicted from the cache.
     /// </summary>
-    public enum EvictionReason
+    internal enum EvictionReason
     {
         /// <summary>
         /// The item was not removed from the cache.

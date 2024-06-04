@@ -39,9 +39,7 @@ namespace Streamiz.Kafka.Net.State.Cache
         {
             cache = new MemoryCache<Bytes, CacheEntryValue>(new MemoryCacheOptions {
                 SizeLimit = context.Configuration.StateStoreCacheMaxBytes,
-                TrackStatistics = true,
-                CompactionPercentage = .20,
-                ExpirationScanFrequency = TimeSpan.FromMilliseconds(Math.Max(context.Configuration.CommitIntervalMs / 2, 100))
+                CompactionPercentage = .20
             }, new BytesComparer());
         }
 
@@ -63,26 +61,24 @@ namespace Streamiz.Kafka.Net.State.Cache
             CreateCache(context);
         }
 
-        private void CacheEntryEviction(object key, object value, EvictionReason reason, object state)
+        private void CacheEntryEviction(Bytes key, CacheEntryValue value, EvictionReason reason, MemoryCache<Bytes, CacheEntryValue> state)
         {
             if (reason == EvictionReason.Replaced) return;
             
-            Bytes keyBytes = key as Bytes;
-            CacheEntryValue entryValue = value as CacheEntryValue;
             if (flushListener != null)
             {
-                byte[] rawNewValue = entryValue.Value;
-                byte[] rawOldValue = rawNewValue == null || sendOldValue ? wrapped.Get(keyBytes) : null;
+                byte[] rawNewValue = value.Value;
+                byte[] rawOldValue = rawNewValue == null || sendOldValue ? wrapped.Get(key) : null;
                 
                 // this is an optimization: if this key did not exist in underlying store and also not in the cache,
                 // we can skip flushing to downstream as well as writing to underlying store
                 if (rawNewValue != null || rawOldValue != null)
                 {
                     var currentContext = context.RecordContext;
-                    context.SetRecordMetaData(entryValue.Context);
-                    wrapped.Put(keyBytes, rawNewValue);
+                    context.SetRecordMetaData(value.Context);
+                    wrapped.Put(key, rawNewValue);
                     flushListener(new KeyValuePair<byte[], Change<byte[]>>(
-                        keyBytes.Get,
+                        key.Get,
                         new Change<byte[]>(sendOldValue ? rawOldValue : null, rawNewValue)));
                     context.SetRecordMetaData(currentContext);
                 }
@@ -90,8 +86,8 @@ namespace Streamiz.Kafka.Net.State.Cache
             else
             {
                 var currentContext = context.RecordContext;
-                context.SetRecordMetaData(entryValue.Context);
-                wrapped.Put(keyBytes, entryValue.Value);
+                context.SetRecordMetaData(value.Context);
+                wrapped.Put(key, value.Value);
                 context.SetRecordMetaData(currentContext);
             }
         }
@@ -158,8 +154,7 @@ namespace Streamiz.Kafka.Net.State.Cache
         {
             long totalSize = key.Get.LongLength + entry.Size;
 
-            var memoryCacheEntryOptions = new MemoryCacheEntryOptions()
-                .SetPriority(CacheItemPriority.Normal)
+            var memoryCacheEntryOptions = new MemoryCacheEntryOptions<Bytes, CacheEntryValue>()
                 .SetSize(totalSize)
                 .RegisterPostEvictionCallback(CacheEntryEviction, cache);
             

@@ -23,9 +23,7 @@ public class MergedStoredCacheKeyValueEnumeratorTest
         cacheStore = new MemoryCache<Bytes, CacheEntryValue>(new MemoryCacheOptions
         {
             SizeLimit = Int32.MaxValue,
-            TrackStatistics = true,
-            CompactionPercentage = .20,
-            ExpirationScanFrequency = TimeSpan.FromMilliseconds(100000)
+            CompactionPercentage = .20
         }, new BytesComparer());
     }
 
@@ -56,8 +54,7 @@ public class MergedStoredCacheKeyValueEnumeratorTest
 
         long totalSize = key.Get.LongLength + cacheEntry.Size;
 
-        var memoryCacheEntryOptions = new MemoryCacheEntryOptions()
-            .SetPriority(CacheItemPriority.Normal)
+        var memoryCacheEntryOptions = new MemoryCacheEntryOptions<Bytes, CacheEntryValue>()
             .SetSize(totalSize);
 
         cacheStore.Set(key, cacheEntry, memoryCacheEntryOptions);

@@ -6,10 +6,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Primitives;
 
 namespace Streamiz.Kafka.Net.State.Cache.Internal
 {
@@ -19,9 +17,9 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         // which typically is not using expiration tokens or callbacks
         private sealed class CacheEntryTokens
         {
-            private List<PostEvictionCallbackRegistration>? _postEvictionCallbacks; // this is not really related to tokens, but was moved here to shrink typical CacheEntry size
+            private List<PostEvictionCallbackRegistration<K, V>>? _postEvictionCallbacks; // this is not really related to tokens, but was moved here to shrink typical CacheEntry size
 
-            internal List<PostEvictionCallbackRegistration> PostEvictionCallbacks => _postEvictionCallbacks ??= new List<PostEvictionCallbackRegistration>();
+            internal List<PostEvictionCallbackRegistration<K, V>> PostEvictionCallbacks => _postEvictionCallbacks ??= new List<PostEvictionCallbackRegistration<K, V>>();
             
 
             internal void InvokeEvictionCallbacks(CacheEntry<K, V> cacheEntry)
@@ -35,7 +33,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             private void InvokeCallbacks(CacheEntry<K, V> entry)
             {
                 Debug.Assert(entry._tokens != null);
-                List<PostEvictionCallbackRegistration>? callbackRegistrations = Interlocked.Exchange(ref entry._tokens._postEvictionCallbacks, null);
+                List<PostEvictionCallbackRegistration<K, V>>? callbackRegistrations = Interlocked.Exchange(ref entry._tokens._postEvictionCallbacks, null);
 
                 if (callbackRegistrations == null)
                 {
@@ -44,7 +42,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
 
                 for (int i = 0; i < callbackRegistrations.Count; i++)
                 {
-                    PostEvictionCallbackRegistration registration = callbackRegistrations[i];
+                    PostEvictionCallbackRegistration<K, V> registration = callbackRegistrations[i];
 
                     try
                     {

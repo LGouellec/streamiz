@@ -10,7 +10,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
     /// <summary>
     /// Represents a local in-memory cache whose values are not serialized.
     /// </summary>
-    public interface IMemoryCache<K, V> : IDisposable
+    internal interface IMemoryCache<K, V> : IDisposable
     {
         /// <summary>
         /// Gets the item associated with this key if present.
@@ -32,13 +32,11 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// </summary>
         /// <param name="key">An object identifying the entry.</param>
         void Remove(K key);
-
-        #if NET6_0_OR_GREATER
+        
         /// <summary>
         /// Gets a snapshot of the cache statistics if available.
         /// </summary>
         /// <returns>An instance of <see cref="MemoryCacheStatistics"/> containing a snapshot of the cache statistics.</returns>
-        MemoryCacheStatistics? GetCurrentStatistics() => null;
-        #endif
+        MemoryCacheStatistics GetCurrentStatistics();
     }
 }

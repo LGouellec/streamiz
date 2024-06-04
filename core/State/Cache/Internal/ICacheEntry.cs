@@ -5,7 +5,6 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.Primitives;
 
 namespace Streamiz.Kafka.Net.State.Cache.Internal
 {
@@ -13,7 +12,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
     /// Represents an entry in the <see cref="IMemoryCache"/> implementation.
     /// When Disposed, is committed to the cache.
     /// </summary>
-    public interface ICacheEntry<K, V> : IDisposable
+    internal interface ICacheEntry<K, V> : IDisposable
     {
         /// <summary>
         /// Gets the key of the cache entry.
@@ -28,13 +27,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <summary>
         /// Gets or sets the callbacks will be fired after the cache entry is evicted from the cache.
         /// </summary>
-        IList<PostEvictionCallbackRegistration> PostEvictionCallbacks { get; }
-
-        /// <summary>
-        /// Gets or sets the priority for keeping the cache entry in the cache during a
-        ///  cleanup. The default is <see cref="CacheItemPriority.Normal"/>.
-        /// </summary>
-        CacheItemPriority Priority { get; set; }
+        IList<PostEvictionCallbackRegistration<K, V>> PostEvictionCallbacks { get; }
 
         /// <summary>
         /// Gets or set the size of the cache entry value.

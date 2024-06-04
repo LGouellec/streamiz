@@ -27,7 +27,6 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         private bool _isValueSet;
         private byte _evictionReason;
         private bool _isExpired;
-        private byte _priority = (byte)CacheItemPriority.Normal;
         
         private const int NotSet = -1;
 
@@ -44,14 +43,8 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <summary>
         /// Gets or sets the callbacks will be fired after the cache entry is evicted from the cache.
         /// </summary>
-        public IList<PostEvictionCallbackRegistration> PostEvictionCallbacks => GetOrCreateTokens().PostEvictionCallbacks;
-
-        /// <summary>
-        /// Gets or sets the priority for keeping the cache entry in the cache during a
-        /// memory pressure triggered cleanup. The default is <see cref="CacheItemPriority.Normal"/>.
-        /// </summary>
-        public CacheItemPriority Priority { get => (CacheItemPriority)_priority; set => _priority = (byte)value; }
-
+        public IList<PostEvictionCallbackRegistration<K, V>> PostEvictionCallbacks => GetOrCreateTokens().PostEvictionCallbacks;
+        
         internal long Size => _size;
 
         long? ICacheEntry<K, V>.Size

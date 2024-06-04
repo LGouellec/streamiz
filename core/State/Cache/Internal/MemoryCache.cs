@@ -16,7 +16,7 @@ using Streamiz.Kafka.Net.Crosscutting;
 namespace Streamiz.Kafka.Net.State.Cache.Internal
 {
     /// <summary>
-    /// An implementation of <see cref="IMemoryCache"/> using a dictionary to
+    /// An implementation of <see cref="IMemoryCache{K, V}"/> using a dictionary to
     /// store its entries.
     /// </summary>
     internal class MemoryCache<K, V> : IMemoryCache<K, V>
@@ -26,9 +26,9 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
 
         private readonly MemoryCacheOptions _options;
 
-        private readonly List<WeakReference<Stats>>? _allStats;
-        private readonly Stats? _accumulatedStats;
-        private readonly ThreadLocal<Stats>? _stats;
+        private readonly List<WeakReference<Stats>> _allStats;
+        private readonly Stats _accumulatedStats;
+        private readonly ThreadLocal<Stats> _stats;
         private CoherentState<K, V> _coherentState;
         private bool _disposed;
         private DateTime _lastExpirationScan;
@@ -62,12 +62,9 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
 
             _coherentState = new CoherentState<K, V>();
 
-            if (_options.TrackStatistics)
-            {
-                _allStats = new List<WeakReference<Stats>>();
-                _accumulatedStats = new Stats();
-                _stats = new ThreadLocal<Stats>(() => new Stats(this));
-            }
+            _allStats = new List<WeakReference<Stats>>();
+            _accumulatedStats = new Stats();
+            _stats = new ThreadLocal<Stats>(() => new Stats(this));
 
             _lastExpirationScan = UtcNow;
         }
@@ -88,7 +85,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <summary>
         /// Gets an enumerable of the all the keys in the <see cref="MemoryCache"/>.
         /// </summary>
-        public IEnumerable<K> Keys => _coherentState._entries.Keys;
+        private IEnumerable<K> Keys => _coherentState._entries.Keys;
 
         internal IEnumerable<K> KeySetEnumerable(bool forward)
         {
@@ -146,11 +143,6 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
                 return;
             }
 
-            if (_options.HasSizeLimit && entry.Size < 0)
-            {
-                throw new InvalidOperationException("Entry size is not correct, please set a size greater or equal to O");
-            }
-
             DateTime utcNow = UtcNow;
 
             // Initialize the last access timestamp at the time the entry is added
@@ -158,73 +150,31 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
 
             CoherentState<K, V> coherentState = _coherentState; // Clear() can update the reference in the meantime
             if (coherentState._entries.TryGetValue(entry.Key, out CacheEntry<K, V> priorEntry))
-            {
                 priorEntry.SetExpired(EvictionReason.Replaced);
-            }
 
-            if (entry.CheckExpired(utcNow))
+            if (!UpdateCacheSizeExceedsCapacity(entry, coherentState))
             {
-                entry.InvokeEvictionCallbacks();
-                if (priorEntry != null)
-                {
-                    coherentState.RemoveEntry(priorEntry, _options);
-                }
-            }
-            else if (!UpdateCacheSizeExceedsCapacity(entry, coherentState))
-            {
-                bool entryAdded;
                 if (priorEntry == null)
                 {
                     // Try to add the new entry if no previous entries exist.
-                    entryAdded = coherentState._entries.TryAdd(entry.Key, entry);
+                    coherentState._entries.TryAdd(entry.Key, entry);
                 }
                 else
                 {
                     // Try to update with the new entry if a previous entries exist.
-                    entryAdded = coherentState._entries.AddOrUpdate(entry.Key, entry);
-
-                    if (entryAdded)
-                    {
-                        if (_options.HasSizeLimit)
-                        {
-                            // The prior entry was removed, decrease the by the prior entry's size
-                            Interlocked.Add(ref coherentState._cacheSize, -priorEntry.Size);
-                        }
-                    }
-                    else
-                    {
-                        // The update will fail if the previous entry was removed after retrieval.
-                        // Adding the new entry will succeed only if no entry has been added since.
-                        // This guarantees removing an old entry does not prevent adding a new entry.
-                        entryAdded = coherentState._entries.TryAdd(entry.Key, entry);
-                    }
+                    coherentState._entries.AddOrUpdate(entry.Key, entry);
+                    // The prior entry was removed, decrease the by the prior entry's size
+                    Interlocked.Add(ref coherentState._cacheSize, -priorEntry.Size);
                 }
-
-                if (!entryAdded)
-                {
-                    if (_options.HasSizeLimit)
-                    {
-                        // Entry could not be added, reset cache size
-                        Interlocked.Add(ref coherentState._cacheSize, -entry.Size);
-                    }
-                    entry.SetExpired(EvictionReason.Replaced);
-                    entry.InvokeEvictionCallbacks();
-                }
-
+                
                 priorEntry?.InvokeEvictionCallbacks();
             }
             else
             {
-                entry.SetExpired(EvictionReason.Capacity);
                 TriggerOvercapacityCompaction();
-                entry.InvokeEvictionCallbacks();
-                if (priorEntry != null)
-                {
-                    coherentState.RemoveEntry(priorEntry, _options);
-                }
+                coherentState._entries.TryAdd(entry.Key, entry);
+                Interlocked.Add(ref coherentState._cacheSize, entry.Size);
             }
-
-            StartScanForExpiredItemsIfNeeded(utcNow);
         }
 
         /// <inheritdoc />
@@ -280,16 +230,10 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             CoherentState<K, V> coherentState = _coherentState; // Clear() can update the reference in the meantime
             if (coherentState._entries.Remove(key, out CacheEntry<K, V> entry))
             {
-                if (_options.HasSizeLimit)
-                {
-                    Interlocked.Add(ref coherentState._cacheSize, -entry.Size);
-                }
-
+                Interlocked.Add(ref coherentState._cacheSize, -entry.Size);
                 entry.SetExpired(EvictionReason.Removed);
                 entry.InvokeEvictionCallbacks();
             }
-
-            StartScanForExpiredItemsIfNeeded(UtcNow);
         }
 
         /// <summary>
@@ -311,7 +255,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// Gets a snapshot of the current statistics for the memory cache.
         /// </summary>
         /// <returns>Returns <see langword="null"/> if statistics are not being tracked because <see cref="MemoryCacheOptions.TrackStatistics" /> is <see langword="false"/>.</returns>
-        public MemoryCacheStatistics? GetCurrentStatistics()
+        public MemoryCacheStatistics GetCurrentStatistics()
         {
             if (_allStats is not null)
             {
@@ -321,35 +265,11 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
                     TotalMisses = sumTotal.miss,
                     TotalHits = sumTotal.hit,
                     CurrentEntryCount = Count,
-                    CurrentEstimatedSize = _options.SizeLimit.HasValue ? Size : null
+                    CurrentEstimatedSize = Size
                 };
             }
 
             return null;
-        }
-
-        internal void EntryExpired(CacheEntry<K, V> entry)
-        {
-            // TODO: For efficiency consider processing these expirations in batches.
-            _coherentState.RemoveEntry(entry, _options);
-            StartScanForExpiredItemsIfNeeded(UtcNow);
-        }
-
-        // Called by multiple actions to see how long it's been since we last checked for expired items.
-        // If sufficient time has elapsed then a scan is initiated on a background task.
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void StartScanForExpiredItemsIfNeeded(DateTime utcNow)
-        {
-            if (_options.ExpirationScanFrequency < utcNow - _lastExpirationScan)
-            {
-                ScheduleTask(utcNow);
-            }
-
-            void ScheduleTask(DateTime utcNow)
-            {
-                _lastExpirationScan = utcNow;
-                ScanForExpiredItems();
-            }
         }
 
         private (long, long) Sum()
@@ -440,18 +360,12 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// </summary>
         private bool UpdateCacheSizeExceedsCapacity(CacheEntry<K, V> entry, CoherentState<K, V> coherentState)
         {
-            long sizeLimit = _options.SizeLimitValue;
-            if (sizeLimit < 0)
-            {
-                return false;
-            }
-
             long sizeRead = coherentState.Size;
             for (int i = 0; i < 100; i++)
             {
                 long newSize = sizeRead + entry.Size;
 
-                if ((ulong)newSize > (ulong)sizeLimit)
+                if ((ulong)newSize > (ulong)_options.SizeLimit)
                 {
                     // Overflow occurred, return true without updating the cache size
                     return true;
@@ -484,7 +398,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             if (_logger.IsEnabled(LogLevel.Debug))
                 _logger.LogDebug($"Overcapacity compaction executing. Current size {currentSize}");
 
-            long sizeLimit = _options.SizeLimitValue;
+            long sizeLimit = _options.SizeLimit;
             if (sizeLimit >= 0)
             {
                 long lowWatermark = sizeLimit - (long)(sizeLimit * _options.CompactionPercentage);
@@ -499,74 +413,35 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         }
 
         /// Remove at least the given percentage (0.10 for 10%) of the total entries (or estimated memory?), according to the following policy:
-        /// 1. Remove all expired items.
-        /// 2. Bucket by CacheItemPriority.
-        /// 3. Least recently used objects.
-        /// ?. Items with the soonest absolute expiration.
-        /// ?. Items with the soonest sliding expiration.
-        /// ?. Larger objects - estimated by object graph size, inaccurate.
+        /// 1. Remove all items if the percentage is more than 100%
+        /// 2. Least recently used objects.
         public void Compact(double percentage)
         {
-            CoherentState<K, V> coherentState = _coherentState; // Clear() can update the reference in the meantime
-            int removalCountTarget = (int)(coherentState.Count * percentage);
-            Compact(removalCountTarget, _ => 1, coherentState);
+            if (percentage >= 1) // clear all the cache
+            {
+                foreach (var entry in _coherentState._entries)
+                    _coherentState.RemoveEntry(entry.Value, _options);
+            }
+            else
+            {
+                CoherentState<K, V> coherentState = _coherentState; // Clear() can update the reference in the meantime
+                int removalCountTarget = (int)(coherentState.Count * percentage);
+                Compact(removalCountTarget, _ => 1, coherentState);
+            }
         }
 
         private void Compact(long removalSizeTarget, Func<CacheEntry<K, V>, long> computeEntrySize, CoherentState<K, V> coherentState)
         {
             var entriesToRemove = new List<CacheEntry<K, V>>();
-            // cache LastAccessed outside of the CacheEntry so it is stable during compaction
-            var lowPriEntries = new List<(CacheEntry<K, V> entry, DateTimeOffset lastAccessed)>();
-            var normalPriEntries = new List<(CacheEntry<K, V> entry, DateTimeOffset lastAccessed)>();
-            var highPriEntries = new List<(CacheEntry<K, V> entry, DateTimeOffset lastAccessed)>();
             long removedSize = 0;
 
-            // Sort items by expired & priority status
-            DateTime utcNow = UtcNow;
-            foreach (KeyValuePair<K, CacheEntry<K, V>> item in coherentState._entries)
-            {
-                CacheEntry<K, V> entry = item.Value;
-                if (entry.CheckExpired(utcNow))
-                {
-                    entriesToRemove.Add(entry);
-                    removedSize += computeEntrySize(entry);
-                }
-                else
-                {
-                    switch (entry.Priority)
-                    {
-                        case CacheItemPriority.Low:
-                            lowPriEntries.Add((entry, entry.LastAccessed));
-                            break;
-                        case CacheItemPriority.Normal:
-                            normalPriEntries.Add((entry, entry.LastAccessed));
-                            break;
-                        case CacheItemPriority.High:
-                            highPriEntries.Add((entry, entry.LastAccessed));
-                            break;
-                        case CacheItemPriority.NeverRemove:
-                            break;
-                        default:
-                            throw new NotSupportedException("Not implemented: " + entry.Priority);
-                    }
-                }
-            }
-
-            ExpirePriorityBucket(ref removedSize, removalSizeTarget, computeEntrySize, entriesToRemove, lowPriEntries);
-            ExpirePriorityBucket(ref removedSize, removalSizeTarget, computeEntrySize, entriesToRemove, normalPriEntries);
-            ExpirePriorityBucket(ref removedSize, removalSizeTarget, computeEntrySize, entriesToRemove, highPriEntries);
+            ExpireLruBucket(ref removedSize, removalSizeTarget, computeEntrySize, entriesToRemove, coherentState._entries);
 
             foreach (CacheEntry<K, V> entry in entriesToRemove)
-            {
                 coherentState.RemoveEntry(entry, _options);
-            }
 
-            // Policy:
-            // 1. Least recently used objects.
-            // ?. Items with the soonest absolute expiration.
-            // ?. Items with the soonest sliding expiration.
-            // ?. Larger objects - estimated by object graph size, inaccurate.
-            static void ExpirePriorityBucket(ref long removedSize, long removalSizeTarget, Func<CacheEntry<K, V>, long> computeEntrySize, List<CacheEntry<K, V>> entriesToRemove, List<(CacheEntry<K, V> Entry, DateTimeOffset LastAccessed)> priorityEntries)
+            // Expire the least recently used objects.
+            static void ExpireLruBucket(ref long removedSize, long removalSizeTarget, Func<CacheEntry<K, V>, long> computeEntrySize, List<CacheEntry<K, V>> entriesToRemove, SortedDictionary<K, CacheEntry<K, V>> priorityEntries)
             {
                 // Do we meet our quota by just removing expired entries?
                 if (removalSizeTarget <= removedSize)
@@ -575,16 +450,12 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
                     return;
                 }
 
-                // Expire enough entries to reach our goal
-                // TODO: Refine policy
-
                 // LRU
-                priorityEntries.Sort(static (e1, e2) => e1.LastAccessed.CompareTo(e2.LastAccessed));
-                foreach ((CacheEntry<K, V> entry, _) in priorityEntries)
+                foreach (var keyValuePair in priorityEntries.OrderBy(e => e.Value.LastAccessed))
                 {
-                    entry.SetExpired(EvictionReason.Capacity);
-                    entriesToRemove.Add(entry);
-                    removedSize += computeEntrySize(entry);
+                    keyValuePair.Value.SetExpired(EvictionReason.Capacity);
+                    entriesToRemove.Add(keyValuePair.Value);
+                    removedSize += computeEntrySize(keyValuePair.Value);
 
                     if (removalSizeTarget <= removedSize)
                     {
@@ -666,10 +537,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             {
                 if (EntriesCollection.Remove(new KeyValuePair<K, CacheEntry<K, V>>(entry.Key, entry)))
                 {
-                    if (options.SizeLimit.HasValue)
-                    {
-                        Interlocked.Add(ref _cacheSize, -entry.Size);
-                    }
+                    Interlocked.Add(ref _cacheSize, -entry.Size);
                     entry.InvokeEvictionCallbacks();
                 }
             }
