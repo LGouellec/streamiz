@@ -110,7 +110,7 @@ namespace Streamiz.Kafka.Net.State.Enumerator
 
         public void Reset()
         {
-            current?.Reset();
+            enumerator.ForEach(e => e.Reset());
             current = null;
             index = 0;
         }

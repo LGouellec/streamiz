@@ -7,11 +7,13 @@ namespace Streamiz.Kafka.Net.State.Enumerator
     internal class WrapEnumerableKeyValueEnumerator<K, V> :
         IKeyValueEnumerator<K, V>
     {
-        private readonly IEnumerator<KeyValuePair<K, V>> _enumerator;
+        private readonly IEnumerable<KeyValuePair<K, V>> _enumerable;
+        private IEnumerator<KeyValuePair<K, V>> _enumerator;
         private KeyValuePair<K, V>? current = null;
 
         public WrapEnumerableKeyValueEnumerator(IEnumerable<KeyValuePair<K, V>> enumerable)
-        { 
+        {
+            _enumerable = enumerable;
             _enumerator = enumerable.GetEnumerator();
         }
 
@@ -39,7 +41,9 @@ namespace Streamiz.Kafka.Net.State.Enumerator
 
         public void Reset()
         {
-            _enumerator.Reset();
+            _enumerator.Dispose();
+            current = null;
+            _enumerator = _enumerable.GetEnumerator();
         }
     }
 }
