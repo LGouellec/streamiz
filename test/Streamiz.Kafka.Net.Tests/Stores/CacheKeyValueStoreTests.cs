@@ -89,17 +89,22 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         [Test]
         public void ExpiryCapacityTest()
         {
-            config.StateStoreCacheMaxBytes = 10;
+            config.StateStoreCacheMaxBytes = 30;
             cache.CreateCache(context);
-            
+            bool checkListener = true;
             cache.SetFlushListener((record) => {
-                Assert.AreEqual(ToKey("test").Get, record.Key);
-                Assert.AreEqual(ToValue("value1"), record.Value.NewValue);
-                Assert.IsNull(record.Value.OldValue);
+                if (checkListener)
+                {
+                    Assert.AreEqual(ToKey("test").Get, record.Key);
+                    Assert.AreEqual(ToValue("value1"), record.Value.NewValue);
+                    Assert.IsNull(record.Value.OldValue);
+                    checkListener = false;
+                }
             }, true);
 
             context.SetRecordMetaData(new RecordContext(new Headers(), 0, 100, 0, "topic"));
             cache.Put(ToKey("test"), ToValue("value1"));
+            cache.Put(ToKey("test2"), ToValue("value2"));
             Assert.AreEqual(ToValue("value1"), inMemoryKeyValue.Get(ToKey("test")));
         }
         

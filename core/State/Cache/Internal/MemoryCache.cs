@@ -418,16 +418,24 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         public void Compact(double percentage)
         {
             if (percentage >= 1) // clear all the cache
-            {
-                foreach (var entry in _coherentState._entries)
-                    _coherentState.RemoveEntry(entry.Value, _options);
-            }
+                Flush();
             else
             {
                 CoherentState<K, V> coherentState = _coherentState; // Clear() can update the reference in the meantime
                 int removalCountTarget = (int)(coherentState.Count * percentage);
                 Compact(removalCountTarget, _ => 1, coherentState);
             }
+        }
+
+        private void Flush()
+        {
+            var entriesToRemove = new List<CacheEntry<K, V>>();
+            using var enumerator = _coherentState._entries.GetEnumerator();
+            while (enumerator.MoveNext())
+                entriesToRemove.Add(enumerator.Current.Value);
+            
+            foreach (CacheEntry<K, V> entry in entriesToRemove)
+                _coherentState.RemoveEntry(entry, _options);
         }
 
         private void Compact(long removalSizeTarget, Func<CacheEntry<K, V>, long> computeEntrySize, CoherentState<K, V> coherentState)
