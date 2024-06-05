@@ -43,9 +43,10 @@ namespace Streamiz.Kafka.Net.Crosscutting
                 , out number);
         }
 
-        public static void CheckIfNotNull(this object parameter)
+        public static void CheckIfNotNull(object parameter, string nameAccessor)
         {
-            
+            if(parameter == null)
+                throw new ArgumentException($"{nameAccessor} must not be null");
         }
     }
 }

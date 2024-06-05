@@ -258,7 +258,7 @@ namespace Streamiz.Kafka.Net
         private readonly StreamStateManager manager;
         private readonly StreamMetricsRegistry metricsRegistry;
 
-        private readonly CancellationTokenSource _cancelSource = new CancellationTokenSource();
+        private readonly CancellationTokenSource _cancelSource = new();
 
         internal State StreamState { get; private set; }
 
@@ -492,6 +492,7 @@ namespace Streamiz.Kafka.Net
                 }
 
                 Close();
+                _cancelSource.Dispose();
             }).Wait(TimeSpan.FromSeconds(30));
         }
 

@@ -4,8 +4,6 @@
 // The only difference is the compaction process and eviction callback is synchronous whereas the .NET repo is asyncrhonous
 
 using System;
-using System.Diagnostics.CodeAnalysis;
-using Microsoft.Extensions.Primitives;
 
 namespace Streamiz.Kafka.Net.State.Cache.Internal
 {
@@ -23,6 +21,8 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         internal static ICacheEntry<K, V> RegisterPostEvictionCallback<K, V>(
             this ICacheEntry<K, V> entry,
             PostEvictionDelegate<K, V> callback)
+            where K : class
+            where V : class
         {
             return entry.RegisterPostEvictionCallbackNoValidation(callback, state: null);
         }
@@ -38,6 +38,8 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             this ICacheEntry<K, V> entry,
             PostEvictionDelegate<K, V> callback,
             MemoryCache<K, V>? state)
+            where K : class
+            where V : class
         {
             return entry.RegisterPostEvictionCallbackNoValidation(callback, state);
         }
@@ -46,6 +48,8 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             this ICacheEntry<K, V> entry,
             PostEvictionDelegate<K, V> callback,
             MemoryCache<K, V>? state)
+            where K : class
+            where V : class
         {
             entry.PostEvictionCallbacks.Add(new PostEvictionCallbackRegistration<K, V>()
             {
@@ -64,6 +68,8 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         public static ICacheEntry<K, V> SetValue<K, V>(
             this ICacheEntry<K, V> entry,
             V value)
+            where K : class
+            where V : class
         {
             entry.Value = value;
             return entry;
@@ -78,6 +84,8 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         public static ICacheEntry<K, V> SetSize<K, V>(
             this ICacheEntry<K, V> entry,
             long size)
+            where K : class
+            where V : class
         {
             if (size < 0)
             {
@@ -95,6 +103,8 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <param name="options">Set the values of these options on the <paramref name="entry"/>.</param>
         /// <returns>The <see cref="ICacheEntry"/> for chaining.</returns>
         public static ICacheEntry<K, V> SetOptions<K, V>(this ICacheEntry<K, V> entry, MemoryCacheEntryOptions<K, V> options)
+            where K : class
+            where V : class
         {
             entry.Size = options.Size;
 

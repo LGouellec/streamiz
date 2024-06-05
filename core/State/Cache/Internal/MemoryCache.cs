@@ -19,6 +19,8 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
     /// store its entries.
     /// </summary>
     internal sealed class MemoryCache<K, V> : IMemoryCache<K, V>
+        where K : class
+        where V : class
     {
         private readonly IComparer<K> _keyComparer;
         internal readonly ILogger Logger;
@@ -30,7 +32,6 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         private readonly ThreadLocal<Stats> _stats;
         private CoherentState<K, V> _coherentState;
         private bool _disposed;
-        private DateTime _lastExpirationScan;
 
         /// <summary>
         /// Creates a new <see cref="MemoryCache{K, V}"/> instance.
@@ -50,12 +51,11 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <param name="loggerFactory">The factory used to create loggers.</param>
         private MemoryCache(IOptions<MemoryCacheOptions> optionsAccessor, IComparer<K> keyComparer, ILoggerFactory loggerFactory)
         {
-            if (optionsAccessor == null)
-                throw new ArgumentException(nameof(optionsAccessor) + "must not be null");
-            if (loggerFactory == null)
-                throw new ArgumentException();
-
-            _keyComparer = keyComparer ?? throw new ArgumentException();
+            Utils.CheckIfNotNull(optionsAccessor, nameof(optionsAccessor));
+            Utils.CheckIfNotNull(loggerFactory, nameof(loggerFactory));
+            Utils.CheckIfNotNull(keyComparer, nameof(keyComparer));
+            
+            _keyComparer = keyComparer;
             _options = optionsAccessor.Value;
             Logger = loggerFactory.CreateLogger<MemoryCache<K, V>>();
 
@@ -64,12 +64,9 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             _allStats = new List<WeakReference<Stats>>();
             _accumulatedStats = new Stats();
             _stats = new ThreadLocal<Stats>(() => new Stats(this));
-
-            _lastExpirationScan = UtcNow;
         }
 
-        //private DateTime UtcNow => _options.Clock?.UtcNow.UtcDateTime ?? DateTime.UtcNow;
-        private DateTime UtcNow => DateTime.UtcNow;
+        private static DateTime UtcNow => DateTime.UtcNow;
 
         /// <summary>
         /// Cleans up the background collection events.
@@ -91,7 +88,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             return forward ? Keys : Keys.OrderByDescending(k => k, _keyComparer);
         }
 
-        // TODO: Maybe used Keys accessor ..
+        // Maybe used Keys accessor ..
         internal IEnumerable<K> KeyRange(K from, K to, bool inclusive, bool forward)
         {
             if (from == null && to == null)
@@ -522,6 +519,8 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// the new backing collection.
         /// </summary>
         private sealed class CoherentState<K, V>
+            where K : class
+            where V : class
         {
             internal readonly SortedDictionary<K, CacheEntry<K, V>> Entries = new();
             internal long CacheSize;

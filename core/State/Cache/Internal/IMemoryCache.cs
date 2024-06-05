@@ -11,6 +11,8 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
     /// Represents a local in-memory cache whose values are not serialized.
     /// </summary>
     internal interface IMemoryCache<K, V> : IDisposable
+        where K : class
+        where V : class
     {
         /// <summary>
         /// Gets the item associated with this key if present.
