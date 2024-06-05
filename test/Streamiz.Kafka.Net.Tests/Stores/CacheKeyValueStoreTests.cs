@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Confluent.Kafka;
 using NUnit.Framework;
 using Moq;
@@ -8,6 +9,7 @@ using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.Cache;
 using Streamiz.Kafka.Net.State.InMemory;
 
@@ -206,7 +208,60 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             cache.Flush();
             Assert.AreEqual(ToValue("value1"), inMemoryKeyValue.Get(ToKey("test")));
         }
+
+        [Test]
+        public void RangeTest()
+        {
+            context.SetRecordMetaData(new RecordContext(new Headers(), 0, 100, 0, "topic"));
+            cache.PutAll(new List<KeyValuePair<Bytes, byte[]>>
+            {
+                new(ToKey("test1"), ToValue("value1")),
+                new(ToKey("test2"), ToValue("value2")),
+                new(ToKey("test3"), ToValue("value3")),
+                new(ToKey("test4"), ToValue("value4"))
+            });
+            
+            Assert.AreEqual(4, cache.ApproximateNumEntries());
+
+            Assert.AreEqual(4, cache.All().ToList().Count);
+            Assert.AreEqual(4, cache.ReverseAll().ToList().Count);
+            Assert.AreEqual(2, cache.Range(ToKey("test"), ToKey("test2")).ToList().Count);
+            Assert.AreEqual(2, cache.ReverseRange(ToKey("test"), ToKey("test2")).ToList().Count);
+        }
         
-        // implement and test range methods        
+        [Test]
+        public void DisabledCachingTest()
+        {
+            config.StateStoreCacheMaxBytes = 0;
+            cache.CreateCache(context);
+            
+            context.SetRecordMetaData(new RecordContext(new Headers(), 0, 100, 0, "topic"));
+            cache.Put(ToKey("test"), ToValue("value1"));
+            cache.Put(ToKey("test2"), ToValue("value2"));
+            
+            Assert.AreEqual(ToValue("value1"), cache.Get(ToKey("test")));
+            Assert.AreEqual(ToValue("value2"), cache.Get(ToKey("test2")));
+            Assert.AreEqual(2, cache.ApproximateNumEntries());
+
+            cache.Delete(ToKey("test"));
+            Assert.AreEqual(1, cache.ApproximateNumEntries());
+
+            Assert.Null(cache.Get(ToKey("test")));
+            Assert.Null(cache.PutIfAbsent(ToKey("test"), ToValue("value1")));
+            
+            cache.PutAll(new List<KeyValuePair<Bytes, byte[]>>
+            {
+                new(ToKey("test3"), ToValue("value3")),
+                new(ToKey("test4"), ToValue("value4"))
+            });
+            
+            Assert.AreEqual(4, cache.ApproximateNumEntries());
+
+            Assert.AreEqual(4, cache.All().ToList().Count);
+            Assert.AreEqual(4, cache.ReverseAll().ToList().Count);
+            Assert.AreEqual(4, cache.Range(ToKey("test"), ToKey("test4")).ToList().Count);
+            Assert.AreEqual(4, cache.ReverseRange(ToKey("test"), ToKey("test4")).ToList().Count);
+        }
+
     }
 }

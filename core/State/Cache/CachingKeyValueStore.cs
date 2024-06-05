@@ -10,9 +10,6 @@ using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.State.Cache
 {
-    //  add option Materialize
-    // Add StoreBuilder
-    // Check if disabled or not
     // Add new metrics
     // add documentation
     // Check flush and forward messages in downstream
@@ -23,6 +20,7 @@ namespace Streamiz.Kafka.Net.State.Cache
         private MemoryCache<Bytes, CacheEntryValue> cache;
         private Action<KeyValuePair<byte[], Change<byte[]>>> flushListener;
         private bool sendOldValue;
+        private bool cachingEnabled;
         
         public CachingKeyValueStore(IKeyValueStore<Bytes, byte[]> wrapped) 
             : base(wrapped)
@@ -40,22 +38,29 @@ namespace Streamiz.Kafka.Net.State.Cache
         // Only for testing
         internal void CreateCache(ProcessorContext context)
         {
-            cache = new MemoryCache<Bytes, CacheEntryValue>(new MemoryCacheOptions {
-                SizeLimit = context.Configuration.StateStoreCacheMaxBytes,
-                CompactionPercentage = .20
-            }, new BytesComparer());
+            cachingEnabled = context.Configuration.StateStoreCacheMaxBytes > 0;
+            if(cachingEnabled)
+                cache = new MemoryCache<Bytes, CacheEntryValue>(new MemoryCacheOptions {
+                    SizeLimit = context.Configuration.StateStoreCacheMaxBytes,
+                    CompactionPercentage = .20
+                }, new BytesComparer());
         }
 
         private byte[] GetInternal(Bytes key)
         {
-            if (cache.TryGetValue(key, out CacheEntryValue priorEntry))
-                return priorEntry.Value;
-            
-            var rawValue = wrapped.Get(key);
-            if (rawValue == null)
-                return null;
-            PutInternal(key, new CacheEntryValue(rawValue));
-            return rawValue;
+            if (cachingEnabled)
+            {
+                if (cache.TryGetValue(key, out CacheEntryValue priorEntry))
+                    return priorEntry.Value;
+
+                var rawValue = wrapped.Get(key);
+                if (rawValue == null)
+                    return null;
+                PutInternal(key, new CacheEntryValue(rawValue));
+                return rawValue;
+            }
+
+            return wrapped.Get(key);
         } 
 
         public override void Init(ProcessorContext context, IStateStore root)
@@ -97,8 +102,13 @@ namespace Streamiz.Kafka.Net.State.Cache
         
         public override void Flush()
         {
-            cache.Compact(1); // Compact 100% of the cache
-            base.Flush();
+            if (cachingEnabled)
+            {
+                cache.Compact(1); // Compact 100% of the cache
+                base.Flush();
+            }
+            else
+                wrapped.Flush();
         }
 
         public byte[] Get(Bytes key)
@@ -106,51 +116,75 @@ namespace Streamiz.Kafka.Net.State.Cache
         
         public IKeyValueEnumerator<Bytes, byte[]> Range(Bytes from, Bytes to)
         {
-            var storeEnumerator = wrapped.Range(from, to);
-            var cacheEnumerator = new CacheEnumerator<Bytes, CacheEntryValue>(cache.KeyRange(from, to, true, true), cache);
-            
-            return new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, true);
+            if (cachingEnabled)
+            {
+                var storeEnumerator = wrapped.Range(from, to);
+                var cacheEnumerator =
+                    new CacheEnumerator<Bytes, CacheEntryValue>(cache.KeyRange(from, to, true, true), cache);
+
+                return new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, true);
+            }
+            return wrapped.Range(from, to);
         }
 
         public IKeyValueEnumerator<Bytes, byte[]> ReverseRange(Bytes from, Bytes to)
         {
-            var storeEnumerator = wrapped.ReverseRange(from, to);
-            var cacheEnumerator = new CacheEnumerator<Bytes, CacheEntryValue>(cache.KeyRange(from, to, true, false), cache);
-            
-            return new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, false);
+            if (cachingEnabled)
+            {
+                var storeEnumerator = wrapped.ReverseRange(from, to);
+                var cacheEnumerator =
+                    new CacheEnumerator<Bytes, CacheEntryValue>(cache.KeyRange(from, to, true, false), cache);
+
+                return new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, false);
+            }
+
+            return wrapped.ReverseRange(from, to);
         }
 
-        public IEnumerable<KeyValuePair<Bytes, byte[]>> All()
+        private IEnumerable<KeyValuePair<Bytes, byte[]>> InternalAll(bool reverse)
         {
             var storeEnumerator = new WrapEnumerableKeyValueEnumerator<Bytes, byte[]>(wrapped.All());
-            var cacheEnumerator = new CacheEnumerator<Bytes, CacheEntryValue>(cache.KeySetEnumerable(true), cache);
+            var cacheEnumerator = new CacheEnumerator<Bytes, CacheEntryValue>(cache.KeySetEnumerable(reverse), cache);
 
-            return new WrapKeyValueEnumeratorEnumerable<Bytes, byte[]>(
-                new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, true));
+            var mergedEnumerator = new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, reverse);
+            while (mergedEnumerator.MoveNext())
+                if (mergedEnumerator.Current != null)
+                    yield return mergedEnumerator.Current.Value;
+        }
+        
+        public IEnumerable<KeyValuePair<Bytes, byte[]>> All()
+        {
+            if (cachingEnabled)
+                return InternalAll(true);
+            return wrapped.All();
         }
 
         public IEnumerable<KeyValuePair<Bytes, byte[]>> ReverseAll()
         {
-            var storeEnumerator = new WrapEnumerableKeyValueEnumerator<Bytes, byte[]>(wrapped.ReverseAll());
-            var cacheEnumerator = new CacheEnumerator<Bytes, CacheEntryValue>(cache.KeySetEnumerable(false), cache);
+            if (cachingEnabled)
+                return InternalAll(false);
 
-            return new WrapKeyValueEnumeratorEnumerable<Bytes, byte[]>(
-                new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, false));
+            return wrapped.ReverseAll();
         }
 
-        public long ApproximateNumEntries() => cache.Count;
+        public long ApproximateNumEntries() => cachingEnabled ? cache.Count : wrapped.ApproximateNumEntries();
 
         public void Put(Bytes key, byte[] value)
         {
-            var cacheEntry = new CacheEntryValue(
+            if (cachingEnabled)
+            {
+                var cacheEntry = new CacheEntryValue(
                     value,
                     context.RecordContext.Headers,
                     context.Offset,
-                    context.Timestamp, 
-                    context.Partition, 
+                    context.Timestamp,
+                    context.Partition,
                     context.Topic);
 
-            PutInternal(key, cacheEntry);
+                PutInternal(key, cacheEntry);
+            }
+            else
+                wrapped.Put(key, value);
         }
 
         private void PutInternal(Bytes key, CacheEntryValue entry)
@@ -166,29 +200,49 @@ namespace Streamiz.Kafka.Net.State.Cache
 
         public byte[] PutIfAbsent(Bytes key, byte[] value)
         {
-            var v = GetInternal(key);
-            if(v == null)
-                Put(key, value);
-            return v;
+            if (cachingEnabled)
+            {
+                var v = GetInternal(key);
+                if (v == null)
+                    Put(key, value);
+                return v;
+            }
+
+            return wrapped.PutIfAbsent(key, value);
         }
 
         public void PutAll(IEnumerable<KeyValuePair<Bytes, byte[]>> entries)
         {
-            foreach(var entry in entries)
-                Put(entry.Key, entry.Value);
+            if (cachingEnabled)
+            {
+                foreach (var entry in entries)
+                    Put(entry.Key, entry.Value);
+            }
+            else
+                wrapped.PutAll(entries);
         }
 
         public byte[] Delete(Bytes key)
         {
-            var rawValue = Get(key);
-            Put(key, null);
-            return rawValue;
+            if (cachingEnabled)
+            {
+                var rawValue = Get(key);
+                Put(key, null);
+                return rawValue;
+            }
+
+            return wrapped.Delete(key);
         }
 
         public new void Close()
         {
-            cache.Dispose();
-            base.Close();
+            if (cachingEnabled)
+            {
+                cache.Dispose();
+                base.Close();
+            }
+            else 
+                wrapped.Close();
         }
     }
 }
