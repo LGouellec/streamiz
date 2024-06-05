@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.State.Cache.Enumerator;
 using Streamiz.Kafka.Net.State.Cache.Internal;
@@ -10,7 +12,6 @@ using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.State.Cache
 {
-    // Add new metrics
     // add documentation
     // Check flush and forward messages in downstream
     internal class CachingKeyValueStore :
@@ -21,11 +22,22 @@ namespace Streamiz.Kafka.Net.State.Cache
         private Action<KeyValuePair<byte[], Change<byte[]>>> flushListener;
         private bool sendOldValue;
         private bool cachingEnabled;
+
+        private Sensor hitRatioSensor = NoRunnableSensor.Empty;
+        private Sensor totalCacheSizeSensor = NoRunnableSensor.Empty;
         
         public CachingKeyValueStore(IKeyValueStore<Bytes, byte[]> wrapped) 
             : base(wrapped)
+        { }
+
+        protected virtual void RegisterMetrics()
         {
-            
+            if (cachingEnabled)
+            {
+                hitRatioSensor = CachingMetrics.HitRatioSensor(context.Id, "cache-store", Name, context.Metrics);
+                totalCacheSizeSensor =
+                    CachingMetrics.TotalCacheSizeBytesSensor(context.Id, "cache-store", Name, context.Metrics);
+            }
         }
         
         public bool SetFlushListener(Action<KeyValuePair<byte[], Change<byte[]>>> listener, bool sendOldChanges)
@@ -50,14 +62,21 @@ namespace Streamiz.Kafka.Net.State.Cache
         {
             if (cachingEnabled)
             {
+                byte[] value;
+                
                 if (cache.TryGetValue(key, out CacheEntryValue priorEntry))
-                    return priorEntry.Value;
+                    value = priorEntry.Value;
+                else
+                {
+                    value = wrapped.Get(key);
+                    if(value != null)
+                        PutInternal(key, new CacheEntryValue(value));
+                }
 
-                var rawValue = wrapped.Get(key);
-                if (rawValue == null)
-                    return null;
-                PutInternal(key, new CacheEntryValue(rawValue));
-                return rawValue;
+                var currentStat = cache.GetCurrentStatistics();
+                hitRatioSensor.Record((double)currentStat.TotalHits / (currentStat.TotalMisses + currentStat.TotalHits));
+                
+                return value;
             }
 
             return wrapped.Get(key);
@@ -67,6 +86,7 @@ namespace Streamiz.Kafka.Net.State.Cache
         {
             base.Init(context, root);
             CreateCache(context);
+            RegisterMetrics();
         }
 
         private void CacheEntryEviction(Bytes key, CacheEntryValue value, EvictionReason reason, MemoryCache<Bytes, CacheEntryValue> state)
@@ -98,6 +118,8 @@ namespace Streamiz.Kafka.Net.State.Cache
                 wrapped.Put(key, value.Value);
                 context.SetRecordMetaData(currentContext);
             }
+            
+            totalCacheSizeSensor.Record(cache.Size);
         }
         
         public override void Flush()
@@ -196,6 +218,7 @@ namespace Streamiz.Kafka.Net.State.Cache
                 .RegisterPostEvictionCallback(CacheEntryEviction, cache);
             
             cache.Set(key, entry, memoryCacheEntryOptions);
+            totalCacheSizeSensor.Record(cache.Size);
         }
 
         public byte[] PutIfAbsent(Bytes key, byte[] value)

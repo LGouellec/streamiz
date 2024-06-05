@@ -1,10 +1,13 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Confluent.Kafka;
 using NUnit.Framework;
 using Moq;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -25,6 +28,8 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         private ProcessorStateManager stateManager = null;
         private Mock<AbstractTask> task = null;
         private InMemoryKeyValueStore inMemoryKeyValue = null;
+        private StreamMetricsRegistry metricsRegistry;
+        private string threadId = StreamMetricsRegistry.UNKNOWN_THREAD;
         
         #region Tools
         private Bytes ToKey(string key)
@@ -59,6 +64,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             config.ApplicationId = $"unit-test-cachestore-kv";
             config.StateStoreCacheMaxBytes = 1000;
 
+            threadId = Thread.CurrentThread.Name ?? StreamMetricsRegistry.UNKNOWN_THREAD;
             id = new TaskId { Id = 0, Partition = 0 };
             partition = new TopicPartition("source", 0);
             stateManager = new ProcessorStateManager(
@@ -71,7 +77,8 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             task = new Mock<AbstractTask>();
             task.Setup(k => k.Id).Returns(id);
 
-            context = new ProcessorContext(task.Object, config, stateManager, new StreamMetricsRegistry());
+            metricsRegistry = new StreamMetricsRegistry("test", MetricsRecordingLevel.DEBUG);
+            context = new ProcessorContext(task.Object, config, stateManager, metricsRegistry);
 
             inMemoryKeyValue = new InMemoryKeyValueStore("store");
             cache = new CachingKeyValueStore(inMemoryKeyValue);
@@ -263,5 +270,58 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             Assert.AreEqual(4, cache.ReverseRange(ToKey("test"), ToKey("test4")).ToList().Count);
         }
 
+
+        [Test]
+        public void TestMetrics()
+        {
+            context.SetRecordMetaData(new RecordContext(new Headers(), 0, 100, 0, "topic"));
+            cache.PutAll(new List<KeyValuePair<Bytes, byte[]>>
+            {
+                new(ToKey("test1"), ToValue("value1")),
+                new(ToKey("test2"), ToValue("value2")),
+                new(ToKey("test3"), ToValue("value3")),
+                new(ToKey("test4"), ToValue("value4"))
+            });
+
+            cache.Get(ToKey("test1"));
+            cache.Get(ToKey("test1"));
+            cache.Get(ToKey("test50")); // not found
+            cache.Get(ToKey("test100")); // not found
+
+            var totalCacheSize = GetSensorMetric(
+                CachingMetrics.CACHE_SIZE_BYTES_TOTAL,
+                string.Empty,
+                StreamMetricsRegistry.STATE_STORE_LEVEL_GROUP);
+            
+            var hitRatioAvg = GetSensorMetric(
+                CachingMetrics.HIT_RATIO,
+                "-avg",
+                StreamMetricsRegistry.STATE_STORE_LEVEL_GROUP);
+            
+            Assert.IsTrue((double)totalCacheSize.Value > 0);
+            Assert.IsTrue((double)hitRatioAvg.Value > 0.5d);
+        }
+        
+        private StreamMetric GetSensorMetric(string sensorName, string metricSuffix, string group)
+        {
+            long now = DateTime.Now.GetMilliseconds();
+            var sensor = metricsRegistry.GetSensors().FirstOrDefault(s => s.Name.Equals(GetSensorName(sensorName)));
+            if (sensor == null)
+                throw new NullReferenceException($"sensor {sensorName} not found");
+
+            MetricName keyMetric = MetricName.NameAndGroup(
+                sensorName + metricSuffix,
+                group);
+            
+            if (!sensor.Metrics.ContainsKey(keyMetric))
+                throw new NullReferenceException($"metric {sensorName + metricSuffix}|{group} not found inside {sensorName}");
+            
+            return sensor.Metrics[keyMetric];
+        }
+        
+        private string GetSensorName(string sensorName)
+            => metricsRegistry.FullSensorName(
+                sensorName,
+                metricsRegistry.StoreSensorPrefix(threadId, id.ToString(), "store"));
     }
 }
