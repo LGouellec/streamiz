@@ -8,14 +8,14 @@ using System;
 namespace Streamiz.Kafka.Net.State.Cache.Internal
 {
     /// <summary>
-    /// Provide extensions methods for <see cref="IMemoryCache"/> operations.
+    /// Provide extensions methods for <see cref="IMemoryCache{K, V}"/> operations.
     /// </summary>
     internal static class CacheExtensions
     {
         /// <summary>
         /// Gets the value associated with this key if present.
         /// </summary>
-        /// <param name="cache">The <see cref="IMemoryCache"/> instance this method extends.</param>
+        /// <param name="cache">The <see cref="IMemoryCache{K, V}"/> instance this method extends.</param>
         /// <param name="key">The key of the value to get.</param>
         /// <returns>The value associated with this key, or <c>null</c> if the key is not present.</returns>
         internal static V Get<K, V>(this IMemoryCache<K, V> cache, K key)
@@ -27,8 +27,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <summary>
         /// Try to get the value associated with the given key.
         /// </summary>
-        /// <typeparam name="TItem">The type of the object to get.</typeparam>
-        /// <param name="cache">The <see cref="IMemoryCache"/> instance this method extends.</param>
+        /// <param name="cache">The <see cref="IMemoryCache{K, V}"/> instance this method extends.</param>
         /// <param name="key">The key of the value to get.</param>
         /// <param name="value">The value associated with the given key.</param>
         /// <returns><c>true</c> if the key was found. <c>false</c> otherwise.</returns>
@@ -42,7 +41,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
                     return false; // if result == null, is a delete
                 }
 
-                if (result is V item)
+                if (result is { } item)
                 {
                     value = item;
                     return true;
@@ -54,10 +53,9 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         }
 
         /// <summary>
-        /// Associate a value with a key in the <see cref="IMemoryCache"/>.
+        /// Associate a value with a key in the <see cref="IMemoryCache{K, V}"/>.
         /// </summary>
-        /// <typeparam name="TItem">The type of the object to set.</typeparam>
-        /// <param name="cache">The <see cref="IMemoryCache"/> instance this method extends.</param>
+        /// <param name="cache">The <see cref="IMemoryCache{K, V}"/> instance this method extends.</param>
         /// <param name="key">The key of the entry to add.</param>
         /// <param name="value">The value to associate with the key.</param>
         /// <returns>The value that was set.</returns>
@@ -71,13 +69,12 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         
 
         /// <summary>
-        /// Sets a cache entry with the given key and value and apply the values of an existing <see cref="MemoryCacheEntryOptions"/> to the created entry.
+        /// Sets a cache entry with the given key and value and apply the values of an existing <see cref="MemoryCacheEntryOptions{K, V}"/> to the created entry.
         /// </summary>
-        /// <typeparam name="TItem">The type of the object to set.</typeparam>
-        /// <param name="cache">The <see cref="IMemoryCache"/> instance this method extends.</param>
+        /// <param name="cache">The <see cref="IMemoryCache{K, V}"/> instance this method extends.</param>
         /// <param name="key">The key of the entry to add.</param>
         /// <param name="value">The value to associate with the key.</param>
-        /// <param name="options">The existing <see cref="MemoryCacheEntryOptions"/> instance to apply to the new entry.</param>
+        /// <param name="options">The existing <see cref="MemoryCacheEntryOptions{K, V}"/> instance to apply to the new entry.</param>
         /// <returns>The value that was set.</returns>
         internal static V Set<K, V>(this IMemoryCache<K, V> cache, K key, V value, MemoryCacheEntryOptions<K, V> options)
         {
@@ -95,8 +92,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <summary>
         /// Gets the value associated with this key if it exists, or generates a new entry using the provided key and a value from the given factory if the key is not found.
         /// </summary>
-        /// <typeparam name="TItem">The type of the object to get.</typeparam>
-        /// <param name="cache">The <see cref="IMemoryCache"/> instance this method extends.</param>
+        /// <param name="cache">The <see cref="IMemoryCache{K, V}"/> instance this method extends.</param>
         /// <param name="key">The key of the entry to look for or create.</param>
         /// <param name="factory">The factory that creates the value associated with this key if the key does not exist in the cache.</param>
         /// <returns>The value associated with this key.</returns>
@@ -108,12 +104,10 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <summary>
         /// Gets the value associated with this key if it exists, or generates a new entry using the provided key and a value from the given factory if the key is not found.
         /// </summary>
-        /// <typeparam name="TItem">The type of the object to get.</typeparam>
-        /// <param name="cache">The <see cref="IMemoryCache"/> instance this method extends.</param>
+        /// <param name="cache">The <see cref="IMemoryCache{K, V}"/> instance this method extends.</param>
         /// <param name="key">The key of the entry to look for or create.</param>
         /// <param name="factory">The factory that creates the value associated with this key if the key does not exist in the cache.</param>
-        /// <param name="createOptions">The options to be applied to the <see cref="ICacheEntry"/> if the key does not exist in the cache.</param>
-        /// <returns>The value associated with this key.</returns>
+        /// <param name="createOptions">The options to be applied to the <see cref="ICacheEntry{K, V}"/> if the key does not exist in the cache.</param>
         internal static V GetOrCreate<K, V>(this IMemoryCache<K, V> cache, K key, Func<ICacheEntry<K, V>, V> factory, MemoryCacheEntryOptions<K, V>? createOptions)
         {
             if (!cache.TryGetValue(key, out V result))

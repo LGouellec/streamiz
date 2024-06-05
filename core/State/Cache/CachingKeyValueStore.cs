@@ -10,6 +10,12 @@ using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.State.Cache
 {
+    //  add option Materialize
+    // Add StoreBuilder
+    // Check if disabled or not
+    // Add new metrics
+    // add documentation
+    // Check flush and forward messages in downstream
     internal class CachingKeyValueStore :
         WrappedStateStore<IKeyValueStore<Bytes, byte[]>>,
         IKeyValueStore<Bytes, byte[]>, ICachedStateStore<byte[], byte[]>
@@ -24,9 +30,6 @@ namespace Streamiz.Kafka.Net.State.Cache
             
         }
         
-        // for testing
-        internal MemoryCache<Bytes, CacheEntryValue> Cache { get; private set; }
-
         public bool SetFlushListener(Action<KeyValuePair<byte[], Change<byte[]>>> listener, bool sendOldChanges)
         {
             flushListener = listener;

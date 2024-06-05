@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Streamiz.Kafka.Net.Crosscutting;
@@ -91,6 +92,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Enumerator
         {
             cacheEnumerator.Dispose();
             storeEnumerator.Dispose();
+            GC.SuppressFinalize(this);
         }
         
         #region Abstract

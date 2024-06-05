@@ -51,7 +51,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
                     catch (Exception e)
                     {
                         // This will be invoked on a background thread, don't let it throw.
-                        entry._cache._logger.LogError(e, "EvictionCallback invoked failed");
+                        entry._cache.Logger.LogError(e, "EvictionCallback invoked failed");
                     }
                 }
             }

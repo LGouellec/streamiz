@@ -5,18 +5,18 @@ using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.State.Cache
 {
-    public class CacheEntryValue
+    internal class CacheEntryValue
     {
         public byte[] Value { get; }
         public IRecordContext Context { get; }
 
-        public CacheEntryValue(byte[] value)
+        internal CacheEntryValue(byte[] value)
         {
             Context = new RecordContext();
             Value = value;
         }
 
-        public CacheEntryValue(byte[] value, Headers headers, long offset, long timestamp, int partition, string topic)
+        internal CacheEntryValue(byte[] value, Headers headers, long offset, long timestamp, int partition, string topic)
         {
             Context = new RecordContext(headers.Clone(), offset, timestamp, partition, topic);
             Value = value;

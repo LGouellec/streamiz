@@ -5,11 +5,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Primitives;
 
 namespace Streamiz.Kafka.Net.State.Cache.Internal
 {
