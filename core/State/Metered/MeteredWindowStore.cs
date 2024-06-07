@@ -39,6 +39,8 @@ namespace Streamiz.Kafka.Net.State.Metered
             this.valueSerdes = valueSerdes;
             this.metricScope = metricScope;
         }
+        
+        public override bool IsCachedStore => ((IWrappedStateStore)wrapped).IsCachedStore;
 
         public virtual void InitStoreSerde(ProcessorContext context)
         {

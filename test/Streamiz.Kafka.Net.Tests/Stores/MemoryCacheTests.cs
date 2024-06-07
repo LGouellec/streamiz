@@ -1,9 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using Confluent.Kafka;
-using Google.Protobuf.WellKnownTypes;
-using log4net.Layout;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.State.Cache;
@@ -52,7 +51,7 @@ public class MemoryCacheTests
             .SetSize(totalSize)
             .RegisterPostEvictionCallback(evictionDelegate, memoryCache);
             
-        memoryCache.Set(key, entry, memoryCacheEntryOptions);
+        memoryCache.Set(key, entry, memoryCacheEntryOptions, EvictionReason.Setted);
     } 
     
     [Test]
@@ -105,4 +104,52 @@ public class MemoryCacheTests
         Assert.IsNull(memoryCache.Get(Bytes.Wrap(new byte[] { 1 })));
         Assert.AreEqual(2L, memoryCache.Count);
     }
+    
+    [Test]
+    public void ShouldEvictLRU() {
+        memoryCache?.Dispose();
+
+        var results = new List<String>();
+        var expected = new List<String>{
+            "test123", "test456", "test789"
+        };
+        
+        var expectedbis = new List<String>{
+            "test456", "test789", "test123"
+        };
+        
+        var clockTime = new MockSystemTime(DateTime.Now);
+        
+        var options = new MemoryCacheOptions();
+        options.SizeLimit = 100000;
+        options.CompactionPercentage = 0.1;
+        memoryCache = new MemoryCache<Bytes, CacheEntryValue>(options, new BytesComparer(), clockTime);
+
+        PostEvictionDelegate<Bytes, CacheEntryValue> deleg = (key, value, reason, state) => {
+            results.Add(Encoding.UTF8.GetString(value.Value));
+        };
+        
+        PutCache(Bytes.Wrap(new byte[]{1}), "test123", deleg);
+        clockTime.AdvanceTime(TimeSpan.FromMinutes(1));
+        PutCache(Bytes.Wrap(new byte[]{2}), "test456", deleg);
+        clockTime.AdvanceTime(TimeSpan.FromMinutes(1));
+        PutCache(Bytes.Wrap(new byte[]{3}), "test789", deleg);
+        clockTime.AdvanceTime(TimeSpan.FromMinutes(1));
+
+        memoryCache.Compact(1d); // total flush
+       
+        Assert.AreEqual(expected, results);
+        results.Clear();
+        
+        PutCache(Bytes.Wrap(new byte[]{1}), "test123", deleg);
+        clockTime.AdvanceTime(TimeSpan.FromMinutes(1));
+        PutCache(Bytes.Wrap(new byte[]{2}), "test456", deleg);
+        clockTime.AdvanceTime(TimeSpan.FromMinutes(1));
+        PutCache(Bytes.Wrap(new byte[]{3}), "test789", deleg);
+        clockTime.AdvanceTime(TimeSpan.FromMinutes(1));
+        memoryCache.Get(Bytes.Wrap(new byte[] { 1 }));
+        memoryCache.Compact(1d); // total
+        Assert.AreEqual(expectedbis, results);
+    }
+
 }

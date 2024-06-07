@@ -16,7 +16,8 @@ namespace Streamiz.Kafka.Net.State.Cache
     // Check flush and forward messages in downstream
     internal class CachingKeyValueStore :
         WrappedStateStore<IKeyValueStore<Bytes, byte[]>>,
-        IKeyValueStore<Bytes, byte[]>, ICachedStateStore<byte[], byte[]>
+        IKeyValueStore<Bytes, byte[]>,
+        ICachedStateStore<byte[], byte[]>
     {
         private MemoryCache<Bytes, CacheEntryValue> cache;
         private Action<KeyValuePair<byte[], Change<byte[]>>> flushListener;
@@ -39,6 +40,8 @@ namespace Streamiz.Kafka.Net.State.Cache
                     CachingMetrics.TotalCacheSizeBytesSensor(context.Id, "cache-store", Name, context.Metrics);
             }
         }
+
+        public override bool IsCachedStore => true;
         
         public bool SetFlushListener(Action<KeyValuePair<byte[], Change<byte[]>>> listener, bool sendOldChanges)
         {
@@ -70,7 +73,7 @@ namespace Streamiz.Kafka.Net.State.Cache
                 {
                     value = wrapped.Get(key);
                     if(value != null)
-                        PutInternal(key, new CacheEntryValue(value));
+                        PutInternal(key, new CacheEntryValue(value), true);
                 }
 
                 var currentStat = cache.GetCurrentStatistics();
@@ -91,7 +94,7 @@ namespace Streamiz.Kafka.Net.State.Cache
 
         private void CacheEntryEviction(Bytes key, CacheEntryValue value, EvictionReason reason, MemoryCache<Bytes, CacheEntryValue> state)
         {
-            if (reason == EvictionReason.Replaced) return;
+            if (reason is EvictionReason.Replaced or EvictionReason.None) return;
             
             if (flushListener != null)
             {
@@ -209,7 +212,7 @@ namespace Streamiz.Kafka.Net.State.Cache
                 wrapped.Put(key, value);
         }
 
-        private void PutInternal(Bytes key, CacheEntryValue entry)
+        private void PutInternal(Bytes key, CacheEntryValue entry, bool fromWrappedCache = false)
         {
             long totalSize = key.Get.LongLength + entry.Size;
 
@@ -217,7 +220,7 @@ namespace Streamiz.Kafka.Net.State.Cache
                 .SetSize(totalSize)
                 .RegisterPostEvictionCallback(CacheEntryEviction, cache);
             
-            cache.Set(key, entry, memoryCacheEntryOptions);
+            cache.Set(key, entry, memoryCacheEntryOptions, fromWrappedCache ? EvictionReason.None : EvictionReason.Setted);
             totalCacheSizeSensor.Record(cache.Size);
         }
 

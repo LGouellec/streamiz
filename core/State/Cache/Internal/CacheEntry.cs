@@ -93,12 +93,9 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             }
         }
 
-        internal void SetExpired(EvictionReason reason)
+        public void SetExpired(EvictionReason reason)
         {
-            if (EvictionReason == EvictionReason.None)
-            {
-                EvictionReason = reason;
-            }
+            EvictionReason = reason;
             _isExpired = true;
         }
         

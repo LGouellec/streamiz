@@ -17,6 +17,8 @@ namespace Streamiz.Kafka.Net.State.Logging
             : base(wrapped)
         {
         }
+        
+        public override bool IsCachedStore => false;
 
         protected virtual void Publish(Bytes key, byte[] value)
             => context.Log(Name, key, value, context.RecordContext.Timestamp);

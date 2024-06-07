@@ -81,8 +81,9 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <param name="key">The key of the entry to add.</param>
         /// <param name="value">The value to associate with the key.</param>
         /// <param name="options">The existing <see cref="MemoryCacheEntryOptions{K, V}"/> instance to apply to the new entry.</param>
+        /// <param name="reason">Initial eviction reason</param>
         /// <returns>The value that was set.</returns>
-        internal static V Set<K, V>(this IMemoryCache<K, V> cache, K key, V value, MemoryCacheEntryOptions<K, V> options)
+        internal static V Set<K, V>(this IMemoryCache<K, V> cache, K key, V value, MemoryCacheEntryOptions<K, V> options, EvictionReason reason)
             where K : class
             where V : class
         {
@@ -91,8 +92,9 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             {
                 entry.SetOptions(options);
             }
-
+            
             entry.Value = value;
+            entry.SetExpired(reason);
 
             return value;
         }

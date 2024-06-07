@@ -57,7 +57,7 @@ public class MergedStoredCacheKeyValueEnumeratorTest
         var memoryCacheEntryOptions = new MemoryCacheEntryOptions<Bytes, CacheEntryValue>()
             .SetSize(totalSize);
 
-        cacheStore.Set(key, cacheEntry, memoryCacheEntryOptions);
+        cacheStore.Set(key, cacheEntry, memoryCacheEntryOptions, EvictionReason.Setted);
     }
 
     [Test]

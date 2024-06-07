@@ -11,9 +11,14 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
     internal enum EvictionReason
     {
         /// <summary>
-        /// The item was not removed from the cache.
+        /// The item was not removed from the cache or getting from the internal wrapped store
         /// </summary>
         None,
+        
+        /// <summary>
+        /// The item was adding to the cache.
+        /// </summary>
+        Setted,
 
         /// <summary>
         /// The item was removed from the cache manually.
@@ -24,16 +29,6 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// The item was removed from the cache because it was overwritten.
         /// </summary>
         Replaced,
-
-        /// <summary>
-        /// The item was removed from the cache because it timed out.
-        /// </summary>
-        Expired,
-
-        /// <summary>
-        /// The item was removed from the cache because its token expired.
-        /// </summary>
-        TokenExpired,
 
         /// <summary>
         /// The item was removed from the cache because it exceeded its capacity.

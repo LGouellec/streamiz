@@ -24,6 +24,8 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             this.retainDuplicates = retainDuplicates;
         }
 
+        public override bool IsCachedStore => false;
+        
         private void UpdateSeqNumber()
         {
             if (retainDuplicates)

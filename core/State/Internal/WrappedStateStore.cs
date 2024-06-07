@@ -7,9 +7,10 @@ namespace Streamiz.Kafka.Net.State.Internal
     internal interface IWrappedStateStore
     {
         IStateStore Wrapped { get; }
+        bool IsCachedStore { get; }
     }
 
-    internal class WrappedStore
+    internal static class WrappedStore
     {
         internal static bool IsTimestamped(IStateStore stateStore)
         {
@@ -22,7 +23,7 @@ namespace Streamiz.Kafka.Net.State.Internal
         }
     }
 
-    internal class WrappedStateStore<S> : IStateStore, IWrappedStateStore
+    internal abstract class WrappedStateStore<S> : IStateStore, IWrappedStateStore
         where S : IStateStore
     {
         protected ProcessorContext context;
@@ -36,6 +37,7 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         #region StateStore Impl
 
+        public abstract bool IsCachedStore { get; }
         public virtual string Name => wrapped.Name;
 
         public virtual bool Persistent => wrapped.Persistent;

@@ -23,6 +23,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         where V : class
     {
         private readonly IComparer<K> _keyComparer;
+        private readonly IClockTime _clockTime;
         internal readonly ILogger Logger;
 
         private readonly MemoryCacheOptions _options;
@@ -39,7 +40,17 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <param name="optionsAccessor">The options of the cache.</param>
         /// <param name="keyComparer">Compare the key</param>
         public MemoryCache(IOptions<MemoryCacheOptions> optionsAccessor, IComparer<K> keyComparer)
-            : this(optionsAccessor, keyComparer, NullLoggerFactory.Instance)
+            : this(optionsAccessor, keyComparer, NullLoggerFactory.Instance, new ClockSystemTime())
+        {
+        }
+        
+        /// <summary>
+        /// Creates a new <see cref="MemoryCache{K, V}"/> instance.
+        /// </summary>
+        /// <param name="optionsAccessor">The options of the cache.</param>
+        /// <param name="keyComparer">Compare the key</param>
+        public MemoryCache(IOptions<MemoryCacheOptions> optionsAccessor, IComparer<K> keyComparer, IClockTime clockTime)
+            : this(optionsAccessor, keyComparer, NullLoggerFactory.Instance, clockTime)
         {
         }
 
@@ -49,13 +60,19 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <param name="optionsAccessor">The options of the cache.</param>
         /// <param name="keyComparer">Compare the key</param>
         /// <param name="loggerFactory">The factory used to create loggers.</param>
-        private MemoryCache(IOptions<MemoryCacheOptions> optionsAccessor, IComparer<K> keyComparer, ILoggerFactory loggerFactory)
+        /// <param name="clockTime">Clock time accessor</param>
+        private MemoryCache(
+            IOptions<MemoryCacheOptions> optionsAccessor,
+            IComparer<K> keyComparer,
+            ILoggerFactory loggerFactory,
+            IClockTime clockTime)
         {
             Utils.CheckIfNotNull(optionsAccessor, nameof(optionsAccessor));
             Utils.CheckIfNotNull(loggerFactory, nameof(loggerFactory));
             Utils.CheckIfNotNull(keyComparer, nameof(keyComparer));
             
             _keyComparer = keyComparer;
+            _clockTime = clockTime;
             _options = optionsAccessor.Value;
             Logger = loggerFactory.CreateLogger<MemoryCache<K, V>>();
 
@@ -66,7 +83,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             _stats = new ThreadLocal<Stats>(() => new Stats(this));
         }
 
-        private static DateTime UtcNow => DateTime.UtcNow;
+        private DateTime UtcNow => _clockTime.GetCurrentTime();
 
         /// <summary>
         /// Cleans up the background collection events.
@@ -419,7 +436,11 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         private void Flush()
         {
             var entriesToRemove = new List<CacheEntry<K, V>>();
-            using var enumerator = _coherentState.Entries.GetEnumerator();
+            using var enumerator = _coherentState
+                .Entries
+                .OrderBy(e => e.Value.LastAccessed)
+                .GetEnumerator();
+            
             while (enumerator.MoveNext())
                 entriesToRemove.Add(enumerator.Current.Value);
             

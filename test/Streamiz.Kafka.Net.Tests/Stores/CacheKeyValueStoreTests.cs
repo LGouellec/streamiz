@@ -18,6 +18,7 @@ using Streamiz.Kafka.Net.State.InMemory;
 
 namespace Streamiz.Kafka.Net.Tests.Stores
 {
+    // TODO : add test add event from internal wrapped store and flush cache store
     public class CacheKeyValueStoreTests
     {
         private StreamConfig config = null;
@@ -318,6 +319,28 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             
             return sensor.Metrics[keyMetric];
         }
+        
+        [Test]
+        public void RehydrateCachingBasedOnWrappedStoreTest()
+        {
+            context.SetRecordMetaData(new RecordContext(new Headers(), 0, 100, 0, "topic"));
+            inMemoryKeyValue.Put(ToKey("test"), ToValue("value1"));
+            inMemoryKeyValue.Put(ToKey("test2"), ToValue("value2"));
+            Assert.AreEqual(0, cache.ApproximateNumEntries());
+            
+            Assert.AreEqual(ToValue("value1"), cache.Get(ToKey("test")));
+            Assert.AreEqual(ToValue("value2"), cache.Get(ToKey("test2")));
+            Assert.AreEqual(2, cache.ApproximateNumEntries());
+            cache.Flush(); 
+            
+            cache.Delete(ToKey("test"));
+            Assert.AreEqual(1, cache.ApproximateNumEntries());
+            Assert.AreEqual(2, inMemoryKeyValue.ApproximateNumEntries());
+
+            cache.Flush();
+            Assert.AreEqual(1, inMemoryKeyValue.ApproximateNumEntries());
+        }
+
         
         private string GetSensorName(string sensorName)
             => metricsRegistry.FullSensorName(

@@ -35,5 +35,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// Gets or set the size of the cache entry value.
         /// </summary>
         long? Size { get; set; }
+
+        void SetExpired(EvictionReason reason);
     }
 }
