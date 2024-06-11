@@ -33,8 +33,8 @@ namespace Streamiz.Kafka.Net.Processors
                     this, 
                     kv => {
                         context.CurrentProcessor = this;
-                        Forward(kv.Key,
-                            new Change<V>(sendOldValues ? kv.Value.OldValue.Value : default, kv.Value.NewValue.Value),
+                        context.CurrentProcessor.Forward(kv.Key,
+                            new Change<V>(sendOldValues ? (kv.Value.OldValue != null ? kv.Value.OldValue.Value : default) : default, kv.Value.NewValue.Value),
                             kv.Value.NewValue.Timestamp);
                     },
                     sendOldValues,

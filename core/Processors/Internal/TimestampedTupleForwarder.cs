@@ -48,7 +48,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public void MaybeForward(K key, V newValue, V oldValue, long timestamp)
         {
-            processor?.Forward(key, new Change<V>(sendOldValues ? oldValue : default, newValue), timestamp);
+            if (!cachingEnabled)
+                processor?.Forward(key, new Change<V>(sendOldValues ? oldValue : default, newValue), timestamp);
         }
 
         public void MaybeForward<VR>(K key, VR newValue, VR oldValue, long timestamp)

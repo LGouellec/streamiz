@@ -226,6 +226,12 @@ namespace Streamiz.Kafka.Net.Mock
                 }
             }
         }
+        
+        public void TriggerCommit()
+        {
+            throw new NotImplementedException();
+            //((StreamThread)threadTopology)?.Manager.CommitAll();
+        }
 
         #endregion
     }
