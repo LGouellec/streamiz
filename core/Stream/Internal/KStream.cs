@@ -206,15 +206,27 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             To(new StaticTopicNameExtractor<K, V>(topicName), keySerdes, valueSerdes, named);
         }
 
-        public void To(ITopicNameExtractor<K, V> topicExtractor, string named = null) => DoTo(topicExtractor, Produced<K, V>.Create(KeySerdes, ValueSerdes).WithName(named));
+        public void To(ITopicNameExtractor<K, V> topicExtractor, string named = null) => DoTo(topicExtractor, new DefaultRecordTimestampExtractor<K, V>(), Produced<K, V>.Create(KeySerdes, ValueSerdes).WithName(named));
 
         public void To(ITopicNameExtractor<K, V> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null)
-            => DoTo(topicExtractor, Produced<K,V>.Create(keySerdes, valueSerdes).WithName(named));
+            => DoTo(topicExtractor, new DefaultRecordTimestampExtractor<K, V>(), Produced<K,V>.Create(keySerdes, valueSerdes).WithName(named));
 
         public void To(Func<K, V, IRecordContext, string> topicExtractor, string named = null) => To(new WrapperTopicNameExtractor<K, V>(topicExtractor), named);
 
         public void To(Func<K, V, IRecordContext, string> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null)
             => To(new WrapperTopicNameExtractor<K, V>(topicExtractor), keySerdes, valueSerdes, named);
+
+        public void To(Func<K, V, IRecordContext, string> topicExtractor, Func<K, V, IRecordContext, long> recordTimestampExtractor, string named = null) =>
+            DoTo(new WrapperTopicNameExtractor<K, V>(topicExtractor), new WrapperRecordTimestampExtractor<K, V>(recordTimestampExtractor), Produced<K, V>.Create(KeySerdes, ValueSerdes).WithName(named));
+
+        public void To(Func<K, V, IRecordContext, string> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Func<K, V, IRecordContext, long> recordTimestampExtractor, string named = null) =>
+            DoTo(new WrapperTopicNameExtractor<K, V>(topicExtractor), new WrapperRecordTimestampExtractor<K, V>(recordTimestampExtractor), Produced<K, V>.Create(keySerdes, valueSerdes).WithName(named));
+
+        public void To(ITopicNameExtractor<K, V> topicExtractor, IRecordTimestampExtractor<K, V> recordTimestampExtractor, string named = null) =>
+            DoTo(topicExtractor, recordTimestampExtractor, Produced<K, V>.Create(KeySerdes, ValueSerdes).WithName(named));
+
+        public void To(ITopicNameExtractor<K, V> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, IRecordTimestampExtractor<K, V> recordTimestampExtractor, string named = null) =>
+            DoTo(topicExtractor, recordTimestampExtractor, Produced<K, V>.Create(keySerdes, valueSerdes).WithName(named));    
 
         public void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor, string named = null)
             where KS : ISerDes<K>, new()
@@ -229,7 +241,17 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         public void To<KS, VS>(ITopicNameExtractor<K, V> topicExtractor, string named = null)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
-            => DoTo(topicExtractor, Produced<K, V>.Create<KS, VS>().WithName(named));
+            => DoTo(topicExtractor, new DefaultRecordTimestampExtractor<K, V>(), Produced<K, V>.Create<KS, VS>().WithName(named));
+
+        public void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor, Func<K, V, IRecordContext, long> recordTimestampExtractor, string named = null)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+            => To<KS, VS>(new WrapperTopicNameExtractor<K, V>(topicExtractor), new WrapperRecordTimestampExtractor<K, V>(recordTimestampExtractor), named);
+
+        public void To<KS, VS>(ITopicNameExtractor<K, V> topicExtractor, IRecordTimestampExtractor<K, V> recordTimestampExtractor, string named = null)
+            where KS : ISerDes<K>, new()
+            where VS : ISerDes<V>, new()
+        => DoTo(topicExtractor, recordTimestampExtractor, Produced<K, V>.Create<KS, VS>().WithName(named));
 
         #endregion
 
@@ -1038,11 +1060,11 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             return new KStream<K, V>(name, KeySerdes, ValueSerdes, SetSourceNodes, RepartitionRequired, filterProcessorNode, builder);
         }
 
-        private void DoTo(ITopicNameExtractor<K, V> topicExtractor, Produced<K, V> produced)
+        private void DoTo(ITopicNameExtractor<K, V> topicExtractor, IRecordTimestampExtractor<K, V> timestampExtractor, Produced<K, V> produced)
         {
             string name = new Named(produced.Named).OrElseGenerateWithPrefix(builder, KStream.SINK_NAME);
 
-            StreamSinkNode<K, V> sinkNode = new StreamSinkNode<K, V>(topicExtractor, name, produced);
+            StreamSinkNode<K, V> sinkNode = new StreamSinkNode<K, V>(topicExtractor, timestampExtractor, name, produced);
             builder.AddGraphNode(Node, sinkNode);
         }
 

@@ -76,7 +76,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
     internal class SinkNodeFactory<K, V> : NodeFactory, ISinkNodeFactory
     {
-        public ITopicNameExtractor<K, V> Extractor { get; }
+        public ITopicNameExtractor<K, V> TopicExtractor { get; }
+        public IRecordTimestampExtractor<K, V> TimestampExtractor { get; }
         public ISerDes<K> KeySerdes { get; }
         public ISerDes<V> ValueSerdes { get; }
         public Func<string, K, V, int> ProducedPartitioner { get; }
@@ -85,29 +86,31 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             get
             {
-                return Extractor is StaticTopicNameExtractor<K, V> ?
-                    ((StaticTopicNameExtractor<K, V>)Extractor).TopicName :
+                return TopicExtractor is StaticTopicNameExtractor<K, V> ?
+                    ((StaticTopicNameExtractor<K, V>)TopicExtractor).TopicName :
                      null;
             }
         }
 
-        public SinkNodeFactory(string name, string[] previous, ITopicNameExtractor<K, V> topicExtractor,
+        public SinkNodeFactory(string name, string[] previous, ITopicNameExtractor<K, V> topicExtractor, 
+            IRecordTimestampExtractor<K, V> timestampExtractor,
             ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Func<string, K, V, int> producedPartitioner)
             : base(name, previous)
         {
-            Extractor = topicExtractor;
+            TopicExtractor = topicExtractor;
+            TimestampExtractor = timestampExtractor;
             KeySerdes = keySerdes;
             ValueSerdes = valueSerdes;
             ProducedPartitioner = producedPartitioner;
         }
 
         public override IProcessor Build()
-            => new SinkProcessor<K, V>(Name, Extractor, KeySerdes, ValueSerdes, ProducedPartitioner);
+            => new SinkProcessor<K, V>(Name, TopicExtractor, TimestampExtractor, KeySerdes, ValueSerdes, ProducedPartitioner);
 
         public override NodeDescription Describe()
-            => Extractor is StaticTopicNameExtractor<K, V> ?
-            new SinkNodeDescription(Name, ((StaticTopicNameExtractor<K, V>)Extractor).TopicName) :
-            new SinkNodeDescription(Name, Extractor?.GetType());
+            => TopicExtractor is StaticTopicNameExtractor<K, V> ?
+            new SinkNodeDescription(Name, ((StaticTopicNameExtractor<K, V>)TopicExtractor).TopicName) :
+            new SinkNodeDescription(Name, TopicExtractor?.GetType());
     }
 
     #endregion
