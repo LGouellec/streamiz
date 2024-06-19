@@ -95,8 +95,8 @@ namespace Streamiz.Kafka.Net.State.Cache
 
                 var currentStat = cache.GetCurrentStatistics();
                 hitRatioSensor.Record((double)currentStat.TotalHits / (currentStat.TotalMisses + currentStat.TotalHits));
-                
-                return value;
+
+                return value ?? wrapped.Fetch(key, time);
             }
             
             return wrapped.Fetch(key, time);
