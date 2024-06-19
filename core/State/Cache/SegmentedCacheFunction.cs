@@ -34,7 +34,7 @@ namespace Streamiz.Kafka.Net.State.Cache
             return binaryKey;
         }
 
-        public long SegmentId( Bytes key) {
+        public virtual long SegmentId(Bytes key) {
             return SegmentId(keySchema.SegmentTimestamp(key));
         }
         
