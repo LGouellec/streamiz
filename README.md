@@ -137,3 +137,13 @@ When adding or changing a service please add tests and documentations.
 # Support
 
 You can found support [here](https://discord.gg/J7Jtxum)
+
+# Star History
+
+<a href="https://star-history.com/#LGouellec/kafka-streams-dotnet&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=LGouellec/kafka-streams-dotnet&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=LGouellec/kafka-streams-dotnet&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=LGouellec/kafka-streams-dotnet&type=Date" />
+ </picture>
+</a>

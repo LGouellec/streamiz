@@ -3,7 +3,6 @@ using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.InMemory;
-using Streamiz.Kafka.Net.State.RocksDb;
 using Streamiz.Kafka.Net.State.Supplier;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;

@@ -1,37 +1,37 @@
-﻿using Confluent.Kafka;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Confluent.Kafka;
 using Moq;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
-using Streamiz.Kafka.Net.State.RocksDb;
+using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Tests.Helpers;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Tests.Stores
 {
     public class RocksDbKeyValueStoreTests
     {
-        private StreamConfig config = null;
-        private RocksDbKeyValueStore store = null;
-        private ProcessorContext context = null;
-        private TaskId id = null;
-        private TopicPartition partition = null;
-        private ProcessorStateManager stateManager = null;
-        private Mock<AbstractTask> task = null;
+        private StreamConfig config;
+        private RocksDbKeyValueStore store;
+        private ProcessorContext context;
+        private TaskId id;
+        private TopicPartition partition;
+        private ProcessorStateManager stateManager;
+        private Mock<AbstractTask> task;
 
         [SetUp]
         public void Begin()
         {
             config = new StreamConfig();
-            config.ApplicationId = $"unit-test-rocksdb-kv";
+            config.ApplicationId = "unit-test-rocksdb-kv";
             config.UseRandomRocksDbConfigForTest();
 
             id = new TaskId { Id = 0, Partition = 0 };

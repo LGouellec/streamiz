@@ -29,5 +29,12 @@ namespace Streamiz.Kafka.Net.State.Supplier
         /// Note this should return false if caching is enabled.
         /// </summary>
         public bool RetainDuplicates { get; set; }
+        
+        /// <summary>
+        /// The size of the segments (in milliseconds) the store has.
+        /// If your store is segmented then this should be the size of segments in the underlying store.
+        /// It is also used to reduce the amount of data that is scanned when caching is enabled.
+        /// </summary>
+        public long SegmentInterval { get; set; }
     }
 }

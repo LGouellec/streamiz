@@ -7,7 +7,7 @@ using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
-using Streamiz.Kafka.Net.State.RocksDb;
+using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Tests.Helpers;
 using System;
 using System.Collections.Generic;

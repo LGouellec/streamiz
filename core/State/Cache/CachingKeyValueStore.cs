@@ -12,8 +12,6 @@ using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.State.Cache
 {
-    // add documentation
-    // Check flush and forward messages in downstream
     internal class CachingKeyValueStore :
         WrappedStateStore<IKeyValueStore<Bytes, byte[]>>,
         IKeyValueStore<Bytes, byte[]>,
@@ -91,6 +89,12 @@ namespace Streamiz.Kafka.Net.State.Cache
             CreateCache(context);
             RegisterMetrics();
         }
+        
+        private void UpdateRatioSensor()
+        {
+            var currentStat = cache.GetCurrentStatistics();
+            hitRatioSensor.Record((double)currentStat.TotalHits / (currentStat.TotalMisses + currentStat.TotalHits));
+        }
 
         private void CacheEntryEviction(Bytes key, CacheEntryValue value, EvictionReason reason, MemoryCache<Bytes, CacheEntryValue> state)
         {
@@ -145,7 +149,10 @@ namespace Streamiz.Kafka.Net.State.Cache
             {
                 var storeEnumerator = wrapped.Range(from, to);
                 var cacheEnumerator =
-                    new CacheEnumerator<Bytes, CacheEntryValue>(cache.KeyRange(from, to, true, true), cache);
+                    new CacheEnumerator<Bytes, CacheEntryValue>(
+                        cache.KeyRange(from, to, true, true),
+                        cache,
+                        UpdateRatioSensor);
 
                 return new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, true);
             }
@@ -158,7 +165,10 @@ namespace Streamiz.Kafka.Net.State.Cache
             {
                 var storeEnumerator = wrapped.ReverseRange(from, to);
                 var cacheEnumerator =
-                    new CacheEnumerator<Bytes, CacheEntryValue>(cache.KeyRange(from, to, true, false), cache);
+                    new CacheEnumerator<Bytes, CacheEntryValue>(
+                        cache.KeyRange(from, to, true, false),
+                        cache,
+                        UpdateRatioSensor);
 
                 return new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, false);
             }
@@ -169,7 +179,10 @@ namespace Streamiz.Kafka.Net.State.Cache
         private IEnumerable<KeyValuePair<Bytes, byte[]>> InternalAll(bool reverse)
         {
             var storeEnumerator = new WrapEnumerableKeyValueEnumerator<Bytes, byte[]>(wrapped.All());
-            var cacheEnumerator = new CacheEnumerator<Bytes, CacheEntryValue>(cache.KeySetEnumerable(reverse), cache);
+            var cacheEnumerator = new CacheEnumerator<Bytes, CacheEntryValue>(
+                cache.KeySetEnumerable(reverse),
+                cache,
+                UpdateRatioSensor);
 
             var mergedEnumerator = new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, reverse);
             while (mergedEnumerator.MoveNext())

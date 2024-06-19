@@ -1,6 +1,7 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.State.Cache;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
@@ -23,7 +24,9 @@ namespace Streamiz.Kafka.Net.State.Internal
         }
     }
 
-    internal abstract class WrappedStateStore<S> : IStateStore, IWrappedStateStore
+    internal abstract class WrappedStateStore<S> : 
+        IStateStore,
+        IWrappedStateStore
         where S : IStateStore
     {
         protected ProcessorContext context;

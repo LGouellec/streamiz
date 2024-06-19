@@ -20,9 +20,7 @@ namespace Streamiz.Kafka.Net.State.Enumerator
             }
 
             public KeyValuePair<Bytes, byte[]> Current 
-                => enumerator.Current.HasValue ? 
-                    enumerator.Current.Value :
-                    throw new NotMoreValueException($"No more record present in your state store {stateStoreName}");
+                => enumerator.Current ?? throw new NotMoreValueException($"No more record present in your state store {stateStoreName}");
 
             object IEnumerator.Current => Current;
 

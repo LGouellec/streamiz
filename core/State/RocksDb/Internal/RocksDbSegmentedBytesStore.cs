@@ -1,6 +1,6 @@
 ﻿using Streamiz.Kafka.Net.State.Internal;
 
-namespace Streamiz.Kafka.Net.State.RocksDb.Internal
+namespace Streamiz.Kafka.Net.State.Internal
 {
     internal class RocksDbSegmentedBytesStore :
         AbstractRocksDBSegmentedBytesStore<RocksDbKeyValueSegment>

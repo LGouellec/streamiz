@@ -5,7 +5,7 @@ using Streamiz.Kafka.Net.State.Enumerator;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Streamiz.Kafka.Net.State.RocksDb
+namespace Streamiz.Kafka.Net.State
 {
     internal class RocksDbEnumerator : IKeyValueEnumerator<Bytes, byte[]>
     {

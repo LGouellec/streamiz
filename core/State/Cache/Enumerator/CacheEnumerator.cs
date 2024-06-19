@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Streamiz.Kafka.Net.State.Cache.Internal;
@@ -11,13 +12,17 @@ namespace Streamiz.Kafka.Net.State.Cache.Enumerator
     {
         private IEnumerator<K> keys;
         private readonly MemoryCache<K, V> cache;
+        private readonly Action _beforeClosing;
         private KeyValuePair<K, V>? current;
         
-        public CacheEnumerator(IEnumerable<K> keys,
-            MemoryCache<K, V> cache)
+        public CacheEnumerator(
+            IEnumerable<K> keys,
+            MemoryCache<K, V> cache,
+            Action beforeClosing)
         {
             this.keys = keys.GetEnumerator();
             this.cache = cache;
+            _beforeClosing = beforeClosing;
         }
         
         public K PeekNextKey()
@@ -46,6 +51,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Enumerator
         {
             current = null;
             keys.Dispose();
+            _beforeClosing?.Invoke();
         }
     }
 }

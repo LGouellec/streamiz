@@ -37,7 +37,7 @@ public class MergedStoredCacheKeyValueEnumeratorTest
     private MergedStoredCacheKeyValueEnumerator CreateEnumerator()
     {
         var cacheEnumerator = new CacheEnumerator<Bytes, CacheEntryValue>(
-            cacheStore.KeySetEnumerable(true), cacheStore);
+            cacheStore.KeySetEnumerable(true), cacheStore, () => { });
         var storeEnumerator = new WrapEnumerableKeyValueEnumerator<Bytes, byte[]>(internalStore.All());
         return new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, true);
     }
@@ -80,7 +80,7 @@ public class MergedStoredCacheKeyValueEnumeratorTest
         Bytes to = Bytes.Wrap(new byte[] {9});
         
         var cacheEnumerator = new CacheEnumerator<Bytes, CacheEntryValue>(
-            cacheStore.KeyRange(from, to, true, true), cacheStore);
+            cacheStore.KeyRange(from, to, true, true), cacheStore, () => { });
         var storeEnumerator = internalStore.Range(from, to);
         var mergedEnumerator = new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, true);
         
@@ -117,7 +117,7 @@ public class MergedStoredCacheKeyValueEnumeratorTest
         Bytes to = Bytes.Wrap(new byte[] {9});
         
         var cacheEnumerator = new CacheEnumerator<Bytes, CacheEntryValue>(
-            cacheStore.KeyRange(from, to, true, false), cacheStore);
+            cacheStore.KeyRange(from, to, true, false), cacheStore, null);
         var storeEnumerator = internalStore.ReverseRange(from, to);
         var mergedEnumerator = new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, false);
         

@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.SerDes;
@@ -6,7 +7,6 @@ using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using Streamiz.Kafka.Net.Tests.Helpers;
-using System;
 
 namespace Streamiz.Kafka.Net.Tests.Stores
 {
@@ -97,7 +97,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
                 .WindowedBy(TumblingWindowOptions.Of(1000))
                 .Count(
                     Materialized<string, long, IWindowStore<Bytes, byte[]>>.Create(
-                        Streamiz.Kafka.Net.State.Stores.PersistentWindowStore(
+                        State.Stores.PersistentWindowStore(
                             "rocksdb-w-store",
                             TimeSpan.FromDays(1),
                             TimeSpan.FromSeconds(1))));

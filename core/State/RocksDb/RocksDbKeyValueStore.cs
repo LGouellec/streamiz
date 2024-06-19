@@ -10,7 +10,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 
-namespace Streamiz.Kafka.Net.State.RocksDb
+namespace Streamiz.Kafka.Net.State
 {
     #region RocksDb Enumerator Wrapper
 

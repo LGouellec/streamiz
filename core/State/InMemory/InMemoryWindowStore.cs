@@ -129,8 +129,6 @@ namespace Streamiz.Kafka.Net.State.InMemory
                 closingCallback?.Invoke(this);
                 disposed = true;
             }
-            else
-                throw new ObjectDisposedException("Enumerator was disposed");
         }
 
         public void RemoveExpiredData(long time)
@@ -273,8 +271,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         private long observedStreamTime = -1;
         private int seqnum = 0;
 
-        private readonly ConcurrentDictionary<long, ConcurrentDictionary<Bytes, byte[]>> map =
-            new ConcurrentDictionary<long, ConcurrentDictionary<Bytes, byte[]>>();
+        private readonly ConcurrentDictionary<long, ConcurrentDictionary<Bytes, byte[]>> map = new();
         
         private readonly ISet<InMemoryWindowStoreEnumeratorWrapper> openIterators = new HashSet<InMemoryWindowStoreEnumeratorWrapper>();
 

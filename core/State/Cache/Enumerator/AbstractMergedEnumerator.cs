@@ -7,8 +7,6 @@ using Streamiz.Kafka.Net.State.Enumerator;
 namespace Streamiz.Kafka.Net.State.Cache.Enumerator
 {
     internal abstract class AbstractMergedEnumerator<K, KS, V, VS> : IKeyValueEnumerator<K, V>
-        where KS : class
-        where K : class
     {
         private enum LastChoice
         {
@@ -36,8 +34,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Enumerator
         private bool IsDeletedCacheEntry(KeyValuePair<Bytes, CacheEntryValue>? nextFromCache) 
             => nextFromCache?.Value.Value == null;
 
-        public K PeekNextKey()
-            => Current?.Key;
+        public K PeekNextKey() => Current.Value.Key;
 
         public bool MoveNext()
         {
@@ -60,17 +57,17 @@ namespace Streamiz.Kafka.Net.State.Cache.Enumerator
             }
 
             Bytes nextCacheKey = cacheEnumerator.Current?.Key;
-            KS nextStoreKey = storeEnumerator.Current?.Key;
+            bool nullStoreKey = !storeEnumerator.Current.HasValue || storeEnumerator.Current.Value.Key == null;
                 
             if (nextCacheKey == null) {
                 Current = CurrentStoreValue();
             }
-            else if (nextStoreKey == null) {
+            else if (nullStoreKey) {
                 Current = CurrentCacheValue();
             }
             else
             {
-                int comparison = Compare(nextCacheKey, nextStoreKey);
+                int comparison = Compare(nextCacheKey, storeEnumerator.Current.Value.Key);
                 Current = ChooseCurrentValue(comparison);
             }
 

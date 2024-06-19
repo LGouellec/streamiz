@@ -1,22 +1,17 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
 using Confluent.Kafka;
 using Moq;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
-using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
-using Streamiz.Kafka.Net.State.RocksDb;
-using Streamiz.Kafka.Net.State.RocksDb.Internal;
+using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Tests.Helpers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using Streamiz.Kafka.Net.Metrics;
-
 
 namespace Streamiz.Kafka.Net.Tests.Stores
 {
@@ -25,19 +20,19 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         private static readonly TimeSpan defaultRetention = TimeSpan.FromMinutes(1);
         private static readonly TimeSpan defaultSize = TimeSpan.FromSeconds(10);
 
-        private StreamConfig config = null;
-        private RocksDbWindowStore store = null;
-        private ProcessorContext context = null;
-        private TaskId id = null;
-        private TopicPartition partition = null;
-        private ProcessorStateManager stateManager = null;
-        private Mock<AbstractTask> task = null;
+        private StreamConfig config;
+        private RocksDbWindowStore store;
+        private ProcessorContext context;
+        private TaskId id;
+        private TopicPartition partition;
+        private ProcessorStateManager stateManager;
+        private Mock<AbstractTask> task;
 
         [SetUp]
         public void Begin()
         {
             config = new StreamConfig();
-            config.ApplicationId = $"unit-test-duplicate-rocksdb-window";
+            config.ApplicationId = "unit-test-duplicate-rocksdb-window";
             config.UseRandomRocksDbConfigForTest();
 
             id = new TaskId { Id = 0, Partition = 0 };
@@ -55,7 +50,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             context = new ProcessorContext(task.Object, config, stateManager, new StreamMetricsRegistry());
 
             store = new RocksDbWindowStore(
-                new RocksDbSegmentedBytesStore("test-w-store", (long)defaultRetention.TotalMilliseconds, 5000, new RocksDbWindowKeySchema()),
+                new RocksDbSegmentedBytesStore("test-w-store", (long)defaultRetention.TotalMilliseconds, 5000, new WindowKeySchema()),
                 (long)defaultSize.TotalMilliseconds, true);
 
             store.Init(context, store);

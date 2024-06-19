@@ -3,6 +3,7 @@ using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using System;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -36,7 +37,18 @@ namespace Streamiz.Kafka.Net.Processors
         {
             base.Init(context);
             windowStore = (ITimestampedWindowStore<K, Agg>)context.GetStateStore(storeName);
-            tupleForwarder = new TimestampedTupleForwarder<Windowed<K>, Agg>(this, sendOldValues);
+            tupleForwarder = new TimestampedTupleForwarder<Windowed<K>, Agg>(
+                windowStore,
+                this, 
+                kv => 
+                {
+                    context.CurrentProcessor = this;
+                    Forward(kv.Key,
+                        new Change<Agg>(sendOldValues ? kv.Value.OldValue.Value : default, kv.Value.NewValue.Value),
+                        kv.Value.NewValue.Timestamp);
+                },
+                sendOldValues,
+                context.ConfigEnableCache);
         }
 
         public override void Process(K key, V value)

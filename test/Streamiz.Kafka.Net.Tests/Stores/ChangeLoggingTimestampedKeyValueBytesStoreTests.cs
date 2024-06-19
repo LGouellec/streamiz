@@ -1,9 +1,14 @@
-﻿using Confluent.Kafka;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Confluent.Kafka;
 using Moq;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Kafka.Internal;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
@@ -12,29 +17,24 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.InMemory;
 using Streamiz.Kafka.Net.State.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Streamiz.Kafka.Net.Metrics;
-using Streamiz.Kafka.Net.Metrics.Internal;
 
 namespace Streamiz.Kafka.Net.Tests.Stores
 {
     public class ChangeLoggingTimestampedKeyValueBytesStoreTests
     {
 
-        private StreamConfig config = null;
-        private ChangeLoggingTimestampedKeyValueBytesStore store = null;
-        private ProcessorContext context = null;
-        private TaskId id = null;
-        private TopicPartition partition = null;
-        private ProcessorStateManager stateManager = null;
-        private Mock<AbstractTask> task = null;
+        private StreamConfig config;
+        private ChangeLoggingTimestampedKeyValueBytesStore store;
+        private ProcessorContext context;
+        private TaskId id;
+        private TopicPartition partition;
+        private ProcessorStateManager stateManager;
+        private Mock<AbstractTask> task;
 
-        private SyncKafkaSupplier kafkaSupplier = null;
-        private IRecordCollector recordCollector = null;
+        private SyncKafkaSupplier kafkaSupplier;
+        private IRecordCollector recordCollector;
 
-        private StringSerDes stringSerDes = new StringSerDes();
+        private StringSerDes stringSerDes = new();
         private ValueAndTimestampSerDes<string> valueAndTimestampSerDes;
 
         [SetUp]
@@ -42,7 +42,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         {
             valueAndTimestampSerDes = new ValueAndTimestampSerDes<string>(stringSerDes);
             config = new StreamConfig();
-            config.ApplicationId = $"unit-test-changelogging-tkv";
+            config.ApplicationId = "unit-test-changelogging-tkv";
 
             id = new TaskId { Id = 0, Partition = 0 };
             partition = new TopicPartition("source", 0);

@@ -13,13 +13,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly bool sendOldValues;
         private readonly bool cachingEnabled;
 
-        public TimestampedTupleForwarder(IProcessor processor, bool sendOldValues)
-        {
-            this.processor = processor;
-            this.sendOldValues = sendOldValues;
-            cachingEnabled = false;
-        }
-        
         public TimestampedTupleForwarder(
             IStateStore store,
             IProcessor processor,

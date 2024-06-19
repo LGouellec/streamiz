@@ -10,8 +10,7 @@ using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.State;
-using Streamiz.Kafka.Net.State.RocksDb;
-using Streamiz.Kafka.Net.State.RocksDb.Internal;
+using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.Stores
@@ -21,19 +20,19 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         private static readonly TimeSpan defaultRetention = TimeSpan.FromDays(1);
         private static readonly TimeSpan defaultSize = TimeSpan.FromHours(6);
 
-        private StreamConfig config = null;
-        private RocksDbWindowStore store = null;
-        private ProcessorContext context = null;
-        private TaskId id = null;
-        private TopicPartition partition = null;
-        private ProcessorStateManager stateManager = null;
-        private Mock<AbstractTask> task = null;
+        private StreamConfig config;
+        private RocksDbWindowStore store;
+        private ProcessorContext context;
+        private TaskId id;
+        private TopicPartition partition;
+        private ProcessorStateManager stateManager;
+        private Mock<AbstractTask> task;
 
         [SetUp]
         public void Begin()
         {
             config = new StreamConfig();
-            config.ApplicationId = $"unit-test-rocksdb-w";
+            config.ApplicationId = "unit-test-rocksdb-w";
             config.UseRandomRocksDbConfigForTest();
 
             id = new TaskId { Id = 0, Partition = 0 };
@@ -55,7 +54,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
                     "test-w-store", 
                     (long)defaultRetention.TotalMilliseconds,
                     7200000,
-                    new RocksDbWindowKeySchema()),
+                    new WindowKeySchema()),
                 (long)defaultSize.TotalMilliseconds, false);
 
             store.Init(context, store);

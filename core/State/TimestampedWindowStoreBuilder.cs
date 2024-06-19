@@ -1,5 +1,7 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State.Cache;
+using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.State.Logging;
 using Streamiz.Kafka.Net.State.Metered;
 using Streamiz.Kafka.Net.State.Supplier;
@@ -46,7 +48,7 @@ namespace Streamiz.Kafka.Net.State
         {
             var store = supplier.Get();
             return new MeteredTimestampedWindowStore<K, V>(
-                WrapLogging(store),
+                WrapCaching(WrapLogging(store)),
                 supplier.WindowSize.Value,
                 keySerdes,
                 valueSerdes,
@@ -59,6 +61,17 @@ namespace Streamiz.Kafka.Net.State
                 return inner;
 
             return new ChangeLoggingTimestampedWindowBytesStore(inner);
+        }
+        
+        private IWindowStore<Bytes, byte[]> WrapCaching(IWindowStore<Bytes, byte[]> inner)
+        {
+            return !CachingEnabled ? 
+                inner :
+                new CachingWindowStore(
+                    inner,
+                    supplier.WindowSize.Value,
+                    supplier.SegmentInterval,
+                    new WindowKeySchema());
         }
     }
 }

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Confluent.Kafka;
-using NUnit.Framework;
 using Moq;
+using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
@@ -21,14 +21,14 @@ namespace Streamiz.Kafka.Net.Tests.Stores
     // TODO : add test add event from internal wrapped store and flush cache store
     public class CacheKeyValueStoreTests
     {
-        private StreamConfig config = null;
-        private CachingKeyValueStore cache = null;
-        private ProcessorContext context = null;
-        private TaskId id = null;
-        private TopicPartition partition = null;
-        private ProcessorStateManager stateManager = null;
-        private Mock<AbstractTask> task = null;
-        private InMemoryKeyValueStore inMemoryKeyValue = null;
+        private StreamConfig config;
+        private CachingKeyValueStore cache;
+        private ProcessorContext context;
+        private TaskId id;
+        private TopicPartition partition;
+        private ProcessorStateManager stateManager;
+        private Mock<AbstractTask> task;
+        private InMemoryKeyValueStore inMemoryKeyValue;
         private StreamMetricsRegistry metricsRegistry;
         private string threadId = StreamMetricsRegistry.UNKNOWN_THREAD;
         
@@ -62,7 +62,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         public void Begin()
         {
             config = new StreamConfig();
-            config.ApplicationId = $"unit-test-cachestore-kv";
+            config.ApplicationId = "unit-test-cachestore-kv";
             config.StateStoreCacheMaxBytes = 1000;
 
             threadId = Thread.CurrentThread.Name ?? StreamMetricsRegistry.UNKNOWN_THREAD;
@@ -102,7 +102,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             config.StateStoreCacheMaxBytes = 30;
             cache.CreateCache(context);
             bool checkListener = true;
-            cache.SetFlushListener((record) => {
+            cache.SetFlushListener(record => {
                 if (checkListener)
                 {
                     Assert.AreEqual(ToKey("test").Get, record.Key);
@@ -121,7 +121,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         [Test]
         public void DuplicateValueSameKeyTest()
         {
-            cache.SetFlushListener((record) => {
+            cache.SetFlushListener(record => {
                 Assert.AreEqual(ToKey("test").Get, record.Key);
                 Assert.AreEqual(ToValue("value2"), record.Value.NewValue);
                 Assert.IsNull(record.Value.OldValue);
@@ -138,7 +138,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         public void DuplicateValueWithOldValueSameKeyTest()
         {
             bool checkedListener = false;
-            cache.SetFlushListener((record) => {
+            cache.SetFlushListener(record => {
                 if (checkedListener)
                 {
                     Assert.AreEqual(ToKey("test").Get, record.Key);
@@ -160,7 +160,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         [Test]
         public void FlushTest()
         {
-            cache.SetFlushListener((record) => {
+            cache.SetFlushListener(record => {
                 Assert.AreEqual(ToKey("test").Get, record.Key);
                 Assert.AreEqual(ToValue("value1"), record.Value.NewValue);
                 Assert.IsNull(record.Value.OldValue);
