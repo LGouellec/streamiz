@@ -57,7 +57,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Enumerator
             }
 
             Bytes nextCacheKey = cacheEnumerator.Current?.Key;
-            bool nullStoreKey = !storeEnumerator.Current.HasValue || storeEnumerator.Current.Value.Key == null;
+            bool nullStoreKey = !storeEnumerator.Current.HasValue;
                 
             if (nextCacheKey == null) {
                 Current = CurrentStoreValue();
