@@ -153,7 +153,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             nodeGroups = null;
         }
 
-        internal void AddSinkOperator<K, V>(ITopicNameExtractor<K, V> topicNameExtractor, string nameNode, Produced<K, V> produced, params string[] previousProcessorNames)
+        internal void AddSinkOperator<K, V>(ITopicNameExtractor<K, V> topicNameExtractor, IRecordTimestampExtractor<K, V> timestampExtractor, string nameNode, Produced<K, V> produced, params string[] previousProcessorNames)
         {
             if (nodeFactories.ContainsKey(nameNode))
             {
@@ -161,7 +161,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
 
             nodeFactories.Add(nameNode,
-                new SinkNodeFactory<K, V>(nameNode, previousProcessorNames, topicNameExtractor, produced.KeySerdes, produced.ValueSerdes, produced.Partitioner));
+                new SinkNodeFactory<K, V>(nameNode, previousProcessorNames, topicNameExtractor, timestampExtractor, produced.KeySerdes, produced.ValueSerdes, produced.Partitioner));
             nodeGrouper.Add(nameNode);
             nodeGrouper.Unite(nameNode, previousProcessorNames);
             nodeGroups = null;

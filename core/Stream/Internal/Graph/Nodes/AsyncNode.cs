@@ -34,6 +34,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
                 builder.AddInternalTopic(RepartitionTopic, null);
                 builder.AddSinkOperator(
                     new StaticTopicNameExtractor<TK, TV>(RepartitionTopic),
+                    new DefaultRecordTimestampExtractor<TK, TV>(),
                     SinkName,
                     Produced<TK, TV>.Create(KeySerdes, ValueSerdes),
                     ParentNodeNames());
@@ -70,6 +71,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
                 builder.AddInternalTopic(RepartitionTopic, null);
                 builder.AddProcessor(ProcessorParameters.ProcessorName, ProcessorParameters.Processor, ParentNodeNames());
                 builder.AddSinkOperator(new StaticTopicNameExtractor<TK1, TV1>(RepartitionTopic),
+                    new DefaultRecordTimestampExtractor<TK1, TV1>(),
                         SinkName,
                         Produced<TK1, TV1>.Create(KeySerdes, ValueSerdes),
                         ProcessorParameters.ProcessorName);
@@ -112,6 +114,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
             {
                 builder.AddInternalTopic(RequestTopic, null);
                 builder.AddSinkOperator(new StaticTopicNameExtractor<TK, TV>(RequestTopic),
+                    new DefaultRecordTimestampExtractor<TK, TV>(),
                     SinkName,
                     Produced<TK, TV>.Create(KeySerdes, ValueSerdes),
                     ParentNodeNames());
