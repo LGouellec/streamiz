@@ -64,7 +64,6 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             {
                 builder.SetPartitionsAssignedHandler(rebalanceListener.PartitionsAssigned);
                 builder.SetPartitionsRevokedHandler(rebalanceListener.PartitionsRevoked);
-                builder.SetPartitionsLostHandler(rebalanceListener.PartitionsLost);
                 builder.SetLogHandler(loggerAdapter.LogConsume);
                 builder.SetErrorHandler(loggerAdapter.ErrorConsume);
             }
@@ -129,6 +128,24 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             ConsumerBuilder<byte[], byte[]> builder = builderKafkaHandler.GetConsumerBuilder(config);
             builder.SetLogHandler(loggerAdapter.LogConsume);
             builder.SetErrorHandler(loggerAdapter.ErrorConsume);
+            
+            if (exposeLibrdKafka)
+            {
+                var consumerStatisticsHandler = new ConsumerStatisticsHandler(
+                    config.ClientId,
+                    config is StreamizConsumerConfig streamizConsumerConfig  && streamizConsumerConfig.Config != null ?
+                        streamizConsumerConfig.Config.ApplicationId :
+                        streamConfig.ApplicationId, 
+                    (config as StreamizConsumerConfig)?.ThreadId, 
+                    true);
+                consumerStatisticsHandler.Register(MetricsRegistry);
+                builder.SetStatisticsHandler((c, stat) =>
+                {
+                    var statistics = JsonConvert.DeserializeObject<Statistics>(stat);
+                    consumerStatisticsHandler.Publish(statistics);
+                });
+            }
+            
             return builder.Build();
         }
         

@@ -12,6 +12,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka.Admin;
+using Streamiz.Kafka.Net.Processors.Public;
+using Streamiz.Kafka.Net.State.Enumerator;
+using Streamiz.Kafka.Net.Stream.Internal.Graph;
 
 namespace Streamiz.Kafka.Net.Tests.Public
 {
@@ -763,5 +766,113 @@ namespace Streamiz.Kafka.Net.Tests.Public
             stream.Dispose();
         }
 
+        private sealed class OpenIteratorProcessorTest : IProcessor<string, string>
+        {
+            private readonly string _storeName;
+            private readonly List<IKeyValueEnumerator<string, string>> _currentEnumerators;
+            private IKeyValueStore<string, string> store;
+
+            public OpenIteratorProcessorTest()
+            {
+            }
+            
+            public OpenIteratorProcessorTest(string storeName, List<IKeyValueEnumerator<string, string>> currentEnumerators)
+            {
+                _storeName = storeName;
+                _currentEnumerators = currentEnumerators;
+            }
+            public void Init(ProcessorContext<string, string> context)
+            {
+                store = (IKeyValueStore<string, string>)context.GetStateStore(_storeName);
+            }
+
+            public void Process(Record<string, string> record)
+            {
+                var enumerator = store.Range("key0", "key9");
+                enumerator.MoveNext();
+                store.Put(record.Key, record.Value);
+                // enumerator is not closed
+                _currentEnumerators.Add(enumerator);
+            }
+
+            public void Close()
+            {
+                
+            }
+        }
+        
+        [Test]
+        public async Task OpenIteratorsWithTheProcessAPI()
+        {
+            var timeout = TimeSpan.FromSeconds(10);
+
+            bool isRunningState = false;
+            DateTime dt = DateTime.Now;
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-open-iterator";
+            config.BootstrapServers = "127.0.0.1";
+            config.PollMs = 10;
+
+            var supplier = new SyncKafkaSupplier();
+            var producer = supplier.GetProducer(config.ToProducerConfig());
+
+            var currentEnumerators = new List<IKeyValueEnumerator<string, string>>();
+            var builder = new StreamBuilder();
+            builder.Stream<string, string>("input")
+                .Process(new ProcessorBuilder<string, string>()
+                    .Processor<OpenIteratorProcessorTest>("store", currentEnumerators)
+                    .StateStore(State.Stores.KeyValueStoreBuilder(
+                            State.Stores.PersistentKeyValueStore("store"),
+                            new StringSerDes(),
+                            new StringSerDes()))
+                    .Build());
+            
+            var t = builder.Build();
+            var stream = new KafkaStream(t, config, supplier);
+
+            stream.StateChanged += (old, @new) =>
+            {
+                if (@new.Equals(KafkaStream.State.RUNNING))
+                {
+                    isRunningState = true;
+                }
+            };
+            await stream.StartAsync();
+            while (!isRunningState)
+            {
+                Thread.Sleep(250);
+                if (DateTime.Now > dt + timeout)
+                {
+                    break;
+                }
+            }
+
+            Assert.IsTrue(isRunningState);
+
+            if (isRunningState)
+            {
+                var serdes = new StringSerDes();
+                for (int i = 0; i < 10; ++i)
+                {
+                    producer.Produce("input",
+                        new Confluent.Kafka.Message<byte[], byte[]> {
+                            Key = serdes.Serialize($"key{i}", new SerializationContext()),
+                            Value = serdes.Serialize($"coucou{i}", new SerializationContext())
+                        });
+                }
+
+                Thread.Sleep(50);
+                var store = stream.Store(StoreQueryParameters.FromNameAndType("store",
+                    QueryableStoreTypes.KeyValueStore<string, string>()));
+                Assert.IsNotNull(store);
+                while (store.All().ToList().Count != 10) ;
+            }
+            
+            Assert.AreEqual(10, currentEnumerators.Count);
+            stream.Dispose();
+            foreach(var e in currentEnumerators)
+                Assert.Throws<ObjectDisposedException>(() => e.Dispose());
+        }
     }
 }

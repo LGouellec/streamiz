@@ -14,12 +14,14 @@ namespace Streamiz.Kafka.Net.Processors
     internal class SinkProcessor<K, V> : AbstractProcessor<K, V>, ISinkProcessor
     {
         private ITopicNameExtractor<K, V> topicNameExtractor;
+        private readonly IRecordTimestampExtractor<K, V> timestampExtractor;
         private readonly Func<string, K, V, int> partitioner; 
 
-        internal SinkProcessor(string name, ITopicNameExtractor<K, V> topicNameExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Func<string, K, V, int> partitioner = null)
+        internal SinkProcessor(string name, ITopicNameExtractor<K, V> topicNameExtractor, IRecordTimestampExtractor<K, V> timestampExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Func<string, K, V, int> partitioner = null)
             : base(name, keySerdes, valueSerdes)
         {
             this.topicNameExtractor = topicNameExtractor;
+            this.timestampExtractor = timestampExtractor;
             this.partitioner = partitioner;
         }
 
@@ -55,8 +57,7 @@ namespace Streamiz.Kafka.Net.Processors
             }
 
             var topicName = topicNameExtractor.Extract(key, value, Context.RecordContext);
-
-            var timestamp = Context.Timestamp;
+            var timestamp = timestampExtractor.Extract(key, value, Context.RecordContext);
             if (timestamp < 0)
             {
                 throw new StreamsException($"Invalid (negative) timestamp of {timestamp} for output record <{key}:{value}>.");

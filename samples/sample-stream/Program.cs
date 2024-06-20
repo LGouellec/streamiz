@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Prometheus;
 using Streamiz.Kafka.Net.Stream;
+using System.Collections.Generic;
+using Streamiz.Kafka.Net.Metrics.Prometheus;
 using Streamiz.Kafka.Net.Table;
 
 namespace sample_stream
@@ -22,7 +24,7 @@ namespace sample_stream
             };
             config.MetricsRecording = MetricsRecordingLevel.DEBUG;
             config.UsePrometheusReporter(9090, true);
-            
+                   
             var t = BuildTopology();
             var stream = new KafkaStream(t, config);
             

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -32,7 +33,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             cancellationTokenSource = new CancellationTokenSource();
             globalStreamThread = new GlobalStreamThread("global", globalConsumerMock.Object, streamConfigMock.Object,
-                globalStateMaintainerMock.Object);
+                globalStateMaintainerMock.Object, new StreamMetricsRegistry());
         }
 
         [TearDown]

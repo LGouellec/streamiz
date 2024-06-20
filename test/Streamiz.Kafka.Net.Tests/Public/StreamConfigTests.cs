@@ -143,7 +143,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual("localhost:9092", consumerConfig.BootstrapServers);
             Assert.AreEqual("test-app", consumerConfig.GroupId);
             Assert.AreEqual(ExceptionHandlerResponse.CONTINUE, streamConfig.DeserializationExceptionHandler.Invoke(null, null, null));
-            Assert.AreEqual(true, streamConfig.FollowMetadata);
+            Assert.IsTrue(streamConfig.FollowMetadata);
             Assert.AreEqual(100000, streamConfig.MetricsIntervalMs);
         }
 
@@ -170,7 +170,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual("localhost:9092", consumerConfig.BootstrapServers);
             Assert.AreEqual("test-app", consumerConfig.GroupId);
             Assert.AreEqual(ExceptionHandlerResponse.CONTINUE, streamConfig.DeserializationExceptionHandler.Invoke(null, null, null));
-            Assert.AreEqual(true, streamConfig.FollowMetadata);
+            Assert.IsTrue(streamConfig.FollowMetadata);
             Assert.AreEqual(100000, streamConfig.MetricsIntervalMs);
             Assert.AreEqual(Acks.Leader, producerConfig.Acks);
             Assert.AreEqual(AutoOffsetReset.Latest, consumerConfig.AutoOffsetReset);
@@ -777,7 +777,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual(true, stream.AllowAutoCreateTopics);
             Assert.AreEqual(100, stream.BatchSize);
             Assert.AreEqual(5, stream.StickyPartitioningLingerMs);
-            Assert.AreEqual(true, stream.ParallelProcessing);
+            Assert.IsTrue(stream.ParallelProcessing);
             Assert.AreEqual(10, stream.MaxDegreeOfParallelism);
 
             #endregion

@@ -322,5 +322,20 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             enumerator.Dispose();
             Assert.Throws<ObjectDisposedException>(() => enumerator.Dispose());
         }
+        
+        [Test]
+        public void OpenEnumerator()
+        {
+            var serdes = new StringSerDes();
+            byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
+
+            store.Put(new Bytes(key), value);
+
+            var enumerator = store.Range(new Bytes(key), new Bytes(key));
+            Assert.IsTrue(enumerator.MoveNext());
+            store.Close();
+            Assert.Throws<ObjectDisposedException>(() => enumerator.Dispose());
+            store.OpenDatabase(context); // needed for teardown
+        }
     }
 }
