@@ -100,7 +100,6 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
                 IEnumerable<KeyValuePair<string, long>> expected = new List<KeyValuePair<string, long>> {
                     KeyValuePair.Create("TEST", 1L),
-                    KeyValuePair.Create("TEST", 0L),
                     KeyValuePair.Create("TEST", 1L)
                 };
 

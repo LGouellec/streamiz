@@ -14,5 +14,6 @@ namespace Streamiz.Kafka.Net.Mock
         TestOutputTopic<K, V> CreateOutputTopic<K, V>(string topicName, TimeSpan consumeTimeout, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null);
         TestMultiInputTopic<K, V> CreateMultiInputTopic<K, V>(string[] topics, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null);
         IStateStore GetStateStore<K, V>(string name);
+        void TriggerCommit();
     }
 }

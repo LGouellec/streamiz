@@ -2,10 +2,9 @@
 using Streamiz.Kafka.Net.State.Enumerator;
 using Streamiz.Kafka.Net.State.Helper;
 using Streamiz.Kafka.Net.State.Internal;
-using Streamiz.Kafka.Net.State.RocksDb.Internal;
 using System;
 
-namespace Streamiz.Kafka.Net.State.RocksDb
+namespace Streamiz.Kafka.Net.State
 {
     internal class RocksDbWindowStore
         : WrappedStateStore<RocksDbSegmentedBytesStore>, IWindowStore<Bytes, byte[]>
@@ -24,6 +23,8 @@ namespace Streamiz.Kafka.Net.State.RocksDb
             this.retainDuplicates = retainDuplicates;
         }
 
+        public override bool IsCachedStore => false;
+        
         private void UpdateSeqNumber()
         {
             if (retainDuplicates)

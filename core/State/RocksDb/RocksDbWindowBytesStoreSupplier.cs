@@ -1,18 +1,15 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
-using Streamiz.Kafka.Net.State.RocksDb.Internal;
 using Streamiz.Kafka.Net.State.Supplier;
 using System;
+using Streamiz.Kafka.Net.State.Internal;
 
-namespace Streamiz.Kafka.Net.State.RocksDb
+namespace Streamiz.Kafka.Net.State
 {
     /// <summary>
     /// A rocksdb key/value store supplier used to create <see cref="RocksDbWindowStore"/>.
     /// </summary>
     public class RocksDbWindowBytesStoreSupplier : IWindowBytesStoreSupplier
     {
-        private readonly long segmentInterval;
-        private readonly bool retainDuplicates;
-
         /// <summary>
         /// Constructor with some arguments.
         /// </summary>
@@ -30,9 +27,9 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         {
             Name = storeName;
             Retention = (long)retention.TotalMilliseconds;
-            this.segmentInterval = segmentInterval;
             RetainDuplicates = retainDuplicates;
             WindowSize = size;
+            SegmentInterval = segmentInterval;
         }
         
         /// <summary>
@@ -61,6 +58,13 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         /// State store name
         /// </summary>
         public string Name { get; set; }
+        
+        /// <summary>
+        /// The size of the segments (in milliseconds) the store has.
+        /// If your store is segmented then this should be the size of segments in the underlying store.
+        /// It is also used to reduce the amount of data that is scanned when caching is enabled.
+        /// </summary>
+        public long SegmentInterval { get; set; }
 
         /// <summary>
         /// Build the rocksdb state store.
@@ -72,8 +76,8 @@ namespace Streamiz.Kafka.Net.State.RocksDb
                 new RocksDbSegmentedBytesStore(
                     Name,
                     Retention,
-                    segmentInterval,
-                    new RocksDbWindowKeySchema()),
+                    SegmentInterval,
+                    new WindowKeySchema()),
                 WindowSize.HasValue ? WindowSize.Value : (long)TimeSpan.FromMinutes(1).TotalMilliseconds,
                 RetainDuplicates);
         }

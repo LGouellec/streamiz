@@ -77,7 +77,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
             nodes.Add(filter);
 
             var to = new StreamSinkNode<string, string>(
-                new StaticTopicNameExtractor<string, string>("topic2"), "to-03",
+                new StaticTopicNameExtractor<string, string>("topic2"),
+                new DefaultRecordTimestampExtractor<string, string>(),
+                "to-03",
                 new Stream.Internal.Produced<string, string>(
                     new StringSerDes(),
                     new StringSerDes())

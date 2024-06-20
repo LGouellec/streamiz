@@ -1,19 +1,30 @@
-﻿using Streamiz.Kafka.Net.Table.Internal;
+﻿using System;
+using System.Collections.Generic;
+using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.Cache;
+using Streamiz.Kafka.Net.State.Internal;
+using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
-    // TODO REFACTOR
     internal class TimestampedTupleForwarder<K, V>
     {
         private readonly IProcessor processor;
         private readonly bool sendOldValues;
         private readonly bool cachingEnabled;
 
-        public TimestampedTupleForwarder(IProcessor processor, bool sendOldValues)
+        public TimestampedTupleForwarder(
+            IStateStore store,
+            IProcessor processor,
+            Action<KeyValuePair<K, Change<ValueAndTimestamp<V>>>> listener,
+            bool sendOldValues,
+            bool configCachingEnabled)
         {
             this.processor = processor;
             this.sendOldValues = sendOldValues;
-            cachingEnabled = false;
+            cachingEnabled = configCachingEnabled &&
+                                  ((IWrappedStateStore)store).IsCachedStore &&
+                                  ((ICachedStateStore<K, ValueAndTimestamp<V>>)store).SetFlushListener(listener, sendOldValues);
         }
 
         public void MaybeForward(K key, V newValue, V oldValue)
@@ -30,7 +41,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public void MaybeForward(K key, V newValue, V oldValue, long timestamp)
         {
-            processor?.Forward(key, new Change<V>(sendOldValues ? oldValue : default, newValue), timestamp);
+            if (!cachingEnabled)
+                processor?.Forward(key, new Change<V>(sendOldValues ? oldValue : default, newValue), timestamp);
         }
 
         public void MaybeForward<VR>(K key, VR newValue, VR oldValue, long timestamp)

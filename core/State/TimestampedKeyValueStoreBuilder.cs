@@ -1,6 +1,7 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State.Cache;
 using Streamiz.Kafka.Net.State.Logging;
 using Streamiz.Kafka.Net.State.Metered;
 using Streamiz.Kafka.Net.State.Supplier;
@@ -50,7 +51,7 @@ namespace Streamiz.Kafka.Net.State
             var store = storeSupplier.Get();
             
             return new MeteredTimestampedKeyValueStore<K, V>(
-                WrapLogging(store),
+                WrapCaching(WrapLogging(store)),
                 keySerdes,
                 valueSerdes,
                 storeSupplier.MetricsScope);
@@ -58,10 +59,12 @@ namespace Streamiz.Kafka.Net.State
 
         private IKeyValueStore<Bytes, byte[]> WrapLogging(IKeyValueStore<Bytes, byte[]> inner)
         {
-            if (!LoggingEnabled)
-                return inner;
+            return !LoggingEnabled ? inner : new ChangeLoggingTimestampedKeyValueBytesStore(inner);
+        }
 
-            return new ChangeLoggingTimestampedKeyValueBytesStore(inner);
+        private IKeyValueStore<Bytes, byte[]> WrapCaching(IKeyValueStore<Bytes, byte[]> inner)
+        {
+            return !CachingEnabled ? inner : new CachingKeyValueStore(inner);
         }
     }
 }

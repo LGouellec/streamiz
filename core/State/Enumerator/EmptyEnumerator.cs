@@ -5,6 +5,8 @@ namespace Streamiz.Kafka.Net.State.Enumerator
 {
     internal class EmptyKeyValueEnumerator<K, V> : IKeyValueEnumerator<K, V>
     {
+        public static EmptyKeyValueEnumerator<K, V> Empty => new();
+        
         public KeyValuePair<K, V>? Current => null;
 
         object IEnumerator.Current => null;

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
@@ -6,15 +7,19 @@ using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State.Cache;
 using Streamiz.Kafka.Net.State.Enumerator;
+using Streamiz.Kafka.Net.State.Helper;
 using Streamiz.Kafka.Net.State.Internal;
+using Streamiz.Kafka.Net.Table.Internal;
 using static Streamiz.Kafka.Net.Crosscutting.ActionHelper;
 
 namespace Streamiz.Kafka.Net.State.Metered
 {
     internal class MeteredWindowStore<K, V> :
         WrappedStateStore<IWindowStore<Bytes, byte[]>>,
-        IWindowStore<K, V>
+        IWindowStore<K, V>,
+        ICachedStateStore<Windowed<K>, V>
     {
         private readonly long windowSizeMs;
         protected ISerDes<K> keySerdes;
@@ -39,6 +44,8 @@ namespace Streamiz.Kafka.Net.State.Metered
             this.valueSerdes = valueSerdes;
             this.metricScope = metricScope;
         }
+        
+        public override bool IsCachedStore => ((IWrappedStateStore)wrapped).IsCachedStore;
 
         public virtual void InitStoreSerde(ProcessorContext context)
         {
@@ -66,6 +73,21 @@ namespace Streamiz.Kafka.Net.State.Metered
             putSensor = StateStoreMetrics.PutSensor(context.Id, metricScope, Name, context.Metrics);
             fetchSensor = StateStoreMetrics.FetchSensor(context.Id, metricScope, Name, context.Metrics);
             flushSensor = StateStoreMetrics.FlushSensor(context.Id, metricScope, Name, context.Metrics);
+        }
+        
+        public bool SetFlushListener(Action<KeyValuePair<Windowed<K>, Change<V>>> listener, bool sendOldChanges)
+        {
+            if (wrapped is ICachedStateStore<byte[], byte[]> store)
+            {
+                return store.SetFlushListener(
+                    kv => {
+                        var key = WindowKeyHelper.FromStoreKey(kv.Key, windowSizeMs, keySerdes, changelogTopic);
+                        var newValue = kv.Value.NewValue != null ? FromValue(kv.Value.NewValue) : default;
+                        var oldValue = kv.Value.OldValue != null ? FromValue(kv.Value.OldValue) : default;
+                        listener(new KeyValuePair<Windowed<K>, Change<V>>(key, new Change<V>(oldValue, newValue)));
+                    }, sendOldChanges);
+            }
+            return false;
         }
         
         private Bytes GetKeyBytes(K key)

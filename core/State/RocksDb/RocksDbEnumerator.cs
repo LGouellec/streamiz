@@ -5,57 +5,8 @@ using Streamiz.Kafka.Net.State.Enumerator;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Streamiz.Kafka.Net.State.RocksDb
+namespace Streamiz.Kafka.Net.State
 {
-    internal class RocksDbEnumerable : IEnumerable<KeyValuePair<Bytes, byte[]>>
-    {
-        #region Inner Class
-        private class RocksDbWrappedEnumerator : IEnumerator<KeyValuePair<Bytes, byte[]>>
-        {
-            private readonly string stateStoreName;
-            private readonly IKeyValueEnumerator<Bytes, byte[]> enumerator;
-
-            public RocksDbWrappedEnumerator(string stateStoreName, IKeyValueEnumerator<Bytes, byte[]> enumerator)
-            {
-                this.stateStoreName = stateStoreName;
-                this.enumerator = enumerator;
-            }
-
-            public KeyValuePair<Bytes, byte[]> Current 
-                => enumerator.Current.HasValue ? 
-                        enumerator.Current.Value :
-                        throw new NotMoreValueException($"No more record present in your state store {stateStoreName}");
-
-            object IEnumerator.Current => Current;
-
-            public void Dispose()
-                => enumerator.Dispose();
-
-            public bool MoveNext()
-                => enumerator.MoveNext();
-
-            public void Reset()
-                => enumerator.Reset();
-        }
-
-        #endregion
-
-        private readonly IKeyValueEnumerator<Bytes, byte[]> enumerator;
-        private readonly string stateStoreName;
-
-        public RocksDbEnumerable(string stateStoreName, IKeyValueEnumerator<Bytes, byte[]> enumerator)
-        {
-            this.stateStoreName = stateStoreName;
-            this.enumerator = enumerator;
-        }
-
-        public IEnumerator<KeyValuePair<Bytes, byte[]>> GetEnumerator()
-            => new RocksDbWrappedEnumerator(stateStoreName, enumerator);
-
-        IEnumerator IEnumerable.GetEnumerator()
-            => GetEnumerator();
-    }
-
     internal class RocksDbEnumerator : IKeyValueEnumerator<Bytes, byte[]>
     {
         protected Iterator iterator;
@@ -100,7 +51,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         }
 
         public Bytes PeekNextKey()
-            => Current.HasValue ? Current.Value.Key : null;
+            => Current?.Key;
 
         public void Reset()
         {

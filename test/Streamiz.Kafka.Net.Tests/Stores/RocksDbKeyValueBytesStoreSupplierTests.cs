@@ -50,7 +50,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             // builder.Table("table-topic", RocksDb.As<string,string>("table-topic-store"));
             builder.Table("table-topic",
                 Materialized<string, string, IKeyValueStore<Bytes, byte[]>>.Create(
-                    Streamiz.Kafka.Net.State.Stores.PersistentKeyValueStore("table-topic-store")));
+                    State.Stores.PersistentKeyValueStore("table-topic-store")));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-map";

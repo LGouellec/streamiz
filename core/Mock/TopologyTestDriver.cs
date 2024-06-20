@@ -165,6 +165,14 @@ namespace Streamiz.Kafka.Net.Mock
             behavior.Dispose();
         }
 
+        /// <summary>
+        /// Trigger the driver to commit, especially needed if you use caching
+        /// </summary>
+        public void Commit()
+        {
+            behavior.TriggerCommit();
+        }
+        
         #region Create Input Topic
 
         /// <summary>

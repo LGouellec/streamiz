@@ -1,9 +1,13 @@
-﻿using Confluent.Kafka;
+﻿using System;
+using System.Collections.Generic;
+using Confluent.Kafka;
 using Moq;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Kafka.Internal;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Processors;
@@ -12,27 +16,22 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.InMemory;
 using Streamiz.Kafka.Net.State.Logging;
-using System;
-using System.Collections.Generic;
-using Streamiz.Kafka.Net.Metrics;
-using Streamiz.Kafka.Net.Metrics.Internal;
-
 
 namespace Streamiz.Kafka.Net.Tests.Stores
 {
     public class ChangeLoggingTimestampedWindowBytesStoreTests
     {
 
-        private StreamConfig config = null;
-        private ChangeLoggingTimestampedWindowBytesStore store = null;
-        private ProcessorContext context = null;
-        private TaskId id = null;
-        private TopicPartition partition = null;
-        private ProcessorStateManager stateManager = null;
-        private Mock<AbstractTask> task = null;
+        private StreamConfig config;
+        private ChangeLoggingTimestampedWindowBytesStore store;
+        private ProcessorContext context;
+        private TaskId id;
+        private TopicPartition partition;
+        private ProcessorStateManager stateManager;
+        private Mock<AbstractTask> task;
 
-        private SyncKafkaSupplier kafkaSupplier = null;
-        private IRecordCollector recordCollector = null;
+        private SyncKafkaSupplier kafkaSupplier;
+        private IRecordCollector recordCollector;
 
         private static StringSerDes stringSerDes = new StringSerDes();
         private static ValueAndTimestampSerDes<string> valueAndTsSerDes = new ValueAndTimestampSerDes<string>(stringSerDes);
@@ -42,7 +41,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         public void Begin()
         {
             config = new StreamConfig();
-            config.ApplicationId = $"unit-test-changelogging-tw";
+            config.ApplicationId = "unit-test-changelogging-tw";
 
             id = new TaskId { Id = 0, Partition = 0 };
             partition = new TopicPartition("source", 0);

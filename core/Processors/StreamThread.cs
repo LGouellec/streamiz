@@ -106,7 +106,7 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly ILogger log = Logger.GetLogger(typeof(StreamThread));
         private readonly Thread thread;
         private readonly IConsumer<byte[], byte[]> consumer;
-        private readonly TaskManager manager;
+        private TaskManager Manager { get; }
         private readonly InternalTopologyBuilder builder;
         private readonly TimeSpan consumeTimeout;
         private readonly string threadId;
@@ -155,7 +155,7 @@ namespace Streamiz.Kafka.Net.Processors
             InternalTopologyBuilder builder, IChangelogReader storeChangelogReader,
             StreamMetricsRegistry streamMetricsRegistry, TimeSpan timeSpan, long commitInterval)
         {
-            this.manager = manager;
+            this.Manager = manager;
             this.consumer = consumer;
             this.builder = builder;
             consumeTimeout = timeSpan;
@@ -234,7 +234,7 @@ namespace Streamiz.Kafka.Net.Processors
 
                         try
                         {
-                            if (!manager.RebalanceInProgress)
+                            if (!Manager.RebalanceInProgress)
                             {
                                 RestorePhase();
 
@@ -268,10 +268,10 @@ namespace Streamiz.Kafka.Net.Processors
                                     {
                                         long processLatency = 0;
 
-                                        if (!manager.RebalanceInProgress)
+                                        if (!Manager.RebalanceInProgress)
                                             processLatency = ActionHelper.MeasureLatency(() =>
                                             {
-                                                processed = manager.Process(now);
+                                                processed = Manager.Process(now);
                                             });
                                         else
                                             processed = 0;
@@ -296,7 +296,7 @@ namespace Streamiz.Kafka.Net.Processors
                                     int punctuated = 0;
                                     var punctuateLatency = ActionHelper.MeasureLatency(() =>
                                     {
-                                        punctuated = manager.Punctuate();
+                                        punctuated = Manager.Punctuate();
                                     });
                                     totalPunctuateLatency += punctuateLatency;
                                     summaryPunctuated += punctuated;
@@ -399,16 +399,16 @@ namespace Streamiz.Kafka.Net.Processors
 
         private void RestorePhase()
         {
-            if (State == ThreadState.PARTITIONS_ASSIGNED || State == ThreadState.RUNNING && manager.NeedRestoration())
+            if (State == ThreadState.PARTITIONS_ASSIGNED || State == ThreadState.RUNNING && Manager.NeedRestoration())
             {
                 log.LogDebug($"{logPrefix} State is {State}, initializing and restoring tasks if necessary");
                 restorationInProgress = true;
 
-                if (manager.TryToCompleteRestoration())
+                if (Manager.TryToCompleteRestoration())
                 {
                     restorationInProgress = false;
                     log.LogInformation(
-                        $"Restoration took {DateTime.Now.GetMilliseconds() - LastPartitionAssignedTime}ms for all tasks {string.Join(",", manager.ActiveTaskIds)}");
+                        $"Restoration took {DateTime.Now.GetMilliseconds() - LastPartitionAssignedTime}ms for all tasks {string.Join(",", Manager.ActiveTaskIds)}");
                     if (State == ThreadState.PARTITIONS_ASSIGNED)
                         SetState(ThreadState.RUNNING);
                 }
@@ -435,7 +435,7 @@ namespace Streamiz.Kafka.Net.Processors
             foreach (var record in records)
             {
                 count++;
-                var task = manager.ActiveTaskFor(record.TopicPartition);
+                var task = Manager.ActiveTaskFor(record.TopicPartition);
                 if (task != null)
                 {
                     if (task.IsClosed)
@@ -482,7 +482,7 @@ namespace Streamiz.Kafka.Net.Processors
             ThreadMetrics.CreateStartThreadSensor(threadId, DateTime.Now.GetMilliseconds(), streamMetricsRegistry);
         }
 
-        public IEnumerable<ITask> ActiveTasks => manager.ActiveTasks;
+        public IEnumerable<ITask> ActiveTasks => Manager.ActiveTasks;
 
         public long LastPartitionAssignedTime { get; internal set; }
 
@@ -501,7 +501,7 @@ namespace Streamiz.Kafka.Net.Processors
                 "{LogPrefix}Detected that the thread is being fenced. This implies that this thread missed a rebalance and dropped out of the consumer group. Will close out all assigned tasks and rejoin the consumer group",
                 logPrefix);
 
-            manager.HandleLostAll();
+            Manager.HandleLostAll();
             consumer.Unsubscribe();
             consumer.Subscribe(builder.GetSourceTopics());
         }
@@ -512,12 +512,12 @@ namespace Streamiz.Kafka.Net.Processors
                 "{LogPrefix}Detected that the thread throw an inner exception. Your configuration manager has decided to continue running stream processing. So will close out all assigned tasks and rejoin the consumer group",
                 logPrefix);
 
-            manager.HandleLostAll();
+            Manager.HandleLostAll();
             consumer.Unsubscribe();
             consumer.Subscribe(builder.GetSourceTopics());
         }
 
-        private int Commit()
+        internal int Commit() // for testing
         {
             int committed = 0;
             if (DateTime.Now - lastCommit > TimeSpan.FromMilliseconds(commitTimeMs))
@@ -525,12 +525,12 @@ namespace Streamiz.Kafka.Net.Processors
                 DateTime beginCommit = DateTime.Now;
                 log.LogDebug(
                     "Committing all active tasks {TaskIDs} since {DateTime}ms has elapsed (commit interval is {CommitTime}ms)",
-                    string.Join(",", manager.ActiveTaskIds), (DateTime.Now - lastCommit).TotalMilliseconds,
+                    string.Join(",", Manager.ActiveTaskIds), (DateTime.Now - lastCommit).TotalMilliseconds,
                     commitTimeMs);
-                committed = manager.CommitAll();
+                committed = Manager.CommitAll();
                 if (committed > 0)
                     log.LogDebug("Committed all active tasks {TaskIDs} in {TimeElapsed}ms",
-                        string.Join(",", manager.ActiveTaskIds), (DateTime.Now - beginCommit).TotalMilliseconds);
+                        string.Join(",", Manager.ActiveTaskIds), (DateTime.Now - beginCommit).TotalMilliseconds);
 
                 if (committed == -1)
                 {
@@ -571,7 +571,7 @@ namespace Streamiz.Kafka.Net.Processors
 
                     IsRunning = false;
 
-                    manager.Close();
+                    Manager.Close();
 
                     consumer.Unsubscribe();
                     consumer.Close();
@@ -595,7 +595,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         private IEnumerable<ConsumeResult<byte[], byte[]>> PollRequest(TimeSpan ts)
         {
-            if (!restorationInProgress && !manager.RebalanceInProgress)
+            if (!restorationInProgress && !Manager.RebalanceInProgress)
             {
                 lastPollMs = DateTime.Now.GetMilliseconds();
                 return consumer.ConsumeRecords(ts, streamConfig.MaxPollRecords);

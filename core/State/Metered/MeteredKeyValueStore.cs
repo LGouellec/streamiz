@@ -8,8 +8,10 @@ using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State.Cache;
 using Streamiz.Kafka.Net.State.Enumerator;
 using Streamiz.Kafka.Net.State.Internal;
+using Streamiz.Kafka.Net.Table.Internal;
 using static Streamiz.Kafka.Net.Crosscutting.ActionHelper;
 
 namespace Streamiz.Kafka.Net.State.Metered
@@ -57,6 +59,22 @@ namespace Streamiz.Kafka.Net.State.Metered
             deleteSensor = StateStoreMetrics.DeleteSensor(context.Id, metricScope, Name, context.Metrics);
         }
         
+        public override bool SetFlushListener(Action<KeyValuePair<K, Change<V>>> listener, bool sendOldChanges)
+        {
+            if (wrapped is ICachedStateStore<byte[], byte[]> store)
+            {
+                return store.SetFlushListener(
+                    (kv) =>
+                    {
+                        var key = FromKey(Bytes.Wrap(kv.Key));
+                        var newValue = kv.Value.NewValue != null ? FromValue(kv.Value.NewValue) : default;
+                        var oldValue = kv.Value.OldValue != null ? FromValue(kv.Value.OldValue) : default;
+                        listener(new KeyValuePair<K, Change<V>>(key, new Change<V>(oldValue, newValue)));
+                    }, sendOldChanges);
+            }
+            return false;
+        }
+
         // TODO : set theses methods in helper class, used in some part of the code
         private byte[] GetValueBytes(V value)
         {

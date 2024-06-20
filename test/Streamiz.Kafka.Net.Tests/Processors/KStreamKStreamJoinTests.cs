@@ -397,6 +397,5 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             config.RemoveRocksDbFolderForTest();
         }
-
     }
 }

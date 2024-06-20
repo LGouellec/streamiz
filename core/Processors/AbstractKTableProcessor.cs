@@ -1,4 +1,5 @@
-﻿using Streamiz.Kafka.Net.Errors;
+﻿using Confluent.Kafka;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Table.Internal;
@@ -11,7 +12,7 @@ namespace Streamiz.Kafka.Net.Processors
         protected readonly bool sendOldValues;
         private readonly bool throwException = false;
         protected ITimestampedKeyValueStore<KS, VS> store;
-        protected TimestampedTupleForwarder<K, V> tupleForwarder;
+        protected TimestampedTupleForwarder<KS, VS> tupleForwarder;
 
         protected AbstractKTableProcessor(string queryableStoreName, bool sendOldValues, bool throwExceptionStateNull = false)
         {
@@ -27,7 +28,16 @@ namespace Streamiz.Kafka.Net.Processors
             if (queryableStoreName != null)
             {
                 store = (ITimestampedKeyValueStore<KS, VS>)context.GetStateStore(queryableStoreName);
-                tupleForwarder = new TimestampedTupleForwarder<K, V>(this, sendOldValues);
+                tupleForwarder = new TimestampedTupleForwarder<KS, VS>(
+                    store,
+                    this,kv => {
+                        context.CurrentProcessor = this;
+                        Forward(kv.Key,
+                            new Change<VS>(sendOldValues ? kv.Value.OldValue.Value : default, kv.Value.NewValue.Value),
+                            kv.Value.NewValue.Timestamp);
+                    },
+                    sendOldValues, 
+                    context.ConfigEnableCache);
             }
 
             if (throwException && (queryableStoreName == null || store == null || tupleForwarder == null))

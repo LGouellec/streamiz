@@ -5,21 +5,22 @@ namespace Streamiz.Kafka.Net.Processors.Internal
     internal class RecordContext : IRecordContext
     {
         public RecordContext()
+            : this(new Headers(), -1, -1, -1, "")
         {
-            Offset = -1;
-            Timestamp = -1;
-            Topic = "";
-            Partition = -1;
-            Headers = new Headers();
+        }
+
+        public RecordContext(Headers headers, long offset, long timestamp, int partition, string topic)
+        {
+            Offset = offset;
+            Timestamp = timestamp;
+            Topic = topic;
+            Partition = partition;
+            Headers = headers;
         }
         
         public RecordContext(ConsumeResult<byte[], byte[]> result)
+        : this(result.Message.Headers, result.Offset, result.Message.Timestamp.UnixTimestampMs, result.Partition, result.Topic)
         {
-            Offset = result.Offset;
-            Timestamp = result.Message.Timestamp.UnixTimestampMs;
-            Topic = result.Topic;
-            Partition = result.Partition;
-            Headers = result.Message.Headers;
         }
 
         public long Offset { get; }

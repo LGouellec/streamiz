@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Streamiz.Kafka.Net.Processors.Public;
+using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.Stream
 {
@@ -162,6 +163,45 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         void To(ITopicNameExtractor<K, V> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null);
 
+        /// <summary>
+        /// Dynamically materialize this stream to topics using default serializers specified in the config and producer's.
+        /// The topic names for each record to send to is dynamically determined based on the <code>Func&lt;K, V, IRecordContext, string&gt;</code>.
+        /// </summary>
+        /// <param name="topicExtractor">Extractor function to determine the name of the Kafka topic to write to for each record</param>
+        /// <param name="recordTimestampExtractor">Extractor function to determine the timestamp of the record stored in the Kafka topic</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        void To(Func<K, V, IRecordContext, string> topicExtractor, Func<K, V, IRecordContext, long> recordTimestampExtractor, string named = null);
+
+        /// <summary>
+        /// Dynamically materialize this stream to topics using default serializers specified in the config and producer's.
+        /// The topic names for each record to send to is dynamically determined based on the <code>Func&lt;K, V, IRecordContext, string&gt;</code>.
+        /// </summary>
+        /// <param name="topicExtractor">Extractor function to determine the name of the Kafka topic to write to for each record</param>
+        /// <param name="keySerdes">Key serializer</param>
+        /// <param name="valueSerdes">Value serializer</param>
+        /// <param name="recordTimestampExtractor">Extractor function to determine the timestamp of the record stored in the Kafka topic</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        void To(Func<K, V, IRecordContext, string> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Func<K, V, IRecordContext, long> recordTimestampExtractor, string named = null);
+
+        /// <summary>
+        /// Dynamically materialize this stream to topics using default serializers specified in the config and producer's.
+        /// The topic names for each record to send to is dynamically determined based on the <see cref="ITopicNameExtractor&lt;K, V&gt;"/>}.
+        /// </summary>
+        /// <param name="topicExtractor">The extractor to determine the name of the Kafka topic to write to for each record</param>
+        /// <param name="recordTimestampExtractor">Extractor function to determine the timestamp of the record stored in the Kafka topic</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        void To(ITopicNameExtractor<K, V> topicExtractor, IRecordTimestampExtractor<K, V> recordTimestampExtractor, string named = null);
+
+        /// <summary>
+        /// Dynamically materialize this stream to a topic using serializers specified in the method parameters.
+        /// The topic names for each record to send to is dynamically determined based on the <see cref="ITopicNameExtractor&lt;K, V&gt;"/>}.
+        /// </summary>
+        /// <param name="topicExtractor">The extractor to determine the name of the Kafka topic to write to for each record</param>4
+        /// <param name="keySerdes">Key serializer</param>
+        /// <param name="valueSerdes">Value serializer</param>
+        /// <param name="recordTimestampExtractor">Extractor function to determine the timestamp of the record stored in the Kafka topic</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        void To(ITopicNameExtractor<K, V> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, IRecordTimestampExtractor<K, V> recordTimestampExtractor, string named = null);
 
         /// <summary>
         /// Materialize this stream to a topic using <typeparamref name="KS"/> and <typeparamref name="VS"/> serializers specified in the method parameters.
@@ -194,8 +234,30 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         void To<KS, VS>(ITopicNameExtractor<K, V> topicExtractor, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new();
 
-        #endregion
+        /// <summary>
+        /// Dynamically materialize this stream to a topic using <typeparamref name="KS"/> and <typeparamref name="VS"/> serializers specified in the method parameters.
+        /// The topic names for each record to send to is dynamically determined based on the <code>Func&lt;K, V, IRecordContext, string&gt;</code>.
+        /// </summary>
+        /// <typeparam name="KS">New type key serializer</typeparam>
+        /// <typeparam name="VS">New type value serializer</typeparam>
+        /// <param name="topicExtractor">Extractor function to determine the name of the Kafka topic to write to for each record</param>
+        /// <param name="recordTimestampExtractor">Extractor function to determine the timestamp of the record stored in the Kafka topic</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor, Func<K, V, IRecordContext, long> recordTimestampExtractor, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new();
+
+        /// <summary>
+        /// Dynamically materialize this stream to a topic using <typeparamref name="KS"/> and <typeparamref name="VS"/> serializers specified in the method parameters.
+        /// The topic names for each record to send to is dynamically determined based on the <see cref="ITopicNameExtractor&lt;K, V&gt;"/>}.
+        /// </summary>
+        /// <typeparam name="KS">New type key serializer</typeparam>
+        /// <typeparam name="VS">New type value serializer</typeparam>
+        /// <param name="topicExtractor">The extractor to determine the name of the Kafka topic to write to for each record</param>
+        /// <param name="recordTimestampExtractor">Extractor function to determine the timestamp of the record stored in the Kafka topic</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        void To<KS, VS>(ITopicNameExtractor<K, V> topicExtractor, IRecordTimestampExtractor<K, V> recordTimestampExtractor, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new();
         
+        #endregion
+
         #region FlatMap
 
         /// <summary>

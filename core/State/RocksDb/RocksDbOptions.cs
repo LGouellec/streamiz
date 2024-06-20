@@ -1,7 +1,7 @@
 ﻿using RocksDbSharp;
 using System;
 
-namespace Streamiz.Kafka.Net.State.RocksDb
+namespace Streamiz.Kafka.Net.State
 {
     /// <summary>
     /// RocksDB log levels.

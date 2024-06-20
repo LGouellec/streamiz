@@ -27,14 +27,23 @@ namespace Streamiz.Kafka.Net.Processors
             KeyValuePair<K1, V1> oldPair = value.OldValue == null ? default : mapper.Apply(key, value.OldValue);
             KeyValuePair<K1, V1> newPair = value.NewValue == null ? default : mapper.Apply(key, value.NewValue);
 
-            // if the value is null, we do not need to forward its selected key-value further
+            bool oldPairNotNull = value.OldValue != null;
+            bool newPairNotNull = value.NewValue != null;
+            
             // if the selected repartition key or value is null, skip
             // forward oldPair first, to be consistent with reduce and aggregate
-            if (oldPair.Key != null && oldPair.Value != null)
-                Forward(oldPair.Key, new Change<V1>(oldPair.Value, default));
-
-            if (newPair.Key != null && newPair.Value != null)
-                Forward(newPair.Key, new Change<V1>(default, newPair.Value));
+            if (oldPairNotNull && newPairNotNull && oldPair.Key.Equals(newPair.Key))
+            {
+                Forward(oldPair.Key, new Change<V1>(oldPair.Value, newPair.Value));
+            }
+            else
+            {
+                if(oldPairNotNull)
+                    Forward(oldPair.Key, new Change<V1>(oldPair.Value, default));
+                
+                if(newPairNotNull)
+                    Forward(newPair.Key, new Change<V1>(default, newPair.Value));
+            }
         }
     }
 }
