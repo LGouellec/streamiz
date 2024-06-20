@@ -28,7 +28,17 @@ namespace Streamiz.Kafka.Net.Processors
             if (this.queryableName != null)
             {
                 store = (ITimestampedKeyValueStore<K, V>)context.GetStateStore(queryableName);
-                tupleForwarder = new TimestampedTupleForwarder<K, V>(this, sendOldValues);
+                tupleForwarder = new TimestampedTupleForwarder<K, V>(
+                    store,
+                    this, 
+                    kv => {
+                        context.CurrentProcessor = this;
+                        context.CurrentProcessor.Forward(kv.Key,
+                            new Change<V>(sendOldValues ? (kv.Value.OldValue != null ? kv.Value.OldValue.Value : default) : default, kv.Value.NewValue.Value),
+                            kv.Value.NewValue.Timestamp);
+                    },
+                    sendOldValues,
+                    context.ConfigEnableCache);
             }
         }
 

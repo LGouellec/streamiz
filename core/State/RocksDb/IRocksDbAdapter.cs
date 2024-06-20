@@ -3,7 +3,7 @@ using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.State.Enumerator;
 using System.Collections.Generic;
 
-namespace Streamiz.Kafka.Net.State.RocksDb
+namespace Streamiz.Kafka.Net.State
 {
     internal interface IRocksDbAdapter
     {

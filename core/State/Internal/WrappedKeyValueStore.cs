@@ -1,11 +1,16 @@
-﻿using Streamiz.Kafka.Net.Crosscutting;
+﻿using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State.Cache;
+using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
-    internal class WrappedKeyValueStore<K, V> :
-        WrappedStateStore<IKeyValueStore<Bytes, byte[]>>
+    internal abstract class WrappedKeyValueStore<K, V> :
+        WrappedStateStore<IKeyValueStore<Bytes, byte[]>>, ICachedStateStore<K, V>
     {
         protected ISerDes<K> keySerdes;
         protected ISerDes<V> valueSerdes;
@@ -17,7 +22,11 @@ namespace Streamiz.Kafka.Net.State.Internal
             this.keySerdes = keySerdes;
             this.valueSerdes = valueSerdes;
         }
+        
+        public override bool IsCachedStore => wrapped is IWrappedStateStore { IsCachedStore: true };
 
+        public abstract bool SetFlushListener(Action<KeyValuePair<K, Change<V>>> listener, bool sendOldChanges);
+        
         public virtual void InitStoreSerDes(ProcessorContext context)
         {
             if (!initStoreSerdes)

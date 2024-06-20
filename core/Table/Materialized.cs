@@ -3,7 +3,6 @@ using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.InMemory;
-using Streamiz.Kafka.Net.State.RocksDb;
 using Streamiz.Kafka.Net.State.Supplier;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;
@@ -214,17 +213,17 @@ namespace Streamiz.Kafka.Net.Table
         public IDictionary<string, string> TopicConfig { get; protected set; }
 
         /// <summary>
-        /// Is logging enabled (default: false), Warning : will be true in next release.
+        /// Is logging enabled (default: true).
         /// </summary>
         public bool LoggingEnabled { get; protected set; } = true;
 
         /// <summary>
-        /// Is caching enabled. Not use for moment.
+        /// Is caching enabled (default: false)
         /// </summary>
         public bool CachingEnabled { get; protected set; }
 
         /// <summary>
-        /// Store suppplier use to build the state store
+        /// Store supplier use to build the state store
         /// </summary>
         public IStoreSupplier<S> StoreSupplier { get; protected set; }
 

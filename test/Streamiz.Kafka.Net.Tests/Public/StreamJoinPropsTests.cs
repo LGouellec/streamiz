@@ -18,6 +18,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
         public string MetricsScope => "test-window";
 
         public bool RetainDuplicates { get; set; } = false;
+        public long SegmentInterval { get; set; } = 1;
 
         public IWindowStore<Bytes, byte[]> Get()
             => null;

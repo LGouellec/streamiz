@@ -33,5 +33,19 @@ namespace Streamiz.Kafka.Net.Crosscutting
                 }
             }
         }
+
+        internal static IEnumerable<KeyValuePair<K, V>> TailMap<K, V>(this SortedDictionary<K, V> sortedDic, K keyFrom,
+            bool inclusive)
+        {
+            foreach (K k in sortedDic.Keys)
+            {
+                int rT = sortedDic.Comparer.Compare(keyFrom, k);
+
+                if ((inclusive && rT <= 0) || (!inclusive && rT < 0))
+                {
+                    yield return new KeyValuePair<K, V>(k, sortedDic[k]);
+                }
+            }
+        }
     }
 }

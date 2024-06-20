@@ -57,11 +57,7 @@ namespace Streamiz.Kafka.Net.State
         /// </summary>
         /// <returns></returns>
         public override string ToString()
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"Key : {Key}");
-            sb.AppendLine($"Window : {Window}");
-            return sb.ToString();
-        }
+            => $"Key: {Key} | Window : {Window}";
+        
     }
 }

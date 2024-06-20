@@ -67,6 +67,9 @@ namespace Streamiz.Kafka.Net.State.Enumerator
                 }
             }
 
+            if (!hasNext && index == segmentsEnumerator.Count) // no more segment to iterate
+                CloseCurrentEnumerator();
+
             return currentEnumerator != null && hasNext;
         }
 

@@ -15,7 +15,7 @@
         - run: echo "deb http://ftp.debian.org/debian stable main contrib non-free" >> /etc/apt/sources.list
         - run: apt update
         - run: apt install -y unzip
-        # Install JAVA 11
+        # Install JAVA 17
         - run: mkdir -p /usr/share/man/man1 # FIX https://github.com/geerlingguy/ansible-role-java/issues/64
         - run: apt install -y openjdk-17-jdk
         # BEGIN Dependencies for RocksDB
@@ -24,7 +24,7 @@
         # END Dependencies for RocksDB
         - run: set JAVA_HOME /usr/lib/jvm/java-17-openjdk-amd64/
         - run: export JAVA_HOME
-        - run: dotnet sonarscanner begin /k:LGouellec_kafka-streams-dotnet /o:kafka-streams-dotnet /d:sonar.login=${SONAR_TOKEN} /d:sonar.host.url=https://sonarcloud.io /d:sonar.cs.opencover.reportsPaths="**\coverage*.opencover.xml" /d:sonar.coverage.exclusions="**sample*/*.cs,**test*/*.cs,**Tests*.cs,**Mock*.cs"
+        - run: dotnet sonarscanner begin /k:LGouellec_kafka-streams-dotnet /o:kafka-streams-dotnet /d:sonar.login=${SONAR_TOKEN} /d:sonar.host.url=https://sonarcloud.io /d:sonar.cs.opencover.reportsPaths="**\coverage*.opencover.xml" /d:sonar.coverage.exclusions="**sample*/*.cs,**test*/*.cs,**Tests*.cs,**Mock*.cs,**State/Cache/Internal/*.cs"
         - run: dotnet build
         - run: dotnet test --no-restore --no-build --verbosity normal -f net6.0 --collect:"XPlat Code Coverage" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover test/Streamiz.Kafka.Net.Tests/Streamiz.Kafka.Net.Tests.csproj
         - run: dotnet sonarscanner end /d:sonar.login=${SONAR_TOKEN}

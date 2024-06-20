@@ -6,12 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Streamiz.Kafka.Net.State.RocksDb.Internal
+namespace Streamiz.Kafka.Net.State.Internal
 {
     /// <summary>
     /// Like JAVA Implementation, no advantages to rewrite
     /// </summary>
-    internal class RocksDbWindowKeySchema : IKeySchema
+    internal class WindowKeySchema : IKeySchema
     {
         private static readonly IComparer<Bytes> bytesComparer = new BytesComparer();
 
@@ -29,7 +29,6 @@ namespace Streamiz.Kafka.Net.State.RocksDb.Internal
                         && time >= from
                         && time <= to)
                         return true;
-                        
                 }
                 return false;
             };

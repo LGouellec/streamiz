@@ -1,7 +1,7 @@
 ﻿using Streamiz.Kafka.Net.State.Internal;
 using System;
 
-namespace Streamiz.Kafka.Net.State.RocksDb.Internal
+namespace Streamiz.Kafka.Net.State.Internal
 {
     internal class RocksDbKeyValueSegment
         : RocksDbKeyValueStore, IComparable<RocksDbKeyValueSegment>, ISegment

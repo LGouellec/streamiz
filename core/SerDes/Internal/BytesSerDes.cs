@@ -9,6 +9,6 @@ namespace Streamiz.Kafka.Net.SerDes.Internal
             => Bytes.Wrap(data);
 
         public override byte[] Serialize(Bytes data, SerializationContext context)
-            => data != null ? data.Get : null;
+            => data?.Get;
     }
 }

@@ -39,6 +39,10 @@ namespace Streamiz.Kafka.Net.State.Internal
             {
                 builder.WithCachingEnabled();
             }
+            else
+            {
+                builder.WithCachingDisabled();
+            }
 
             return builder;
         }

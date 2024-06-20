@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Linq;
 using System.Text;
 using System.Threading;
-using Avro.Util;
+using Moq;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Metrics;
@@ -194,7 +193,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         public void TestRetention()
         {
             var metricsRegistry = new StreamMetricsRegistry();
-            var mockContext = new Moq.Mock<ProcessorContext>();
+            var mockContext = new Mock<ProcessorContext>();
             mockContext.Setup(c => c.Id).Returns(new TaskId{Id = 0, Partition = 0});
             mockContext.Setup(c => c.Metrics).Returns(metricsRegistry);
             mockContext.Setup(c => c.Timestamp).Returns(DateTime.Now.GetMilliseconds());

@@ -44,7 +44,7 @@
     <PackageReference Include="CloudNative.CloudEvents" Version="2.6.0" />
     <PackageReference Include="CloudNative.CloudEvents.Kafka" Version="2.6.0" />
     <PackageReference Include="CloudNative.CloudEvents.SystemTextJson" Version="2.6.0" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
   </ItemGroup>
 
 </Project>

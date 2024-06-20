@@ -104,22 +104,22 @@ static async System.Threading.Tasks.Task Main(string[] args)
 |:------------------------------------------------------------:|:----------------------------------:|:----------------------:|:------------------------------------------:|
 | Stateless processors                                         |              X                     |         X              |                                            |
 | RocksDb store                                                |              X                     |         X              |                                            |
-| Standby replicas                                             |              X                     |                       |    No plan for now                            |
+| Standby replicas                                             |              X                     |                        |    No plan for now                         |
 | InMemory store                                               |              X                     |         X              |                                            |
 | Transformer, Processor API                                   |              X                     |         X              |                                            |
-| Punctuate                                                    |              X                     |         X               |                                            |
+| Punctuate                                                    |              X                     |         X              |                                            |
 | KStream-KStream Join                                         |              X                     |         X              |                                            |
 | KTable-KTable Join                                           |              X                     |         X              |                                            |
-| KTable-KTable FK Join                                        |              X                     |                        | Plan for 1.6.0                             |
+| KTable-KTable FK Join                                        |              X                     |                        | Plan for future                            |
 | KStream-KTable Join                                          |              X                     |         X              |                                            |
 | KStream-GlobalKTable Join                                    |              X                     |         X              |                                            |
-| KStream Async Processing (external call inside the topology) |                                    |                  X     |  Not supported in Kafka Streams JAVA       |
+| KStream Async Processing (external call inside the topology) |                                    |         X              |  Not supported in Kafka Streams JAVA       |
 | Hopping window                                               |              X                     |         X              |                                            |
 | Tumbling window                                              |              X                     |         X              |                                            |
 | Sliding window                                               |              X                     |                        | No plan for now                            |
 | Session window                                               |              X                     |                        | No plan for now                            |
-| Cache                                                        |              X                     |                        | Plan for 1.6.0                             |
-| Suppress(..)                                                        |              X                     |                        | No plan for now                            |
+| Cache                                                        |              X                     |         X              | EA 1.6.0                                   |
+| Suppress(..)                                                 |              X                     |                        | No plan for now                            |
 | Interactive Queries                                          |              X                     |                        | No plan for now                            |
 | State store batch restoring                                  |              X                     |                        | No plan for now                            |
 | Exactly Once (v1 and v2)                                     |              X                     |         X              | EOS V1 supported, EOS V2 not supported yet |
@@ -137,3 +137,13 @@ When adding or changing a service please add tests and documentations.
 # Support
 
 You can found support [here](https://discord.gg/J7Jtxum)
+
+# Star History
+
+<a href="https://star-history.com/#LGouellec/kafka-streams-dotnet&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=LGouellec/kafka-streams-dotnet&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=LGouellec/kafka-streams-dotnet&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=LGouellec/kafka-streams-dotnet&type=Date" />
+ </picture>
+</a>

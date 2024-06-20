@@ -157,5 +157,40 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 Assert.AreEqual("c", results["key1"]);
             }
         }
+        
+        
+        [Test]
+        public void TableWithCachingTest()
+        {
+            var builder = new StreamBuilder();
+
+            builder.Table("table-topic", 
+                    InMemory
+                        .As<string,string>("table-topic-store")
+                        .WithCachingEnabled())
+                .ToStream((k, v) => v.ToUpper())
+                .To("table-stream");
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-map";
+
+            Topology t = builder.Build();
+
+            using var driver = new TopologyTestDriver(t, config);
+            var inputTopic = driver.CreateInputTopic<string, string>("table-topic");
+            var outputTopic = driver.CreateOuputTopic<string, string>("table-stream");
+            var expected = new List<KeyValuePair<string, string>>();
+            expected.Add(KeyValuePair.Create("D", "d"));
+
+            inputTopic.PipeInput("key1", "a");
+            inputTopic.PipeInput("key1", "b");
+            inputTopic.PipeInput("key1", "c");
+            inputTopic.PipeInput("key1", "d");
+                
+            driver.Commit();
+                
+            var results = outputTopic.ReadKeyValueList().Select(r => KeyValuePair.Create(r.Message.Key, r.Message.Value));
+            Assert.AreEqual(expected, results);
+        }
     }
 }

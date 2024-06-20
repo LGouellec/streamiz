@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using Confluent.Kafka;
 using NUnit.Framework;
@@ -21,6 +22,16 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
                 if (start.Add(timeout) < DateTime.Now)
                     return;
                 Thread.Sleep((int)step.TotalMilliseconds);
+            }
+        }
+        
+        public static void VerifyKeyValueList<K, V>(List<KeyValuePair<K, V>> expected, List<KeyValuePair<K, V>> actual) {
+            Assert.AreEqual(expected.Count, actual.Count);
+            for (int i = 0; i < actual.Count; i++) {
+                KeyValuePair<K, V> expectedKv = expected[i];
+                KeyValuePair<K, V> actualKv = actual[i];
+                Assert.AreEqual(expectedKv.Key, actualKv.Key);
+                Assert.AreEqual(expectedKv.Value, actualKv.Value);
             }
         }
     }

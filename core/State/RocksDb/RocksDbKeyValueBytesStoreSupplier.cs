@@ -1,7 +1,7 @@
 ﻿using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.State.Supplier;
 
-namespace Streamiz.Kafka.Net.State.RocksDb
+namespace Streamiz.Kafka.Net.State
 {
     /// <summary>
     /// A rocksdb key/value store supplier used to create <see cref="RocksDbKeyValueStore"/>.

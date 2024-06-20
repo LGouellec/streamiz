@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
 
-namespace Streamiz.Kafka.Net.State.RocksDb.Internal
+namespace Streamiz.Kafka.Net.State.Internal
 {
     internal class AbstractRocksDBSegmentedBytesStore<S> : ISegmentedBytesStore
         where S : ISegment

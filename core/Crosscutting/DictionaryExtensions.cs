@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Confluent.Kafka;
 
 namespace Streamiz.Kafka.Net.Crosscutting
@@ -26,11 +27,9 @@ namespace Streamiz.Kafka.Net.Crosscutting
                 map[key] = value;
                 return false;
             }
-            else
-            {
-                map.Add(key, value);
-                return true;
-            }
+
+            map.Add(key, value);
+            return true;
         }
 
         /// <summary>
@@ -133,6 +132,33 @@ namespace Streamiz.Kafka.Net.Crosscutting
             else
                 source.Add(key, new List<V>{value});
         }
+        
+       #if NETSTANDARD2_0
+        public static bool TryAdd<K, V>( this IDictionary<K, V> dictionary,
+            K key,
+            V value){
+            if (dictionary == null)
+                throw new ArgumentNullException(nameof (dictionary));
+            if (dictionary.ContainsKey(key))
+                return false;
+            dictionary.Add(key, value);
+            return true;
+            }
+        
+         public static bool Remove<K, V>( this IDictionary<K, V> dictionary,
+            K key,
+            out V value){
+             bool result = dictionary.TryGetValue(key, out V valueTmp);
+             if (result)
+             {
+                 value = valueTmp;
+                 dictionary.Remove(key);
+                 return true;
+             }
+             value = default(V);
+             return false;
+         }
+        #endif
         
     }
 }

@@ -125,6 +125,40 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             );
         }
         
+        internal static void AddAvgAndMinAndMaxToSensor(Sensor sensor,
+            string group,
+            IDictionary<string, string> tags,
+            string operation,
+            string descriptionOfAvg,
+            string descriptionOfMax,
+            string descriptionOfMin) {
+            
+            sensor.AddStatMetric(
+                new MetricName(
+                    operation + StreamMetricsRegistry.AVG_SUFFIX,
+                    group,
+                    descriptionOfAvg,
+                    tags),
+                new Avg()
+            );
+            sensor.AddStatMetric(
+                new MetricName(
+                    operation + StreamMetricsRegistry.MAX_SUFFIX,
+                    group,
+                    descriptionOfMax,
+                    tags),
+                new Max()
+            );
+            sensor.AddStatMetric(
+                new MetricName(
+                    operation + StreamMetricsRegistry.MIN_SUFFIX,
+                    group,
+                    descriptionOfMin,
+                    tags),
+                new Min()
+            );
+        }
+        
         internal static void AddRateOfSumAndSumMetricsToSensor(Sensor sensor,
             string group,
             IDictionary<string, string> tags,

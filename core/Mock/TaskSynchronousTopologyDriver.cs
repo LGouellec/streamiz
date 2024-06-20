@@ -237,7 +237,10 @@ namespace Streamiz.Kafka.Net.Mock
                 null);
 
             foreach (var topic in topicsLink)
+            {
+                GetTask(topic);
                 pipeInput.Flushed += () => ForwardRepartitionTopic(consumer, topic);
+            }
 
             return new TestInputTopic<K, V>(pipeInput, configuration, keySerdes, valueSerdes);
         }
@@ -294,6 +297,21 @@ namespace Streamiz.Kafka.Net.Mock
                 return task.Context.GetStateStore(name);
 
             return hasGlobalTopology ? globalProcessorContext.GetStateStore(name) : null;
+        }
+
+        public void TriggerCommit()
+        {
+            foreach(var extProcessor in externalProcessorTopologies.Values)
+                extProcessor.Flush();
+
+            foreach (var task in tasks.Values)
+            {
+                var consumer = supplier.GetConsumer(topicConfiguration.ToConsumerConfig("consumer-repartition-forwarder"),
+                    null);
+                task.Commit();
+            }
+
+            globalTask?.FlushState();
         }
 
         #endregion

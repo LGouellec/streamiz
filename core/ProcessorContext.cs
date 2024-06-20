@@ -68,6 +68,8 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         public virtual string StateDir => $"{Path.Combine(Configuration.StateDir, Configuration.ApplicationId, Id.ToString())}";
 
+        internal bool ConfigEnableCache => Configuration.StateStoreCacheMaxBytes > 0;
+        
         // FOR TESTING
         internal ProcessorContext()
         {
@@ -91,6 +93,11 @@ namespace Streamiz.Kafka.Net
             return this;
         }
 
+        internal void SetRecordMetaData(IRecordContext context)
+        {
+            RecordContext = context;
+        }
+        
         internal void SetRecordMetaData(ConsumeResult<byte[], byte[]> result)
         {
             RecordContext = new RecordContext(result);

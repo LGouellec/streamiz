@@ -14,7 +14,6 @@ using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
-using Streamiz.Kafka.Net.State.RocksDb;
 using static Streamiz.Kafka.Net.Processors.Internal.StoreChangelogReader;
 
 namespace Streamiz.Kafka.Net.Tests.Private
