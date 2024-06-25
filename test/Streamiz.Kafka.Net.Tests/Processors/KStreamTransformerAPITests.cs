@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Text;
+using Confluent.Kafka;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Processors.Public;
@@ -270,5 +272,42 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 Assert.AreEqual("1", mapRecords["value2"]);
             } 
         }
+        
+        [Test]
+        public void TransformerValuesWithUpdateHeaders()
+        {
+            var builder = new StreamBuilder();
+            
+            builder.Stream<string, string>("topic")
+                .TransformValues(TransformerBuilder
+                    .New<string, string, string, string>()
+                    .Transformer((record) =>
+                    {
+                        var headers = new Headers();
+                        headers.Add("key1", Encoding.UTF8.GetBytes("value1"));
+                        return Record<string, string>.Create(record.Value.ToUpper(), headers);
+                    })
+                    .Build())
+                .To("topic-output");
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-transformer-api";
+
+            Topology t = builder.Build();
+
+            using var driver = new TopologyTestDriver(t, config);
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("topic");
+                inputTopic.PipeInput("key1", "value1");
+
+                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var record = outputTopic.ReadKeyValue();
+                Assert.AreEqual(1, record.Message.Headers.Count);
+                Assert.AreEqual(
+                    Encoding.UTF8.GetBytes("value1"),
+                    record.Message.Headers.GetLastBytes("key1"));
+            }
+        }
+
     }
 }
