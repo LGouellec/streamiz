@@ -2,6 +2,7 @@
 using Confluent.Kafka.Admin;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Streamiz.Kafka.Net.Mock.Kafka;
 
@@ -66,20 +67,28 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         public override Metadata GetMetadata(string topic, TimeSpan timeout)
         {
             var error = new Error(ErrorCode.NoError);
-
-            var brokersMetadata = new List<BrokerMetadata> {
-                new BrokerMetadata(1, "localhost", 9092)
-            };
-
-            var partitionsMetadata = new List<PartitionMetadata>
+            var topics = producer.GetAllTopics();
+            var brokersMetadata = new List<BrokerMetadata>
             {
-                new PartitionMetadata(1, 1, new int[1]{1}, new int[1]{1}, error)
+                new(1, "localhost", 9092)
             };
+            
+            if (topics.Contains(topic))
+            {
+                var partitionsMetadata = new List<PartitionMetadata>
+                {
+                    new(1, 1, new int[1] { 1 }, new int[1] { 1 }, error)
+                };
 
-            var topicMetadata = new TopicMetadata(topic, partitionsMetadata, error);
-
+                var topicMetadata = new TopicMetadata(topic, partitionsMetadata, error);
+                
+                return new Metadata(brokersMetadata,
+                    new List<TopicMetadata>() { topicMetadata },
+                    1, "localhost");
+            }
+            
             return new Metadata(brokersMetadata,
-                new List<TopicMetadata>() { topicMetadata },
+                new List<TopicMetadata>(),
                 1, "localhost");
         }
 
