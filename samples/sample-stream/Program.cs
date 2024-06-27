@@ -25,7 +25,6 @@ namespace sample_stream
                 PartitionAssignmentStrategy = PartitionAssignmentStrategy.RoundRobin,
                 Partitioner = Partitioner.ConsistentRandom,
                 Debug = "broker,topic,msg",
-                ClientId = "ttoot",
                 Logger = LoggerFactory.Create((b) =>
                 {
                     b.AddConsole();
@@ -50,7 +49,7 @@ namespace sample_stream
             TimeSpan windowSize = TimeSpan.FromHours(1);
             
             var builder = new StreamBuilder();
-          /*  builder.Stream<string, string>("input")
+            builder.Stream<string, string>("input")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(windowSize))
                 .Count(RocksDbWindows.As<string, long>("count-store")
@@ -61,9 +60,8 @@ namespace sample_stream
                 .Map((k,v) => new KeyValuePair<string,string>(k.ToString(), v.ToString()))
                 .To("output",
                     new StringSerDes(),
-                    new StringSerDes());*/
+                    new StringSerDes());
 
-          builder.GlobalTable<string, string>("global");
             
             return builder.Build();
         }
