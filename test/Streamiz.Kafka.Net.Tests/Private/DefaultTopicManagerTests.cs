@@ -16,7 +16,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [SetUp]
         public void Begin()
         {
-            kafkaSupplier = new SyncKafkaSupplier();
+            kafkaSupplier = new SyncKafkaSupplier(false);
         }
 
         [TearDown]
@@ -47,7 +47,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 NumberPartitions = 1
             });
 
-            var r = manager.ApplyAsync(0, topics).GetAwaiter().GetResult().ToList();
+            var r = manager.ApplyAsync(0, topics)
+                .GetAwaiter().GetResult().ToList();
 
             Assert.AreEqual(2, r.Count);
             Assert.AreEqual("topic", r[0]);

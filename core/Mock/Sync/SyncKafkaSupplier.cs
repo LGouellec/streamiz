@@ -14,10 +14,10 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         protected SyncProducer producer = null;
         protected SyncAdminClient admin = null;
 
-        public SyncKafkaSupplier()
+        public SyncKafkaSupplier(bool autoCreateTopic = true)
         {
             producer = new SyncProducer();
-            admin = new SyncAdminClient(producer);   
+            admin = new SyncAdminClient(producer, autoCreateTopic);   
         }
 
         public virtual IAdminClient GetAdmin(AdminClientConfig config)
