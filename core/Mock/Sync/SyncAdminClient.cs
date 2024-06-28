@@ -11,11 +11,13 @@ namespace Streamiz.Kafka.Net.Mock.Sync
     internal class SyncAdminClient : BasedAdminClient
     {
         private readonly SyncProducer producer;
+        private readonly bool _autoCreateTopic;
         private AdminClientConfig config;
 
-        public SyncAdminClient(SyncProducer producer)
+        public SyncAdminClient(SyncProducer producer, bool autoCreateTopic)
         {
             this.producer = producer;
+            _autoCreateTopic = autoCreateTopic;
         }
 
         internal void UseConfig(AdminClientConfig config)
@@ -85,6 +87,13 @@ namespace Streamiz.Kafka.Net.Mock.Sync
                 return new Metadata(brokersMetadata,
                     new List<TopicMetadata>() { topicMetadata },
                     1, "localhost");
+            }
+
+            if (_autoCreateTopic)
+            {
+                // auto create topic if not exist
+                producer.CreateTopic(topic);
+                return GetMetadata(topic, timeout);
             }
             
             return new Metadata(brokersMetadata,
