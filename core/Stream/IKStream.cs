@@ -7,6 +7,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Confluent.Kafka;
 using Streamiz.Kafka.Net.Processors.Public;
 using Streamiz.Kafka.Net.Processors.Internal;
 
