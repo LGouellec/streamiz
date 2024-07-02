@@ -809,6 +809,9 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         internal DeliveryReport<byte[], byte[]> Produce(TopicPartition topicPartition, Message<byte[], byte[]> message)
         {
+            if (topicPartition.Partition.Equals(Partition.Any))
+                return Produce(topicPartition.Topic, message);
+            
             DeliveryReport<byte[], byte[]> r = new DeliveryReport<byte[], byte[]>();
             r.Status = PersistenceStatus.NotPersisted;
             CreateTopic(topicPartition.Topic);

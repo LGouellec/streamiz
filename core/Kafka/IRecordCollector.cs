@@ -12,5 +12,6 @@ namespace Streamiz.Kafka.Net.Kafka
         void Close();
         void Send<K, V>(string topic, K key, V value, Headers headers, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer);
         void Send<K, V>(string topic, K key, V value, Headers headers, int partition, long timestamp, ISerDes<K> keySerializer, ISerDes<V> valueSerializer);
+        int PartitionsFor(string topic);
     }
 }

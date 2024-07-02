@@ -79,12 +79,13 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.ClientId = "test";
             config.ApplicationId = "test-app";
 
+            var syncKafkaSupplier = new SyncKafkaSupplier(true);
             var streamTask = new StreamTask(
                 "thread",
                 taskId,
                 new List<TopicPartition>(),
                 new Stream.Internal.ProcessorTopology(null, null, null, null, null, null, null, null),
-                null, config , null, new SyncProducer(config.ToProducerConfig()), new MockChangelogRegister(), new StreamMetricsRegistry());
+                null, config , syncKafkaSupplier, new SyncProducer(config.ToProducerConfig()), new MockChangelogRegister(), new StreamMetricsRegistry());
 
             return streamTask;
         }

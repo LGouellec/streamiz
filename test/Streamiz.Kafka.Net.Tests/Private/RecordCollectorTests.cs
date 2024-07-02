@@ -1,6 +1,7 @@
 using System;
 using Confluent.Kafka;
 using NUnit.Framework;
+using Moq;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics.Internal;
@@ -21,11 +22,13 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config = new StreamConfig();
             config.ApplicationId = "collector-unit-test";
             config.ProductionExceptionHandler = (_) => ProductionExceptionHandlerResponse.RETRY;
+            var client = new Mock<IAdminClient>();
             collector = new RecordCollector(
                 "test-collector",
                 config,
                 new TaskId {Id = 0, Partition = 0},
-                NoRunnableSensor.Empty);
+                NoRunnableSensor.Empty,
+                client.Object);
         }
 
         [TearDown]
