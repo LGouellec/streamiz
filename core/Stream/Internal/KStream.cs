@@ -187,6 +187,32 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             To(new StaticTopicNameExtractor<K, V>(topicName), new DefaultStreamPartitioner<K, V>(), named);
         }
 
+        public void To(string topicName, Func<string, K, V, int, Partition> partitioner, string named = null)
+        {
+            if (string.IsNullOrEmpty(topicName))
+            {
+                throw new ArgumentException("topicName must not be null or empty");
+            }
+
+            To(
+                new StaticTopicNameExtractor<K, V>(topicName), 
+                new WrapperStreamPartitioner<K, V>(partitioner),
+                named);
+        }
+
+        public void To(string topicName, IStreamPartitioner<K, V> partitioner, string named = null)
+        {
+            if (string.IsNullOrEmpty(topicName))
+            {
+                throw new ArgumentException("topicName must not be null or empty");
+            }
+
+            To(
+                new StaticTopicNameExtractor<K, V>(topicName), 
+                partitioner,
+                named);
+        }
+        
         public void To(string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null)
         {
             if (string.IsNullOrEmpty(topicName))

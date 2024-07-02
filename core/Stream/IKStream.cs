@@ -114,6 +114,30 @@ namespace Streamiz.Kafka.Net.Stream
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> if <paramref name="topicName"/> is null</exception>
         /// /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if <paramref name="topicName"/> is incorrect</exception>
         void To(string topicName, string named = null);
+        
+        /// <summary>
+        /// Materialize this stream to a topic using default serializers specified in the config and producer's.
+        /// The specified topic should be manually created before it is used(i.e., before the Kafka Streams application is
+        /// started).
+        /// </summary>
+        /// <param name="topicName">the topic name</param>
+        /// <param name="partitioner">The function used to determine how records are distributed among partitions of the topic</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> if <paramref name="topicName"/> is null</exception>
+        /// /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if <paramref name="topicName"/> is incorrect</exception>
+        void To(string topicName, Func<string, K, V, int, Partition> partitioner, string named = null);
+        
+        /// <summary>
+        /// Materialize this stream to a topic using default serializers specified in the config and producer's.
+        /// The specified topic should be manually created before it is used(i.e., before the Kafka Streams application is
+        /// started).
+        /// </summary>
+        /// <param name="topicName">the topic name</param>
+        /// <param name="partitioner">The function used to determine how records are distributed among partitions of the topic</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> if <paramref name="topicName"/> is null</exception>
+        /// /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if <paramref name="topicName"/> is incorrect</exception>
+        void To(string topicName, IStreamPartitioner<K, V> partitioner, string named = null);
 
         /// <summary>
         /// Materialize this stream to a topic using serializers specified in the method parameters.
