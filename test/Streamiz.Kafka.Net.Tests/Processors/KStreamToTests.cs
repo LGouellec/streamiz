@@ -15,7 +15,7 @@ public class KStreamToTests
 {
     private class MyStreamPartitioner : IStreamPartitioner<string, string>
     {
-        public Partition Partition(string topic, string key, string value, int numPartitions)
+        public Partition Partition(string topic, string key, string value, Partition sourcePartition, int numPartitions)
         {
             switch (key)
             {
@@ -63,7 +63,7 @@ public class KStreamToTests
             .Stream<string, string>("stream")
             .MapValues((v) => v.ToUpper())
             .To("output", 
-                (_, _, _, _) => new Partition(0));
+                (_, _, _,_, _) => new Partition(0));
 
         Topology t = builder.Build();
 
@@ -109,7 +109,7 @@ public class KStreamToTests
             .Stream<string, string>("stream")
             .MapValues((v) => v.ToUpper())
             .To("output", 
-                (_, _, _, _) => new Partition(0), 
+                (_, _, _,_, _) => new Partition(0), 
                 new StringSerDes(),
                 new StringSerDes());
 
@@ -157,7 +157,7 @@ public class KStreamToTests
             .Stream<string, string>("stream")
             .MapValues((v) => v.ToUpper())
             .To<StringSerDes, StringSerDes>("output", 
-                (_, _, _, _) => new Partition(0));
+                (_, _,_, _, _) => new Partition(0));
 
         Topology t = builder.Build();
 
@@ -203,7 +203,7 @@ public class KStreamToTests
             .Stream<string, string>("stream")
             .MapValues((v) => v.ToUpper())
             .To((_,_,_) => "output", 
-                (_, _, _, _) => new Partition(0), 
+                (_, _,_, _, _) => new Partition(0), 
                 new StringSerDes(),
                 new StringSerDes());
 
@@ -251,7 +251,7 @@ public class KStreamToTests
             .Stream<string, string>("stream")
             .MapValues((v) => v.ToUpper())
             .To<StringSerDes, StringSerDes>((_,_,_) => "output", 
-                (_, _, _, _) => new Partition(0));
+                (_, _,_, _, _) => new Partition(0));
 
         Topology t = builder.Build();
 
@@ -296,7 +296,7 @@ public class KStreamToTests
             .Stream<string, string>("stream")
             .MapValues((v) => v.ToUpper())
             .To((_,_,_) => "output", 
-                (_, _, _, _) => new Partition(0));
+                (_, _,_, _, _) => new Partition(0));
 
         Topology t = builder.Build();
 
@@ -482,7 +482,7 @@ public class KStreamToTests
             .MapValues((v) => v.ToUpper())
             .To((_,_,_) => "output", 
                 (_,_,_) => tst,
-                (_, _, _, _) => new Partition(0));
+                (_, _,_, _, _) => new Partition(0));
 
         Topology t = builder.Build();
 
@@ -928,7 +928,7 @@ public class KStreamToTests
             .To<StringSerDes, StringSerDes>(
                 (_, _, _) => "output",
                 (_,_,_) => tst,
-                (_,_,_,_) => new Partition(0));
+                (_,_,_,_,_) => new Partition(0));
 
         Topology t = builder.Build();
 
@@ -975,7 +975,7 @@ public class KStreamToTests
             .MapValues((v) => v.ToUpper());
 
         Assert.Throws<ArgumentException>(() => stream.To(
-            string.Empty, (_,_,_,_) => Partition.Any));
+            string.Empty, (_,_,_,_,_) => Partition.Any));
     }
 
     [Test]
@@ -1026,6 +1026,6 @@ public class KStreamToTests
             .MapValues((v) => v.ToUpper());
 
         Assert.Throws<ArgumentException>(() => stream.To(
-            string.Empty, (_,_,_,_) => Partition.Any, new StringSerDes(), new StringSerDes()));
+            string.Empty, (_,_,_,_,_) => Partition.Any, new StringSerDes(), new StringSerDes()));
     }
 }

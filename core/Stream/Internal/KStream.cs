@@ -187,7 +187,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             To(new StaticTopicNameExtractor<K, V>(topicName), new DefaultStreamPartitioner<K, V>(), named);
         }
 
-        public void To(string topicName, Func<string, K, V, int, Partition> partitioner, string named = null)
+        public void To(string topicName, Func<string, K, V, Partition, int, Partition> partitioner, string named = null)
         {
             if (string.IsNullOrEmpty(topicName))
             {
@@ -221,7 +221,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             To(new StaticTopicNameExtractor<K, V>(topicName), new DefaultStreamPartitioner<K, V>(), keySerdes, valueSerdes, named);
         }
 
-        public void To(string topicName, Func<string, K, V, int, Partition> partitioner, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null)
+        public void To(string topicName, Func<string, K, V, Partition, int, Partition> partitioner, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null)
         {
             if (string.IsNullOrEmpty(topicName))
                 throw new ArgumentException("topicName must be empty");
@@ -232,7 +232,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         }
 
         public void To(Func<K, V, IRecordContext, string> topicExtractor,
-            Func<string, K, V, int, Partition> partitioner, ISerDes<K> keySerdes, ISerDes<V> valueSerdes,
+            Func<string, K, V, Partition, int, Partition> partitioner, ISerDes<K> keySerdes, ISerDes<V> valueSerdes,
             string named = null)
             => To(
                 new WrapperTopicNameExtractor<K, V>(topicExtractor),
@@ -270,7 +270,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             => To(new WrapperTopicNameExtractor<K, V>(topicExtractor), named);
 
         public void To(Func<K, V, IRecordContext, string> topicExtractor,
-            Func<string, K, V, int, Partition> partitioner, string named = null)
+            Func<string, K, V, Partition, int, Partition> partitioner, string named = null)
             => To(new WrapperTopicNameExtractor<K, V>(topicExtractor), 
                 new WrapperStreamPartitioner<K, V>(partitioner),
                 named);
@@ -288,7 +288,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 named);
 
         public void To(Func<K, V, IRecordContext, string> topicExtractor,
-            Func<K, V, IRecordContext, long> recordTimestampExtractor, Func<string, K, V, int, Partition> partitioner,
+            Func<K, V, IRecordContext, long> recordTimestampExtractor, Func<string, K, V, Partition, int, Partition> partitioner,
             string named = null)
             => To(
                 new WrapperTopicNameExtractor<K, V>(topicExtractor),
@@ -345,7 +345,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 partitioner,
                 Produced<K, V>.Create(keySerdes, valueSerdes).WithName(named));
 
-        public void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor, Func<string, K, V, int, Partition> partitioner, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new()
+        public void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor, Func<string, K, V, Partition, int, Partition> partitioner, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new()
             => To<KS, VS>(
                 new WrapperTopicNameExtractor<K, V>(topicExtractor),
                 new WrapperStreamPartitioner<K, V>(partitioner),
@@ -361,7 +361,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             where VS : ISerDes<V>, new()
             => To<KS, VS>(new StaticTopicNameExtractor<K, V>(topicName), named);
 
-        public void To<KS, VS>(string topicName, Func<string, K, V, int, Partition> partitioner, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new()
+        public void To<KS, VS>(string topicName, Func<string, K, V, Partition, int, Partition> partitioner, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new()
             => To<KS, VS>(new StaticTopicNameExtractor<K, V>(topicName), 
                 new WrapperStreamPartitioner<K, V>(partitioner),
                 named);
@@ -383,7 +383,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             where VS : ISerDes<V>, new()
             => To<KS, VS>(new WrapperTopicNameExtractor<K, V>(topicExtractor), new WrapperRecordTimestampExtractor<K, V>(recordTimestampExtractor), named);
 
-        public void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor, Func<K, V, IRecordContext, long> recordTimestampExtractor, Func<string, K, V, int, Partition> partitioner, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new()
+        public void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor, Func<K, V, IRecordContext, long> recordTimestampExtractor, Func<string, K, V, Partition, int, Partition> partitioner, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new()
             => To<KS, VS>(new WrapperTopicNameExtractor<K, V>(topicExtractor), new WrapperRecordTimestampExtractor<K, V>(recordTimestampExtractor), new WrapperStreamPartitioner<K, V>(partitioner), named);
 
         public void To<KS, VS>(ITopicNameExtractor<K, V> topicExtractor,

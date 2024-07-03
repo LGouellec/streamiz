@@ -82,7 +82,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// </summary>
         /// <param name="streamPartitioner">the function used to determine how records are distributed among partitions of the topic</param>
         /// <returns>A new instance of <see cref="Repartitioned{K,V}"/></returns>
-        public static Repartitioned<K, V> Partitioner(Func<string, K, V, int, Partition> streamPartitioner) 
+        public static Repartitioned<K, V> Partitioner(Func<string, K, V, Partition, int, Partition> streamPartitioner) 
             => Partitioner(new WrapperStreamPartitioner<K, V>(streamPartitioner));
 
         
@@ -150,7 +150,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// </summary>
         /// <param name="streamPartitioner">Function to determine the partition where the repartition record will be persist</param>
         /// <returns>this</returns>
-        public Repartitioned<K, V> WithStreamPartitioner(Func<string, K, V, int, Partition> streamPartitioner)
+        public Repartitioned<K, V> WithStreamPartitioner(Func<string, K, V, Partition, int, Partition> streamPartitioner)
             => WithStreamPartitioner(new WrapperStreamPartitioner<K, V>(streamPartitioner));
 
 

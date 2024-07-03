@@ -75,6 +75,7 @@ namespace Streamiz.Kafka.Net.Processors
                 Partition partition = partitioner.Partition(
                     topicName,
                     key, value,
+                    Context.Partition,
                     Context.RecordCollector.PartitionsFor(topicName));
                 
                 Context.RecordCollector.Send(

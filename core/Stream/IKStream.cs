@@ -125,7 +125,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> if <paramref name="topicName"/> is null</exception>
         /// /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if <paramref name="topicName"/> is incorrect</exception>
-        void To(string topicName, Func<string, K, V, int, Partition> partitioner, string named = null);
+        void To(string topicName, Func<string, K, V, Partition, int, Partition> partitioner, string named = null);
         
         /// <summary>
         /// Materialize this stream to a topic using default serializers specified in the config and producer's.
@@ -164,7 +164,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> if <paramref name="topicName"/> is null</exception>
         /// /// <exception cref="ArgumentException">Throw <see cref="ArgumentException"/> if <paramref name="topicName"/> is incorrect</exception>
-        void To(string topicName, Func<string, K, V, int, Partition> partitioner, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null);
+        void To(string topicName, Func<string, K, V, Partition, int, Partition> partitioner, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null);
 
         /// <summary>
         /// Dynamically materialize this stream to topics using default serializers specified in the config and producer's.
@@ -181,7 +181,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="topicExtractor">Extractor function to determine the name of the Kafka topic to write to for each record</param>
         /// <param name="partitioner">The function used to determine how records are distributed among partitions of the topic</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
-        void To(Func<K, V, IRecordContext, string> topicExtractor, Func<string, K, V, int, Partition> partitioner, string named = null);
+        void To(Func<K, V, IRecordContext, string> topicExtractor, Func<string, K, V, Partition, int, Partition> partitioner, string named = null);
 
         /// <summary>
         /// Dynamically materialize this stream to topics using default serializers specified in the config and producer's.
@@ -202,7 +202,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="keySerdes">Key serializer</param>
         /// <param name="valueSerdes">Value serializer</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
-        void To(Func<K, V, IRecordContext, string> topicExtractor, Func<string, K, V, int, Partition> partitioner, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null);
+        void To(Func<K, V, IRecordContext, string> topicExtractor, Func<string, K, V, Partition, int, Partition> partitioner, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null);
 
         
         /// <summary>
@@ -252,7 +252,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="recordTimestampExtractor">Extractor function to determine the timestamp of the record stored in the Kafka topic</param>
         /// <param name="partitioner">The function used to determine how records are distributed among partitions of the topic</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
-        void To(Func<K, V, IRecordContext, string> topicExtractor, Func<K, V, IRecordContext, long> recordTimestampExtractor, Func<string, K, V, int, Partition> partitioner, string named = null);
+        void To(Func<K, V, IRecordContext, string> topicExtractor, Func<K, V, IRecordContext, long> recordTimestampExtractor, Func<string, K, V, Partition, int, Partition> partitioner, string named = null);
 
         /// <summary>
         /// Dynamically materialize this stream to topics using default serializers specified in the config and producer's.
@@ -337,7 +337,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="topicName">the topic name</param>
         /// <param name="partitioner">The function used to determine how records are distributed among partitions of the topic</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
-        void To<KS, VS>(string topicName, Func<string, K, V, int, Partition> partitioner, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new();
+        void To<KS, VS>(string topicName, Func<string, K, V, Partition, int, Partition> partitioner, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new();
 
         /// <summary>
         /// Dynamically materialize this stream to a topic using <typeparamref name="KS"/> and <typeparamref name="VS"/> serializers specified in the method parameters.
@@ -348,7 +348,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="topicExtractor">Extractor function to determine the name of the Kafka topic to write to for each record</param>
         /// <param name="partitioner">The function used to determine how records are distributed among partitions of the topic</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
-        void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor, Func<string, K, V, int, Partition> partitioner, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new();
+        void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor, Func<string, K, V, Partition, int, Partition> partitioner, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new();
 
         /// <summary>
         /// Dynamically materialize this stream to a topic using <typeparamref name="KS"/> and <typeparamref name="VS"/> serializers specified in the method parameters.
@@ -402,7 +402,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="recordTimestampExtractor">Extractor function to determine the timestamp of the record stored in the Kafka topic</param>
         /// <param name="partitioner">The function used to determine how records are distributed among partitions of the topic</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
-        void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor, Func<K, V, IRecordContext, long> recordTimestampExtractor, Func<string, K, V, int, Partition> partitioner, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new();
+        void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor, Func<K, V, IRecordContext, long> recordTimestampExtractor, Func<string, K, V, Partition, int, Partition> partitioner, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new();
         
         /// <summary>
         /// Dynamically materialize this stream to a topic using <typeparamref name="KS"/> and <typeparamref name="VS"/> serializers specified in the method parameters.
