@@ -51,9 +51,14 @@ namespace Streamiz.Kafka.Net.Tests.Stores
 
             var producerConfig = new ProducerConfig();
             producerConfig.ClientId = "producer-1";
-            var producerClient = kafkaSupplier.GetProducer(producerConfig);
 
-            recordCollector = new RecordCollector("p-1", config, id, new NoRunnableSensor("s", "s", MetricsRecordingLevel.DEBUG));
+            var adminConfig = new AdminClientConfig();
+            adminConfig.ClientId = "admin-client";
+            
+            var producerClient = kafkaSupplier.GetProducer(producerConfig);
+            var adminClient = kafkaSupplier.GetAdmin(adminConfig);
+            
+            recordCollector = new RecordCollector("p-1", config, id, new NoRunnableSensor("s", "s", MetricsRecordingLevel.DEBUG), adminClient);
             recordCollector.Init(ref producerClient);
 
             var changelogsTopics = new Dictionary<string, string>{

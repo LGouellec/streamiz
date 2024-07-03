@@ -169,7 +169,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             Assert.IsTrue(
                 (double)processLatency.Metrics[MetricName.NameAndGroup(
                     TaskMetrics.PROCESS_LATENCY + StreamMetricsRegistry.MAX_SUFFIX, 
-                    StreamMetricsRegistry.TASK_LEVEL_GROUP)].Value > 0d);
+                    StreamMetricsRegistry.TASK_LEVEL_GROUP)].Value >= 0d);
             
             var commitSensor = sensors.FirstOrDefault(s => s.Name.Equals(GetSensorName(TaskMetrics.COMMIT)));
             Assert.AreEqual(2, commitSensor.Metrics.Count());

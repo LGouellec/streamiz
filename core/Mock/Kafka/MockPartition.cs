@@ -7,7 +7,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 {
     internal class MockPartition
     {
-        private readonly List<(byte[], byte[])> log = new();
+        private readonly List<(byte[], byte[], long)> log = new();
         private readonly Dictionary<long, long> mappingOffsets = new();
 
         public MockPartition(int indice)
@@ -21,10 +21,10 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         public long LowOffset { get; private set; } = Offset.Unset;
         public long HighOffset { get; private set; } = Offset.Unset;
 
-        internal void AddMessageInLog(byte[] key, byte[] value)
+        internal void AddMessageInLog(byte[] key, byte[] value, long timestamp)
         {
             mappingOffsets.Add(Size, log.Count);
-            log.Add((key, value));
+            log.Add((key, value, timestamp));
             ++Size;
             UpdateOffset();
         }
@@ -43,7 +43,12 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             if (mappingOffsets.ContainsKey(offset))
             {
                 var record = log[(int) mappingOffsets[offset]];
-                return new TestRecord<byte[], byte[]> {Key = record.Item1, Value = record.Item2};
+                return new TestRecord<byte[], byte[]>
+                {
+                    Key = record.Item1,
+                    Value = record.Item2,
+                    Timestamp = record.Item3.FromMilliseconds()
+                };
             }
 
             return null;

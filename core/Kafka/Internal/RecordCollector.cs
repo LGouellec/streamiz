@@ -7,6 +7,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Metrics;
@@ -81,24 +82,28 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
         private readonly IStreamConfig configuration;
         private readonly TaskId id;
         private readonly Sensor droppedRecordsSensor;
+        private readonly IAdminClient _adminClient;
         private Exception exception = null;
 
         private readonly string logPrefix;
         private readonly ILogger log = Logger.GetLogger(typeof(RecordCollector));
 
-        private readonly ConcurrentDictionary<TopicPartition, long> collectorsOffsets =
-            new ConcurrentDictionary<TopicPartition, long>();
+        private readonly ConcurrentDictionary<TopicPartition, long> collectorsOffsets = new();
 
-        private readonly RetryRecordContext retryRecordContext = new RetryRecordContext();
+        private readonly RetryRecordContext retryRecordContext = new();
 
         public IDictionary<TopicPartition, long> CollectorOffsets => collectorsOffsets.ToDictionary();
 
-        public RecordCollector(string logPrefix, IStreamConfig configuration, TaskId id, Sensor droppedRecordsSensor)
+        public IDictionary<string, (int, DateTime)> cachePartitionsForTopics =
+            new Dictionary<string, (int, DateTime)>();
+
+        public RecordCollector(string logPrefix, IStreamConfig configuration, TaskId id, Sensor droppedRecordsSensor, IAdminClient adminClient)
         {
             this.logPrefix = $"{logPrefix}";
             this.configuration = configuration;
             this.id = id;
             this.droppedRecordsSensor = droppedRecordsSensor;
+            _adminClient = adminClient;
         }
 
         public void Init(ref IProducer<byte[], byte[]> producer)
@@ -136,6 +141,8 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                     }
                 }
             }
+            
+            _adminClient?.Dispose();
         }
 
         public void Flush()
@@ -415,6 +422,21 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 exception = null;
                 throw e;
             }
+        }
+
+        public int PartitionsFor(string topic)
+        {
+            var adminConfig = configuration.ToAdminConfig("");
+            var refreshInterval = adminConfig.TopicMetadataRefreshIntervalMs ?? 5 * 60 * 1000;
+
+            if (cachePartitionsForTopics.ContainsKey(topic) &&
+                cachePartitionsForTopics[topic].Item2 + TimeSpan.FromMilliseconds(refreshInterval) > DateTime.Now)
+                return cachePartitionsForTopics[topic].Item1;
+            
+            var metadata = _adminClient.GetMetadata(topic, TimeSpan.FromSeconds(5));
+            var partitionCount = metadata.Topics.FirstOrDefault(t => t.Topic.Equals(topic))!.Partitions.Count;
+            cachePartitionsForTopics.Add(topic, (partitionCount, DateTime.Now));
+            return partitionCount;
         }
     }
 }

@@ -89,7 +89,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 builder
                     .Stream<string, string>("topic")
-                    .Repartition(Repartitioned<string, string>.Empty().WithStreamPartitioner((t,k,v) => 0))
+                    .Repartition(Repartitioned<string, string>.Empty().WithStreamPartitioner((t,k,v,_, c) => 0))
                     .To("output");
             }, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, 10);
 

@@ -80,21 +80,16 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public IRecordTimestampExtractor<K, V> TimestampExtractor { get; }
         public ISerDes<K> KeySerdes { get; }
         public ISerDes<V> ValueSerdes { get; }
-        public Func<string, K, V, int> ProducedPartitioner { get; }
+        public IStreamPartitioner<K, V> ProducedPartitioner { get; }
 
-        public string Topic
-        {
-            get
-            {
-                return TopicExtractor is StaticTopicNameExtractor<K, V> ?
-                    ((StaticTopicNameExtractor<K, V>)TopicExtractor).TopicName :
-                     null;
-            }
-        }
+        public string Topic =>
+            (TopicExtractor as StaticTopicNameExtractor<K, V>)?.TopicName;
 
-        public SinkNodeFactory(string name, string[] previous, ITopicNameExtractor<K, V> topicExtractor, 
+        public SinkNodeFactory(string name, string[] previous, ITopicNameExtractor<K, V> topicExtractor,
             IRecordTimestampExtractor<K, V> timestampExtractor,
-            ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Func<string, K, V, int> producedPartitioner)
+            ISerDes<K> keySerdes, 
+            ISerDes<V> valueSerdes,
+            IStreamPartitioner<K, V> producedPartitioner)
             : base(name, previous)
         {
             TopicExtractor = topicExtractor;

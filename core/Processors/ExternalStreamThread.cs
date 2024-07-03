@@ -372,7 +372,8 @@ namespace Streamiz.Kafka.Net.Processors
                 topology.GetSourceProcessor(topic),
                 producer,
                 configuration,
-                streamMetricsRegistry);
+                streamMetricsRegistry,
+                adminClient);
             externalProcessorTopologies.Add(topic, externalProcessorTopologyExecutor);
                 
             return externalProcessorTopologyExecutor;
