@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using Confluent.Kafka;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
@@ -9,7 +8,6 @@ using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
-using Streamiz.Kafka.Net.Stream.Internal;
 
 namespace Streamiz.Kafka.Net.Tests.Processors;
 
@@ -79,7 +77,7 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = outputTopic.ReadKeyValueList().ToList();
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
         Assert.AreEqual("test1", record[0].Message.Key);
@@ -127,7 +125,53 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = outputTopic.ReadKeyValueList().ToList();
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        Assert.IsNotNull(record);
+        Assert.AreEqual(3, record.Count);
+        Assert.AreEqual("test1", record[0].Message.Key);
+        Assert.AreEqual("TEST1", record[0].Message.Value);
+        Assert.AreEqual(0, record[0].Partition.Value);
+            
+            
+        Assert.AreEqual("test2", record[1].Message.Key);
+        Assert.AreEqual("TEST2", record[1].Message.Value);
+        Assert.AreEqual(0, record[1].Partition.Value);
+            
+            
+        Assert.AreEqual("test3", record[2].Message.Key);
+        Assert.AreEqual("TEST3", record[2].Message.Value);
+        Assert.AreEqual(0, record[2].Partition.Value);
+    }
+    
+    [Test]
+    public void StreamToLambdaCustomPartitionerWithSerdesTypeTest()
+    {
+        var config = new StreamConfig<StringSerDes, StringSerDes>
+        {
+            ApplicationId = "test-stream-table-left-join"
+        };
+
+        StreamBuilder builder = new StreamBuilder();
+        
+        builder
+            .Stream<string, string>("stream")
+            .MapValues((v) => v.ToUpper())
+            .To<StringSerDes, StringSerDes>("output", 
+                (_, _, _, _) => new Partition(0));
+
+        Topology t = builder.Build();
+
+        var mockSupplier = new MockKafkaSupplier(4);
+        mockSupplier.CreateTopic("output");
+        mockSupplier.CreateTopic("stream");
+        
+        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        var inputTopic = driver.CreateInputTopic<string, string>("stream");
+        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        inputTopic.PipeInput("test1", "test1");
+        inputTopic.PipeInput("test2", "test2");
+        inputTopic.PipeInput("test3", "test3");
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
         Assert.AreEqual("test1", record[0].Message.Key);
@@ -175,7 +219,53 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = outputTopic.ReadKeyValueList().ToList();
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        Assert.IsNotNull(record);
+        Assert.AreEqual(3, record.Count);
+        Assert.AreEqual("test1", record[0].Message.Key);
+        Assert.AreEqual("TEST1", record[0].Message.Value);
+        Assert.AreEqual(0, record[0].Partition.Value);
+            
+            
+        Assert.AreEqual("test2", record[1].Message.Key);
+        Assert.AreEqual("TEST2", record[1].Message.Value);
+        Assert.AreEqual(0, record[1].Partition.Value);
+            
+            
+        Assert.AreEqual("test3", record[2].Message.Key);
+        Assert.AreEqual("TEST3", record[2].Message.Value);
+        Assert.AreEqual(0, record[2].Partition.Value);
+    }
+    
+    [Test]
+    public void StreamToTopicExtractorLambdaCustomPartitionerWithSerdesTypeTest()
+    {
+        var config = new StreamConfig<StringSerDes, StringSerDes>
+        {
+            ApplicationId = "test-stream-table-left-join"
+        };
+
+        StreamBuilder builder = new StreamBuilder();
+        
+        builder
+            .Stream<string, string>("stream")
+            .MapValues((v) => v.ToUpper())
+            .To<StringSerDes, StringSerDes>((_,_,_) => "output", 
+                (_, _, _, _) => new Partition(0));
+
+        Topology t = builder.Build();
+
+        var mockSupplier = new MockKafkaSupplier(4);
+        mockSupplier.CreateTopic("output");
+        mockSupplier.CreateTopic("stream");
+        
+        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        var inputTopic = driver.CreateInputTopic<string, string>("stream");
+        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        inputTopic.PipeInput("test1", "test1");
+        inputTopic.PipeInput("test2", "test2");
+        inputTopic.PipeInput("test3", "test3");
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
         Assert.AreEqual("test1", record[0].Message.Key);
@@ -220,7 +310,7 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = outputTopic.ReadKeyValueList().ToList();
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
         Assert.AreEqual("test1", record[0].Message.Key);
@@ -267,7 +357,7 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = outputTopic.ReadKeyValueList().ToList();
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
         Assert.AreEqual("test1", record[0].Message.Key);
@@ -280,6 +370,46 @@ public class KStreamToTests
         Assert.AreEqual("TEST3", record[2].Message.Value);
     }
 
+    [Test]
+    public void StreamToTopicExtractorWithSerdesTypeTest()
+    {
+        var config = new StreamConfig<StringSerDes, StringSerDes>
+        {
+            ApplicationId = "test-stream-table-left-join"
+        };
+
+        StreamBuilder builder = new StreamBuilder();
+        
+        builder
+            .Stream<string, string>("stream")
+            .MapValues((v) => v.ToUpper())
+            .To<StringSerDes, StringSerDes>(new MyTopicNameExtractor());
+
+        Topology t = builder.Build();
+
+        var mockSupplier = new MockKafkaSupplier(4);
+        mockSupplier.CreateTopic("output");
+        mockSupplier.CreateTopic("stream");
+        
+        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        var inputTopic = driver.CreateInputTopic<string, string>("stream");
+        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        inputTopic.PipeInput("test1", "test1");
+        inputTopic.PipeInput("test2", "test2");
+        inputTopic.PipeInput("test3", "test3");
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        Assert.IsNotNull(record);
+        Assert.AreEqual(3, record.Count);
+        Assert.AreEqual("test1", record[0].Message.Key);
+        Assert.AreEqual("TEST1", record[0].Message.Value);
+            
+        Assert.AreEqual("test2", record[1].Message.Key);
+        Assert.AreEqual("TEST2", record[1].Message.Value);
+        
+        Assert.AreEqual("test3", record[2].Message.Key);
+        Assert.AreEqual("TEST3", record[2].Message.Value);
+    }
+    
     [Test]
     public void StreamToCustomPartitionerTest()
     {
@@ -310,7 +440,7 @@ public class KStreamToTests
         inputTopic.PipeInput("other", "other");
         inputTopic.PipeInput("test", "test1");
         
-        var record = outputTopic.ReadKeyValueList()
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 5)
             .ToList();
 
         var orderRecord = record.Where(o => o.Message.Key.Equals("order")).ToList();
@@ -366,7 +496,7 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = outputTopic.ReadKeyValueList().ToList();
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
         Assert.AreEqual("test1", record[0].Message.Key);
@@ -416,7 +546,7 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = outputTopic.ReadKeyValueList().ToList();
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
         Assert.AreEqual("test1", record[0].Message.Key);
@@ -432,6 +562,50 @@ public class KStreamToTests
         Assert.AreEqual(tst, record[2].Message.Timestamp.UnixTimestampMs);
     }
 
+    [Test]
+    public void StreamToTopicExtractorRecordExtractorTimestampWithSerdesTypeTest()
+    {
+        var config = new StreamConfig<StringSerDes, StringSerDes> {
+            ApplicationId = "test-stream-table-left-join"
+        };
+
+        StreamBuilder builder = new StreamBuilder();
+
+        var tst = DateTime.Now.GetMilliseconds();
+        builder
+            .Stream<string, string>("stream")
+            .MapValues((v) => v.ToUpper())
+            .To<StringSerDes, StringSerDes>((_,_,_) => "output", 
+                (_,_,_) => tst);
+
+        Topology t = builder.Build();
+
+        var mockSupplier = new MockKafkaSupplier(4);
+        mockSupplier.CreateTopic("output");
+        mockSupplier.CreateTopic("stream");
+        
+        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        var inputTopic = driver.CreateInputTopic<string, string>("stream");
+        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        inputTopic.PipeInput("test1", "test1");
+        inputTopic.PipeInput("test2", "test2");
+        inputTopic.PipeInput("test3", "test3");
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        Assert.IsNotNull(record);
+        Assert.AreEqual(3, record.Count);
+        Assert.AreEqual("test1", record[0].Message.Key);
+        Assert.AreEqual("TEST1", record[0].Message.Value);
+        Assert.AreEqual(tst, record[0].Message.Timestamp.UnixTimestampMs);
+        
+        Assert.AreEqual("test2", record[1].Message.Key);
+        Assert.AreEqual("TEST2", record[1].Message.Value);
+        Assert.AreEqual(tst, record[1].Message.Timestamp.UnixTimestampMs);
+        
+        Assert.AreEqual("test3", record[2].Message.Key);
+        Assert.AreEqual("TEST3", record[2].Message.Value);
+        Assert.AreEqual(tst, record[2].Message.Timestamp.UnixTimestampMs);
+    }
+    
     [Test]
     public void StreamToTopicExtractorRecordExtractorTimestampTest()
     {
@@ -460,7 +634,7 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = outputTopic.ReadKeyValueList().ToList();
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
         Assert.AreEqual("test1", record[0].Message.Key);
@@ -504,7 +678,7 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = outputTopic.ReadKeyValueList().ToList();
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
         Assert.AreEqual("test1", record[0].Message.Key);
@@ -549,7 +723,7 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = outputTopic.ReadKeyValueList().ToList();
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
         Assert.AreEqual("test1", record[0].Message.Key);
@@ -597,7 +771,7 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = outputTopic.ReadKeyValueList().ToList();
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
         Assert.AreEqual("test1", record[0].Message.Key);
@@ -612,4 +786,49 @@ public class KStreamToTests
         Assert.AreEqual("TEST3", record[2].Message.Value);
         Assert.AreEqual(tst, record[2].Message.Timestamp.UnixTimestampMs);
     }
+    
+    [Test]
+    public void StreamToTopicExtractorRecordExtractorTimestampWithSerdesTypeWrapperTest()
+    {
+        var config = new StreamConfig<StringSerDes, StringSerDes> {
+            ApplicationId = "test-stream-table-left-join"
+        };
+
+        StreamBuilder builder = new StreamBuilder();
+
+        var tst = DateTime.Now.GetMilliseconds();
+        builder
+            .Stream<string, string>("stream")
+            .MapValues((v) => v.ToUpper())
+            .To<StringSerDes, StringSerDes>(new MyTopicNameExtractor(),
+                new MyRecordTimestampExtractor(tst));
+
+        Topology t = builder.Build();
+
+        var mockSupplier = new MockKafkaSupplier(4);
+        mockSupplier.CreateTopic("output");
+        mockSupplier.CreateTopic("stream");
+        
+        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        var inputTopic = driver.CreateInputTopic<string, string>("stream");
+        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        inputTopic.PipeInput("test1", "test1");
+        inputTopic.PipeInput("test2", "test2");
+        inputTopic.PipeInput("test3", "test3");
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        Assert.IsNotNull(record);
+        Assert.AreEqual(3, record.Count);
+        Assert.AreEqual("test1", record[0].Message.Key);
+        Assert.AreEqual("TEST1", record[0].Message.Value);
+        Assert.AreEqual(tst, record[0].Message.Timestamp.UnixTimestampMs);
+        
+        Assert.AreEqual("test2", record[1].Message.Key);
+        Assert.AreEqual("TEST2", record[1].Message.Value);
+        Assert.AreEqual(tst, record[1].Message.Timestamp.UnixTimestampMs);
+        
+        Assert.AreEqual("test3", record[2].Message.Key);
+        Assert.AreEqual("TEST3", record[2].Message.Value);
+        Assert.AreEqual(tst, record[2].Message.Timestamp.UnixTimestampMs);
+    }
+
 }
