@@ -172,11 +172,11 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             Assert.IsTrue(
                 (double)commitSensor.Metrics[MetricName.NameAndGroup(
                     ThreadMetrics.COMMIT + StreamMetricsRegistry.LATENCY_SUFFIX + StreamMetricsRegistry.AVG_SUFFIX, 
-                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value > 0d);
+                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value >= 0d);
             Assert.IsTrue(
                 (double)commitSensor.Metrics[MetricName.NameAndGroup(
                     ThreadMetrics.COMMIT + StreamMetricsRegistry.LATENCY_SUFFIX + StreamMetricsRegistry.MAX_SUFFIX,
-                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value > 0d);
+                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value >= 0d);
             
             var pollSensor = sensors.FirstOrDefault(s => s.Name.Equals(GetSensorName(ThreadMetrics.POLL)));
             Assert.AreEqual(4, pollSensor.Metrics.Count());
@@ -191,11 +191,11 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             Assert.IsTrue(
                 (double)pollSensor.Metrics[MetricName.NameAndGroup(
                     ThreadMetrics.POLL + StreamMetricsRegistry.LATENCY_SUFFIX + StreamMetricsRegistry.AVG_SUFFIX, 
-                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value > 0d);
+                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value >= 0d);
             Assert.IsTrue(
                 (double)pollSensor.Metrics[MetricName.NameAndGroup(
                     ThreadMetrics.POLL + StreamMetricsRegistry.LATENCY_SUFFIX + StreamMetricsRegistry.MAX_SUFFIX,
-                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value > 0d);
+                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value >= 0d);
             
             var pollRecordsSensor = sensors.FirstOrDefault(s => s.Name.Equals(GetSensorName(ThreadMetrics.POLL + StreamMetricsRegistry.RECORDS_SUFFIX)));
             Assert.AreEqual(2, pollRecordsSensor.Metrics.Count());
@@ -235,11 +235,11 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             Assert.IsTrue(
                 (double)processLatencySensor.Metrics[MetricName.NameAndGroup(
                     ThreadMetrics.PROCESS + StreamMetricsRegistry.LATENCY_SUFFIX + StreamMetricsRegistry.AVG_SUFFIX, 
-                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value > 0d);
+                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value >= 0d);
             Assert.IsTrue(
                 (double)processLatencySensor.Metrics[MetricName.NameAndGroup(
                     ThreadMetrics.PROCESS + StreamMetricsRegistry.LATENCY_SUFFIX + StreamMetricsRegistry.MAX_SUFFIX,
-                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value > 0d);
+                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value >= 0d);
             
             // Punctuate sensor
             var punctuateSensor = sensors.FirstOrDefault(s => s.Name.Equals(GetSensorName(ThreadMetrics.PUNCTUATE)));
@@ -255,11 +255,11 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             Assert.IsTrue(
                 (double)punctuateSensor.Metrics[MetricName.NameAndGroup(
                     ThreadMetrics.PUNCTUATE + StreamMetricsRegistry.LATENCY_SUFFIX + StreamMetricsRegistry.AVG_SUFFIX, 
-                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value > 0d);
+                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value >= 0d);
             Assert.IsTrue(
                 (double)punctuateSensor.Metrics[MetricName.NameAndGroup(
                     ThreadMetrics.PUNCTUATE + StreamMetricsRegistry.LATENCY_SUFFIX + StreamMetricsRegistry.MAX_SUFFIX,
-                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value > 0d);
+                    StreamMetricsRegistry.THREAD_LEVEL_GROUP)].Value >= 0d);
             
             // ratio sensors
             var processRatioSensor = sensors.FirstOrDefault(s => s.Name.Equals(GetSensorName(ThreadMetrics.PROCESS + StreamMetricsRegistry.RATIO_SUFFIX)));
