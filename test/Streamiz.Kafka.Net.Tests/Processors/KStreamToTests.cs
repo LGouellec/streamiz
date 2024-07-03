@@ -831,4 +831,201 @@ public class KStreamToTests
         Assert.AreEqual(tst, record[2].Message.Timestamp.UnixTimestampMs);
     }
 
+    
+    [Test]
+    public void StreamToLambdaTopicExtractorWithSerdesTest()
+    {
+        var config = new StreamConfig<StringSerDes, StringSerDes> {
+            ApplicationId = "test-stream-table-left-join"
+        };
+
+        StreamBuilder builder = new StreamBuilder();
+
+        var tst = DateTime.Now.GetMilliseconds();
+        builder
+            .Stream<string, string>("stream")
+            .MapValues((v) => v.ToUpper())
+            .To((_, _, _) => "output", new StringSerDes(), new StringSerDes());
+
+        Topology t = builder.Build();
+
+        var mockSupplier = new MockKafkaSupplier(4);
+        mockSupplier.CreateTopic("output");
+        mockSupplier.CreateTopic("stream");
+        
+        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        var inputTopic = driver.CreateInputTopic<string, string>("stream");
+        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        inputTopic.PipeInput("test1", "test1");
+        inputTopic.PipeInput("test2", "test2");
+        inputTopic.PipeInput("test3", "test3");
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        Assert.IsNotNull(record);
+        Assert.AreEqual(3, record.Count);
+        Assert.AreEqual("test1", record[0].Message.Key);
+        Assert.AreEqual("TEST1", record[0].Message.Value);
+        
+        Assert.AreEqual("test2", record[1].Message.Key);
+        Assert.AreEqual("TEST2", record[1].Message.Value);
+        
+        Assert.AreEqual("test3", record[2].Message.Key);
+        Assert.AreEqual("TEST3", record[2].Message.Value);
+    }
+
+    [Test]
+    public void StreamToLambdaTopicExtractorWithSerdesTypeTest()
+    {
+        var config = new StreamConfig<StringSerDes, StringSerDes> {
+            ApplicationId = "test-stream-table-left-join"
+        };
+
+        StreamBuilder builder = new StreamBuilder();
+
+        var tst = DateTime.Now.GetMilliseconds();
+        builder
+            .Stream<string, string>("stream")
+            .MapValues((v) => v.ToUpper())
+            .To<StringSerDes, StringSerDes>((_, _, _) => "output");
+
+        Topology t = builder.Build();
+
+        var mockSupplier = new MockKafkaSupplier(4);
+        mockSupplier.CreateTopic("output");
+        mockSupplier.CreateTopic("stream");
+        
+        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        var inputTopic = driver.CreateInputTopic<string, string>("stream");
+        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        inputTopic.PipeInput("test1", "test1");
+        inputTopic.PipeInput("test2", "test2");
+        inputTopic.PipeInput("test3", "test3");
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        Assert.IsNotNull(record);
+        Assert.AreEqual(3, record.Count);
+        Assert.AreEqual("test1", record[0].Message.Key);
+        Assert.AreEqual("TEST1", record[0].Message.Value);
+        
+        Assert.AreEqual("test2", record[1].Message.Key);
+        Assert.AreEqual("TEST2", record[1].Message.Value);
+        
+        Assert.AreEqual("test3", record[2].Message.Key);
+        Assert.AreEqual("TEST3", record[2].Message.Value);
+    }
+    
+    [Test]
+    public void StreamToAllLambdaWithSerdesTypeTest()
+    {
+        var config = new StreamConfig<StringSerDes, StringSerDes> {
+            ApplicationId = "test-stream-table-left-join"
+        };
+
+        StreamBuilder builder = new StreamBuilder();
+
+        var tst = DateTime.Now.GetMilliseconds();
+        builder
+            .Stream<string, string>("stream")
+            .MapValues((v) => v.ToUpper())
+            .To<StringSerDes, StringSerDes>(
+                (_, _, _) => "output",
+                (_,_,_) => tst,
+                (_,_,_,_) => new Partition(0));
+
+        Topology t = builder.Build();
+
+        var mockSupplier = new MockKafkaSupplier(4);
+        mockSupplier.CreateTopic("output");
+        mockSupplier.CreateTopic("stream");
+        
+        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        var inputTopic = driver.CreateInputTopic<string, string>("stream");
+        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        inputTopic.PipeInput("test1", "test1");
+        inputTopic.PipeInput("test2", "test2");
+        inputTopic.PipeInput("test3", "test3");
+        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        Assert.IsNotNull(record);
+        Assert.AreEqual(3, record.Count);
+        Assert.AreEqual("test1", record[0].Message.Key);
+        Assert.AreEqual("TEST1", record[0].Message.Value);
+        Assert.AreEqual(tst, record[0].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual(0, record[0].Partition.Value);
+        
+        Assert.AreEqual("test2", record[1].Message.Key);
+        Assert.AreEqual("TEST2", record[1].Message.Value);
+        Assert.AreEqual(tst, record[1].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual(0, record[1].Partition.Value);
+        
+        Assert.AreEqual("test3", record[2].Message.Key);
+        Assert.AreEqual("TEST3", record[2].Message.Value);
+        Assert.AreEqual(tst, record[2].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual(0, record[2].Partition.Value);
+    }
+    
+    [Test]
+    public void StreamArgumentExceptionTopicEmptyTest()
+    {
+        var config = new StreamConfig<StringSerDes, StringSerDes> {
+            ApplicationId = "test-stream-table-left-join"
+        };
+
+        StreamBuilder builder = new StreamBuilder();
+
+        var stream = builder
+            .Stream<string, string>("stream")
+            .MapValues((v) => v.ToUpper());
+
+        Assert.Throws<ArgumentException>(() => stream.To(
+            string.Empty, (_,_,_,_) => Partition.Any));
+    }
+
+    [Test]
+    public void StreamArgumentExceptionTopicEmpty2Test()
+    {
+        var config = new StreamConfig<StringSerDes, StringSerDes> {
+            ApplicationId = "test-stream-table-left-join"
+        };
+
+        StreamBuilder builder = new StreamBuilder();
+
+        var stream = builder
+            .Stream<string, string>("stream")
+            .MapValues((v) => v.ToUpper());
+
+        Assert.Throws<ArgumentException>(() => stream.To(
+            string.Empty, new MyStreamPartitioner()));
+    }
+    
+    [Test]
+    public void StreamArgumentExceptionTopicEmpty3Test()
+    {
+        var config = new StreamConfig<StringSerDes, StringSerDes> {
+            ApplicationId = "test-stream-table-left-join"
+        };
+
+        StreamBuilder builder = new StreamBuilder();
+
+        var stream = builder
+            .Stream<string, string>("stream")
+            .MapValues((v) => v.ToUpper());
+
+        Assert.Throws<ArgumentException>(() => stream.To(
+            string.Empty, new StringSerDes(), new StringSerDes()));
+    }
+    
+    [Test]
+    public void StreamArgumentExceptionTopicEmpty4Test()
+    {
+        var config = new StreamConfig<StringSerDes, StringSerDes> {
+            ApplicationId = "test-stream-table-left-join"
+        };
+
+        StreamBuilder builder = new StreamBuilder();
+
+        var stream = builder
+            .Stream<string, string>("stream")
+            .MapValues((v) => v.ToUpper());
+
+        Assert.Throws<ArgumentException>(() => stream.To(
+            string.Empty, (_,_,_,_) => Partition.Any, new StringSerDes(), new StringSerDes()));
+    }
 }
