@@ -77,22 +77,24 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
-        Assert.AreEqual(0, record[0].Partition.Value);
-            
-            
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
-        Assert.AreEqual(0, record[1].Partition.Value);
-            
-            
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
-        Assert.AreEqual(0, record[2].Partition.Value);
+        
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
+        Assert.AreEqual(0, record["test1"].Partition.Value);
+        
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
+        Assert.AreEqual(0, record["test2"].Partition.Value);
+        
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
+        Assert.AreEqual(0, record["test3"].Partition.Value);
     }
     
     [Test]
@@ -125,22 +127,24 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
-        Assert.AreEqual(0, record[0].Partition.Value);
-            
-            
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
-        Assert.AreEqual(0, record[1].Partition.Value);
-            
-            
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
-        Assert.AreEqual(0, record[2].Partition.Value);
+        
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
+        Assert.AreEqual(0, record["test1"].Partition.Value);
+        
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
+        Assert.AreEqual(0, record["test2"].Partition.Value);
+        
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
+        Assert.AreEqual(0, record["test3"].Partition.Value);
     }
     
     [Test]
@@ -171,22 +175,24 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
-        Assert.AreEqual(0, record[0].Partition.Value);
-            
-            
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
-        Assert.AreEqual(0, record[1].Partition.Value);
-            
-            
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
-        Assert.AreEqual(0, record[2].Partition.Value);
+        
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
+        Assert.AreEqual(0, record["test1"].Partition.Value);
+        
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
+        Assert.AreEqual(0, record["test2"].Partition.Value);
+        
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
+        Assert.AreEqual(0, record["test3"].Partition.Value);
     }
     
     [Test]
@@ -219,22 +225,23 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
-        Assert.AreEqual(0, record[0].Partition.Value);
-            
-            
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
-        Assert.AreEqual(0, record[1].Partition.Value);
-            
-            
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
-        Assert.AreEqual(0, record[2].Partition.Value);
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
+        Assert.AreEqual(0, record["test1"].Partition.Value);
+        
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
+        Assert.AreEqual(0, record["test2"].Partition.Value);
+        
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
+        Assert.AreEqual(0, record["test3"].Partition.Value);
     }
     
     [Test]
@@ -265,22 +272,23 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
-        Assert.AreEqual(0, record[0].Partition.Value);
-            
-            
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
-        Assert.AreEqual(0, record[1].Partition.Value);
-            
-            
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
-        Assert.AreEqual(0, record[2].Partition.Value);
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
+        Assert.AreEqual(0, record["test1"].Partition.Value);
+        
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
+        Assert.AreEqual(0, record["test2"].Partition.Value);
+        
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
+        Assert.AreEqual(0, record["test3"].Partition.Value);
     }
     
     [Test]
@@ -310,22 +318,23 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
-        Assert.AreEqual(0, record[0].Partition.Value);
-            
-            
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
-        Assert.AreEqual(0, record[1].Partition.Value);
-            
-            
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
-        Assert.AreEqual(0, record[2].Partition.Value);
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
+        Assert.AreEqual(0, record["test1"].Partition.Value);
+        
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
+        Assert.AreEqual(0, record["test2"].Partition.Value);
+        
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
+        Assert.AreEqual(0, record["test3"].Partition.Value);
     }
     
     [Test]
@@ -357,17 +366,20 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
-            
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
         
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
+        
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
     }
 
     [Test]
@@ -397,17 +409,20 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
-            
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
         
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
+        
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
     }
     
     [Test]
@@ -496,25 +511,26 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
-        Assert.AreEqual(tst, record[0].Message.Timestamp.UnixTimestampMs);
-        Assert.AreEqual(0, record[0].Partition.Value);
-            
-            
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
-        Assert.AreEqual(tst, record[1].Message.Timestamp.UnixTimestampMs);
-        Assert.AreEqual(0, record[1].Partition.Value);
-            
-            
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
-        Assert.AreEqual(tst, record[2].Message.Timestamp.UnixTimestampMs);
-        Assert.AreEqual(0, record[2].Partition.Value);
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
+        Assert.AreEqual(0, record["test1"].Partition.Value);
+        Assert.AreEqual(tst, record["test1"].Message.Timestamp.UnixTimestampMs);
+        
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
+        Assert.AreEqual(0, record["test2"].Partition.Value);
+        Assert.AreEqual(tst, record["test2"].Message.Timestamp.UnixTimestampMs);
+        
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
+        Assert.AreEqual(0, record["test3"].Partition.Value);
+        Assert.AreEqual(tst, record["test3"].Message.Timestamp.UnixTimestampMs);
     }
 
     [Test]
@@ -546,20 +562,24 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
-        Assert.AreEqual(tst, record[0].Message.Timestamp.UnixTimestampMs);
         
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
-        Assert.AreEqual(tst, record[1].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
+        Assert.AreEqual(tst, record["test1"].Message.Timestamp.UnixTimestampMs);
         
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
-        Assert.AreEqual(tst, record[2].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
+        Assert.AreEqual(tst, record["test2"].Message.Timestamp.UnixTimestampMs);
+        
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
+        Assert.AreEqual(tst, record["test3"].Message.Timestamp.UnixTimestampMs);
     }
 
     [Test]
@@ -590,20 +610,24 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
-        Assert.AreEqual(tst, record[0].Message.Timestamp.UnixTimestampMs);
         
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
-        Assert.AreEqual(tst, record[1].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
+        Assert.AreEqual(tst, record["test1"].Message.Timestamp.UnixTimestampMs);
         
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
-        Assert.AreEqual(tst, record[2].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
+        Assert.AreEqual(tst, record["test2"].Message.Timestamp.UnixTimestampMs);
+        
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
+        Assert.AreEqual(tst, record["test3"].Message.Timestamp.UnixTimestampMs);
     }
     
     [Test]
@@ -634,20 +658,23 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
-        Assert.AreEqual(tst, record[0].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
+        Assert.AreEqual(tst, record["test1"].Message.Timestamp.UnixTimestampMs);
         
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
-        Assert.AreEqual(tst, record[1].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
+        Assert.AreEqual(tst, record["test2"].Message.Timestamp.UnixTimestampMs);
         
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
-        Assert.AreEqual(tst, record[2].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
+        Assert.AreEqual(tst, record["test3"].Message.Timestamp.UnixTimestampMs);
     }
 
     [Test]
@@ -678,20 +705,23 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
-        Assert.IsTrue(record[0].TopicPartition.Partition.Value >= 0);
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
+        Assert.IsTrue(record["test1"].TopicPartition.Partition.Value >= 0);
         
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
-        Assert.IsTrue(record[1].TopicPartition.Partition.Value >= 0);
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
+        Assert.IsTrue(record["test2"].TopicPartition.Partition.Value >= 0);
         
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
-        Assert.IsTrue(record[2].TopicPartition.Partition.Value >= 0);
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
+        Assert.IsTrue(record["test3"].TopicPartition.Partition.Value >= 0);
     }
     
     [Test]
@@ -723,23 +753,26 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
-        Assert.AreEqual(tst, record[0].Message.Timestamp.UnixTimestampMs);
-        Assert.IsTrue(record[0].TopicPartition.Partition.Value >= 0);
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
+        Assert.AreEqual(tst, record["test1"].Message.Timestamp.UnixTimestampMs);
+        Assert.IsTrue(record["test1"].TopicPartition.Partition.Value >= 0);
         
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
-        Assert.AreEqual(tst, record[1].Message.Timestamp.UnixTimestampMs);
-        Assert.IsTrue(record[1].TopicPartition.Partition.Value >= 0);
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
+        Assert.AreEqual(tst, record["test2"].Message.Timestamp.UnixTimestampMs);
+        Assert.IsTrue(record["test2"].TopicPartition.Partition.Value >= 0);
         
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
-        Assert.AreEqual(tst, record[2].Message.Timestamp.UnixTimestampMs);
-        Assert.IsTrue(record[2].TopicPartition.Partition.Value >= 0);
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
+        Assert.AreEqual(tst, record["test3"].Message.Timestamp.UnixTimestampMs);
+        Assert.IsTrue(record["test3"].TopicPartition.Partition.Value >= 0);
     }
     
     [Test]
@@ -771,20 +804,23 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
-        Assert.AreEqual(tst, record[0].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
+        Assert.AreEqual(tst, record["test1"].Message.Timestamp.UnixTimestampMs);
         
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
-        Assert.AreEqual(tst, record[1].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
+        Assert.AreEqual(tst, record["test2"].Message.Timestamp.UnixTimestampMs);
         
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
-        Assert.AreEqual(tst, record[2].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
+        Assert.AreEqual(tst, record["test3"].Message.Timestamp.UnixTimestampMs);
     }
     
     [Test]
@@ -815,20 +851,23 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
-        Assert.AreEqual(tst, record[0].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
+        Assert.AreEqual(tst, record["test1"].Message.Timestamp.UnixTimestampMs);
         
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
-        Assert.AreEqual(tst, record[1].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
+        Assert.AreEqual(tst, record["test2"].Message.Timestamp.UnixTimestampMs);
         
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
-        Assert.AreEqual(tst, record[2].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
+        Assert.AreEqual(tst, record["test3"].Message.Timestamp.UnixTimestampMs);
     }
 
     
@@ -859,17 +898,20 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
         
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
         
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
     }
 
     [Test]
@@ -899,17 +941,20 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
         
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
         
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
     }
     
     [Test]
@@ -942,23 +987,26 @@ public class KStreamToTests
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
-        var record = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(outputTopic, 3);
+        var record = IntegrationTestUtils
+            .WaitUntilMinKeyValueRecordsReceived(outputTopic, 3)
+            .ToDictionary(c => c.Message.Key, c => c);
+        
         Assert.IsNotNull(record);
         Assert.AreEqual(3, record.Count);
-        Assert.AreEqual("test1", record[0].Message.Key);
-        Assert.AreEqual("TEST1", record[0].Message.Value);
-        Assert.AreEqual(tst, record[0].Message.Timestamp.UnixTimestampMs);
-        Assert.AreEqual(0, record[0].Partition.Value);
+        Assert.AreEqual("test1", record["test1"].Message.Key);
+        Assert.AreEqual("TEST1", record["test1"].Message.Value);
+        Assert.AreEqual(tst, record["test1"].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual(0, record["test1"].TopicPartition.Partition.Value);
         
-        Assert.AreEqual("test2", record[1].Message.Key);
-        Assert.AreEqual("TEST2", record[1].Message.Value);
-        Assert.AreEqual(tst, record[1].Message.Timestamp.UnixTimestampMs);
-        Assert.AreEqual(0, record[1].Partition.Value);
+        Assert.AreEqual("test2", record["test2"].Message.Key);
+        Assert.AreEqual("TEST2", record["test2"].Message.Value);
+        Assert.AreEqual(tst, record["test2"].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual(0, record["test2"].TopicPartition.Partition.Value);
         
-        Assert.AreEqual("test3", record[2].Message.Key);
-        Assert.AreEqual("TEST3", record[2].Message.Value);
-        Assert.AreEqual(tst, record[2].Message.Timestamp.UnixTimestampMs);
-        Assert.AreEqual(0, record[2].Partition.Value);
+        Assert.AreEqual("test3", record["test3"].Message.Key);
+        Assert.AreEqual("TEST3", record["test3"].Message.Value);
+        Assert.AreEqual(tst, record["test3"].Message.Timestamp.UnixTimestampMs);
+        Assert.AreEqual(0, record["test3"].TopicPartition.Partition.Value);
     }
     
     [Test]

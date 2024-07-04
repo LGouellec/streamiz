@@ -32,8 +32,7 @@ namespace Streamiz.Kafka.Net.Processors
                         new Change<V1>(sendOldValues ? kv.Value.OldValue.Value : default, kv.Value.NewValue.Value),
                         kv.Value.NewValue.Timestamp);
                 },
-                sendOldValues,
-                context.ConfigEnableCache);
+                sendOldValues);
         }
     }
 }

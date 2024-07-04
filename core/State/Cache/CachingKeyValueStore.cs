@@ -8,6 +8,7 @@ using Streamiz.Kafka.Net.State.Cache.Enumerator;
 using Streamiz.Kafka.Net.State.Cache.Internal;
 using Streamiz.Kafka.Net.State.Enumerator;
 using Streamiz.Kafka.Net.State.Internal;
+using Streamiz.Kafka.Net.Table;
 using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.State.Cache
@@ -17,17 +18,21 @@ namespace Streamiz.Kafka.Net.State.Cache
         IKeyValueStore<Bytes, byte[]>,
         ICachedStateStore<byte[], byte[]>
     {
-        private MemoryCache<Bytes, CacheEntryValue> cache;
+        private readonly CacheSize _cacheSize;
         private Action<KeyValuePair<byte[], Change<byte[]>>> flushListener;
         private bool sendOldValue;
         private bool cachingEnabled;
 
         private Sensor hitRatioSensor = NoRunnableSensor.Empty;
         private Sensor totalCacheSizeSensor = NoRunnableSensor.Empty;
-        
-        public CachingKeyValueStore(IKeyValueStore<Bytes, byte[]> wrapped) 
+
+        internal MemoryCache<Bytes, CacheEntryValue> Cache { get; private set; }
+
+        public CachingKeyValueStore(IKeyValueStore<Bytes, byte[]> wrapped, CacheSize cacheSize) 
             : base(wrapped)
-        { }
+        {
+            _cacheSize = cacheSize;
+        }
 
         protected virtual void RegisterMetrics()
         {
@@ -39,7 +44,7 @@ namespace Streamiz.Kafka.Net.State.Cache
             }
         }
 
-        public override bool IsCachedStore => true;
+        public override bool IsCachedStore => cachingEnabled;
         
         public bool SetFlushListener(Action<KeyValuePair<byte[], Change<byte[]>>> listener, bool sendOldChanges)
         {
@@ -51,10 +56,11 @@ namespace Streamiz.Kafka.Net.State.Cache
         // Only for testing
         internal void CreateCache(ProcessorContext context)
         {
-            cachingEnabled = context.Configuration.StateStoreCacheMaxBytes > 0;
+            cachingEnabled = context.Configuration.DefaultStateStoreCacheMaxBytes > 0 ||
+                             _cacheSize is { CacheSizeBytes: > 0 };
             if(cachingEnabled)
-                cache = new MemoryCache<Bytes, CacheEntryValue>(new MemoryCacheOptions {
-                    SizeLimit = context.Configuration.StateStoreCacheMaxBytes,
+                Cache = new MemoryCache<Bytes, CacheEntryValue>(new MemoryCacheOptions {
+                    SizeLimit = _cacheSize is { CacheSizeBytes: > 0 } ? _cacheSize.CacheSizeBytes :  context.Configuration.DefaultStateStoreCacheMaxBytes,
                     CompactionPercentage = .20
                 }, new BytesComparer());
         }
@@ -65,7 +71,7 @@ namespace Streamiz.Kafka.Net.State.Cache
             {
                 byte[] value;
                 
-                if (cache.TryGetValue(key, out CacheEntryValue priorEntry))
+                if (Cache.TryGetValue(key, out CacheEntryValue priorEntry))
                     value = priorEntry.Value;
                 else
                 {
@@ -74,7 +80,7 @@ namespace Streamiz.Kafka.Net.State.Cache
                         PutInternal(key, new CacheEntryValue(value), true);
                 }
 
-                var currentStat = cache.GetCurrentStatistics();
+                var currentStat = Cache.GetCurrentStatistics();
                 hitRatioSensor.Record((double)currentStat.TotalHits / (currentStat.TotalMisses + currentStat.TotalHits));
                 
                 return value;
@@ -92,7 +98,7 @@ namespace Streamiz.Kafka.Net.State.Cache
         
         private void UpdateRatioSensor()
         {
-            var currentStat = cache.GetCurrentStatistics();
+            var currentStat = Cache.GetCurrentStatistics();
             hitRatioSensor.Record((double)currentStat.TotalHits / (currentStat.TotalMisses + currentStat.TotalHits));
         }
 
@@ -126,14 +132,14 @@ namespace Streamiz.Kafka.Net.State.Cache
                 context.SetRecordMetaData(currentContext);
             }
             
-            totalCacheSizeSensor.Record(cache.Size);
+            totalCacheSizeSensor.Record(Cache.Size);
         }
         
         public override void Flush()
         {
             if (cachingEnabled)
             {
-                cache.Compact(1); // Compact 100% of the cache
+                Cache.Compact(1); // Compact 100% of the cache
                 base.Flush();
             }
             else
@@ -150,8 +156,8 @@ namespace Streamiz.Kafka.Net.State.Cache
                 var storeEnumerator = wrapped.Range(from, to);
                 var cacheEnumerator =
                     new CacheEnumerator<Bytes, CacheEntryValue>(
-                        cache.KeyRange(from, to, true, true),
-                        cache,
+                        Cache.KeyRange(from, to, true, true),
+                        Cache,
                         UpdateRatioSensor);
 
                 return new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, true);
@@ -166,8 +172,8 @@ namespace Streamiz.Kafka.Net.State.Cache
                 var storeEnumerator = wrapped.ReverseRange(from, to);
                 var cacheEnumerator =
                     new CacheEnumerator<Bytes, CacheEntryValue>(
-                        cache.KeyRange(from, to, true, false),
-                        cache,
+                        Cache.KeyRange(from, to, true, false),
+                        Cache,
                         UpdateRatioSensor);
 
                 return new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, false);
@@ -180,8 +186,8 @@ namespace Streamiz.Kafka.Net.State.Cache
         {
             var storeEnumerator = new WrapEnumerableKeyValueEnumerator<Bytes, byte[]>(wrapped.All());
             var cacheEnumerator = new CacheEnumerator<Bytes, CacheEntryValue>(
-                cache.KeySetEnumerable(reverse),
-                cache,
+                Cache.KeySetEnumerable(reverse),
+                Cache,
                 UpdateRatioSensor);
 
             var mergedEnumerator = new MergedStoredCacheKeyValueEnumerator(cacheEnumerator, storeEnumerator, reverse);
@@ -205,7 +211,7 @@ namespace Streamiz.Kafka.Net.State.Cache
             return wrapped.ReverseAll();
         }
 
-        public long ApproximateNumEntries() => cachingEnabled ? cache.Count : wrapped.ApproximateNumEntries();
+        public long ApproximateNumEntries() => cachingEnabled ? Cache.Count : wrapped.ApproximateNumEntries();
 
         public void Put(Bytes key, byte[] value)
         {
@@ -231,10 +237,10 @@ namespace Streamiz.Kafka.Net.State.Cache
 
             var memoryCacheEntryOptions = new MemoryCacheEntryOptions<Bytes, CacheEntryValue>()
                 .SetSize(totalSize)
-                .RegisterPostEvictionCallback(CacheEntryEviction, cache);
+                .RegisterPostEvictionCallback(CacheEntryEviction, Cache);
             
-            cache.Set(key, entry, memoryCacheEntryOptions, fromWrappedCache ? EvictionReason.None : EvictionReason.Setted);
-            totalCacheSizeSensor.Record(cache.Size);
+            Cache.Set(key, entry, memoryCacheEntryOptions, fromWrappedCache ? EvictionReason.None : EvictionReason.Setted);
+            totalCacheSizeSensor.Record(Cache.Size);
         }
 
         public byte[] PutIfAbsent(Bytes key, byte[] value)
@@ -277,7 +283,7 @@ namespace Streamiz.Kafka.Net.State.Cache
         {
             if (cachingEnabled)
             {
-                cache.Dispose();
+                Cache.Dispose();
                 base.Close();
             }
             else 

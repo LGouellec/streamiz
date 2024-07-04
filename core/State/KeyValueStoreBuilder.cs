@@ -63,7 +63,7 @@ namespace Streamiz.Kafka.Net.State
 
         private IKeyValueStore<Bytes, byte[]> WrapCaching(IKeyValueStore<Bytes, byte[]> inner)
         {
-            return !CachingEnabled ? inner : new CachingKeyValueStore(inner);
+            return !CachingEnabled ? inner : new CachingKeyValueStore(inner, CacheSize);
         }
     }
 }
