@@ -1,6 +1,7 @@
 ﻿using Streamiz.Kafka.Net.Processors;
 using System;
 using System.Collections.Generic;
+using Streamiz.Kafka.Net.Table;
 
 namespace Streamiz.Kafka.Net.State
 {
@@ -30,6 +31,10 @@ namespace Streamiz.Kafka.Net.State
         /// </summary>
         string Name { get; }
         /// <summary>
+        /// Cache size of the storage
+        /// </summary>
+        CacheSize CacheSize { get; }
+        /// <summary>
         /// Build the state store
         /// </summary>
         /// <returns></returns>
@@ -47,7 +52,7 @@ namespace Streamiz.Kafka.Net.State
         /// Activate caching
         /// </summary>
         /// <returns></returns>
-        IStoreBuilder<T> WithCachingEnabled();
+        IStoreBuilder<T> WithCachingEnabled(CacheSize cacheSize = null);
         /// <summary>
         /// Disable caching
         /// </summary>

@@ -17,14 +17,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             IStateStore store,
             IProcessor processor,
             Action<KeyValuePair<K, Change<ValueAndTimestamp<V>>>> listener,
-            bool sendOldValues,
-            bool configCachingEnabled)
+            bool sendOldValues)
         {
             this.processor = processor;
             this.sendOldValues = sendOldValues;
-            cachingEnabled = configCachingEnabled &&
-                                  ((IWrappedStateStore)store).IsCachedStore &&
-                                  ((ICachedStateStore<K, ValueAndTimestamp<V>>)store).SetFlushListener(listener, sendOldValues);
+            cachingEnabled = ((IWrappedStateStore)store).IsCachedStore &&
+                             ((ICachedStateStore<K, ValueAndTimestamp<V>>)store).SetFlushListener(listener, sendOldValues);
         }
 
         public void MaybeForward(K key, V newValue, V oldValue)

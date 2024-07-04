@@ -42,7 +42,7 @@ namespace Streamiz.Kafka.Net.State.Internal
                 builder.WithLoggingDisabled();
 
             if (materializedInternal.CachingEnabled)
-                builder.WithCachingEnabled();
+                builder.WithCachingEnabled(materializedInternal.CacheSize);
 
             return builder;
         }

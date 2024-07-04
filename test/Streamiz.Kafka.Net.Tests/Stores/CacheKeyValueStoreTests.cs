@@ -63,7 +63,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         {
             config = new StreamConfig();
             config.ApplicationId = "unit-test-cachestore-kv";
-            config.StateStoreCacheMaxBytes = 1000;
+            config.DefaultStateStoreCacheMaxBytes = 1000;
 
             threadId = Thread.CurrentThread.Name ?? StreamMetricsRegistry.UNKNOWN_THREAD;
             id = new TaskId { Id = 0, Partition = 0 };
@@ -82,7 +82,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             context = new ProcessorContext(task.Object, config, stateManager, metricsRegistry);
 
             inMemoryKeyValue = new InMemoryKeyValueStore("store");
-            cache = new CachingKeyValueStore(inMemoryKeyValue);
+            cache = new CachingKeyValueStore(inMemoryKeyValue, null);
             cache.Init(context, cache);
         }
 
@@ -99,7 +99,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         [Test]
         public void ExpiryCapacityTest()
         {
-            config.StateStoreCacheMaxBytes = 30;
+            config.DefaultStateStoreCacheMaxBytes = 30;
             cache.CreateCache(context);
             bool checkListener = true;
             cache.SetFlushListener(record => {
@@ -240,7 +240,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         [Test]
         public void DisabledCachingTest()
         {
-            config.StateStoreCacheMaxBytes = 0;
+            config.DefaultStateStoreCacheMaxBytes = 0;
             cache.CreateCache(context);
             
             context.SetRecordMetaData(new RecordContext(new Headers(), 0, 100, 0, "topic"));

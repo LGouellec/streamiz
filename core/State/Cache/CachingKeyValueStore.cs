@@ -8,6 +8,7 @@ using Streamiz.Kafka.Net.State.Cache.Enumerator;
 using Streamiz.Kafka.Net.State.Cache.Internal;
 using Streamiz.Kafka.Net.State.Enumerator;
 using Streamiz.Kafka.Net.State.Internal;
+using Streamiz.Kafka.Net.Table;
 using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.State.Cache
@@ -17,6 +18,7 @@ namespace Streamiz.Kafka.Net.State.Cache
         IKeyValueStore<Bytes, byte[]>,
         ICachedStateStore<byte[], byte[]>
     {
+        private readonly CacheSize _cacheSize;
         private MemoryCache<Bytes, CacheEntryValue> cache;
         private Action<KeyValuePair<byte[], Change<byte[]>>> flushListener;
         private bool sendOldValue;
@@ -25,9 +27,11 @@ namespace Streamiz.Kafka.Net.State.Cache
         private Sensor hitRatioSensor = NoRunnableSensor.Empty;
         private Sensor totalCacheSizeSensor = NoRunnableSensor.Empty;
         
-        public CachingKeyValueStore(IKeyValueStore<Bytes, byte[]> wrapped) 
+        public CachingKeyValueStore(IKeyValueStore<Bytes, byte[]> wrapped, CacheSize cacheSize) 
             : base(wrapped)
-        { }
+        {
+            _cacheSize = cacheSize;
+        }
 
         protected virtual void RegisterMetrics()
         {
@@ -39,7 +43,7 @@ namespace Streamiz.Kafka.Net.State.Cache
             }
         }
 
-        public override bool IsCachedStore => true;
+        public override bool IsCachedStore => cachingEnabled;
         
         public bool SetFlushListener(Action<KeyValuePair<byte[], Change<byte[]>>> listener, bool sendOldChanges)
         {
@@ -51,10 +55,11 @@ namespace Streamiz.Kafka.Net.State.Cache
         // Only for testing
         internal void CreateCache(ProcessorContext context)
         {
-            cachingEnabled = context.Configuration.StateStoreCacheMaxBytes > 0;
+            cachingEnabled = context.Configuration.DefaultStateStoreCacheMaxBytes > 0 ||
+                             _cacheSize is { CacheSizeBytes: > 0 };
             if(cachingEnabled)
                 cache = new MemoryCache<Bytes, CacheEntryValue>(new MemoryCacheOptions {
-                    SizeLimit = context.Configuration.StateStoreCacheMaxBytes,
+                    SizeLimit = _cacheSize is { CacheSizeBytes: > 0 } ? _cacheSize.CacheSizeBytes :  context.Configuration.DefaultStateStoreCacheMaxBytes,
                     CompactionPercentage = .20
                 }, new BytesComparer());
         }

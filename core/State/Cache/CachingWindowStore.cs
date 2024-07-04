@@ -10,6 +10,7 @@ using Streamiz.Kafka.Net.State.Cache.Internal;
 using Streamiz.Kafka.Net.State.Enumerator;
 using Streamiz.Kafka.Net.State.Helper;
 using Streamiz.Kafka.Net.State.Internal;
+using Streamiz.Kafka.Net.Table;
 using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.State.Cache
@@ -21,7 +22,8 @@ namespace Streamiz.Kafka.Net.State.Cache
         ICachedStateStore<byte[], byte[]>
     {
         private readonly long _windowSize;
-        
+        private readonly CacheSize _cacheSize;
+
         private MemoryCache<Bytes, CacheEntryValue> cache;
         private bool cachingEnabled;
         private bool sendOldValue;
@@ -35,10 +37,12 @@ namespace Streamiz.Kafka.Net.State.Cache
             IWindowStore<Bytes, byte[]> wrapped,
             long windowSize,
             long segmentInterval,
-            IKeySchema keySchema) 
+            IKeySchema keySchema,
+            CacheSize cacheSize)
             : base(wrapped)
         {
             _windowSize = windowSize;
+            _cacheSize = cacheSize;
             SegmentInterval = segmentInterval;
             KeySchema = keySchema;
             SegmentCacheFunction = new SegmentedCacheFunction(KeySchema, segmentInterval);
@@ -51,7 +55,7 @@ namespace Streamiz.Kafka.Net.State.Cache
         internal ICacheFunction SegmentCacheFunction { get; }
         internal IKeySchema KeySchema { get; }
 
-        public override bool IsCachedStore => true;
+        public override bool IsCachedStore => cachingEnabled;
 
         public override void Init(ProcessorContext context, IStateStore root)
         {
@@ -73,10 +77,11 @@ namespace Streamiz.Kafka.Net.State.Cache
         // Only for testing
         internal void CreateCache(ProcessorContext context)
         {
-            cachingEnabled = context.Configuration.StateStoreCacheMaxBytes > 0;
+            cachingEnabled = context.Configuration.DefaultStateStoreCacheMaxBytes > 0 ||
+                             _cacheSize is { CacheSizeBytes: > 0 };
             if(cachingEnabled)
                 cache = new MemoryCache<Bytes, CacheEntryValue>(new MemoryCacheOptions {
-                    SizeLimit = context.Configuration.StateStoreCacheMaxBytes,
+                    SizeLimit = _cacheSize is { CacheSizeBytes: > 0 } ? _cacheSize.CacheSizeBytes :  context.Configuration.DefaultStateStoreCacheMaxBytes,
                     CompactionPercentage = .20
                 }, new BytesComparer());
         }
