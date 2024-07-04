@@ -67,12 +67,12 @@ namespace Streamiz.Kafka.Net
         /// Returns the state directory for the partition.
         /// </summary>
         public virtual string StateDir => $"{Path.Combine(Configuration.StateDir, Configuration.ApplicationId, Id.ToString())}";
-        
-        // FOR TESTING
+
         internal ProcessorContext()
         {
+            
         }
-
+        
         internal ProcessorContext(AbstractTask task, IStreamConfig configuration, IStateManager stateManager,
             StreamMetricsRegistry streamMetricsRegistry)
         { 

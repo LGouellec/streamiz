@@ -2,7 +2,7 @@ namespace Streamiz.Kafka.Net.Table
 {
     public class CacheSize
     {
-        internal long CacheSizeBytes { get; private set; }
+        public long CacheSizeBytes { get; private set; }
         
         public static CacheSize OfB(int bytes) => new CacheSize { CacheSizeBytes = bytes };
         public static CacheSize OfKb(int kilobytes) => new CacheSize { CacheSizeBytes = kilobytes * 1024 };

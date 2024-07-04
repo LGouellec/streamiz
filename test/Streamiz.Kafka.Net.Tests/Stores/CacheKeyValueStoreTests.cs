@@ -18,7 +18,6 @@ using Streamiz.Kafka.Net.State.InMemory;
 
 namespace Streamiz.Kafka.Net.Tests.Stores
 {
-    // TODO : add test add event from internal wrapped store and flush cache store
     public class CacheKeyValueStoreTests
     {
         private StreamConfig config;

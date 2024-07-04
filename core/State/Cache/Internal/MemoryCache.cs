@@ -25,8 +25,10 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         private readonly IComparer<K> _keyComparer;
         private readonly IClockTime _clockTime;
         internal readonly ILogger Logger;
-
+        
         private readonly MemoryCacheOptions _options;
+
+        internal long Capacity => _options.SizeLimit;
 
         private readonly List<WeakReference<Stats>> _allStats;
         private readonly Stats _accumulatedStats;
