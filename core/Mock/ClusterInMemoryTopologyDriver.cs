@@ -8,7 +8,6 @@ using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Stream.Internal;

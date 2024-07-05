@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Streamiz.Kafka.Net.State;
 
 namespace Streamiz.Kafka.Net.Processors
@@ -36,7 +37,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             LogProcessingKeyValue(key, value);
             
-            if (value != null)
+            if (!EqualityComparer<V>.Default.Equals(value, default(V)))
             {
                 if (IsDuplicate(key, value)) {
                     windowEventStore.Put(key, value, context.Timestamp);
@@ -44,6 +45,10 @@ namespace Streamiz.Kafka.Net.Processors
                     windowEventStore.Put(key, value, context.Timestamp);
                     Forward(key, value);
                 }
+            }
+            else
+            {
+                Forward(key, value);
             }
         }
         
