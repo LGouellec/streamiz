@@ -1222,7 +1222,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             }
             
             var options = TumblingWindowOptions.Of((long)interval.TotalMilliseconds);
-            var storeBuilder = new WindowStoreMaterializer<K, V, TimeWindow>(options, materialized).Materialize(); 
+            var storeBuilder = new WindowStoreMaterializer<K, V, TimeWindow, IWindowStore<K, V>>(options, materialized).Materialize(); 
             
             var processorSupplier = new KStreamDropDuplicate<K, V>(
                 name,
