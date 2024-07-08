@@ -2306,5 +2306,13 @@ namespace Streamiz.Kafka.Net.Stream
         IKStream<K, V> WithRecordTimestamp(Func<K, V, long> timestampExtractor, string named = null);
 
         #endregion
+        
+        #region DropDuplicates
+        
+        IKStream<K, V> DropDuplicate(Func<K, V, V, bool> valueComparer, TimeSpan interval, string named = null);
+        
+        IKStream<K, V> DropDuplicate(Func<K, V, V, bool> valueComparer, TimeSpan interval, Materialized<K, V, IWindowStore<Bytes, byte[]>> materialized, string named = null);
+        
+        #endregion
     }
 }

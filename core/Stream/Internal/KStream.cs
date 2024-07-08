@@ -15,6 +15,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Streamiz.Kafka.Net.Processors.Public;
+using Streamiz.Kafka.Net.State.Supplier;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
@@ -55,6 +56,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         internal static readonly string FLATMAPVALUES_ASYNC_NAME = "KSTREAM-FLATMAPVALUES-ASYNC-";
         internal static readonly string FOREACH_ASYNC_NAME = "KSTREAM-FOREACH-ASYNC-";
         internal static readonly string RECORD_TIMESTAMP_NAME = "KSTREAM-RECORDTIMESTAMP-";
+        internal static readonly string DROP_DUPLICATES_NAME = "KSTREAM-DROPDUPLICATES-";
 
         internal static readonly string REQUEST_SINK_SUFFIX = "-request-sink";
         internal static readonly string RESPONSE_SINK_SUFFIX = "-response-sink";
@@ -1189,6 +1191,64 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         }
 
         #endregion
+        
+        #region DropDuplicates
+
+        public IKStream<K, V> DropDuplicate(Func<K, V, V, bool> valueComparer, TimeSpan interval, string named = null)
+            => DropDuplicate(valueComparer, interval, null, named);
+
+        public IKStream<K, V> DropDuplicate(Func<K, V, V, bool> valueComparer, TimeSpan interval, Materialized<K, V, IWindowStore<Bytes, byte[]>> materialized, string named = null)
+        {
+            materialized ??= Materialized<K, V, IWindowStore<Bytes, byte[]>>.Create();
+
+            var name = new Named(named).OrElseGenerateWithPrefix(builder, KStream.DROP_DUPLICATES_NAME);
+            materialized.UseProvider(builder, KStream.DROP_DUPLICATES_NAME);
+            StreamGraphNode tableParentNode = null;
+            IEnumerable<string> subTopologySourceNodes = null;
+            
+            if (RepartitionRequired)
+            {
+                (string repartitionSourceName, RepartitionNode<K, V> node) = CreateRepartitionSource(
+                    name,
+                    KeySerdes,
+                    ValueSerdes, builder);
+                tableParentNode = node;
+                builder.AddGraphNode(Node, tableParentNode);
+                subTopologySourceNodes = repartitionSourceName.ToSingle();
+            }
+            else{
+                tableParentNode = Node;
+                subTopologySourceNodes = SetSourceNodes;
+            }
+            
+            var options = TumblingWindowOptions.Of((long)interval.TotalMilliseconds);
+            var storeBuilder = new WindowStoreMaterializer<K, V, TimeWindow, IWindowStore<K, V>>(options, materialized).Materialize(); 
+            
+            var processorSupplier = new KStreamDropDuplicate<K, V>(
+                name,
+                storeBuilder.Name,
+                valueComparer,
+                interval);
+            var processorParameters = new ProcessorParameters<K, V>(processorSupplier, name);
+            
+            StatefulProcessorNode<K, V> dropDuplicateProcessorNode =
+                new StatefulProcessorNode<K, V>(
+                    name,
+                    processorParameters,
+                    storeBuilder);
+            
+            builder.AddGraphNode(tableParentNode, dropDuplicateProcessorNode);
+            
+            return new KStream<K, V>(
+                name,
+                KeySerdes,
+                ValueSerdes,
+                subTopologySourceNodes.ToList(),
+                dropDuplicateProcessorNode,
+                builder);
+        }
+        
+        #endregion
 
         #region Private
 
@@ -1496,8 +1556,5 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         }
 
         #endregion
-        
-        
-        
     }
 }
