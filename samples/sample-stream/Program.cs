@@ -58,6 +58,8 @@ namespace sample_stream
                     new StringSerDes());*/
 
             builder.Stream<string, string>("input")
+                .DropDuplicate((key, value1, value2) => value1.Equals(value2),
+                    TimeSpan.FromMinutes(1))
                 .To(
                     "output");//, (s, s1, arg3, arg4) => new Partition(0));
 

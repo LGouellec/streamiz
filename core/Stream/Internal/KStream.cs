@@ -1194,9 +1194,24 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         
         #region DropDuplicates
 
+        /// <summary>
+        ///  This function removes duplicate records from the same key based on the time interval mentioned. 
+        /// </summary>
+        /// <param name="valueComparer">Lambda function which determine if the old value and the new value for the same key is equal</param>
+        /// <param name="interval">Time elapsed between two records are considered duplicates</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>a <see cref="IKStream{K,V}"/> which rejects duplicates records</returns>
         public IKStream<K, V> DropDuplicate(Func<K, V, V, bool> valueComparer, TimeSpan interval, string named = null)
             => DropDuplicate(valueComparer, interval, null, named);
 
+        /// <summary>
+        ///  This function removes duplicate records from the same key based on the time interval mentioned. 
+        /// </summary>
+        /// <param name="valueComparer">Lambda function which determine if the old value and the new value for the same key is equal</param>
+        /// <param name="interval">Time elapsed between two records are considered duplicates</param>
+        /// <param name="materialized">an instance of <see cref="Materialized{K, V, S}"/> used to describe how the window state store should be materialized.</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>a <see cref="IKStream{K,V}"/> which rejects duplicates records</returns>
         public IKStream<K, V> DropDuplicate(Func<K, V, V, bool> valueComparer, TimeSpan interval, Materialized<K, V, IWindowStore<Bytes, byte[]>> materialized, string named = null)
         {
             materialized ??= Materialized<K, V, IWindowStore<Bytes, byte[]>>.Create();
