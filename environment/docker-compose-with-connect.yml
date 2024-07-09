@@ -2,7 +2,7 @@
 version: '2'
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.4.0
+    image: confluentinc/cp-zookeeper:7.6.1
     hostname: zookeeper
     container_name: zookeeper
     ports:
@@ -13,7 +13,7 @@ services:
       KAFKA_OPTS: "-Dzookeeper.4lw.commands.whitelist=*"
 
   broker:
-    image: confluentinc/cp-server:7.4.0
+    image: confluentinc/cp-server:7.6.1
     hostname: broker
     container_name: broker
     depends_on:
@@ -42,7 +42,7 @@ services:
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:7.4.0
+    image: confluentinc/cp-schema-registry:7.6.1
     hostname: schema-registry
     container_name: schema-registry
     depends_on:
@@ -55,7 +55,7 @@ services:
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
 
   connect:
-    image: cnfldemos/kafka-connect-datagen:0.6.0-7.3.0
+    image: cnfldemos/kafka-connect-datagen:0.6.4-7.6.0
     container_name: connect
     depends_on:
       - broker

@@ -14,7 +14,7 @@ namespace sample_stream
 {
     public static class Program
     {
-        public static async Task Main(string[] args)
+        public static async Task Main2(string[] args)
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>{
                 ApplicationId = $"test-app",
