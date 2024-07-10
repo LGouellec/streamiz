@@ -310,8 +310,9 @@ namespace Streamiz.Kafka.Net.State.InMemory
             if (openIterators.Count != 0)
             {
                 logger.LogWarning("Closing {OpenIteratorCount} open iterators for store {Name}", openIterators.Count, Name);
-                for (int i = 0; i< openIterators.Count; ++i)
-                    openIterators.ElementAt(i).Close();
+                foreach(var iterator in openIterators)
+                    iterator.Close();
+                openIterators.Clear();
             }
 
             map.Clear();
