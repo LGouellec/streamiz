@@ -556,7 +556,18 @@ namespace Streamiz.Kafka.Net
         private readonly Dictionary<string, dynamic> configProperties = new();
 
         internal long MetricsMinIntervalMs { get; set; } = 30000;
-
+        
+        /// <summary>
+        /// Get the config value of the key. Null if any key found OR
+        /// Add a new key/value configuration.
+        /// </summary>
+        /// <param name="key">key to get or add</param>
+        public dynamic this[string key]
+        {
+            get => Get(key);
+            set => AddConfig(key, value);
+        }
+        
         #region Middlewares
 
         /// <summary>

@@ -68,6 +68,16 @@ public class AzureRemoteTests
 
                     return Moq.Mock.Of<NullableResponse<AzureTableEntity>>();
                 });
+
+            tableClient
+                .Setup(client => client.SubmitTransaction(It.IsAny<IEnumerable<TableTransactionAction>>(), default))
+                .Returns((IEnumerable<TableTransactionAction> transactionActions, CancellationToken token) =>
+                {
+                    foreach (var action in transactionActions)
+                        tableClient.Object.UpsertEntity((AzureTableEntity)action.Entity, TableUpdateMode.Replace,
+                            token);
+                    return Moq.Mock.Of<Response<IReadOnlyList<Response>>>();
+                });
             
             tableClient.Setup(client =>
                     client.Query<AzureTableEntity>(It.IsAny<Expression<Func<AzureTableEntity, bool>>>(), null, null,
@@ -202,5 +212,20 @@ public class AzureRemoteTests
         var items = store.ReverseRange(Bytes.Wrap(Encoding.UTF8.GetBytes("test")), Bytes.Wrap(Encoding.UTF8.GetBytes("test1")))
             .ToList();
         Assert.AreEqual(2, items.Count());
+    }
+    
+    [Test]
+    public void PutAllElement()
+    {
+        var elements = new List<KeyValuePair<Bytes, byte[]>>
+        {
+            KeyValuePair.Create(Bytes.Wrap(Encoding.UTF8.GetBytes("test")), Encoding.UTF8.GetBytes("value")),
+            KeyValuePair.Create(Bytes.Wrap(Encoding.UTF8.GetBytes("test1")), Encoding.UTF8.GetBytes("value1")),
+            KeyValuePair.Create(Bytes.Wrap(Encoding.UTF8.GetBytes("test2")), Encoding.UTF8.GetBytes("value2"))
+        };
+        
+        store.PutAll(elements);
+        var items = store.All();
+        Assert.AreEqual(3, items.Count());
     }
 }
