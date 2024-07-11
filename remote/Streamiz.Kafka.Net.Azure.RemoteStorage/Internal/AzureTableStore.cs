@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
+using System.Threading;
 using Azure.Data.Tables;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
@@ -15,7 +15,6 @@ namespace Streamiz.Kafka.Net.Azure.RemoteStorage.Internal
     {
         private readonly AzureRemoteStorageOptions _azureRemoteStorageOptions;
         private TableClient _tableClient;
-        private ProcessorContext _context;
         private string _partitionKey;
         private readonly string _azureTableName;
 
@@ -54,13 +53,9 @@ namespace Streamiz.Kafka.Net.Azure.RemoteStorage.Internal
                 throw new StreamConfigException(
                     "Azure remote store needs StorageUri, StorageAccountKey and AccountName configuration.");
 
-            _tableClient = new TableClient(
-                new Uri(_azureRemoteStorageOptions.StorageUri),
-                _azureTableName,
-                new TableSharedKeyCredential(_azureRemoteStorageOptions.AccountName,
-                    _azureRemoteStorageOptions.StorageAccountKey));
-
-            _tableClient.CreateIfNotExists();
+            _tableClient = CreateTableClient();
+            _tableClient.CreateIfNotExists(CancellationToken.None);
+            
             IsOpen = true;
             
             if (root != null)
@@ -68,6 +63,15 @@ namespace Streamiz.Kafka.Net.Azure.RemoteStorage.Internal
                 // register the store
                 context.Register(root, (key, value, _) => Put(key, value));
             }
+        }
+
+        protected virtual TableClient CreateTableClient()
+        {
+            return new TableClient(
+                new Uri(_azureRemoteStorageOptions.StorageUri),
+                _azureTableName,
+                new TableSharedKeyCredential(_azureRemoteStorageOptions.AccountName,
+                    _azureRemoteStorageOptions.StorageAccountKey));
         }
 
         public void Flush()
@@ -117,8 +121,8 @@ namespace Streamiz.Kafka.Net.Azure.RemoteStorage.Internal
                 PartitionKey = _partitionKey,
                 RowKey = hashKey
             };
-
-            _tableClient.UpsertEntity(entity, TableUpdateMode.Replace);
+            
+            _tableClient.UpsertEntity(entity, TableUpdateMode.Replace, CancellationToken.None);
         }
 
         public byte[] PutIfAbsent(Bytes key, byte[] value)

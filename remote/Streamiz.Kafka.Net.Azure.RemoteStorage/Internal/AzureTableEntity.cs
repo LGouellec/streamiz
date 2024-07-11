@@ -4,7 +4,7 @@ using Azure.Data.Tables;
 
 namespace Streamiz.Kafka.Net.Azure.RemoteStorage.Internal
 {
-    public class AzureTableEntity : ITableEntity
+    internal class AzureTableEntity : ITableEntity
     {
         public string PartitionKey { get; set; }
         public string RowKey { get; set; }
