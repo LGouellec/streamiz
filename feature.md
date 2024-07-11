@@ -12,5 +12,5 @@
 - [ ] Auto scaling consumption
 
 
-- [ ] Flush cache store as a batch of records instead of unitary records
+- [ ] Evict cache store as a batch of records instead of unitary records
 - [ ] State store restore handler with a batch approach
