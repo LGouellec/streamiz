@@ -12,7 +12,7 @@ namespace sample_stream;
 
 public class Reproducer314
 {
-    public static async Task Main(string[] args)
+    public static async Task Main2(string[] args)
     {
         Console.WriteLine("Hello Streams");
 
