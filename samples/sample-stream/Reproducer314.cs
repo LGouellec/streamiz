@@ -1,8 +1,10 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Streamiz.Kafka.Net;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
@@ -23,52 +25,68 @@ public class Reproducer314
             AutoOffsetReset = AutoOffsetReset.Earliest
         };
 
-        var builder = CreateWindowedStore();
+        var builder = CreateKVStore();
         var t = builder.Build();
         var windowedTableStream = new KafkaStream(t, config);
 
+        Console.CancelKeyPress += (_,_) => {
+            windowedTableStream.Dispose();
+        };
+        
         await windowedTableStream.StartAsync();
 
         // wait for the store to be restored and ready
         Thread.Sleep(10000);
 
-        GetValueFromWindowedStore(windowedTableStream, DateTime.UtcNow.AddHours(-1), new CancellationToken());
-
+        GetValueFromKVStore(windowedTableStream, DateTime.UtcNow.AddHours(-1), new CancellationToken());
+        
         Console.WriteLine("Finished");
     }
 
-    private static void GetValueFromWindowedStore(KafkaStream windowedTableStream, DateTime startUtcForWindowLookup, CancellationToken cancellationToken)
+    private static void GetValueFromKVStore(KafkaStream windowedTableStream, DateTime startUtcForWindowLookup, CancellationToken cancellationToken)
     {
-        var windowedStore = windowedTableStream.Store(StoreQueryParameters.FromNameAndType("store", QueryableStoreTypes.WindowStore<string, int>()));
+        IReadOnlyKeyValueStore<string, int> windowedStore = null;
+        while (windowedStore == null)
+        {
+            try
+            {
+                windowedStore =
+                    windowedTableStream.Store(StoreQueryParameters.FromNameAndType("store",
+                        QueryableStoreTypes.KeyValueStore<string, int>()));
+
+            }
+            catch (InvalidStateStoreException e)
+            {
+            }
+        }
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            var records = windowedStore.FetchAll(startUtcForWindowLookup, DateTime.UtcNow).ToList();
+            var records = windowedStore.All();
 
-            if (records.Count > 0)
+            if (records.Any())
             {
                 foreach (var item in records)
                 {
                     Console.WriteLine($"Value from windowed store : KEY = {item.Key} VALUE = {item.Value}");
                 }
-
-                startUtcForWindowLookup = DateTime.UtcNow;
             }
         }
     }
 
-    private static StreamBuilder CreateWindowedStore()
+    private static StreamBuilder CreateKVStore()
     {
         var builder = new StreamBuilder();
 
         builder
             .Stream<string, string>("users")
             .GroupByKey()
-            .WindowedBy(TumblingWindowOptions.Of(60000))
             .Aggregate(
                 () => 0,
                 (k, v, agg) => Math.Max(v.Length, agg),
-                InMemoryWindows.As<string, int>("store").WithValueSerdes<Int32SerDes>());
+                InMemory.As<string, int>("store")
+                    .WithValueSerdes<Int32SerDes>()
+                    .WithCachingEnabled());
 
         return builder;
     }

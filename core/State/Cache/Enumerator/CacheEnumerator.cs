@@ -7,7 +7,7 @@ using Streamiz.Kafka.Net.State.Enumerator;
 namespace Streamiz.Kafka.Net.State.Cache.Enumerator
 {
     internal class CacheEnumerator<K, V> : IKeyValueEnumerator<K, V>
-        where K : class
+        where K : class, IComparable<K>
         where V : class
     {
         private IEnumerator<K> keys;

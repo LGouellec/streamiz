@@ -13,7 +13,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
     /// Represents the cache options applied to an entry of the <see cref="IMemoryCache"/> instance.
     /// </summary>
     internal class MemoryCacheEntryOptions<K, V>
-        where K : class
+        where K : IComparable<K>
         where V : class
     {
         private long? _size;

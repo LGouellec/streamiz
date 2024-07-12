@@ -3,13 +3,15 @@
 // This is a fork from Microsoft.Extensions.Caching.Memory.MemoryCache https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Caching.Memory
 // The only difference is the compaction process and eviction callback is synchronous whereas the .NET repo is asyncrhonous
 
+using System;
+
 namespace Streamiz.Kafka.Net.State.Cache.Internal
 {
     /// <summary>
     /// Represents a callback delegate that will be fired after an entry is evicted from the cache.
     /// </summary>
     internal class PostEvictionCallbackRegistration<K, V>
-        where K : class
+        where K : IComparable<K>
         where V : class
     {
         /// <summary>

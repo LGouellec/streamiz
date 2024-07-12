@@ -127,6 +127,10 @@ namespace Streamiz.Kafka.Net.Crosscutting
         public virtual int CompareTo(Bytes other)
         {
             BytesComparer comparer = new BytesComparer();
+            if (other == null || other.Get == null)
+                return 1;
+            if (Get == null)
+                return -1;
             return comparer.Compare(this, other);
         }
     }
