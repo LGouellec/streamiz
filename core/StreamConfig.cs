@@ -2716,9 +2716,12 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
-        /// Time wait before completing the start task of <see cref="KafkaStream"/>. (default: 5000)
+        /// Time wait before completing the start task of <see cref="KafkaStream"/>.
+        /// Should be removed in the next release.
+        /// (default: 5000)
         /// </summary>
         [StreamConfigProperty("" + startTaskDelayMsCst)]
+        [Obsolete]
         public long StartTaskDelayMs
         {
             get => configProperties[startTaskDelayMsCst];

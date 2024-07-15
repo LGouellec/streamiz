@@ -259,6 +259,7 @@ namespace Streamiz.Kafka.Net
         private readonly StreamMetricsRegistry metricsRegistry;
 
         private readonly CancellationTokenSource _cancelSource = new();
+        private readonly SequentiallyGracefullyShutdownHook shutdownHook;
 
         internal State StreamState { get; private set; }
 
@@ -401,6 +402,13 @@ namespace Streamiz.Kafka.Net
             queryableStoreProvider = new QueryableStoreProvider(stateStoreProviders, globalStateStoreProvider);
 
             StreamState = State.CREATED;
+
+            shutdownHook = new SequentiallyGracefullyShutdownHook(
+                threads,
+                globalStreamThread,
+                externalStreamThread,
+                _cancelSource
+            );
         }
 
         /// <summary>
@@ -424,13 +432,9 @@ namespace Streamiz.Kafka.Net
         public async Task StartAsync(CancellationToken? token = null)
         {
             if (token.HasValue)
-            {
-                token.Value.Register(() => {
-                    _cancelSource.Cancel();
-                    Dispose();
-                });
-            }
-            await Task.Factory.StartNew(async () =>
+                token.Value.Register(Dispose);
+            
+            await Task.Factory.StartNew(() =>
             {
                 if (SetState(State.REBALANCING))
                 {
@@ -448,12 +452,13 @@ namespace Streamiz.Kafka.Net
                             SetState(State.PENDING_SHUTDOWN);
                             SetState(State.ERROR);
                         }
-                        return;
+
+                        return Task.CompletedTask;
                     }
 
                     RunMiddleware(true, true);
                     
-                    globalStreamThread?.Start(_cancelSource.Token);
+                    globalStreamThread?.Start();
                     externalStreamThread?.Start(_cancelSource.Token);
                     
                     foreach (var t in threads)
@@ -463,14 +468,16 @@ namespace Streamiz.Kafka.Net
                     
                     RunMiddleware(false, true);
                 }
+
+                return Task.CompletedTask;
             }, token ?? _cancelSource.Token);
 
 
             try
             {
                 // Allow time for streams thread to run
-                await Task.Delay(TimeSpan.FromMilliseconds(configuration.StartTaskDelayMs),
-                    token ?? _cancelSource.Token);
+               // await Task.Delay(TimeSpan.FromMilliseconds(configuration.StartTaskDelayMs),
+               //     token ?? _cancelSource.Token);
             }
             catch
             {
@@ -484,16 +491,8 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         public void Dispose()
         {
-            Task.Factory.StartNew(() =>
-            {
-                if (!_cancelSource.IsCancellationRequested)
-                {
-                    _cancelSource.Cancel();
-                }
-
-                Close();
-                _cancelSource.Dispose();
-            }).Wait(TimeSpan.FromSeconds(30));
+            Close();
+            _cancelSource.Dispose();
         }
 
         /// <summary>
@@ -512,13 +511,7 @@ namespace Streamiz.Kafka.Net
             {
                 RunMiddleware(true, false);
                 
-                foreach (var t in threads)
-                {
-                    t.Dispose();
-                }
-
-                externalStreamThread?.Dispose();
-                globalStreamThread?.Dispose();
+                shutdownHook.Shutdown();
 
                 RunMiddleware(false, false);
                 metricsRegistry.RemoveClientSensors();

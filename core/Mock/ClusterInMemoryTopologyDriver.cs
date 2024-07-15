@@ -212,7 +212,7 @@ namespace Streamiz.Kafka.Net.Mock
             
             InitializeInternalTopicManager();
             
-            globalStreamThread?.Start(token);
+            globalStreamThread?.Start();
             externalStreamThread?.Start(token);
 
             threadTopology.Start(token);
