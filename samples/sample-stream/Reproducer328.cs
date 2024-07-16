@@ -31,7 +31,6 @@ public class Reproducer328
             ApplicationId = $"test-reproducer328",
             BootstrapServers = "localhost:9092",
             AutoOffsetReset = AutoOffsetReset.Earliest,
-            MaxPollRecords = 1,
             Logger = LoggerFactory.Create(b =>
             {
                 b.SetMinimumLevel(LogLevel.Debug);
