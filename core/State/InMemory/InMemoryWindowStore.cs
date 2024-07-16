@@ -13,6 +13,7 @@ using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.State.Helper;
 using Streamiz.Kafka.Net.State.InMemory.Internal;
+using Streamiz.Kafka.Net.State.Internal;
 
 namespace Streamiz.Kafka.Net.State.InMemory
 {
