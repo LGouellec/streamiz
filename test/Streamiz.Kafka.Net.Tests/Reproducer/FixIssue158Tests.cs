@@ -1,19 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Reflection.Metadata.Ecma335;
-using Confluent.Kafka;
-using Google.Protobuf.Reflection;
-using Microsoft.VisualBasic;
 using NUnit.Framework;
-using Streamiz.Kafka.Net.Kafka;
-using Streamiz.Kafka.Net.Kafka.Internal;
-using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Table;
-using Streamiz.Kafka.Net.Tests.Helpers;
 
-namespace Streamiz.Kafka.Net.Tests
+namespace Streamiz.Kafka.Net.Tests.Reproducer
 {
     public class FixIssue158Tests
     {
