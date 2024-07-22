@@ -19,7 +19,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <param name="key">The key of the value to get.</param>
         /// <returns>The value associated with this key, or <c>null</c> if the key is not present.</returns>
         internal static V Get<K, V>(this IMemoryCache<K, V> cache, K key)
-            where K : IComparable<K>
+            where K : IComparable<K>, new()
             where V : class
         {
             cache.TryGetValue(key, out V value);
@@ -34,7 +34,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <param name="value">The value associated with the given key.</param>
         /// <returns><c>true</c> if the key was found. <c>false</c> otherwise.</returns>
         internal static bool TryGetValue<K, V>(this IMemoryCache<K, V> cache, K key, out V value)
-            where K : IComparable<K>
+            where K : IComparable<K>, new()
             where V : class
         {
             if (cache.TryGetValue(key, out V result))
@@ -64,7 +64,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <param name="value">The value to associate with the key.</param>
         /// <returns>The value that was set.</returns>
         internal static V Set<K, V>(this IMemoryCache<K, V> cache, K key, V value)
-            where K : IComparable<K>
+            where K : IComparable<K>, new()
             where V : class
         {
             using ICacheEntry<K, V> entry = cache.CreateEntry(key);
@@ -84,7 +84,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <param name="reason">Initial eviction reason</param>
         /// <returns>The value that was set.</returns>
         internal static V Set<K, V>(this IMemoryCache<K, V> cache, K key, V value, MemoryCacheEntryOptions<K, V> options, EvictionReason reason)
-            where K : IComparable<K>
+            where K : IComparable<K>, new()
             where V : class
         {
             using ICacheEntry<K, V> entry = cache.CreateEntry(key);
@@ -107,7 +107,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <param name="factory">The factory that creates the value associated with this key if the key does not exist in the cache.</param>
         /// <returns>The value associated with this key.</returns>
         internal static V GetOrCreate<K, V>(this IMemoryCache<K, V> cache, K key, Func<ICacheEntry<K, V>, V> factory)
-            where K : IComparable<K>
+            where K : IComparable<K>, new()
             where V : class
         {
             return GetOrCreate(cache, key, factory, null);
@@ -121,7 +121,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <param name="factory">The factory that creates the value associated with this key if the key does not exist in the cache.</param>
         /// <param name="createOptions">The options to be applied to the <see cref="ICacheEntry{K, V}"/> if the key does not exist in the cache.</param>
         internal static V GetOrCreate<K, V>(this IMemoryCache<K, V> cache, K key, Func<ICacheEntry<K, V>, V> factory, MemoryCacheEntryOptions<K, V>? createOptions)
-            where K : IComparable<K>
+            where K : IComparable<K>, new()
             where V : class
         {
             if (!cache.TryGetValue(key, out V result))

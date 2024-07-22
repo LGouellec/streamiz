@@ -15,6 +15,6 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
     /// <param name="reason">The <see cref="EvictionReason"/>.</param>
     /// <param name="state">The information that was passed when registering the callback.</param>
     internal delegate void PostEvictionDelegate<K, V>(K key, V? value, EvictionReason reason, MemoryCache<K, V> state)
-        where K : IComparable<K>
+        where K : IComparable<K>, new()
         where V : class;
 }

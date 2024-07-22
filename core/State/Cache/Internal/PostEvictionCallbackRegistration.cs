@@ -11,7 +11,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
     /// Represents a callback delegate that will be fired after an entry is evicted from the cache.
     /// </summary>
     internal class PostEvictionCallbackRegistration<K, V>
-        where K : IComparable<K>
+        where K : IComparable<K>, new()
         where V : class
     {
         /// <summary>

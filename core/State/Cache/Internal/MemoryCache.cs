@@ -19,7 +19,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
     /// store its entries.
     /// </summary>
     internal sealed class MemoryCache<K, V> : IMemoryCache<K, V>
-        where K : IComparable<K>
+        where K : IComparable<K>, new()
         where V : class
     {
         private readonly IComparer<K> _keyComparer;
@@ -541,7 +541,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// the new backing collection.
         /// </summary>
         private sealed class CoherentState<K, V> 
-            where K : IComparable<K>
+            where K : IComparable<K>, new()
             where V : class
         {
             //internal readonly SortedDictionary<K, CacheEntry<K, V>> EntriesBis = new();
