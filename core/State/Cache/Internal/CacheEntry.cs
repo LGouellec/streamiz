@@ -11,7 +11,7 @@ using System.Threading;
 namespace Streamiz.Kafka.Net.State.Cache.Internal
 {
     internal sealed partial class CacheEntry<K, V> : ICacheEntry<K, V>
-        where K : IComparable<K>
+        where K : class, IComparable<K>
         where V : class
     {
         //private static readonly Action<object> ExpirationCallback = ExpirationTokensExpired;

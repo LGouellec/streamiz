@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         internal static MemoryCacheEntryOptions<K, V> SetSize<K, V>(
             this MemoryCacheEntryOptions<K, V>  options,
             long size)
-            where K : IComparable<K>
+            where K : class, IComparable<K>
             where V : class
         {
             if (size < 0)
@@ -44,7 +44,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             this MemoryCacheEntryOptions<K, V> options,
             PostEvictionDelegate<K, V> callback,
             MemoryCache<K, V> state)
-            where K : IComparable<K>
+            where K : class, IComparable<K>
             where V : class
         {
             options.PostEvictionCallbacks.Add(new PostEvictionCallbackRegistration<K, V>()

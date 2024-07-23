@@ -82,6 +82,11 @@ namespace Streamiz.Kafka.Net.Crosscutting
         {
             Get = bytes;
         }
+        
+        /// <summary>
+        /// Create a Bytes using the byte array.
+        /// </summary>
+        public Bytes(){}
 
         /// <summary>
         /// 

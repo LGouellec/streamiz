@@ -1,11 +1,4 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-
-namespace Streamiz.Kafka.Net.State.Cache.Internal
-{ /*
+/*
 MIT License
 
 Copyright (c) 2023 Matthew Krebser (https://github.com/mkrebser)
@@ -29,6 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+
+namespace Streamiz.Kafka.Net.State.Cache.Internal
+{
 // Used for more nuanced lock testing and sanity test
 // #define ConcurrentSortedDictionary_DEBUG
 
@@ -2003,7 +2004,7 @@ SOFTWARE.
                     else
                     {
                         mergeLeft(in left, node, in leftIndex, in nodeIndex, parent);
-                        if (left.isLeaf) LeafSiblingNodes.AtomicUpdateMergeNodes(in left);
+                        if (left is { isLeaf: true }) LeafSiblingNodes.AtomicUpdateMergeNodes(in left);
                     }
 
 #if ConcurrentSortedDictionary_DEBUG
@@ -2612,7 +2613,8 @@ SOFTWARE.
                         if (!ReferenceEquals(null, nextNode) && !TryAcquire(ref nextNode.siblings))
                         {
                             Release(ref deleteNode.siblings);
-                            Release(ref prevNode.siblings);
+                            if (prevNode != null) 
+                                Release(ref prevNode.siblings);
                             continue;
                         }
 
