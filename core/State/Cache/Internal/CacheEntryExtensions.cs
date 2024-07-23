@@ -38,7 +38,11 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             this ICacheEntry<K, V> entry,
             PostEvictionDelegate<K, V> callback,
             MemoryCache<K, V>? state)
+<<<<<<< HEAD
             where K : class, IComparable<K>
+=======
+            where K : IComparable<K>, new()
+>>>>>>> 26c0e47655accb5309c3f95a22a13e2da2ab62f5
             where V : class
         {
             return entry.RegisterPostEvictionCallbackNoValidation(callback, state);
@@ -48,7 +52,11 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             this ICacheEntry<K, V> entry,
             PostEvictionDelegate<K, V> callback,
             MemoryCache<K, V>? state)
+<<<<<<< HEAD
             where K : class, IComparable<K>
+=======
+            where K : IComparable<K>, new()
+>>>>>>> 26c0e47655accb5309c3f95a22a13e2da2ab62f5
             where V : class
         {
             entry.PostEvictionCallbacks.Add(new PostEvictionCallbackRegistration<K, V>()
@@ -68,7 +76,11 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         public static ICacheEntry<K, V> SetValue<K, V>(
             this ICacheEntry<K, V> entry,
             V value)
+<<<<<<< HEAD
             where K : class, IComparable<K>
+=======
+            where K : IComparable<K>, new()
+>>>>>>> 26c0e47655accb5309c3f95a22a13e2da2ab62f5
             where V : class
         {
             entry.Value = value;
@@ -84,7 +96,11 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         public static ICacheEntry<K, V> SetSize<K, V>(
             this ICacheEntry<K, V> entry,
             long size)
+<<<<<<< HEAD
             where K : class, IComparable<K>
+=======
+            where K : IComparable<K>, new()
+>>>>>>> 26c0e47655accb5309c3f95a22a13e2da2ab62f5
             where V : class
         {
             if (size < 0)
@@ -103,7 +119,11 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         /// <param name="options">Set the values of these options on the <paramref name="entry"/>.</param>
         /// <returns>The <see cref="ICacheEntry"/> for chaining.</returns>
         public static ICacheEntry<K, V> SetOptions<K, V>(this ICacheEntry<K, V> entry, MemoryCacheEntryOptions<K, V> options)
+<<<<<<< HEAD
             where K : class, IComparable<K>
+=======
+            where K : IComparable<K>, new()
+>>>>>>> 26c0e47655accb5309c3f95a22a13e2da2ab62f5
             where V : class
         {
             entry.Size = options.Size;
