@@ -195,33 +195,36 @@ namespace Streamiz.Kafka.Net.Tests.Private
             logger.Logs.Clear();
         }
         
-        [Test]
-        public void TestAdapterGetNameNPE()
+       [Test]
+       public void TestAdapterGetNameNPE()
         {
-            var config = new StreamConfig();
-            config.ApplicationId = "test-logger-adapter";
-            var logger = new InMemoryLogger();
-            var adapter = new KafkaLoggerAdapter(config, logger);
-            
-            var client = new Mock<IConsumer<byte[], byte[]>>();
-            client
-                .Setup(c => c.Name)
-                .Throws<NullReferenceException>();
+                var config = new StreamConfig();
+                config.ApplicationId = "test-logger-adapter";
+                var logger = new InMemoryLogger();
+                var adapter = new KafkaLoggerAdapter(config, logger);
 
-            int v = 1233;
-            Type handleType = typeof(object);
-            object handle = ReflectionHelperExtensionMethods.GetInstance(
-                "Confluent.Kafka.Impl.SafeKafkaHandle", ref handleType);
-            handle.SetPrivateFieldsValue(handleType, "handle", new IntPtr(v));
-            
-            Handle h = new Handle();
-            h.SetPrivatePropertyValue("LibrdkafkaHandle", handle);
-            
-            client.Setup(c => c.Handle)
-                .Returns(() => h);
-            
-            adapter.LogConsume(client.Object,
-                new Confluent.Kafka.LogMessage("error", Confluent.Kafka.SyslogLevel.Critical, "", "error"));
+                var client = new Mock<IConsumer<byte[], byte[]>>();
+                client
+                    .Setup(c => c.Name)
+                    .Throws<NullReferenceException>();
+
+               int v = 1233;
+                Type handleType = typeof(object);
+                object handle = ReflectionHelperExtensionMethods.GetInstance(
+                    "Confluent.Kafka.Impl.SafeKafkaHandle", ref handleType);
+                handle.SetPrivateFieldsValue(handleType, "handle", new IntPtr(v));
+
+                Handle h = new Handle();
+                h.SetPrivatePropertyValue("LibrdkafkaHandle", handle);
+
+                client.Setup(c => c.Handle)
+                    .Returns(() => h);
+
+                adapter.LogConsume(client.Object,
+                    new Confluent.Kafka.LogMessage("error", Confluent.Kafka.SyslogLevel.Critical, "", "error"));
+
+                handle.SetPrivateFieldsValue(handleType, "handle", IntPtr.Zero);
+                handle = null;
         }
         
         [Test]
@@ -268,6 +271,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             
             adapter.LogConsume(client.Object,
                 new Confluent.Kafka.LogMessage("error", Confluent.Kafka.SyslogLevel.Critical, "", "error"));
+
+            handle = null;
         }
     }
 }
