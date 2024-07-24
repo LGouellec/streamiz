@@ -47,9 +47,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             var config = GetConfig();
             var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config), config);
-            var restore = supplier.GetRestoreConsumer(config.ToConsumerConfig("retore"));
+            var restore = supplier.GetRestoreConsumer(config.ToConsumerConfig("restore"));
             Assert.IsNotNull(restore);
-            Assert.AreEqual("retore", restore.Name.Split("#")[0]);
+            Assert.AreEqual("restore", restore.Name.Split("#")[0]);
         }
 
         [Test]
@@ -60,6 +60,16 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var produce = supplier.GetProducer(config.ToProducerConfig("produce"));
             Assert.IsNotNull(produce);
             Assert.AreEqual("produce", produce.Name.Split("#")[0]);
+        }
+        
+        [Test]
+        public void CreateGlobalConsumerClient()
+        {
+            var config = GetConfig();
+            var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config), config);
+            var globalConsumer = supplier.GetGlobalConsumer(config.ToGlobalConsumerConfig("global-consumer"));
+            Assert.IsNotNull(globalConsumer);
+            Assert.AreEqual("global-consumer", globalConsumer.Name.Split("#")[0]);
         }
 
         [Test]
@@ -94,6 +104,24 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var producer = supplier.GetProducer(wrapper);
             Assert.IsNotNull(producer);
+        }
+        
+        [Test]
+        public void CreateGlobalConsumerWithStats()
+        {
+            var config = GetConfig();
+            config.ExposeLibrdKafkaStats = true;
+            config.ApplicationId = "test-app";
+            config.ClientId = "test-client";
+            
+            var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config), config);
+            supplier.MetricsRegistry = new StreamMetricsRegistry();
+            
+            var consumerConfig = config.ToGlobalConsumerConfig("global-consume");
+            StreamizConsumerConfig wrapper = new StreamizConsumerConfig(consumerConfig, "global-thread-1");
+            
+            var globalConsumer = supplier.GetGlobalConsumer(wrapper);
+            Assert.IsNotNull(globalConsumer);
         }
     }
 }
