@@ -18,7 +18,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             this.cluster = cluster;
         }
 
-        public override Handle Handle => throw new NotImplementedException();
+        public override Handle Handle => null;
 
         public override string Name { get; }
         
