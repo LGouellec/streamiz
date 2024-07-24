@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using Confluent.Kafka;
 using Moq;
 using Microsoft.Extensions.Logging;
@@ -129,6 +130,34 @@ namespace Streamiz.Kafka.Net.Tests.Private
             public List<string> Logs { get; } = new List<string>();
         }
 
+        [Test]
+        public void LogAndErrorWithThreadName()
+        {
+            Thread.CurrentThread.Name = "test-adapter";
+            
+            var mockConsumer = new MockConsumer(null, "group", "CONSUMER");
+            var mockProducer = new MockProducer(null, "PRODUCER");
+            var mockAdmin = new MockAdminClient(null, "ADMIN");
+            
+            var config = new StreamConfig();
+            config.ApplicationId = "test-logger-adapter";
+            var logger = new InMemoryLogger();
+            var adapter = new KafkaLoggerAdapter(config, logger);
+
+            adapter.LogConsume(mockConsumer,
+                new Confluent.Kafka.LogMessage("error", Confluent.Kafka.SyslogLevel.Critical, "", "error"));
+            adapter.ErrorConsume(mockConsumer, new Error(ErrorCode.ConcurrentTransactions));
+
+            adapter.LogProduce(mockProducer,
+                new Confluent.Kafka.LogMessage("error", Confluent.Kafka.SyslogLevel.Critical, "", "error"));
+            adapter.ErrorProduce(mockProducer, new Error(ErrorCode.RecordListTooLarge));
+            
+            adapter.LogAdmin(mockAdmin,
+                new Confluent.Kafka.LogMessage("error", Confluent.Kafka.SyslogLevel.Critical, "", "error"));
+            adapter.ErrorAdmin(mockAdmin,
+                new Confluent.Kafka.Error(Confluent.Kafka.ErrorCode.ClusterAuthorizationFailed));
+        }
+        
         [Test]
         public void TestAdapterLogProducer()
         {
