@@ -804,8 +804,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         // FOR TESTING
         internal void GetLinkTopics(string topic, IList<string> linkTopics)
         {
-            if (linkTopics.Contains(topic))
-                return;
             var subTopo = GetSubTopologyDescription(topic);
             if (subTopo != null)
             {
@@ -820,6 +818,10 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                         var sinkTopic = internalTopics.ContainsKey(sinkNode.Topic)
                             ? DecorateTopic(sinkNode.Topic)
                             : sinkNode.Topic;
+                        
+                        if (linkTopics.Contains(sinkTopic))
+                            return;
+                        
                         linkTopics.Add(sinkTopic);
                         GetLinkTopics(sinkTopic, linkTopics);
                     }
