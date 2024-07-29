@@ -19,8 +19,8 @@
     <PackageIconUrl>https://raw.githubusercontent.com/LGouellec/kafka-streams-dotnet/master/resources/logo-kafka-stream-net.png</PackageIconUrl>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\key.snk</AssemblyOriginatorKeyFile>
-    <Version>1.6.0-RC2</Version>
-    <PackageVersion>1.6.0-RC2</PackageVersion>
+    <Version>1.6.0</Version>
+    <PackageVersion>1.6.0</PackageVersion>
     <AssemblyVersion>1.6.0</AssemblyVersion>
     <FileVersion>1.6.0</FileVersion>
   </PropertyGroup>
