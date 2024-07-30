@@ -459,3 +459,21 @@ Detailed behavior:
 - Input records with a null key are ignored and do not trigger the join.
 - Input records with a null value are interpreted as tombstones for the corresponding key, which indicate the deletion of the key from the table. Tombstones do not trigger the join. When an input tombstone is received, then an output tombstone is forwarded directly to the join result IKTable if required (i.e. only if the corresponding key actually exists already in the join result IKTable).
 - For each input record on one side that does not have any match on the other side, the ValueJoiner will be called with (leftRecord.value, null) or (null, rightRecord.value), respectively; this explains the rows with timestamp=3 and timestamp=7 in the table below, which list [A, null] and [null, b], respectively, in the OUTER JOIN column.
+
+
+## Drop Duplicates
+
+This function removes duplicate records from the same key based on the time interval mentioned. Duplicate records are detected based on the kafka key plus the lambda returns; In this simplified example, the record value is the event ID.  The internal processor remembers the old event IDs in an associated window state store, which automatically purges/expires event IDs from the store after a certain amount of time has passed to prevent the store from growing indefinitely.
+
+``` csharp
+builder.Stream<string, string>("input")
+        .DropDuplicate((key, value1, value2) => value1.Equals(value2), TimeSpan.FromMinutes(1))
+        .To("output");
+```
+
+| Timestamp  | Input Topic                   | Window Store                           | Output Topic                             |
+|------------|-------------------------------|----------------------------------------|------------------------------------------|
+|     t0     | key: key1 ; value : eventID1  |   key: key1 ; value : eventID1 ; t0    |   key: key1 ; value : eventID1           |
+|     t0+10s | key: key1 ; value : eventID1  |   key: key1 ; value : eventID1 ; t0    |   X                                      |
+|     t0+30s | key: key1 ; value : eventID2  |   key: key1 ; value : eventID2 ; t0+30s|   key: key1 ; value : eventID2           |
+|     t0+95s | key: key1 ; value : eventID2  |   key: key1 ; value : eventID2 ; t0+95s|   key: key1 ; value : eventID2           |

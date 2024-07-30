@@ -8,6 +8,7 @@ using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ using Confluent.Kafka.Admin;
 using Streamiz.Kafka.Net.Processors.Public;
 using Streamiz.Kafka.Net.State.Enumerator;
 using Streamiz.Kafka.Net.Stream.Internal.Graph;
+using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.Public
 {
@@ -633,7 +635,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.PollMs = 1;
 
             var builder = new StreamBuilder();
-            builder.GlobalTable<string, string>("test", InMemory.As<string,string>("store"));
+            builder.GlobalTable("test", InMemory.As<string,string>("store"));
 
             var supplier = new SyncKafkaSupplier();
             var producer = supplier.GetProducer(new ProducerConfig());
@@ -813,7 +815,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.ApplicationId = "test-open-iterator";
             config.BootstrapServers = "127.0.0.1";
             config.PollMs = 10;
-
+            config.UseRandomRocksDbConfigForTest();
+            
             var supplier = new SyncKafkaSupplier();
             var producer = supplier.GetProducer(config.ToProducerConfig());
 
@@ -873,6 +876,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
             stream.Dispose();
             foreach(var e in currentEnumerators)
                 Assert.Throws<ObjectDisposedException>(() => e.Dispose());
+            
+            //Directory.Delete(config.StateDir, true);
         }
     }
 }

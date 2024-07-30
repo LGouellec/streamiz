@@ -110,7 +110,6 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                     producerStatisticsHandler.Publish(statistics);
                 });
             }
-
             return builder.Build();
         }
 

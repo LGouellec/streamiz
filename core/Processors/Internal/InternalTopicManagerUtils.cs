@@ -25,75 +25,74 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             };
         }
 
-        internal static InternalTopicManagerUtils New() => new InternalTopicManagerUtils();
+        internal static InternalTopicManagerUtils New() => new();
 
         internal async Task CreateInternalTopicsAsync(
             ITopicManager topicManager,
             InternalTopologyBuilder builder)
         {
-            var clusterMetadata = topicManager.AdminClient.GetMetadata(timeout);
+            //var clusterMetadata = topicManager.AdminClient.GetMetadata(timeout);
             var internalTopicsGroups = builder.MakeInternalTopicGroups();
-
-            var resultsConf = new List<DescribeConfigsResult>();
-            if (internalTopicsGroups.Any(internalTopic => 
-                    !clusterMetadata.Topics.Exists(t => t.Topic.Equals(internalTopic.Value.SourceTopics.First()))))
-            {
-                brokerConfigResource.Name = clusterMetadata.Brokers[0].BrokerId.ToString();
-                resultsConf = await topicManager.AdminClient.DescribeConfigsAsync(new List<ConfigResource> { brokerConfigResource });
-            }
-
+            
             foreach (var entry in internalTopicsGroups)
             {
-                ComputeRepartitionTopicConfig(entry.Value, internalTopicsGroups, clusterMetadata);
-                ComputeChangelogTopicConfig(entry.Value, clusterMetadata, resultsConf);
+                ComputeRepartitionTopicConfig(entry.Value, internalTopicsGroups, topicManager);
+                ComputeChangelogTopicConfig(entry.Value, topicManager);
 
                 var internalTopics = entry.Value.ChangelogTopics.Union(entry.Value.RepartitionTopics).ToDictionary();
 
                 await topicManager.ApplyAsync(entry.Key, internalTopics);
-                // refresh metadata
-                clusterMetadata = topicManager.AdminClient.GetMetadata(timeout);
             }
         }
 
-        private static void ComputeChangelogTopicConfig(InternalTopologyBuilder.TopologyTopicsInfo topicsInfo,
-            Metadata clusterMetadata, List<DescribeConfigsResult> resultsConf)
+        private static void ComputeChangelogTopicConfig(
+            InternalTopologyBuilder.TopologyTopicsInfo topicsInfo,
+            ITopicManager topicManager)
         {
-            var topic = clusterMetadata.Topics.FirstOrDefault(t => t.Topic.Equals(topicsInfo.SourceTopics.First()));
-            if (topic != null)
+            var metadata =
+                topicManager.AdminClient.GetMetadata(topicsInfo.SourceTopics.First(), TimeSpan.FromSeconds(10));
+            var topicMetadata = metadata.Topics.FirstOrDefault(t => t.Topic.Equals(topicsInfo.SourceTopics.First()));
+            if (topicMetadata != null)
             {
                 topicsInfo
                     .ChangelogTopics
                     .Values
-                    .ForEach(c => c.NumberPartitions = topic.Partitions.Count);
+                    .ForEach(c => c.NumberPartitions = topicMetadata.Partitions.Count);
             }
             else
             {
                 topicsInfo
                     .ChangelogTopics
                     .Values
-                    .ForEach(c => c.NumberPartitions = DefaultPartitionNumber(resultsConf));
+                    .ForEach(c => c.NumberPartitions = -1);
             }
         }
 
         private static void ComputeRepartitionTopicConfig(
             InternalTopologyBuilder.TopologyTopicsInfo topicsInfo,
             IDictionary<int, InternalTopologyBuilder.TopologyTopicsInfo> topologyTopicInfos,
-            Metadata clusterMetadata)
+            ITopicManager topicManager)
         {
             if (topicsInfo.RepartitionTopics.Any())
             {
-                CheckIfExternalSourceTopicsExist(topicsInfo, clusterMetadata);
-                SetRepartitionSourceTopicPartitionCount(topicsInfo.RepartitionTopics, topologyTopicInfos,
-                    clusterMetadata);
+                CheckIfExternalSourceTopicsExist(topicsInfo, topicManager);
+                SetRepartitionSourceTopicPartitionCount(topicsInfo.RepartitionTopics, topologyTopicInfos, topicManager);
             }
         }
 
-        private static void CheckIfExternalSourceTopicsExist(InternalTopologyBuilder.TopologyTopicsInfo topicsInfo, Metadata clusterMetadata)
+        private static void CheckIfExternalSourceTopicsExist(
+            InternalTopologyBuilder.TopologyTopicsInfo topicsInfo,
+            ITopicManager topicManager)
         {
-            List<string> sourcesTopics = new List<string>(topicsInfo.SourceTopics);
-            sourcesTopics.RemoveAll(topicsInfo.RepartitionTopics.Keys);
-            sourcesTopics.RemoveAll(clusterMetadata.Topics.Select(t => t.Topic));
-            if (sourcesTopics.Any())
+            List<string> sourcesTopics = new List<string>();
+            foreach (var s in topicsInfo.SourceTopics)
+            {
+                var metadata = topicManager.AdminClient.GetMetadata(s, TimeSpan.FromSeconds(10));
+                if (metadata.PartitionCountForTopic(s).HasValue)
+                    sourcesTopics.Add(s);
+            }
+            
+            if (!sourcesTopics.Any())
             {
                 log.LogError($"Topology use one (or multiple) repartition topic(s)." +
                              $" The following source topics ({string.Join(",", sourcesTopics)}) are missing/unknown." +
@@ -105,7 +104,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private static void SetRepartitionSourceTopicPartitionCount(
             IDictionary<string, InternalTopicConfig> repartitionTopics,
             IDictionary<int, InternalTopologyBuilder.TopologyTopicsInfo> topologyTopicInfos,
-            Metadata clusterMetadata)
+            ITopicManager topicManager)
         {
             #region Compute topic partition count
 
@@ -126,6 +125,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                             }
                             else
                             {
+                                var clusterMetadata =
+                                    topicManager.AdminClient.GetMetadata(upstreamSourceTopic, TimeSpan.FromSeconds(10));
                                 var count = clusterMetadata.PartitionCountForTopic(upstreamSourceTopic);
                                 if (count == null)
                                     count = ComputePartitionCount(upstreamSourceTopic);

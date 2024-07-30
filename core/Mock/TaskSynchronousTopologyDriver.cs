@@ -7,13 +7,10 @@ using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data.SqlTypes;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using Streamiz.Kafka.Net.Crosscutting;
-using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Stream.Internal;
 
@@ -78,13 +75,13 @@ namespace Streamiz.Kafka.Net.Mock
                     partitionsByTaskId.Add(taskId, new List<TopicPartition> {part});
             }
             
+            var adminClient = this.supplier.GetAdmin(configuration.ToAdminConfig($"{clientId}-admin"));
             ProcessorTopology globalTaskTopology = topologyBuilder.BuildGlobalStateTopology();
             hasGlobalTopology = globalTaskTopology != null;
             if (hasGlobalTopology)
             {
                 var globalConsumer =
                     this.supplier.GetGlobalConsumer(configuration.ToGlobalConsumerConfig($"{clientId}-global-consumer"));
-                var adminClient = this.supplier.GetAdmin(configuration.ToAdminConfig($"{clientId}-admin"));
                 var stateManager =
                     new GlobalStateManager(globalConsumer, globalTaskTopology, adminClient, configuration);
                 globalProcessorContext = new GlobalProcessorContext(configuration, stateManager, metricsRegistry);
@@ -105,7 +102,8 @@ namespace Streamiz.Kafka.Net.Mock
                         topologyBuilder.BuildTopology(taskId).GetSourceProcessor(requestTopic),
                         this.supplier.GetProducer(configuration.ToProducerConfig($"ext-thread-producer-{requestTopic}")),
                         configuration,
-                        metricsRegistry));
+                        metricsRegistry,
+                        adminClient));
             }
         }
 

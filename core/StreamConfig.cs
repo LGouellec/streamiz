@@ -343,9 +343,9 @@ namespace Streamiz.Kafka.Net
         TimeSpan LogProcessingSummary { get; set; }
         
         /// <summary>
-        /// Maximum number of memory bytes to be used for state stores cache for a single store. (default: 5Mb)
+        /// Define the default maximum number of memory bytes to be used for state stores cache for a single store. (default: 5Mb)
         /// </summary>
-        long StateStoreCacheMaxBytes { get; set; }
+        long DefaultStateStoreCacheMaxBytes { get; set; }
         
         #endregion
         
@@ -2013,7 +2013,16 @@ namespace Streamiz.Kafka.Net
         /// low
         /// </summary>
         [StreamConfigProperty("allow.auto.create.topics")]
-        public bool? AllowAutoCreateTopics { get { return _consumerConfig.AllowAutoCreateTopics; } set { _consumerConfig.AllowAutoCreateTopics = value; } }
+        public bool? AllowAutoCreateTopics
+        {
+            get { return _consumerConfig.AllowAutoCreateTopics; }
+            set
+            {
+                _consumerConfig.AllowAutoCreateTopics = value;
+                _adminClientConfig.AllowAutoCreateTopics = value;
+                _producerConfig.AllowAutoCreateTopics = value;
+            }
+        }
 
         #endregion
 
@@ -2292,12 +2301,12 @@ namespace Streamiz.Kafka.Net
             MetricsIntervalMs = (long)TimeSpan.FromSeconds(30).TotalMilliseconds;
             MetricsRecording = MetricsRecordingLevel.INFO;
             LogProcessingSummary = TimeSpan.FromMinutes(1);
-            MetricsReporter = (_) => { }; // nothing by default, maybe another behavior in future
+            MetricsReporter = _ => { }; // nothing by default, maybe another behavior in future
             ExposeLibrdKafkaStats = false;
             StartTaskDelayMs = 5000;
             ParallelProcessing = false;
             MaxDegreeOfParallelism = 8;
-            StateStoreCacheMaxBytes = 5 * 1024 * 1024;
+            DefaultStateStoreCacheMaxBytes = 5 * 1024 * 1024;
 
             _consumerConfig = new ConsumerConfig();
             _producerConfig = new ProducerConfig();
@@ -2307,6 +2316,7 @@ namespace Streamiz.Kafka.Net
             MaxPollIntervalMs = 300000;
             EnableAutoCommit = false;
             EnableAutoOffsetStore = false;
+            AllowAutoCreateTopics = false;
             PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.CooperativeSticky;
             Partitioner = Confluent.Kafka.Partitioner.Murmur2Random;
 
@@ -2771,7 +2781,7 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         [StreamConfigProperty("" + stateStoreCacheMaxBytesCst)]
 
-        public long StateStoreCacheMaxBytes        
+        public long DefaultStateStoreCacheMaxBytes        
         {
             get => configProperties[stateStoreCacheMaxBytesCst];
             set => configProperties.AddOrUpdate(stateStoreCacheMaxBytesCst, value);

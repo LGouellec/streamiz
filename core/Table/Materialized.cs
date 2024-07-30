@@ -41,6 +41,11 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         private TimeSpan retention;
 
+        /// <summary>
+        /// Cache size
+        /// </summary>
+        private CacheSize cacheSize;
+
         #region Ctor
 
         /// <summary>
@@ -252,6 +257,11 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         public TimeSpan Retention => retention;
 
+        /// <summary>
+        /// Cache size (in bytes) of the storage (default: null).
+        /// </summary>
+        public CacheSize CacheSize => cacheSize;
+
         #endregion
 
         #region Methods
@@ -289,14 +299,16 @@ namespace Streamiz.Kafka.Net.Table
             TopicConfig?.Clear();
             return this;
         }
-
+        
         /// <summary>
-        /// Enable caching for this <see cref="Materialized{K, V, S}"/>
+        /// Enable caching for this <see cref="Materialized{K, V, S}"/> and specify the cache size
         /// </summary>
+        /// <param name="cacheSize">Cache size of the storage</param>
         /// <returns>Itself</returns>
-        public Materialized<K, V, S> WithCachingEnabled()
+        public Materialized<K, V, S> WithCachingEnabled(CacheSize cacheSize = null)
         {
             CachingEnabled = true;
+            this.cacheSize = cacheSize;
             return this;
         }
 
@@ -306,6 +318,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <returns>Itself</returns>
         public Materialized<K, V, S> WithCachingDisabled()
         {
+            this.cacheSize = null;
             CachingEnabled = false;
             return this;
         }

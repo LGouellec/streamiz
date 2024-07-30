@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.State.Internal;
 
 namespace Streamiz.Kafka.Net.State
 {
@@ -61,8 +62,7 @@ namespace Streamiz.Kafka.Net.State
     {
         private static readonly ILogger log = Logger.GetLogger(typeof(RocksDbKeyValueStore));
 
-        private readonly ISet<WrappedRocksRbKeyValueEnumerator> openIterators 
-            = new HashSet<WrappedRocksRbKeyValueEnumerator>();
+        private readonly ConcurrentSet<WrappedRocksRbKeyValueEnumerator> openIterators = new();
 
 
         private const Compression COMPRESSION_TYPE = Compression.No;

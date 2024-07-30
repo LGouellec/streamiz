@@ -12,6 +12,8 @@ using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.State.Helper;
+using Streamiz.Kafka.Net.State.InMemory.Internal;
+using Streamiz.Kafka.Net.State.Internal;
 
 namespace Streamiz.Kafka.Net.State.InMemory
 {
@@ -260,7 +262,8 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
     #endregion
 
-    internal class InMemoryWindowStore : IWindowStore<Bytes, byte[]>
+    internal class 
+        InMemoryWindowStore : IWindowStore<Bytes, byte[]>
     {
         private readonly TimeSpan retention;
         private readonly long size;
@@ -272,8 +275,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         private int seqnum = 0;
 
         private readonly ConcurrentDictionary<long, ConcurrentDictionary<Bytes, byte[]>> map = new();
-        
-        private readonly ISet<InMemoryWindowStoreEnumeratorWrapper> openIterators = new HashSet<InMemoryWindowStoreEnumeratorWrapper>();
+        private readonly ConcurrentSet<InMemoryWindowStoreEnumeratorWrapper> openIterators = new();
 
         private readonly ILogger logger = Logger.GetLogger(typeof(InMemoryWindowStore));
 
@@ -310,8 +312,9 @@ namespace Streamiz.Kafka.Net.State.InMemory
             if (openIterators.Count != 0)
             {
                 logger.LogWarning("Closing {OpenIteratorCount} open iterators for store {Name}", openIterators.Count, Name);
-                for (int i = 0; i< openIterators.Count; ++i)
-                    openIterators.ElementAt(i).Close();
+                foreach(var iterator in openIterators)
+                    iterator.Close();
+                openIterators.Clear();
             }
 
             map.Clear();
