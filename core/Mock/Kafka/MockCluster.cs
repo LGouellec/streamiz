@@ -760,7 +760,8 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                                         Key = record.Key,
                                         Value = record.Value,
                                         Timestamp = new Timestamp(
-                                            record.Timestamp ?? DateTime.Now, TimestampType.NotAvailable)
+                                            record.Timestamp ?? DateTime.Now, TimestampType.NotAvailable),
+                                        Headers = record.Headers
                                     }
                                 };
                                 ++offset.OffsetConsumed;
@@ -800,7 +801,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             else
                 partition = Math.Abs(MurMurHash3.Hash(new MemoryStream(message.Key))) % topics[topic].PartitionNumber;
             
-            topics[topic].AddMessage(message.Key, message.Value, partition, message.Timestamp.UnixTimestampMs);
+            topics[topic].AddMessage(message.Key, message.Value, partition, message.Timestamp.UnixTimestampMs, message.Headers);
 
             r.Message = message;
             r.Partition = partition;
@@ -822,13 +823,13 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             CreateTopic(topicPartition.Topic);
             if (topics[topicPartition.Topic].PartitionNumber > topicPartition.Partition)
             {
-                topics[topicPartition.Topic].AddMessage(message.Key, message.Value, topicPartition.Partition, message.Timestamp.UnixTimestampMs);
+                topics[topicPartition.Topic].AddMessage(message.Key, message.Value, topicPartition.Partition, message.Timestamp.UnixTimestampMs, message.Headers);
                 r.Status = PersistenceStatus.Persisted;
             }
             else
             {
                 topics[topicPartition.Topic].CreateNewPartitions(topicPartition.Partition);
-                topics[topicPartition.Topic].AddMessage(message.Key, message.Value, topicPartition.Partition, message.Timestamp.UnixTimestampMs);
+                topics[topicPartition.Topic].AddMessage(message.Key, message.Value, topicPartition.Partition, message.Timestamp.UnixTimestampMs, message.Headers);
                 r.Status = PersistenceStatus.Persisted;
             }
 

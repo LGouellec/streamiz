@@ -33,6 +33,25 @@ namespace Streamiz.Kafka.Net.Crosscutting
         }
 
         /// <summary>
+        /// Add the element if the key doesn't exist
+        /// </summary>
+        /// <typeparam name="K">Key type</typeparam>
+        /// <typeparam name="V">Value type</typeparam>
+        /// <param name="map">Source dictionary</param>
+        /// <param name="key">New key</param>
+        /// <param name="value">Value</param>
+        /// <returns>Return true if the key|value was added, false otherwise</returns>
+        public static bool AddIfNotExist<K, V>(this IDictionary<K, V> map, K key, V value)
+        {
+            if (!map.ContainsKey(key))
+            {
+                map.Add(key, value);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Convert enumerable of <see cref="KeyValuePair{K, V}"/> to <see cref="IDictionary{K, V}"/>
         /// </summary>
         /// <typeparam name="K">Key type</typeparam>

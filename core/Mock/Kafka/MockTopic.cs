@@ -23,9 +23,9 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         public int PartitionNumber { get; private set; }
         public IEnumerable<MockPartition> Partitions => partitions.AsReadOnly();
 
-        public void AddMessage(byte[] key, byte[] value, int partition, long timestamp = 0)
+        public void AddMessage(byte[] key, byte[] value, int partition, long timestamp = 0, Headers headers = null)
         {
-            partitions[partition].AddMessageInLog(key, value, timestamp);
+            partitions[partition].AddMessageInLog(key, value, timestamp, headers);
         }
 
         public TestRecord<byte[], byte[]> GetMessage(int partition, long consumerOffset)

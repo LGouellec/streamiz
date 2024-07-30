@@ -2003,7 +2003,16 @@ namespace Streamiz.Kafka.Net
         /// low
         /// </summary>
         [StreamConfigProperty("allow.auto.create.topics")]
-        public bool? AllowAutoCreateTopics { get { return _consumerConfig.AllowAutoCreateTopics; } set { _consumerConfig.AllowAutoCreateTopics = value; } }
+        public bool? AllowAutoCreateTopics
+        {
+            get { return _consumerConfig.AllowAutoCreateTopics; }
+            set
+            {
+                _consumerConfig.AllowAutoCreateTopics = value;
+                _adminClientConfig.AllowAutoCreateTopics = value;
+                _producerConfig.AllowAutoCreateTopics = value;
+            }
+        }
 
         #endregion
 
@@ -2297,6 +2306,7 @@ namespace Streamiz.Kafka.Net
             MaxPollIntervalMs = 300000;
             EnableAutoCommit = false;
             EnableAutoOffsetStore = false;
+            AllowAutoCreateTopics = false;
             PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.CooperativeSticky;
             Partitioner = Confluent.Kafka.Partitioner.Murmur2Random;
 
