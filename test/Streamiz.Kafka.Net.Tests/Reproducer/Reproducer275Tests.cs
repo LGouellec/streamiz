@@ -13,7 +13,7 @@ using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 
-namespace Streamiz.Kafka.Net.Tests
+namespace Streamiz.Kafka.Net.Tests.Reproducer
 {
     internal class CloudEventSerDes2 : AbstractSerDes<CloudEvent>
     {

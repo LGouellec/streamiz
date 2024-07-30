@@ -430,7 +430,8 @@ namespace Streamiz.Kafka.Net
                     Dispose();
                 });
             }
-            await Task.Factory.StartNew(async () =>
+            
+            await Task.Factory.StartNew(() =>
             {
                 if (SetState(State.REBALANCING))
                 {
@@ -448,7 +449,8 @@ namespace Streamiz.Kafka.Net
                             SetState(State.PENDING_SHUTDOWN);
                             SetState(State.ERROR);
                         }
-                        return;
+
+                        return Task.CompletedTask;
                     }
 
                     RunMiddleware(true, true);
@@ -463,6 +465,8 @@ namespace Streamiz.Kafka.Net
                     
                     RunMiddleware(false, true);
                 }
+
+                return Task.CompletedTask;
             }, token ?? _cancelSource.Token);
 
 
@@ -624,8 +628,8 @@ namespace Streamiz.Kafka.Net
         {
             // Create internal topics (changelogs & repartition) if need
             var adminClientInternalTopicManager = kafkaSupplier.GetAdmin(configuration.ToAdminConfig(StreamThread.GetSharedAdminClientId($"{configuration.ApplicationId.ToLower()}-admin-internal-topic-manager")));
-            using(var internalTopicManager = new DefaultTopicManager(configuration, adminClientInternalTopicManager))
-                await InternalTopicManagerUtils.New().CreateInternalTopicsAsync(internalTopicManager, topology.Builder);
+            using var internalTopicManager = new DefaultTopicManager(configuration, adminClientInternalTopicManager);
+            await InternalTopicManagerUtils.New().CreateInternalTopicsAsync(internalTopicManager, topology.Builder);
         }
 
         private void RunMiddleware(bool before, bool start)

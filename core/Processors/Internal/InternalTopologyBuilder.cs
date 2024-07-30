@@ -585,11 +585,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     int? internalTopicPartition = internalTopics[topic];
 
                     if (internalTopicPartition.HasValue)
-                        repartitionTopics.Add(internalTopic,
+                        repartitionTopics.AddIfNotExist(internalTopic,
                             new RepartitionTopicConfig()
                                 {Name = internalTopic, NumberPartitions = internalTopicPartition.Value});
                     else
-                        repartitionTopics.Add(internalTopic,
+                        repartitionTopics.AddIfNotExist(internalTopic,
                             new RepartitionTopicConfig() {Name = internalTopic});
                     return internalTopic;
                 }
@@ -818,6 +818,10 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                         var sinkTopic = internalTopics.ContainsKey(sinkNode.Topic)
                             ? DecorateTopic(sinkNode.Topic)
                             : sinkNode.Topic;
+                        
+                        if (linkTopics.Contains(sinkTopic))
+                            return;
+                        
                         linkTopics.Add(sinkTopic);
                         GetLinkTopics(sinkTopic, linkTopics);
                     }

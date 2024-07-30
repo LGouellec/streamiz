@@ -2,19 +2,17 @@ using Confluent.Kafka;
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SerDes;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Prometheus;
 using Streamiz.Kafka.Net.Stream;
 using Microsoft.Extensions.Logging;
-using Streamiz.Kafka.Net.Table;
 
 namespace sample_stream
 {
     public static class Program
     {
-        public static async Task Main2(string[] args)
+        public static async Task Main(string[] args)
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>{
                 ApplicationId = $"test-app",
