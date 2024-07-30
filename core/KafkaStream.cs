@@ -432,7 +432,16 @@ namespace Streamiz.Kafka.Net
         public async Task StartAsync(CancellationToken? token = null)
         {
             if (token.HasValue)
+<<<<<<< HEAD
                 token.Value.Register(Dispose);
+=======
+            {
+                token.Value.Register(() => {
+                    _cancelSource.Cancel();
+                    Dispose();
+                });
+            }
+>>>>>>> develop
             
             await Task.Factory.StartNew(() =>
             {
@@ -617,8 +626,8 @@ namespace Streamiz.Kafka.Net
         {
             // Create internal topics (changelogs & repartition) if need
             var adminClientInternalTopicManager = kafkaSupplier.GetAdmin(configuration.ToAdminConfig(StreamThread.GetSharedAdminClientId($"{configuration.ApplicationId.ToLower()}-admin-internal-topic-manager")));
-            using(var internalTopicManager = new DefaultTopicManager(configuration, adminClientInternalTopicManager))
-                await InternalTopicManagerUtils.New().CreateInternalTopicsAsync(internalTopicManager, topology.Builder);
+            using var internalTopicManager = new DefaultTopicManager(configuration, adminClientInternalTopicManager);
+            await InternalTopicManagerUtils.New().CreateInternalTopicsAsync(internalTopicManager, topology.Builder);
         }
 
         private void RunMiddleware(bool before, bool start)

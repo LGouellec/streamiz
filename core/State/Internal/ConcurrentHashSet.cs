@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace Streamiz.Kafka.Net.State.InMemory.Internal
+namespace Streamiz.Kafka.Net.State.Internal
 {
     internal class ConcurrentSet<T>
     {
