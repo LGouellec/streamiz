@@ -1,54 +1,87 @@
 ﻿using System;
 using Confluent.Kafka;
 using Newtonsoft.Json;
+using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Librdkafka;
+using Streamiz.Kafka.Net.Table;
 
-namespace Streamiz.Kafka.Net.Kafka.Internal
+namespace Streamiz.Kafka.Net.Kafka
 {
-    internal class DefaultKafkaClientBuilder
+    /// <summary>
+    /// Default builder used to provide Kafka clients builder
+    /// </summary>
+    public class DefaultKafkaClientBuilder
     {
+        /// <summary>
+        /// Get the consumer builder
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
         public virtual ConsumerBuilder<byte[], byte[]> GetConsumerBuilder(ConsumerConfig config)
             => new(config);
         
+        /// <summary>
+        /// Get the admin client builder
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
         public virtual AdminClientBuilder GetAdminBuilder(AdminClientConfig config)
             => new(config);
 
+        /// <summary>
+        /// Get the producer builder
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
         public virtual ProducerBuilder<byte[], byte[]> GetProducerBuilder(ProducerConfig config)
             => new(config);
     }
     
-    internal class DefaultKafkaClientSupplier : IKafkaSupplier
+    /// <summary>
+    /// Default <see cref="IKafkaSupplier"/> can be used to provide custom Kafka clients to a <see cref="KafkaStream"/> instance.
+    /// </summary>
+    public class DefaultKafkaClientSupplier : IKafkaSupplier
     {
         private readonly KafkaLoggerAdapter loggerAdapter;
         private readonly IStreamConfig streamConfig;
         private readonly bool exposeLibrdKafka;
         private readonly DefaultKafkaClientBuilder builderKafkaHandler;
 
-        public DefaultKafkaClientSupplier(KafkaLoggerAdapter loggerAdapter)
-            : this(loggerAdapter, null)
-        { }
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="loggerAdapter"></param>
+        /// <param name="streamConfig"></param>
         public DefaultKafkaClientSupplier(
             KafkaLoggerAdapter loggerAdapter,
             IStreamConfig streamConfig)
             : this(loggerAdapter, streamConfig, new DefaultKafkaClientBuilder())
         { }
 
-        internal DefaultKafkaClientSupplier(
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="loggerAdapter"></param>
+        /// <param name="streamConfig"></param>
+        /// <param name="builderKafkaHandler"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public DefaultKafkaClientSupplier(
             KafkaLoggerAdapter loggerAdapter,
             IStreamConfig streamConfig,
             DefaultKafkaClientBuilder builderKafkaHandler)
         {
-            if (loggerAdapter == null)
-                throw new ArgumentNullException(nameof(loggerAdapter));
-
-            this.loggerAdapter = loggerAdapter;
+            this.loggerAdapter = loggerAdapter ?? throw new ArgumentNullException(nameof(loggerAdapter));
             this.streamConfig = streamConfig;
             exposeLibrdKafka = streamConfig?.ExposeLibrdKafkaStats ?? false;
             this.builderKafkaHandler = builderKafkaHandler ?? new DefaultKafkaClientBuilder();
         }
 
+        /// <summary>
+        /// Create an admin kafka client which is used for internal topic management.
+        /// </summary>
+        /// <param name="config">Admin configuration can't be null</param>
+        /// <returns>Return an admin client instance</returns>
         public IAdminClient GetAdmin(AdminClientConfig config)
         {
             AdminClientBuilder builder = builderKafkaHandler.GetAdminBuilder(config);
@@ -57,6 +90,12 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             return builder.Build();
         }
 
+        /// <summary>
+        /// Build a kafka consumer with <see cref="ConsumerConfig"/> instance and <see cref="IConsumerRebalanceListener"/> listener.
+        /// </summary>
+        /// <param name="config">Consumer configuration can't be null</param>
+        /// <param name="rebalanceListener">Rebalance listener (Nullable)</param>
+        /// <returns>Return a kafka consumer built</returns>
         public IConsumer<byte[], byte[]> GetConsumer(ConsumerConfig config, IConsumerRebalanceListener rebalanceListener)
         {
             ConsumerBuilder<byte[], byte[]> builder = builderKafkaHandler.GetConsumerBuilder(config);
@@ -88,6 +127,11 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             return builder.Build();
         }
 
+        /// <summary>
+        /// Build a kafka producer with <see cref="ProducerConfig"/> instance.
+        /// </summary>
+        /// <param name="config">Producer configuration can't be null</param>
+        /// <returns>Return a kafka producer built</returns>
         public IProducer<byte[], byte[]> GetProducer(ProducerConfig config)
         {
             ProducerBuilder<byte[], byte[]> builder = builderKafkaHandler.GetProducerBuilder(config);
@@ -113,6 +157,11 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             return builder.Build();
         }
 
+        /// <summary>
+        /// Build a kafka restore consumer with <see cref="ConsumerConfig"/> instance for read record to restore statestore.
+        /// </summary>
+        /// <param name="config">Restore consumer configuration can't be null</param>
+        /// <returns>Return a kafka restore consumer built</returns>
         public IConsumer<byte[], byte[]> GetRestoreConsumer(ConsumerConfig config)
         {
             ConsumerBuilder<byte[], byte[]> builder = builderKafkaHandler.GetConsumerBuilder(config);
@@ -121,6 +170,11 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             return builder.Build();
         }
 
+        /// <summary>
+        /// Build a kafka global consumer with <see cref="ConsumerConfig"/> which is used to consume records for <see cref="IGlobalKTable{K,V}"/>.
+        /// </summary>
+        /// <param name="config">Global consumer configuration can't be null</param>
+        /// <returns>Return a kafka global consumer built</returns>
         public IConsumer<byte[], byte[]> GetGlobalConsumer(ConsumerConfig config)
         {
             config.AutoOffsetReset = AutoOffsetReset.Earliest;
@@ -148,6 +202,10 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             return builder.Build();
         }
         
+        /// <summary>
+        /// Get or set the metrics registry.
+        /// This registry will be capture all librdkafka statistics if <see cref="IStreamConfig.ExposeLibrdKafkaStats"/> is enable and forward these into the metrics reporter
+        /// </summary>
         public StreamMetricsRegistry MetricsRegistry { get; set; }
     }
 }

@@ -1,11 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
+using System.Threading;
+using Confluent.Kafka;
+using Moq;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
-using Streamiz.Kafka.Net.Kafka.Internal;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Mock.Kafka;
+using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -125,6 +131,34 @@ namespace Streamiz.Kafka.Net.Tests.Private
         }
 
         [Test]
+        public void LogAndErrorWithThreadName()
+        {
+            Thread.CurrentThread.Name = "test-adapter";
+            
+            var mockConsumer = new MockConsumer(null, "group", "CONSUMER");
+            var mockProducer = new MockProducer(null, "PRODUCER");
+            var mockAdmin = new MockAdminClient(null, "ADMIN");
+            
+            var config = new StreamConfig();
+            config.ApplicationId = "test-logger-adapter";
+            var logger = new InMemoryLogger();
+            var adapter = new KafkaLoggerAdapter(config, logger);
+
+            adapter.LogConsume(mockConsumer,
+                new Confluent.Kafka.LogMessage("error", Confluent.Kafka.SyslogLevel.Critical, "", "error"));
+            adapter.ErrorConsume(mockConsumer, new Error(ErrorCode.ConcurrentTransactions));
+
+            adapter.LogProduce(mockProducer,
+                new Confluent.Kafka.LogMessage("error", Confluent.Kafka.SyslogLevel.Critical, "", "error"));
+            adapter.ErrorProduce(mockProducer, new Error(ErrorCode.RecordListTooLarge));
+            
+            adapter.LogAdmin(mockAdmin,
+                new Confluent.Kafka.LogMessage("error", Confluent.Kafka.SyslogLevel.Critical, "", "error"));
+            adapter.ErrorAdmin(mockAdmin,
+                new Confluent.Kafka.Error(Confluent.Kafka.ErrorCode.ClusterAuthorizationFailed));
+        }
+        
+        [Test]
         public void TestAdapterLogProducer()
         {
             var mockProducer = new MockProducer(null, "PRODUCER");
@@ -188,6 +222,86 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             Assert.AreEqual(1, logger.Logs.Count);
             logger.Logs.Clear();
+        }
+        
+       [Test]
+       public void TestAdapterGetNameNPE()
+        {
+                var config = new StreamConfig();
+                config.ApplicationId = "test-logger-adapter";
+                var logger = new InMemoryLogger();
+                var adapter = new KafkaLoggerAdapter(config, logger);
+
+                var client = new Mock<IConsumer<byte[], byte[]>>();
+                client
+                    .Setup(c => c.Name)
+                    .Throws<NullReferenceException>();
+
+               int v = 1233;
+                Type handleType = typeof(object);
+                object handle = ReflectionHelperExtensionMethods.GetInstance(
+                    "Confluent.Kafka.Impl.SafeKafkaHandle", ref handleType);
+                handle.SetPrivateFieldsValue(handleType, "handle", new IntPtr(v));
+
+                Handle h = new Handle();
+                h.SetPrivatePropertyValue("LibrdkafkaHandle", handle);
+
+                client.Setup(c => c.Handle)
+                    .Returns(() => h);
+
+                adapter.LogConsume(client.Object,
+                    new Confluent.Kafka.LogMessage("error", Confluent.Kafka.SyslogLevel.Critical, "", "error"));
+
+                handle.SetPrivateFieldsValue(handleType, "handle", IntPtr.Zero);
+                handle = null;
+        }
+        
+        [Test]
+        public void TestAdapterNullHandle()
+        {
+            var config = new StreamConfig();
+            config.ApplicationId = "test-logger-adapter";
+            var logger = new InMemoryLogger();
+            var adapter = new KafkaLoggerAdapter(config, logger);
+            
+            var client = new Mock<IConsumer<byte[], byte[]>>();
+            client
+                .Setup(c => c.Name)
+                .Throws<NullReferenceException>();
+            
+            client.Setup(c => c.Handle)
+                .Returns(() => new Handle());
+            
+            adapter.LogConsume(client.Object,
+                new Confluent.Kafka.LogMessage("error", Confluent.Kafka.SyslogLevel.Critical, "", "error"));
+        }
+        
+        [Test]
+        public void TestAdapterHandleInvalid()
+        {
+            var config = new StreamConfig();
+            config.ApplicationId = "test-logger-adapter";
+            var logger = new InMemoryLogger();
+            var adapter = new KafkaLoggerAdapter(config, logger);
+            
+            var client = new Mock<IConsumer<byte[], byte[]>>();
+            client
+                .Setup(c => c.Name)
+                .Throws<NullReferenceException>();
+            
+            Type handleType = typeof(object);
+            object handle = ReflectionHelperExtensionMethods.GetInstance(
+                "Confluent.Kafka.Impl.SafeKafkaHandle", ref handleType);
+            Handle h = new Handle();
+            h.SetPrivatePropertyValue("LibrdkafkaHandle", handle);
+            
+            client.Setup(c => c.Handle)
+                .Returns(() => h);
+            
+            adapter.LogConsume(client.Object,
+                new Confluent.Kafka.LogMessage("error", Confluent.Kafka.SyslogLevel.Critical, "", "error"));
+
+            handle = null;
         }
     }
 }

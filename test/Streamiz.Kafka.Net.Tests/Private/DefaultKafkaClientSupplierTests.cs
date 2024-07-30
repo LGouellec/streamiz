@@ -1,6 +1,11 @@
 ﻿using NUnit.Framework;
 using Streamiz.Kafka.Net.Kafka.Internal;
 using System;
+using System.Linq;
+using System.Threading;
+using Moq;
+using Confluent.Kafka;
+using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Processors.Internal;
 
@@ -8,8 +13,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
 {
     public class DefaultKafkaClientSupplierTest
     {
-        private readonly StreamConfig config = GetConfig();
-
         private static StreamConfig GetConfig()
         {
             var config = new StreamConfig();
@@ -20,13 +23,14 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void ShouldArgumentNullException()
         {
-            Assert.Throws<ArgumentNullException>(() => new DefaultKafkaClientSupplier(null));
+            Assert.Throws<ArgumentNullException>(() => new DefaultKafkaClientSupplier(null, null));
         }
 
         [Test]
         public void CreateAdminClient()
         {
-            var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config));
+            var config = GetConfig();
+            var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config), config);
             var adminClient = supplier.GetAdmin(config.ToAdminConfig("admin"));
             Assert.IsNotNull(adminClient);
             Assert.AreEqual("admin", adminClient.Name.Split("#")[0]);
@@ -35,7 +39,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void CreateConsumerClient()
         {
-            var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config));
+            var config = GetConfig();
+            var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config), config);
             var consumer = supplier.GetConsumer(config.ToConsumerConfig("consume"), new StreamsRebalanceListener(null));
             Assert.IsNotNull(consumer);
             Assert.AreEqual("consume", consumer.Name.Split("#")[0]);
@@ -44,24 +49,37 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void CreateRestoreClient()
         {
-            var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config));
-            var restore = supplier.GetRestoreConsumer(config.ToConsumerConfig("retore"));
+            var config = GetConfig();
+            var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config), config);
+            var restore = supplier.GetRestoreConsumer(config.ToConsumerConfig("restore"));
             Assert.IsNotNull(restore);
-            Assert.AreEqual("retore", restore.Name.Split("#")[0]);
+            Assert.AreEqual("restore", restore.Name.Split("#")[0]);
         }
 
         [Test]
         public void CreateProducerClient()
         {
-            var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config));
+            var config = GetConfig();
+            var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config), config);
             var produce = supplier.GetProducer(config.ToProducerConfig("produce"));
             Assert.IsNotNull(produce);
             Assert.AreEqual("produce", produce.Name.Split("#")[0]);
+        }
+        
+        [Test]
+        public void CreateGlobalConsumerClient()
+        {
+            var config = GetConfig();
+            var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config), config);
+            var globalConsumer = supplier.GetGlobalConsumer(config.ToGlobalConsumerConfig("global-consumer"));
+            Assert.IsNotNull(globalConsumer);
+            Assert.AreEqual("global-consumer", globalConsumer.Name.Split("#")[0]);
         }
 
         [Test]
         public void CreateConsumerWithStats()
         {
+            var config = GetConfig();
             config.ExposeLibrdKafkaStats = true;
             config.ApplicationId = "test-app";
             config.ClientId = "test-client";
@@ -78,6 +96,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void CreateProducerWithStats()
         {
+            var config = GetConfig();
             config.ExposeLibrdKafkaStats = true;
             config.ApplicationId = "test-app";
             config.ClientId = "test-client";
@@ -89,6 +108,128 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var producer = supplier.GetProducer(wrapper);
             Assert.IsNotNull(producer);
+        }
+        
+        [Test]
+        public void CreateGlobalConsumerWithStats()
+        {
+            var config = GetConfig();
+            config.ExposeLibrdKafkaStats = true;
+            config.ApplicationId = "test-app";
+            config.ClientId = "test-client";
+            
+            var supplier = new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(config), config);
+            supplier.MetricsRegistry = new StreamMetricsRegistry();
+            
+            var consumerConfig = config.ToGlobalConsumerConfig("global-consume");
+            StreamizConsumerConfig wrapper = new StreamizConsumerConfig(consumerConfig, "global-thread-1");
+            
+            var globalConsumer = supplier.GetGlobalConsumer(wrapper);
+            Assert.IsNotNull(globalConsumer);
+        }
+        
+        [Test]
+        public void ProducerStatisticHandler()
+        {
+            var config = GetConfig();
+            config.ExposeLibrdKafkaStats = true;
+            config.ApplicationId = "test-app";
+            config.ClientId = "test-client";
+            config.StatisticsIntervalMs = 10;
+            
+            var kafkaClientBuilder = new DefaultKafkaClientBuilder();
+            
+            var supplier = new DefaultKafkaClientSupplier(
+                new KafkaLoggerAdapter(config),
+                config,
+                kafkaClientBuilder);
+            
+            supplier.MetricsRegistry = new StreamMetricsRegistry();
+            
+            var producerConfig = config.ToProducerConfig("producer");
+            StreamizProducerConfig wrapper = new StreamizProducerConfig(producerConfig, "thread-1", new TaskId(){Id = 0, Partition = 0});
+            var producer = supplier.GetProducer(wrapper);
+            Assert.IsNotNull(producer);
+
+            Thread.Sleep(150);
+
+            var sensor = supplier
+                .MetricsRegistry
+                .GetSensors()
+                .FirstOrDefault(s => s.Name.Equals("librdkafka.producer.sensor.messages-produced-total"));
+            
+            Assert.IsNotNull(sensor);
+            Assert.AreEqual(0, sensor.Metrics.Values.Sum(v => (double)v.Value));
+        }
+        
+        [Test]
+        public void ConsumerStatisticHandler()
+        {
+            var config = GetConfig();
+            config.ExposeLibrdKafkaStats = true;
+            config.ApplicationId = "test-app";
+            config.ClientId = "test-client";
+            config.StatisticsIntervalMs = 10;
+            
+            var kafkaClientBuilder = new DefaultKafkaClientBuilder();
+            
+            var supplier = new DefaultKafkaClientSupplier(
+                new KafkaLoggerAdapter(config),
+                config,
+                kafkaClientBuilder);
+            
+            supplier.MetricsRegistry = new StreamMetricsRegistry();
+            
+            var consumerConfig = config.ToConsumerConfig("consume");
+            StreamizConsumerConfig wrapper = new StreamizConsumerConfig(consumerConfig, "thread-1");
+
+            var consumer = supplier.GetConsumer(wrapper, new StreamsRebalanceListener(null));
+            Assert.IsNotNull(consumer);
+
+            Thread.Sleep(150);
+
+            var sensor = supplier
+                .MetricsRegistry
+                .GetSensors()
+                .FirstOrDefault(s => s.Name.Equals("librdkafka.consume.sensor.messages-consumed-total"));
+            
+            Assert.IsNotNull(sensor);
+            Assert.AreEqual(0, sensor.Metrics.Values.Sum(v => (double)v.Value));
+        }
+        
+        [Test]
+        public void GlobalConsumerStatisticHandler()
+        {
+            var config = GetConfig();
+            config.ExposeLibrdKafkaStats = true;
+            config.ApplicationId = "test-app";
+            config.ClientId = "test-client";
+            config.StatisticsIntervalMs = 10;
+            
+            var kafkaClientBuilder = new DefaultKafkaClientBuilder();
+            
+            var supplier = new DefaultKafkaClientSupplier(
+                new KafkaLoggerAdapter(config),
+                config,
+                kafkaClientBuilder);
+            
+            supplier.MetricsRegistry = new StreamMetricsRegistry();
+            
+            var consumerConfig = config.ToGlobalConsumerConfig("consume");
+            StreamizConsumerConfig wrapper = new StreamizConsumerConfig(consumerConfig, "thread-1");
+
+            var consumer = supplier.GetGlobalConsumer(wrapper);
+            Assert.IsNotNull(consumer);
+
+            Thread.Sleep(150);
+
+            var sensor = supplier
+                .MetricsRegistry
+                .GetSensors()
+                .FirstOrDefault(s => s.Name.Equals("librdkafka.consume.sensor.messages-consumed-total"));
+            
+            Assert.IsNotNull(sensor);
+            Assert.AreEqual(0, sensor.Metrics.Values.Sum(v => (double)v.Value));
         }
     }
 }

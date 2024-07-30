@@ -1,16 +1,21 @@
 ﻿using Confluent.Kafka;
-using Streamiz.Kafka.Net.Crosscutting;
 using System;
 using System.Threading;
 using Microsoft.Extensions.Logging;
-using Streamiz.Kafka.Net.Errors;
 
-namespace Streamiz.Kafka.Net.Kafka.Internal
+namespace Streamiz.Kafka.Net.Kafka
 {
-    internal class KafkaLoggerAdapter
+    /// <summary>
+    /// Kafka log adapter to intercept librdkafka internal logs
+    /// </summary>
+    public class KafkaLoggerAdapter
     {
         private readonly ILogger log;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="configuration"></param>
         public KafkaLoggerAdapter(IStreamConfig configuration)
             : this(configuration, configuration.Logger.CreateLogger(typeof(KafkaLoggerAdapter)))
         {
@@ -71,10 +76,11 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
         private string GetName(IClient client)
         {
-            // FOR FIX
             string name = "";
             try
             {
+                if (client.Handle == null || client.Handle.IsInvalid)
+                    return "Unknown";
                 name = client.Name;
             }
             catch (NullReferenceException)
