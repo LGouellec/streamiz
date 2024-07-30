@@ -10,13 +10,14 @@ using Streamiz.Kafka.Net.Metrics.Prometheus;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
+using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Table;
 
 namespace sample_stream
 {
     public static class Program
     {
-        public static async Task Main(string[] args)
+        public static async Task Main2(string[] args)
         {
            var config = new StreamConfig<StringSerDes, StringSerDes>{
                 ApplicationId = $"test-app",
@@ -49,14 +50,24 @@ namespace sample_stream
         private static Topology BuildTopology()
         {
             var builder = new StreamBuilder();
-            
-            var table = builder
-                .Table("table-input",
-                    AzureRemoteStorage.As<string, string>().WithCachingEnabled());
-            
+            /*builder.Stream<string, string>("input")
+                .GroupByKey()
+                .WindowedBy(TumblingWindowOptions.Of(windowSize))
+                .Count(RocksDbWindows.As<string, long>("count-store")
+                    .WithKeySerdes(new StringSerDes())
+                    .WithValueSerdes(new Int64SerDes())
+                    .WithCachingEnabled())
+                .ToStream()
+                .Map((k,v) => new KeyValuePair<string,string>(k.ToString(), v.ToString()))
+                .To("output",
+                    new StringSerDes(),
+                    new StringSerDes());*/
+
             builder.Stream<string, string>("input")
-                .Join(table, (s, s1) => s + ":" + s1)
-                .To("output");
+                .DropDuplicate((key, value1, value2) => value1.Equals(value2),
+                    TimeSpan.FromMinutes(1))
+                .To(
+                    "output");//, (s, s1, arg3, arg4) => new Partition(0));
             
             return builder.Build();
         }

@@ -68,13 +68,11 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         public virtual string StateDir => $"{Path.Combine(Configuration.StateDir, Configuration.ApplicationId, Id.ToString())}";
 
-        internal bool ConfigEnableCache => Configuration.StateStoreCacheMaxBytes > 0;
-        
-        // FOR TESTING
         internal ProcessorContext()
         {
+            
         }
-
+        
         internal ProcessorContext(AbstractTask task, IStreamConfig configuration, IStateManager stateManager,
             StreamMetricsRegistry streamMetricsRegistry)
         { 

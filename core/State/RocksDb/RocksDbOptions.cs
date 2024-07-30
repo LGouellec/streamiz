@@ -1191,9 +1191,9 @@ namespace Streamiz.Kafka.Net.State
         /// <param name="p3"></param>
         /// <param name="p4"></param>
         /// <returns>the instance of the current object</returns>
-        public RocksDbOptions SetPlainTableFactory(uint p1, int p2, double p3, ulong p4)
+        public RocksDbOptions SetPlainTableFactory(uint user_key_len, int bloom_bits_per_key, double hash_table_ratio, int index_sparseness, int huge_page_tlb_size, char encoding_type, bool full_scan_mode, bool store_index_in_file)
         {
-            columnFamilyOptions.SetPlainTableFactory(p1, p2, p3, p4);
+            columnFamilyOptions.SetPlainTableFactory(user_key_len, bloom_bits_per_key, hash_table_ratio, index_sparseness, huge_page_tlb_size, encoding_type, full_scan_mode, store_index_in_file);
             return this;
         }
         

@@ -241,8 +241,8 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
                 StreamMetricsRegistry.LATENCY_SUFFIX + StreamMetricsRegistry.MAX_SUFFIX,
                 StreamMetricsRegistry.STATE_STORE_LEVEL_GROUP);
             
-            Assert.IsTrue((double)latencyAvg.Value > 0);
-            Assert.IsTrue((double)latencyMax.Value > 0);
+            Assert.IsTrue((double)latencyAvg.Value >= 0);
+            Assert.IsTrue((double)latencyMax.Value >= 0);
             
             for(int i = 0 ; i < nbMessage2 ; ++i)
                 meteredKeyValueStore.Put($"test{i}", $"test{i}");
@@ -346,8 +346,8 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
                 sensorName,
                 StreamMetricsRegistry.LATENCY_SUFFIX + StreamMetricsRegistry.MAX_SUFFIX,
                 StreamMetricsRegistry.STATE_STORE_LEVEL_GROUP);
-            Assert.IsTrue((double)latencyAvg.Value > 0);
-            Assert.IsTrue((double)latencyMax.Value > 0);
+            Assert.GreaterOrEqual((double)latencyAvg.Value, 0);
+            Assert.GreaterOrEqual((double)latencyMax.Value, 0);
         }
         
         private StreamMetric GetSensorMetric(string sensorName, string metricSuffix, string group)

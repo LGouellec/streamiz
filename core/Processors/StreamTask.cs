@@ -73,7 +73,8 @@ namespace Streamiz.Kafka.Net.Processors
             }
 
             var droppedRecordsSensor = TaskMetrics.DroppedRecordsSensor(this.threadId, Id, this.streamMetricsRegistry);
-            collector = new RecordCollector(logPrefix, configuration, id, droppedRecordsSensor);
+            var adminClient = kafkaSupplier.GetAdmin(configuration.ToAdminConfig(this.threadId));
+            collector = new RecordCollector(logPrefix, configuration, id, droppedRecordsSensor, adminClient);
             collector.Init(ref this.producer);
 
             Context = new ProcessorContext(this, configuration, stateMgr, streamMetricsRegistry)

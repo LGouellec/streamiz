@@ -17,7 +17,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
         private readonly Produced<K, V> produced;
         private readonly IRecordTimestampExtractor<K, V> timestampExtractor;
 
-        public StreamSinkNode(ITopicNameExtractor<K, V> topicNameExtractor, IRecordTimestampExtractor<K, V> timestampExtractor, string streamGraphNode, Produced<K, V> produced)
+        public StreamSinkNode(
+            ITopicNameExtractor<K, V> topicNameExtractor,
+            IRecordTimestampExtractor<K, V> timestampExtractor,
+        string streamGraphNode, Produced<K, V> produced)
             : base(streamGraphNode)
         {
             this.topicNameExtractor = topicNameExtractor;
@@ -27,7 +30,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
 
         public override void WriteToTopology(InternalTopologyBuilder builder)
         {
-            builder.AddSinkOperator(topicNameExtractor, timestampExtractor, this.streamGraphNode, produced, ParentNodeNames());
+            builder.AddSinkOperator(topicNameExtractor, timestampExtractor, streamGraphNode, produced, ParentNodeNames());
         }
     }
 }

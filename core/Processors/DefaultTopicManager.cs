@@ -49,7 +49,6 @@ namespace Streamiz.Kafka.Net.Processors
                 var defaultConfig = new Dictionary<string, string>();
                 var topicsNewCreated = new List<string>();
                 var topicsToCreate = new List<string>();
-                var metadata = AdminClient.GetMetadata(timeout);
 
                 // 1. get source topic partition
                 // 2. check if changelog exist, :
@@ -58,6 +57,7 @@ namespace Streamiz.Kafka.Net.Processors
                 // 3. if changelog doesn't exist, create it with partition number and configuration
                 foreach (var t in topics)
                 {
+                    var metadata = AdminClient.GetMetadata(t.Key, timeout);
                     var numberPartitions = GetNumberPartitionForTopic(metadata, t.Key);
                     if (numberPartitions == 0)
                     {

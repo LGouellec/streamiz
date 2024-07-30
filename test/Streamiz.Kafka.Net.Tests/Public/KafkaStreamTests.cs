@@ -633,7 +633,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.PollMs = 1;
 
             var builder = new StreamBuilder();
-            builder.GlobalTable<string, string>("test", InMemory.As<string,string>("store"));
+            builder.GlobalTable("test", InMemory.As<string,string>("store"));
 
             var supplier = new SyncKafkaSupplier();
             var producer = supplier.GetProducer(new ProducerConfig());

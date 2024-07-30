@@ -125,7 +125,8 @@ namespace Streamiz.Kafka.Net.Processors
             ISourceProcessor sourceProcessor, 
             IProducer<byte[], byte[]> producer,
             IStreamConfig config,
-            StreamMetricsRegistry streamMetricsRegistry)
+            StreamMetricsRegistry streamMetricsRegistry,
+            IAdminClient adminClient)
         {
             this.threadId = threadId;
             this.producerId = producer.Name;
@@ -140,7 +141,7 @@ namespace Streamiz.Kafka.Net.Processors
             processSensor = TaskMetrics.ProcessSensor(threadId, taskId, streamMetricsRegistry);
             processLatencySensor = TaskMetrics.ProcessLatencySensor(threadId, taskId, streamMetricsRegistry);
             
-            recordCollector = new RecordCollector(logPrefix, config, taskId, droppedRecordsSensor);
+            recordCollector = new RecordCollector(logPrefix, config, taskId, droppedRecordsSensor, adminClient);
             recordCollector.Init(ref producer);
             
             context = new ProcessorContext(ExternalStreamTask.Create(taskId), config, null, streamMetricsRegistry);

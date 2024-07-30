@@ -73,7 +73,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
             var stream = builder.Stream<string, string>("topic");
             string topicDes = null;
-            Assert.Throws<ArgumentNullException>(() => stream.To(topicDes));
+            Assert.Throws<ArgumentException>(() => stream.To(topicDes));
         }
 
         [Test]
