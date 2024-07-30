@@ -7,6 +7,8 @@ using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Prometheus;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
+using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Table;
 
 namespace sample_stream
 {
@@ -25,10 +27,6 @@ namespace sample_stream
                 })
             };
            
-            config["azure.remote.storage.uri"] = "URI";
-            config["azure.remote.storage.account.name"] = "ACCOUNT_NAME";
-            config["azure.remote.storage.account.key"] = "MASTER_KEY";
-            
             config.MetricsRecording = MetricsRecordingLevel.DEBUG;
             config.UsePrometheusReporter(9090, true);
                    
@@ -45,7 +43,6 @@ namespace sample_stream
         private static Topology BuildTopology()
         {
             var builder = new StreamBuilder();
-
             /*builder.Stream<string, string>("input")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(windowSize))
