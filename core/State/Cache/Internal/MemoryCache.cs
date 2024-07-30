@@ -22,6 +22,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
         where K : class, IComparable<K>
         where V : class
     {
+        // https://github.com/mkrebser/ConcurrentSortedDictionary
         private readonly IComparer<K> _keyComparer;
         private readonly IClockTime _clockTime;
         internal readonly ILogger Logger;

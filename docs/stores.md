@@ -164,3 +164,285 @@ InMemory.As<string, long>("count-store")
         .WithValueSerdes(new Int64SerDes())
         .WithCachingEnabled();
 ```
+
+## Remote storage
+
+Steamiz provides powerful capabilities for real-time stream processing applications, leveraging Kafka as a robust event streaming platform. One of its key features is the ability to manage and store stateful data, crucial for maintaining application state across stream processing operations. While Steamiz offers built-in state stores like RocksDB, In memory store, developers may sometimes need to create custom state stores tailored to specific use cases or integration requirements.
+
+Custom state stores can be beneficial for scenarios such as integrating with existing systems, enhancing performance for specific data access patterns, or ensuring compatibility with proprietary data formats.
+
+### Custom state store 
+
+**Steps to Create Custom State Stores**
+
+1- Implement the State Store
+
+Create a class that extends `IKeyValueStore<Bytes, byte[]>` depending on the nature of your state. This involves defining how the state is stored and accessed. Consider using technologies like in-memory data structures or external databases depending on your use case.
+
+For instance:
+
+``` csharp
+public class CustomKeyValueStore : IKeyValueStore<Bytes, byte[]>
+{
+        /// <summary>
+        /// Name of this store
+        /// </summary>
+        public string Name { get; }
+
+        /// <summary>
+        /// Return if the storage is persistent or not.
+        /// </summary>
+        public bool Persistent { get; }
+
+        /// <summary>
+        /// Return if the storage is present locally or not.
+        /// If the store is local, an internal kafka topic will be created to offload the data
+        /// </summary>
+        public bool IsLocally { get; }
+
+        /// <summary>
+        /// Is this store open for reading and writing
+        /// </summary>
+        public bool IsOpen { get; }
+
+        /// <summary>
+        /// Constructor with client parameters ..
+        /// </summary>
+        public CustomKeyValueStore(string uri, string token, string name)
+        {
+                Name = name;
+                // doing something with uri, token etc ..
+        }
+
+        /// <summary>
+        /// Initializes this state store.
+        /// The implementation of this function must register the root store in the context via the
+        /// <see cref="ProcessorContext.Register(IStateStore, Internal.StateRestoreCallback)"/> function, where the
+        /// first <see cref="IStateStore"/> parameter should always be the passed-in <code>root</code> object, and
+        /// the second parameter should be an object of user's implementation
+        /// of the <see cref="Internal.StateRestoreCallback"/> interface used for restoring the state store from the changelog.
+        /// </summary>
+        /// <param name="context">Processor context</param>
+        /// <param name="root">Root state (always itself)</param>
+        public void Init(ProcessorContext context, IStateStore root)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Flush any cached data
+        /// </summary>
+        public void Flush()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Close the storage engine.
+        /// Note that this function needs to be idempotent since it may be called
+        /// several times on the same state store
+        /// Users only need to implement this function but should NEVER need to call this api explicitly
+        /// as it will be called by the library automatically when necessary
+        /// </summary>
+        public void Close()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Get the value corresponding to this key.
+        /// </summary>
+        /// <param name="key">the key to fetch</param>
+        /// <returns>The value or null if no value is found.</returns>
+        public byte[] Get(Bytes key)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Get an enumerator over a given range of keys. This enumerator must be closed after use.
+        /// Order is not guaranteed as bytes lexicographical ordering might not represent key order.
+        /// </summary>
+        /// <param name="from">The first key that could be in the range, where iteration starts from.</param>
+        /// <param name="to">The last key that could be in the range, where iteration ends.</param>
+        /// <returns>The enumerator for this range, from smallest to largest bytes.</returns>
+        public IKeyValueEnumerator<Bytes, byte[]> Range(Bytes from, Bytes to)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Get a reverser enumerator over a given range of keys. This enumerator must be closed after use.
+        /// Order is not guaranteed as bytes lexicographical ordering might not represent key order.
+        /// </summary>
+        /// <param name="from">The first key that could be in the range, where iteration starts from.</param>
+        /// <param name="to">The last key that could be in the range, where iteration ends.</param>
+        /// <returns>The reverse enumerator for this range, from smallest to largest bytes.</returns>
+        /// <exception cref="InvalidStateStoreException">if the store is not initialized</exception>
+        public IKeyValueEnumerator<Bytes, byte[]> ReverseRange(Bytes from, Bytes to)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Return an enumerator over all keys in this store. No ordering guarantees are provided.
+        /// </summary>
+        /// <returns>An enumerator of all key/value pairs in the store.</returns>
+        /// <exception cref="InvalidStateStoreException">if the store is not initialized</exception>
+        public IEnumerable<KeyValuePair<Bytes, byte[]>> All()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Return a reverse enumerator over all keys in this store. No ordering guarantees are provided.
+        /// </summary>
+        /// <returns>A reverse enumerator of all key/value pairs in the store.</returns>
+        /// <exception cref="InvalidStateStoreException">if the store is not initialized</exception>
+        public IEnumerable<KeyValuePair<Bytes, byte[]>> ReverseAll()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Return an approximate count of key-value mappings in this store.
+        /// The count is not guaranteed to be exact in order to accommodate stores
+        /// where an exact count is expensive to calculate.
+        /// </summary>
+        /// <returns>an approximate count of key-value mappings in the store.</returns>
+        public long ApproximateNumEntries()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Update the value associated with this key.
+        /// </summary>
+        /// <param name="key">The key to associate the value to</param>
+        /// <param name="value">The value to update, it can be null if the serialized bytes are also null it is interpreted as deletes</param>
+        public void Put(Bytes key, byte[] value)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Update the value associated with this key, unless a value is already associated with the key.
+        /// </summary>
+        /// <param name="key">The key to associate the value to</param>
+        /// <param name="value">The value to update, it can be null; if the serialized bytes are also null it is interpreted as deletes</param>
+        /// <returns>The old value or null if there is no such key.</returns>
+        public byte[] PutIfAbsent(Bytes key, byte[] value)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Update all the given key/value pairs.
+        /// </summary>
+        /// <param name="entries">A list of entries to put into the store. if the serialized bytes are also null it is interpreted as deletes</param>
+        public void PutAll(IEnumerable<KeyValuePair<Bytes, byte[]>> entries)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Delete the value from the store (if there is one).
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <returns>The old value or null if there is no such key</returns>
+        public byte[] Delete(Bytes key)
+        {
+            throw new NotImplementedException();
+        }
+}
+```
+
+2 - Integrate with Streamiz Application
+
+For using the custom state store within your Streamiz application, you need to write a custom `IKeyValueBytesStoreSupplier`. This supplier will be used to create one or multiple instances of your custom store. Of course, you can add some parameters like URI, API Key/Secret, etc ..
+
+For instance :
+
+``` csharp
+    public class CustomStorageSupplier : IKeyValueBytesStoreSupplier
+    {
+        public String Uri {get;set;}
+        public String Token {get;set;}
+        public string Name { get; set; }
+
+        public AzureRemoteStorageSupplier(string uri, string token, string name)
+        {
+            Uri = uri;
+            Token = token;
+            Name = name;
+        }
+
+        public IKeyValueStore<Bytes, byte[]> Get()
+            => new CustomKeyValueStore(Uri, Token, Name);
+
+        public string MetricsScope => "custom-remote-storage";
+    }
+```
+
+3 - Use the supplier
+
+Let's suppose, you would like to materialize a KTable with your custom state store. 
+
+``` csharp
+var table = builder.Table("table-input", 
+                        Materialized<string, string, IKeyValueStore<Bytes, byte[]>>
+                                .Create(new CustomStorageSupplier("uri://", "APIZ?ZLAKZ", "custom-store")));
+```
+
+### Azure Table Key/Value store
+
+**This feature is available in `EARLY ACCESS` only.**
+ 
+`1.7.0` introduce a new remote storage. The `Azure Table Store` use under the hood, the Azure Table Client which can be used with a [Table Blob Storage](https://learn.microsoft.com/en-us/azure/storage/tables/table-storage-overview) or a [CosmosDb endpoint](https://learn.microsoft.com/en-us/azure/cosmos-db/table/tutorial-query)
+
+#### How to ?
+
+1- Install this nuget package 
+
+``` 
+dotnet add package Streamiz.Kafka.Net.Azure.RemoteStorage
+```
+
+2- Use the helper class to materialize the `Azure Remote Store`
+
+``` csharp
+var table = builder.Table("table-input", AzureRemoteStorage.As<string, string>());
+```
+
+3- Configure it
+
+You can configure the azure endpoint and credentials via two way. 
+
+1- Programmaticaly 
+```csharp
+var table = builder
+                .Table("table-input",
+                    AzureRemoteStorage.As<string, string>( 
+                            new AzureRemoteStorageOptions
+                                {
+                                    AccountName = "",
+                                    StorageUri = "",
+                                    StorageAccountKey = ""
+                                }));
+```
+
+2- Via Configuration
+
+``` csharp
+var config = new StreamConfig<StringSerDes, StringSerDes>{
+                ApplicationId = $"test-app",
+                BootstrapServers = "localhost:9092"
+        };
+           
+config["azure.remote.storage.uri"] = "URI";
+config["azure.remote.storage.account.name"] = "ACCOUNT_NAME";
+config["azure.remote.storage.account.key"] = "MASTER_KEY";
+
+/// ....
+var table = builder.Table("table-input", AzureRemoteStorage.As<string, string>());
+```

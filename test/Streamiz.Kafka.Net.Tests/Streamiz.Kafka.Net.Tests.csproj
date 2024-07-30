@@ -41,6 +41,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\core\Streamiz.Kafka.Net.csproj" />
+    <ProjectReference Include="..\..\remote\Streamiz.Kafka.Net.Azure.RemoteStorage\Streamiz.Kafka.Net.Azure.RemoteStorage.csproj" />
     <ProjectReference Include="..\..\serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.csproj" />
     <ProjectReference Include="..\..\serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json.csproj" />
     <ProjectReference Include="..\..\serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf.csproj" />

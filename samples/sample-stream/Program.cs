@@ -1,12 +1,14 @@
-using Confluent.Kafka;
 using Streamiz.Kafka.Net;
-using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Threading.Tasks;
+using Confluent.Kafka;
+using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Prometheus;
+using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Table;
 
 namespace sample_stream
 {
@@ -14,16 +16,17 @@ namespace sample_stream
     {
         public static async Task Main(string[] args)
         {
-            var config = new StreamConfig<StringSerDes, StringSerDes>{
+           var config = new StreamConfig<StringSerDes, StringSerDes>{
                 ApplicationId = $"test-app",
                 BootstrapServers = "localhost:9092",
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 Logger = LoggerFactory.Create((b) =>
                 {
                     b.AddConsole();
-                    b.SetMinimumLevel(LogLevel.Debug);
+                    b.SetMinimumLevel(LogLevel.Information);
                 })
             };
+           
             config.MetricsRecording = MetricsRecordingLevel.DEBUG;
             config.UsePrometheusReporter(9090, true);
                    
@@ -39,8 +42,6 @@ namespace sample_stream
         
         private static Topology BuildTopology()
         {
-            TimeSpan windowSize = TimeSpan.FromHours(1);
-            
             var builder = new StreamBuilder();
             /*builder.Stream<string, string>("input")
                 .GroupByKey()
@@ -60,7 +61,6 @@ namespace sample_stream
                     TimeSpan.FromMinutes(1))
                 .To(
                     "output");//, (s, s1, arg3, arg4) => new Partition(0));
-
             
             return builder.Build();
         }
