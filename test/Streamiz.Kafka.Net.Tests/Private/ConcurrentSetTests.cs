@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Streamiz.Kafka.Net.State.InMemory.Internal;
+using Streamiz.Kafka.Net.State.Internal;
 
 namespace Streamiz.Kafka.Net.Tests.Private;
 

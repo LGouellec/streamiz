@@ -1,32 +1,36 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Crosscutting
 {
     internal static class SortedDictionaryExtensions
     {
-        internal static IEnumerable<KeyValuePair<K, V>> HeadMap<K, V>(this SortedDictionary<K, V> sortedDic,  K key, bool inclusive)
+        internal static IEnumerable<KeyValuePair<K, V>> HeadMap<K, V>(this IEnumerable<KeyValuePair<K, V>> enumerable,  K key, bool inclusive)
+            where K : IComparable<K>
         {
-            foreach (K k in sortedDic.Keys) {
-                int r = sortedDic.Comparer.Compare(key, k);
+            foreach (var kv in enumerable)
+            {
+                int r = key.CompareTo(kv.Key);
                 if ((inclusive && r >= 0) || (!inclusive && r > 0))
-                    yield return new KeyValuePair<K, V>(k, sortedDic[k]);
+                    yield return new KeyValuePair<K, V>(kv.Key, kv.Value);
                 else
                     break;
             }
         }
 
-        internal static IEnumerable<KeyValuePair<K, V>> SubMap<K, V>(this SortedDictionary<K, V> sortedDic, K keyFrom, K keyTo , bool inclusiveFrom, bool inclusiveTo)
+        internal static IEnumerable<KeyValuePair<K, V>> SubMap<K, V>(this IEnumerable<KeyValuePair<K, V>> enumerable, K keyFrom, K keyTo , bool inclusiveFrom, bool inclusiveTo)
+            where K : IComparable<K>
         {
-            foreach (K k in sortedDic.Keys)
+            foreach (var kv in enumerable)
             {
-                int rF = sortedDic.Comparer.Compare(keyFrom, k);
-                int rT = sortedDic.Comparer.Compare(keyTo, k);
+                int rF = keyFrom.CompareTo(kv.Key);
+                int rT = keyTo.CompareTo(kv.Key);
 
                 if((inclusiveFrom && rF <= 0) || (!inclusiveFrom && rF < 0))
                 {
                     if ((inclusiveTo && rT >= 0) || (!inclusiveTo && rT > 0))
                     {
-                        yield return new KeyValuePair<K, V>(k, sortedDic[k]);
+                        yield return new KeyValuePair<K, V>(kv.Key, kv.Value);
                     }
                     else
                         break;
@@ -34,16 +38,17 @@ namespace Streamiz.Kafka.Net.Crosscutting
             }
         }
 
-        internal static IEnumerable<KeyValuePair<K, V>> TailMap<K, V>(this SortedDictionary<K, V> sortedDic, K keyFrom,
+        internal static IEnumerable<KeyValuePair<K, V>> TailMap<K, V>(this IEnumerable<KeyValuePair<K, V>> enumerable, K keyFrom,
             bool inclusive)
+            where K : IComparable<K>
         {
-            foreach (K k in sortedDic.Keys)
+            foreach (var kv in enumerable)
             {
-                int rT = sortedDic.Comparer.Compare(keyFrom, k);
+                int rT = keyFrom.CompareTo(kv.Key);
 
                 if ((inclusive && rT <= 0) || (!inclusive && rT < 0))
                 {
-                    yield return new KeyValuePair<K, V>(k, sortedDic[k]);
+                    yield return new KeyValuePair<K, V>(kv.Key, kv.Value);
                 }
             }
         }
