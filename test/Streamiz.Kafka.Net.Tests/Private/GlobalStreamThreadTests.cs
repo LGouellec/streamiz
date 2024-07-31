@@ -14,112 +14,146 @@ namespace Streamiz.Kafka.Net.Tests.Private
 {
     public class GlobalStreamThreadTests
     {
-        private Mock<IGlobalStateMaintainer> globalStateMaintainerMock;
-        private Mock<IStreamConfig> streamConfigMock;
-        private Mock<IConsumer<byte[], byte[]>> globalConsumerMock;
-
-        private GlobalStreamThread globalStreamThread;
-        private CancellationTokenSource cancellationTokenSource;
-
-        [SetUp]
-        public void SetUp()
+        [Test]
+        public void ShouldConvertExceptionsToStreamsException()
         {
-            globalConsumerMock = new Mock<IConsumer<byte[], byte[]>>();
-            globalStateMaintainerMock = new Mock<IGlobalStateMaintainer>();
-            streamConfigMock = new Mock<IStreamConfig>();
+            var globalConsumerMock = new Mock<IConsumer<byte[], byte[]>>();
+            var globalStateMaintainerMock = new Mock<IGlobalStateMaintainer>();
+            var streamConfigMock = new Mock<IStreamConfig>();
             streamConfigMock.Setup(x => x.PollMs).Returns(1);
             streamConfigMock.Setup(x => x.CommitIntervalMs).Returns(1);
             globalStateMaintainerMock.Setup(x => x.Initialize()).Returns(new Dictionary<TopicPartition, long>());
 
-            cancellationTokenSource = new CancellationTokenSource();
-            globalStreamThread = new GlobalStreamThread("global", globalConsumerMock.Object, streamConfigMock.Object,
+            var globalStreamThread = new GlobalStreamThread("global", globalConsumerMock.Object, streamConfigMock.Object,
                 globalStateMaintainerMock.Object, new StreamMetricsRegistry());
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            cancellationTokenSource.Cancel();
-        }
-
-        [Test]
-        public void ShouldConvertExceptionsToStreamsException()
-        {
+            
             streamConfigMock.Setup(x => x.PollMs).Throws(new Exception("boom"));
 
             Assert.Throws<StreamsException>(() => globalStreamThread.Start());
+            globalStreamThread.Dispose();
         }
 
         [Test]
         public void ShouldBeRunningAfterSuccesfullStart()
         {
+            var globalConsumerMock = new Mock<IConsumer<byte[], byte[]>>();
+            var globalStateMaintainerMock = new Mock<IGlobalStateMaintainer>();
+            var streamConfigMock = new Mock<IStreamConfig>();
+            streamConfigMock.Setup(x => x.PollMs).Returns(1);
+            streamConfigMock.Setup(x => x.CommitIntervalMs).Returns(1);
+            globalStateMaintainerMock.Setup(x => x.Initialize()).Returns(new Dictionary<TopicPartition, long>());
+
+            var globalStreamThread = new GlobalStreamThread("global", globalConsumerMock.Object, streamConfigMock.Object,
+                globalStateMaintainerMock.Object, new StreamMetricsRegistry());
+            
             globalStreamThread.Start();
 
             // we need to wait for thread to set running state
             Thread.Sleep(100);
             Assert.AreEqual(GlobalThreadState.RUNNING, globalStreamThread.State);
+
+            globalStreamThread.Dispose();
         }
 
         [Test]
         public void ShouldStopRunningWhenClosedByUser()
         {
-            var token = cancellationTokenSource.Token;
+            var globalConsumerMock = new Mock<IConsumer<byte[], byte[]>>();
+            var globalStateMaintainerMock = new Mock<IGlobalStateMaintainer>();
+            var streamConfigMock = new Mock<IStreamConfig>();
+            streamConfigMock.Setup(x => x.PollMs).Returns(1);
+            streamConfigMock.Setup(x => x.CommitIntervalMs).Returns(1);
+            globalStateMaintainerMock.Setup(x => x.Initialize()).Returns(new Dictionary<TopicPartition, long>());
+
+            var globalStreamThread = new GlobalStreamThread("global", globalConsumerMock.Object, streamConfigMock.Object,
+                globalStateMaintainerMock.Object, new StreamMetricsRegistry());
 
             globalStreamThread.Start();
-            cancellationTokenSource.Cancel();
-            globalStreamThread.Dispose();
-
             // thread should stop after some time
             Thread.Sleep(100);
+            globalStreamThread.Dispose();
             Assert.AreEqual(GlobalThreadState.DEAD, globalStreamThread.State);
         }
 
         [Test]
         public void ShouldStopGlobalConsumer()
         {
-            var token = cancellationTokenSource.Token;
+            var globalConsumerMock = new Mock<IConsumer<byte[], byte[]>>();
+            var globalStateMaintainerMock = new Mock<IGlobalStateMaintainer>();
+            var streamConfigMock = new Mock<IStreamConfig>();
+            streamConfigMock.Setup(x => x.PollMs).Returns(1);
+            streamConfigMock.Setup(x => x.CommitIntervalMs).Returns(1);
+            globalStateMaintainerMock.Setup(x => x.Initialize()).Returns(new Dictionary<TopicPartition, long>());
+
+            var globalStreamThread = new GlobalStreamThread("global", globalConsumerMock.Object, streamConfigMock.Object,
+                globalStateMaintainerMock.Object, new StreamMetricsRegistry());
 
             globalStreamThread.Start();
-            cancellationTokenSource.Cancel();
-            globalStreamThread.Dispose();
 
             // thread should stop after some time
             Thread.Sleep(100);
+            globalStreamThread.Dispose();
             globalConsumerMock.Verify(x => x.Close());
         }
 
         [Test]
         public void ShouldStopGlobalStateMaintainer()
         {
-            var token = cancellationTokenSource.Token;
+            var globalConsumerMock = new Mock<IConsumer<byte[], byte[]>>();
+            var globalStateMaintainerMock = new Mock<IGlobalStateMaintainer>();
+            var streamConfigMock = new Mock<IStreamConfig>();
+            streamConfigMock.Setup(x => x.PollMs).Returns(1);
+            streamConfigMock.Setup(x => x.CommitIntervalMs).Returns(1);
+            globalStateMaintainerMock.Setup(x => x.Initialize()).Returns(new Dictionary<TopicPartition, long>());
 
+            var globalStreamThread = new GlobalStreamThread("global", globalConsumerMock.Object, streamConfigMock.Object,
+                globalStateMaintainerMock.Object, new StreamMetricsRegistry());
+            
             globalStreamThread.Start();
-            cancellationTokenSource.Cancel();
-            globalStreamThread.Dispose();
-
+            
             // thread should stop after some time
             Thread.Sleep(100);
+            globalStreamThread.Dispose();
             globalStateMaintainerMock.Verify(x => x.Close());
         }
 
         [Test]
         public void ShouldStopGlobalStateMaintainerEvenIfStoppingConsumerThrows()
         {
+            var globalConsumerMock = new Mock<IConsumer<byte[], byte[]>>();
+            var globalStateMaintainerMock = new Mock<IGlobalStateMaintainer>();
+            var streamConfigMock = new Mock<IStreamConfig>();
+            streamConfigMock.Setup(x => x.PollMs).Returns(1);
+            streamConfigMock.Setup(x => x.CommitIntervalMs).Returns(1);
+            globalStateMaintainerMock.Setup(x => x.Initialize()).Returns(new Dictionary<TopicPartition, long>());
+
+            var globalStreamThread = new GlobalStreamThread("global", globalConsumerMock.Object, streamConfigMock.Object,
+                globalStateMaintainerMock.Object, new StreamMetricsRegistry());
+            
             globalConsumerMock.Setup(x => x.Close()).Throws(new Exception());
-            var token = cancellationTokenSource.Token;
 
             globalStreamThread.Start();
-            cancellationTokenSource.Cancel();
-            globalStreamThread.Dispose();
 
             // thread should stop after some time
             Thread.Sleep(100);
+            globalStreamThread.Dispose();
+            
             globalStateMaintainerMock.Verify(x => x.Close());
         }
 
         [Test]
         public void ShouldAssignTopicsToConsumer()
         {
+            var globalConsumerMock = new Mock<IConsumer<byte[], byte[]>>();
+            var globalStateMaintainerMock = new Mock<IGlobalStateMaintainer>();
+            var streamConfigMock = new Mock<IStreamConfig>();
+            streamConfigMock.Setup(x => x.PollMs).Returns(1);
+            streamConfigMock.Setup(x => x.CommitIntervalMs).Returns(1);
+            globalStateMaintainerMock.Setup(x => x.Initialize()).Returns(new Dictionary<TopicPartition, long>());
+
+            var globalStreamThread = new GlobalStreamThread("global", globalConsumerMock.Object, streamConfigMock.Object,
+                globalStateMaintainerMock.Object, new StreamMetricsRegistry());
+            
             var partitionOffsetDictionary = new Dictionary<TopicPartition, long>()
             {
                 {new TopicPartition("topic", 0), Offset.Beginning}
@@ -130,11 +164,22 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var parts = partitionOffsetDictionary.Keys.Select(o => new TopicPartitionOffset(o, Offset.Beginning));
             globalConsumerMock.Verify(x => x.Assign(parts));
+            globalStreamThread.Dispose();
         }
 
         [Test]
         public void ShouldConsumeRecords()
         {
+            var globalConsumerMock = new Mock<IConsumer<byte[], byte[]>>();
+            var globalStateMaintainerMock = new Mock<IGlobalStateMaintainer>();
+            var streamConfigMock = new Mock<IStreamConfig>();
+            streamConfigMock.Setup(x => x.PollMs).Returns(1);
+            streamConfigMock.Setup(x => x.CommitIntervalMs).Returns(1);
+            globalStateMaintainerMock.Setup(x => x.Initialize()).Returns(new Dictionary<TopicPartition, long>());
+
+            var globalStreamThread = new GlobalStreamThread("global", globalConsumerMock.Object, streamConfigMock.Object,
+                globalStateMaintainerMock.Object, new StreamMetricsRegistry());
+            
             var result1 = new ConsumeResult<byte[], byte[]>();
             var result2 = new ConsumeResult<byte[], byte[]>();
 
@@ -149,27 +194,50 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Thread.Sleep(100);
             globalStateMaintainerMock.Verify(x => x.Update(result1), Times.Once);
             globalStateMaintainerMock.Verify(x => x.Update(result2), Times.Once);
+            globalStreamThread.Dispose();
         }
 
         [Test]
         public void ShouldNotFlushTooSoon()
         {
+            var globalConsumerMock = new Mock<IConsumer<byte[], byte[]>>();
+            var globalStateMaintainerMock = new Mock<IGlobalStateMaintainer>();
+            var streamConfigMock = new Mock<IStreamConfig>();
+            streamConfigMock.Setup(x => x.PollMs).Returns(1);
+            streamConfigMock.Setup(x => x.CommitIntervalMs).Returns(1);
+            globalStateMaintainerMock.Setup(x => x.Initialize()).Returns(new Dictionary<TopicPartition, long>());
+
+            var globalStreamThread = new GlobalStreamThread("global", globalConsumerMock.Object, streamConfigMock.Object,
+                globalStateMaintainerMock.Object, new StreamMetricsRegistry());
+            
             streamConfigMock.Setup(x => x.CommitIntervalMs).Returns(100);
             globalStreamThread.Start();
 
             // this should be true as the thread should wait 100ms to flush
             globalStateMaintainerMock.Verify(x => x.FlushState(), Times.Never);
+            globalStreamThread.Dispose();
         }
 
         [Test]
         public void ShouldFlush()
         {
+            var globalConsumerMock = new Mock<IConsumer<byte[], byte[]>>();
+            var globalStateMaintainerMock = new Mock<IGlobalStateMaintainer>();
+            var streamConfigMock = new Mock<IStreamConfig>();
+            streamConfigMock.Setup(x => x.PollMs).Returns(1);
+            streamConfigMock.Setup(x => x.CommitIntervalMs).Returns(1);
+            globalStateMaintainerMock.Setup(x => x.Initialize()).Returns(new Dictionary<TopicPartition, long>());
+
+            var globalStreamThread = new GlobalStreamThread("global", globalConsumerMock.Object, streamConfigMock.Object,
+                globalStateMaintainerMock.Object, new StreamMetricsRegistry());
+            
             streamConfigMock.Setup(x => x.CommitIntervalMs).Returns(10);
             globalStreamThread.Start();
 
             Thread.Sleep(50);
             // we are waiting longer than CommitIntervalMs so thread should already flush at least once
             globalStateMaintainerMock.Verify(x => x.FlushState());
+            globalStreamThread.Dispose();
         }
     }
 }

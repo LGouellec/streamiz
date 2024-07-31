@@ -432,16 +432,12 @@ namespace Streamiz.Kafka.Net
         public async Task StartAsync(CancellationToken? token = null)
         {
             if (token.HasValue)
-<<<<<<< HEAD
-                token.Value.Register(Dispose);
-=======
             {
                 token.Value.Register(() => {
                     _cancelSource.Cancel();
                     Dispose();
                 });
             }
->>>>>>> develop
             
             await Task.Factory.StartNew(() =>
             {

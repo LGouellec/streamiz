@@ -270,7 +270,13 @@ namespace Streamiz.Kafka.Net.Processors
 
                 if (waitForThread)
                 {
-                    thread.Join();
+                    try
+                    {
+                        thread.Join();
+                    }
+                    catch (ThreadStateException)
+                    {
+                    }
                 }
 
                 SetState(GlobalThreadState.DEAD);
