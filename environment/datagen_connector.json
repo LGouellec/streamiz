@@ -1,5 +1,5 @@
 {
-  "name": "datagen-users",
+  "name": "datagen-products",
   "config": {
     "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
     "kafka.topic": "users",
@@ -9,6 +9,8 @@
     "value.converter.schemas.enable": "false",
     "max.interval": 50,
     "iterations": 10000000,
-    "tasks.max": "1"
+    "tasks.max": "1",
+    "schema.filename": "/home/appuser/order.avsc",
+    "schema.keyfield": "name"
   }
 }

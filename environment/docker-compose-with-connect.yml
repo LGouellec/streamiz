@@ -78,6 +78,8 @@ services:
       CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
+    volumes: 
+      - ./confs/order.avsc:/home/appuser/order.avsc
 
   akhq:
     image: tchiotludo/akhq:latest

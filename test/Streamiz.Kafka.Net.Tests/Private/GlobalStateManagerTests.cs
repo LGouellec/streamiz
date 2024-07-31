@@ -87,6 +87,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
             stateManager.SetGlobalProcessorContext(context);
         }
 
+        [TearDown]
+        public void Dispose()
+        {
+            
+        }
+        
         [Test]
         public void ShouldInitializeStateStores()
         {

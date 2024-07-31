@@ -55,16 +55,19 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             DateTime start = DateTime.Now;
             lock (manager._lock)
             {
-                manager.RebalanceInProgress = true;
-                manager.RevokeTasks(new List<TopicPartition>(partitions.Select(p => p.TopicPartition)));
-                Thread.SetState(ThreadState.PARTITIONS_REVOKED);
-                manager.RebalanceInProgress = false;
+                if (Thread.IsRunning)
+                {
+                    manager.RebalanceInProgress = true;
+                    manager.RevokeTasks(new List<TopicPartition>(partitions.Select(p => p.TopicPartition)));
+                    Thread.SetState(ThreadState.PARTITIONS_REVOKED);
+                    manager.RebalanceInProgress = false;
 
-                StringBuilder sb = new StringBuilder();
-                sb.AppendLine($"Partition revocation took {DateTime.Now - start} ms");
-                sb.AppendLine(
-                    $"\tCurrent suspended active tasks: {string.Join(",", partitions.Select(p => $"{p.Topic}-{p.Partition}"))}");
-                log.LogInformation(sb.ToString());
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine($"Partition revocation took {DateTime.Now - start} ms");
+                    sb.AppendLine(
+                        $"\tCurrent suspended active tasks: {string.Join(",", partitions.Select(p => $"{p.Topic}-{p.Partition}"))}");
+                    log.LogInformation(sb.ToString());
+                }
             }
         }
 

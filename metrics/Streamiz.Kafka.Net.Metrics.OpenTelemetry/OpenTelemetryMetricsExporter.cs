@@ -1,10 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
-using System.Globalization;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using Streamiz.Kafka.Net.Mock;
 
 namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry
 {

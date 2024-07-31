@@ -109,8 +109,7 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly string logPrefix;
         private readonly string threadClientId;
         private readonly IConsumer<byte[], byte[]> globalConsumer;
-        private CancellationToken token;
-        private readonly object stateLock = new object();
+        private readonly object stateLock = new();
         private readonly IStreamConfig configuration;
         private StateConsumer stateConsumer;
         private readonly IGlobalStateMaintainer globalStateMaintainer;
@@ -140,7 +139,7 @@ namespace Streamiz.Kafka.Net.Processors
             SetState(GlobalThreadState.RUNNING);
             try
             {
-                while (!token.IsCancellationRequested && State.IsRunning())
+                while (State.IsRunning())
                 {
                     stateConsumer.PollAndUpdate();
                     
@@ -166,11 +165,11 @@ namespace Streamiz.Kafka.Net.Processors
                     // https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1065
                 }
 
-                Dispose(false);
+                //Dispose(false);
             }
         }
 
-        public void Start(CancellationToken token)
+        public void Start()
         {
             log.LogInformation("{LogPrefix}Starting", logPrefix);
 
@@ -184,9 +183,7 @@ namespace Streamiz.Kafka.Net.Processors
                     $"{logPrefix}Error happened during initialization of the global state store; this thread has shutdown : {e}");
                 throw;
             }
-
-            this.token = token;
-
+            
             thread.Start();
         }
 
@@ -273,7 +270,13 @@ namespace Streamiz.Kafka.Net.Processors
 
                 if (waitForThread)
                 {
-                    thread.Join();
+                    try
+                    {
+                        thread.Join();
+                    }
+                    catch (ThreadStateException)
+                    {
+                    }
                 }
 
                 SetState(GlobalThreadState.DEAD);
