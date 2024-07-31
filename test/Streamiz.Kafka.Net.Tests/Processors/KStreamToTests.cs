@@ -71,7 +71,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
@@ -121,7 +121,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
@@ -169,7 +169,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
@@ -219,7 +219,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
@@ -266,7 +266,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
@@ -312,7 +312,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
@@ -360,7 +360,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
@@ -403,7 +403,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
@@ -446,7 +446,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output", TimeSpan.FromSeconds(2));
         inputTopic.PipeInput("order", "order1");
@@ -505,7 +505,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
@@ -556,7 +556,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
@@ -604,7 +604,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
@@ -652,7 +652,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
@@ -699,7 +699,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
@@ -747,7 +747,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
@@ -798,7 +798,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
@@ -845,7 +845,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
@@ -892,7 +892,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
@@ -935,7 +935,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
@@ -981,7 +981,7 @@ public class KStreamToTests
         mockSupplier.CreateTopic("output");
         mockSupplier.CreateTopic("stream");
         
-        using var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, mockSupplier);
+        using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
         var outputTopic = driver.CreateOuputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");

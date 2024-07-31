@@ -115,7 +115,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 
             Topology t = builder.Build();
 
-            using (var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
                 var inputTopic2 = driver.CreateInputTopic<string, string>("topic2");
@@ -156,7 +156,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             Topology t = builder.Build();
 
-            using (var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
                 var outputTopic = driver.CreateOuputTopic<string, long, StringSerDes, Int64SerDes>("output");
@@ -197,7 +197,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             MockKafkaSupplier supplier = new MockKafkaSupplier(4);
             
-            using (var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
                 var inputTableTopic = driver.CreateInputTopic<string, string>("input-table");

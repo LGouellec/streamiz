@@ -30,7 +30,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 ? new MockKafkaSupplier(numberPartition)
                 : null;
 
-            using (var driver = new TopologyTestDriver(t.Builder, config, mode, supplier))
+            using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
                 var outputTopic = driver.CreateOuputTopic<string, string>("output");
