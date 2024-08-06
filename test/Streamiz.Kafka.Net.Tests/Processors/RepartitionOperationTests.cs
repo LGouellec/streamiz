@@ -24,7 +24,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .Map((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                 .GroupByKey()
                 .Count(InMemory.As<string, long>())
                 .ToStream()
@@ -58,7 +58,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .Map((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                 .GroupByKey()
                 .Count(InMemory.As<string, long>())
                 .ToStream()
@@ -96,7 +96,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             IKStream<string, string> stream1 = builder
                 .Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v));
+                .Map((k, v, _) => KeyValuePair.Create(k.ToUpper(), v));
             
             IKStream<string, string> stream2 = builder.Stream<string, string>("topic2");
 
@@ -148,7 +148,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .Map((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                 .GroupByKey()
                 .Count(InMemory.As<string, long>())
                 .ToStream()
@@ -189,7 +189,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             
             builder
                 .Stream<string, string>("topic")
-                .SelectKey((k, v) => v.ToUpper())
+                .SelectKey((k, v, _) => v.ToUpper())
                 .Join(table, (v,t) => $"{v}:{t}")
                 .To("output");
 

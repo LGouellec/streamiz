@@ -33,8 +33,8 @@ public class FIxIssue319Tests
         var stream =
             builder.Stream("self", new JsonSerDes<SelfId>(), new JsonSerDes<SelfRelation>());
 
-        var filtrate = stream.Filter((k, v) => v.Relation.HasValue);
-        var withRelationKeyStream = filtrate.SelectKey((k, v) => new SelfId { Id = v.Relation!.Value });
+        var filtrate = stream.Filter((k, v, _) => v.Relation.HasValue);
+        var withRelationKeyStream = filtrate.SelectKey((k, v, _) => new SelfId { Id = v.Relation!.Value });
         var withRelationKeyTable = withRelationKeyStream.ToTable(
             InMemory.As<SelfId, SelfRelation>()
                 .WithKeySerdes(new JsonSerDes<SelfId>())

@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using Streamiz.Kafka.Net.Mock;
+using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
@@ -10,7 +11,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
     {
         class MyKeyValueMapper : IKeyValueMapper<string, string, string>
         {
-            public string Apply(string key, string value)
+            public string Apply(string key, string value, IRecordContext context)
                 => key;
         }
 

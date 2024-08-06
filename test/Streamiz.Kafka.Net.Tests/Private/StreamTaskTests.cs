@@ -28,7 +28,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var builder = new StreamBuilder();
 
             builder.Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()))
+                .Map((k, v, _) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()))
                 .To("topic2");
 
             var topology = builder.Build();
@@ -119,7 +119,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var builder = new StreamBuilder();
 
             builder.Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()))
+                .Map((k, v, _) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()))
                 .To("topic2");
 
             var topology = builder.Build();
@@ -220,7 +220,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var builder = new StreamBuilder();
 
             builder.Table<string, string>("topic", InMemory.As<string, string>("store").WithLoggingDisabled())
-                .MapValues((k, v) => v.ToUpper())
+                .MapValues((k, v, _) => v.ToUpper())
                 .ToStream()
                 .To("topic2");
 

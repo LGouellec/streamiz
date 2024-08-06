@@ -71,7 +71,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var filterParameters =
                 new ProcessorParameters<string, string>(
-                    new KStreamFilter<string, string>((k, v) => true, false), "filter-02");
+                    new KStreamFilter<string, string>((k, v, _) => true, false), "filter-02");
             var filter = new ProcessorGraphNode<string, string>("filter-02", filterParameters);
             source.AppendChild(filter);
             nodes.Add(filter);

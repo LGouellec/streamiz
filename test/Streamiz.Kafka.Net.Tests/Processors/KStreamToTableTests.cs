@@ -22,7 +22,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("test")
-                .Filter((k, v) => v.Length % 2 == 0)
+                .Filter((k, v, _) => v.Length % 2 == 0)
                 .ToTable(InMemory.As<string, string>("store"))
                 .ToStream()
                 .To("output");
@@ -61,7 +61,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var table = builder
                 .Stream<string, string>("test")
-                .Filter((k, v) => v.Length % 2 == 0)
+                .Filter((k, v, _) => v.Length % 2 == 0)
                 .ToTable(InMemory.As<string, string>("table-store"));
 
             Topology t = builder.Build();

@@ -6,6 +6,7 @@ using Streamiz.Kafka.Net.Table;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Streamiz.Kafka.Net.Processors;
 
 
 namespace Streamiz.Kafka.Net.Tests.Processors
@@ -17,8 +18,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var builder = new StreamBuilder();
             var table = builder.Table<string, string>("ktable-topic");
-            Func<string, string> mapper1 = null;
-            Func<string, string, string> mapper3 = null;
+            Func<string, IRecordContext, string> mapper1 = null;
+            Func<string, string, IRecordContext, string> mapper3 = null;
             IValueMapper<string, string> mapper2 = null;
             IValueMapperWithKey<string, string, string> mapper4 = null;
             Assert.Throws<ArgumentNullException>(() => table.MapValues(mapper1));
@@ -37,7 +38,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key3", "paper"));
 
             builder.Table<string, string>("table-topic")
-                .MapValues((v) => v.Length, InMemory.As<string,int>("test-store").With<StringSerDes, Int32SerDes>());
+                .MapValues((v, _) => v.Length, InMemory.As<string,int>("test-store").With<StringSerDes, Int32SerDes>());
                 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "table-test-mapvalues";
@@ -72,7 +73,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key3", "paper"));
 
             builder.Table<string, string>("table-topic")
-                .MapValues((v) => v.ToCharArray()[0].ToString(), InMemory.As<string,string>("test-store"));
+                .MapValues((v, _) => v.ToCharArray()[0].ToString(), InMemory.As<string,string>("test-store"));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "table-test-mapvalues";
@@ -108,9 +109,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key3", "paper"));
 
             builder.Table<string, string>("table-topic")
-                .MapValues((v) => v.Length)
+                .MapValues((v, _) => v.Length)
                 .ToStream()
-                .Peek((k, v) => observed.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => observed.Add(KeyValuePair.Create(k, v)));
 
             var expected = new List<KeyValuePair<string, int>>();
             expected.Add(KeyValuePair.Create("key1", 8));

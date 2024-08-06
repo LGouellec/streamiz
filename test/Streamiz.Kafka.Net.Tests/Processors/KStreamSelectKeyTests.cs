@@ -5,6 +5,7 @@ using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Streamiz.Kafka.Net.Processors;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -15,7 +16,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var builder = new StreamBuilder();
             var stream = builder.Stream<string, string>("topic");
-            Func<string, string, string> mapper1 = null;
+            Func<string, string, IRecordContext, string> mapper1 = null;
             IKeyValueMapper<string, string, string> mapper2 = null;
 
             Assert.Throws<ArgumentNullException>(() => stream.SelectKey(mapper1));
@@ -32,7 +33,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("toulon", "10"));
 
             builder.Stream<string, string>("topic")
-                .SelectKey((k,v) => k.Length)
+                .SelectKey((k,v, _) => k.Length)
                 .To<Int32SerDes, StringSerDes>("topic-select-key");
 
             var expected = new List<KeyValuePair<int, string>>();
@@ -68,7 +69,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("toulon", "10"));
 
             builder.Stream<string, string>("topic")
-                .SelectKey((k, v) => k.ToUpper())
+                .SelectKey((k, v, _) => k.ToUpper())
                 .To("topic-select-key");
 
             var expected = new List<KeyValuePair<string, string>>();

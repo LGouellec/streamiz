@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using Streamiz.Kafka.Net.Stream;
 using System;
+using Streamiz.Kafka.Net.Processors;
 
 namespace Streamiz.Kafka.Net.Tests.Public
 {
@@ -16,7 +17,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
         [Test]
         public void FunctionNullKeyValueMapper()
         {
-            Assert.Throws<ArgumentNullException>(() => new WrappedKeyValueMapper<string, int, int>(null));
+            Assert.Throws<ArgumentNullException>(() => new WrappedKeyValueMapper<string, int, int>((Func<string, int, IRecordContext, int>)null));
         }
 
         [Test]
@@ -47,25 +48,25 @@ namespace Streamiz.Kafka.Net.Tests.Public
         [Test]
         public void FunctionValueMapper()
         {
-            Func<int, int> mapper = (i) => i * 2;
+            Func<int, IRecordContext, int> mapper = (i, _) => i * 2;
             var wrap = new WrappedValueMapper<int, int>(mapper);
-            Assert.AreEqual(4, wrap.Apply(2));
+            Assert.AreEqual(4, wrap.Apply(2, null));
         }
 
         [Test]
         public void FunctionKeyValueMapper()
         {
-            Func<string, int, int> mapper = (k, v) => k.Length;
+            Func<string, int, IRecordContext, int> mapper = (k, v, _) => k.Length;
             var wrap = new WrappedKeyValueMapper<string, int, int>(mapper);
-            Assert.AreEqual(4, wrap.Apply("test", 12));
+            Assert.AreEqual(4, wrap.Apply("test", 12, null));
         }
 
         [Test]
         public void FunctionValueMapperWithKey()
         {
-            Func<string, int, int> mapper = (k, v) => v * 4;
+            Func<string, int, IRecordContext, int> mapper = (k, v, _) => v * 4;
             var wrap = new WrappedValueMapperWithKey<string, int, int>(mapper);
-            Assert.AreEqual(12, wrap.Apply("test", 3));
+            Assert.AreEqual(12, wrap.Apply("test", 3, null));
         }
 
         [Test]

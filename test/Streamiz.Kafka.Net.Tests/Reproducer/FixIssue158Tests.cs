@@ -66,13 +66,13 @@ namespace Streamiz.Kafka.Net.Tests.Reproducer
                 InMemory.As<string, Job, StringSerDes, JsonSerDes<Job>>());
             
             personStream
-                .SelectKey((_, v) => v.LocationId)
+                .SelectKey((_, v, _) => v.LocationId)
                 .Join<Location, PersonLocation, JsonSerDes<Location>, JsonSerDes<PersonLocation>>(locationTable,
                     (person, location) => new PersonLocation {
                         Person = person,
                         Location = location
                     })
-                .SelectKey((_, v) => v.Person.JobId)
+                .SelectKey((_, v, _) => v.Person.JobId)
                 .Join<Job, PersonJobLocation, JsonSerDes<Job>, JsonSerDes<PersonJobLocation>>(jobTable,
                     (personLocation, job) => new PersonJobLocation {
                         Person = personLocation.Person,

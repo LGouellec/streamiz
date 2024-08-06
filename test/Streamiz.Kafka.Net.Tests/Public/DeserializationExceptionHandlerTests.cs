@@ -27,7 +27,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             data.Add(KeyValuePair.Create("t", "12")); // exception in serdes, value.length % 2 == 0
 
             builder.Stream<string, string>("topic")
-                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => _return.Add(KeyValuePair.Create(k, v)));
 
             var config = new StreamConfig<SerdesThrowException, SerdesThrowException>();
             config.ApplicationId = "test-deserialization-handler";
@@ -97,7 +97,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("test")
-                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => _return.Add(KeyValuePair.Create(k, v)));
 
             var t = builder.Build();
             var stream = new KafkaStream(t, config, supplier);
@@ -167,7 +167,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("test")
-                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => _return.Add(KeyValuePair.Create(k, v)));
 
 
             var t = builder.Build();

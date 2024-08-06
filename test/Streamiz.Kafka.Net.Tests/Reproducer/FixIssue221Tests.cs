@@ -63,7 +63,7 @@ namespace Streamiz.Kafka.Net.Tests.Reproducer
                 InMemory.As<Int32, Location>("location-store"));
 
             var stream = personStream
-                .Map((_, v) => KeyValuePair.Create(v.LocationId, v));
+                .Map((_, v, _) => KeyValuePair.Create(v.LocationId, v));
 
             IKStream<Int32, PersonLocation> personLocationStream;
             

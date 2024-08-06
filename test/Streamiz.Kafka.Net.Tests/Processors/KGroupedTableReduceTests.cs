@@ -41,8 +41,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Table<string, string>("topic", InMemory.As<string, string>())
-                .MapValues((v) => v.Length)
-                .GroupBy((k,v) => KeyValuePair.Create(k.ToUpper(),v))
+                .MapValues((v, _) => v.Length)
+                .GroupBy((k,v, _) => KeyValuePair.Create(k.ToUpper(),v))
                 .Reduce((v1, v2) => Math.Max(v1, v2), (v1, v2) => v2, m);
 
             var topology = builder.Build();
@@ -70,8 +70,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Table<string, string>("topic", InMemory.As<string, string>())
-                .MapValues((v) => v.Length)
-                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .MapValues((v, _) => v.Length)
+                .GroupBy((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                 .Reduce((v1, v2) => Math.Max(v1, v2), (v1,v2) => v2, m)
                 .ToStream()
                 .To("output-topic");
@@ -102,8 +102,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 builder
                     .Table<string, string>("topic", InMemory.As<string, string>())
-                    .MapValues((v) => v.Length)
-                    .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                    .MapValues((v, _) => v.Length)
+                    .GroupBy((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                     .Reduce((Reducer<int>)null, (Reducer<int>)null, m);
             });
         }
@@ -118,8 +118,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var table = builder
                 .Table<string, string>("topic", InMemory.As<string, string>())
-                .MapValues(v => v.Length)
-                .GroupBy<string, int, StringSerDes, Int32SerDes>((k, v) => KeyValuePair.Create(k.ToUpper(), v));
+                .MapValues((v, _) => v.Length)
+                .GroupBy<string, int, StringSerDes, Int32SerDes>((k, v, _) => KeyValuePair.Create(k.ToUpper(), v));
 
             table.Count(InMemory.As<string, long>("count-store"));
             table.Reduce(
@@ -162,7 +162,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Table<string, string>("topic", InMemory.As<string, string>())
-                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .GroupBy((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                    .Reduce(
                         (v1, v2) => v2.Length > v1.Length ? v2 : v1,
                         (v1, v2) => v2,
@@ -194,7 +194,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Table<string, string>("topic", InMemory.As<string, string>())
-                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .GroupBy((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                .Reduce(new MyAddReducer(), new MySubReducer(), InMemory.As<string, string>("reduce-store"));
 
             var topology = builder.Build();
@@ -223,7 +223,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Table<string, string>("topic", InMemory.As<string, string>())
-                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .GroupBy((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                .Reduce(
                     new MyAddReducer(), new MySubReducer(),
                     InMemory.As<string, string>("reduce-store"),
@@ -257,7 +257,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Table<string, string>("topic", InMemory.As<string, string>())
-                .GroupBy((k, v) => KeyValuePair.Create(k?.ToUpper(), v))
+                .GroupBy((k, v, _) => KeyValuePair.Create(k?.ToUpper(), v))
                .Reduce(
                     new MyAddReducer(), new MySubReducer(),
                     InMemory.As<string, string>("reduce-store"),
@@ -307,7 +307,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Table<string, string>("topic", InMemory.As<string, string>())
-                .GroupBy((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
+                .GroupBy((k, v, _) => KeyValuePair.Create(k.ToCharArray()[0], v))
                 .Reduce(
                     (v1, v2) => v2,
                     (v1, v2) => v2,

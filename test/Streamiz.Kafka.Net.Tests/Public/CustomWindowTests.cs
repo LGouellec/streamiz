@@ -183,7 +183,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             // retention 2jours
             var stream = builder.Stream<string, int>(inputTopic);
             var sumStream = stream
-                .SelectKey((k, v) => 1)
+                .SelectKey((k, v, _) => 1)
                 .GroupByKey<Int32SerDes, Int32SerDes>()
                 .WindowedBy(new DailyTimeWindows(zone, windowStartHour, grace))
                 .Reduce(
