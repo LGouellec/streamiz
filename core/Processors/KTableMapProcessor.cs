@@ -24,8 +24,8 @@ namespace Streamiz.Kafka.Net.Processors
                 throw new StreamsException("Record key for the grouping KTable should not be null.");
             }
 
-            KeyValuePair<K1, V1> oldPair = value.OldValue == null ? default : mapper.Apply(key, value.OldValue);
-            KeyValuePair<K1, V1> newPair = value.NewValue == null ? default : mapper.Apply(key, value.NewValue);
+            KeyValuePair<K1, V1> oldPair = value.OldValue == null ? default : mapper.Apply(key, value.OldValue, Context.RecordContext);
+            KeyValuePair<K1, V1> newPair = value.NewValue == null ? default : mapper.Apply(key, value.NewValue, Context.RecordContext);
 
             bool oldPairNotNull = value.OldValue != null;
             bool newPairNotNull = value.NewValue != null;

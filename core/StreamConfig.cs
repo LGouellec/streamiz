@@ -270,6 +270,7 @@ namespace Streamiz.Kafka.Net
         /// Authorize your streams application to follow metadata (timestamp, topic, partition, offset and headers) during processing record.
         /// You can use <see cref="StreamizMetadata"/> to get these metadatas. (Default : false)
         /// </summary>
+        [Obsolete("Plan to remove in the next release")]
         bool FollowMetadata { get; set; }
 
         /// <summary>
