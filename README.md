@@ -1,4 +1,4 @@
-# .NET Stream Processing Library for Apache Kafka <sup>TM</sup> &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/LGouellec/streamiz-kafka-net/blob/master/LICENSE) &middot; [![Join the chat at https://discord.gg/J7Jtxum](https://img.shields.io/discord/704268523169382421.svg?logoColor=white)](https://discord.gg/J7Jtxum) ![build](https://github.com/LGouellec/kafka-streams-dotnet/workflows/build/badge.svg?branch=master)
+# .NET Stream Processing Library for Apache Kafka <sup>TM</sup> &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/LGouellec/streamiz-kafka-net/blob/master/LICENSE) &middot; [![Join the chat at https://discord.gg/J7Jtxum](https://img.shields.io/discord/704268523169382421.svg?logoColor=white)](https://discord.gg/J7Jtxum) ![build](https://github.com/LGouellec/streamiz/workflows/build/badge.svg?branch=master)
 
 | Package  | Nuget version  | Downloads |
 |---|---|---|
@@ -21,8 +21,8 @@
 
 ## Project Statistics
 <div>
-    <img alt="GitHub issues" src="https://img.shields.io/github/issues/LGouellec/kafka-streams-dotnet">
-    <img alt="GitHub pull requests" src="https://img.shields.io/github/issues-pr/LGouellec/kafka-streams-dotnet">
+    <img alt="GitHub issues" src="https://img.shields.io/github/issues/LGouellec/streamiz">
+    <img alt="GitHub pull requests" src="https://img.shields.io/github/issues-pr/LGouellec/streamiz">
 </div>
 <br/>
 
@@ -40,7 +40,7 @@ affiliation with and is not endorsed by The Apache Software Foundation.
 
 # Try it with Gitpod
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/LGouellec/kafka-streams-dotnet)
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/LGouellec/streamiz)
 
 ## Step 1
 
@@ -57,7 +57,7 @@ Switch to `consumer`terminal and check aggregation result
 
 # Documentation
 
-Read the full documentation on https://lgouellec.github.io/kafka-streams-dotnet/
+Read the full documentation on https://lgouellec.github.io/streamiz/
 
 # Installation
 
@@ -124,26 +124,6 @@ static async System.Threading.Tasks.Task Main(string[] args)
 | State store batch restoring                                  |              X                     |                        | No plan for now                            |
 | Exactly Once (v1 and v2)                                     |              X                     |         X              | EOS V1 supported, EOS V2 not supported yet |
 
-# Contributing
+# Community Support
 
-Maintainers:
-
-- [lgouellec](https://github.com/LGouellec)
-
-**Streamiz Kafka .Net** is a community project. We invite your participation through issues and pull requests! You can peruse the [contributing guidelines](CONTRIBUTING.md).
-
-When adding or changing a service please add tests and documentations.
-
-# Support
-
-You can found support [here](https://discord.gg/J7Jtxum)
-
-# Star History
-
-<a href="https://star-history.com/#LGouellec/kafka-streams-dotnet&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=LGouellec/kafka-streams-dotnet&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=LGouellec/kafka-streams-dotnet&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=LGouellec/kafka-streams-dotnet&type=Date" />
- </picture>
-</a>
+Feel free to reach out to our community support [here](https://discord.gg/J7Jtxum) anytime; we're here to help you with any questions or issues you may have! 
