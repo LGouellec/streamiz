@@ -18,6 +18,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <None Include="..\..\key.snk" Link="key.snk" />
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="..\..\core\Streamiz.Kafka.Net.csproj" />
     </ItemGroup>
 
