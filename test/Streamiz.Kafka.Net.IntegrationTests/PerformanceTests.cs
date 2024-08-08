@@ -1,14 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using NUnit.Framework;
-using RocksDbSharp;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.IntegrationTests.Fixtures;
-using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.SerDes;
 using RocksDb = Streamiz.Kafka.Net.Table.RocksDb;
 

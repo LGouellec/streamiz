@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
+using Confluent.Kafka.Admin;
 using Testcontainers.Kafka;
-using Testcontainers;
 
 namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
 {
@@ -16,8 +17,8 @@ namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
 
         public KafkaFixture()
         {
-            container = new KafkaBuilder()
-                .WithImage("registry.hub.docker.com/confluentinc/cp-kafka:7.4.0")
+            container = new ApacheKafkaBuilder()
+                .WithImage(ApacheKafkaBuilder.APACHE_KAFKA_NATIVE_IMAGE_NAME)
                 .WithPortBinding(9092)
                 .WithName("kafka-streamiz-integration-tests")
                 .Build();
@@ -148,15 +149,20 @@ namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
 
         public async Task CreateTopic(string name, int partitions = 1)
         {
-            await container.ExecAsync(new List<string>()
+            ClientConfig config = new ClientConfig();
+            config.BootstrapServers = BootstrapServers;
+            config.ClientId = "create-topic-client";
+            AdminClientBuilder builder = new AdminClientBuilder(config);
+            
+            using IAdminClient client = builder.Build();
+            var metadata = client.GetMetadata(name, TimeSpan.FromSeconds(10));
+            if(metadata.Topics.Any(t => t.Topic.Contains(name)))
+                await client.DeleteTopicsAsync(new List<string> { name });
+            await client.CreateTopicsAsync(new List<TopicSpecification>{new TopicSpecification
             {
-                "/bin/sh",
-                "-c",
-                $"/usr/bin/kafka-topics --create --bootstrap-server {container.IpAddress}:9092 " +
-                "--replication-factor 1 " +
-                $"--partitions {partitions} " +
-                $"--topic {name}"
-            });
+                Name = name,
+                NumPartitions = partitions
+            }});
         }
 
         public Task DisposeAsync() => container.DisposeAsync().AsTask();
