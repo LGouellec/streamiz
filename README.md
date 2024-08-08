@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+We’re excited to hear from you and would love to get your feedback on the product. Your insights are invaluable and will help us shape the future of our product to better meet your needs. The [survey](https://docs.google.com/forms/d/1OVISLOQY0FLcvh9KhSEPZ5K2Lgqzl7NkciCyd6w9_kU/) will only take a few minutes, and your responses will be completely confidential.
+
+
 # .NET Stream Processing Library for Apache Kafka <sup>TM</sup> &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/LGouellec/streamiz/blob/master/LICENSE) &middot; [![Join the chat at https://discord.gg/J7Jtxum](https://img.shields.io/discord/704268523169382421.svg?logoColor=white)](https://discord.gg/J7Jtxum) ![build](https://github.com/LGouellec/streamiz/workflows/build/badge.svg?branch=master)
 
 | Package  | Nuget version  | Downloads |
