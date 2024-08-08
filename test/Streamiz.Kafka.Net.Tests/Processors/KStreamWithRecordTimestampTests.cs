@@ -29,7 +29,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key1", "123456"));
 
             builder.Stream<string, string>("topic")
-                .WithRecordTimestamp((k, v) => negativeTimestamp)
+                .WithRecordTimestamp((k, v, _) => negativeTimestamp)
                 .To("output-topic");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -63,7 +63,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key1", "123456"));
 
             builder.Stream<string, string>("topic")
-                .WithRecordTimestamp((k, v) => customTimestamp)
+                .WithRecordTimestamp((k, v, _) => customTimestamp)
                 .To("output-topic");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();

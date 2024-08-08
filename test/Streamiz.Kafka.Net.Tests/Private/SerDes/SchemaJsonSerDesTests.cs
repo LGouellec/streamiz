@@ -114,7 +114,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var builder = new StreamBuilder();
             builder
                 .Stream<string, PersonJson>("person")
-                .Filter((k, v) => v.Age >= 18)
+                .Filter((k, v, _) => v.Age >= 18)
                 .To("person-major");
 
             var topo = builder.Build();
@@ -144,7 +144,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var builder = new StreamBuilder();
             builder
                 .Stream<string, PersonJson>("person")
-                .Filter((k, v) => v.Age >= 18)
+                .Filter((k, v, _) => v.Age >= 18)
                 .To("person-major");
 
             var topo = builder.Build();
@@ -173,8 +173,8 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var builder = new StreamBuilder();
             builder
                 .Stream<string, PersonJson>("person")
-                .Filter((k, v) => v.Age >= 18)
-                .MapValues((v) => v.Age)
+                .Filter((k, v, _) => v.Age >= 18)
+                .MapValues((v, _) => v.Age)
                 .To<StringSerDes, Int32SerDes>("person-major");
 
             var topo = builder.Build();

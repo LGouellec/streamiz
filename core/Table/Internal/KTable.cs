@@ -95,21 +95,21 @@ namespace Streamiz.Kafka.Net.Table.Internal
 
         #region Filter
 
-        public IKTable<K, V> Filter(Func<K, V, bool> predicate, string named = null) => DoFilter(predicate, named, null, false);
+        public IKTable<K, V> Filter(Func<K, V, IRecordContext, bool> predicate, string named = null) => DoFilter(predicate, named, null, false);
 
-        public IKTable<K, V> Filter(Func<K, V, bool> predicate, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        public IKTable<K, V> Filter(Func<K, V, IRecordContext, bool> predicate, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
             => DoFilter(predicate, named, materialized, false);
 
-        public IKTable<K, V> FilterNot(Func<K, V, bool> predicate, string named = null) => DoFilter(predicate, named, null, true);
+        public IKTable<K, V> FilterNot(Func<K, V, IRecordContext, bool> predicate, string named = null) => DoFilter(predicate, named, null, true);
 
-        public IKTable<K, V> FilterNot(Func<K, V, bool> predicate, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        public IKTable<K, V> FilterNot(Func<K, V, IRecordContext, bool> predicate, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
             => DoFilter(predicate, named, materialized, true);
 
         #endregion
 
         #region ToStream
 
-        public IKStream<KR, V> ToStream<KR>(Func<K, V, KR> mapper, string named = null)
+        public IKStream<KR, V> ToStream<KR>(Func<K, V, IRecordContext, KR> mapper, string named = null)
             => ToStream(new WrappedKeyValueMapper<K, V, KR>(mapper), named);
 
         public IKStream<KR, V> ToStream<KR>(IKeyValueMapper<K, V, KR> mapper, string named = null)
@@ -121,7 +121,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
         {
             string name = new Named(named).OrElseGenerateWithPrefix(builder, KTable.TOSTREAM_NAME);
 
-            var p = new WrappedValueMapperWithKey<K, Change<V>, V>((_, v) => v.NewValue);
+            var p = new WrappedValueMapperWithKey<K, Change<V>, V>((_, v, _) => v.NewValue);
             IProcessorSupplier<K, Change<V>> processorMapValues = new KStreamMapValues<K, Change<V>, V>(p);
             ProcessorParameters<K, Change<V>> processorParameters = new ProcessorParameters<K, Change<V>>(processorMapValues, name);
 
@@ -137,14 +137,14 @@ namespace Streamiz.Kafka.Net.Table.Internal
 
         #region MapValues
 
-        public IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper)
+        public IKTable<K, VR> MapValues<VR>(Func<V, IRecordContext, VR> mapper)
             => MapValues(mapper, null);
 
-        public IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, string named = null)
+        public IKTable<K, VR> MapValues<VR>(Func<V, IRecordContext, VR> mapper, string named = null)
             => MapValues(mapper, null, named);
 
 
-        public IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        public IKTable<K, VR> MapValues<VR>(Func<V, IRecordContext, VR> mapper, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
              => MapValues(new WrappedValueMapper<V, VR>(mapper), materialized, named);
 
         public IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, string named = null)
@@ -153,10 +153,10 @@ namespace Streamiz.Kafka.Net.Table.Internal
         public IKTable<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
             => MapValues(WithKey(mapper), materialized, named);
 
-        public IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, string named = null)
+        public IKTable<K, VR> MapValues<VR>(Func<K, V, IRecordContext, VR> mapperWithKey, string named = null)
             => MapValues(mapperWithKey, null, named);
 
-        public IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
+        public IKTable<K, VR> MapValues<VR>(Func<K, V, IRecordContext, VR> mapperWithKey, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
             => MapValues(new WrappedValueMapperWithKey<K, V, VR>(mapperWithKey), materialized, named);
 
         public IKTable<K, VR> MapValues<VR>(IValueMapperWithKey<K, V, VR> mapperWithKey, string named = null)
@@ -172,7 +172,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
         public IKGroupedTable<KR, VR> GroupBy<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> keySelector, string named = null)
             => DoGroup(keySelector, Grouped<KR, VR>.Create(named, null, null));
 
-        public IKGroupedTable<KR, VR> GroupBy<KR, VR>(Func<K, V, KeyValuePair<KR, VR>> keySelector, string named = null)
+        public IKGroupedTable<KR, VR> GroupBy<KR, VR>(Func<K, V, IRecordContext, KeyValuePair<KR, VR>> keySelector, string named = null)
             => GroupBy(new WrappedKeyValueMapper<K, V, KeyValuePair<KR, VR>>(keySelector), named);
 
         public IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> keySelector, string named = null)
@@ -180,7 +180,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
             where VRS : ISerDes<VR>, new()
             => DoGroup(keySelector, Grouped<KR, VR>.Create<KRS, VRS>(named));
 
-        public IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(Func<K, V, KeyValuePair<KR, VR>> keySelector, string named = null)
+        public IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(Func<K, V, IRecordContext, KeyValuePair<KR, VR>> keySelector, string named = null)
             where KRS : ISerDes<KR>, new()
             where VRS : ISerDes<VR>, new()
             => GroupBy<KR, VR, KRS, VRS>(new WrappedKeyValueMapper<K, V, KeyValuePair<KR, VR>>(keySelector), named);
@@ -243,7 +243,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
 
         #region Privates
 
-        private IKTable<K, V> DoFilter(Func<K, V, bool> predicate, string named, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materializedInternal, bool filterNot)
+        private IKTable<K, V> DoFilter(Func<K, V, IRecordContext, bool> predicate, string named, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materializedInternal, bool filterNot)
         {
             ISerDes<K> keySerde;
             ISerDes<V> valueSerde;

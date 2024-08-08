@@ -24,7 +24,7 @@ public class HeaderMetadataTests
         var builder = new StreamBuilder();
         builder
             .Stream<string, string>("topic")
-            .MapValues((v) =>
+            .MapValues((v, _) =>
             {
                 var h = StreamizMetadata.GetCurrentHeadersMetadata();
                 h.Add("header1", Encoding.UTF8.GetBytes("value1"));
@@ -60,7 +60,7 @@ public class HeaderMetadataTests
         var builder = new StreamBuilder();
         builder
             .Stream<string, string>("topic")
-            .MapValues((v) =>
+            .MapValues((v, _) =>
             {
                 var h = StreamizMetadata.GetCurrentHeadersMetadata();
                 h.Add("header1", Encoding.UTF8.GetBytes("value1"));

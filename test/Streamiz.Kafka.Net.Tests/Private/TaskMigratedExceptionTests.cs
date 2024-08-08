@@ -1,14 +1,9 @@
-﻿using Confluent.Kafka;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Streamiz.Kafka.Net.Mock;
-using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.Private
@@ -43,7 +38,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 .To("test-output");
 
             builder.Stream<string, string>("test-output")
-                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => _return.Add(KeyValuePair.Create(k, v)));
 
             var t = builder.Build();
 
@@ -109,7 +104,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 .To("test-output");
         
             builder.Stream<string, string>("test-output")
-                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => _return.Add(KeyValuePair.Create(k, v)));
         
             var t = builder.Build();
         
@@ -168,7 +163,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 .To("test-output");
         
             builder.Stream<string, string>("test-output")
-                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => _return.Add(KeyValuePair.Create(k, v)));
         
             var t = builder.Build();
         
@@ -223,7 +218,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 .To("test-output");
 
             builder.Stream<string, string>("test-output")
-                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => _return.Add(KeyValuePair.Create(k, v)));
 
             var t = builder.Build();
 
@@ -276,7 +271,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 .To("test-output");
 
             builder.Stream<string, string>("test-output")
-                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => _return.Add(KeyValuePair.Create(k, v)));
 
             var t = builder.Build();
 
@@ -331,7 +326,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 .To("test-output");
 
             builder.Stream<string, string>("test-output")
-                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => _return.Add(KeyValuePair.Create(k, v)));
 
             var t = builder.Build();
 

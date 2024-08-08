@@ -48,7 +48,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, V}"/> that contains only those records that satisfy the given predicate</returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when predicate function is null</exception>
-        IKTable<K, V> Filter(Func<K, V, bool> predicate, string named = null);
+        IKTable<K, V> Filter(Func<K, V, IRecordContext,  bool> predicate, string named = null);
 
         /// <summary>
         /// Create a new <see cref="IKTable{K, V}"/> that consists of all records of this <see cref="IKTable{K, V}"/> which satisfy the given
@@ -70,7 +70,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, V}"/> that contains only those records that satisfy the given predicate</returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when predicate function is null</exception>
-        IKTable<K, V> Filter(Func<K, V, bool> predicate, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<K, V> Filter(Func<K, V, IRecordContext, bool> predicate, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
         /// Create a new <see cref="IKTable{K, V}"/> that consists of all records of this <see cref="IKTable{K, V}"/> which DO NOT satisfy the given
@@ -91,7 +91,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, V}"/> that contains only those records that satisfy the given predicate</returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when predicate function is null</exception>
-        IKTable<K, V> FilterNot(Func<K, V, bool> predicate, string named = null);
+        IKTable<K, V> FilterNot(Func<K, V, IRecordContext, bool> predicate, string named = null);
 
         /// <summary>
         /// Create a new <see cref="IKTable{K, V}"/> that consists of all records of this <see cref="IKTable{K, V}"/> which DO NOT satisfy the given
@@ -113,7 +113,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, V}"/> that contains only those records that satisfy the given predicate</returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when predicate function is null</exception>
-        IKTable<K, V> FilterNot(Func<K, V, bool> predicate, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<K, V> FilterNot(Func<K, V, IRecordContext, bool> predicate, Materialized<K, V, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
         /// Convert this changelog stream to a <see cref="IKStream{K, V}"/>.
@@ -157,7 +157,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="mapper">a function mapper that computes a new key for each record</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>a <see cref="IKStream{KR, V}"/> that contains the same records as this <see cref="IKTable{K, V}"/></returns>
-        IKStream<KR, V> ToStream<KR>(Func<K, V, KR> mapper, string named = null);
+        IKStream<KR, V> ToStream<KR>(Func<K, V, IRecordContext, KR> mapper, string named = null);
 
         /// <summary>
         /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
@@ -186,7 +186,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>a <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
-        IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, string named = null);
+        IKTable<K, VR> MapValues<VR>(Func<V, IRecordContext, VR> mapper, string named = null);
 
         /// <summary>
         /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
@@ -209,7 +209,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
-        IKTable<K, VR> MapValues<VR>(Func<V, VR> mapper, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<K, VR> MapValues<VR>(Func<V, IRecordContext, VR> mapper, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
         /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
@@ -276,7 +276,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
-        IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, string named = null);
+        IKTable<K, VR> MapValues<VR>(Func<K, V, IRecordContext, VR> mapperWithKey, string named = null);
 
         /// <summary>
         /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
@@ -299,7 +299,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKTable{K, VR}"/> that contains records with unmodified keys and new values (possibly of different type)</returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
-        IKTable<K, VR> MapValues<VR>(Func<K, V, VR> mapperWithKey, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+        IKTable<K, VR> MapValues<VR>(Func<K, V, IRecordContext, VR> mapperWithKey, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
 
         /// <summary>
         /// Create a new <see cref="IKTable{K, V}"/> by transforming the value of each record in this <see cref="IKTable{K, V}"/> into a new value
@@ -400,7 +400,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>a <see cref="IKGroupedTable{KR, VR}"/> that contains the re-grouped records of the original <see cref="IKTable{K, V}"/></returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
-        IKGroupedTable<KR, VR> GroupBy<KR, VR>(Func<K, V, KeyValuePair<KR, VR>> keySelector, string named = null);
+        IKGroupedTable<KR, VR> GroupBy<KR, VR>(Func<K, V, IRecordContext, KeyValuePair<KR, VR>> keySelector, string named = null);
 
         /// <summary>
         /// Re-groups the records of this <see cref="IKTable{K, V}"/> using the provided <see cref="IKeyValueMapper{K, V, VR}"/> and serdes parameters from (<typeparamref name="KR"/> as key serdes,
@@ -460,7 +460,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>a <see cref="IKGroupedTable{KR, VR}"/> that contains the re-grouped records of the original <see cref="IKTable{K, V}"/></returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
-        IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(Func<K, V, KeyValuePair<KR, VR>> keySelector, string named = null) where KRS : ISerDes<KR>, new() where VRS : ISerDes<VR>, new();
+        IKGroupedTable<KR, VR> GroupBy<KR, VR, KRS, VRS>(Func<K, V, IRecordContext, KeyValuePair<KR, VR>> keySelector, string named = null) where KRS : ISerDes<KR>, new() where VRS : ISerDes<VR>, new();
 
         /// <summary>
         /// Join records of this <see cref="IKTable{K, V}"/> with another <see cref="IKTable{K, VT}"/>'s records using non-windowed inner equi join.

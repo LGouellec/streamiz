@@ -30,7 +30,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("topic")
-                .MapValues((v) =>
+                .MapValues((v, _) =>
                 {
                     h = StreamizMetadata.GetCurrentHeadersMetadata();
                     h.Add("h", new byte[1] { 20 });
@@ -96,7 +96,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("topic")
-                .MapValues((v) =>
+                .MapValues((v, _) =>
                 {
                     h = StreamizMetadata.GetCurrentHeadersMetadata();
                     return v;
@@ -158,7 +158,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("topic")
-                .MapValues((v) =>
+                .MapValues((v, _) =>
                 {
                     h = StreamizMetadata.GetCurrentHeadersMetadata();
                     return v;
@@ -218,7 +218,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("topic")
-                .MapValues((v) =>
+                .MapValues((v, _) =>
                 {
                     h = StreamizMetadata.GetCurrentTopicMetadata();
                     return v;
@@ -275,7 +275,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("topic")
-                .MapValues((v) =>
+                .MapValues((v, _) =>
                 {
                     h = StreamizMetadata.GetCurrentTopicMetadata();
                     return v;
@@ -334,7 +334,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("topic")
-                .MapValues((v) =>
+                .MapValues((v, _) =>
                 {
                     h = StreamizMetadata.GetCurrentOffsetMetadata();
                     return v;
@@ -391,7 +391,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("topic")
-                .MapValues((v) =>
+                .MapValues((v, _) =>
                 {
                     h = StreamizMetadata.GetCurrentOffsetMetadata();
                     return v;
@@ -450,7 +450,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("topic")
-                .MapValues((v) =>
+                .MapValues((v, _) =>
                 {
                     h = StreamizMetadata.GetCurrentPartitionMetadata();
                     return v;
@@ -507,7 +507,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("topic")
-                .MapValues((v) =>
+                .MapValues((v, _) =>
                 {
                     h = StreamizMetadata.GetCurrentPartitionMetadata();
                     return v;
@@ -567,7 +567,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("topic")
-                .MapValues((v) =>
+                .MapValues((v, _) =>
                 {
                     h = StreamizMetadata.GetCurrentTimestampMetadata();
                     return v;
@@ -626,7 +626,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("topic")
-                .MapValues((v) =>
+                .MapValues((v, _) =>
                 {
                     h = StreamizMetadata.GetCurrentTimestampMetadata();
                     return v;

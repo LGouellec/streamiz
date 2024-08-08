@@ -100,10 +100,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
 
             builder
                 .Stream<string, string>("topic")
-                .Filter((key, value) =>
-                {
-                    return key == "1";
-                })
+                .Filter((key, value, _) => key == "1")
                 .To("tempTopic");
 
             builder.Stream<string, string>("tempTopic")

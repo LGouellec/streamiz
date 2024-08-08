@@ -115,7 +115,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic")
-                .GroupBy<char, CharSerDes>((k, v) => k.ToCharArray()[0])
+                .GroupBy<char, CharSerDes>((k, v, _) => k.ToCharArray()[0])
                 .Count(InMemory.As<char, long>("count-store").WithKeySerdes(new CharSerDes()));
 
             var topology = builder.Build();
@@ -143,7 +143,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic")
-                .GroupBy<char, CharSerDes>((k, v) => k.ToCharArray()[0])
+                .GroupBy<char, CharSerDes>((k, v, _) => k.ToCharArray()[0])
                 .Count(InMemory.As<char, long>("count-store").WithKeySerdes(new CharSerDes()));
 
             var topology = builder.Build();
@@ -240,7 +240,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic")
-                .GroupBy((k, v) => k.ToCharArray()[0])
+                .GroupBy((k, v, _) => k.ToCharArray()[0])
                 .Count(InMemory.As<char, long>("count-store"));
 
             var topology = builder.Build();

@@ -17,7 +17,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             builder.Table("table-topic", InMemory.As<string,string>("table-topic-store"))
-                .ToStream((k, v) => v.ToUpper())
+                .ToStream((k, v, _) => v.ToUpper())
                 .To("table-stream");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -168,7 +168,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     InMemory
                         .As<string,string>("table-topic-store")
                         .WithCachingEnabled())
-                .ToStream((k, v) => v.ToUpper())
+                .ToStream((k, v, _) => v.ToUpper())
                 .To("table-stream");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();

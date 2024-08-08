@@ -16,9 +16,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph
             this.label = label;
         }
 
-        public void Apply(K key, V value)
+        public void Apply(K key, V value, IRecordContext context)
         {
-            string data = $"[{label}]: {mapper.Apply(key, value)}";
+            string data = $"[{label}]: {mapper.Apply(key, value, context)}";
             writer.WriteLine(data);
             writer.Flush();
         }

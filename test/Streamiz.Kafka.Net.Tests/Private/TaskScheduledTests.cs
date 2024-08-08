@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Text;
 using System.Threading;
 using Confluent.Kafka;
-using Namotion.Reflection;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
@@ -409,7 +407,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                     .Transformer<MyForwarderTransformer>()
                     .StateStore(Streamiz.Kafka.Net.State.Stores.KeyValueStoreBuilder(Streamiz.Kafka.Net.State.Stores.InMemoryKeyValueStore("forwarder-store"), new StringSerDes(), new Int32SerDes()))
                     .Build())
-                .MapValues(c => c.ToString())
+                .MapValues((c, _) => c.ToString())
                 .To<StringSerDes, StringSerDes>("output");
             
             var topology = builder.Build();

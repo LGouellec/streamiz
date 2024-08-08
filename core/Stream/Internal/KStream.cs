@@ -80,9 +80,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Branch
 
-        public IKStream<K, V>[] Branch(params Func<K, V, bool>[] predicates) => DoBranch(string.Empty, predicates);
+        public IKStream<K, V>[] Branch(params Func<K, V, IRecordContext, bool>[] predicates) => DoBranch(string.Empty, predicates);
 
-        public IKStream<K, V>[] Branch(string named, params Func<K, V, bool>[] predicates) => DoBranch(named, predicates);
+        public IKStream<K, V>[] Branch(string named, params Func<K, V, IRecordContext, bool>[] predicates) => DoBranch(named, predicates);
 
         #endregion
 
@@ -97,10 +97,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Filter
 
-        public IKStream<K, V> Filter(Func<K, V, bool> predicate, string named = null)
+        public IKStream<K, V> Filter(Func<K, V,IRecordContext, bool> predicate, string named = null)
             => DoFilter(predicate, named, false);
 
-        public IKStream<K, V> FilterNot(Func<K, V, bool> predicate, string named = null)
+        public IKStream<K, V> FilterNot(Func<K, V,IRecordContext, bool> predicate, string named = null)
             => DoFilter(predicate, named, true);
 
         #endregion
@@ -406,7 +406,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region FlatMap
 
-        public IKStream<KR, VR> FlatMap<KR, VR>(Func<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named = null)
+        public IKStream<KR, VR> FlatMap<KR, VR>(Func<K, V,IRecordContext, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named = null)
             => FlatMap(new WrappedKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>>(mapper), named);
 
         public IKStream<KR, VR> FlatMap<KR, VR>(IKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named = null)
@@ -431,10 +431,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region FlatMapValues
 
-        public IKStream<K, VR> FlatMapValues<VR>(Func<V, IEnumerable<VR>> mapper, string named = null)
+        public IKStream<K, VR> FlatMapValues<VR>(Func<V,IRecordContext, IEnumerable<VR>> mapper, string named = null)
             => FlatMapValues(new WrappedValueMapper<V, IEnumerable<VR>>(mapper), named);
 
-        public IKStream<K, VR> FlatMapValues<VR>(Func<K, V, IEnumerable<VR>> mapper, string named = null)
+        public IKStream<K, VR> FlatMapValues<VR>(Func<K, V,IRecordContext, IEnumerable<VR>> mapper, string named = null)
             => FlatMapValues(new WrappedValueMapperWithKey<K, V, IEnumerable<VR>>(mapper), named);
 
         public IKStream<K, VR> FlatMapValues<VR>(IValueMapper<V, IEnumerable<VR>> mapper, string named = null)
@@ -470,7 +470,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Foreach
 
-        public void Foreach(Action<K, V> action, string named = null)
+        public void Foreach(Action<K, V, IRecordContext> action, string named = null)
         {
             if (action == null)
             {
@@ -488,7 +488,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Peek
 
-        public IKStream<K, V> Peek(Action<K, V> action, string named = null)
+        public IKStream<K, V> Peek(Action<K, V, IRecordContext> action, string named = null)
         {
             if (action == null)
             {
@@ -515,7 +515,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Map
 
-        public IKStream<KR, VR> Map<KR, VR>(Func<K, V, KeyValuePair<KR, VR>> mapper, string named = null)
+        public IKStream<KR, VR> Map<KR, VR>(Func<K, V, IRecordContext, KeyValuePair<KR, VR>> mapper, string named = null)
             => Map(new WrappedKeyValueMapper<K, V, KeyValuePair<KR, VR>>(mapper), named);
 
         public IKStream<KR, VR> Map<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper, string named = null)
@@ -547,10 +547,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region MapValues
 
-        public IKStream<K, VR> MapValues<VR>(Func<V, VR> mapper, string named = null)
+        public IKStream<K, VR> MapValues<VR>(Func<V, IRecordContext, VR> mapper, string named = null)
             => MapValues(new WrappedValueMapper<V, VR>(mapper), named);
 
-        public IKStream<K, VR> MapValues<VR>(Func<K, V, VR> mapper, string named = null)
+        public IKStream<K, VR> MapValues<VR>(Func<K, V, IRecordContext, VR> mapper, string named = null)
             => MapValues(new WrappedValueMapperWithKey<K, V, VR>(mapper), named);
 
         public IKStream<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, string named = null)
@@ -604,7 +604,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region SelectKey
 
-        public IKStream<KR, V> SelectKey<KR>(Func<K, V, KR> mapper, string named = null)
+        public IKStream<KR, V> SelectKey<KR>(Func<K, V, IRecordContext, KR> mapper, string named = null)
             => SelectKey(new WrappedKeyValueMapper<K, V, KR>(mapper), named);
 
         public IKStream<KR, V> SelectKey<KR>(IKeyValueMapper<K, V, KR> mapper, string named = null)
@@ -637,7 +637,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         public IKGroupedStream<KR, V> GroupBy<KR>(IKeyValueMapper<K, V, KR> keySelector, string named = null)
             => DoGroup(keySelector, Grouped<KR, V>.Create(named, null, ValueSerdes));
 
-        public IKGroupedStream<KR, V> GroupBy<KR>(Func<K, V, KR> keySelector, string named = null)
+        public IKGroupedStream<KR, V> GroupBy<KR>(Func<K, V, IRecordContext, KR> keySelector, string named = null)
             => GroupBy(new WrappedKeyValueMapper<K, V, KR>(keySelector), named);
 
         public IKGroupedStream<KR, V> GroupBy<KR, KS>(IKeyValueMapper<K, V, KR> keySelector, string named = null)
@@ -649,11 +649,11 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             where VS : ISerDes<V>, new()
             => DoGroup(keySelector, Grouped<KR, V>.Create<KRS, VS>(named));
 
-        public IKGroupedStream<KR, V> GroupBy<KR, KS>(Func<K, V, KR> keySelector, string named = null)
+        public IKGroupedStream<KR, V> GroupBy<KR, KS>(Func<K, V, IRecordContext, KR> keySelector, string named = null)
              where KS : ISerDes<KR>, new()
             => GroupBy<KR, KS>(new WrappedKeyValueMapper<K, V, KR>(keySelector), named);
 
-        public IKGroupedStream<KR, V> GroupBy<KR, KRS, VS>(Func<K, V, KR> keySelector, string named = null)
+        public IKGroupedStream<KR, V> GroupBy<KR, KRS, VS>(Func<K, V, IRecordContext, KR> keySelector, string named = null)
             where KRS : ISerDes<KR>, new() 
             where VS : ISerDes<V>, new()
             => GroupBy<KR, KRS, VS>(new WrappedKeyValueMapper<K, V, KR>(keySelector), named);
@@ -1173,7 +1173,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region WithRecordTimestamp
 
-        public IKStream<K, V> WithRecordTimestamp(Func<K, V, long> timestampExtractor, string named = null)
+        public IKStream<K, V> WithRecordTimestamp(Func<K, V, IRecordContext, long> timestampExtractor, string named = null)
         {
             if (timestampExtractor == null)
             {
@@ -1267,7 +1267,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Private
 
-        private IKStream<K, V> DoFilter(Func<K, V, bool> predicate, string named, bool not)
+        private IKStream<K, V> DoFilter(Func<K, V,IRecordContext, bool> predicate, string named, bool not)
         {
             if (predicate == null)
             {
@@ -1294,7 +1294,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             builder.AddGraphNode(Node, sinkNode);
         }
 
-        private IKStream<K, V>[] DoBranch(string named = null, params Func<K, V, bool>[] predicates)
+        private IKStream<K, V>[] DoBranch(string named = null, params Func<K, V,IRecordContext, bool>[] predicates)
         {
             var namedInternal = new Named(named);
             if (predicates != null && predicates.Length == 0)
@@ -1387,7 +1387,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
             WrappedKeyValueMapper<K, V, KeyValuePair<KR, V>> internalMapper =
                 new WrappedKeyValueMapper<K, V, KeyValuePair<KR, V>>(
-                (key, value) => new KeyValuePair<KR, V>(mapper.Apply(key, value), value));
+                (key, value, c) => new KeyValuePair<KR, V>(mapper.Apply(key, value, c), value));
 
             KStreamMap<K, V, KR, V> kStreamMap = new KStreamMap<K, V, KR, V>(internalMapper);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(kStreamMap, name);
@@ -1520,7 +1520,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             var sourceName = builder.NewProcessorName(KStream.SOURCE_NAME);
 
             var processorParameters = new ProcessorParameters<K, V>(
-                new KStreamFilter<K, V>((k, v) => k != null), nullKeyFilterName);
+                new KStreamFilter<K, V>((k, v, _) => k != null), nullKeyFilterName);
 
             var repartitionNode = new RepartitionNode<K, V>(
                 sourceName,

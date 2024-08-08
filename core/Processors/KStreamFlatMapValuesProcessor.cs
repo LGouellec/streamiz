@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             LogProcessingKeyValue(key, value);
             
-            foreach (var newValue in this.mapper.Apply(key, value))
+            foreach (var newValue in this.mapper.Apply(key, value, Context.RecordContext))
             {
                 var originalHeader = Context.RecordContext.Headers.Clone();
                 Forward(key, newValue);

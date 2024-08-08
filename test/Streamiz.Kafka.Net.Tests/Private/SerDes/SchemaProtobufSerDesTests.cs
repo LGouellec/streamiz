@@ -170,7 +170,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var builder = new StreamBuilder();
             builder
                 .Stream<string, Helpers.Proto.Person>("person")
-                .Filter((k, v) => v.Age >= 18)
+                .Filter((k, v, _) => v.Age >= 18)
                 .To("person-major");
 
             var topo = builder.Build();
@@ -200,7 +200,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var builder = new StreamBuilder();
             builder
                 .Stream<string, Helpers.Proto.Person>("person")
-                .Filter((k, v) => v.Age >= 18)
+                .Filter((k, v, _) => v.Age >= 18)
                 .To("person-major");
 
             var topo = builder.Build();
@@ -229,8 +229,8 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var builder = new StreamBuilder();
             builder
                 .Stream<string, Helpers.Proto.Person>("person")
-                .Filter((k, v) => v.Age >= 18)
-                .MapValues((v) => v.Age)
+                .Filter((k, v, _) => v.Age >= 18)
+                .MapValues((v, _) => v.Age)
                 .To<StringSerDes, Int32SerDes>("person-major");
 
             var topo = builder.Build();
@@ -262,7 +262,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             StreamBuilder builder = new StreamBuilder();
 
             var ss = builder.Stream<string, Order, StringSerDes, SchemaProtobufSerDes<Order>>("test-topic")
-                .Peek((k, v) => { Console.WriteLine($"Order #  {v.OrderId}"); });
+                .Peek((k, v, _) => { Console.WriteLine($"Order #  {v.OrderId}"); });
 
             Topology t = builder.Build();
 
@@ -296,7 +296,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             StreamBuilder builder = new StreamBuilder();
 
             builder.Stream<string, Order>("test")
-                .Filter((k, v) => k.Contains("test"))
+                .Filter((k, v, _) => k.Contains("test"))
                 .To("test-output");
 
             Topology t = builder.Build();
@@ -331,7 +331,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             StreamBuilder builder = new StreamBuilder();
 
             var ss = builder.Stream<string, Order, StringSerDes, SchemaProtobufSerDes<Order>>("test-topic")
-                .Peek((k, v) => { Console.WriteLine($"Order #  {v.OrderId}"); });
+                .Peek((k, v, _) => { Console.WriteLine($"Order #  {v.OrderId}"); });
 
             Topology t = builder.Build();
 
@@ -362,7 +362,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             StreamBuilder builder = new StreamBuilder();
 
             var ss = builder.Stream<string, Order, StringSerDes, SchemaProtobufSerDes<Order>>("test-topic")
-                .Peek((k, v) => { Console.WriteLine($"Order #  {v.OrderId}"); });
+                .Peek((k, v, _) => { Console.WriteLine($"Order #  {v.OrderId}"); });
 
             Topology t = builder.Build();
 

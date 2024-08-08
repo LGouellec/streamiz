@@ -61,7 +61,7 @@ public class KStreamToTests
         
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To("output", 
                 (_, _, _,_, _) => new Partition(0));
 
@@ -109,7 +109,7 @@ public class KStreamToTests
         
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To("output", 
                 (_, _, _,_, _) => new Partition(0), 
                 new StringSerDes(),
@@ -159,7 +159,7 @@ public class KStreamToTests
         
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To<StringSerDes, StringSerDes>("output", 
                 (_, _,_, _, _) => new Partition(0));
 
@@ -207,7 +207,7 @@ public class KStreamToTests
         
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To((_,_,_) => "output", 
                 (_, _,_, _, _) => new Partition(0), 
                 new StringSerDes(),
@@ -256,7 +256,7 @@ public class KStreamToTests
         
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To<StringSerDes, StringSerDes>((_,_,_) => "output", 
                 (_, _,_, _, _) => new Partition(0));
 
@@ -302,7 +302,7 @@ public class KStreamToTests
         
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To((_,_,_) => "output", 
                 (_, _,_, _, _) => new Partition(0));
 
@@ -349,7 +349,7 @@ public class KStreamToTests
         
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To(new MyTopicNameExtractor(), 
                 new StringSerDes(),
                 new StringSerDes());
@@ -394,7 +394,7 @@ public class KStreamToTests
         
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To<StringSerDes, StringSerDes>(new MyTopicNameExtractor());
 
         Topology t = builder.Build();
@@ -437,7 +437,7 @@ public class KStreamToTests
         
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To("output", new MyStreamPartitioner());
 
         Topology t = builder.Build();
@@ -494,7 +494,7 @@ public class KStreamToTests
         var tst = DateTime.Now.GetMilliseconds();
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To((_,_,_) => "output", 
                 (_,_,_) => tst,
                 (_, _,_, _, _) => new Partition(0));
@@ -545,7 +545,7 @@ public class KStreamToTests
         var tst = DateTime.Now.GetMilliseconds();
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To((_,_,_) => "output", 
                 new StringSerDes(), new StringSerDes(),
                 (_,_,_) => tst);
@@ -594,7 +594,7 @@ public class KStreamToTests
         var tst = DateTime.Now.GetMilliseconds();
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To<StringSerDes, StringSerDes>((_,_,_) => "output", 
                 (_,_,_) => tst);
 
@@ -642,7 +642,7 @@ public class KStreamToTests
         var tst = DateTime.Now.GetMilliseconds();
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To(new MyTopicNameExtractor(),
                 new MyRecordTimestampExtractor(tst));
 
@@ -689,7 +689,7 @@ public class KStreamToTests
         var tst = DateTime.Now.GetMilliseconds();
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To(new MyTopicNameExtractor(),
                 new MyStreamPartitioner());
 
@@ -736,7 +736,7 @@ public class KStreamToTests
         var tst = DateTime.Now.GetMilliseconds();
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To(new MyTopicNameExtractor(),
                 new MyRecordTimestampExtractor(tst), 
                 new MyStreamPartitioner());
@@ -787,7 +787,7 @@ public class KStreamToTests
         var tst = DateTime.Now.GetMilliseconds();
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To(new MyTopicNameExtractor(),
                 new StringSerDes(), new StringSerDes(),
                 new MyRecordTimestampExtractor(tst));
@@ -835,7 +835,7 @@ public class KStreamToTests
         var tst = DateTime.Now.GetMilliseconds();
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To<StringSerDes, StringSerDes>(new MyTopicNameExtractor(),
                 new MyRecordTimestampExtractor(tst));
 
@@ -883,7 +883,7 @@ public class KStreamToTests
         var tst = DateTime.Now.GetMilliseconds();
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To((_, _, _) => "output", new StringSerDes(), new StringSerDes());
 
         Topology t = builder.Build();
@@ -926,7 +926,7 @@ public class KStreamToTests
         var tst = DateTime.Now.GetMilliseconds();
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To<StringSerDes, StringSerDes>((_, _, _) => "output");
 
         Topology t = builder.Build();
@@ -969,7 +969,7 @@ public class KStreamToTests
         var tst = DateTime.Now.GetMilliseconds();
         builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper())
+            .MapValues((v, _) => v.ToUpper())
             .To<StringSerDes, StringSerDes>(
                 (_, _, _) => "output",
                 (_,_,_) => tst,
@@ -1020,7 +1020,7 @@ public class KStreamToTests
 
         var stream = builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper());
+            .MapValues((v, _) => v.ToUpper());
 
         Assert.Throws<ArgumentException>(() => stream.To(
             string.Empty, (_,_,_,_,_) => Partition.Any));
@@ -1037,7 +1037,7 @@ public class KStreamToTests
 
         var stream = builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper());
+            .MapValues((v, _) => v.ToUpper());
 
         Assert.Throws<ArgumentException>(() => stream.To(
             string.Empty, new MyStreamPartitioner()));
@@ -1054,7 +1054,7 @@ public class KStreamToTests
 
         var stream = builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper());
+            .MapValues((v, _) => v.ToUpper());
 
         Assert.Throws<ArgumentException>(() => stream.To(
             string.Empty, new StringSerDes(), new StringSerDes()));
@@ -1071,7 +1071,7 @@ public class KStreamToTests
 
         var stream = builder
             .Stream<string, string>("stream")
-            .MapValues((v) => v.ToUpper());
+            .MapValues((v, _) => v.ToUpper());
 
         Assert.Throws<ArgumentException>(() => stream.To(
             string.Empty, (_,_,_,_,_) => Partition.Any, new StringSerDes(), new StringSerDes()));

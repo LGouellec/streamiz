@@ -5,6 +5,7 @@ using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Streamiz.Kafka.Net.Processors;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -16,10 +17,10 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
             var stream = builder.Stream<string, string>("topic");
 
-            Func<string, string> mapper1 = null;
+            Func<string, IRecordContext, string> mapper1 = null;
             IValueMapper<string, string> mapper2 = null;
             IValueMapperWithKey<string, string, string> mapper3 = null;
-            Func<string, string, string> mapper4 = null;
+            Func<string, string, IRecordContext, string> mapper4 = null;
 
             Assert.Throws<ArgumentNullException>(() => stream.MapValues(mapper1));
             Assert.Throws<ArgumentNullException>(() => stream.MapValues(mapper2));
@@ -36,7 +37,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key2", "test"));
 
             builder.Stream<string, string>("topic")
-                .MapValues((k, v) => v.ToUpper())
+                .MapValues((k, v, _) => v.ToUpper())
                 .To("topic-mapvalues");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -69,7 +70,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key1", "123456"));
 
             builder.Stream<string, string>("topic")
-                .MapValues((k, v) => v.Length)
+                .MapValues((k, v, _) => v.Length)
                 .To<StringSerDes, Int32SerDes>("topic-mapvalues");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();

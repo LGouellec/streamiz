@@ -4,10 +4,10 @@ namespace Streamiz.Kafka.Net.Processors
 {
     internal class KStreamBranchProcessor<K, V> : AbstractProcessor<K, V>
     {
-        private readonly Func<K, V, bool>[] predicates;
+        private readonly Func<K, V,IRecordContext, bool>[] predicates;
         private readonly string[] childNodes;
 
-        public KStreamBranchProcessor(Func<K, V, bool>[] predicates, string[] childNodes)
+        public KStreamBranchProcessor(Func<K, V,IRecordContext, bool>[] predicates, string[] childNodes)
         {
             this.predicates = predicates;
             this.childNodes = childNodes;
@@ -18,9 +18,9 @@ namespace Streamiz.Kafka.Net.Processors
             LogProcessingKeyValue(key, value);
             for (int i = 0; i < this.predicates.Length; i++)
             {
-                if (this.predicates[i].Invoke(key, value))
+                if (predicates[i].Invoke(key, value, Context.RecordContext))
                 {
-                    this.Forward(key, value, this.childNodes[i]);
+                    Forward(key, value, this.childNodes[i]);
                     break;
                 }
             }

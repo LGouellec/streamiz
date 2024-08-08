@@ -26,7 +26,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key1", "123456"));
 
             builder.Stream<string, string>("topic")
-                .Foreach((k, v) => foreachObserved.Add(KeyValuePair.Create(k, v)));
+                .Foreach((k, v, _) => foreachObserved.Add(KeyValuePair.Create(k, v)));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-foreach";

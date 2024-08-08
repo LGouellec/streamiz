@@ -37,7 +37,7 @@ namespace Streamiz.Kafka.Net.Processors
             }
             else
             {
-                K2 mappedKey = mapper.Apply(key, value);
+                K2 mappedKey = mapper.Apply(key, value, Context.RecordContext);
                 V2 value2 = mappedKey == null ? default : ValueAndTimestamp.GetValueOrNull(valueGetter.Get(mappedKey));
                 if (leftJoin || value2 != null)
                     Forward(key, joiner.Apply(value, value2));

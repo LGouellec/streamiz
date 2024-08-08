@@ -150,7 +150,7 @@ namespace Streamiz.Kafka.Net.Tests.Reproducer
 
             if(!async)
                 inputStream
-                    .FlatMapValues((k, v) => v.Split(",").Select(x => new CloudEvent()
+                    .FlatMapValues((k, v, _) => v.Split(",").Select(x => new CloudEvent()
                         {Id = Guid.NewGuid().ToString(), Source = new Uri("abc://a/b/c"), Type = x}))
                     .To("Output", new StringSerDes(), new CloudEventSerDes2());
             else

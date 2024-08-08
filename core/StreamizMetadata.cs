@@ -1,4 +1,5 @@
-﻿using Confluent.Kafka;
+﻿using System;
+using Confluent.Kafka;
 using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net
@@ -31,6 +32,7 @@ namespace Streamiz.Kafka.Net
     /// </code>
     /// </para>
     /// </summary>
+    [Obsolete("Plan to remove in the next release")]
     public static class StreamizMetadata
     {
         /// <summary>

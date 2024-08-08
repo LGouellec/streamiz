@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Streamiz.Kafka.Net.Processors.Public;
-using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.Stream
 {
@@ -40,7 +39,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// </summary>
         /// <param name="predicates">the ordered list of predicate instances</param>
         /// <returns>Multiple distinct substreams of this <see cref="IKStream{K, V}"/></returns>
-        IKStream<K, V>[] Branch(params Func<K, V, bool>[] predicates);
+        IKStream<K, V>[] Branch(params Func<K, V, IRecordContext, bool>[] predicates);
 
         /// <summary>
         /// Creates an array of <see cref="IKStream{K, V}"/> from this stream by branching the records in the original stream based on
@@ -58,7 +57,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="predicates">the ordered list of predicate instances</param>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> if one (or multiple) predicate function is null</exception>
         /// <returns>multiple distinct substreams of this <see cref="IKStream{K, V}"/></returns>
-        IKStream<K, V>[] Branch(string named, params Func<K, V, bool>[] predicates);
+        IKStream<K, V>[] Branch(string named, params Func<K, V, IRecordContext, bool>[] predicates);
         
         #endregion
 
@@ -86,7 +85,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{K, V}"/> that contains only those records that satisfy the given predicate</returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when predicate function is null</exception>
-        IKStream<K, V> Filter(Func<K, V, bool> predicate, string named = null);
+        IKStream<K, V> Filter(Func<K, V, IRecordContext, bool> predicate, string named = null);
 
         /// <summary>
         /// Create a new <see cref="IKStream{K, V}"/>
@@ -98,7 +97,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{K, V}"/> that contains only those records that DO NOT satisfy the given predicate</returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when predicate function is null</exception>
-        IKStream<K, V> FilterNot(Func<K, V, bool> predicate, string named = null);
+        IKStream<K, V> FilterNot(Func<K, V, IRecordContext, bool> predicate, string named = null);
         
         #endregion
         
@@ -465,7 +464,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{KR, VR}"/> that contains more or less records with new key and value (possibly of different type)</returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
-        IKStream<KR, VR> FlatMap<KR, VR>(Func<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named = null);
+        IKStream<KR, VR> FlatMap<KR, VR>(Func<K, V, IRecordContext, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named = null);
         
         #endregion
 
@@ -501,7 +500,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{KR, VR}"/> that contains more or less records with new key and value (possibly of different type)</returns>
         /// /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
-        IKStream<K, VR> FlatMapValues<VR>(Func<V, IEnumerable<VR>> mapper, string named = null);
+        IKStream<K, VR> FlatMapValues<VR>(Func<V, IRecordContext, IEnumerable<VR>> mapper, string named = null);
 
         /// <summary>
         /// Transform each record of the input stream into zero or more records with the same (unmodified) key in the output stream.
@@ -533,7 +532,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{KR, VR}"/> that contains more or less records with new key and value (possibly of different type)</returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
-        IKStream<K, VR> FlatMapValues<VR>(Func<K, V, IEnumerable<VR>> mapper, string named = null);
+        IKStream<K, VR> FlatMapValues<VR>(Func<K, V, IRecordContext, IEnumerable<VR>> mapper, string named = null);
 
         #endregion
         
@@ -547,7 +546,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="action">An action to perform on each record</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when action is null</exception>
-        void Foreach(Action<K, V> action, string named = null);
+        void Foreach(Action<K, V, IRecordContext> action, string named = null);
         
         #endregion
         
@@ -606,7 +605,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{KR, VR}"/> that contains records with new key and value (possibly both of different type)</returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
-        IKStream<KR, VR> Map<KR, VR>(Func<K, V, KeyValuePair<KR, VR>> mapper, string named = null);
+        IKStream<KR, VR> Map<KR, VR>(Func<K, V, IRecordContext, KeyValuePair<KR, VR>> mapper, string named = null);
         
         #endregion
 
@@ -646,7 +645,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{K, VR}"/> that contains records with unmodified key and new values (possibly of different type)</returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
-        IKStream<K, VR> MapValues<VR>(Func<V, VR> mapper, string named = null);
+        IKStream<K, VR> MapValues<VR>(Func<V, IRecordContext, VR> mapper, string named = null);
 
         /// <summary>
         /// Transform the value of each input record into a new value (with possible new type) of the output record.
@@ -684,7 +683,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{K, VR}"/> that contains records with unmodified key and new values (possibly of different type)</returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
-        IKStream<K, VR> MapValues<VR>(Func<K, V, VR> mapper, string named = null);
+        IKStream<K, VR> MapValues<VR>(Func<K, V, IRecordContext, VR> mapper, string named = null);
         
         #endregion
         
@@ -701,7 +700,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> exception if <paramref name="action"/> is null</exception>
         /// <returns>Itself</returns>
-        IKStream<K, V> Peek(Action<K, V> action, string named = null);
+        IKStream<K, V> Peek(Action<K, V, IRecordContext> action, string named = null);
         
         #endregion
         
@@ -753,7 +752,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{KR, V}"/> that contains records with new key (possibly of different type) and unmodified value</returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when mapper function is null</exception>
-        IKStream<KR, V> SelectKey<KR>(Func<K, V, KR> mapper, string named = null);
+        IKStream<KR, V> SelectKey<KR>(Func<K, V, IRecordContext, KR> mapper, string named = null);
         
         #endregion
         
@@ -803,7 +802,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKGroupedStream{KR, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
-        IKGroupedStream<KR, V> GroupBy<KR>(Func<K, V, KR> keySelector, string named = null);
+        IKGroupedStream<KR, V> GroupBy<KR>(Func<K, V, IRecordContext, KR> keySelector, string named = null);
 
         /// <summary>
         /// Group the records of this <see cref="IKStream{K, V}"/> on a new key that is selected using the provided <see cref="IKeyValueMapper{K, V, VR}"/> and default serializers and deserializers.
@@ -878,7 +877,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKGroupedStream{KR, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
-        IKGroupedStream<KR, V> GroupBy<KR, KRS>(Func<K, V, KR> keySelector, string named = null) where KRS : ISerDes<KR>, new();
+        IKGroupedStream<KR, V> GroupBy<KR, KRS>(Func<K, V, IRecordContext, KR> keySelector, string named = null) where KRS : ISerDes<KR>, new();
 
                 /// <summary>
         /// Group the records of this <see cref="IKStream{K, V}"/> on a new key that is selected using the provided <code>Func&lt;K, V, VR&gt;</code> and default serializers and deserializers.
@@ -903,7 +902,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKGroupedStream{KR, V}"/> that contains the grouped records of the original <see cref="IKStream{K, V}"/></returns>
         /// <exception cref="ArgumentNullException">Throw <see cref="ArgumentNullException"/> when selector function is null</exception>
-        IKGroupedStream<KR, V> GroupBy<KR, KRS, VS>(Func<K, V, KR> keySelector, string named = null) 
+        IKGroupedStream<KR, V> GroupBy<KR, KRS, VS>(Func<K, V, IRecordContext, KR> keySelector, string named = null) 
                     where KRS : ISerDes<KR>, new()
                     where VS : ISerDes<V>, new();
         
@@ -2303,7 +2302,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="timestampExtractor"></param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>a <see cref="IKStream{K,V1}"/> that has records with timestamp explicitly provided by <paramref name="timestampExtractor"/></returns>
-        IKStream<K, V> WithRecordTimestamp(Func<K, V, long> timestampExtractor, string named = null);
+        IKStream<K, V> WithRecordTimestamp(Func<K, V, IRecordContext, long> timestampExtractor, string named = null);
 
         #endregion
         

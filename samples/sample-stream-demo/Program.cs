@@ -37,11 +37,11 @@ namespace sample_stream_demo
             StreamBuilder builder = new StreamBuilder();
             
             builder.Stream<string, string>(inputTopic)
-                .FlatMapValues((v) => v.Split(" ").AsEnumerable())
-                .GroupBy((k,v) => v)
+                .FlatMapValues((v, _) => v.Split(" ").AsEnumerable())
+                .GroupBy((k,v, _) => v)
                 .Count()
                 .ToStream()
-                .MapValues((v) => v.ToString())
+                .MapValues((v, _) => v.ToString())
                 .To(outputTopic);
             
             Topology t = builder.Build();

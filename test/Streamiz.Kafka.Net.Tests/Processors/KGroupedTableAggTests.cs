@@ -75,7 +75,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Table<string, string>("topic", InMemory.As<string, string>())
-                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .GroupBy((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                 .Aggregate(() => 0L, (k, v, agg) => agg + 1, (k, v, agg) => agg, m);
 
             var topology = builder.Build();
@@ -103,7 +103,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Table<string, string>("topic", InMemory.As<string, string>())
-                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .GroupBy((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                 .Aggregate(() => 0, (k, v, agg) => agg + 1, (k, v, agg) => agg, m)
                 .ToStream()
                 .To("output-topic");
@@ -134,8 +134,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 builder
                     .Table<string, string>("topic", InMemory.As<string, string>())
-                    .MapValues((v) => v.Length)
-                    .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                    .MapValues((v, _) => v.Length)
+                    .GroupBy((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                     .Aggregate((Initializer<int>)null, (Aggregator<string, int, int>)null, (Aggregator<string,int,int>)null, m);
             });
         }
@@ -150,7 +150,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var table = builder
                 .Table<string, string>("topic", InMemory.As<string, string>())
-                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v));
+                .GroupBy((k, v, _) => KeyValuePair.Create(k.ToUpper(), v));
 
             table.Count(InMemory.As<string, long>("count-store"));
             table.Aggregate(
@@ -214,7 +214,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Table<string, string>("topic", InMemory.As<string, string>())
-                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .GroupBy((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                 .Aggregate<Dictionary<char, int>, DictionarySerDes>(
                     () => new Dictionary<char, int>(),
                     (k, v, old) =>
@@ -266,7 +266,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Table<string, string>("topic", InMemory.As<string, string>())
-                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .GroupBy((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                 .Aggregate<Dictionary<char, int>, DictionarySerDes>(
                     new MyInitializer(),
                     new MyAdderAggregator(),
@@ -307,7 +307,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Table<string, string>("topic", InMemory.As<string, string>())
-                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .GroupBy((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                 .Aggregate(
                     () => 0L,
                     (k, v, agg) => agg + 1,
@@ -356,7 +356,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Table<string, string>("topic", InMemory.As<string, string>())
-                .GroupBy((k, v) => KeyValuePair.Create(k.ToCharArray()[0], v))
+                .GroupBy((k, v, _) => KeyValuePair.Create(k.ToCharArray()[0], v))
                 .Aggregate(
                     () => 0L, 
                     (k, v, agg) => agg + 1,

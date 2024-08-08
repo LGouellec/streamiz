@@ -209,7 +209,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
             
             builder.Stream<string, string>("topic")
-                .SelectKey((k,v) => v)
+                .SelectKey((k,v, _) => v)
                 .GroupByKey()
                 .Count(InMemory.As<string, long>())
                 .ToStream()
@@ -251,7 +251,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .GroupByKey()
                 .Count(InMemory.As<string, long>())
                 .ToStream()
-                .MapValues((v) => v.ToString())
+                .MapValues((v, _) => v.ToString())
                 .To("topic-output");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
