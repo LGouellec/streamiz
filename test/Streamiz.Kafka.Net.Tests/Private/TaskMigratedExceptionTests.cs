@@ -42,8 +42,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var t = builder.Build();
 
-            using (var driver = new TopologyTestDriver(t.Builder, config,
-                TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
                 inputtopic.PipeInput("coucou");
@@ -108,8 +107,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         
             var t = builder.Build();
         
-            using (var driver = new TopologyTestDriver(t.Builder, config,
-                TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
                 var outputTopic = driver.CreateOuputTopic<string, string>("test-output");
@@ -167,8 +165,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         
             var t = builder.Build();
         
-            using (var driver = new TopologyTestDriver(t.Builder, config,
-                       TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
                 var outputTopic = driver.CreateOuputTopic<string, string>("test-output");
@@ -222,8 +219,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var t = builder.Build();
 
-            using (var driver = new TopologyTestDriver(t.Builder, config,
-                TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
                 inputtopic.PipeInput("coucou");
@@ -275,8 +271,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var t = builder.Build();
 
-            using var driver = new TopologyTestDriver(t.Builder, config,
-                TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier);
+            using var driver = new TopologyTestDriver(t, config, supplier);
             var inputtopic = driver.CreateInputTopic<string, string>("test");
             inputtopic.PipeInput("coucou1");
             inputtopic.PipeInput("coucou2");
@@ -330,8 +325,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var t = builder.Build();
 
-            using var driver = new TopologyTestDriver(t.Builder, config,
-                TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier);
+            using var driver = new TopologyTestDriver(t, config, supplier);
             var inputtopic = driver.CreateInputTopic<string, string>("test");
             inputtopic.PipeInput("coucou1");
             inputtopic.PipeInput("coucou2");
