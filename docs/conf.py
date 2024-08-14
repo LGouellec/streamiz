@@ -31,6 +31,7 @@ html_favicon = 'favicon.ico'
 extensions = [
     'recommonmark',
     'sphinx_markdown_tables',
+    'sphinx_rtd_theme',
     'sphinx.ext.githubpages']
 
 # Add any paths that contain templates here, relative to this directory.
