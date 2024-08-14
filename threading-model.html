@@ -14,6 +14,8 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=4825356b"></script>
@@ -87,19 +89,19 @@
            <div itemprop="articleBody">
              
   <section id="threading-model">
-<h1>Threading model<a class="headerlink" href="#threading-model" title="Permalink to this heading">¶</a></h1>
+<h1>Threading model<a class="headerlink" href="#threading-model" title="Permalink to this heading"></a></h1>
 <p>Streamiz allows the user to configure the number of threads that the library can use to parallelize processing within an application instance.
 Each thread can execute one or more stream tasks with their processor topologies independently.</p>
 <a class="reference internal image-reference" href="_images/threading-model.png"><img alt="_images/threading-model.png" class="align-center" src="_images/threading-model.png" style="width: 650px;" /></a>
 <section id="stream-thread">
-<h2>Stream thread<a class="headerlink" href="#stream-thread" title="Permalink to this heading">¶</a></h2>
+<h2>Stream thread<a class="headerlink" href="#stream-thread" title="Permalink to this heading"></a></h2>
 <p>The default Streamiz application has one StreamThread.
 Each thread can execute one or more stream tasks with their processor topologies independently.</p>
 <p>You configure your number of thread using <cite>config.NumStreamThreads</cite>.
 In contrary JAVA implementation, you can’t (for now) adding or removing stream thread when your streamiz application is running.</p>
 </section>
 <section id="global-stream-thread">
-<h2>Global stream thread<a class="headerlink" href="#global-stream-thread" title="Permalink to this heading">¶</a></h2>
+<h2>Global stream thread<a class="headerlink" href="#global-stream-thread" title="Permalink to this heading"></a></h2>
 <p>This is the thread responsible for keeping all Global State Stores updated. All global state stores are available inside the stream tasks.
 The scope of this task is just to read all global topics and update the global state stores.</p>
 <p>It is only creating and running if you use <cite>builder.GlobalTable(…)</cite>.</p>
@@ -110,7 +112,7 @@ Their instances have to consumer all partitions both and update two global state
 Because <cite>librdkafka</cite> doesn’t not authorize to create a consumer without <cite>group.id</cite> like the kafka consumer JAVA implementation</p>
 </section>
 <section id="external-stream-thread">
-<h2>External stream thread<a class="headerlink" href="#external-stream-thread" title="Permalink to this heading">¶</a></h2>
+<h2>External stream thread<a class="headerlink" href="#external-stream-thread" title="Permalink to this heading"></a></h2>
 <p>Calling external system inside your topology can appears some error. First one is if your consumer doesn’t fetch messages during <cite>max.poll.interval.ms</cite> (default value : 5 minutes), your consumer will die.</p>
 <p>That’s why the external stream thread exist. His sole purpose is to execute asynchronous processing from a request topic to a response topic.</p>
 <a class="reference internal image-reference" href="_images/request-response.png"><img alt="_images/request-response.png" class="align-center" src="_images/request-response.png" style="width: 450px;" /></a>

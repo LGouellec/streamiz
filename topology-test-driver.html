@@ -14,6 +14,8 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=4825356b"></script>
@@ -86,7 +88,7 @@
            <div itemprop="articleBody">
              
   <section id="test-topology-driver">
-<h1>Test topology driver<a class="headerlink" href="#test-topology-driver" title="Permalink to this heading">¶</a></h1>
+<h1>Test topology driver<a class="headerlink" href="#test-topology-driver" title="Permalink to this heading"></a></h1>
 <p>Streamiz Kafka .Net provides a test-utils for testing your stream topology.</p>
 <p>TopologyTestDriver that can be used pipe data through a Topology that is either assembled manually using the DSL using StreamsBuilder. The test driver simulates the library runtime that continuously fetches records from input topics and processes them by traversing the topology.</p>
 <p>You can use the test driver to verify that your specified processor topology computes the correct result with the manually piped in data records. The test driver captures the results records and allows to query its embedded state stores.</p>
@@ -123,7 +125,7 @@
 <p>Note, that you should always dispose the test driver at the end to make sure all resources are release properly.
 TopologyTestDriver is disposable so you should ‘using’ keyword in your unit test.</p>
 <section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Permalink to this heading">¶</a></h2>
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this heading"></a></h2>
 <p>Sample code :</p>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="o">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">StringSerDes</span><span class="o">&gt;</span><span class="p">();</span>
 <span class="n">config</span><span class="p">.</span><span class="n">ApplicationId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;test-test-driver-app&quot;</span><span class="p">;</span>
@@ -158,7 +160,7 @@ TopologyTestDriver is disposable so you should ‘using’ keyword in your unit 
 </div>
 </section>
 <section id="unit-test-with-avro-serdes">
-<h2>Unit test with AVRO SerDes<a class="headerlink" href="#unit-test-with-avro-serdes" title="Permalink to this heading">¶</a></h2>
+<h2>Unit test with AVRO SerDes<a class="headerlink" href="#unit-test-with-avro-serdes" title="Permalink to this heading"></a></h2>
 <p>SchemaAvroSerDes need to connect to Confluent Schema Registry to serialize/deserialize AVRO bean.
 So if you want write unit test with your avro beans, most of time you will not have one Confluent Schema Registry.
 Since 1.1.4 release, you have a mock schema registry client implementation.</p>

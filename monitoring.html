@@ -14,6 +14,8 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=4825356b"></script>
@@ -102,9 +104,9 @@
            <div itemprop="articleBody">
              
   <section id="monitoring-stream-applications">
-<h1>Monitoring Stream Applications<a class="headerlink" href="#monitoring-stream-applications" title="Permalink to this heading">¶</a></h1>
+<h1>Monitoring Stream Applications<a class="headerlink" href="#monitoring-stream-applications" title="Permalink to this heading"></a></h1>
 <section id="metrics">
-<h2>Metrics<a class="headerlink" href="#metrics" title="Permalink to this heading">¶</a></h2>
+<h2>Metrics<a class="headerlink" href="#metrics" title="Permalink to this heading"></a></h2>
 <p>The Streamiz library reports a variety of metrics through his own registry. You have to specify a <a href="stream-configuration.html#optional-configuration-parameters" rel="stylesheet">metric reporter</a> (see <code class="docutils literal notranslate"><span class="pre">IStreamConfig.MetricsReporter</span></code>) to export all metrics to a different layer (Prometheus, Elastic, …). This reporter will be triggered every <code class="docutils literal notranslate"><span class="pre">IStreamConfig.MetricsIntervalMs</span></code> (minimium and default : 30 seconds).</p>
 <p>Streamiz provide two implementations :</p>
 <ul class="simple">
@@ -123,15 +125,15 @@
 </pre></div>
 </div>
 <section id="accessing-metrics">
-<h3>Accessing Metrics<a class="headerlink" href="#accessing-metrics" title="Permalink to this heading">¶</a></h3>
+<h3>Accessing Metrics<a class="headerlink" href="#accessing-metrics" title="Permalink to this heading"></a></h3>
 <p>The entire metrics registry of a KafkaStream instance can be accessed read-only through the method <code class="docutils literal notranslate"><span class="pre">KafkaStream.Metrics()</span></code>. The metrics registry will contain all the available metrics listed below.</p>
 </section>
 <section id="configuring-metrics-granularity">
-<h3>Configuring Metrics Granularity<a class="headerlink" href="#configuring-metrics-granularity" title="Permalink to this heading">¶</a></h3>
+<h3>Configuring Metrics Granularity<a class="headerlink" href="#configuring-metrics-granularity" title="Permalink to this heading"></a></h3>
 <p>By default Streamiz has metrics with two recording levels: INFO and DEBUG. The <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code> level records most metrics, while the <code class="docutils literal notranslate"><span class="pre">INFO</span></code> level records only some of them. Use the <code class="docutils literal notranslate"><span class="pre">IStreamConfig.MetricsRecording</span></code> configuration option to specify which metrics you want collected, see <a href="stream-configuration.html#metricsrecording" rel="stylesheet">configuration parameters</a>.</p>
 </section>
 <section id="application-metrics">
-<h3>Application metrics<a class="headerlink" href="#application-metrics" title="Permalink to this heading">¶</a></h3>
+<h3>Application metrics<a class="headerlink" href="#application-metrics" title="Permalink to this heading"></a></h3>
 <p>All the following metrics have a recording level of <code class="docutils literal notranslate"><span class="pre">INFO</span></code>.</p>
 <p><strong>Sensor : stream-metrics.sensor.app-info, Type : stream-metrics</strong></p>
 <table border="1" class="docutils">
@@ -171,7 +173,7 @@
 </tbody>
 </table></section>
 <section id="thread-metrics">
-<h3>Thread metrics<a class="headerlink" href="#thread-metrics" title="Permalink to this heading">¶</a></h3>
+<h3>Thread metrics<a class="headerlink" href="#thread-metrics" title="Permalink to this heading"></a></h3>
 <p>All the following metrics have a recording level of <code class="docutils literal notranslate"><span class="pre">INFO</span></code>.</p>
 <p><strong>Sensor : internal.[THREAD_ID].sensor.thread-start-time, Type : stream-thread-metrics</strong></p>
 <table border="1" class="docutils">
@@ -427,7 +429,7 @@
 </tbody>
 </table></section>
 <section id="task-metrics">
-<h3>Task metrics<a class="headerlink" href="#task-metrics" title="Permalink to this heading">¶</a></h3>
+<h3>Task metrics<a class="headerlink" href="#task-metrics" title="Permalink to this heading"></a></h3>
 <p>All the following metrics have a recording level of <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code>.</p>
 <p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].sensor.process-latency, Type : stream-task-metrics</strong></p>
 <table border="1" class="docutils">
@@ -584,7 +586,7 @@
 </tbody>
 </table></section>
 <section id="processor-metrics">
-<h3>Processor metrics<a class="headerlink" href="#processor-metrics" title="Permalink to this heading">¶</a></h3>
+<h3>Processor metrics<a class="headerlink" href="#processor-metrics" title="Permalink to this heading"></a></h3>
 <p>All the following metrics have a recording level of <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code>.</p>
 <p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].node.[PROCESSOR_NODE_ID].sensor.process, Type : stream-processor-node-metrics</strong></p>
 <table border="1" class="docutils">
@@ -609,7 +611,7 @@
 </tbody>
 </table></section>
 <section id="state-store-metrics">
-<h3>State store metrics<a class="headerlink" href="#state-store-metrics" title="Permalink to this heading">¶</a></h3>
+<h3>State store metrics<a class="headerlink" href="#state-store-metrics" title="Permalink to this heading"></a></h3>
 <p>All the following metrics have a recording level of <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code>. The <code class="docutils literal notranslate"><span class="pre">store-scope</span></code> value is specified in <code class="docutils literal notranslate"><span class="pre">IStoreSupplier.MetricsScope</span></code> for the user’s customized state stores; for built-in state stores, currently we have:</p>
 <ul class="simple">
 <li><p>in-memory_state</p></li>
@@ -879,14 +881,14 @@
 </tbody>
 </table></section>
 <section id="rocksdb-metrics">
-<h3>RocksDb metrics<a class="headerlink" href="#rocksdb-metrics" title="Permalink to this heading">¶</a></h3>
+<h3>RocksDb metrics<a class="headerlink" href="#rocksdb-metrics" title="Permalink to this heading"></a></h3>
 <p><em>Not available for now, stay tuned works in progress</em></p>
 </section>
 <section id="librdkafka-metrics">
-<h3>Librdkafka metrics<a class="headerlink" href="#librdkafka-metrics" title="Permalink to this heading">¶</a></h3>
+<h3>Librdkafka metrics<a class="headerlink" href="#librdkafka-metrics" title="Permalink to this heading"></a></h3>
 <p>Only main consumer and producer librdkafka statistics are exposed for now in Streamiz application. All the following metrics have a recording level of <code class="docutils literal notranslate"><span class="pre">INFO</span></code>.</p>
 <section id="main-consumer">
-<h4>Main consumer<a class="headerlink" href="#main-consumer" title="Permalink to this heading">¶</a></h4>
+<h4>Main consumer<a class="headerlink" href="#main-consumer" title="Permalink to this heading"></a></h4>
 <p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.messages-consumed-total, Type : librdkafka-consumer-metrics</strong></p>
 <table border="1" class="docutils">
 <thead>
@@ -1000,7 +1002,7 @@
 </tr>
 </tbody>
 </table><section id="broker-metrics">
-<h5>Broker metrics<a class="headerlink" href="#broker-metrics" title="Permalink to this heading">¶</a></h5>
+<h5>Broker metrics<a class="headerlink" href="#broker-metrics" title="Permalink to this heading"></a></h5>
 <p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-responses-received-total, Type : librdkafka-consumer-metrics</strong></p>
 <table border="1" class="docutils">
 <thead>
@@ -1099,7 +1101,7 @@
 </tbody>
 </table></section>
 <section id="topic-metrics">
-<h5>Topic metrics<a class="headerlink" href="#topic-metrics" title="Permalink to this heading">¶</a></h5>
+<h5>Topic metrics<a class="headerlink" href="#topic-metrics" title="Permalink to this heading"></a></h5>
 <p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.topic-batch-size-bytes-avg, Type : librdkafka-consumer-metrics</strong></p>
 <table border="1" class="docutils">
 <thead>
@@ -1134,7 +1136,7 @@
 </tbody>
 </table></section>
 <section id="partition-metrics">
-<h5>Partition metrics<a class="headerlink" href="#partition-metrics" title="Permalink to this heading">¶</a></h5>
+<h5>Partition metrics<a class="headerlink" href="#partition-metrics" title="Permalink to this heading"></a></h5>
 <p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.consumer-lag, Type : librdkafka-consumer-metrics</strong></p>
 <table border="1" class="docutils">
 <thead>
@@ -1186,7 +1188,7 @@
 </table></section>
 </section>
 <section id="producer">
-<h4>Producer<a class="headerlink" href="#producer" title="Permalink to this heading">¶</a></h4>
+<h4>Producer<a class="headerlink" href="#producer" title="Permalink to this heading"></a></h4>
 <p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.messages-produced-total, Type : librdkafka-producer-metrics</strong></p>
 <table border="1" class="docutils">
 <thead>
@@ -1332,7 +1334,7 @@
 </tr>
 </tbody>
 </table><section id="id1">
-<h5>Broker metrics<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h5>
+<h5>Broker metrics<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h5>
 <p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.broker-request-awaiting-total, Type : librdkafka-producer-metrics</strong></p>
 <table border="1" class="docutils">
 <thead>
@@ -1559,7 +1561,7 @@
 </tbody>
 </table></section>
 <section id="id2">
-<h5>Topic metrics<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h5>
+<h5>Topic metrics<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h5>
 <p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.topic-batch-size-bytes-avg, Type : librdkafka-producer-metrics</strong></p>
 <table border="1" class="docutils">
 <thead>
@@ -1599,7 +1601,7 @@
 </tbody>
 </table></section>
 <section id="id3">
-<h5>Partition metrics<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h5>
+<h5>Partition metrics<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h5>
 <p><strong>Sensor : librdkafka.[LIBRDKAFKA_CLIENT_ID].sensor.partition-messages-produced-total, Type : librdkafka-producer-metrics</strong></p>
 <table border="1" class="docutils">
 <thead>
@@ -1684,7 +1686,7 @@
 </section>
 </section>
 <section id="external-thread-metrics">
-<h3>External Thread metrics<a class="headerlink" href="#external-thread-metrics" title="Permalink to this heading">¶</a></h3>
+<h3>External Thread metrics<a class="headerlink" href="#external-thread-metrics" title="Permalink to this heading"></a></h3>
 <p>All the following metrics have a recording level of <code class="docutils literal notranslate"><span class="pre">INFO</span></code>.</p>
 <p><strong>Sensor : internal.[THREAD_ID].sensor.commit, Type : stream-thread-metrics</strong></p>
 <table border="1" class="docutils">
@@ -1792,7 +1794,7 @@
 </tbody>
 </table></section>
 <section id="external-task-metrics">
-<h3>External Task metrics<a class="headerlink" href="#external-task-metrics" title="Permalink to this heading">¶</a></h3>
+<h3>External Task metrics<a class="headerlink" href="#external-task-metrics" title="Permalink to this heading"></a></h3>
 <p>All the following metrics have a recording level of <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code>.</p>
 <p><strong>Sensor : internal.[THREAD_ID].task.[TASK_ID].sensor.process-latency, Type : stream-task-metrics</strong></p>
 <table border="1" class="docutils">
