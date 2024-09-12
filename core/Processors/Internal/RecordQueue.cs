@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
@@ -91,6 +92,16 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             while (currentRecord == null && queue.Count > 0)
             {
                 var record = queue[0];
+                if (record.Message == null)
+                {
+                    log.LogWarning(
+                        "Skipping record due to a null message payload. topic=[{Topic}] partition=[{Partition}] offset=[{Offset}]",
+                        record.Topic, record.Partition, record.Offset);
+                    droppedRecordsSensor.Record();
+                    queue.RemoveAt(0);
+                    continue;
+                }
+                
                 var recordObject = ToConsumeObject(record);
                 long timestamp = -1;
                 try
@@ -121,6 +132,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         private ConsumeResult<object, object> ToConsumeObject(ConsumeResult<byte[], byte[]> record)
         {
+            if (record == null)
+                throw new ArgumentNullException("record");
+            if (record.Message == null)
+                throw new ArgumentNullException("record.Message");
+            if (sourceProcessor == null)
+                throw new ArgumentNullException("sourceProcessor");
+            
             return new ConsumeResult<object, object>
             {
                 Topic = record.Topic,

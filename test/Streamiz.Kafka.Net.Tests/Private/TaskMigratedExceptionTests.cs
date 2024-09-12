@@ -4,6 +4,8 @@ using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.Private
@@ -63,6 +65,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.AreEqual(new List<KeyValuePair<string, string>>(), _return);
         }
 
+        [NonParallelizable]
         [Test]
         public void ProductionExceptionRecoverableHandlerFailTestWithParallel()
         {
@@ -88,7 +91,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config.PollMs = 10;
             config.ProductionExceptionHandler += (r) => ProductionExceptionHandlerResponse.FAIL;
             config.ParallelProcessing = parallelProcessing;
-        
+            
             var options = new ProducerSyncExceptionOptions()
             {
                 IsRecoverable = true,
@@ -96,7 +99,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 WhiteTopics = new List<string> {"test"}
             };
             var supplier = new ProducerSyncExceptionSupplier(options);
-        
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("test")
@@ -110,11 +112,19 @@ namespace Streamiz.Kafka.Net.Tests.Private
             using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
-                var outputTopic = driver.CreateOuputTopic<string, string>("test-output");
+                //var outputTopic = driver.CreateOuputTopic<string, string>("test-output");
                 inputtopic.PipeInput("coucou");
                 inputtopic.PipeInput("coucou");
-                while (_return.Count == 0) ;
+                while (_return.Count == 0)
+                {
+                    Thread.Sleep(100);
+                    if (DateTime.Now > dt + timeout)
+                    {
+                        break;
+                    }
+                }
                 var expected = new List<KeyValuePair<string, string>>();
+                expected.Add(KeyValuePair.Create<string, string>(null, "coucou"));
                 expected.Add(KeyValuePair.Create<string, string>(null, "coucou"));
                 Assert.AreEqual(expected, _return);
             }
@@ -126,7 +136,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
             ProduceExceptionRecoverableHandlerFailTest(false);
         }
         
-        [Test] public void ProduceExceptionRecoverableHandlerFailTestWithParallel()
+        [NonParallelizable]
+        [Test] 
+        public void ProduceExceptionRecoverableHandlerFailTestWithParallel()
         {
             ProduceExceptionRecoverableHandlerFailTest(true);
         }

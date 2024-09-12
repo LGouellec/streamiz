@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 using Confluent.Kafka;
 using Confluent.Kafka.Admin;
 using Microsoft.Extensions.Logging;
+using Microsoft.Win32.SafeHandles;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Kafka.Internal;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -42,21 +44,24 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public IDictionary<TaskId, ITask> Tasks => activeTasks.ToDictionary(i => i.Key, i => (ITask)i.Value);
 
         public IConsumer<byte[], byte[]> Consumer { get; internal set; }
+        public StreamsProducer Producer { get; }
         public IEnumerable<TaskId> ActiveTaskIds => activeTasks.Keys;
         public bool RebalanceInProgress { get; internal set; }
         internal readonly object _lock = new object();
 
         internal TaskManager(InternalTopologyBuilder builder, TaskCreator taskCreator, IAdminClient adminClient,
-            IChangelogReader changelogReader)
+            IChangelogReader changelogReader, StreamsProducer producer)
         {
             this.builder = builder;
             this.taskCreator = taskCreator;
             this.adminClient = adminClient;
             this.changelogReader = changelogReader;
+            
+            Producer = producer;
         }
 
-        internal TaskManager(InternalTopologyBuilder builder, TaskCreator taskCreator, IAdminClient adminClient, IConsumer<byte[], byte[]>  consumer, IChangelogReader changelogReader)
-            : this(builder, taskCreator, adminClient, changelogReader)
+        internal TaskManager(InternalTopologyBuilder builder, TaskCreator taskCreator, IAdminClient adminClient, IConsumer<byte[], byte[]>  consumer, IChangelogReader changelogReader, StreamsProducer producer)
+            : this(builder, taskCreator, adminClient, changelogReader, producer)
         {
             Consumer = consumer;
         }
@@ -82,7 +87,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             if (tasksToBeCreated.Count > 0)
             {
-                var tasks = taskCreator.CreateTasks(Consumer, tasksToBeCreated);
+                var tasks = taskCreator.CreateTasks(Consumer, Producer, tasksToBeCreated);
                 foreach (var task in tasks)
                 {
                     task.InitializeStateStores();
@@ -92,21 +97,52 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
         }
 
-        public void RevokeTasks(ICollection<TopicPartition> assignment)
+        public void RevokeTasks(ICollection<TopicPartition> revokeAssignment)
         {
             CurrentTask = null;
-            foreach (var p in assignment)
+            List<StreamTask> revokedTask = new List<StreamTask>();
+            List<StreamTask> commitNeededActiveTask = new List<StreamTask>();
+            List<TopicPartitionOffset> consumedOffsetsToCommit = new List<TopicPartitionOffset>();
+            
+            foreach (var p in revokeAssignment)
             {
                 var taskId = builder.GetTaskIdFromPartition(p);
                 if (activeTasks.TryGetValue(taskId, out StreamTask task))
-                {
-                   task.MayWriteCheckpoint(true);
-                   task.Close();
+                { 
+                    revokedTask.Add(task);
 
                     partitionsToTaskId.TryRemove(p, out _);
                     activeTasks.TryRemove(taskId, out _);
                 }
             }
+
+            foreach (var activeTask in activeTasks)
+            {
+                if(activeTask.Value.CommitNeeded)
+                    commitNeededActiveTask.Add(activeTask.Value);
+            }
+
+            foreach (var rvTask in revokedTask)
+                consumedOffsetsToCommit.AddRange(rvTask.PrepareCommit());
+
+            if (consumedOffsetsToCommit.Any())
+            {
+                foreach(var acT in commitNeededActiveTask)
+                    consumedOffsetsToCommit.AddRange(acT.PrepareCommit());
+            }
+            
+            CommitOffsetsOrTransaction(consumedOffsetsToCommit);
+
+            foreach (var rvTask in revokedTask)
+            {
+                rvTask.PostCommit(true);
+                rvTask.Suspend();
+                rvTask.Close(false);
+            }
+            
+            foreach(var acT in commitNeededActiveTask)
+                acT.PostCommit(false);
+            
         }
 
         public StreamTask ActiveTaskFor(TopicPartition partition)
@@ -124,18 +160,39 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public void Close()
         {
+            List<StreamTask> tasksToCommit = new List<StreamTask>();
+            List<TopicPartitionOffset> consumedOffsets = new List<TopicPartitionOffset>();
             CurrentTask = null;
             foreach (var t in activeTasks)
             {
                 CurrentTask = t.Value;
-                t.Value.MayWriteCheckpoint(true);
-                t.Value.Close();
+                if (t.Value.CommitNeeded || t.Value.CommitRequested) // commit only needed
+                {
+                    tasksToCommit.Add(t.Value);
+                    consumedOffsets.AddRange(t.Value.PrepareCommit());
+                }
             }
+
+            CurrentTask = null;
+            
+            CommitOffsetsOrTransaction(consumedOffsets);
+            
+            foreach (var task in activeTasks.Values) // flush all active tasks
+            {
+                CurrentTask = task;
+                task.PostCommit(true);
+                task.Suspend();
+                task.Close(false);
+            }
+            
+            Producer.Dispose();
 
             activeTasks.Clear();
             CurrentTask = null;
             
             partitionsToTaskId.Clear();
+            
+            changelogReader.Clear();
 
             // if one delete request is in progress, we wait the result before closing the manager
             if (currentDeleteTask is {IsCompleted: false})
@@ -151,16 +208,29 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 return -1;
             }
 
+            List<StreamTask> tasksToCommit = new List<StreamTask>();
+            List<TopicPartitionOffset> consumedOffsets = new List<TopicPartitionOffset>();
+            
             foreach (var t in ActiveTasks)
             {
                 CurrentTask = t;
                 if (t.CommitNeeded || t.CommitRequested)
                 {
                     purgeOffsets.AddRange(t.PurgeOffsets);
-                    t.Commit();
-                    t.MayWriteCheckpoint();
-                    ++committed;
+                    tasksToCommit.Add(t);
+                    consumedOffsets.AddRange(t.PrepareCommit());
                 }
+            }
+
+            CurrentTask = null;
+            
+            CommitOffsetsOrTransaction(consumedOffsets);
+
+            foreach (var task in tasksToCommit)
+            {
+                CurrentTask = task;
+                task.PostCommit(false);
+                ++committed;
             }
 
             CurrentTask = null;
@@ -169,6 +239,32 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 PurgeCommittedRecords(purgeOffsets);
             
             return committed;
+        }
+
+        private void CommitOffsetsOrTransaction(IEnumerable<TopicPartitionOffset> offsets)
+        {
+            var offsetsToCommit = offsets.ToList();
+            if (taskCreator.Configuration.Guarantee == ProcessingGuarantee.AT_LEAST_ONCE)
+            {
+                if (offsetsToCommit.Any())
+                {
+                    try
+                    {
+                        Consumer.Commit(offsetsToCommit);
+                    }
+                    catch (KafkaException kafkaException)
+                    {
+                        throw new TaskMigratedException(
+                            $"Consumer committing offsets failed, indicating the corresponding thread is no longer part of the group : {kafkaException.Message}");
+                    }
+                }
+            }else if (taskCreator.Configuration.Guarantee == ProcessingGuarantee.EXACTLY_ONCE)
+            {
+                if (offsetsToCommit.Any() || Producer.TransactionInFlight)
+                {
+                    Producer.CommitTransaction(offsetsToCommit, Consumer.ConsumerGroupMetadata);
+                }
+            }
         }
 
         internal int Process(long now)
@@ -238,19 +334,27 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             log.LogDebug("Closing lost active tasks as zombies");
             CurrentTask = null;
 
+            if (Producer.EosEnabled)
+                Producer.AbortTransaction();
+
             var enumerator = activeTasks.GetEnumerator();
             while (enumerator.MoveNext())
             {
                 var task = enumerator.Current.Value;
+                task.PrepareCommit();
                 task.Suspend();
+                task.PostCommit(true);
+                task.Close(true);
+                
                 foreach(var part in task.Partition)
                 {
                     partitionsToTaskId.TryRemove(part, out TaskId taskId);
                 }
-                task.MayWriteCheckpoint(true);
-                task.Close();
             }
             activeTasks.Clear();
+            
+            if (Producer.EosEnabled)
+                Producer.ResetProducer();
         }
 
         internal bool NeedRestoration()

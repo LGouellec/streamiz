@@ -270,7 +270,7 @@ namespace Streamiz.Kafka.Net
         /// Authorize your streams application to follow metadata (timestamp, topic, partition, offset and headers) during processing record.
         /// You can use <see cref="StreamizMetadata"/> to get these metadatas. (Default : false)
         /// </summary>
-        [Obsolete("Plan to remove in the next release")]
+        [Obsolete("Plan to remove in 1.8.0")]
         bool FollowMetadata { get; set; }
 
         /// <summary>
@@ -2599,7 +2599,7 @@ namespace Streamiz.Kafka.Net
         /// Maximum number of records to buffer per partition. (Default: 1000)
         /// </summary>
         [StreamConfigProperty("" + bufferedRecordsPerPartitionCst)]
-        [Obsolete("Librdkafka clients manage internally a backpressure. So this configuration will be remove in the next release.")]
+        [Obsolete("Librdkafka clients manage internally a backpressure. So this configuration will be remove in 1.8.0")]
         public long BufferedRecordsPerPartition
         {
             get => configProperties[bufferedRecordsPerPartitionCst];
@@ -2742,7 +2742,7 @@ namespace Streamiz.Kafka.Net
         /// (default: 5000)
         /// </summary>
         [StreamConfigProperty("" + startTaskDelayMsCst)]
-        [Obsolete]
+        [Obsolete("Remove in 1.8.0")]
         public long StartTaskDelayMs
         {
             get => configProperties[startTaskDelayMsCst];

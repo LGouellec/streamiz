@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Stream.Internal;
 
@@ -33,7 +34,7 @@ namespace Streamiz.Kafka.Net.Mock
         private readonly IDictionary<TaskId, IList<TopicPartition>> partitionsByTaskId =
             new Dictionary<TaskId, IList<TopicPartition>>();
 
-        private readonly SyncProducer producer = null;
+        private readonly StreamsProducer producer = null;
         private readonly bool hasGlobalTopology = false;
         private ITopicManager internalTopicManager;
 
@@ -62,7 +63,10 @@ namespace Streamiz.Kafka.Net.Mock
             builder = topologyBuilder;
             this.supplier = supplier ?? new SyncKafkaSupplier();
             this.supplier.MetricsRegistry = metricsRegistry;
-            producer = this.supplier.GetProducer(configuration.ToProducerConfig()) as SyncProducer;
+
+            producer = new StreamsProducer(
+                configuration,
+                clientId, Guid.NewGuid(), this.supplier, string.Empty);
 
             foreach (var sourceTopic in builder
                 .GetSourceTopics())
@@ -100,7 +104,7 @@ namespace Streamiz.Kafka.Net.Mock
                         "ext-thread-0",
                         taskId,
                         topologyBuilder.BuildTopology(taskId).GetSourceProcessor(requestTopic),
-                        this.supplier.GetProducer(configuration.ToProducerConfig($"ext-thread-producer-{requestTopic}")),
+                        producer,
                         configuration,
                         metricsRegistry,
                         adminClient));
@@ -246,7 +250,7 @@ namespace Streamiz.Kafka.Net.Mock
         public TestOutputTopic<K, V> CreateOutputTopic<K, V>(string topicName, TimeSpan consumeTimeout,
             ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
         {
-            var pipeBuilder = new SyncPipeBuilder(producer);
+            var pipeBuilder = new SyncPipeBuilder(producer.Producer as SyncProducer);
             var pipeOutput = pipeBuilder.Output(topicName, consumeTimeout, configuration, token);
             return new TestOutputTopic<K, V>(pipeOutput, topicConfiguration, keySerdes, valueSerdes);
         }
@@ -258,7 +262,8 @@ namespace Streamiz.Kafka.Net.Mock
             foreach (var t in tasks.Values)
             {
                 bool persistent = t.IsPersistent;
-                t.Close();
+                t.Suspend();
+                t.Close(false);
 
                 // Remove local state store for this task
                 if (persistent)
@@ -304,9 +309,9 @@ namespace Streamiz.Kafka.Net.Mock
 
             foreach (var task in tasks.Values)
             {
-                var consumer = supplier.GetConsumer(topicConfiguration.ToConsumerConfig("consumer-repartition-forwarder"),
-                    null);
-                task.Commit();
+                // var consumer = supplier.GetConsumer(topicConfiguration.ToConsumerConfig("consumer-repartition-forwarder"),null);
+                var offsets = task.PrepareCommit();
+                task.PostCommit(false);
             }
 
             globalTask?.FlushState();

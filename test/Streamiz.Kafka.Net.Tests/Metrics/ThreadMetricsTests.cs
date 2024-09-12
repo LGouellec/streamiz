@@ -81,9 +81,12 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             var topo = builder.Build();
 
             thread = StreamThread.Create(
-                threadId, "c1",
+                threadId,
+                Guid.NewGuid(),
+                "c1",
                 topo.Builder, streamMetricsRegistry, config,
-                mockKafkaSupplier, mockKafkaSupplier.GetAdmin(config.ToAdminConfig("admin")),
+                mockKafkaSupplier,
+                mockKafkaSupplier.GetAdmin(config.ToAdminConfig("admin")),
                 1) as StreamThread;
         }
         

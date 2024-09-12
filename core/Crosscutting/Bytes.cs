@@ -77,7 +77,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
         /// Create a Bytes using the byte array.
         /// </summary>
         /// <param name="bytes">This array becomes the backing storage for the object.</param>
-        [Obsolete("Will be removed last release version")]
+        [Obsolete("Will be removed in 1.8.0")]
         public Bytes(byte[] bytes)
         {
             Get = bytes;

@@ -4,6 +4,7 @@ using System.Linq;
 using Confluent.Kafka;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Mock;
@@ -52,7 +53,9 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             var processorTopology = builder.Build().Builder.BuildTopology(id);
             
             syncKafkaSupplier = new SyncKafkaSupplier();
-            var producer = syncKafkaSupplier.GetProducer(config.ToProducerConfig());
+            var streamsProducer = new StreamsProducer(
+                config, threadId, Guid.NewGuid(), syncKafkaSupplier, "");
+            
             var consumer = syncKafkaSupplier.GetConsumer(config.ToConsumerConfig(), null);
 
             topicPartition = new TopicPartition("topic", 0);
@@ -64,7 +67,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
                 consumer,
                 config,
                 syncKafkaSupplier,
-                null,
+                streamsProducer,
                 new MockChangelogRegister(),
                 streamMetricsRegistry);
             
@@ -88,7 +91,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
         public void Dispose()
         {
             task.Suspend();
-            task.Close();
+            task.Close(false);
             task = null;
         }
         
@@ -98,7 +101,6 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             var serdes = new StringSerDes();
             var cloneConfig = config.Clone();
             cloneConfig.ApplicationId = "consume-test";
-            var producer = syncKafkaSupplier.GetProducer(cloneConfig.ToProducerConfig());
             var consumer = syncKafkaSupplier.GetConsumer(cloneConfig.ToConsumerConfig("test-consum"), null);
             consumer.Subscribe("topic2");
             
@@ -124,7 +126,8 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             {
                 Assert.IsTrue(task.Process());
                 Assert.IsTrue(task.CommitNeeded);
-                task.Commit();
+                task.PrepareCommit();
+                task.PostCommit(false);
             }
             
             var messagesSink = new List<ConsumeResult<byte[], byte[]>>();

@@ -7,6 +7,8 @@ using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Tests.Public
@@ -80,12 +82,16 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.ApplicationId = "test-app";
 
             var syncKafkaSupplier = new SyncKafkaSupplier(true);
+
+            var streamsProducer = new StreamsProducer(
+                config, "thread", Guid.NewGuid(), syncKafkaSupplier, "log");
+            
             var streamTask = new StreamTask(
                 "thread",
                 taskId,
                 new List<TopicPartition>(),
                 new Stream.Internal.ProcessorTopology(null, null, null, null, null, null, null, null),
-                null, config , syncKafkaSupplier, new SyncProducer(config.ToProducerConfig()), new MockChangelogRegister(), new StreamMetricsRegistry());
+                null, config , syncKafkaSupplier, streamsProducer, new MockChangelogRegister(), new StreamMetricsRegistry());
 
             return streamTask;
         }

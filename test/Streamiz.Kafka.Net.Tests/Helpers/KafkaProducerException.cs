@@ -121,7 +121,7 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
 
                 if (options.IsRecoverable)
                 {
-                    throw new ProduceException<byte[], byte[]>(new Error(ErrorCode.TransactionCoordinatorFenced,
+                    throw new ProduceException<byte[], byte[]>(new Error(ErrorCode.ProducerFenced,
                         "TransactionCoordinatorFenced", false), result);
                 }
                 else
@@ -141,7 +141,7 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
                 }
                 else if (options.IsRecoverable)
                 {
-                    initReport.Error = new Error(ErrorCode.TransactionCoordinatorFenced,
+                    initReport.Error = new Error(ErrorCode.ProducerFenced,
                         "TransactionCoordinatorFenced",
                         false);
                     deliveryHandler(initReport);

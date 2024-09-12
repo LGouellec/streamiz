@@ -18,7 +18,7 @@ namespace Streamiz.Kafka.Net.Stream
     /// </summary>
     public class Topology
     {
-        internal InternalTopologyBuilder Builder { get; } = new InternalTopologyBuilder();
+        internal InternalTopologyBuilder Builder { get; } = new();
 
         internal Topology()
         {
