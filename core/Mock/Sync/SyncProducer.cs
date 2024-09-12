@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Crosscutting;
 
 namespace Streamiz.Kafka.Net.Mock.Sync
 {
@@ -28,14 +30,11 @@ namespace Streamiz.Kafka.Net.Mock.Sync
                     (metadata as SyncConsumer).Commit(offsets);
             }
         }
-
-        private readonly static object _lock = new object();
-        private readonly Dictionary<string, List<Message<byte[], byte[]>>> topics = new Dictionary<string, List<Message<byte[], byte[]>>>();
-
-        private SyncTransaction transaction = null;
-
+        private static readonly object _lock = new();
+        private readonly Dictionary<string, List<Message<byte[], byte[]>>> topics = new();
+        private SyncTransaction transaction;
         private ProducerConfig config;
-
+        
         public SyncProducer(){}
         public SyncProducer(ProducerConfig config) { this.config = config; }
 
@@ -113,8 +112,9 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         public void Produce(string topic, Message<byte[], byte[]> message, Action<DeliveryReport<byte[], byte[]>> deliveryHandler = null)
         {
             CreateTopic(topic);
-
-            topics[topic].Add(message);
+            
+            lock (_lock)
+                topics[topic].Add(message);
 
             DeliveryReport<byte[], byte[]> r = new DeliveryReport<byte[], byte[]>();
 

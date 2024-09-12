@@ -92,16 +92,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             while (currentRecord == null && queue.Count > 0)
             {
                 var record = queue[0];
-                if (record.Message == null)
-                {
-                    log.LogWarning(
-                        "Skipping record due to a null message payload. topic=[{Topic}] partition=[{Partition}] offset=[{Offset}]",
-                        record.Topic, record.Partition, record.Offset);
-                    droppedRecordsSensor.Record();
-                    queue.RemoveAt(0);
-                    continue;
-                }
-                
                 var recordObject = ToConsumeObject(record);
                 long timestamp = -1;
                 try

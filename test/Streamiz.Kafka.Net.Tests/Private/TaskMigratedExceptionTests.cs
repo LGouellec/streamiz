@@ -83,7 +83,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var _return = new List<KeyValuePair<string, string>>();
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             var dt = DateTime.Now;
-            var timeout = TimeSpan.FromSeconds(10);
+            var timeout = TimeSpan.FromSeconds(1);
             
         
             config.ApplicationId = "test";
@@ -91,7 +91,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config.PollMs = 10;
             config.ProductionExceptionHandler += (r) => ProductionExceptionHandlerResponse.FAIL;
             config.ParallelProcessing = parallelProcessing;
-            
+            config.Logger = LoggerFactory.Create((b) =>
+            {
+                b.SetMinimumLevel(LogLevel.Debug);
+                b.AddConsole();
+            });
+                
             var options = new ProducerSyncExceptionOptions()
             {
                 IsRecoverable = true,
