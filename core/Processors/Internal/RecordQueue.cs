@@ -109,6 +109,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                         "Skipping record due to negative extracted timestamp. topic=[{Topic}] partition=[{Partition}] offset=[{Offset}] extractedTimestamp=[{Timestamp}] extractor=[{TimestampExtractor}]",
                         record.Topic, record.Partition, record.Offset, timestamp, timestampExtractor.GetType().Name);
                     droppedRecordsSensor.Record();
+                    queue.RemoveAt(0);
                     continue;
                 }
 
