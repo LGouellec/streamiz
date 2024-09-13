@@ -53,5 +53,5 @@ dotnet build -f net6.0 --no-restore
 
 if [ $# -gt 0 ]
   then
-     dotnet run -f net6.0 --project samples/sample-stream-demo/sample-stream-demo.csproj --no-build --no-restore
+     dotnet run -f net6.0 --project launcher/sample-stream-demo/sample-stream-demo.csproj --no-build --no-restore
 fi
