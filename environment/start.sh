@@ -18,3 +18,4 @@ curl -i -X PUT http://localhost:8083/connectors/datagen_product/config \
 
 # curl -i -X PUT http://localhost:8083/connectors/datagen_product/pause 
 # curl -i -X PUT http://localhost:8083/connectors/datagen_product/resume 
+# curl -X DELETE http://localhost:8083/connectors/datagen_product

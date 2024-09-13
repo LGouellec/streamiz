@@ -166,11 +166,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             foreach (var t in activeTasks)
             {
                 CurrentTask = t.Value;
-                if (t.Value.CommitNeeded || t.Value.CommitRequested) // commit only needed
-                {
-                    tasksToCommit.Add(t.Value);
-                    consumedOffsets.AddRange(t.Value.PrepareCommit());
-                }
+                tasksToCommit.Add(t.Value);
+                consumedOffsets.AddRange(t.Value.PrepareCommit());
             }
 
             CurrentTask = null;

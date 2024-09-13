@@ -225,7 +225,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             
             var metadata = _adminClient.GetMetadata(topic, TimeSpan.FromSeconds(5));
             var partitionCount = metadata.Topics.FirstOrDefault(t => t.Topic.Equals(topic))!.Partitions.Count;
-            _cachePartitionsForTopics.Add(topic, (partitionCount, DateTime.Now));
+            _cachePartitionsForTopics.AddOrUpdate(topic, (partitionCount, DateTime.Now));
             return partitionCount;
         }
     }

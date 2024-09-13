@@ -255,7 +255,7 @@ namespace Streamiz.Kafka.Net.Processors
                 state == TaskState.RESTORING ||
                 state == TaskState.SUSPENDED)
             {
-                if (commitNeeded)
+                if (commitNeeded || commitRequested)
                 {
                     FlushState();
                     return CommittableTopicPartitionOffsets();
