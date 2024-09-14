@@ -1,0 +1,13 @@
+# Roadmap Feature
+
+- [ ] Support CSFLE , DataQuality Rules ..
+- [ ] Dead letter queue mecanism
+- [ ] Reafactor External Call with similar behavior like ParrallelConsumer + a real async approach
+- [ ] Singleton Registered SerDes
+- [ ] Auto scaling consumption (inspired KEDA)
+- [ ] State store restore handler with a batch approach
+- [ ] Evict cache store as a batch of records instead of unitary records
+- KIP-612 : end-to-end latency metrics
+- KIP-450 : Sliding windows
+- Session Windows
+- Rename WithRecordTimestamp to AlterRecordTimestamp
