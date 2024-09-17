@@ -14,31 +14,35 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
     {
         private const String ROCKSDB_PROPERTIES_PREFIX = "rocksdb.";
         private static ILogger logger = Logger.GetLogger(typeof(RocksDbMetricsRecorder));
-        
-        private class DbAndCacheAndStatistics {
+
+        private class DbAndCacheAndStatistics
+        {
             public RocksDb db;
             // public Cache cache;
             // public Statistics statistics;
 
-            public DbAndCacheAndStatistics(RocksDb db/*, final Cache cache, final Statistics statistics*/) {
+            public DbAndCacheAndStatistics(RocksDb db /*, final Cache cache, final Statistics statistics*/)
+            {
                 this.db = db;
-               /* this.cache = cache;
-                if (statistics != null) {
-                    statistics.setStatsLevel(StatsLevel.EXCEPT_DETAILED_TIMERS);
-                }
-                this.statistics = statistics;*/
+                /* this.cache = cache;
+                 if (statistics != null) {
+                     statistics.setStatsLevel(StatsLevel.EXCEPT_DETAILED_TIMERS);
+                 }
+                 this.statistics = statistics;*/
             }
         }
 
         private readonly ConcurrentDictionary<string, DbAndCacheAndStatistics> storeToValueProviders = new();
         //private bool singleCache = true;
-        
+
         private readonly string metricsScope;
         private readonly string storeName;
         private TaskId taskId;
         private StreamMetricsRegistry streamMetricsRegistry;
 
-        public void Init(StreamMetricsRegistry streamMetricsRegistry, TaskId taskId)
+        internal string Name => $"{taskId}-{storeName}";
+
+    public void Init(StreamMetricsRegistry streamMetricsRegistry, TaskId taskId)
         {
             this.streamMetricsRegistry = streamMetricsRegistry;
             this.taskId = taskId;
@@ -52,7 +56,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
         {
             if (!storeToValueProviders.Any()) {
                 logger.LogDebug($"Adding metrics recorder of task {taskId} to metrics recording trigger");
-                streamMetricsRegistry.rocksDBMetricsRecordingTrigger().addMetricsRecorder(this);
+                streamMetricsRegistry.RocksDbMetricsRecordingTrigger.AddMetricsRecorder(this);
             } else if (storeToValueProviders.ContainsKey(segmentName)) {
                 throw new IllegalStateException($"Value providers for store {segmentName} of task {taskId}" +
                                                 " has been already added. This is a bug in Streamiz. Please open a bug.");
@@ -73,7 +77,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             if (!storeToValueProviders.Any()) {
                 logger.LogDebug(
                     $"Removing metrics recorder for store {storeName} of task {taskId} from metrics recording trigger");
-                streamMetricsRegistry.rocksDBMetricsRecordingTrigger().removeMetricsRecorder(this);
+                streamMetricsRegistry.RocksDbMetricsRecordingTrigger.RemoveMetricsRecorder(this);
             }
         }
 
@@ -243,30 +247,31 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 
         private Func<BigInteger> GaugeToComputeSumOfProperties(String propertyName)
         {
-            return (metricsConfig, now) =>
+            return () =>
             {
-                BigInteger result = BigInteger.valueOf(0);
-                for (final DbAndCacheAndStatistics valueProvider :
-                storeToValueProviders.values()) {
+                // BigInteger result = BigInteger.valueOf(0);
+                foreach(var valueProvider in storeToValueProviders.Values) {
                     try
                     {
+                        valueProvider.db.GetProperty(ROCKSDB_PROPERTIES_PREFIX + propertyName);
                         // values of RocksDB properties are of type unsigned long in C++, i.e., in Java we need to use
                         // BigInteger and construct the object from the byte representation of the value
-                        result = result.add(new BigInteger(1, longToBytes(
-                            valueProvider.db.getAggregatedLongProperty(ROCKSDB_PROPERTIES_PREFIX + propertyName)
-                        )));
+                        //result = result.add(new BigInteger(1, longToBytes(
+                        //    valueProvider.db.getAggregatedLongProperty(ROCKSDB_PROPERTIES_PREFIX + propertyName)
+                        //)));
                     }
-                    catch (final RocksDBException
-
-                    e) {
+                    catch (Exception e) {
                         throw new ProcessorStateException("Error recording RocksDB metric " + propertyName, e);
                     }
                 }
-                return result;
+                return BigInteger.One;
             };
         }
+
+
+        private Func<BigInteger> GaugeToComputeBlockCacheMetrics(String propertyName) => () => BigInteger.One;
         
-        private Func<BigInteger> GaugeToComputeBlockCacheMetrics(String propertyName) {
+        /*private Func<BigInteger> GaugeToComputeBlockCacheMetrics(String propertyName) {
             return (metricsConfig, now) -> {
                 BigInteger result = BigInteger.valueOf(0);
                 for (final DbAndCacheAndStatistics valueProvider : storeToValueProviders.values()) {
@@ -291,6 +296,6 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
                 }
                 return result;
             };
-        }
+        }*/
     }
 }
