@@ -2,6 +2,7 @@
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Kafka;
+using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
 
@@ -18,22 +19,23 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly StreamMetricsRegistry streamMetricsRegistry;
         private readonly Sensor createTaskSensor;
 
+        internal IStreamConfig Configuration => configuration;
+        
         public TaskCreator(InternalTopologyBuilder builder, IStreamConfig configuration, string threadId,
-            IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer, StoreChangelogReader storeChangelogReader,
+            IKafkaSupplier kafkaSupplier, StoreChangelogReader storeChangelogReader,
             StreamMetricsRegistry streamMetricsRegistry)
         {
             this.builder = builder;
             this.configuration = configuration;
             this.threadId = threadId;
             this.kafkaSupplier = kafkaSupplier;
-            this.producer = producer;
             this.storeChangelogReader = storeChangelogReader;
             this.streamMetricsRegistry = streamMetricsRegistry;
 
             createTaskSensor = ThreadMetrics.CreateTaskSensor(threadId, streamMetricsRegistry);
         }
 
-        public override StreamTask CreateTask(IConsumer<byte[], byte[]> consumer, TaskId id, IEnumerable<TopicPartition> partitions)
+        public override StreamTask CreateTask(IConsumer<byte[], byte[]> consumer,  StreamsProducer producer, TaskId id, IEnumerable<TopicPartition> partitions)
         {
             log.LogDebug($"Created task {id} with assigned partition {string.Join(",", partitions)}");
             var task = new StreamTask(

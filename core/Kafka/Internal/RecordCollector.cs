@@ -1,20 +1,18 @@
-﻿using Confluent.Kafka;
-using Streamiz.Kafka.Net.Crosscutting;
-using Streamiz.Kafka.Net.Errors;
-using Streamiz.Kafka.Net.Processors.Internal;
-using Streamiz.Kafka.Net.SerDes;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
+using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.SerDes;
 
 namespace Streamiz.Kafka.Net.Kafka.Internal
 {
-    // TODO : Need to refactor, not necessary now to have one producer by thread if EOS is enable, see EOS_V2
     internal class RecordCollector : IRecordCollector
     {
         private sealed class RetryRecord
@@ -47,6 +45,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                     record.Headers.Remove(oldGuidKey);
                     records.Remove(oldGuidKey);
                 }
+
                 var newKey = Guid.NewGuid().ToString();
                 record.Headers.AddOrUpdate(RETRY_HEADER_KEY, Encoding.UTF8.GetBytes(newKey));
                 records.Add(newKey, record);
@@ -72,96 +71,67 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             }
         }
 
-        // IF EOS DISABLED, ONE PRODUCER BY TASK BUT ONE INSTANCE RECORD COLLECTOR BY TASK
-        // WHEN CLOSING TASK, WE MUST DISPOSE PRODUCER WHEN NO MORE INSTANCE OF RECORD COLLECTOR IS PRESENT
-        // IT'S A GARBAGE COLLECTOR LIKE
-        private static IDictionary<string, int> instanceProducer = new Dictionary<string, int>();
-        private readonly object _lock = new();
+        private StreamsProducer _producer;
+        private readonly IStreamConfig _configuration;
+        private readonly TaskId _id;
+        private readonly Sensor _droppedRecordsSensor;
+        private Exception _exception;
 
-        private IProducer<byte[], byte[]> producer;
-        private readonly IStreamConfig configuration;
-        private readonly TaskId id;
-        private readonly Sensor droppedRecordsSensor;
-        private readonly IAdminClient _adminClient;
-        private Exception exception = null;
-
-        private readonly string logPrefix;
+        private readonly string _logPrefix;
         private readonly ILogger log = Logger.GetLogger(typeof(RecordCollector));
 
-        private readonly ConcurrentDictionary<TopicPartition, long> collectorsOffsets = new();
+        private readonly ConcurrentDictionary<TopicPartition, long> _collectorsOffsets = new();
 
-        private readonly RetryRecordContext retryRecordContext = new();
+        private readonly RetryRecordContext _retryRecordContext = new();
 
-        public IDictionary<TopicPartition, long> CollectorOffsets => collectorsOffsets.ToDictionary();
+        public IDictionary<TopicPartition, long> CollectorOffsets => _collectorsOffsets.ToDictionary();
 
-        public IDictionary<string, (int, DateTime)> cachePartitionsForTopics =
-            new Dictionary<string, (int, DateTime)>();
-
-        public RecordCollector(string logPrefix, IStreamConfig configuration, TaskId id, Sensor droppedRecordsSensor, IAdminClient adminClient)
+        public RecordCollector(string logPrefix, IStreamConfig configuration, TaskId id, StreamsProducer producer,
+            Sensor droppedRecordsSensor)
         {
-            this.logPrefix = $"{logPrefix}";
-            this.configuration = configuration;
-            this.id = id;
-            this.droppedRecordsSensor = droppedRecordsSensor;
-            _adminClient = adminClient;
+            _logPrefix = $"{logPrefix}";
+            _configuration = configuration;
+            _id = id;
+            _droppedRecordsSensor = droppedRecordsSensor;
+            _producer = producer;
         }
 
-        public void Init(ref IProducer<byte[], byte[]> producer)
+        public void Initialize()
         {
-            this.producer = producer;
-
-            string producerName = producer.Name.Split('#')[0];
-            lock (_lock)
-            {
-                if (instanceProducer.ContainsKey(producerName))
-                    ++instanceProducer[producerName];
-                else
-                    instanceProducer.Add(producerName, 1);
-            }
+            if (_producer.EosEnabled)
+                _producer.InitTransaction();
         }
 
-        public void Close()
+        public void Close(bool dirty)
         {
-            log.LogDebug("{LogPrefix}Closing producer", logPrefix);
-            if (producer != null)
-            {
-                lock (_lock)
-                {
-                    string producerName = producer.Name.Split('#')[0];
-                    if (instanceProducer.ContainsKey(producerName) && --instanceProducer[producerName] <= 0)
-                    {
-                        if (retryRecordContext.HasNext)
-                            log.LogWarning(
-                                "There are messages still pending to retry in the backpressure queue. These messages won't longer flush into the corresponding topic !");
+            log.LogDebug($"{_logPrefix}Closing producer");
 
-                        retryRecordContext.Clear();
-                        producer.Dispose();
-                        producer = null;
-                        CheckForException();
-                    }
-                }
+            if (_retryRecordContext.HasNext)
+                log.LogWarning(
+                    "There are messages still pending to retry in the backpressure queue. These messages won't longer flush into the corresponding topic !");
+
+            _retryRecordContext.Clear();
+
+            if (dirty)
+            {
+                if (_producer.EosEnabled)
+                    _producer.AbortTransaction();
             }
-            
-            _adminClient?.Dispose();
+
+            _collectorsOffsets.Clear();
+            CheckForException();
         }
 
         public void Flush()
         {
-            log.LogDebug("{LogPrefix}Flushing producer", logPrefix);
-            if (producer != null)
+            log.LogDebug("{LogPrefix}Flushing producer", _logPrefix);
+            if (_producer != null)
             {
-                try
-                {
-                    while (retryRecordContext.HasNext)
-                        ProduceRetryRecord();
-                    
-                    producer.Flush();
-                    CheckForException();
-                }
-                catch (ObjectDisposedException)
-                {
-                    // has been disposed
-                }
+                while (_retryRecordContext.HasNext)
+                    ProduceRetryRecord();
+
+                _producer.Flush();
+                CheckForException();
             }
         }
 
@@ -190,37 +160,30 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
         private bool IsRecoverableError(DeliveryReport<byte[], byte[]> report)
         {
-            return IsRecoverableError(report.Error);
-        }
-
-        private bool IsRecoverableError(Error error)
-        {
-            return error.Code == ErrorCode.TransactionCoordinatorFenced ||
-                   error.Code == ErrorCode.UnknownProducerId ||
-                   error.Code == ErrorCode.OutOfOrderSequenceNumber;
+            return _producer.IsRecoverable(report.Error);
         }
 
         private void SendInternal<K, V>(string topic, K key, V value, Headers headers, int? partition, long timestamp,
             ISerDes<K> keySerializer, ISerDes<V> valueSerializer)
         {
-            Debug.Assert(producer != null, nameof(producer) + " != null");
+            CheckForException();
+            
+            Debug.Assert(_producer != null, nameof(_producer) + " != null");
             var k = key != null
                 ? keySerializer.Serialize(key, new SerializationContext(MessageComponentType.Key, topic, headers))
                 : null;
             var v = value != null
                 ? valueSerializer.Serialize(value, new SerializationContext(MessageComponentType.Value, topic, headers))
                 : null;
-
-            CheckForException();
-
-            while (retryRecordContext.HasNext)
-                ProduceRetryRecord();
             
+            while (_retryRecordContext.HasNext)
+                ProduceRetryRecord();
+
             try
             {
                 if (partition.HasValue)
                 {
-                    producer.Produce(
+                    _producer.Produce(
                         new TopicPartition(topic, partition.Value),
                         new Message<byte[], byte[]>
                         {
@@ -233,7 +196,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 }
                 else
                 {
-                    producer.Produce(
+                    _producer.Produce(
                         topic,
                         new Message<byte[], byte[]>
                         {
@@ -247,6 +210,10 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             }
             catch (ProduceException<byte[], byte[]> produceException)
             {
+                if (_producer.IsRecoverable(produceException.Error))
+                    throw new TaskMigratedException(
+                        $"Producer got fenced trying to send a record: {produceException.Message}");
+
                 ManageProduceException(produceException);
             }
         }
@@ -257,43 +224,40 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             {
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine(
-                    $"{logPrefix}Error encountered sending record to topic {report.Topic} for task {id} due to:");
-                sb.AppendLine($"{logPrefix}Error Code : {report.Error.Code.ToString()}");
-                sb.AppendLine($"{logPrefix}Message : {report.Error.Reason}");
+                    $"{_logPrefix}Error encountered sending record to topic {report.Topic} for task {_id} due to:");
+                sb.AppendLine($"{_logPrefix}Error Code : {report.Error.Code.ToString()}");
+                sb.AppendLine($"{_logPrefix}Message : {report.Error.Reason}");
 
                 if (IsFatalError(report))
                 {
                     sb.AppendLine(
-                        $"{logPrefix}Written offsets would not be recorded and no more records would be sent since this is a fatal error.");
+                        $"{_logPrefix}Written offsets would not be recorded and no more records would be sent since this is a fatal error.");
                     log.LogError(sb.ToString());
-                    lock (_lock)
-                        exception = new StreamsException(sb.ToString());
+                    _exception = new StreamsException(sb.ToString());
                 }
                 else if (IsRecoverableError(report))
                 {
                     sb.AppendLine(
-                        $"{logPrefix}Written offsets would not be recorded and no more records would be sent since the producer is fenced, indicating the task may be migrated out");
+                        $"{_logPrefix}Written offsets would not be recorded and no more records would be sent since the producer is fenced, indicating the task may be migrated out");
                     log.LogError(sb.ToString());
-                    lock (_lock)
-                        exception = new TaskMigratedException(sb.ToString());
+                    _exception = new TaskMigratedException(sb.ToString());
                 }
                 else
                 {
-                    var exceptionResponse = configuration.ProductionExceptionHandler(report);
+                    var exceptionResponse = _configuration.ProductionExceptionHandler(report);
                     if (exceptionResponse == ProductionExceptionHandlerResponse.FAIL)
                     {
                         sb.AppendLine(
-                            $"{logPrefix}Exception handler choose to FAIL the processing, no more records would be sent.");
+                            $"{_logPrefix}Exception handler choose to FAIL the processing, no more records would be sent.");
                         log.LogError(sb.ToString());
-                        lock (_lock)
-                            exception = new ProductionException(sb.ToString());
+                        _exception = new ProductionException(sb.ToString());
                     }
                     else if (exceptionResponse == ProductionExceptionHandlerResponse.RETRY)
                     {
                         sb.AppendLine(
-                            $"{logPrefix}Exception handler choose to RETRY sending the message to the next iteration");
+                            $"{_logPrefix}Exception handler choose to RETRY sending the message to the next iteration");
                         log.LogWarning(sb.ToString());
-                        var retryRecord = new RetryRecord()
+                        var retryRecord = new RetryRecord
                         {
                             Key = report.Key,
                             Value = report.Value,
@@ -302,14 +266,14 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                             Partition = report.Partition,
                             Topic = report.Topic
                         };
-                        retryRecordContext.AddRecord(retryRecord);
+                        _retryRecordContext.AddRecord(retryRecord);
                     }
                     else
                     {
                         sb.AppendLine(
-                            $"{logPrefix}Exception handler choose to CONTINUE processing in spite of this error but written offsets would not be recorded.");
+                            $"{_logPrefix}Exception handler choose to CONTINUE processing in spite of this error but written offsets would not be recorded.");
                         log.LogError(sb.ToString());
-                        droppedRecordsSensor.Record();
+                        _droppedRecordsSensor.Record();
                     }
                 }
             }
@@ -318,31 +282,33 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             {
                 log.LogWarning(
                     "{logPrefix}Record not persisted or possibly persisted: (timestamp {Timestamp}) topic=[{Topic}] partition=[{Partition}] offset=[{Offset}]. May config Retry configuration, depends your use case",
-                    logPrefix, report.Message.Timestamp.UnixTimestampMs, report.Topic, report.Partition, report.Offset);
+                    _logPrefix, report.Message.Timestamp.UnixTimestampMs, report.Topic, report.Partition,
+                    report.Offset);
             }
             else if (report.Status == PersistenceStatus.Persisted)
             {
                 log.LogDebug(
                     "{LogPrefix}Record persisted: (timestamp {Timestamp}) topic=[{Topic}] partition=[{Partition}] offset=[{Offset}]",
-                    logPrefix, report.Message.Timestamp.UnixTimestampMs, report.Topic, report.Partition, report.Offset);
-                if (collectorsOffsets.ContainsKey(report.TopicPartition) &&
-                    collectorsOffsets[report.TopicPartition] < report.Offset.Value)
-                    collectorsOffsets.TryUpdate(report.TopicPartition, report.Offset.Value,
-                        collectorsOffsets[report.TopicPartition]);
+                    _logPrefix, report.Message.Timestamp.UnixTimestampMs, report.Topic, report.Partition,
+                    report.Offset);
+                if (_collectorsOffsets.ContainsKey(report.TopicPartition) &&
+                    _collectorsOffsets[report.TopicPartition] < report.Offset.Value)
+                    _collectorsOffsets.TryUpdate(report.TopicPartition, report.Offset.Value,
+                        _collectorsOffsets[report.TopicPartition]);
                 else
-                    collectorsOffsets.TryAdd(report.TopicPartition, report.Offset);
-                retryRecordContext.AckRecord(report);
+                    _collectorsOffsets.TryAdd(report.TopicPartition, report.Offset);
+                _retryRecordContext.AckRecord(report);
             }
         }
 
         private void ProduceRetryRecord()
         {
-            var retryRecord = retryRecordContext.NextRecord();
+            var retryRecord = _retryRecordContext.NextRecord();
             if (retryRecord != null)
             {
                 try
                 {
-                    producer.Produce(
+                    _producer.Produce(
                         new TopicPartition(retryRecord.Topic, retryRecord.Partition),
                         new Message<byte[], byte[]>
                         {
@@ -354,6 +320,10 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 }
                 catch (ProduceException<byte[], byte[]> produceException)
                 {
+                    if (_producer.IsRecoverable(produceException.Error))
+                        throw new TaskMigratedException(
+                            $"Producer got fenced trying to send a record: {produceException.Message}");
+
                     ManageProduceException(produceException);
                 }
             }
@@ -361,17 +331,11 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
         private void ManageProduceException(ProduceException<byte[], byte[]> produceException)
         {
-            if (IsRecoverableError(produceException.Error))
-            {
-                throw new TaskMigratedException(
-                    $"Producer got fenced trying to send a record [{logPrefix}] : {produceException.Message}");
-            }
-
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(
-                $"{logPrefix}Error encountered sending record to topic {produceException.DeliveryResult.Topic} for task {id} due to:");
-            sb.AppendLine($"{logPrefix}Error Code : {produceException.Error.Code.ToString()}");
-            sb.AppendLine($"{logPrefix}Message : {produceException.Error.Reason}");
+                $"{_logPrefix}Error encountered sending record to topic {produceException.DeliveryResult.Topic} for task {_id} due to:");
+            sb.AppendLine($"{_logPrefix}Error Code : {produceException.Error.Code.ToString()}");
+            sb.AppendLine($"{_logPrefix}Message : {produceException.Error.Reason}");
 
             var buildDeliveryReport =
                 new DeliveryReport<byte[], byte[]>
@@ -383,21 +347,21 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                         produceException.Error)
                 };
 
-            var exceptionHandlerResponse = configuration.ProductionExceptionHandler(buildDeliveryReport);
+            var exceptionHandlerResponse = _configuration.ProductionExceptionHandler(buildDeliveryReport);
 
             if (exceptionHandlerResponse == ProductionExceptionHandlerResponse.FAIL)
             {
                 sb.AppendLine(
-                    $"{logPrefix}Exception handler choose to FAIL the processing, no more records would be sent.");
+                    $"{_logPrefix}Exception handler choose to FAIL the processing, no more records would be sent.");
                 log.LogError(sb.ToString());
                 throw new StreamsException(
-                    $"Error encountered trying to send record to topic {produceException.DeliveryResult.Topic} [{logPrefix}] : {produceException.Message}");
+                    $"Error encountered trying to send record to topic {produceException.DeliveryResult.Topic} [{_logPrefix}] : {produceException.Message}");
             }
 
             if (exceptionHandlerResponse == ProductionExceptionHandlerResponse.RETRY)
             {
                 sb.AppendLine(
-                    $"{logPrefix}Exception handler choose to RETRY sending the message to the next iteration");
+                    $"{_logPrefix}Exception handler choose to RETRY sending the message to the next iteration");
                 log.LogWarning(sb.ToString());
                 var retryRecord = new RetryRecord
                 {
@@ -408,40 +372,25 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                     Partition = buildDeliveryReport.Partition,
                     Topic = buildDeliveryReport.Topic
                 };
-                retryRecordContext.AddRecord(retryRecord);
+                _retryRecordContext.AddRecord(retryRecord);
             }
             else if (exceptionHandlerResponse == ProductionExceptionHandlerResponse.CONTINUE)
             {
                 sb.AppendLine(
-                    $"{logPrefix}Exception handler choose to CONTINUE processing in spite of this error but written offsets would not be recorded.");
+                    $"{_logPrefix}Exception handler choose to CONTINUE processing in spite of this error but written offsets would not be recorded.");
                 log.LogError(sb.ToString());
             }
         }
 
         private void CheckForException()
         {
-            lock (_lock)
-            {
-                if (exception == null) return;
-                var e = exception;
-                exception = null;
-                throw e;
-            }
+            if (_exception == null) return;
+            var e = _exception;
+            _exception = null;
+            throw e;
         }
 
         public int PartitionsFor(string topic)
-        {
-            var adminConfig = configuration.ToAdminConfig("");
-            var refreshInterval = adminConfig.TopicMetadataRefreshIntervalMs ?? 5 * 60 * 1000;
-
-            if (cachePartitionsForTopics.ContainsKey(topic) &&
-                cachePartitionsForTopics[topic].Item2 + TimeSpan.FromMilliseconds(refreshInterval) > DateTime.Now)
-                return cachePartitionsForTopics[topic].Item1;
-            
-            var metadata = _adminClient.GetMetadata(topic, TimeSpan.FromSeconds(5));
-            var partitionCount = metadata.Topics.FirstOrDefault(t => t.Topic.Equals(topic))!.Partitions.Count;
-            cachePartitionsForTopics.Add(topic, (partitionCount, DateTime.Now));
-            return partitionCount;
-        }
+            => _producer.PartitionsFor(topic);
     }
 }

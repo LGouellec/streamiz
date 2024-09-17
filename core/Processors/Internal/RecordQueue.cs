@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
@@ -121,6 +122,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         private ConsumeResult<object, object> ToConsumeObject(ConsumeResult<byte[], byte[]> record)
         {
+            if (record == null)
+                throw new ArgumentNullException("record");
+            if (record.Message == null)
+                throw new ArgumentNullException("record.Message");
+            if (sourceProcessor == null)
+                throw new ArgumentNullException("sourceProcessor");
+            
             return new ConsumeResult<object, object>
             {
                 Topic = record.Topic,

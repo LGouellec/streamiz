@@ -13,7 +13,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
 {
     public class RecordCollectorTests
     {
-        private RecordCollector collector;
         private StreamConfig config;
         
         [SetUp]
@@ -22,19 +21,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config = new StreamConfig();
             config.ApplicationId = "collector-unit-test";
             config.ProductionExceptionHandler = (_) => ProductionExceptionHandlerResponse.RETRY;
-            var client = new Mock<IAdminClient>();
-            collector = new RecordCollector(
-                "test-collector",
-                config,
-                new TaskId {Id = 0, Partition = 0},
-                NoRunnableSensor.Empty,
-                client.Object);
         }
 
         [TearDown]
         public void Dispose()
         {
-            collector.Close();
+            // nothing
         }
         
         [Test]
@@ -45,9 +37,20 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 NumberOfError = 5,
             };
             var supplier = new ProducerSyncExceptionSupplier(options);
-            var producer = supplier.GetProducer(config.ToProducerConfig("producer-1"));
             
-            collector.Init(ref producer);
+            var producer = new StreamsProducer(
+                config,
+                "thread",
+                Guid.NewGuid(),
+                supplier,
+                "");
+            
+            var collector = new RecordCollector(
+                "test-collector",
+                config,
+                new TaskId {Id = 0, Partition = 0},
+                producer,
+                NoRunnableSensor.Empty);
             
             // first send => retry queue
             try
@@ -98,9 +101,19 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 IsFatal = true
             };
             var supplier = new ProducerSyncExceptionSupplier(options);
-            var producer = supplier.GetProducer(config.ToProducerConfig("producer-1"));
+            var producer = new StreamsProducer(
+                config,
+                "thread",
+                Guid.NewGuid(),
+                supplier,
+                "");
             
-            collector.Init(ref producer);
+            var collector = new RecordCollector(
+                "test-collector",
+                config,
+                new TaskId {Id = 0, Partition = 0},
+                producer,
+                NoRunnableSensor.Empty);
             
             // first send => retry queue
             try
@@ -158,9 +171,19 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 IsRecoverable = true
             };
             var supplier = new ProducerSyncExceptionSupplier(options);
-            var producer = supplier.GetProducer(config.ToProducerConfig("producer-1"));
+            var producer = new StreamsProducer(
+                config,
+                "thread",
+                Guid.NewGuid(),
+                supplier,
+                "");
             
-            collector.Init(ref producer);
+            var collector = new RecordCollector(
+                "test-collector",
+                config,
+                new TaskId {Id = 0, Partition = 0},
+                producer,
+                NoRunnableSensor.Empty);
             
             // first send => retry queue
             try

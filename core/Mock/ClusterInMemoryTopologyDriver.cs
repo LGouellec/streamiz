@@ -64,6 +64,7 @@ namespace Streamiz.Kafka.Net.Mock
 
             threadTopology = StreamThread.Create(
                 $"{this.configuration.ApplicationId.ToLower()}-stream-thread-0",
+                Guid.NewGuid(),
                 clientId,
                 topologyBuilder,
                 metricsRegistry,

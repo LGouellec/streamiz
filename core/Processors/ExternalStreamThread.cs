@@ -47,7 +47,7 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly Sensor pollSensor;
         private readonly Sensor processLatencySensor;
         private readonly Sensor processRateSensor;
-        private IProducer<byte[],byte[]> producer;
+        private StreamsProducer producer;
 
         public ExternalStreamThread(
             string threadId,
@@ -335,7 +335,10 @@ namespace Streamiz.Kafka.Net.Processors
             
             currentConsumer = GetConsumer();
             adminClient = kafkaSupplier.GetAdmin(configuration.ToAdminConfig(clientId));
-            producer = kafkaSupplier.GetProducer(configuration.ToExternalProducerConfig($"{thread.Name}-producer").Wrap(Name, configuration));
+            
+            producer = new StreamsProducer(configuration, Name, Guid.NewGuid(), kafkaSupplier, logPrefix);
+            
+            //producer = kafkaSupplier.GetProducer(configuration.ToExternalProducerConfig($"{thread.Name}-producer").Wrap(Name, configuration));
             
             SetState(ThreadState.PARTITIONS_ASSIGNED);
             thread.Start();     

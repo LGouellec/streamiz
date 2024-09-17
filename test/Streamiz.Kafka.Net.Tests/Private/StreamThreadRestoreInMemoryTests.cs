@@ -51,14 +51,15 @@ namespace Streamiz.Kafka.Net.Tests.Private
             topo.Builder.RewriteTopology(config);
             topo.Builder.BuildTopology();
 
+            var processId = Guid.NewGuid();
             thread1 = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", processId, "c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 mockKafkaSupplier, mockKafkaSupplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
 
             thread2 = StreamThread.Create(
-                "thread-1", "c1",
+                "thread-1", processId, "c1",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 mockKafkaSupplier, mockKafkaSupplier.GetAdmin(config.ToAdminConfig("admin")),
                 1) as StreamThread;

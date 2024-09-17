@@ -345,7 +345,7 @@ namespace Streamiz.Kafka.Net.State
             tableConfig.SetBlockCache(RocksDbSharp.Cache.CreateLru(BLOCK_CACHE_SIZE));
             tableConfig.SetBlockSize(BLOCK_SIZE);
             tableConfig.SetFilterPolicy(BloomFilterPolicy.Create());
-
+            
             rocksDbOptions.SetOptimizeFiltersForHits(1);
             rocksDbOptions.SetBlockBasedTableFactory(tableConfig);
             rocksDbOptions.SetCompression(COMPRESSION_TYPE);

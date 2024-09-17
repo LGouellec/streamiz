@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avro.Util;
+using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Tests.Helpers;
 
@@ -53,7 +54,8 @@ public class TimeWindowKStreamCountTests
         var processorTopology = topology.Builder.BuildTopology(id);
 
         var supplier = new SyncKafkaSupplier();
-        var producer = supplier.GetProducer(config.ToProducerConfig());
+        var streamsProducer = new StreamsProducer(
+            config, "thread-0", Guid.NewGuid(), supplier, "");
         var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
 
         var part = new TopicPartition("topic", 0);
@@ -65,7 +67,7 @@ public class TimeWindowKStreamCountTests
             consumer,
             config,
             supplier,
-            null,
+            streamsProducer,
             new MockChangelogRegister(),
             new StreamMetricsRegistry());
         task.InitializeStateStores();
