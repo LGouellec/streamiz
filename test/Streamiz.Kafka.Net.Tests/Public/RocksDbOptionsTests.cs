@@ -57,7 +57,6 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     .OptimizeLevelStyleCompaction(memTableMemoryBudget)
                     .OptimizeUniversalStyleCompaction(memtableMemoryBudget2)
                     .PrepareForBulkLoad()
-                    .SetAccessHintOnCompactionStart(accessHintOnCompactionStart)
                     .SetAdviseRandomOnOpen(adviseRandomOnOpen)
                     .SetAllowConcurrentMemtableWrite(allowConcurrentMemtableWrite)
                     .SetAllowMmapReads(false)
@@ -152,7 +151,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             context = new ProcessorContext(task.Object, config, stateManager, new StreamMetricsRegistry());
 
-            store = new RocksDbKeyValueStore("test-store");
+            store = new RocksDbKeyValueStore("test-store", "rocksdb");
             store.Init(context, store);
         }
 

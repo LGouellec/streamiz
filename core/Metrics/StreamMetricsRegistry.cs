@@ -176,7 +176,7 @@ namespace Streamiz.Kafka.Net.Metrics
         
         #endregion
 
-        internal RocksDBMetricsRecordingTrigger RocksDbMetricsRecordingTrigger { get; } = new();
+        internal RocksDbMetricsRecordingTrigger RocksDbMetricsRecordingTrigger { get; } = new();
         
         /// <summary>
         /// Create stream metrics registry in INFO level with a empty cliend Id.

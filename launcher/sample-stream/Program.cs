@@ -20,7 +20,7 @@ namespace sample_stream
                 ApplicationId = $"test-app",
                 BootstrapServers = "localhost:9092",
                 AutoOffsetReset = AutoOffsetReset.Earliest,
-                Guarantee = ProcessingGuarantee.AT_LEAST_ONCE,
+                Guarantee = ProcessingGuarantee.EXACTLY_ONCE,
                 StateDir = ".",
                 Logger = LoggerFactory.Create((b) =>
                 {

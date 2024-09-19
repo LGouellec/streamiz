@@ -670,7 +670,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -687,7 +687,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -704,7 +704,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -721,7 +721,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -738,7 +738,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -755,7 +755,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -772,7 +772,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -789,7 +789,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -806,7 +806,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -823,7 +823,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -840,7 +840,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -857,7 +857,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -874,7 +874,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -891,7 +891,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -908,7 +908,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -925,7 +925,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -942,7 +942,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -959,7 +959,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -976,7 +976,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -993,7 +993,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -1010,7 +1010,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,
@@ -1026,7 +1026,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             TaskId taskId,
             string storeType,
             string storeName,
-            Func<BigInteger> valueProvider)
+            Func<long> valueProvider)
         {
             AddMutableMetric(
                 streamRegistry,

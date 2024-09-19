@@ -7,7 +7,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.State.Internal;
 
 namespace Streamiz.Kafka.Net.State
@@ -60,6 +62,21 @@ namespace Streamiz.Kafka.Net.State
     /// </summary>
     public class RocksDbKeyValueStore : IKeyValueStore<Bytes, byte[]>
     {
+        #region Property provider
+        private class RocksDbPropertyProvider : IDbProperyProvider
+        {
+            private RocksDb _rocksDb;
+
+            public RocksDbPropertyProvider(RocksDb rocksDb)
+            {
+                _rocksDb = rocksDb;
+            }
+
+            public long GetProperty(string propertyName)
+                => Int64.Parse(_rocksDb.GetProperty(propertyName));
+        }
+        #endregion
+        
         private static readonly ILogger log = Logger.GetLogger(typeof(RocksDbKeyValueStore));
 
         private readonly ConcurrentSet<WrappedRocksRbKeyValueEnumerator> openIterators = new();
@@ -74,6 +91,7 @@ namespace Streamiz.Kafka.Net.State
         private const string DB_FILE_DIR = "rocksdb";
         private readonly string parentDir;
         private WriteOptions writeOptions;
+        internal RocksDbMetricsRecorder MetricsRecorder;
 
         internal DirectoryInfo DbDir { get; private set; }
         internal RocksDbSharp.RocksDb Db { get; set; }
@@ -88,20 +106,27 @@ namespace Streamiz.Kafka.Net.State
         /// Constructor with state store name
         /// </summary>
         /// <param name="name">state store name</param>
-        public RocksDbKeyValueStore(string name)
-            : this(name, DB_FILE_DIR)
+        /// <param name="metricsScope"></param>
+        public RocksDbKeyValueStore(
+            string name,
+            string metricsScope)
+            : this(name, metricsScope, DB_FILE_DIR)
         { }
 
         /// <summary>
         /// Constructor with state store name and parent directory
         /// </summary>
         /// <param name="name"></param>
+        /// <param name="metricsScope"></param>
         /// <param name="parentDir"></param>
-        public RocksDbKeyValueStore(string name, string parentDir)
+        public RocksDbKeyValueStore(string name, 
+            string metricsScope,
+            string parentDir)
         {
             Name = name;
             this.parentDir = parentDir;
             KeyComparator = CompareKey;
+            MetricsRecorder = new RocksDbMetricsRecorder(metricsScope, name);
         }
 
         #region Store Impl
@@ -244,6 +269,7 @@ namespace Streamiz.Kafka.Net.State
         /// <param name="root">Root state (always itself)</param>
         public void Init(ProcessorContext context, IStateStore root)
         {
+            MetricsRecorder.Init(context.Metrics, context.Id);
             OpenDatabase(context);
 
             // TODO : batch restoration behavior
@@ -377,6 +403,7 @@ namespace Streamiz.Kafka.Net.State
             OpenRocksDb(dbOptions, columnFamilyOptions);
 
             IsOpen = true;
+            MetricsRecorder.AddValueProviders(Name, new RocksDbPropertyProvider(Db));
         }
 
         /// <summary>
