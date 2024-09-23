@@ -16,8 +16,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores;
 
 public class BoundMemoryRocksDbConfigHandlerTests
 {
-    [Test]
-    public void CheckWithMemoryBoundedOptions()
+    private void MemoryBoundedOptionsImpl(BoundMemoryRocksDbConfigHandler handler)
     {
         Bytes Key(string k)
         {
@@ -32,10 +31,6 @@ public class BoundMemoryRocksDbConfigHandlerTests
         }
         
         bool stop = false;
-        CacheSize totalUnmanagedMemory = CacheSize.OfMb(10);
-        BoundMemoryRocksDbConfigHandler handler = new BoundMemoryRocksDbConfigHandler();
-        handler
-            .LimitTotalMemory(totalUnmanagedMemory);
 
         var config = new StreamConfig();
         config.RocksDbConfigHandler = handler.Handle;
@@ -54,7 +49,7 @@ public class BoundMemoryRocksDbConfigHandlerTests
         context.Setup(c => c.States)
             .Returns(() => stateManager.Object);
 
-        long totalLogged = 0L;
+        ulong totalLogged = 0L;
         
         RocksDbKeyValueStore store = new RocksDbKeyValueStore("store");
         store.Init(context.Object, store);
@@ -68,8 +63,8 @@ public class BoundMemoryRocksDbConfigHandlerTests
             var rawKey = Key(key);
             store.Put(Key(key), Value(value));
             allKeys.Add(rawKey);
-            totalLogged += key.Length + sizeof(Int32);
-            stop = totalLogged > 2 * totalUnmanagedMemory.CacheSizeBytes; // stop if 2 * totalUnmanagedMemory has pushed
+            totalLogged += Convert.ToUInt32(key.Length + sizeof(Int32));
+            stop = totalLogged > 2 * handler.CacheSizeCapacity; // stop if 2 * totalUnmanagedMemory has pushed
         }
 
         long memtableSizeAfterWrite = Convert.ToInt32(store.Db.GetProperty("rocksdb.cur-size-all-mem-tables"));
@@ -86,7 +81,31 @@ public class BoundMemoryRocksDbConfigHandlerTests
         store.Close();
         Directory.Delete(context.Object.StateDir, true);
         
-        Assert.IsTrue(memtableSizeAfterWrite + blockCacheSizeBeforeRead < totalUnmanagedMemory.CacheSizeBytes);
-        Assert.IsTrue(memtableSizeAfterRead + blockCacheSizeAfterRead < totalUnmanagedMemory.CacheSizeBytes);
+        Assert.IsTrue(Convert.ToUInt32(memtableSizeAfterWrite + blockCacheSizeBeforeRead) < handler.CacheSizeCapacity);
+        Assert.IsTrue(Convert.ToUInt32(memtableSizeAfterRead + blockCacheSizeAfterRead) < handler.CacheSizeCapacity);
+    }
+    
+    [Test]
+    [NonParallelizable]
+    public void CheckWithMemoryBoundedOptions()
+    {
+        CacheSize totalUnmanagedMemory = CacheSize.OfMb(10);
+        BoundMemoryRocksDbConfigHandler handler = new BoundMemoryRocksDbConfigHandler();
+        handler
+            .LimitTotalMemory(totalUnmanagedMemory);
+        
+        MemoryBoundedOptionsImpl(handler);
+    }
+    
+    [Test]
+    [NonParallelizable]
+    public void MutualizeCacheMemoryBoundedOptions()
+    {
+        CacheSize totalUnmanagedMemory = CacheSize.OfMb(10);
+        BoundMemoryRocksDbConfigHandler handler = new BoundMemoryRocksDbConfigHandler();
+        handler
+            .LimitTotalMemory(totalUnmanagedMemory,true);
+        
+        MemoryBoundedOptionsImpl(handler);
     }
 }

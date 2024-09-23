@@ -15,6 +15,8 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         
         private IntPtr writeBufferManager;
         private IntPtr blockCachePtr;
+        
+        public ulong CacheSizeCapacity { get; private set; }
 
         public BoundMemoryRocksDbConfigHandler UseJemalloc()
         {
@@ -37,20 +39,24 @@ namespace Streamiz.Kafka.Net.State.RocksDb
         public BoundMemoryRocksDbConfigHandler LimitTotalMemory(CacheSize maximumCacheSize)
             => LimitTotalMemory(Convert.ToUInt32(maximumCacheSize.CacheSizeBytes));
         
+        public BoundMemoryRocksDbConfigHandler LimitTotalMemory(CacheSize maximumCacheSize, bool mutualizeCache)
+            => LimitTotalMemory(Convert.ToUInt32(maximumCacheSize.CacheSizeBytes), mutualizeCache);
+        
         public BoundMemoryRocksDbConfigHandler ConfigureNumThreads(int numberOfThreads)
         {
             maxNumberOfThreads = numberOfThreads;
             return this;
         }
         
-        private BoundMemoryRocksDbConfigHandler LimitTotalMemory(ulong totalUnManagedMemory)
+        private BoundMemoryRocksDbConfigHandler LimitTotalMemory(ulong totalUnManagedMemory, bool mutualizeCache = false)
         {
             if (configured)
                 throw new IllegalStateException(
                     "BoundMemoryRocksDbConfigHandler is already configured ! To avoid multiple block cache and writer buffer manager allocation, an inner exception is throw. It was due to a bug or misconfiguration in your side");
             
+            CacheSizeCapacity = totalUnManagedMemory;
             configured = true;
-            ulong blockCacheSize = totalUnManagedMemory;
+            ulong blockCacheSize = mutualizeCache ? totalUnManagedMemory : totalUnManagedMemory / 2;
             ulong totalMemtableMemory = totalUnManagedMemory / 2;
             
             // block cache allocator
@@ -74,7 +80,7 @@ namespace Streamiz.Kafka.Net.State.RocksDb
                 IntPtr jemallocPtr = Native.Instance.rocksdb_jemalloc_nodump_allocator_create();
                 Native.Instance.rocksdb_lru_cache_options_set_memory_allocator(LRUWriteCacheOptionsPtr, jemallocPtr);
             }
-            var cacheWBM = Native.Instance.rocksdb_cache_create_lru_opts(LRUWriteCacheOptionsPtr);
+            var cacheWBM = mutualizeCache ? blockCachePtr : Native.Instance.rocksdb_cache_create_lru_opts(LRUWriteCacheOptionsPtr);
             
             writeBufferManager = Native.Instance.rocksdb_write_buffer_manager_create_with_cache(
                 new UIntPtr(totalMemtableMemory),
