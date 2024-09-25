@@ -88,7 +88,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             bool result = storeToValueProviders.TryRemove(segmentName, out DbAndCacheAndStatistics db);
             if (!result)
             {
-                throw new IllegalStateException($"No value providers for store {segmentName}of task {taskId}" +
+                throw new IllegalStateException($"No value providers for store {segmentName} of task {taskId}" +
                                                 " could be found. This is a bug in Kafka Streamiz. Please open a bug");
             }
 

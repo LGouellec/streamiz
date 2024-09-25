@@ -16,6 +16,7 @@ public class CachingPersistentWindowStoreTests :
     {
         var bytesStore = new RocksDbSegmentedBytesStore(
             "test-w-store",
+            "rocksdb-w",
             (long)RETENTION_MS.TotalMilliseconds,
             SEGMENT_INTERVAL,
             keySchema);

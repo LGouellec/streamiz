@@ -122,11 +122,18 @@ namespace Streamiz.Kafka.Net.State
         public RocksDbKeyValueStore(string name, 
             string metricsScope,
             string parentDir)
+        : this(name, parentDir, new RocksDbMetricsRecorder(metricsScope, name))
+        { }
+        
+        
+        internal RocksDbKeyValueStore(string name, 
+            string parentDir,
+            RocksDbMetricsRecorder metricsRecorder)
         {
             Name = name;
             this.parentDir = parentDir;
             KeyComparator = CompareKey;
-            MetricsRecorder = new RocksDbMetricsRecorder(metricsScope, name);
+            MetricsRecorder = metricsRecorder;
         }
 
         #region Store Impl
@@ -197,6 +204,9 @@ namespace Streamiz.Kafka.Net.State
             }
 
             IsOpen = false;
+            
+            MetricsRecorder.RemoveValueProviders(Name);
+            
             DbAdapter.Close();
             Db.Dispose();
 
