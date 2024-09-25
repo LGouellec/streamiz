@@ -341,17 +341,14 @@ namespace Streamiz.Kafka.Net.State
             BlockBasedTableOptions tableConfig = new BlockBasedTableOptions();
 
             RocksDbOptions rocksDbOptions = new RocksDbOptions(dbOptions, columnFamilyOptions);
-
+            
             tableConfig.SetBlockCache(RocksDbSharp.Cache.CreateLru(BLOCK_CACHE_SIZE));
             tableConfig.SetBlockSize(BLOCK_SIZE);
             tableConfig.SetFilterPolicy(BloomFilterPolicy.Create());
 
             rocksDbOptions.SetOptimizeFiltersForHits(1);
-            rocksDbOptions.SetBlockBasedTableFactory(tableConfig);
             rocksDbOptions.SetCompression(COMPRESSION_TYPE);
-            rocksDbOptions.SetWriteBufferSize(WRITE_BUFFER_SIZE);
             rocksDbOptions.SetCompactionStyle(COMPACTION_STYLE);
-            rocksDbOptions.SetMaxWriteBufferNumber(MAX_WRITE_BUFFERS);
             rocksDbOptions.SetCreateIfMissing(true);
             rocksDbOptions.SetErrorIfExists(false);
             rocksDbOptions.SetInfoLogLevel(InfoLogLevel.Error);
@@ -367,6 +364,10 @@ namespace Streamiz.Kafka.Net.State
             // TODO : wrap writeOptions in rocksDbOptions too
             writeOptions.DisableWal(1);
 
+            rocksDbOptions.SetWriteBufferSize(WRITE_BUFFER_SIZE);
+            rocksDbOptions.SetMaxWriteBufferNumber(MAX_WRITE_BUFFERS);
+            rocksDbOptions.SetBlockBasedTableFactory(tableConfig);
+            
             context.Configuration.RocksDbConfigHandler?.Invoke(Name, rocksDbOptions);
             rocksDbOptions.SetMinWriteBufferNumberToMerge(2);
             
