@@ -160,7 +160,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
         private bool IsRecoverableError(DeliveryReport<byte[], byte[]> report)
         {
-            return _producer.IsRecoverable(report.Error);
+            return StreamsProducer.IsRecoverable(report.Error);
         }
 
         private void SendInternal<K, V>(string topic, K key, V value, Headers headers, int? partition, long timestamp,
@@ -210,7 +210,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             }
             catch (ProduceException<byte[], byte[]> produceException)
             {
-                if (_producer.IsRecoverable(produceException.Error))
+                if (StreamsProducer.IsRecoverable(produceException.Error))
                     throw new TaskMigratedException(
                         $"Producer got fenced trying to send a record: {produceException.Message}");
 
@@ -320,7 +320,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 }
                 catch (ProduceException<byte[], byte[]> produceException)
                 {
-                    if (_producer.IsRecoverable(produceException.Error))
+                    if (StreamsProducer.IsRecoverable(produceException.Error))
                         throw new TaskMigratedException(
                             $"Producer got fenced trying to send a record: {produceException.Message}");
 
