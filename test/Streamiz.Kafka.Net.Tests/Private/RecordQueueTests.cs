@@ -12,6 +12,14 @@ namespace Streamiz.Kafka.Net.Tests.Private
     {
         private readonly Sensor droppedSensor = new NoRunnableSensor("s", "s", MetricsRecordingLevel.DEBUG);
 
+        private class NegativeTimestampExtractor : ITimestampExtractor
+        {
+            public long Extract(ConsumeResult<object, object> record, long partitionTime)
+            {
+                return -1;
+            }
+        }
+
         [Test]
         public void QueueOneMessageTest()
         {
@@ -77,40 +85,25 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.AreEqual(0, recordQueue.Size);
         }
 
-
-        private class NegativeTimestamp : ITimestampExtractor
+        [Test]
+        public void IgnoreNegativeTimestampTest()
         {
-            public long Extract(ConsumeResult<object, object> record, long partitionTime)
-            {
-                return -1;
-            }
-        }
-        
-        //[Test]
-        public void MessageWithNegativeTimestampTest()
-        {
+            var timestampEx = new NegativeTimestampExtractor();
             var serdes = new StringSerDes();
-            var sourceProcessor = new SourceProcessor<string, string>("source", "test", serdes, serdes, new NegativeTimestamp());
-            var recordQueue = new RecordQueue("", "", new NegativeTimestamp(), new TopicPartition("test", 0), sourceProcessor,
+            var sourceProcessor = new SourceProcessor<string, string>("source", "test", serdes, serdes, timestampEx);
+            var recordQueue = new RecordQueue("", "", timestampEx, new TopicPartition("test", 0), sourceProcessor,
                 droppedSensor);
-            recordQueue.Queue(new ConsumeResult<byte[], byte[]>()
+            int size = recordQueue.Queue(new ConsumeResult<byte[], byte[]>()
             {
                 Message = new Message<byte[], byte[]>
                 {
                     Key = serdes.Serialize("key", new SerializationContext()),
-                    Value = serdes.Serialize("test1", new SerializationContext()),
+                    Value = serdes.Serialize("test", new SerializationContext())
                 }
             });
-            recordQueue.Queue(new ConsumeResult<byte[], byte[]>()
-            {
-                Message = new Message<byte[], byte[]>
-                {
-                    Key = serdes.Serialize("key", new SerializationContext()),
-                    Value = serdes.Serialize("test2", new SerializationContext())
-                }
-            });
-            var e= recordQueue.Poll();
+            Assert.AreEqual(0, size);
+            Assert.IsTrue(recordQueue.IsEmpty);
+            Assert.AreEqual(0, recordQueue.Size);
         }
-
     }
 }

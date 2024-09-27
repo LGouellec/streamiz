@@ -19,7 +19,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private bool hasPersistentStores;
         private IStreamConfig config;
 
-        private StateDirectory(IStreamConfig streamConfig, bool hasPersistentStores)
+        internal StateDirectory(IStreamConfig streamConfig, bool hasPersistentStores)
         {
             this.hasPersistentStores = hasPersistentStores;
             config = streamConfig;

@@ -12,6 +12,8 @@ using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Table;
 using Streamiz.Kafka.Net.State.Internal;
 using System.IO;
+using System.Threading.Tasks.Sources;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics;
 
@@ -19,6 +21,105 @@ namespace Streamiz.Kafka.Net.Tests.Private
 {
     public class StreamTaskTests
     {
+         [Test]
+        public void StreamCloseRunning()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-app";
+            config.Guarantee = ProcessingGuarantee.EXACTLY_ONCE;
+
+            var serdes = new StringSerDes();
+            var builder = new StreamBuilder();
+
+            builder.Stream<string, string>("topic")
+                .Map((k, v, _) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()))
+                .To("topic2");
+
+            var topology = builder.Build();
+            TaskId id = new TaskId {Id = 0, Partition = 0};
+            var processorTopology = topology.Builder.BuildTopology(id);
+
+            var supplier = new SyncKafkaSupplier();
+            var streamsProducer = new StreamsProducer(
+                config,
+                "thread-0",
+                Guid.NewGuid(),
+                supplier,
+                "log-prefix");
+            var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
+
+
+            var part = new TopicPartition("topic", 0);
+            StreamTask task = new StreamTask(
+                "thread-0",
+                id,
+                new List<TopicPartition> {part},
+                processorTopology,
+                consumer,
+                config,
+                supplier,
+                streamsProducer,
+                new MockChangelogRegister()
+                , new StreamMetricsRegistry());
+            task.InitializeStateStores();
+            task.InitializeTopology();
+            task.RestorationIfNeeded();
+            task.CompleteRestoration();
+
+            Assert.Throws<IllegalStateException>(() => task.Close(false));
+        }
+        
+        [Test]
+        public void StreamCloseAlreadyClosed()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-app";
+            config.Guarantee = ProcessingGuarantee.EXACTLY_ONCE;
+
+            var serdes = new StringSerDes();
+            var builder = new StreamBuilder();
+
+            builder.Stream<string, string>("topic")
+                .Map((k, v, _) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()))
+                .To("topic2");
+
+            var topology = builder.Build();
+            TaskId id = new TaskId {Id = 0, Partition = 0};
+            var processorTopology = topology.Builder.BuildTopology(id);
+
+            var supplier = new SyncKafkaSupplier();
+            var streamsProducer = new StreamsProducer(
+                config,
+                "thread-0",
+                Guid.NewGuid(),
+                supplier,
+                "log-prefix");
+            var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
+
+
+            var part = new TopicPartition("topic", 0);
+            StreamTask task = new StreamTask(
+                "thread-0",
+                id,
+                new List<TopicPartition> {part},
+                processorTopology,
+                consumer,
+                config,
+                supplier,
+                streamsProducer,
+                new MockChangelogRegister()
+                , new StreamMetricsRegistry());
+            task.InitializeStateStores();
+            task.InitializeTopology();
+            task.RestorationIfNeeded();
+            task.CompleteRestoration();
+
+            task.Suspend();
+            task.Close(false);
+            task.Close(false);
+        }
+
+        
         [Test]
         public void StreamTaskRunning()
         {

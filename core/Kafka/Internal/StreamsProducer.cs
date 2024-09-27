@@ -68,7 +68,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             EosEnabled = config.Guarantee == ProcessingGuarantee.EXACTLY_ONCE;
         }
 
-        internal bool IsRecoverable(Error error)
+        internal static bool IsRecoverable(Error error)
         {
             return error.Code == ErrorCode.InvalidProducerIdMapping ||
                    error.Code == ErrorCode.ProducerFenced ||
@@ -185,8 +185,8 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                     if (IsRecoverable(kafkaException.Error))
                         log.LogDebug(
                             $"Encountered {kafkaException.Message} while aborting the transaction; this is expected and hence swallowed");
-                    
-                    throw new StreamsException("Error encounter trying to abort a transaction", kafkaException);
+                    else
+                        throw new StreamsException("Error encounter trying to abort a transaction", kafkaException);
 
                 }
                 finally

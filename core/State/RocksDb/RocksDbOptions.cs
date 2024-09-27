@@ -1292,5 +1292,18 @@ namespace Streamiz.Kafka.Net.State
         }
         
         #endregion
+        
+        #region Custom
+        
+        /// <summary>
+        /// Set the write buffer manager
+        /// </summary>
+        /// <param name="wbm">Pointer to the writer buffer manager</param>
+        public void SetWriteBufferManager(IntPtr wbm)
+        {
+            Native.Instance.rocksdb_options_set_write_buffer_manager(dbOptions.Handle, wbm);
+        }
+        
+        #endregion
     }
 }
