@@ -65,9 +65,9 @@ namespace Streamiz.Kafka.Net.State
         #region Property provider
         private class RocksDbPropertyProvider : IDbProperyProvider
         {
-            private RocksDb _rocksDb;
+            private RocksDbSharp.RocksDb _rocksDb;
 
-            public RocksDbPropertyProvider(RocksDb rocksDb)
+            public RocksDbPropertyProvider(RocksDbSharp.RocksDb rocksDb)
             {
                 _rocksDb = rocksDb;
             }
