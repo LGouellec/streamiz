@@ -51,7 +51,7 @@ public class BoundMemoryRocksDbConfigHandlerTests
 
         ulong totalLogged = 0L;
         
-        RocksDbKeyValueStore store = new RocksDbKeyValueStore("store");
+        RocksDbKeyValueStore store = new RocksDbKeyValueStore("store", "rocksdb");
         store.Init(context.Object, store);
 
         List<Bytes> allKeys = new List<Bytes>();
