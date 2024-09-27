@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 using Confluent.Kafka;
 using Streamiz.Kafka.Net.Kafka;
-using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Stream.Internal;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
+    // TODO : remove soon
     internal class UnassignedStreamTask : StreamTask
     {
         private readonly IStreamConfig config;
@@ -24,7 +24,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         }
 
         UnassignedStreamTask(string threadId, TaskId id, IEnumerable<TopicPartition> partitions, ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration, IKafkaSupplier kafkaSupplier, IProducer<byte[], byte[]> producer)
-            : base(threadId, id, partitions, processorTopology, consumer, configuration, kafkaSupplier, producer, null, new StreamMetricsRegistry())
+            : base(threadId, id, partitions, processorTopology, consumer, configuration, kafkaSupplier, null, null, new StreamMetricsRegistry())
         {
             config = configuration;
         }

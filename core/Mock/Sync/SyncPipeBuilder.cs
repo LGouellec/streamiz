@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.Mock.Sync

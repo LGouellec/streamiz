@@ -1,5 +1,6 @@
 using Streamiz.Kafka.Net;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
@@ -15,7 +16,7 @@ namespace sample_stream
 {
     public static class Program
     {
-        public static async Task Main(string[] args)
+       public static async Task Main(string[] args)
         {
             var rocksDbHandler = new BoundMemoryRocksDbConfigHandler()
                 .ConfigureNumThreads(2)
@@ -27,7 +28,7 @@ namespace sample_stream
                 ApplicationId = $"test-app",
                 BootstrapServers = "localhost:9092",
                 AutoOffsetReset = AutoOffsetReset.Earliest,
-                Logger = LoggerFactory.Create(b =>
+                Logger = LoggerFactory.Create((b) =>
                 {
                     b.AddConsole();
                     b.SetMinimumLevel(LogLevel.Information);
@@ -51,30 +52,34 @@ namespace sample_stream
         private static Topology BuildTopology()
         {
             var builder = new StreamBuilder();
-            /*builder.Stream<string, string>("input")
+            
+            builder.Stream<string, string>("input3")
+                .Peek((k,v,c) => Console.WriteLine($"Key : {k} Context : {c.Topic}:{c.Partition}:{c.Offset}"))
                 .GroupByKey()
-                .WindowedBy(TumblingWindowOptions.Of(windowSize))
+                .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
                 .Count(RocksDbWindows.As<string, long>("count-store")
                     .WithKeySerdes(new StringSerDes())
-                    .WithValueSerdes(new Int64SerDes())
-                    .WithCachingEnabled())
+                    .WithValueSerdes(new Int64SerDes()))
+                    //.WithCachingEnabled()
                 .ToStream()
-                .Map((k,v) => new KeyValuePair<string,string>(k.ToString(), v.ToString()))
-                .To("output",
+                .Map((k,v, _) => new KeyValuePair<string,string>(k.ToString(), v.ToString()))
+                .To("output3",
                     new StringSerDes(),
-                    new StringSerDes());*/
+                    new StringSerDes());
+
+            /*builder.Stream<string, string>("input3")
+                .Peek((k,v,c) => Console.WriteLine($"Key : {k} Context : {c.Topic}:{c.Partition}:{c.Offset}"))
+                .To("output3",
+                    new StringSerDes(),
+                    new StringSerDes());
+
 
             /*builder.Stream<string, string>("input")
                 .DropDuplicate((key, value1, value2) => value1.Equals(value2),
                     TimeSpan.FromMinutes(1))
                 .To(
-                    "output");*/
-
-            builder.Stream<string, string>("users")
-                .GroupByKey()
-                .Count()
-                .ToStream("count_users");
-            
+                    "output");//, (s, s1, arg3, arg4) => new Partition(0));
+            */
             return builder.Build();
         }
     }

@@ -32,6 +32,7 @@ namespace Streamiz.Kafka.Net.Processors
         }
 
         // TODO : maybe use this task instead of ExternalProcessorTopologyExecutor
+        // TODO : need to refactor #360
         internal class ExternalStreamTask : AbstractTask
         {
             public override TaskId Id { get; }
@@ -45,6 +46,21 @@ namespace Streamiz.Kafka.Net.Processors
             public override IDictionary<TopicPartition, long> PurgeOffsets { get; }
             public override PartitionGrouper Grouper { get; }
             public override bool CanProcess(long now)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void Close(bool dirty)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override IEnumerable<TopicPartitionOffset> PrepareCommit()
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void PostCommit(bool enforceCheckpoint)
             {
                 throw new NotImplementedException();
             }
@@ -64,11 +80,7 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 throw new NotImplementedException();
             }
-
-            public override void Close()
-            {
-                throw new NotImplementedException();
-            }
+            
 
             public override IStateStore GetStore(string name)
             {
@@ -89,16 +101,7 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 throw new NotImplementedException();
             }
-
-            public override void Resume()
-            {
-                throw new NotImplementedException();
-            }
-
-            public override void Commit()
-            {
-                throw new NotImplementedException();
-            }
+            
             #endregion
         }
         
@@ -123,13 +126,13 @@ namespace Streamiz.Kafka.Net.Processors
             string threadId,
             TaskId taskId,
             ISourceProcessor sourceProcessor, 
-            IProducer<byte[], byte[]> producer,
+            StreamsProducer producer,
             IStreamConfig config,
             StreamMetricsRegistry streamMetricsRegistry,
             IAdminClient adminClient)
         {
             this.threadId = threadId;
-            this.producerId = producer.Name;
+            producerId = producer.Name;
             this.streamMetricsRegistry = streamMetricsRegistry;
             State = ExternalProcessorTopologyState.RUNNING;
             Processor = sourceProcessor;
@@ -141,8 +144,7 @@ namespace Streamiz.Kafka.Net.Processors
             processSensor = TaskMetrics.ProcessSensor(threadId, taskId, streamMetricsRegistry);
             processLatencySensor = TaskMetrics.ProcessLatencySensor(threadId, taskId, streamMetricsRegistry);
             
-            recordCollector = new RecordCollector(logPrefix, config, taskId, droppedRecordsSensor, adminClient);
-            recordCollector.Init(ref producer);
+            recordCollector = new RecordCollector(logPrefix, config, taskId, producer, droppedRecordsSensor);
             
             context = new ProcessorContext(ExternalStreamTask.Create(taskId), config, null, streamMetricsRegistry);
             context.UseRecordCollector(recordCollector);
@@ -272,7 +274,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             log.LogInformation($"{logPrefix}Closing");
             Processor.Close();
-            recordCollector.Close();
+            recordCollector.Close(false);
             streamMetricsRegistry.RemoveTaskSensors(threadId, context.Id.ToString());
             streamMetricsRegistry.RemoveLibrdKafkaSensors(threadId, producerId);
             log.LogInformation($"{logPrefix}Closed");

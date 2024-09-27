@@ -31,6 +31,7 @@ namespace Streamiz.Kafka.Net.IntegrationTests
         }
 
         [Test]
+        [NonParallelizable]
         public async Task TestSimpleTopology()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
@@ -64,6 +65,7 @@ namespace Streamiz.Kafka.Net.IntegrationTests
         }
         
         [Test]
+        [NonParallelizable]
         public async Task TestFilteredTopology()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>

@@ -6,12 +6,15 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Kafka.Internal;
 
 namespace Streamiz.Kafka.Net.Mock.Sync
 {
     internal class SyncConsumer : IConsumer<byte[], byte[]>, IConsumerGroupMetadata
     {
-        internal class SyncConsumerOffset
+        private class SyncConsumerOffset
         {
             public long OffsetCommitted { get; set; } = 0L;
             public long OffsetConsumed { get; set; } = 0L;
@@ -319,6 +322,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
                                     Partition = 0,
                                     Message = messages[kp.Value.OffsetConsumed]
                                 };
+                                
                                 ++kp.Value.OffsetConsumed;
                                 return result;
                             }

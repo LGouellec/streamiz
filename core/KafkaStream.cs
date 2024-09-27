@@ -261,6 +261,7 @@ namespace Streamiz.Kafka.Net
 
         private readonly CancellationTokenSource _cancelSource = new();
         private readonly SequentiallyGracefullyShutdownHook shutdownHook;
+        private readonly Guid processId;
 
         internal State StreamState { get; private set; }
 
@@ -301,8 +302,6 @@ namespace Streamiz.Kafka.Net
                 throw new StreamConfigException($"Stream configuration is not correct. Please set ApplicationId and BootstrapServers as minimal.");
             }
 
-            var processID = Guid.NewGuid();
-            clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;
             logPrefix = $"stream-application[{configuration.ApplicationId}] ";
             metricsRegistry = new StreamMetricsRegistry(clientId, configuration.MetricsRecording);
             this.kafkaSupplier.MetricsRegistry = metricsRegistry;
@@ -314,6 +313,10 @@ namespace Streamiz.Kafka.Net
             
             // sanity check
             var processorTopology = topology.Builder.BuildTopology();
+            processId = StateDirectory
+                .GetInstance(this.configuration, topology.Builder.HasPersistentStores)
+                .InitializeProcessId();
+            clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{configuration.ApplicationId.ToLower()}-{processId}" : configuration.ClientId;
 
             int numStreamThreads = topology.Builder.HasNoNonGlobalTopology ? 0 : configuration.NumStreamThreads;
 
@@ -376,6 +379,7 @@ namespace Streamiz.Kafka.Net
 
                 threads[i] = StreamThread.Create(
                     threadId,
+                    processId,
                     clientId,
                     this.topology.Builder,
                     metricsRegistry,
@@ -418,7 +422,7 @@ namespace Streamiz.Kafka.Net
         /// Because threads are started in the background, this method does not block.
         /// </summary>
         /// <param name="token">Token for propagates notification that the stream should be canceled.</param>
-        [Obsolete("This method is deprecated, please use StartAsync(...) instead. It will be removed in next release version.")]
+        [Obsolete("This method is deprecated, please use StartAsync(...) instead. It will be removed in 1.8.0.")]
         public void Start(CancellationToken? token = null)
         {
             StartAsync(token).ConfigureAwait(false).GetAwaiter().GetResult();

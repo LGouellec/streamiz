@@ -45,7 +45,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var consumer = supplier.GetConsumer(configConsumer.ToConsumerConfig(), null);
 
             var thread = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", Guid.NewGuid(), "c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
@@ -110,7 +110,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var consumer = supplier.GetConsumer(configConsumer.ToConsumerConfig(), null);
 
             var thread = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
@@ -172,7 +172,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var consumer = supplier.GetConsumer(configConsumer.ToConsumerConfig(), null);
 
             var thread = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
@@ -232,7 +232,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var consumer = supplier.GetConsumer(configConsumer.ToConsumerConfig(), null);
 
             var thread = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
@@ -289,7 +289,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var consumer = supplier.GetConsumer(configConsumer.ToConsumerConfig(), null);
 
             var thread = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
@@ -348,7 +348,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var consumer = supplier.GetConsumer(configConsumer.ToConsumerConfig(), null);
 
             var thread = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
@@ -405,7 +405,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var consumer = supplier.GetConsumer(configConsumer.ToConsumerConfig(), null);
 
             var thread = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
@@ -464,7 +464,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var consumer = supplier.GetConsumer(configConsumer.ToConsumerConfig(), null);
 
             var thread = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
@@ -521,7 +521,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var consumer = supplier.GetConsumer(configConsumer.ToConsumerConfig(), null);
 
             var thread = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
@@ -581,7 +581,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var consumer = supplier.GetConsumer(configConsumer.ToConsumerConfig(), null);
 
             var thread = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
@@ -640,7 +640,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var consumer = supplier.GetConsumer(configConsumer.ToConsumerConfig(), null);
 
             var thread = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
