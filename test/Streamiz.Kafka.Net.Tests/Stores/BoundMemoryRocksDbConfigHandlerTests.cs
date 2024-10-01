@@ -8,6 +8,7 @@ using Streamiz.Kafka.Net.State.RocksDb;
 using Streamiz.Kafka.Net.Table;
 using Moq;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
@@ -35,6 +36,8 @@ public class BoundMemoryRocksDbConfigHandlerTests
         var config = new StreamConfig();
         config.RocksDbConfigHandler = handler.Handle;
 
+        var metricsRegistry = new StreamMetricsRegistry();
+
         var stateManager = new Mock<IStateManager>();
         stateManager.Setup(s => 
             s.Register(It.IsAny<IStateStore>(), It.IsAny<Action<ConsumeResult<byte[], byte[]>>>()));
@@ -46,6 +49,8 @@ public class BoundMemoryRocksDbConfigHandlerTests
             .Returns("./bound-test/");
         context.Setup(c => c.Configuration)
             .Returns(config);
+        context.Setup(c => c.Metrics)
+            .Returns(() => metricsRegistry);
         context.Setup(c => c.States)
             .Returns(() => stateManager.Object);
 
