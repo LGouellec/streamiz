@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.Metrics
@@ -175,6 +176,8 @@ namespace Streamiz.Kafka.Net.Metrics
         
         #endregion
 
+        internal RocksDbMetricsRecordingTrigger RocksDbMetricsRecordingTrigger { get; } = new();
+        
         /// <summary>
         /// Create stream metrics registry in INFO level with a empty cliend Id.
         /// </summary>
@@ -587,7 +590,8 @@ namespace Streamiz.Kafka.Net.Metrics
         internal IEnumerable<Sensor> GetThreadScopeSensor(string threadId)
         {
             var sensors = new List<Sensor>();
-
+            RocksDbMetricsRecordingTrigger.Run(DateTime.Now.GetMilliseconds());
+            
             foreach (var s in clientLevelSensors)
             {
                 var sensor = this.sensors[s];
@@ -611,7 +615,7 @@ namespace Streamiz.Kafka.Net.Metrics
         #endregion
         
         #region Public API
-        
+
         /// <summary>
         /// Get all sensors function the metrics recording level set in constructor.
         /// Return a <see cref="ReadOnlyCollection{T}"/> of sensors.
@@ -619,7 +623,10 @@ namespace Streamiz.Kafka.Net.Metrics
         /// </summary>
         /// <returns>Return a <see cref="ReadOnlyCollection{T}"/> of sensors.</returns>
         public IEnumerable<Sensor> GetSensors()
-            => new ReadOnlyCollection<Sensor>(sensors.Values.Where(s => TestMetricsRecordingLevel(s.MetricsRecording)).ToList());
+        {
+            RocksDbMetricsRecordingTrigger.Run(DateTime.Now.GetMilliseconds());
+            return new ReadOnlyCollection<Sensor>(sensors.Values.Where(s => TestMetricsRecordingLevel(s.MetricsRecording)).ToList());
+        }
         
         #endregion
     }

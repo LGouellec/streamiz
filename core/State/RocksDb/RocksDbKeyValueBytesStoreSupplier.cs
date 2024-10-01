@@ -32,6 +32,6 @@ namespace Streamiz.Kafka.Net.State
         /// </summary>
         /// <returns><see cref="RocksDbKeyValueStore"/> state store</returns>
         public IKeyValueStore<Bytes, byte[]> Get() =>
-            new RocksDbKeyValueStore(Name);
+            new RocksDbKeyValueStore(Name, MetricsScope);
     }
 }

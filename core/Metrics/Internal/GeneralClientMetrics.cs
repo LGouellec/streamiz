@@ -74,19 +74,21 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
                     TOPOLOGY_DESCRIPTION_DESCRIPTION,
                     tagsTopo), topologyDescription);
             
-            sensor.AddProviderMetric(
-                new MetricName(
-                    STATE,
-                    StreamMetricsRegistry.CLIENT_LEVEL_GROUP,
-                    STATE_DESCRIPTION,
-                    tags), stateStreamFunc);
+            SensorHelper.AddMutableValueMetricToSensor(
+                sensor,
+                StreamMetricsRegistry.CLIENT_LEVEL_GROUP,
+                tags,
+                STATE,
+                STATE_DESCRIPTION,
+                stateStreamFunc);
             
-            sensor.AddProviderMetric(
-                new MetricName(
-                    STREAM_THREADS,
-                    StreamMetricsRegistry.CLIENT_LEVEL_GROUP,
-                    STREAM_THREADS_DESCRIPTION,
-                    tags), streamThreadsFunc);
+            SensorHelper.AddMutableValueMetricToSensor(
+                sensor,
+                StreamMetricsRegistry.CLIENT_LEVEL_GROUP,
+                tags,
+                STREAM_THREADS,
+                STREAM_THREADS_DESCRIPTION,
+                streamThreadsFunc);
             
             return sensor;
         }

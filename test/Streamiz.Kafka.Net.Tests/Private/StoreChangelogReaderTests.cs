@@ -63,7 +63,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 Partition = 0
             };
 
-            store = new RocksDbKeyValueStore("store");
+            store = new RocksDbKeyValueStore("store", "rocksdb");
             storeChangelogReader =
                 new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
             stateMgr = new ProcessorStateManager(

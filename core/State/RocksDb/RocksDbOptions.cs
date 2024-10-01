@@ -95,17 +95,6 @@ namespace Streamiz.Kafka.Net.State
         }
         
         /// <summary>
-        /// Specify the file access pattern once a compaction is started. It will be applied to all input files of a compaction. Default: 1
-        /// </summary>
-        /// <param name="value">The access hint integer</param>
-        /// <returns>the instance of the current object</returns>
-        public RocksDbOptions SetAccessHintOnCompactionStart(int value)
-        {
-            dbOptions.SetAccessHintOnCompactionStart(value);
-            return this;
-        }
-        
-        /// <summary>
         /// If set true, will hint the underlying file system that the file access pattern is random, when a sst file is opened.
         /// Default: true
         /// </summary>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Avro.Util;
 using Confluent.Kafka;
 using Moq;
 using NUnit.Framework;
@@ -26,6 +27,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         private TopicPartition partition;
         private ProcessorStateManager stateManager;
         private Mock<AbstractTask> task;
+        private StreamMetricsRegistry metricsRegistry;
 
         [SetUp]
         public void Begin()
@@ -46,9 +48,10 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             task = new Mock<AbstractTask>();
             task.Setup(k => k.Id).Returns(id);
 
-            context = new ProcessorContext(task.Object, config, stateManager, new StreamMetricsRegistry());
+            metricsRegistry = new StreamMetricsRegistry();
+            context = new ProcessorContext(task.Object, config, stateManager, metricsRegistry);
 
-            store = new RocksDbKeyValueStore("test-store");
+            store = new RocksDbKeyValueStore("test-store", "rocksdb");
             store.Init(context, store);
         }
 

@@ -53,7 +53,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             context = new ProcessorContext(task.Object, config, stateManager, new StreamMetricsRegistry());
 
             store = new RocksDbWindowStore(
-                new RocksDbSegmentedBytesStore("test-w-store", (long)defaultRetention.TotalMilliseconds, 5000, new WindowKeySchema()),
+                new RocksDbSegmentedBytesStore("test-w-store", "rocksdb-w", (long)defaultRetention.TotalMilliseconds, 5000, new WindowKeySchema()),
                 (long)defaultSize.TotalMilliseconds, false);
 
             store.Init(context, store);
