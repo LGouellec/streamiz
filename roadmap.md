@@ -11,3 +11,5 @@
 - KIP-450 : Sliding windows
 - Session Windows
 - Rename WithRecordTimestamp to AlterRecordTimestamp
+- Versioned State Store
+- https://cwiki.apache.org/confluence/display/KAFKA/KIP-923%3A+Add+A+Grace+Period+to+Stream+Table+Join
