@@ -47,8 +47,9 @@ namespace sample_stream
             
             builder.Stream<string, string>("input")
                 .GroupByKey()
+                .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
                 .Count()
-                .Suppress(SuppressedBuilder.UntilTimeLimit<string>(TimeSpan.FromMinutes(1), StrictBufferConfig.Unbounded()))
+                .Suppress(SuppressedBuilder.UntilWindowClose<Windowed<string>, long>(TimeSpan.FromMinutes(1), StrictBufferConfig.Unbounded()))
                 .ToStream()
                 .To("output");
             

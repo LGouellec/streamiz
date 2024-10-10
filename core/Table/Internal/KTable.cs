@@ -242,7 +242,7 @@ namespace Streamiz.Kafka.Net.Table.Internal
         
         #region Suppress
         
-        public IKTable<K, V> Suppress(Suppressed<K> suppressed, string named = null)
+        public IKTable<K, V> Suppress(Suppressed<K, V> suppressed, string named = null)
         {
             var name = new Named(named).OrElseGenerateWithPrefix(builder, KTable.SUPPRESS_NAME);
             suppressed.Name = name;

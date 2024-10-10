@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
         public long MinTimestamp { get; private set; } = Int64.MaxValue;
         public string Name { get; }
         public bool Persistent => false;
-        public bool IsLocally { get; }
+        public bool IsLocally => true;
         public bool IsOpen { get; private set; }
 
         private Sensor bufferSizeSensor;
@@ -88,7 +88,7 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
             };
         }
         
-        internal void SetSerdesIfNull(ISerDes<K> contextKeySerdes, ISerDes<V> contextValueSerdes) {
+        public void SetSerdesIfNull(ISerDes<K> contextKeySerdes, ISerDes<V> contextValueSerdes) {
             keySerdes ??= contextKeySerdes;
             valueSerdes ??= contextValueSerdes;
         }

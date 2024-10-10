@@ -1,14 +1,16 @@
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.State.Suppress;
 
 namespace Streamiz.Kafka.Net.Table.Internal.Graph
 {
     internal class KTableSuppress<K, S, V> : IKTableProcessorSupplier<K, V, V>
     {
-        internal class KTableSuppressValueGetter : IKTableValueGetter<K, V>
+        private class KTableSuppressValueGetter : IKTableValueGetter<K, V>
         {
             private readonly IKTableValueGetter<K, V> _parentKTableValueGetter;
             private readonly string _storeName;
+            private ITimeOrderedKeyValueBuffer<K,V,Change<V>> buffer;
 
             public KTableSuppressValueGetter(IKTableValueGetterSupplier<K,V> parentKTableValueGetterSupplier, string storeName)
             {
@@ -19,12 +21,13 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
             public void Init(ProcessorContext context)
             {
                 _parentKTableValueGetter.Init(context);
-                context.GetStateStore(_storeName);
+                buffer = (ITimeOrderedKeyValueBuffer<K, V, Change<V>>)context.GetStateStore(_storeName);
             }
 
             public ValueAndTimestamp<V> Get(K key)
             {
-                throw new System.NotImplementedException();
+                var value = buffer.PriorValueForBuffered(key);
+                return value ?? _parentKTableValueGetter.Get(key);
             }
 
             public void Close()
@@ -33,12 +36,12 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
             }
         }
         
-        private readonly Suppressed<K> _suppressed;
+        private readonly Suppressed<K, V> _suppressed;
         private readonly string _storeName;
         private readonly KTable<K, S, V> _parent;
 
         public KTableSuppress(
-            Suppressed<K> suppressed,
+            Suppressed<K, V> suppressed,
             string storeName,
             KTable<K, S, V> parentTable)
         {
@@ -48,8 +51,7 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
             // The suppress buffer requires seeing the old values, to support the prior value view.
             _parent.EnableSendingOldValues();
         }
-
-
+        
         public void EnableSendingOldValues()
             => _parent.EnableSendingOldValues();
 

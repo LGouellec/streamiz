@@ -28,7 +28,6 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
         internal static readonly string RETRY_AVG_DESCRIPTION = StreamMetricsRegistry.RATE_DESCRIPTION_PREFIX + RETRY_DESCRIPTION;
         internal static readonly string RETRY_MAX_DESCRIPTION = StreamMetricsRegistry.TOTAL_DESCRIPTION + RATE_DESCRIPTION_SUFFIX;
         
-        // NOT USE FOR MOMENT
         public static Sensor SuppressionEmitSensor(string threadId,
             TaskId taskId,
             string processorNodeId,

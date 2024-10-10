@@ -957,6 +957,6 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="suppressed">Configuration object determining what, if any, updates to suppress</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A new KTable with the desired suppression characteristics.</returns>
-        IKTable<K, V> Suppress(Suppressed<K> suppressed, string named = null);
+        IKTable<K, V> Suppress(Suppressed<K, V> suppressed, string named = null);
     }
 }

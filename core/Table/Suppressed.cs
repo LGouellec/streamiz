@@ -1,20 +1,21 @@
 using System;
 using System.Collections.Generic;
+using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 
 namespace Streamiz.Kafka.Net.Table
 {
     public static class SuppressedBuilder
     {
-        public static Suppressed<K> UntilWindowClose<K>(TimeSpan gracePeriod, IBufferConfig bufferConfig)
-            where K : Windowed<K> => new(
+        public static Suppressed<K, V> UntilWindowClose<K, V>(TimeSpan gracePeriod, IBufferConfig bufferConfig)
+            where K : Windowed => new(
             null, 
             gracePeriod, 
             bufferConfig, 
             (_, key) => key.Window.EndMs,
             true);
             
-        public static Suppressed<K> UntilTimeLimit<K>(TimeSpan timeToWaitMoreEvents, IBufferConfig bufferConfig) 
+        public static Suppressed<K, V> UntilTimeLimit<K, V>(TimeSpan timeToWaitMoreEvents, IBufferConfig bufferConfig) 
             => new(
                 null, 
                 timeToWaitMoreEvents, 
@@ -116,13 +117,16 @@ namespace Streamiz.Kafka.Net.Table
         }
     }
     
-    public class Suppressed<K>
+    public class Suppressed<K,V>
     {
         public TimeSpan SuppressionTime { get; }
         public IBufferConfig BufferConfig { get; }
         public Func<ProcessorContext, K, long> TimeDefinition { get; }
         public bool SafeToDropTombstones { get; }
         public string Name { get; internal set; }
+        
+        public ISerDes<K> KeySerdes { get; private set; }
+        public ISerDes<V> ValueSerdes { get; private set; }
         
         internal Suppressed(
             string name,
@@ -136,6 +140,18 @@ namespace Streamiz.Kafka.Net.Table
             BufferConfig = bufferConfig;
             TimeDefinition = timeDefinition;
             SafeToDropTombstones = safeToDropTombstones;
+        }
+
+        public Suppressed<K, V> WithKeySerdes(ISerDes<K> keySerdes)
+        {
+            KeySerdes = keySerdes;
+            return this;
+        }
+        
+        public Suppressed<K, V> WithValueSerdes(ISerDes<V> valueSerdes)
+        {
+            ValueSerdes = valueSerdes;
+            return this;
         }
     }
 }
