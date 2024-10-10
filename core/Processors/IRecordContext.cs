@@ -39,5 +39,16 @@ namespace Streamiz.Kafka.Net.Processors
         /// </summary>
         /// <param name="headers">new headers</param>
         void SetHeaders(Headers headers);
+        
+        /// <summary>
+        /// Estimate amount of memory used to store this record context 
+        /// </summary>
+        long MemorySizeEstimate { get; }
+
+        /// <summary>
+        /// Serialize all the metadata into a byte array
+        /// </summary>
+        /// <returns>Return a byte array which contains all the metadata fields serialized</returns>
+        byte[] Serialize();
     }
 }

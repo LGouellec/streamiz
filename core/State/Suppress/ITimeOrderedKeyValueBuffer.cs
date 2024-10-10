@@ -9,8 +9,8 @@ namespace Streamiz.Kafka.Net.State.Suppress
         long BufferSize { get; }
         long MinTimestamp { get; }
         
-        bool Put(long timestamp, K key, V value, IRecordContext recordContext);
-        ValueAndTimestamp<T> PriorValueForBuffered(K key);
+        bool Put(long timestamp, K key, T value, IRecordContext recordContext);
+        ValueAndTimestamp<V> PriorValueForBuffered(K key);
         void EvictWhile(Func<bool> predicate, Action<K, T, IRecordContext> evictHandler);
     }
 }

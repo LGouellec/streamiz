@@ -63,8 +63,8 @@ namespace Streamiz.Kafka.Net.Table
         }
         
         public static StrictBufferConfig Unbounded() => new();
-        public static StrictBufferConfig BoundedMaxRecords(long maxRecords) => new(maxRecords, Int64.MaxValue);
-        public static StrictBufferConfig BoundedMaxBytes(long maxBytes) => new(Int64.MaxValue, maxBytes);
+        public static StrictBufferConfig Bounded(long maxRecords) => new(maxRecords, Int64.MaxValue);
+        public static StrictBufferConfig Bounded(CacheSize maxBytes) => new(Int64.MaxValue, maxBytes.CacheSizeBytes);
         
         public StrictBufferConfig WithLoggingEnabled(IDictionary<string, string> config)
         {
@@ -97,9 +97,9 @@ namespace Streamiz.Kafka.Net.Table
             Config = new Dictionary<string, string>();
         }
 
-        public static EagerConfig EmitEarlyWhenFullMaxRecords(long maxRecords) => new(maxRecords, Int64.MaxValue);
-        public static EagerConfig EmitEarlyWhenFullMaxBytes(long maxBytes) => new(Int64.MaxValue, maxBytes);
-        public static EagerConfig EmitEarlyWhenFull(long maxRecords, long maxBytes) => new(maxRecords, maxBytes);
+        public static EagerConfig EmitEarlyWhenFull(long maxRecords) => new(maxRecords, Int64.MaxValue);
+        public static EagerConfig EmitEarlyWhenFull(CacheSize maxBytes) => new(Int64.MaxValue, maxBytes.CacheSizeBytes);
+        public static EagerConfig EmitEarlyWhenFull(long maxRecords, CacheSize maxBytes) => new(maxRecords, maxBytes.CacheSizeBytes);
 
         public EagerConfig WithLoggingEnabled(IDictionary<string, string> config)
         {

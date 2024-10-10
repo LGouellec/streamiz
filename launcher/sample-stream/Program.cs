@@ -8,9 +8,11 @@ using RocksDbSharp;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Prometheus;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.RocksDb;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
+using RocksDb = Streamiz.Kafka.Net.Table.RocksDb;
 
 namespace sample_stream
 {
