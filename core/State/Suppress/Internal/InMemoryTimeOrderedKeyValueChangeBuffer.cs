@@ -95,6 +95,11 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
         
         public bool Put(long timestamp, K key, Change<V> value, IRecordContext recordContext)
         {
+            if (value == null)
+                throw new ArgumentNullException(nameof(value));
+            if (recordContext == null)
+                throw new ArgumentNullException(nameof(recordContext));
+            
             var serializedKey = Bytes.Wrap(keySerdes.Serialize(key,
                 new SerializationContext(MessageComponentType.Key, changelogTopic)));
 
@@ -178,7 +183,9 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
         
         public void Init(ProcessorContext context, IStateStore root)
         {
+            keySerdes.Initialize(context.SerDesContext);
             valueSerdes.Initialize(context.SerDesContext);
+            
             changelogTopic = context.ChangelogFor(Name);
             processorContext = context;
 

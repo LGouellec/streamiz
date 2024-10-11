@@ -26,8 +26,8 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
 
         public int CompareTo(BufferKey other)
         {
-            var compared = other.Time.CompareTo(Time);
-            return compared == 0 ? other.Key.CompareTo(Key) : compared;
+            var compared = Time.CompareTo(other.Time);
+            return compared == 0 ? Key.CompareTo(other.Key) : compared;
         }
     }
 }
