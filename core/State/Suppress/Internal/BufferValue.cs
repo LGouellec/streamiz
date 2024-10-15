@@ -1,7 +1,7 @@
 using System;
+using System.Linq;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Processors;
-using Streamiz.Kafka.Net.Processors.Internal;
 
 namespace Streamiz.Kafka.Net.State.Suppress.Internal
 {
@@ -17,16 +17,24 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
 
         internal BufferValue(byte[] priorValue, byte[] oldValue, byte[] newValue, IRecordContext recordContext)
         {
-            this.OldValue = oldValue;
-            this.NewValue = newValue;
-            this.RecordContext = recordContext;
+            OldValue = oldValue;
+            NewValue = newValue;
+            RecordContext = recordContext;
 
             if (ReferenceEquals(priorValue, oldValue))
                 this.PriorValue = oldValue;
             else
                 this.PriorValue = priorValue;
         }
-        
+
+        public override bool Equals(object obj)
+        {
+            return obj is BufferValue value &&
+                   ((PriorValue == null && value.PriorValue == null) || PriorValue.SequenceEqual(value.PriorValue)) &&
+                   ((OldValue == null && value.OldValue == null) || OldValue.SequenceEqual(value.OldValue)) &&
+                       ((NewValue == null && value.NewValue == null) || NewValue.SequenceEqual(value.NewValue));
+        }
+
         public long MemoryEstimatedSize()
         {
             return (PriorValue?.Length ?? 0) +

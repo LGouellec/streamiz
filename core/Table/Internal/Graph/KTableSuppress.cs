@@ -26,8 +26,8 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
 
             public ValueAndTimestamp<V> Get(K key)
             {
-                var value = buffer.PriorValueForBuffered(key);
-                return value ?? _parentKTableValueGetter.Get(key);
+                var container = buffer.PriorValueForBuffered(key);
+                return container.IsDefined ? container.Value : _parentKTableValueGetter.Get(key);
             }
 
             public void Close()

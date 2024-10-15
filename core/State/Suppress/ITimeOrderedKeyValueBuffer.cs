@@ -1,6 +1,7 @@
 using System;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State.Suppress.Internal;
 
 namespace Streamiz.Kafka.Net.State.Suppress
 {
@@ -11,7 +12,7 @@ namespace Streamiz.Kafka.Net.State.Suppress
         long MinTimestamp { get; }
         
         bool Put(long timestamp, K key, T value, IRecordContext recordContext);
-        ValueAndTimestamp<V> PriorValueForBuffered(K key);
+        Maybe<ValueAndTimestamp<V>> PriorValueForBuffered(K key);
         void EvictWhile(Func<bool> predicate, Action<K, T, IRecordContext> evictHandler);
         void SetSerdesIfNull(ISerDes<K> contextKeySerdes, ISerDes<V> contextValueSerdes);
     }

@@ -37,7 +37,7 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
 
         private Dictionary<Bytes, BufferKey> index = new();
         private SortedDictionary<BufferKey, BufferValue> sortedValues = new(new BufferKeyComparer());
-        private HashSet<Bytes> dirtyKeys = new();
+        private HashSet<Bytes> dirtyKeys = new(new BytesComparer());
 
         private Func<Bytes, BufferValue, long> ComputeRecordSizeFc => (key, value) =>
         {
@@ -119,7 +119,7 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
             return true;
         }
 
-        public ValueAndTimestamp<V> PriorValueForBuffered(K key)
+        public Maybe<ValueAndTimestamp<V>> PriorValueForBuffered(K key)
         {
             var serializedKey = Bytes.Wrap(keySerdes.Serialize(key,
                 new SerializationContext(MessageComponentType.Key, changelogTopic)));
@@ -130,10 +130,10 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
                 var deserializedValue = valueSerdes.Deserialize(serializedValue,
                     new SerializationContext(MessageComponentType.Value, changelogTopic));
 
-                return ValueAndTimestamp<V>.Make(deserializedValue, -1);
+                return Maybe<ValueAndTimestamp<V>>.Defined(ValueAndTimestamp<V>.Make(deserializedValue, -1));
             }
             
-            return null;
+            return Maybe<ValueAndTimestamp<V>>.Undefined();
         }
 
         public void EvictWhile(Func<bool> predicate, Action<K, Change<V>, IRecordContext> evictHandler)
@@ -212,7 +212,7 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
             {
                 foreach (var dirtyKey in dirtyKeys)
                 {
-                    var bufferKey = index[dirtyKey];
+                    var bufferKey = index.Get(dirtyKey);
                     if (bufferKey == null)
                         LogTombstone(dirtyKey);
                     else
@@ -302,6 +302,7 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
             {
                 BufferValue removedValue = sortedValues.Get(previousKey);
                 sortedValues.Remove(previousKey);
+                sortedValues.Add(previousKey, bufferValue);
                 BufferSize =
                     BufferSize
                     + ComputeRecordSizeFc(key, bufferValue)
