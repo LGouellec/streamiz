@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using NUnit.Framework;
@@ -14,12 +15,16 @@ namespace Streamiz.Kafka.Net.Tests.Processors;
 public class KTableSuppressTests
 {
     private StreamConfig streamConfig;
+    private DateTime dt;
 
     [SetUp]
     public void Init()
     {
         streamConfig = new StreamConfig();
         streamConfig.ApplicationId = "test-ktable-suppress-test";
+        
+        var c = CultureInfo.CreateSpecificCulture("fr-FR");
+        dt = DateTime.Parse("15/10/2024 08:00:00", c);
     }
     
     private StreamBuilder BuildTopology(Suppressed<Windowed<string>, long> suppressed)
@@ -80,7 +85,6 @@ public class KTableSuppressTests
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());
         
-        DateTime dt = DateTime.Parse("15/10/2024 08:00:00");
         inputTopic.PipeInput("key1", "value1", dt);
         inputTopic.PipeInput("key1", "value2", dt.AddSeconds(30)); // should process and emit
 
@@ -104,7 +108,6 @@ public class KTableSuppressTests
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());
         
-        DateTime dt = DateTime.Parse("15/10/2024 08:00:00");
         inputTopic.PipeInput("key1", "value1", dt);
         
         // although the stream time is now 15/10/2024 08:01:00, we have to wait 1 minutes after the window *end* before we
@@ -135,7 +138,6 @@ public class KTableSuppressTests
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());
         
-        DateTime dt = DateTime.Parse("15/10/2024 08:00:00");
         inputTopic.PipeInput("key1", "value1", dt);
         
         // although the stream time is now 15/10/2024 08:01:00, we have to wait 1 minutes after the window *end* before we
@@ -163,7 +165,6 @@ public class KTableSuppressTests
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());
         
-        DateTime dt = DateTime.Parse("15/10/2024 08:00:00");
         inputTopic.PipeInput("key1", "value1", dt);
         
         // although the stream time is now 15/10/2024 08:01:00, we have to wait 1 minutes after the window *end* before we
@@ -191,7 +192,6 @@ public class KTableSuppressTests
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());
         
-        DateTime dt = DateTime.Parse("15/10/2024 08:00:00");
         inputTopic.PipeInput("key1", "value1", dt);
         inputTopic.PipeInput("dummy", "dummy", dt.AddMinutes(2));
         
@@ -216,7 +216,6 @@ public class KTableSuppressTests
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());
         
-        DateTime dt = DateTime.Parse("15/10/2024 08:00:00");
         inputTopic.PipeInput("key1", "value1", dt);
         inputTopic.PipeInput("dummy", "dummy", dt.AddMinutes(2));
         
@@ -241,7 +240,6 @@ public class KTableSuppressTests
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());
         
-        DateTime dt = DateTime.Parse("15/10/2024 08:00:00");
         inputTopic.PipeInput("key1", "value1", dt);
 
         Assert.Throws<StreamsException>(() => inputTopic.PipeInput("dummy", "dummy", dt.AddMinutes(2)));
@@ -262,7 +260,6 @@ public class KTableSuppressTests
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());
         
-        DateTime dt = DateTime.Parse("15/10/2024 08:00:00");
         inputTopic.PipeInput("key1", "value1", dt);
 
         Assert.Throws<StreamsException>(() => inputTopic.PipeInput("dummy", "dummy", dt.AddMinutes(2)));
