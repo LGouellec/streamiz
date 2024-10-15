@@ -56,9 +56,9 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
             => _parent.EnableSendingOldValues();
 
         public IProcessor<K, Change<V>> Get()
-        {
-            throw new System.NotImplementedException();
-        }
+            => new KTableSuppressProcessor<K, V>(
+                _suppressed,
+                _storeName);
 
         public IKTableValueGetterSupplier<K, V> View
         {

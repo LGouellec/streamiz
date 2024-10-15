@@ -16,9 +16,11 @@ namespace Streamiz.Kafka.Net.State.Suppress
         public override bool IsWindowStore => false;
         public override long RetentionMs => -1;
         
-        public override InMemoryTimeOrderedKeyValueChangeBuffer<K, V> Build()
-        {
-            throw new System.NotImplementedException();
-        }
+        public override InMemoryTimeOrderedKeyValueChangeBuffer<K, V> Build() =>
+            new(
+                Name,
+                LoggingEnabled,
+                keySerdes,
+                valueSerdes);
     }
 }
