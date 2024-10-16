@@ -283,11 +283,18 @@ public class InMemoryTimeOrderedKeyValueChangeBufferTests
     [Test]
     public void RestoreTest()
     {
-        var bufferValue1 = GetBufferValue("value1", 0L).Serialize(sizeof(long));
+        BufferValue GetBufferValueWithHeaders(string v, long timestamp)
+        {
+            var bufferValue = GetBufferValue(v, timestamp);
+            bufferValue.RecordContext.Headers.Add("header", Encoding.UTF8.GetBytes("header-value"));
+            return bufferValue;
+        }
+        
+        var bufferValue1 = GetBufferValueWithHeaders("value1", 0L).Serialize(sizeof(long));
         bufferValue1.PutLong(0L);
-        var bufferValue2 = GetBufferValue("value2", 1L).Serialize(sizeof(long));
+        var bufferValue2 = GetBufferValueWithHeaders("value2", 1L).Serialize(sizeof(long));
         bufferValue2.PutLong(1L);
-        var bufferValue3 = GetBufferValue("value3", 2L).Serialize(sizeof(long));
+        var bufferValue3 = GetBufferValueWithHeaders("value3", 2L).Serialize(sizeof(long));
         bufferValue3.PutLong(2L);
 
         BufferValue fb2bis = new BufferValue(
@@ -298,6 +305,8 @@ public class InMemoryTimeOrderedKeyValueChangeBufferTests
         var bufferValue2Bis = fb2bis.Serialize(sizeof(long));
         bufferValue2Bis.PutLong(3L);
 
+        var headerSizeBytes = 18L;
+        
         List<ConsumeResult<byte[], byte[]>> recordsToRestore = new()
         {
             new ConsumeResult<byte[], byte[]>
@@ -346,7 +355,7 @@ public class InMemoryTimeOrderedKeyValueChangeBufferTests
         
         Assert.AreEqual(3, buffer.NumRecords);
         Assert.AreEqual(0, buffer.MinTimestamp);
-        Assert.AreEqual(129, buffer.BufferSize);
+        Assert.AreEqual(129 + 3*headerSizeBytes, buffer.BufferSize);
 
         restoreCallback(new ConsumeResult<byte[], byte[]>
         {
@@ -364,7 +373,7 @@ public class InMemoryTimeOrderedKeyValueChangeBufferTests
         
         Assert.AreEqual(2, buffer.NumRecords);
         Assert.AreEqual(0, buffer.MinTimestamp);
-        Assert.AreEqual(86, buffer.BufferSize);
+        Assert.AreEqual(86 + 2*headerSizeBytes, buffer.BufferSize);
         
         restoreCallback(new ConsumeResult<byte[], byte[]>
         {

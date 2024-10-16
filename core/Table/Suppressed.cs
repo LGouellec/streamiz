@@ -62,7 +62,7 @@ namespace Streamiz.Kafka.Net.Table
     }
 
     /// <summary>
-    /// Buffer Full Strategyy
+    /// Buffer Full Strategy
     /// </summary>
     public enum BUFFER_FULL_STRATEGY
     {
