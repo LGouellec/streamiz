@@ -26,7 +26,7 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly ISerDes<K> keySerdes;
         private readonly ISerDes<V> valueSerdes;
 
-        private bool OverCapacity => buffer?.BufferSize > maxBytes || buffer?.NumRecords > maxRecords;
+        private bool OverCapacity => buffer.BufferSize > maxBytes || buffer.NumRecords > maxRecords;
 
         public KTableSuppressProcessor(Suppressed<K, V> suppressed, string storeName)
         {

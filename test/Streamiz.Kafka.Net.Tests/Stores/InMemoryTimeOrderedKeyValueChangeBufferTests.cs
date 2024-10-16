@@ -10,6 +10,7 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State.Suppress.Internal;
 using Moq;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Mock.Sync;
@@ -380,6 +381,10 @@ public class InMemoryTimeOrderedKeyValueChangeBufferTests
         });
 
         Assert.IsFalse(buffer.PriorValueForBuffered("key3").IsDefined);
+        Assert.Throws<IllegalStateException>(() =>
+        {
+            var value = buffer.PriorValueForBuffered("key3").Value;
+        });
         Assert.IsTrue(buffer.PriorValueForBuffered("key1").IsDefined);
         Assert.IsNull(buffer.PriorValueForBuffered("key1").Value);
         Assert.IsTrue(buffer.PriorValueForBuffered("key2").IsDefined);

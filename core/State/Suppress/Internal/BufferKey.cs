@@ -10,7 +10,7 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
             => x.CompareTo(y);
     }
     
-    internal class BufferKey : IEquatable<BufferKey>, IComparable<BufferKey>
+    internal class BufferKey : IComparable<BufferKey>
     {
         public long Time { get; }
         public Bytes Key { get; }
@@ -20,9 +20,6 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
             Time = time;
             Key = key;
         }
-
-        public bool Equals(BufferKey other)
-            => Time.Equals(other.Time) && Key.Equals(other.Key);
 
         public int CompareTo(BufferKey other)
         {

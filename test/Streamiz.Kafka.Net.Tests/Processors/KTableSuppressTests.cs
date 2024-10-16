@@ -1,7 +1,8 @@
 using System;
 using System.Globalization;
 using System.Linq;
-using System.Security.Cryptography;
+using System.Text;
+using Confluent.Kafka;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock;
@@ -39,7 +40,9 @@ public class KTableSuppressTests
                     .As<string, long>("count-store")
                     .WithKeySerdes(new StringSerDes())
                     .WithValueSerdes(new Int64SerDes()))
-            .Suppress(suppressed)
+            .Suppress(suppressed
+                .WithKeySerdes(new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds))
+                .WithValueSerdes(new Int64SerDes()))
             .ToStream()
             .To("output", 
                 new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds), 
@@ -54,7 +57,7 @@ public class KTableSuppressTests
         var builder =
             BuildTopology(
                 SuppressedBuilder.UntilTimeLimit<Windowed<string>, long>(TimeSpan.Zero,
-                    StrictBufferConfig.Unbounded()));
+                    StrictBufferConfig.Unbounded().WithLoggingEnabled(null)));
         
         using var driver = new TopologyTestDriver(builder.Build(), streamConfig);
         var inputTopic = driver.CreateInputTopic("input", new StringSerDes(), new StringSerDes());
@@ -76,7 +79,7 @@ public class KTableSuppressTests
         var builder =
             BuildTopology(
                 SuppressedBuilder.UntilTimeLimit<Windowed<string>, long>(TimeSpan.FromSeconds(1),
-                    StrictBufferConfig.Unbounded()));
+                    StrictBufferConfig.Unbounded().WithLoggingDisabled()));
         
         using var driver = new TopologyTestDriver(builder.Build(), streamConfig);
         var inputTopic = driver.CreateInputTopic("input", new StringSerDes(), new StringSerDes());
@@ -207,7 +210,7 @@ public class KTableSuppressTests
         var builder =
             BuildTopology(
                 SuppressedBuilder.UntilWindowClose<Windowed<string>, long>(TimeSpan.FromDays(100),
-                    EagerConfig.EmitEarlyWhenFull(CacheSize.OfB(80))));
+                    EagerConfig.EmitEarlyWhenFull(CacheSize.OfB(80)).WithLoggingDisabled()));
         
         using var driver = new TopologyTestDriver(builder.Build(), streamConfig);
         var inputTopic = driver.CreateInputTopic("input", new StringSerDes(), new StringSerDes());
@@ -223,6 +226,32 @@ public class KTableSuppressTests
         Assert.AreEqual(1, records.Count());
         Assert.AreEqual("key1", records.First().Message.Key.Key);
         Assert.AreEqual(1, records.First().Message.Value);
+    }
+    
+    [Test]
+    public void SuppressShouldEmitWhenOverByteAndRecordCapacity()
+    {
+        var builder =
+            BuildTopology(
+                SuppressedBuilder.UntilWindowClose<Windowed<string>, long>(TimeSpan.FromDays(100),
+                    EagerConfig.EmitEarlyWhenFull(3, CacheSize.OfB(120)).WithLoggingEnabled(null)));
+        
+        using var driver = new TopologyTestDriver(builder.Build(), streamConfig);
+        var inputTopic = driver.CreateInputTopic("input", new StringSerDes(), new StringSerDes());
+        var outputTopic = driver.CreateOuputTopic("output",
+            TimeSpan.FromSeconds(5),
+            new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
+            new Int64SerDes());
+        
+        inputTopic.PipeInput("key1", "value1", dt);
+        inputTopic.PipeInput("key1", "value2", dt);
+        inputTopic.PipeInput("key1", "value3", dt);
+        inputTopic.PipeInput("dummy", "dummy", dt.AddMinutes(2));
+        
+        var records = outputTopic.ReadKeyValueList();
+        Assert.AreEqual(1, records.Count());
+        Assert.AreEqual("key1", records.First().Message.Key.Key);
+        Assert.AreEqual(3, records.First().Message.Value);
     }
 
     [Test]
@@ -263,5 +292,34 @@ public class KTableSuppressTests
         inputTopic.PipeInput("key1", "value1", dt);
 
         Assert.Throws<StreamsException>(() => inputTopic.PipeInput("dummy", "dummy", dt.AddMinutes(2)));
+    }
+    
+    [Test]
+    public void EmitEndWindowWithHeaders()
+    {
+        var builder =
+            BuildTopology(
+                SuppressedBuilder.UntilWindowClose<Windowed<string>, long>(TimeSpan.Zero,
+                    StrictBufferConfig.Unbounded()));
+        
+        using var driver = new TopologyTestDriver(builder.Build(), streamConfig);
+        var inputTopic = driver.CreateInputTopic("input", new StringSerDes(), new StringSerDes());
+        var outputTopic = driver.CreateOuputTopic("output",
+            TimeSpan.FromSeconds(5),
+            new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
+            new Int64SerDes());
+
+        Headers headers = new Headers();
+        headers.Add("header", Encoding.UTF8.GetBytes("header-value"));
+        
+        inputTopic.PipeInput("key1", "value1", dt, headers);
+        inputTopic.PipeInput("key1", "value2", dt.AddMinutes(1));
+
+        var records = outputTopic.ReadKeyValueList().ToList();
+        Assert.AreEqual(1, records.Count);
+        Assert.AreEqual(1, records[0].Message.Headers.Count);
+        Assert.AreEqual("key1", records[0].Message.Key.Key);
+        Assert.AreEqual(1L, records[0].Message.Value);
+        Assert.AreEqual("header", records[0].Message.Headers[0].Key);
     }
 }

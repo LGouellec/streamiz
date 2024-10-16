@@ -35,6 +35,18 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
                        ((NewValue == null && value.NewValue == null) || NewValue.SequenceEqual(value.NewValue));
         }
 
+        public override int GetHashCode()
+        {
+            #if NETSTANDARD2_0
+                uint hashCode1 = NewValue != null ? (uint) NewValue.GetHashCode() : 0U;
+                uint hashCode2 = PriorValue != null ? (uint) PriorValue.GetHashCode() : 0U;
+                uint hashCode3 = OldValue != null ? (uint) OldValue.GetHashCode() : 0U;
+                return (int)(hashCode1 & hashCode2 & hashCode3);
+            #else
+                return HashCode.Combine(NewValue, PriorValue, OldValue);
+            #endif
+        }
+
         public long MemoryEstimatedSize()
         {
             return (PriorValue?.Length ?? 0) +
