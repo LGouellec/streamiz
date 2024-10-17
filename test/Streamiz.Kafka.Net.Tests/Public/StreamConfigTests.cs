@@ -296,6 +296,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             stream.InternalTerminationSignal = 1;
             stream.IsolationLevel = Confluent.Kafka.IsolationLevel.ReadCommitted;
             stream.LingerMs = 12;
+            stream.PartitionAssignmentStrategy = PartitionAssignmentStrategy.CooperativeSticky;
             stream.LogConnectionClose = false;
             stream.LogQueue = true;
             stream.LogThreadName = false;

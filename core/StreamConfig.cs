@@ -2318,7 +2318,7 @@ namespace Streamiz.Kafka.Net
             EnableAutoCommit = false;
             EnableAutoOffsetStore = false;
             AllowAutoCreateTopics = false;
-            PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.CooperativeSticky;
+            PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.Range;
             Partitioner = Confluent.Kafka.Partitioner.Murmur2Random;
 
             Logger = LoggerFactory.Create(builder =>
