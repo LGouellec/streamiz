@@ -116,10 +116,10 @@ static async System.Threading.Tasks.Task Main(string[] args)
 | Sliding window                                               |              X                     |                        | No plan for now                            |
 | Session window                                               |              X                     |                        | No plan for now                            |
 | Cache                                                        |              X                     |         X              | EA 1.6.0                                   |
-| Suppress(..)                                                 |              X                     |                        | No plan for now                            |
+| Suppress(..)                                                 |              X                     |           X             | Plan for 1.7.0                           |
 | Interactive Queries                                          |              X                     |                        | No plan for now                            |
 | State store batch restoring                                  |              X                     |                        | No plan for now                            |
-| Exactly Once (v1 and v2)                                     |              X                     |         X              | EOS V1 supported, EOS V2 not supported yet |
+| Exactly Once v2                                     |              X                     |         X              |  |
 
 # Community Support
 

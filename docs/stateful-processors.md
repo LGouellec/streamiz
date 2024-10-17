@@ -477,3 +477,39 @@ builder.Stream<string, string>("input")
 |     t0+10s | key: key1 ; value : eventID1  |   key: key1 ; value : eventID1 ; t0    |   X                                      |
 |     t0+30s | key: key1 ; value : eventID2  |   key: key1 ; value : eventID2 ; t0+30s|   key: key1 ; value : eventID2           |
 |     t0+95s | key: key1 ; value : eventID2  |   key: key1 ; value : eventID2 ; t0+95s|   key: key1 ; value : eventID2           |
+
+## Suppress
+
+In Streamiz, windowed computations update their results continuously. As new data arrives for a window, freshly computed results are emitted downstream. For many applications, this is ideal, since fresh results are always available. and Streamiz is designed to make programming continuous computations seamless. However, some applications need to take action only on the final result of a windowed computation. Common examples of this are sending alerts or delivering results to a system that doesn't support updates.
+
+Suppose that you have an hourly windowed count of events per user. If you want to send an alert when a user has less than three events in an hour, you have a real challenge. All users would match this condition at first, until they accrue enough events, so you cannot simply send an alert when someone matches the condition; you have to wait until you know you won't see any more events for a particular window and then send the alert.
+
+Streamiz offers a clean way to define this logic: after defining your windowed computation, you can suppress the intermediate results, emitting the final count for each user when the window is closed.
+
+Example : 
+
+``` csharp
+var builder = new StreamBuilder();
+        
+builder.Stream("input", new StringSerDes(), new StringSerDes())
+    .GroupByKey()
+    .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
+    .Count(
+        InMemoryWindows
+            .As<string, long>("count-store")
+            .WithKeySerdes(new StringSerDes())
+            .WithValueSerdes(new Int64SerDes()))
+    .Suppress(SuppressedBuilder.UntilWindowClose<Windowed<string>, long>(TimeSpan.FromMinutes(1),
+                StrictBufferConfig.Unbounded()))
+    .ToStream()
+    .To("output", 
+        new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds), 
+        new Int64SerDes());
+```
+
+The key parts of this program are:
+- `TumblingWindowOptions.Of(TimeSpan.FromMinutes(1))` Define a tumbling window of 1 minute
+- `.Suppress(SuppressedBuilder.UntilWindowClose<Windowed<string>, long>(TimeSpan.Zero,` This configures the suppression operator to emit nothing for a window until it closes, and then emit the final result without a grace period.
+- `StrictBufferConfig.Unbounded()))` This configures the buffer used for storing events until their windows close.
+
+More details on the `Suppressed` class in the documentation.
