@@ -191,10 +191,8 @@ Maximum allowed time between calls to consume messages for high-level consumers.
 
 ### BufferedRecordsPerPartition
 
-Maximum number of records to buffer per partition. (Default: 1000)
+[Deprecated] Maximum number of records to buffer per partition. (Default: Int32.MaxValue)
 If this number is exceeded, the consumer pauses for this partition until stream instance process messages.
-
-
 
 ### InnerExceptionHandler
 
@@ -267,7 +265,6 @@ Manager which track offset saved in local state store.
 
 A Rocks DB config handler function called just before openning a rocksdb state store.
 
-
 ### MetricsIntervalMs
 
 Delay between two invocations of `MetricsReporter()`. The minimum and default value is 30 seconds.
@@ -289,7 +286,7 @@ The highest recording level for metrics (default: INFO).
 
 ### StartTaskDelayMs
 
-Time wait before completing the start task of `KafkaStream` (default: 5000).
+[Obsolete] Time wait before completing the start task of `KafkaStream` (default: 5000).
 
 ### BasicAuthUserInfo
 
