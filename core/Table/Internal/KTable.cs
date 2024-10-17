@@ -11,6 +11,7 @@ using Streamiz.Kafka.Net.Table.Internal.Graph;
 using Streamiz.Kafka.Net.Table.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
+using Streamiz.Kafka.Net.State.Suppress;
 
 namespace Streamiz.Kafka.Net.Table.Internal
 {
@@ -237,6 +238,46 @@ namespace Streamiz.Kafka.Net.Table.Internal
         public IKTable<K, VR> OuterJoin<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null)
             => OuterJoin(table, new WrappedValueJoiner<V, VT, VR>(valueJoiner), materialized, named);
 
+        #endregion
+        
+        #region Suppress
+        
+        public IKTable<K, V> Suppress(Suppressed<K, V> suppressed, string named = null)
+        {
+            var name = new Named(named).OrElseGenerateWithPrefix(builder, KTable.SUPPRESS_NAME);
+            suppressed.Name = name;
+
+            var storeName = !string.IsNullOrEmpty(named)
+                ? $"{named}-store"
+                : builder.NewStoreName(KTable.SUPPRESS_NAME);
+
+            IProcessorSupplier<K, Change<V>> processorSupplier = new KTableSuppress<K, S, V>(suppressed, storeName, this);
+
+            var storeBuilder =
+                new InMemoryTimeOrderedKeyValueChangeBufferBuilder<K, V>(storeName, KeySerdes, ValueSerdes);
+
+            if (suppressed.BufferConfig.LoggingEnabled)
+                storeBuilder.WithLoggingEnabled(suppressed.BufferConfig.Config);
+            else
+                storeBuilder.WithLoggingDisabled();
+
+            var processorNode = new StatefulProcessorNode<K, Change<V>>(name,
+                new ProcessorParameters<K, Change<V>>(processorSupplier, name),
+                storeBuilder, null);
+            
+            builder.AddGraphNode(Node, processorNode);
+
+            return new KTable<K, V, V>(
+                name,
+                KeySerdes,
+                ValueSerdes,
+                SetSourceNodes,
+                null,
+                processorSupplier,
+                processorNode,
+                builder);
+        }
+        
         #endregion
 
         #endregion

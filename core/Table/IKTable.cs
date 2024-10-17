@@ -949,5 +949,14 @@ namespace Streamiz.Kafka.Net.Table
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>a <see cref="IKTable{K, VR}"/> that contains join-records for each key and values computed by the given value joiner, one for each matched record-pair with the same key plus one for each non-matching record both KTables</returns>
         IKTable<K, VR> OuterJoin<VT, VR>(IKTable<K, VT> table, Func<V, VT, VR> valueJoiner, Materialized<K, VR, IKeyValueStore<Bytes, byte[]>> materialized, string named = null);
+
+        /// <summary>
+        /// Suppress some updates from this changelog stream, determined by the supplied <paramref name="suppressed"/> configuration.
+        /// This controls what updates downstream table and stream operations will receive.
+        /// </summary>
+        /// <param name="suppressed">Configuration object determining what, if any, updates to suppress</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>A new KTable with the desired suppression characteristics.</returns>
+        IKTable<K, V> Suppress(Suppressed<K, V> suppressed, string named = null);
     }
 }

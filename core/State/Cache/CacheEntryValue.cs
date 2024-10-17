@@ -24,10 +24,6 @@ namespace Streamiz.Kafka.Net.State.Cache
 
         public long Size =>
             (Value != null ? Value.LongLength : 0) +
-            sizeof(int) + // partition
-            sizeof(long) + //offset
-            sizeof(long) + // timestamp
-            Context.Topic.Length + // topic length
-            Context.Headers.GetEstimatedSize(); // headers size
+            Context.MemorySizeEstimate;
     }
 }
