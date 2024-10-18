@@ -28,6 +28,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker-1:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_LOG4J_LOGGERS: "kafka=INFO,kafka.network.RequestChannel$=WARN,kafka.producer.async.DefaultEventHandler=DEBUG,kafka.request.logger=DEBUG,kafka.controller=TRACE,log4j.logger.kafka.log.LogCleaner=INFO,log4j.logger.state.change.logger=TRACE,log4j.logger.kafka.authorizer.logger=WARN"
       KAFKA_ALLOW_AUTO_CREATE_TOPICS: false
       KAFKA_DEFAULT_REPLICATION_FACTOR: 2
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
@@ -66,6 +67,7 @@ services:
       KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_LOG4J_LOGGERS: "kafka=INFO,kafka.network.RequestChannel$=WARN,kafka.producer.async.DefaultEventHandler=DEBUG,kafka.request.logger=DEBUG,kafka.controller=TRACE,log4j.logger.kafka.log.LogCleaner=INFO,log4j.logger.state.change.logger=TRACE,log4j.logger.kafka.authorizer.logger=WARN"
       KAFKA_JMX_PORT: 9102
       KAFKA_JMX_HOSTNAME: localhost
       KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry:8081

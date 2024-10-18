@@ -84,7 +84,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
 
         public virtual void RemoveValueProviders(String segmentName)
         {
-            logger.LogDebug("$Removing value providers for store {segmentName} of task {taskId}");
+            logger.LogDebug($"Removing value providers for store {segmentName} of task {taskId}");
             bool result = storeToValueProviders.TryRemove(segmentName, out DbAndCacheAndStatistics db);
             if (!result)
             {

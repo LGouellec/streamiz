@@ -61,6 +61,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
 
             string path = Path.Combine(config.StateDir, PROCESS_FILE_NAME);
+            if (!Directory.Exists(config.StateDir))
+                Directory.CreateDirectory(config.StateDir);
+            
             if (File.Exists(path))
             {
                 try

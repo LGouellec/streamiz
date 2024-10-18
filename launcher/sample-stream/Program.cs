@@ -1,18 +1,14 @@
 using Streamiz.Kafka.Net;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
-using RocksDbSharp;
-using Streamiz.Kafka.Net.Metrics;
-using Streamiz.Kafka.Net.Metrics.Prometheus;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
-using Streamiz.Kafka.Net.State.RocksDb;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
-using RocksDb = Streamiz.Kafka.Net.Table.RocksDb;
 
 namespace sample_stream
 {
@@ -27,7 +23,7 @@ namespace sample_stream
                 Logger = LoggerFactory.Create((b) =>
                 {
                     b.AddConsole();
-                    b.SetMinimumLevel(LogLevel.Information);
+                    b.SetMinimumLevel(LogLevel.Debug);
                 })
             };
            
@@ -44,14 +40,17 @@ namespace sample_stream
         private static Topology BuildTopology()
         {
             var builder = new StreamBuilder();
-            
-            builder.Stream<string, string>("input")
+
+            builder.Stream<string, string>("input2")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
                 .Count()
-                .Suppress(SuppressedBuilder.UntilWindowClose<Windowed<string>, long>(TimeSpan.FromMinutes(1), StrictBufferConfig.Unbounded()))
+                .Suppress(SuppressedBuilder.UntilWindowClose<Windowed<string>, long>(TimeSpan.Zero,
+                    StrictBufferConfig.Unbounded())
+                    .WithKeySerdes(new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds)))
                 .ToStream()
-                .To("output");
+                .Map((k,v, r) => new KeyValuePair<string,long>(k.Key, v))
+                .To<StringSerDes, Int64SerDes>("output2");
             
             return builder.Build();
         }

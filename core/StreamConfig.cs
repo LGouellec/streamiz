@@ -399,6 +399,14 @@ namespace Streamiz.Kafka.Net
     /// </summary>
     public class StreamConfig : IStreamConfig, ISchemaRegistryConfig
     {
+        private static string VersionString => Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
+        private static List<KeyValuePair<string, string>> NameAndVersionConfig => new()
+            {
+                new( "client.software.name", "streamiz-dotnet"),
+                new( "client.software.version", VersionString )
+            };
+
         private class KeyValueComparer : IEqualityComparer<KeyValuePair<string, string>>
         {
             public bool Equals(KeyValuePair<string, string> x, KeyValuePair<string, string> y)
@@ -2804,7 +2812,12 @@ namespace Streamiz.Kafka.Net
         /// <returns>Return <see cref="ProducerConfig"/> for building <see cref="IProducer{TKey, TValue}"/> instance.</returns>
         public ProducerConfig ToProducerConfig(string clientId)
         {
-            ProducerConfig config = new ProducerConfig(_producerConfig.Union(_config).Distinct(new KeyValueComparer()).ToDictionary());
+            ProducerConfig config = new ProducerConfig(
+                _producerConfig
+                    .Union(_config)
+                    .Distinct(new KeyValueComparer())
+                    .Concat(NameAndVersionConfig)
+                    .ToDictionary());
             foreach(var kv in _overrideProducerConfig)
                 config.Set(kv.Key, kv.Value);
             config.ClientId = clientId;
@@ -2818,7 +2831,12 @@ namespace Streamiz.Kafka.Net
         /// <returns>Return <see cref="ProducerConfig"/> for building <see cref="IProducer{TKey, TValue}"/> instance.</returns>
         public ProducerConfig ToExternalProducerConfig(string clientId)
         {
-            ProducerConfig config = new ProducerConfig(_producerConfig.Union(_config).Distinct(new KeyValueComparer()).ToDictionary());
+            ProducerConfig config = new ProducerConfig(
+                _producerConfig
+                    .Union(_config)
+                    .Distinct(new KeyValueComparer())
+                    .Concat(NameAndVersionConfig)
+                    .ToDictionary());
             foreach(var kv in _overrideExternalProducerConfig)
                 config.Set(kv.Key, kv.Value);
             config.ClientId = clientId;
@@ -2842,7 +2860,11 @@ namespace Streamiz.Kafka.Net
             if (!configProperties.ContainsKey(applicatonIdCst))
                 throw new StreamConfigException($"Key {applicatonIdCst} was not found. She is mandatory for getting consumer config");
 
-            var config = new ConsumerConfig(_consumerConfig.Union(_config).Distinct(new KeyValueComparer()).ToDictionary());
+            var config = new ConsumerConfig(
+                _consumerConfig.Union(_config)
+                    .Distinct(new KeyValueComparer())
+                    .Concat(NameAndVersionConfig)
+                    .ToDictionary());
             if(@override)
             {
                 _overrideMainConsumerConfig.EnableAutoCommit = false;
@@ -2865,7 +2887,12 @@ namespace Streamiz.Kafka.Net
             if (!configProperties.ContainsKey(applicatonIdCst))
                 throw new StreamConfigException($"Key {applicatonIdCst} was not found. She is mandatory for getting consumer config");
 
-            var config = new ConsumerConfig(_consumerConfig.Union(_config).Distinct(new KeyValueComparer()).ToDictionary());
+            var config = new ConsumerConfig(
+                _consumerConfig
+                    .Union(_config)
+                    .Distinct(new KeyValueComparer())
+                    .Concat(NameAndVersionConfig)
+                    .ToDictionary());
             foreach (var kv in _overrideExternalConsumerConfig)
                 config.Set(kv.Key, kv.Value);
             
@@ -2918,7 +2945,12 @@ namespace Streamiz.Kafka.Net
         /// <returns>Return <see cref="AdminClientConfig"/> for building <see cref="IAdminClient"/> instance.</returns>
         public AdminClientConfig ToAdminConfig(string clientId)
         {
-            var config = new AdminClientConfig(_adminClientConfig.Union(_config).Distinct(new KeyValueComparer()).ToDictionary());
+            var config = new AdminClientConfig(
+                _adminClientConfig
+                    .Union(_config)
+                    .Distinct(new KeyValueComparer())
+                    .Concat(NameAndVersionConfig)
+                    .ToDictionary());
             config.ClientId = clientId;
             return config;
         }

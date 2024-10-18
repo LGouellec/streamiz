@@ -448,7 +448,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var lines = File.ReadAllLines(Path.Combine(config.StateDir, config.ApplicationId, "0-0", ".checkpoint"));
             Assert.AreEqual(3, lines.Length);
-            Assert.AreEqual("test-app-store-changelog 0 10014", lines[2]);
+            Assert.AreEqual("test-app-store-changelog 0 10015", lines[2]);
 
             task.Suspend();
             task.Close(false);
