@@ -64,11 +64,11 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
             {
                 byte[] oldBytes = change.OldValue == null
                     ? null
-                    : valueSerdes.Serialize(change.OldValue,
+                    : this.valueSerdes.Serialize(change.OldValue,
                         new SerializationContext(MessageComponentType.Value, changelogTopic));
                 byte[] newBytes = change.NewValue == null
                     ? null
-                    : valueSerdes.Serialize(change.NewValue,
+                    : this.valueSerdes.Serialize(change.NewValue,
                         new SerializationContext(MessageComponentType.Value, changelogTopic));
                 return new Change<byte[]>(oldBytes, newBytes);
             };
@@ -77,11 +77,11 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
             {
                 V oldValue = change.OldValue == null
                     ? default
-                    : valueSerdes.Deserialize(change.OldValue,
+                    : this.valueSerdes.Deserialize(change.OldValue,
                         new SerializationContext(MessageComponentType.Value, changelogTopic));
                 V newValue = change.NewValue == null
                     ? default
-                    : valueSerdes.Deserialize(change.NewValue,
+                    : this.valueSerdes.Deserialize(change.NewValue,
                         new SerializationContext(MessageComponentType.Value, changelogTopic));
 
                 return new Change<V>(oldValue, newValue);
@@ -91,6 +91,19 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
         public void SetSerdesIfNull(ISerDes<K> contextKeySerdes, ISerDes<V> contextValueSerdes) {
             keySerdes ??= contextKeySerdes;
             valueSerdes ??= contextValueSerdes;
+
+            if (keySerdes == null && processorContext.Configuration.DefaultKeySerDes is ISerDes<K> defaultKeySerDes)
+                keySerdes = defaultKeySerDes;
+
+            if (valueSerdes == null && processorContext.Configuration.DefaultValueSerDes is ISerDes<V> defaultValueSerDes)
+                valueSerdes = defaultValueSerDes;
+
+            if (valueSerdes == null || keySerdes == null)
+                throw new StreamsException(
+                    $"Incorrect {(valueSerdes == null ? "value" : "key")} serdes configuration during the initialization of the KTableSuppress processor. Please set an explicit {(valueSerdes == null ? "value" : "key")} serdes using Suppressed{{K,V}}.With{(valueSerdes == null ? "Value" : "Key")}Serdes()");
+            
+            keySerdes.Initialize(processorContext.SerDesContext);
+            valueSerdes.Initialize(processorContext.SerDesContext);
         }
         
         public bool Put(long timestamp, K key, Change<V> value, IRecordContext recordContext)
@@ -183,9 +196,6 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
         
         public void Init(ProcessorContext context, IStateStore root)
         {
-            keySerdes.Initialize(context.SerDesContext);
-            valueSerdes.Initialize(context.SerDesContext);
-            
             changelogTopic = context.ChangelogFor(Name);
             processorContext = context;
 

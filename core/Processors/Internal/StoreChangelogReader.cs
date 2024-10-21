@@ -317,7 +317,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 c => new TopicPartitionOffset(
                     c.StoreMetadata.ChangelogTopicPartition, 
                     c.StoreMetadata.Offset.HasValue
-                        ? new Offset(c.StoreMetadata.Offset.Value + 1) : Offset.Beginning)).ToList();
+                        ? new Offset(c.StoreMetadata.Offset.Value) : Offset.Beginning)).ToList();
             
             restoreConsumer.IncrementalAssign(newPartitionsOffsets);
             restoreConsumer.Resume(newPartitionsOffsets.Select(t => t.TopicPartition));
@@ -336,7 +336,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     return new
                     {
                         TopicPartition = _changelog.StoreMetadata.ChangelogTopicPartition,
-                        EndOffset = offsets.High > 0 ? new Offset(offsets.High - 1) : 0,
+                        //EndOffset = offsets.High > 0 ? new Offset(offsets.High - 1) : 0,
+                        EndOffset = offsets.High,
                         BeginOffset = offsets.Low
 
                     };

@@ -204,7 +204,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     && store.Value.Store.Persistent
                     && store.Value.Store.IsLocally)
                 {
-                    checkpointOffsets.Add(store.Value.ChangelogTopicPartition, store.Value.Offset.HasValue ? store.Value.Offset.Value : OffsetCheckpointFile.OFFSET_UNKNOWN);
+                    // Add +1 for tracking the next end offset
+                    checkpointOffsets.Add(store.Value.ChangelogTopicPartition, store.Value.Offset.HasValue ? store.Value.Offset.Value + 1 : OffsetCheckpointFile.OFFSET_UNKNOWN);
                 }
             }
 
