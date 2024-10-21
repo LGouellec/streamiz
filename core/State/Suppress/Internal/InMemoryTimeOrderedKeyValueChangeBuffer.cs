@@ -64,11 +64,11 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
             {
                 byte[] oldBytes = change.OldValue == null
                     ? null
-                    : valueSerdes.Serialize(change.OldValue,
+                    : this.valueSerdes.Serialize(change.OldValue,
                         new SerializationContext(MessageComponentType.Value, changelogTopic));
                 byte[] newBytes = change.NewValue == null
                     ? null
-                    : valueSerdes.Serialize(change.NewValue,
+                    : this.valueSerdes.Serialize(change.NewValue,
                         new SerializationContext(MessageComponentType.Value, changelogTopic));
                 return new Change<byte[]>(oldBytes, newBytes);
             };
@@ -77,11 +77,11 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
             {
                 V oldValue = change.OldValue == null
                     ? default
-                    : valueSerdes.Deserialize(change.OldValue,
+                    : this.valueSerdes.Deserialize(change.OldValue,
                         new SerializationContext(MessageComponentType.Value, changelogTopic));
                 V newValue = change.NewValue == null
                     ? default
-                    : valueSerdes.Deserialize(change.NewValue,
+                    : this.valueSerdes.Deserialize(change.NewValue,
                         new SerializationContext(MessageComponentType.Value, changelogTopic));
 
                 return new Change<V>(oldValue, newValue);

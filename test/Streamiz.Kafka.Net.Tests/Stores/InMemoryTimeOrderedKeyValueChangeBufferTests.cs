@@ -42,8 +42,8 @@ public class InMemoryTimeOrderedKeyValueChangeBufferTests
         buffer = new InMemoryTimeOrderedKeyValueChangeBuffer<string, string>(
             "suppress-store",
             true,
-            new StringSerDes(),
-            new StringSerDes());
+            null,
+            null);
 
         var config = new StreamConfig();
         config.ApplicationId = "suppress-in-memory-store";
@@ -110,6 +110,7 @@ public class InMemoryTimeOrderedKeyValueChangeBufferTests
     [Test]
     public void AcceptDataTest()
     {
+        buffer.SetSerdesIfNull(new StringSerDes(), new StringSerDes());
         PutRecord(0L, 0L, "key1", "value1");
         Assert.AreEqual(1, buffer.NumRecords);
     }
@@ -117,6 +118,7 @@ public class InMemoryTimeOrderedKeyValueChangeBufferTests
     [Test]
     public void RejectNullValuesTest()
     {
+        buffer.SetSerdesIfNull(new StringSerDes(), new StringSerDes());
         RecordContext recordContext = new RecordContext(new Headers(), 0, 0L, 0, "topic");
         Assert.Throws<ArgumentNullException>(() => buffer.Put(0L, "key", null, recordContext));
     }
@@ -124,12 +126,14 @@ public class InMemoryTimeOrderedKeyValueChangeBufferTests
     [Test]
     public void RejectNullContextTest()
     {
+        buffer.SetSerdesIfNull(new StringSerDes(), new StringSerDes());
         Assert.Throws<ArgumentNullException>(() => buffer.Put(0L, "key", new Change<string>(null, "value"), null));
     }
 
     [Test]
     public void RemoveDataTest()
     {
+        buffer.SetSerdesIfNull(new StringSerDes(), new StringSerDes());
         PutRecord(0L, 0L, "key1", "value1");
         Assert.AreEqual(1, buffer.NumRecords);
         buffer.EvictWhile(() => true, (_, _, _) => { });
@@ -139,6 +143,7 @@ public class InMemoryTimeOrderedKeyValueChangeBufferTests
     [Test]
     public void RespectEvictionPredicateTest()
     {
+        buffer.SetSerdesIfNull(new StringSerDes(), new StringSerDes());
         PutRecord(0L, 0L, "key1", "value1");
         PutRecord(1L, 0L, "key2", "value2");
         Assert.AreEqual(2, buffer.NumRecords);
@@ -157,6 +162,8 @@ public class InMemoryTimeOrderedKeyValueChangeBufferTests
     [Test]
     public void TrackCountTest()
     {
+        buffer.SetSerdesIfNull(new StringSerDes(), new StringSerDes());
+        
         PutRecord(0L, 0L, "key1", "value1");
         Assert.AreEqual(1, buffer.NumRecords);
         PutRecord(1L, 0L, "key2", "value2");
@@ -168,6 +175,8 @@ public class InMemoryTimeOrderedKeyValueChangeBufferTests
     [Test]
     public void TrackSizeTest()
     {
+        buffer.SetSerdesIfNull(new StringSerDes(), new StringSerDes());
+        
         // 8 + 10 (key/value) + 25 (timestamp + tpo + headers) 
         PutRecord(0L, 0L, "key1", "value1");
         Assert.AreEqual(43, buffer.BufferSize);
@@ -182,6 +191,8 @@ public class InMemoryTimeOrderedKeyValueChangeBufferTests
     [Test]
     public void TrackMinTimestampTest()
     {
+        buffer.SetSerdesIfNull(new StringSerDes(), new StringSerDes());
+        
         PutRecord(1L, 0L, "key1", "v1");
         Assert.AreEqual(1, buffer.MinTimestamp);
         PutRecord(0L, 0L, "key2", "v2");
@@ -191,6 +202,8 @@ public class InMemoryTimeOrderedKeyValueChangeBufferTests
     [Test]
     public void EvictOldestAndUpdateSizeAndCountAndMinTimestampTest()
     {
+        buffer.SetSerdesIfNull(new StringSerDes(), new StringSerDes());
+        
         PutRecord(1L, 0L, "key1", "12345");
         Assert.AreEqual(42, buffer.BufferSize);
         Assert.AreEqual(1, buffer.NumRecords);
@@ -230,12 +243,16 @@ public class InMemoryTimeOrderedKeyValueChangeBufferTests
     [Test]
     public void ReturnUndefinedOnPriorValueForNotBufferedKeyTest()
     {
+        buffer.SetSerdesIfNull(new StringSerDes(), new StringSerDes());
+        
         Assert.IsFalse(buffer.PriorValueForBuffered("ASDF").IsDefined);
     }
 
     [Test]
     public void ReturnPriorValueForBufferedKeyTest()
     {
+        buffer.SetSerdesIfNull(new StringSerDes(), new StringSerDes());
+        
         RecordContext recordContext = new RecordContext(new Headers(), 0, 0L, 0, "topic");
         context.SetRecordMetaData(recordContext);
         
@@ -249,6 +266,8 @@ public class InMemoryTimeOrderedKeyValueChangeBufferTests
     [Test]
     public void FlushTest()
     {
+        buffer.SetSerdesIfNull(new StringSerDes(), new StringSerDes());
+        
         PutRecord(2L, 0L, "key1", "value1");
         PutRecord(1L, 1L, "key2", "value2");
         PutRecord(0L, 2L, "key3", "value3");
@@ -283,6 +302,8 @@ public class InMemoryTimeOrderedKeyValueChangeBufferTests
     [Test]
     public void RestoreTest()
     {
+        buffer.SetSerdesIfNull(new StringSerDes(), new StringSerDes());
+        
         BufferValue GetBufferValueWithHeaders(string v, long timestamp)
         {
             var bufferValue = GetBufferValue(v, timestamp);
@@ -398,5 +419,27 @@ public class InMemoryTimeOrderedKeyValueChangeBufferTests
         Assert.IsNull(buffer.PriorValueForBuffered("key1").Value);
         Assert.IsTrue(buffer.PriorValueForBuffered("key2").IsDefined);
         Assert.AreEqual("value2", buffer.PriorValueForBuffered("key2").Value.Value);
+    }
+
+    [Test]
+    public void UseDefaultSerdesTest()
+    {
+        context.Configuration.DefaultKeySerDes = new StringSerDes();
+        context.Configuration.DefaultValueSerDes = new StringSerDes();
+        buffer.SetSerdesIfNull(null, null);
+    }
+    
+    [Test]
+    public void KeySerdesStillNullTest()
+    {
+        context.Configuration.DefaultValueSerDes = new StringSerDes();
+        Assert.Throws<StreamsException>(() => buffer.SetSerdesIfNull(null, null));
+    }
+    
+    [Test]
+    public void ValueSerdesStillNullTest()
+    {
+        context.Configuration.DefaultKeySerDes = new StringSerDes();
+        Assert.Throws<StreamsException>(() => buffer.SetSerdesIfNull(null, null));
     }
 }
