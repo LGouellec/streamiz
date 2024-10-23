@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
@@ -22,24 +23,12 @@ namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry
                 .SetResourceBuilder(
                     ResourceBuilder.CreateDefault()
                         .AddService(serviceName: "Streamiz"));
-                
+            
+            //meterProviderBuilder.AddPrometheusExporter();
+            meterProviderBuilder.AddPrometheusHttpListener();
+            meterProviderBuilder.AddRuntimeInstrumentation();
+            
             actionMeterProviderBuilder?.Invoke(meterProviderBuilder);
-
-            // ONLY FOR TEST
-            // var port = RandomGenerator.GetInt32(10000);
-            // if (port < 5000)
-            //     port += 5000;
-            //
-            // logger.LogInformation($"Open telemetry remote port is {port}");
-            //
-            // meterProviderBuilder.AddPrometheusExporter((options) =>
-            //     {
-            //         // for test
-            //         options.StartHttpListener = true;
-            //         // Use your endpoint and port here
-            //         options.HttpListenerPrefixes = new string[] { $"http://localhost:{port}/" };
-            //         options.ScrapeResponseCacheDurationMilliseconds = 0;
-            //     });
 
             var tracerProvider = meterProviderBuilder.Build();
             var openTelemetryExporter = new OpenTelemetryMetricsExporter();

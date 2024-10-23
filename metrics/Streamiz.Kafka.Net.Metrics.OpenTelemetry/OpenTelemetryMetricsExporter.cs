@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry
             foreach (var metric in metrics)
             {
                 var metricKey = MetricKey(metric.Value);
-
+                //meter.
                     meter.CreateObservableGauge(
                         metricKey, 
                         () => new[]
@@ -35,7 +35,7 @@ namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry
 
         public void Dispose()
         {
-            meter.Dispose();
+            meter?.Dispose();
         }
     }
 }

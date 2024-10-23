@@ -1,14 +1,18 @@
 using Streamiz.Kafka.Net;
 using System;
-using System.Collections.Generic;
-using System.Reflection;
+using System.Diagnostics.Metrics;
+using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
+using OpenTelemetry;
+using Streamiz.Kafka.Net.Metrics.OpenTelemetry;
 using Streamiz.Kafka.Net.SerDes;
-using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
-using Streamiz.Kafka.Net.Table;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Prometheus;
 
 namespace sample_stream
 {
@@ -20,12 +24,17 @@ namespace sample_stream
                 ApplicationId = $"test-app",
                 BootstrapServers = "localhost:9092",
                 AutoOffsetReset = AutoOffsetReset.Earliest,
+                MetricsRecording = MetricsRecordingLevel.DEBUG,
+                MetricsIntervalMs = 500,
                 Logger = LoggerFactory.Create((b) =>
                 {
                     b.AddConsole();
                     b.SetMinimumLevel(LogLevel.Debug);
                 })
             };
+
+           config.UseOpenTelemetryReporter();
+           //config.UsePrometheusReporter(9090);
            
             var t = BuildTopology();
             var stream = new KafkaStream(t, config);
@@ -41,8 +50,10 @@ namespace sample_stream
         {
             var builder = new StreamBuilder();
 
-            builder.Stream<string, string>("input2")
-                .GroupByKey()
+            builder.Stream<string, string>("input")
+                .To("output2");
+                
+                /*.GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
                 .Count()
                 .Suppress(SuppressedBuilder.UntilWindowClose<Windowed<string>, long>(TimeSpan.Zero,
@@ -50,7 +61,7 @@ namespace sample_stream
                     .WithKeySerdes(new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds)))
                 .ToStream()
                 .Map((k,v, r) => new KeyValuePair<string,long>(k.Key, v))
-                .To<StringSerDes, Int64SerDes>("output2");
+                .To<StringSerDes, Int64SerDes>("output");*/
             
             return builder.Build();
         }

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using Confluent.Kafka;
 
 namespace Streamiz.Kafka.Net.Crosscutting
 {
@@ -51,6 +49,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
             return false;
         }
 
+        #if NETSTANDARD2_0 || NET5_0 || NET6_0 || NET7_0
         /// <summary>
         /// Convert enumerable of <see cref="KeyValuePair{K, V}"/> to <see cref="IDictionary{K, V}"/>
         /// </summary>
@@ -65,6 +64,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
                 r.Add(s.Key, s.Value);
             return r;
         }
+        #endif
 
         
         /// <summary>

@@ -1,4 +1,6 @@
+using System.Diagnostics.Metrics;
 using System.Threading;
+using OpenTelemetry;
 using OpenTelemetry.Metrics;
 
 namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry

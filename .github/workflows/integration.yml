@@ -11,10 +11,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Setup .NET 6.0
+    - name: Setup .NET 8.0
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 6.0.202
+        dotnet-version: 8.0.10
     # BEGIN Dependencies for RocksDB
     - run: sudo apt install -y libc6-dev libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
     - run: sudo apt install -y bzip2 lz4 librocksdb-dev

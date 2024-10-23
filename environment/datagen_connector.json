@@ -1,9 +1,8 @@
 {
-  "name": "datagen-products",
+  "name": "datagen-orders",
   "config": {
     "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-    "kafka.topic": "users",
-    "quickstart": "users",
+    "kafka.topic": "input",
     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
     "value.converter.schemas.enable": "false",

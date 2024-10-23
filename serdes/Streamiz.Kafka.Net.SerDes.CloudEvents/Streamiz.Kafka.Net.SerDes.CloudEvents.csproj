@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net5.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>net5.0;net6.0;netstandard2.0;net7.0;net8.0</TargetFrameworks>
     <RootNamespace>Streamiz.Kafka.Net.SerDes.CloudEvents</RootNamespace>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Authors>@LGouellec</Authors>

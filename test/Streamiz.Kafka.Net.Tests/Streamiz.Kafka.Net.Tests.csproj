@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0</TargetFrameworks>
     <RootNamespace>Streamiz.Kafka.Net.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
     <AssemblyName>Streamiz.Kafka.Net.Tests</AssemblyName>
@@ -12,6 +11,7 @@
     <PackageVersion>1.6.0-RC1</PackageVersion>
     <AssemblyVersion>1.6.0</AssemblyVersion>
     <FileVersion>1.6.0</FileVersion>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
