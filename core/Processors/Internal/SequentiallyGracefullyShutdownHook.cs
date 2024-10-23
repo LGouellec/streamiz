@@ -31,9 +31,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             _tokenSource.Cancel();
             
             foreach (var t in _streamThreads)
-            {
                 t.Dispose();
-            }
             
             _externalStreamThread?.Dispose();
             _globalStreamThread?.Dispose();

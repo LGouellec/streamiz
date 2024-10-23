@@ -33,7 +33,6 @@ namespace Streamiz.Kafka.Net.Processors
         private IAdminClient adminClient;
         private readonly string logPrefix;
         private readonly Thread thread;
-        private CancellationToken token;
         
         private DateTime lastCommit = DateTime.Now;
         private DateTime lastMetrics = DateTime.Now;
@@ -93,7 +92,7 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 SetState(ThreadState.RUNNING);
 
-                while (!token.IsCancellationRequested)
+                while (State.IsRunning())
                 {
                     if (exception != null)
                     {
@@ -205,13 +204,11 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 if (!IsDisposable)
                 {
-                    
-                    log.LogInformation($"{logPrefix}Shutting down");
-
-                    SetState(ThreadState.PENDING_SHUTDOWN);
-
                     IsRunning = false;
-
+                    
+                    if (State != ThreadState.PENDING_SHUTDOWN)
+                        SetState(ThreadState.PENDING_SHUTDOWN);
+                    
                     CommitOffsets(true);
 
                     var consumer = GetConsumer();
@@ -308,6 +305,9 @@ namespace Streamiz.Kafka.Net.Processors
         {
             try
             {
+                log.LogInformation($"{logPrefix}Shutting down");
+                SetState(ThreadState.PENDING_SHUTDOWN);
+                
                 thread.Join();
             }
             catch (Exception e)
@@ -326,8 +326,7 @@ namespace Streamiz.Kafka.Net.Processors
                 IsRunning = false;
                 return;
             }
-
-            this.token = token;
+            
             IsRunning = true;
             
             if(configuration.Guarantee == ProcessingGuarantee.EXACTLY_ONCE)
