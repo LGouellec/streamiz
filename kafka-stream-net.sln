@@ -21,7 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streamiz.Kafka.Net.SchemaRe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf", "serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf.csproj", "{21CD1F56-F1AF-42BD-877B-43AC36A43793}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Crosscutting", "Crosscutting", "{A34792BA-25DD-44A5-B420-9CC810379BFE}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Metrics", "Metrics", "{A34792BA-25DD-44A5-B420-9CC810379BFE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Streamiz.Kafka.Net.Metrics.Prometheus", "metrics\Streamiz.Kafka.Net.Metrics.Prometheus\Streamiz.Kafka.Net.Metrics.Prometheus.csproj", "{29CB687B-951E-4B3E-AD1C-13B222490091}"
 EndProject

@@ -380,10 +380,9 @@ namespace Streamiz.Kafka.Net.Mock
             var store = behavior.GetStateStore<K, V>(name);
             if (store is ITimestampedWindowStore<K, V>)
                 return new ReadOnlyWindowStoreFacade<K, V>(store as ITimestampedWindowStore<K, V>);
-            else if (store is IReadOnlyWindowStore<K, V>)
+            if (store is IReadOnlyWindowStore<K, V>)
                 return (IReadOnlyWindowStore<K, V>)store;
-            else
-                return null;
+            return null;
         }
 
         #endregion

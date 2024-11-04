@@ -11,19 +11,19 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
     {
         private static readonly JsonSerializerOptions _jsonSerializerOptions = new();
 
-        public class Tag
+        private class Tag
         {
             public string Field1 { get; set; }
             public string Field2 { get; set; }
             public string Field3 { get; set; }
         }
 
-        public class Metadata
+        private class Metadata
         {
             public Dictionary<string, string> Data { get; set; }
         }
 
-        public class TagInfo
+        private class TagInfo
         {
             public Tag Tag { get; set; }
             public Metadata MetaData { get; set; }

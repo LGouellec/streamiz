@@ -2,6 +2,7 @@ using Streamiz.Kafka.Net;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
@@ -23,7 +24,7 @@ namespace sample_stream
                 Logger = LoggerFactory.Create((b) =>
                 {
                     b.AddConsole();
-                    b.SetMinimumLevel(LogLevel.Debug);
+                    b.SetMinimumLevel(LogLevel.Information);
                 })
             };
            
@@ -35,20 +36,52 @@ namespace sample_stream
             };
 
             await stream.StartAsync();
-        }
+
+            while (true)
+            {
+                try
+                {
+                    DateTime now = DateTime.Now;
+                    TimeSpan _windowSizeMs = TimeSpan.FromDays(1);
+
+                    var windowStore = stream.Store(
+                        StoreQueryParameters.FromNameAndType("agg-store",
+                            QueryableStoreTypes.WindowStore<string, long>()));
+
+                    var items = windowStore?.FetchAll(
+                            now.Subtract(_windowSizeMs),
+                            now.Add(_windowSizeMs))
+                        .ToList();
+                    Thread.Sleep(10);
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
+       }
         
         private static Topology BuildTopology()
         {
             var builder = new StreamBuilder();
 
+            TimeSpan _windowSizeMs = TimeSpan.FromSeconds(5);
+            
+            var materializer
+                        = InMemoryWindows
+                            .As<string, long>("agg-store", _windowSizeMs)
+                            .WithKeySerdes(new StringSerDes())
+                            .WithValueSerdes(new Int64SerDes())
+                            .WithRetention(_windowSizeMs);
+            
             builder.Stream<string, string>("input2")
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
-                .Count()
-                .Suppress(SuppressedBuilder.UntilWindowClose<Windowed<string>, long>(TimeSpan.Zero,
+                .Count(materializer)
+                /*.Suppress(SuppressedBuilder.UntilWindowClose<Windowed<string>, long>(TimeSpan.Zero,
                     StrictBufferConfig.Unbounded())
                     .WithKeySerdes(new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds)))
-                .ToStream()
+                */.ToStream()
                 .Map((k,v, r) => new KeyValuePair<string,long>(k.Key, v))
                 .To<StringSerDes, Int64SerDes>("output2");
             

@@ -12,7 +12,6 @@ using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.State.Helper;
-using Streamiz.Kafka.Net.State.InMemory.Internal;
 using Streamiz.Kafka.Net.State.Internal;
 
 namespace Streamiz.Kafka.Net.State.InMemory
@@ -262,8 +261,11 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
     #endregion
 
-    internal class 
-        InMemoryWindowStore : IWindowStore<Bytes, byte[]>
+    /// <summary>
+    /// <see cref="InMemoryWindowStore"/> implements <see cref="IWindowStore{K, V}"/>. 
+    /// This store can be used for development phase. It's not persistent, so be careful.
+    /// </summary>
+    public class InMemoryWindowStore : IWindowStore<Bytes, byte[]>
     {
         private readonly TimeSpan retention;
         private readonly long size;
@@ -273,6 +275,8 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
         private long observedStreamTime = -1;
         private int seqnum = 0;
+
+        private Mutex _mutex = new();
 
         private readonly ConcurrentDictionary<long, ConcurrentDictionary<Bytes, byte[]>> map = new();
         private readonly ConcurrentSet<InMemoryWindowStoreEnumeratorWrapper> openIterators = new();
@@ -302,19 +306,36 @@ namespace Streamiz.Kafka.Net.State.InMemory
         
         public virtual IKeyValueEnumerator<Windowed<Bytes>, byte[]> All()
         {
-            RemoveExpiredData();
-            long minTime = observedStreamTime - (long)retention.TotalMilliseconds;
-            return CreateNewWindowedKeyValueEnumerator(null, null, Tail(minTime));
+            try
+            {
+                _mutex.WaitOne();
+                RemoveExpiredData();
+                long minTime = observedStreamTime - (long)retention.TotalMilliseconds;
+                return CreateNewWindowedKeyValueEnumerator(null, null, Tail(minTime));
+            }
+            finally
+            {
+                _mutex.ReleaseMutex();
+            }
         }
 
         public void Close()
         {
-            if (openIterators.Count != 0)
+            try
             {
-                logger.LogWarning("Closing {OpenIteratorCount} open iterators for store {Name}", openIterators.Count, Name);
-                foreach(var iterator in openIterators)
-                    iterator.Close();
-                openIterators.Clear();
+                _mutex.WaitOne();
+                if (openIterators.Count != 0)
+                {
+                    logger.LogWarning("Closing {OpenIteratorCount} open iterators for store {Name}",
+                        openIterators.Count, Name);
+                    foreach (var iterator in openIterators)
+                        iterator.Close();
+                    openIterators.Clear();
+                }
+            }
+            finally
+            {
+                _mutex.ReleaseMutex();
             }
 
             map.Clear();
@@ -323,20 +344,28 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
         public virtual byte[] Fetch(Bytes key, long time)
         {
-            RemoveExpiredData();
-
-            if (time <= observedStreamTime - retention.TotalMilliseconds)
-                return null;
-
-            if (map.ContainsKey(time))
+            try
             {
-                var keyFrom = retainDuplicates ? WrapWithSeq(key, 0) : key;
-                var keyTo = retainDuplicates ? WrapWithSeq(key, Int32.MaxValue) : key;
-                return map[time]
-                    .FirstOrDefault(kv => kv.Key.CompareTo(keyFrom) >= 0 && kv.Key.CompareTo(keyTo) <= 0).Value;
+                _mutex.WaitOne();
+                RemoveExpiredData();
+
+                if (time <= observedStreamTime - retention.TotalMilliseconds)
+                    return null;
+
+                if (map.ContainsKey(time))
+                {
+                    var keyFrom = retainDuplicates ? WrapWithSeq(key, 0) : key;
+                    var keyTo = retainDuplicates ? WrapWithSeq(key, Int32.MaxValue) : key;
+                    return map[time]
+                        .FirstOrDefault(kv => kv.Key.CompareTo(keyFrom) >= 0 && kv.Key.CompareTo(keyTo) <= 0).Value;
+                }
+                else
+                    return null;
             }
-            else
-                return null;
+            finally
+            {
+                _mutex.ReleaseMutex();
+            }
         }
 
         public virtual IWindowStoreEnumerator<byte[]> Fetch(Bytes key, DateTime from, DateTime to)
@@ -344,31 +373,48 @@ namespace Streamiz.Kafka.Net.State.InMemory
 
         public virtual IWindowStoreEnumerator<byte[]> Fetch(Bytes key, long from, long to)
         {
-            RemoveExpiredData();
-
-            long minTime = Math.Max(from, observedStreamTime - (long)retention.TotalMilliseconds + 1);
-
-
-            if (to < minTime)
+            try
             {
-                return new EmptyWindowStoreEnumerator<byte[]>();
-            }
+                _mutex.WaitOne();
+                RemoveExpiredData();
 
-            return CreateNewWindowStoreEnumerator(key, SubMap(minTime, to));
+                long minTime = Math.Max(from, observedStreamTime - (long)retention.TotalMilliseconds + 1);
+
+
+                if (to < minTime)
+                {
+                    return new EmptyWindowStoreEnumerator<byte[]>();
+                }
+
+                return CreateNewWindowStoreEnumerator(key, SubMap(minTime, to));
+            }
+            finally
+            {
+                _mutex.ReleaseMutex();
+            }
         }
 
         public virtual IKeyValueEnumerator<Windowed<Bytes>, byte[]> FetchAll(DateTime from, DateTime to)
         {
-            RemoveExpiredData();
+            try
+            {
+                _mutex.WaitOne();
+                RemoveExpiredData();
 
-            long minTime = Math.Max(from.GetMilliseconds(), observedStreamTime - (long)retention.TotalMilliseconds + 1);
+                long minTime = Math.Max(from.GetMilliseconds(),
+                    observedStreamTime - (long)retention.TotalMilliseconds + 1);
 
-            if (to.GetMilliseconds() < minTime)
-            { 
-                return new EmptyKeyValueEnumerator<Windowed<Bytes>, byte[]>();
+                if (to.GetMilliseconds() < minTime)
+                {
+                    return new EmptyKeyValueEnumerator<Windowed<Bytes>, byte[]>();
+                }
+
+                return CreateNewWindowedKeyValueEnumerator(null, null, SubMap(minTime, to.GetMilliseconds()));
             }
-
-            return CreateNewWindowedKeyValueEnumerator(null, null, SubMap(minTime, to.GetMilliseconds()));
+            finally
+            {
+                _mutex.ReleaseMutex();
+            }
         }
 
         public virtual void Flush()
