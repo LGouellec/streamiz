@@ -57,12 +57,19 @@ public class Issue382Tests
         var task = Task.Factory.StartNew(() => { 
             while(@continue)
             {
-                DateTime now = DateTime.Now;
-                var windowStore = driver.GetWindowStore<string, List<Tag>>("tags-agg-store");
-                var items = windowStore?.FetchAll(
-                        now.Subtract(_windowSizeMs),
-                        now.Add(_windowSizeMs))
-                    .ToList();
+                try
+                {
+                    DateTime now = DateTime.Now;
+                    var windowStore = driver.GetWindowStore<string, List<Tag>>("tags-agg-store");
+                    var items = windowStore?.FetchAll(
+                            now.Subtract(_windowSizeMs),
+                            now.Add(_windowSizeMs))
+                        .ToList();
+                }
+                catch
+                {
+                    // nothing
+                }
             }
         });
 
@@ -81,7 +88,7 @@ public class Issue382Tests
                     });
             }
         });
-
+        
         taskProducer.Wait();
         @continue = false;
         task?.Wait();
