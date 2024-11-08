@@ -36,29 +36,6 @@ namespace sample_stream
             };
 
             await stream.StartAsync();
-
-            while (true)
-            {
-                try
-                {
-                    DateTime now = DateTime.Now;
-                    TimeSpan _windowSizeMs = TimeSpan.FromDays(1);
-
-                    var windowStore = stream.Store(
-                        StoreQueryParameters.FromNameAndType("agg-store",
-                            QueryableStoreTypes.WindowStore<string, long>()));
-
-                    var items = windowStore?.FetchAll(
-                            now.Subtract(_windowSizeMs),
-                            now.Add(_windowSizeMs))
-                        .ToList();
-                    Thread.Sleep(10);
-                }
-                catch
-                {
-                    // ignored
-                }
-            }
        }
         
         private static Topology BuildTopology()

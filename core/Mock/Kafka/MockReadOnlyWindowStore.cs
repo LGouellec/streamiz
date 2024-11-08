@@ -63,6 +63,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                     return result;
                 }
             }
+
             return default;
         }
 
