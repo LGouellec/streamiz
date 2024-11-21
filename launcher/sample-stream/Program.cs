@@ -20,11 +20,13 @@ namespace sample_stream
                 ApplicationId = $"test-app",
                 BootstrapServers = "localhost:9092",
                 AutoOffsetReset = AutoOffsetReset.Earliest,
+                Guarantee = ProcessingGuarantee.EXACTLY_ONCE,
                 Logger = LoggerFactory.Create((b) =>
                 {
                     b.AddConsole();
-                    b.SetMinimumLevel(LogLevel.Debug);
-                })
+                    b.SetMinimumLevel(LogLevel.Information);
+                }),
+                NumStreamThreads = 2
             };
            
             var t = BuildTopology();
@@ -40,18 +42,23 @@ namespace sample_stream
         private static Topology BuildTopology()
         {
             var builder = new StreamBuilder();
-
-            builder.Stream<string, string>("input2")
-                .GroupByKey()
-                .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
-                .Count()
-                .Suppress(SuppressedBuilder.UntilWindowClose<Windowed<string>, long>(TimeSpan.Zero,
-                    StrictBufferConfig.Unbounded())
-                    .WithKeySerdes(new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds)))
-                .ToStream()
-                .Map((k,v, r) => new KeyValuePair<string,long>(k.Key, v))
-                .To<StringSerDes, Int64SerDes>("output2");
             
+            builder
+                .Stream<string, string>("input")
+                .Map((k, v, r) =>
+                {
+                    var newKey = Guid.NewGuid().ToString();
+                    return KeyValuePair.Create(newKey, newKey);
+                })
+                .GroupByKey()
+                .Aggregate(
+                    () => Guid.NewGuid().ToString(),
+                    (key, curr, acc) => acc,
+                        RocksDb.As<string, string, StringSerDes, StringSerDes>("test-ktable")
+                )
+                .ToStream()
+                            .To("output");
+                        
             return builder.Build();
         }
     }

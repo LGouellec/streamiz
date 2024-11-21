@@ -58,7 +58,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 case ProcessingGuarantee.AT_LEAST_ONCE:
                     break;
                 case ProcessingGuarantee.EXACTLY_ONCE:
-                    _producerConfig.TransactionalId = $"{config.ApplicationId}-{processId}";
+                    _producerConfig.TransactionalId = $"{config.ApplicationId}-{processId}-{threadId}";
                     break;
                 default:
                     throw new StreamsException($"Guarantee {config.Guarantee} is not supported yet");
