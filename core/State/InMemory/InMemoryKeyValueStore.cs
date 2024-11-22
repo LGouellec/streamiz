@@ -6,13 +6,14 @@ using Streamiz.Kafka.Net.State.Enumerator;
 using Streamiz.Kafka.Net.State.InMemory.Internal;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 
 namespace Streamiz.Kafka.Net.State.InMemory
 {
     /// <summary>
     /// <see cref="InMemoryKeyValueStore"/> implements <see cref="IKeyValueStore{K, V}"/>. 
-    /// This store can be used for development phase. It's not persistent, so be carefull.
+    /// This store can be used for development phase. It's not persistent, so be careful.
     /// </summary>
     public class InMemoryKeyValueStore : IKeyValueStore<Bytes, byte[]>
     {
@@ -20,7 +21,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         private BytesComparer bytesComparer;
         private int size = 0;
         private readonly ConcurrentDictionary<Bytes, byte[]> map;
-
+        
         /// <summary>
         /// Constructor with the store name
         /// </summary>

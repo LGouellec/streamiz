@@ -2,6 +2,7 @@ using Streamiz.Kafka.Net;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
@@ -37,28 +38,32 @@ namespace sample_stream
             };
 
             await stream.StartAsync();
-        }
+       }
         
         private static Topology BuildTopology()
         {
             var builder = new StreamBuilder();
+
+            TimeSpan _windowSizeMs = TimeSpan.FromSeconds(5);
             
-            builder
-                .Stream<string, string>("input")
-                .Map((k, v, r) =>
-                {
-                    var newKey = Guid.NewGuid().ToString();
-                    return KeyValuePair.Create(newKey, newKey);
-                })
+            var materializer
+                        = InMemoryWindows
+                            .As<string, long>("agg-store", _windowSizeMs)
+                            .WithKeySerdes(new StringSerDes())
+                            .WithValueSerdes(new Int64SerDes())
+                            .WithRetention(_windowSizeMs);
+            
+            builder.Stream<string, string>("input2")
                 .GroupByKey()
-                .Aggregate(
-                    () => Guid.NewGuid().ToString(),
-                    (key, curr, acc) => acc,
-                        RocksDb.As<string, string, StringSerDes, StringSerDes>("test-ktable")
-                )
-                .ToStream()
-                            .To("output");
-                        
+                .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
+                .Count(materializer)
+                /*.Suppress(SuppressedBuilder.UntilWindowClose<Windowed<string>, long>(TimeSpan.Zero,
+                    StrictBufferConfig.Unbounded())
+                    .WithKeySerdes(new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds)))
+                */.ToStream()
+                .Map((k,v, r) => new KeyValuePair<string,long>(k.Key, v))
+                .To<StringSerDes, Int64SerDes>("output2");
+            
             return builder.Build();
         }
     }
