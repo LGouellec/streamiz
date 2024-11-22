@@ -7,7 +7,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
     {
         public void Update(ConsumeResult<byte[], byte[]> record);
 
-        public void FlushState();
+        public void FlushState(bool force = false);
 
         public void Close();
 
