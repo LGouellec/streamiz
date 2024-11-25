@@ -58,7 +58,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 offsetCheckpointManager.Write(context.Id,
                     ChangelogOffsets.Where(kv =>
-                        !globalNonPersistentStateStores.Contains(kv.Key.Topic)).ToDictionary());
+                        !globalNonPersistentStateStores.Contains(kv.Key.Topic) && kv.Value != Offset.Beginning).ToDictionary());
             }
             catch (Exception e)
             {
@@ -225,14 +225,20 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             foreach (var topicPartition in topicPartitions)
             {
-                long offset, checkpoint, highWM;
-                
-                if (ChangelogOffsets.ContainsKey(topicPartition)) 
+                long offset, checkpoint, highWM, checkpointSeek;
+
+                if (ChangelogOffsets.ContainsKey(topicPartition))
+                {
                     checkpoint = ChangelogOffsets[topicPartition];
+                    checkpointSeek = checkpoint + 1;
+                }
                 else
+                {
                     checkpoint = Offset.Beginning.Value;
-                
-                globalConsumer.Assign((new TopicPartitionOffset(topicPartition, new Offset(checkpoint))).ToSingle());
+                    checkpointSeek = checkpoint;
+                }
+
+                globalConsumer.Assign((new TopicPartitionOffset(topicPartition, new Offset(checkpointSeek))).ToSingle());
                 offset = checkpoint;
                 var lowWM = offsetWatermarks[topicPartition].Item1;
                 highWM = offsetWatermarks[topicPartition].Item2;

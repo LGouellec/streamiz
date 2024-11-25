@@ -214,7 +214,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             globalStreamThread.Start();
 
             // this should be true as the thread should wait 100ms to flush
-            globalStateMaintainerMock.Verify(x => x.FlushState(), Times.Never);
+            globalStateMaintainerMock.Verify(x => x.FlushState(false), Times.Never);
             globalStreamThread.Dispose();
         }
 
@@ -236,7 +236,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             Thread.Sleep(50);
             // we are waiting longer than CommitIntervalMs so thread should already flush at least once
-            globalStateMaintainerMock.Verify(x => x.FlushState());
+            globalStateMaintainerMock.Verify(x => x.FlushState(false));
             globalStreamThread.Dispose();
         }
     }

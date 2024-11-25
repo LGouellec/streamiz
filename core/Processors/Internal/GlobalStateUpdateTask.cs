@@ -3,6 +3,7 @@ using System.Linq;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Stream.Internal;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
@@ -28,11 +29,15 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             globalStateManager.Close();
         }
 
-        public void FlushState()
+        public void FlushState(bool force = false)
         {
-            globalStateManager.Flush();
-            globalStateManager.UpdateChangelogOffsets(offsets);
-            globalStateManager.Checkpoint();
+            var changelogOffsets = globalStateManager.ChangelogOffsets;
+            if (StateManagerTools.CheckpointNeed(force, changelogOffsets, offsets))
+            {
+                globalStateManager.Flush();
+                globalStateManager.UpdateChangelogOffsets(offsets);
+                globalStateManager.Checkpoint();
+            }
         }
 
         public IDictionary<TopicPartition, long> Initialize()
@@ -61,7 +66,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             processor.Process(record);
             log.LogDebug("Completed processing one record [{RecordInfo}]", recordInfo);
             
-            offsets.AddOrUpdate(record.TopicPartition, record.Offset + 1);
+            offsets.AddOrUpdate(record.TopicPartition, record.Offset);
         }
 
         private void InitTopology()

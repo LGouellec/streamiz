@@ -44,7 +44,9 @@ namespace sample_stream
         {
             var builder = new StreamBuilder();
 
-            TimeSpan _windowSizeMs = TimeSpan.FromSeconds(5);
+            builder.GlobalTable("input", RocksDb.As<string, string>("store"));
+
+            /*TimeSpan _windowSizeMs = TimeSpan.FromSeconds(5);
             
             var materializer
                         = InMemoryWindows
@@ -57,12 +59,12 @@ namespace sample_stream
                 .GroupByKey()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
                 .Count(materializer)
-                /*.Suppress(SuppressedBuilder.UntilWindowClose<Windowed<string>, long>(TimeSpan.Zero,
+                .Suppress(SuppressedBuilder.UntilWindowClose<Windowed<string>, long>(TimeSpan.Zero,
                     StrictBufferConfig.Unbounded())
                     .WithKeySerdes(new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds)))
-                */.ToStream()
+                .ToStream()
                 .Map((k,v, r) => new KeyValuePair<string,long>(k.Key, v))
-                .To<StringSerDes, Int64SerDes>("output2");
+                .To<StringSerDes, Int64SerDes>("output2");*/
             
             return builder.Build();
         }
