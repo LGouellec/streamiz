@@ -21,11 +21,13 @@ namespace sample_stream
                 ApplicationId = $"test-app",
                 BootstrapServers = "localhost:9092",
                 AutoOffsetReset = AutoOffsetReset.Earliest,
+                Guarantee = ProcessingGuarantee.EXACTLY_ONCE,
                 Logger = LoggerFactory.Create((b) =>
                 {
                     b.AddConsole();
                     b.SetMinimumLevel(LogLevel.Information);
-                })
+                }),
+                NumStreamThreads = 2
             };
            
             var t = BuildTopology();
