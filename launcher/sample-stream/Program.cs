@@ -1,6 +1,8 @@
 using Streamiz.Kafka.Net;
 using System;
 using System.Diagnostics.Metrics;
+using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
@@ -60,22 +62,24 @@ namespace sample_stream
        {
            var config = new StreamConfig<StringSerDes, StringSerDes>{
                 ApplicationId = $"test-app",
-                BootstrapServers = "pkc-p11xm.us-east-1.aws.confluent.cloud:9092",
+                BootstrapServers = "",
                 SecurityProtocol = SecurityProtocol.SaslSsl,
                 SaslMechanism = SaslMechanism.Plain,
-                SaslUsername = "VYBKPVLBPW2CYRX4",
+                SaslUsername = "",
                 CommitIntervalMs = 200,
-                SaslPassword = "FdtYt9HdVQUo0RkI5tIrdvbfdYm3BjJfKjNiYZGBfb1VHcOABtsZR1P7ib6DKB6p",
+                SaslPassword = "",
                 SessionTimeoutMs = 45000,
                 ClientId = "ccloud-csharp-client-f7bb4f5b-f37d-4956-851e-e106065963b8",
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 MetricsRecording = MetricsRecordingLevel.DEBUG,
                 MetricsIntervalMs = 500,
+                Guarantee = ProcessingGuarantee.EXACTLY_ONCE,
                 Logger = LoggerFactory.Create((b) =>
                 {
                     b.AddConsole();
                     b.SetMinimumLevel(LogLevel.Information);
-                })
+                }),
+                NumStreamThreads = 2
             };
 
            config.UseOpenTelemetryReporter();
@@ -89,7 +93,7 @@ namespace sample_stream
             };
 
             await stream.StartAsync();
-        }
+       }
         
         private static Topology BuildTopology()
         {
@@ -97,17 +101,6 @@ namespace sample_stream
 
             builder.Stream<string, string>("sample_data")
                 .Print(Printed<string, string>.ToOut());
-                //.To("output2");
-                
-                /*.GroupByKey()
-                .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
-                .Count()
-                .Suppress(SuppressedBuilder.UntilWindowClose<Windowed<string>, long>(TimeSpan.Zero,
-                    StrictBufferConfig.Unbounded())
-                    .WithKeySerdes(new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds)))
-                .ToStream()
-                .Map((k,v, r) => new KeyValuePair<string,long>(k.Key, v))
-                .To<StringSerDes, Int64SerDes>("output");*/
             
             return builder.Build();
         }

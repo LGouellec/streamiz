@@ -50,7 +50,7 @@ namespace Streamiz.Kafka.Net.Processors
                 
                 globalConsumer.Assign(mappedPartitions);
                 foreach(var tpo in mappedPartitions)
-                    globalConsumer.StoreOffset(tpo);
+                    globalConsumer.Seek(tpo);
 
                 lastFlush = DateTime.Now;
             }
@@ -95,7 +95,7 @@ namespace Streamiz.Kafka.Net.Processors
                     log.LogError(e, "Failed to close global consumer due to the following error:");
                 }
 
-                globalStateMaintainer.FlushState();
+                globalStateMaintainer.FlushState(true);
                 globalStateMaintainer.Close();
             }
         }
@@ -157,6 +157,7 @@ namespace Streamiz.Kafka.Net.Processors
                 try
                 {
                     stateConsumer.Close();
+                    metricsRegistry.RemoveThreadSensors(threadClientId);
                 }
                 catch (Exception e)
                 {

@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream.Internal;
 
 namespace Streamiz.Kafka.Net.Mock
@@ -169,17 +170,22 @@ namespace Streamiz.Kafka.Net.Mock
 
         public IStateStore GetStateStore<K, V>(string name)
         {
+            bool windowStore = false;
             IList<IStateStore> stores = new List<IStateStore>();
             foreach (var task in threadTopology.ActiveTasks)
             {
                 var store = task.GetStore(name);
                 if (store != null)
                 {
+                    if (store is IReadOnlyWindowStore<K, V> || store is ITimestampedWindowStore<K, V>)
+                        windowStore = true;
                     stores.Add(store);
                 }
             }
 
-            return stores.Count > 0 ? new MockReadOnlyKeyValueStore<K, V>(stores) : null;
+            return stores.Count > 0 ? 
+                !windowStore ? new MockReadOnlyKeyValueStore<K, V>(stores) : new MockReadOnlyWindowStore<K, V>(stores) 
+                : null;
         }
 
         public void StartDriver()

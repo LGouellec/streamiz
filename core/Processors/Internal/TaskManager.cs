@@ -191,6 +191,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             // if one delete request is in progress, we wait the result before closing the manager
             if (currentDeleteTask is {IsCompleted: false})
                 currentDeleteTask.GetAwaiter().GetResult();
+
+            adminClient.Dispose();
         }
         
         internal int CommitAll()

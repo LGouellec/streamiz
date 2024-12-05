@@ -1,18 +1,19 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Streamiz.Kafka.Net.Errors;
 
 namespace Streamiz.Kafka.Net.Metrics.Internal
 {
     internal class RocksDbMetricsRecordingTrigger
     {
-        private IDictionary<string, RocksDbMetricsRecorder> MetricsRecorders { get; } 
-            = new Dictionary<string, RocksDbMetricsRecorder>();
+        private ConcurrentDictionary<string, RocksDbMetricsRecorder> MetricsRecorders { get; } = new();
 
         internal void AddMetricsRecorder(RocksDbMetricsRecorder recorder)
         {
             if (!MetricsRecorders.ContainsKey(recorder.Name))
             {
-                MetricsRecorders.Add(recorder.Name, recorder);
+                MetricsRecorders.TryAdd(recorder.Name, recorder);
                 return;
             }
 
@@ -21,7 +22,7 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
         }
 
         internal void RemoveMetricsRecorder(RocksDbMetricsRecorder recorder)
-            => MetricsRecorders.Remove(recorder.Name);
+            => MetricsRecorders.TryRemove(recorder.Name, out RocksDbMetricsRecorder _);
 
         internal void Run(long now)
         {
