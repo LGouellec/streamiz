@@ -25,10 +25,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     return UnassignedStreamTask.Create();
                 return _currentTask;
             }
-            set
-            {
-                _currentTask = value;
-            }
+            set => _currentTask = value;
         }
 
         private readonly ILogger log = Logger.GetLogger(typeof(TaskManager));
@@ -143,6 +140,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             foreach(var acT in commitNeededActiveTask)
                 acT.PostCommit(false);
             
+            revokedTask.Clear();
+            commitNeededActiveTask.Clear();
         }
 
         public StreamTask ActiveTaskFor(TopicPartition partition)
@@ -160,13 +159,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public void Close()
         {
-            List<StreamTask> tasksToCommit = new List<StreamTask>();
             List<TopicPartitionOffset> consumedOffsets = new List<TopicPartitionOffset>();
             CurrentTask = null;
             foreach (var t in activeTasks)
             {
                 CurrentTask = t.Value;
-                tasksToCommit.Add(t.Value);
                 consumedOffsets.AddRange(t.Value.PrepareCommit());
             }
 
@@ -237,6 +234,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             if (committed > 0) // try to purge the committed records for repartition topics if possible
                 PurgeCommittedRecords(purgeOffsets);
             
+            tasksToCommit.Clear();
             return committed;
         }
 

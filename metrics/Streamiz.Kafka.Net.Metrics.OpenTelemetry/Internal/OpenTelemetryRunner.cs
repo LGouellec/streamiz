@@ -1,9 +1,9 @@
 using System.Threading;
 using OpenTelemetry.Metrics;
 
-namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry
+namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry.Internal
 {
-    public class OpenTelemetryRunner : IStreamMiddleware
+    internal class OpenTelemetryRunner : IStreamMiddleware
     {
         private readonly MeterProvider meterProvider;
         private readonly OpenTelemetryMetricsExporter openTelemetryMetricsExporter;

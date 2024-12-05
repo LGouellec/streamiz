@@ -310,8 +310,8 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
                 {
                     if (wr.TryGetTarget(out Stats? stats))
                     {
-                        hits += Interlocked.Read(ref stats.Hits);
-                        misses += Interlocked.Read(ref stats.Misses);
+                        hits += stats.Hits;
+                        misses += stats.Misses;
                     }
                 }
 
@@ -351,8 +351,8 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
                     }
                 }
 
-                _accumulatedStats!.Hits += Interlocked.Read(ref current.Hits);
-                _accumulatedStats.Misses += Interlocked.Read(ref current.Misses);
+                _accumulatedStats!.Hits += current.Hits;
+                _accumulatedStats.Misses += current.Misses;
                 _allStats.TrimExcess();
             }
         }
@@ -550,13 +550,13 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
             
             internal long Count => Entries.Count;
 
-            internal long Size => Volatile.Read(ref CacheSize);
+            internal long Size => CacheSize;
 
             internal void RemoveEntry(CacheEntry<K, V> entry, MemoryCacheOptions options)
             {
                 if (Entries.TryRemove(entry.Key))
                 {
-                    Interlocked.Add(ref CacheSize, -entry.Size);
+                    CacheSize -= entry.Size;
                     entry.InvokeEvictionCallbacks();
                 }
             }

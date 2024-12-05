@@ -9,6 +9,7 @@ using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -253,7 +254,7 @@ namespace Streamiz.Kafka.Net
         private readonly string clientId;
         private readonly ILogger logger;
         private readonly string logPrefix;
-        private readonly object stateLock = new object();
+        private readonly object stateLock = new();
         private readonly QueryableStoreProvider queryableStoreProvider;
         private readonly GlobalStreamThread globalStreamThread;
         private readonly StreamStateManager manager;
@@ -329,6 +330,37 @@ namespace Streamiz.Kafka.Net
                 () => StreamState != null && StreamState.IsRunning() ? 1 : 0,
                 () => threads.Count(t => t.State != ThreadState.DEAD && t.State != ThreadState.PENDING_SHUTDOWN),
                 metricsRegistry);
+            
+            #region Temporary
+
+            long GetMemoryUse()
+            {
+                using var process = Process.GetCurrentProcess();
+                #if NETSTANDARD2_0
+                    return process.PrivateMemorySize64;
+                #else
+                    return process.WorkingSet64 + process.PagedSystemMemorySize64 -
+                       (GC.GetGCMemoryInfo().TotalCommittedBytes - GC.GetTotalMemory(false));
+                #endif
+            }
+                
+            string TOTAL_MEMORY = "total-memory";
+            string TOTAL_MEMORY_DESCRIPTION = "The application information metrics";
+            var sensor = metricsRegistry.ClientLevelSensor(
+                TOTAL_MEMORY,
+                TOTAL_MEMORY_DESCRIPTION,
+                MetricsRecordingLevel.INFO);
+            var tags = metricsRegistry.ClientTags();
+            tags.Add(GeneralClientMetrics.APPLICATION_ID, configuration.ApplicationId);
+            
+            SensorHelper.AddMutableValueMetricToSensor(
+                sensor,
+                StreamMetricsRegistry.CLIENT_LEVEL_GROUP,
+                tags,
+                TOTAL_MEMORY,
+                TOTAL_MEMORY_DESCRIPTION,
+                GetMemoryUse);
+            #endregion
             
             threads = new IThread[numStreamThreads];
             var threadState = new Dictionary<long, Processors.ThreadState>();

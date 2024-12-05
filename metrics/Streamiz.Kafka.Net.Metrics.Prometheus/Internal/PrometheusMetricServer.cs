@@ -11,7 +11,7 @@ using Streamiz.Kafka.Net.Crosscutting;
 
 namespace Streamiz.Kafka.Net.Metrics.Prometheus
 {
-    public class PrometheusMetricServer : IDisposable
+    internal class PrometheusMetricServer : IDisposable
     {
         private readonly HttpListener _httpListener = new ();
         private static readonly object @lock = new();
@@ -58,7 +58,7 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
         {
             // This will ensure that any failures to start are nicely thrown from StartServerAsync.
             _httpListener.Start();
-
+            
             // Kick off the actual processing to a new thread and return a Task for the processing thread.
             return Task.Factory.StartNew(() =>
             {
@@ -84,7 +84,7 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
 
                                 try
                                 {
-                                    List<Gauge> tmpGauges = null;
+                                    List<Gauge> tmpGauges;
                                     
                                     lock (@lock)
                                     {
@@ -115,8 +115,15 @@ namespace Streamiz.Kafka.Net.Metrics.Prometheus
                                         //response.OutputStream.Write(memoryBuffer, 0, memoryBuffer.Length);
                                         await ms.CopyToAsync(response.OutputStream, 2048*2*2, cancel);
                                     }
-
-                                    response.OutputStream.Dispose();
+                                    
+                                    tmpGauges.Clear();
+                                    
+                                    await response.OutputStream.FlushAsync(cancel);
+                                    #if NETSTANDARD2_0
+                                        response.OutputStream.Dispose();
+                                    #else
+                                        await response.OutputStream.DisposeAsync();
+                                    #endif
                                 }
                                 catch (Exception ex)
                                 {
