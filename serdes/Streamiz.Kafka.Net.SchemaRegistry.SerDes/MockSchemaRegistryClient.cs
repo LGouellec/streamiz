@@ -67,6 +67,11 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
             id = 0;
         }
 
+        public Task<RegisteredSchema> GetLatestWithMetadataAsync(string subject, IDictionary<string, string> metadata, bool ignoreDeletedSchemas)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Gets a list of all subjects with registered schemas.
         /// </summary>
@@ -194,6 +199,16 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
             return schema != null ?
                 Task.FromResult(new Schema(schema.Schema, SchemaType.Avro)) :
                 Task.FromResult((Schema)null);
+        }
+
+        public Task<Schema> GetSchemaBySubjectAndIdAsync(string subject, int id, string format = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<RegisteredSchema> GetRegisteredSchemaAsync(string subject, int version, bool ignoreDeletedSchemas = true)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -376,6 +391,18 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
         {
             return Task.FromResult(compatibility);
         }
+
+        public void ClearLatestCaches()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ClearCaches()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<KeyValuePair<string, string>> Config { get; }
 
         #endregion ISchemaRegistryClient Impl
     }

@@ -148,6 +148,13 @@ namespace Streamiz.Kafka.Net
         /// <returns>Return the config value of the key, null otherwise</returns>
         dynamic Get(string key);
 
+        /// <summary>
+        /// Get the list of key/value where each key start with the prefixKey.
+        /// </summary>
+        /// <param name="prefixKey">Prefix key searched</param>
+        /// <returns>Return the list of key/value where each key start with the prefixKey.</returns>
+        IEnumerable<KeyValuePair<string, string>> GetPrefixScan(string prefixKey);
+
         #endregion
 
         #region Stream Config Property
@@ -399,6 +406,15 @@ namespace Streamiz.Kafka.Net
     /// </summary>
     public class StreamConfig : IStreamConfig, ISchemaRegistryConfig
     {
+        private class TupleEqualityComparer : IEqualityComparer<KeyValuePair<string, string>>
+        {
+            public bool Equals(KeyValuePair<string, string> x, KeyValuePair<string, string> y)
+                => x.Key.Equals(y.Key);
+
+            public int GetHashCode(KeyValuePair<string, string> obj)
+                => obj.Key.GetHashCode();
+        }
+        
         private static string VersionString => Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
         private static List<KeyValuePair<string, string>> NameAndVersionConfig => new()
@@ -2419,6 +2435,46 @@ namespace Streamiz.Kafka.Net
                     configProperties.AddOrUpdate(key, (object)value);
             }
         }
+
+        /// <summary>
+        /// Get the list of key/value where each key start with the prefixKey.
+        /// </summary>
+        /// <param name="prefixKey">Prefix key searched</param>
+        /// <returns>Return the list of key/value where each key start with the prefixKey.</returns>
+        public IEnumerable<KeyValuePair<string, string>> GetPrefixScan(string prefixKey)
+        {
+            List<(string, dynamic)> results = new List<(string, dynamic)>();
+            results.AddRange(
+                cacheProperties.Where(kv => kv.Key.StartsWith(prefixKey))
+                    .Select(kv => (kv.Key, kv.Value.GetValue(this))));
+
+            if (prefixKey.StartsWith(mainConsumerPrefix))
+                results.AddRange(_overrideMainConsumerConfig.Select(kv => ($"{prefixKey}{kv.Key}", (dynamic)kv.Value)));
+            else if (prefixKey.StartsWith(globalConsumerPrefix))
+                results.AddRange(
+                    _overrideGlobalConsumerConfig.Select(kv => ($"{prefixKey}{kv.Key}", (dynamic)kv.Value)));
+            else if (prefixKey.StartsWith(restoreConsumerPrefix))
+                results.AddRange(
+                    _overrideRestoreConsumerConfig.Select(kv => ($"{prefixKey}{kv.Key}", (dynamic)kv.Value)));
+            else if (prefixKey.StartsWith(producerPrefix))
+                results.AddRange(
+                    _overrideProducerConfig.Select(kv => ($"{prefixKey}{kv.Key}", (dynamic)kv.Value)));
+            else if(prefixKey.StartsWith(externalConsumerPrefix))
+                results.AddRange(
+                    _overrideExternalConsumerConfig.Select(kv => ($"{prefixKey}{kv.Key}", (dynamic)kv.Value)));
+            else if(prefixKey.StartsWith(externalProducerPrefix))
+                results.AddRange(
+                    _overrideExternalProducerConfig.Select(kv => ($"{prefixKey}{kv.Key}", (dynamic)kv.Value)));
+            
+            results.AddRange(
+                configProperties.Where(kv => kv.Key.StartsWith(prefixKey))
+                    .Select(kv => (kv.Key, kv.Value)));
+
+            return results
+                .Where(kv => kv.Item2 != null)
+                .Select(kv => new KeyValuePair<string, string>(kv.Item1, kv.Item2.ToString()))
+                .Distinct(new TupleEqualityComparer());
+        }
         
         /// <summary>
         /// Authorize your streams application to follow metadata (timestamp, topic, partition, offset and headers) during processing record.
@@ -3051,13 +3107,17 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
-        ///    BasicAuthCredentialsSource
+        /// BasicAuthCredentialsSource "USER_INFO" or "SASL_INHERIT".
         /// </summary>
         [StreamConfigProperty("" + schemaRegistryBasicAuthCredentialSourceCst)]
-        public int? BasicAuthCredentialsSource
+        public string BasicAuthCredentialsSource
         {
             get => configProperties.ContainsKey(schemaRegistryBasicAuthCredentialSourceCst) ? configProperties[schemaRegistryBasicAuthCredentialSourceCst] : null;
-            set => configProperties.AddOrUpdate(schemaRegistryBasicAuthCredentialSourceCst, value);
+            set
+            {
+                if(value.Equals("USER_INFO") || value.Equals("SASL_INHERIT"))
+                    configProperties.AddOrUpdate(schemaRegistryBasicAuthCredentialSourceCst, value);
+            }
         }
 
         /// <summary>

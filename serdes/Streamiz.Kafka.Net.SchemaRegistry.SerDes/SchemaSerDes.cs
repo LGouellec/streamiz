@@ -16,9 +16,11 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes
     /// Abstract SerDes for use with schema registries
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <typeparam name="C"></typeparam>
-    public abstract class SchemaSerDes<T, C> : AbstractSerDes<T>
-        where C : Config, new()
+    /// <typeparam name="CS">Serializer config type</typeparam>
+    /// <typeparam name="CD">Deserializer config type</typeparam>
+    public abstract class SchemaSerDes<T, CS, CD> : AbstractSerDes<T>
+        where CS : Config, new()
+        where CD : Config, new()
     {
         private readonly string prefixConfig;
 
@@ -100,8 +102,9 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes
         /// Transform <see cref="ISchemaRegistryConfig"/> to <see cref="SchemaRegistryConfig"/>
         /// </summary>
         /// <param name="config">Streamiz schema registry config</param>
+        /// <param name="streamConfig">Streamiz config</param>
         /// <returns></returns>
-        protected virtual SchemaRegistryConfig GetConfig(ISchemaRegistryConfig config)
+        protected virtual SchemaRegistryConfig GetConfig(ISchemaRegistryConfig config, IStreamConfig streamConfig)
         {
             var c = new SchemaRegistryConfig
             {
@@ -123,24 +126,39 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes
                 c.BasicAuthUserInfo = config.BasicAuthUserInfo;
             }
 
-            if (config.BasicAuthCredentialsSource.HasValue)
+            if (!string.IsNullOrEmpty(config.BasicAuthCredentialsSource) && 
+                Enum.TryParse(config.BasicAuthCredentialsSource, out AuthCredentialsSource credentialsSource))
             {
-                c.BasicAuthCredentialsSource = (AuthCredentialsSource) config.BasicAuthCredentialsSource.Value;
+                c.BasicAuthCredentialsSource = credentialsSource;
+            }
+
+            var explicitStreamConfig = streamConfig.GetPrefixScan("schema.registry.");
+            foreach (var kv in explicitStreamConfig)
+            {
+                try
+                {
+                    c.Set(kv.Key, kv.Value);
+                }
+                catch
+                {
+                    // ignored
+                }
             }
 
             return c;
         }
 
         /// <summary>
-        /// Transform <see cref="ISchemaRegistryConfig"/> to <typeparamref name="C"/>
+        /// Transform <see cref="ISchemaRegistryConfig"/> to <typeparamref name="CS"/>
         /// </summary>
         /// <param name="config">Streamiz schema registry config</param>
+        /// <param name="streamConfig">Streamiz config</param>
         /// <returns></returns>
-        protected virtual C GetSerializerConfig(ISchemaRegistryConfig config)
+        protected virtual CS GetSerializerConfig(ISchemaRegistryConfig config, IStreamConfig streamConfig)
         {
             string Key(string keySuffix) => $"{prefixConfig}.{keySuffix}";
             
-            C c = new C();
+            CS c = new CS();
             
             if (config.AutoRegisterSchemas.HasValue)
                 c.Set(Key("serializer.auto.register.schemas"), config.AutoRegisterSchemas.ToString());
@@ -154,16 +172,65 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes
             if (config.BufferBytes.HasValue)
                 c.Set(Key("serializer.buffer.bytes"), config.BufferBytes.ToString());
 
+            var results = streamConfig.GetPrefixScan(Key("serializer."));
+            foreach (var kv in results)
+            {
+                try
+                {
+                    c.Set(kv.Key, kv.Value);
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
+            
+            return c;
+        }
+        
+        /// <summary>
+        /// Transform <see cref="ISchemaRegistryConfig"/> to <typeparamref name="CD"/>
+        /// </summary>
+        /// <param name="config">Streamiz schema registry config</param>
+        /// <param name="streamConfig">Streamiz config</param>
+        /// <returns></returns>
+        protected virtual CD GetDeserializerConfig(ISchemaRegistryConfig config, IStreamConfig streamConfig)
+        {
+            string Key(string keySuffix) => $"{prefixConfig}.{keySuffix}";
+            
+            CD c = new CD();
+            
+            if (config.SubjectNameStrategy.HasValue)
+                c.Set(Key("deserializer.subject.name.strategy"), ((Confluent.SchemaRegistry.SubjectNameStrategy) config.SubjectNameStrategy.Value).ToString());
+            
+            if (config.UseLatestVersion.HasValue)
+                c.Set(Key("deserializer.use.latest.version"), config.UseLatestVersion.ToString());
+
+            var results = streamConfig.GetPrefixScan(Key("deserializer."));
+            foreach (var kv in results)
+            {
+                try
+                {
+                    c.Set(kv.Key, kv.Value);
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
+            
             return c;
         }
         
         #region Privates
         
         // FOR TESTING
-        internal SchemaRegistryConfig ToConfig(ISchemaRegistryConfig config)
-            => GetConfig(config);
-        internal C ToSerializerConfig(ISchemaRegistryConfig config) 
-            => GetSerializerConfig(config);
+        internal SchemaRegistryConfig ToConfig(ISchemaRegistryConfig config, IStreamConfig streamConfig)
+            => GetConfig(config, streamConfig);
+        internal CS ToSerializerConfig(ISchemaRegistryConfig config, IStreamConfig streamConfig)
+            => GetSerializerConfig(config, streamConfig);
+        internal CD ToDeserializerConfig(ISchemaRegistryConfig config, IStreamConfig streamConfig)
+            => GetDeserializerConfig(config, streamConfig);
         
         private string MaybeGetScope(string schemaRegistryUrl)
         {
