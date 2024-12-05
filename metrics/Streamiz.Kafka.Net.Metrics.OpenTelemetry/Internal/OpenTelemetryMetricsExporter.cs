@@ -3,15 +3,22 @@ using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.Linq;
 
-namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry
+namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry.Internal
 {
-    public class OpenTelemetryMetricsExporter
+    /// <summary>
+    /// Export the metrics using an instance of <see cref="Meter"/>
+    /// </summary>
+    internal class OpenTelemetryMetricsExporter
     {
         private Meter meter;
 
         private readonly IDictionary<string, ObservableGauge<double>> gauges =
             new Dictionary<string, ObservableGauge<double>>();
 
+        /// <summary>
+        /// Expose the current sensors/metrics
+        /// </summary>
+        /// <param name="sensors">Sensors to emit</param>
         public void ExposeMetrics(IEnumerable<Sensor> sensors)
         {
             GC.Collect();

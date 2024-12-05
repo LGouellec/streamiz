@@ -11,7 +11,7 @@ using Streamiz.Kafka.Net.Crosscutting;
 
 namespace Streamiz.Kafka.Net.Metrics.Prometheus
 {
-    public class PrometheusMetricServer : IDisposable
+    internal class PrometheusMetricServer : IDisposable
     {
         private readonly HttpListener _httpListener = new ();
         private static readonly object @lock = new();

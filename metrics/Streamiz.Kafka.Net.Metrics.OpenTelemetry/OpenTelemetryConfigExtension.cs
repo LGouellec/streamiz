@@ -3,11 +3,26 @@ using OpenTelemetry;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
+using Streamiz.Kafka.Net.Metrics.OpenTelemetry.Internal;
 
 namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry
 {
+    /// <summary>
+    /// Extensions class to configure the open telemetry reporter
+    /// </summary>
     public static class OpenTelemetryConfigExtension
     {
+        /// <summary>
+        /// This extension method configures an OpenTelemetry metrics reporter for a stream configuration.
+        /// It allows you to monitor and export application metrics, integrating OpenTelemetry with the stream processing system.
+        /// The method provides a customizable way to set up metric collection intervals, configure the OpenTelemetry MeterProvider,
+        /// and optionally expose statistics related to the underlying librdkafka library.
+        /// </summary>
+        /// <param name="config">The stream configuration object to which the OpenTelemetry metrics reporter will be added</param>
+        /// <param name="metricInterval">The time interval (in milliseconds) at which metrics will be collected and reported. This is used to set the <see cref="IStreamConfig.MetricsIntervalMs"/> property of the configuration.</param>
+        /// <param name="actionMeterProviderBuilder">A delegate allowing additional customization of the MeterProviderBuilder. If not provided, the default setup is used.</param>
+        /// <param name="exposeLibrdkafkaStatistics">Whether to expose statistics related to librdkafka. If set to true, additional configuration is applied to collect and export librdkafka statistics.</param>
+        /// <returns>The configured stream instance (config) with the OpenTelemetry reporter integrated.</returns>
         public static IStreamConfig UseOpenTelemetryReporter(
             this IStreamConfig config,
             TimeSpan metricInterval,
@@ -25,7 +40,6 @@ namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry
                 options.Protocol = OtlpExportProtocol.Grpc;
                 options.ExportProcessorType = ExportProcessorType.Batch;
             });
-            //meterProviderBuilder.AddPrometheusHttpListener();
             meterProviderBuilder.AddRuntimeInstrumentation();
             
             actionMeterProviderBuilder?.Invoke(meterProviderBuilder);
@@ -46,6 +60,16 @@ namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry
             return config;
         }
 
+        /// <summary>
+        /// This extension method configures an OpenTelemetry metrics reporter for a stream configuration.
+        /// It allows you to monitor and export application metrics, integrating OpenTelemetry with the stream processing system.
+        /// The method provides a customizable way to set up metric collection intervals, configure the OpenTelemetry MeterProvider,
+        /// and optionally expose statistics related to the underlying librdkafka library.
+        /// </summary>
+        /// <param name="config">The stream configuration object to which the OpenTelemetry metrics reporter will be added</param>
+        /// <param name="actionMeterProviderBuilder">A delegate allowing additional customization of the MeterProviderBuilder. If not provided, the default setup is used.</param>
+        /// <param name="exposeLibrdkafkaStatistics">Whether to expose statistics related to librdkafka. If set to true, additional configuration is applied to collect and export librdkafka statistics.</param>
+        /// <returns>The configured stream instance (config) with the OpenTelemetry reporter integrated.</returns>
         public static IStreamConfig UseOpenTelemetryReporter(
             this IStreamConfig config,
             Action<MeterProviderBuilder> actionMeterProviderBuilder = null,
