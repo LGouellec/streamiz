@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics.Metrics;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,10 +15,15 @@ using Newtonsoft.Json;
 using RocksDbSharp;
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json;
+using OpenTelemetry;
+using Streamiz.Kafka.Net.Metrics.OpenTelemetry;
 using Streamiz.Kafka.Net.SerDes;
-using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using SubjectNameStrategy = Confluent.SchemaRegistry.SubjectNameStrategy;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.Metrics.Prometheus;
 
 namespace sample_stream
 {
@@ -76,6 +83,43 @@ namespace sample_stream
             public override string ToString()
             {
                 return "NAS: " + nas;
+=======
+        public static void Main2()
+        {
+            Meter? meter = null;
+
+            var meterProviderBuilder = Sdk
+                .CreateMeterProviderBuilder()
+                .AddMeter("Test")
+                .SetResourceBuilder(
+                    ResourceBuilder.CreateDefault()
+                        .AddService(serviceName: "Test"));
+
+            meterProviderBuilder.AddOtlpExporter((exporterOptions, readerOptions) =>
+            {
+                readerOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 5000;
+            });
+
+            using var meterProvider = meterProviderBuilder.Build();
+
+            while (true)
+            {
+                meter?.Dispose();
+                GC.Collect();
+                meter = new Meter("Test");
+                var rd = new Random();
+
+                meter.CreateObservableGauge(
+                    "requests",
+                    () => new[]
+                    {
+                        new Measurement<double>(rd.NextDouble() * rd.Next(100)),
+                    },
+                    description: "Request per second");
+
+                // will see after couple of minutes that the MetricReader contains a lot of MetricPoint[], even if we dispose the Meter after each iteration
+                Thread.Sleep(200);
+>>>>>>> develop
             }
         }
         
@@ -93,6 +137,7 @@ namespace sample_stream
                 SaslMechanism = SaslMechanism.Plain,
                 Acks = Acks.All,
                 AutoOffsetReset = AutoOffsetReset.Earliest,
+                SessionTimeoutMs = 45000,
                 Logger = LoggerFactory.Create((b) =>
                 {
                     b.AddConsole();
@@ -125,6 +170,7 @@ namespace sample_stream
             builder.Table<string, PersonalData, StringSerDes, SchemaJsonSerDes<PersonalData>>("personalData")
                 .ToStream()
                 .Print(Printed<string, PersonalData>.ToOut());
+
             
             return builder.Build();
         }

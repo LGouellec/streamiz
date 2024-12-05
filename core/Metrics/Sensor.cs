@@ -16,7 +16,7 @@ namespace Streamiz.Kafka.Net.Metrics
     {
         private readonly Dictionary<MetricName, StreamMetric> metrics;
         private readonly IList<IMeasurableStat> stats;
-        private MetricConfig config = new MetricConfig();
+        private MetricConfig config = new();
         
         /// <summary>
         /// Lock object to synchronize recording
