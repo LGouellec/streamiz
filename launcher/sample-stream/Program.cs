@@ -80,9 +80,9 @@ namespace sample_stream
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
                 ApplicationId = $"test-app",
-                BootstrapServers = "pkc-921jm.us-east-2.aws.confluent.cloud:9092",
-                SaslUsername = "PWRGWBLA7GVVBPKX",
-                SaslPassword = "n6heUWG7SsOPMTcLtawsnpMTMqM7SltOzKfZmjSY7+tsNwoHSVMwRtFiRNKTo2y+",
+                BootstrapServers = "XXXX.us-east-2.aws.confluent.cloud:9092",
+                SaslUsername = "XXX",
+                SaslPassword = "XXX",
                 SecurityProtocol = SecurityProtocol.SaslSsl,
                 SaslMechanism = SaslMechanism.Plain,
                 Acks = Acks.All,
@@ -93,9 +93,9 @@ namespace sample_stream
                     b.AddConsole();
                     b.SetMinimumLevel(LogLevel.Information);
                 }),
-                SchemaRegistryUrl = "https://psrc-k6gvm.us-west-2.aws.confluent.cloud",
+                SchemaRegistryUrl = "https://XXX.us-west-2.aws.confluent.cloud",
                 BasicAuthUserInfo =
-                    "6MIURHIOLB4UVGVH:h/DLxAL7XqYXxZcdZVGg3YhBnimYUtYPZeZv1/kjaxIEh10ANMfqHV+PHuKW6EMR",
+                    "XXXX:XXXX",
                 BasicAuthCredentialsSource = "USER_INFO",
                 UseLatestVersion = true,
                 AutoRegisterSchemas = false
@@ -116,8 +116,7 @@ namespace sample_stream
         {
             var builder = new StreamBuilder();
 
-            builder.Table<string, PersonalData, StringSerDes, SchemaJsonSerDes<PersonalData>>("personalData")
-                .ToStream()
+            builder.Stream<string, PersonalData, StringSerDes, SchemaJsonSerDes<PersonalData>>("personalData")
                 .Print(Printed<string, PersonalData>.ToOut());
 
 
