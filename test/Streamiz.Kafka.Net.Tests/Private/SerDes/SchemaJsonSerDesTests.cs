@@ -222,12 +222,12 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var config = new StreamConfig();
             config.SchemaRegistryUrl = "mock://test";
             config.BasicAuthUserInfo = "user:password";
-            config.BasicAuthCredentialsSource = (int) AuthCredentialsSource.UserInfo;
+            config.BasicAuthCredentialsSource = "USER_INFO";
             config.SchemaRegistryMaxCachedSchemas = 1;
             config.SchemaRegistryRequestTimeoutMs = 30;
 
             var serdes = new SchemaJsonSerDes<Person>();
-            var schemaConfig = serdes.ToConfig(config);
+            var schemaConfig = serdes.ToConfig(config, config);
 
             Assert.AreEqual(1, schemaConfig.MaxCachedSchemas);
             Assert.AreEqual(30, schemaConfig.RequestTimeoutMs);
@@ -248,7 +248,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             };
 
             var serdes = new SchemaJsonSerDes<PersonJson>();
-            var schemaConfig = serdes.ToSerializerConfig(config);
+            var schemaConfig = serdes.ToSerializerConfig(config, config);
 
             Assert.AreEqual(Confluent.SchemaRegistry.SubjectNameStrategy.TopicRecord, schemaConfig.SubjectNameStrategy);
             Assert.AreEqual(true, schemaConfig.AutoRegisterSchemas);

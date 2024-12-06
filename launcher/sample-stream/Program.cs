@@ -1,107 +1,125 @@
-using Streamiz.Kafka.Net;
 using System;
-using System.Diagnostics.Metrics;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
+using Confluent.SchemaRegistry.Encryption;
+using Confluent.SchemaRegistry.Encryption.Aws;
 using Microsoft.Extensions.Logging;
-using OpenTelemetry;
-using Streamiz.Kafka.Net.Metrics.OpenTelemetry;
+using Newtonsoft.Json;
+using Streamiz.Kafka.Net;
+using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
-using Streamiz.Kafka.Net.Metrics;
-using Streamiz.Kafka.Net.Metrics.Prometheus;
 
 namespace sample_stream
 {
     public static class Program
     {
-        public static void Main2()
+        public class Address
         {
-            Meter? meter = null;
+            [JsonProperty] private int doornumber;
 
-            var meterProviderBuilder = Sdk
-                .CreateMeterProviderBuilder()
-                .AddMeter("Test")
-                .SetResourceBuilder(
-                    ResourceBuilder.CreateDefault()
-                        .AddService(serviceName: "Test"));
+            [JsonProperty] private String doorpin;
 
-            meterProviderBuilder.AddOtlpExporter((exporterOptions, readerOptions) =>
+            [JsonProperty] private String state;
+
+            [JsonProperty] private String street;
+
+            public Address()
             {
-                readerOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 5000;
-            });
+            }
 
-            using var meterProvider = meterProviderBuilder.Build();
-
-            while (true)
+            public Address(int doornumber, String doorpin, String state, String street)
             {
-                meter?.Dispose();
-                GC.Collect();
-                meter = new Meter("Test");
-                var rd = new Random();
+                this.doornumber = doornumber;
+                this.doorpin = doorpin;
+                this.state = state;
+                this.street = street;
+            }
 
-                meter.CreateObservableGauge(
-                    "requests",
-                    () => new[]
-                    {
-                        new Measurement<double>(rd.NextDouble() * rd.Next(100)),
-                    },
-                    description: "Request per second");
-
-                // will see after couple of minutes that the MetricReader contains a lot of MetricPoint[], even if we dispose the Meter after each iteration
-                Thread.Sleep(200);
+            public Address(int doornumber, String doorpin, String street)
+            {
+                this.doornumber = doornumber;
+                this.doorpin = doorpin;
+                this.street = street;
             }
         }
-        
-       public static async Task Main(string[] args)
-       {
-           var config = new StreamConfig<StringSerDes, StringSerDes>{
+
+        public class PersonalData
+        {
+            [JsonProperty] public Address address;
+
+            [JsonProperty] public String firstname;
+
+            [JsonProperty] public String lastname;
+
+            [JsonProperty] public String nas;
+
+            public PersonalData()
+            {
+            }
+
+            public PersonalData(String firstname, String lastname, String nas, Address address)
+            {
+                this.firstname = firstname;
+                this.lastname = lastname;
+                this.nas = nas;
+                this.address = address;
+            }
+
+            public override string ToString()
+            {
+                return "NAS: " + nas;
+            }
+        }
+
+        public static async Task Main(string[] args)
+        {
+            AwsKmsDriver.Register();
+            FieldEncryptionExecutor.Register();
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>
+            {
                 ApplicationId = $"test-app",
-                BootstrapServers = "",
+                BootstrapServers = "XXXX.us-east-2.aws.confluent.cloud:9092",
+                SaslUsername = "XXX",
+                SaslPassword = "XXX",
                 SecurityProtocol = SecurityProtocol.SaslSsl,
                 SaslMechanism = SaslMechanism.Plain,
-                SaslUsername = "",
-                CommitIntervalMs = 200,
-                SaslPassword = "",
-                SessionTimeoutMs = 45000,
-                ClientId = "ccloud-csharp-client-f7bb4f5b-f37d-4956-851e-e106065963b8",
+                Acks = Acks.All,
                 AutoOffsetReset = AutoOffsetReset.Earliest,
-                MetricsRecording = MetricsRecordingLevel.DEBUG,
-                MetricsIntervalMs = 500,
-                Guarantee = ProcessingGuarantee.EXACTLY_ONCE,
+                SessionTimeoutMs = 45000,
                 Logger = LoggerFactory.Create((b) =>
                 {
                     b.AddConsole();
                     b.SetMinimumLevel(LogLevel.Information);
                 }),
-                NumStreamThreads = 2
+                SchemaRegistryUrl = "https://XXX.us-west-2.aws.confluent.cloud",
+                BasicAuthUserInfo =
+                    "XXXX:XXXX",
+                BasicAuthCredentialsSource = "USER_INFO",
+                UseLatestVersion = true,
+                AutoRegisterSchemas = false
             };
 
-           config.UseOpenTelemetryReporter();
-           //config.UsePrometheusReporter(9091);
-           
+            // fix : https://github.com/confluentinc/confluent-kafka-dotnet/pull/2373
+            config.AddConfig("json.deserializer.use.latest.version", false);
+
             var t = BuildTopology();
             var stream = new KafkaStream(t, config);
-            
-            Console.CancelKeyPress += (_,_) => {
-                stream.Dispose();
-            };
+
+            Console.CancelKeyPress += (_, _) => { stream.Dispose(); };
 
             await stream.StartAsync();
-       }
-        
+        }
+
         private static Topology BuildTopology()
         {
             var builder = new StreamBuilder();
 
-            builder.Stream<string, string>("sample_data")
-                .Print(Printed<string, string>.ToOut());
-            
+            builder.Stream<string, PersonalData, StringSerDes, SchemaJsonSerDes<PersonalData>>("personalData")
+                .Print(Printed<string, PersonalData>.ToOut());
+
+
             return builder.Build();
         }
     }

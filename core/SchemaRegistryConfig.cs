@@ -75,9 +75,9 @@
         public string BasicAuthUserInfo { get; set; }
 
         /// <summary>
-        /// Specifies the source, use 0 for UserInfo or 1 for SaslInherit.
+        /// Specifies the source, "USER_INFO" or "SASL_INHERIT".
         /// </summary>
-        public int? BasicAuthCredentialsSource { get; set; }
+        public string BasicAuthCredentialsSource { get; set; }
 
         /// <summary>
         ///    Specifies the initial size (in bytes) of the buffer used for message

@@ -213,8 +213,8 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
                 "mock-in-memory");
             meteredKeyValueStore.Init(context, meteredKeyValueStore);
             
-            int nbMessage = random.Next(0, 30000);
-            int nbMessage2 = random.Next(0, 30);
+            int nbMessage = random.Next(1000, 30000);
+            int nbMessage2 = random.Next(20, 30);
             // produce ${nbMessage} messages to input topic
             List<KeyValuePair<string, string>> messages = new List<KeyValuePair<string, string>>();
             for (int i = 0; i < nbMessage; ++i)
@@ -277,7 +277,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             
             meteredWindowStore.Init(context, meteredWindowStore);
             
-            int nbMessage = random.Next(0, 30);
+            int nbMessage = random.Next(20, 30);
             long now1 = DateTime.Now.GetMilliseconds();
             
             // produce ${nbMessage} messages to input topic (both);

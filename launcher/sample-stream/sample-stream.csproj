@@ -20,7 +20,13 @@
     <ProjectReference Include="..\..\metrics\Streamiz.Kafka.Net.Metrics.OpenTelemetry\Streamiz.Kafka.Net.Metrics.OpenTelemetry.csproj" />
     <ProjectReference Include="..\..\metrics\Streamiz.Kafka.Net.Metrics.Prometheus\Streamiz.Kafka.Net.Metrics.Prometheus.csproj" />
     <ProjectReference Include="..\..\remote\Streamiz.Kafka.Net.Azure.RemoteStorage\Streamiz.Kafka.Net.Azure.RemoteStorage.csproj" />
+    <ProjectReference Include="..\..\serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json.csproj" />
     <ProjectReference Include="..\..\serdes\Streamiz.Kafka.Net.SerDes.CloudEvents\Streamiz.Kafka.Net.SerDes.CloudEvents.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Confluent.SchemaRegistry.Encryption.Aws" Version="2.6.1" />
+    <PackageReference Include="Confluent.SchemaRegistry.Serdes.Json" Version="2.6.1" />
   </ItemGroup>
 
 </Project>

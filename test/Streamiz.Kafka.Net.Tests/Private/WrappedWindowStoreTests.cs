@@ -127,11 +127,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 new StreamMetricsRegistry());
             wrapped.Init(context, inmemorystore);
             wrapped.Put("coucou", 120, dt.GetMilliseconds());
-            wrapped.Put("coucou-toto", 5, dt.GetMilliseconds());
+            wrapped.Put("coucou-toto", 5, dt.GetMilliseconds() + 10);
             var list = wrapped.All().ToList();
             Assert.AreEqual(2, list.Count);
             Assert.AreEqual(dt.GetMilliseconds(), list[0].Key.Window.StartMs);
-            Assert.AreEqual(dt.GetMilliseconds(), list[1].Key.Window.StartMs);
+            Assert.AreEqual(dt.GetMilliseconds() + 10, list[1].Key.Window.StartMs);
             Assert.AreEqual("coucou", list[0].Key.Key);
             Assert.AreEqual("coucou-toto", list[1].Key.Key);
             Assert.AreEqual(120, list[0].Value);
