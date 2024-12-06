@@ -169,7 +169,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             config.ApplicationId = "test-workflow-avroserdes";
             config.DefaultKeySerDes = new StringSerDes();
             config.DefaultValueSerDes = new MockAvroSerDes(client);
-
+            
             var builder = new StreamBuilder();
             builder
                 .Stream<string, Person>("person")
@@ -218,7 +218,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
         }
 
         [Test]
-        public void DefautlValue()
+        public void DefaultValue()
         {
             var mockSchemaClient = new MockSchemaRegistryClient();
             var config = new StreamConfig();
@@ -228,7 +228,8 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             config.DefaultValueSerDes = serdes;
             config.SchemaRegistryMaxCachedSchemas = null;
             config.SchemaRegistryRequestTimeoutMs = null;
-
+            config.SchemaRegistryUrl = "mock://default-value";
+            
             var builder = new StreamBuilder();
             builder
                 .Stream<string, Person>("person")
@@ -282,7 +283,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
                     });
             }
 
-            var client = MockSchemaRegistry.GetClientForScope("test");
+            var client = MockSchemaRegistry.GetClientForScope("test", null);
             Assert.IsAssignableFrom<MockSchemaRegistryClient>(client);
             Assert.NotNull(client.GetSchemaAsync(1).GetAwaiter().GetResult());
 
@@ -418,7 +419,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var config = new StreamConfig();
             config.SchemaRegistryUrl = "mock://test";
             config.BasicAuthUserInfo = "user:password";
-            config.BasicAuthCredentialsSource = AuthCredentialsSource.UserInfo.ToString();
+            config.BasicAuthCredentialsSource = "USER_INFO";
             config.SchemaRegistryMaxCachedSchemas = 1;
             config.SchemaRegistryRequestTimeoutMs = 30;
 

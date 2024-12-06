@@ -75,9 +75,10 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes
                 throw new StreamsException($"SchemaSerDes<{typeof(T).Name}> is not initialized !");
             }
 
-            return serializer
+            var b = serializer
                     .AsSyncOverAsync()
                     .Serialize(data, context);
+            return b;
         }
 
         /// <summary>
@@ -85,12 +86,12 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes
         /// </summary>
         /// <param name="config"></param>
         /// <returns></returns>
-        protected virtual ISchemaRegistryClient GetSchemaRegistryClient(Confluent.SchemaRegistry.SchemaRegistryConfig config)
+        protected virtual ISchemaRegistryClient GetSchemaRegistryClient(SchemaRegistryConfig config)
         {
             string mockScope = MaybeGetScope(config.Url);
             if (mockScope != null)
             {
-                return MockSchemaRegistry.GetClientForScope(mockScope);
+                return MockSchemaRegistry.GetClientForScope(mockScope, config);
             }
             else
             {

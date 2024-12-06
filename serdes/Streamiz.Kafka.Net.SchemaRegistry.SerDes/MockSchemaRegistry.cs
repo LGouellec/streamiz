@@ -19,14 +19,17 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
         /// Get client by scope. If client doesn't not exist, it will be create.
         /// </summary>
         /// <param name="scope">Client scope</param>
+        /// <param name="config">Current schema registry configuration</param>
         /// <returns>Return a mock schema registry client</returns>
-        public static ISchemaRegistryClient GetClientForScope(string scope)
+        public static ISchemaRegistryClient GetClientForScope(string scope, SchemaRegistryConfig config)
         {
             lock (_lock)
             {
                 if (!scopedClients.ContainsKey(scope))
                 {
-                    scopedClients.Add(scope, new MockSchemaRegistryClient());
+                    MockSchemaRegistryClient mockSchemaRegistryClient = new MockSchemaRegistryClient();
+                    mockSchemaRegistryClient.UseConfiguration(config);
+                    scopedClients.Add(scope, mockSchemaRegistryClient);
                 }
 
                 return scopedClients[scope];
