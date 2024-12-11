@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using System.Runtime.InteropServices.JavaScript;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Confluent.SchemaRegistry.Encryption;
@@ -6,9 +8,12 @@ using Confluent.SchemaRegistry.Encryption.Aws;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Streamiz.Kafka.Net;
+using Streamiz.Kafka.Net.Processors.Public;
 using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Table;
 
 namespace sample_stream
 {
@@ -80,11 +85,7 @@ namespace sample_stream
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
                 ApplicationId = $"test-app",
-                BootstrapServers = "XXXX.us-east-2.aws.confluent.cloud:9092",
-                SaslUsername = "XXX",
-                SaslPassword = "XXX",
-                SecurityProtocol = SecurityProtocol.SaslSsl,
-                SaslMechanism = SaslMechanism.Plain,
+                BootstrapServers = "localhost:9092",
                 Acks = Acks.All,
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 SessionTimeoutMs = 45000,
@@ -93,17 +94,8 @@ namespace sample_stream
                     b.AddConsole();
                     b.SetMinimumLevel(LogLevel.Information);
                 }),
-                SchemaRegistryUrl = "https://XXX.us-west-2.aws.confluent.cloud",
-                BasicAuthUserInfo =
-                    "XXXX:XXXX",
-                BasicAuthCredentialsSource = "USER_INFO",
-                UseLatestVersion = true,
-                AutoRegisterSchemas = false
             };
-
-            // fix : https://github.com/confluentinc/confluent-kafka-dotnet/pull/2373
-            config.AddConfig("json.deserializer.use.latest.version", false);
-
+            
             var t = BuildTopology();
             var stream = new KafkaStream(t, config);
 
@@ -116,11 +108,11 @@ namespace sample_stream
         {
             var builder = new StreamBuilder();
 
-            builder.Stream<string, PersonalData, StringSerDes, SchemaJsonSerDes<PersonalData>>("personalData")
-                .Print(Printed<string, PersonalData>.ToOut());
-
+            //builder.Stream<string, PersonalData, StringSerDes, SchemaJsonSerDes<PersonalData>>("personalData")
+            //    .Print(Printed<string, PersonalData>.ToOut());
 
             return builder.Build();
         }
     }
+
 }
