@@ -62,6 +62,14 @@
 <li class="toctree-l3"><a class="reference internal" href="#configuring-caching">Configuring Caching</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#remote-storage">Remote storage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#custom-state-store">Custom state store</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#azure-table-key-value-store">Azure Table Key/Value store</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#how-to">How to ?</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="topology-test-driver.html">Test topology driver</a></li>
@@ -244,6 +252,267 @@ You have an child materialized class to help you to use it.</p>
 <span class="w">        </span><span class="p">.</span><span class="n">WithCachingEnabled</span><span class="p">();</span>
 </pre></div>
 </div>
+</section>
+</section>
+<section id="remote-storage">
+<h2>Remote storage<a class="headerlink" href="#remote-storage" title="Permalink to this heading"></a></h2>
+<p>Steamiz provides powerful capabilities for real-time stream processing applications, leveraging Kafka as a robust event streaming platform. One of its key features is the ability to manage and store stateful data, crucial for maintaining application state across stream processing operations. While Steamiz offers built-in state stores like RocksDB, In memory store, developers may sometimes need to create custom state stores tailored to specific use cases or integration requirements.</p>
+<p>Custom state stores can be beneficial for scenarios such as integrating with existing systems, enhancing performance for specific data access patterns, or ensuring compatibility with proprietary data formats.</p>
+<section id="custom-state-store">
+<h3>Custom state store<a class="headerlink" href="#custom-state-store" title="Permalink to this heading"></a></h3>
+<p><strong>Steps to Create Custom State Stores</strong></p>
+<p>1- Implement the State Store</p>
+<p>Create a class that extends <code class="docutils literal notranslate"><span class="pre">IKeyValueStore&lt;Bytes,</span> <span class="pre">byte[]&gt;</span></code> depending on the nature of your state. This involves defining how the state is stored and accessed. Consider using technologies like in-memory data structures or external databases depending on your use case.</p>
+<p>For instance:</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">CustomKeyValueStore</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">IKeyValueStore</span><span class="o">&lt;</span><span class="n">Bytes</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="o">&gt;</span>
+<span class="p">{</span>
+<span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
+<span class="w">        </span><span class="c1">/// Name of this store</span>
+<span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">Name</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
+<span class="w">        </span><span class="c1">/// Return if the storage is persistent or not.</span>
+<span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">Persistent</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
+<span class="w">        </span><span class="c1">/// Return if the storage is present locally or not.</span>
+<span class="w">        </span><span class="c1">/// If the store is local, an internal kafka topic will be created to offload the data</span>
+<span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">IsLocally</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
+<span class="w">        </span><span class="c1">/// Is this store open for reading and writing</span>
+<span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">IsOpen</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
+<span class="w">        </span><span class="c1">/// Constructor with client parameters ..</span>
+<span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="nf">CustomKeyValueStore</span><span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="n">uri</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">token</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">name</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">                </span><span class="n">Name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">name</span><span class="p">;</span>
+<span class="w">                </span><span class="c1">// doing something with uri, token etc ..</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
+<span class="w">        </span><span class="c1">/// Initializes this state store.</span>
+<span class="w">        </span><span class="c1">/// The implementation of this function must register the root store in the context via the</span>
+<span class="w">        </span><span class="c1">/// &lt;see cref=&quot;ProcessorContext.Register(IStateStore, Internal.StateRestoreCallback)&quot;/&gt; function, where the</span>
+<span class="w">        </span><span class="c1">/// first &lt;see cref=&quot;IStateStore&quot;/&gt; parameter should always be the passed-in &lt;code&gt;root&lt;/code&gt; object, and</span>
+<span class="w">        </span><span class="c1">/// the second parameter should be an object of user&#39;s implementation</span>
+<span class="w">        </span><span class="c1">/// of the &lt;see cref=&quot;Internal.StateRestoreCallback&quot;/&gt; interface used for restoring the state store from the changelog.</span>
+<span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name=&quot;context&quot;&gt;Processor context&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name=&quot;root&quot;&gt;Root state (always itself)&lt;/param&gt;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Init</span><span class="p">(</span><span class="n">ProcessorContext</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">IStateStore</span><span class="w"> </span><span class="n">root</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
+<span class="w">        </span><span class="c1">/// Flush any cached data</span>
+<span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Flush</span><span class="p">()</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
+<span class="w">        </span><span class="c1">/// Close the storage engine.</span>
+<span class="w">        </span><span class="c1">/// Note that this function needs to be idempotent since it may be called</span>
+<span class="w">        </span><span class="c1">/// several times on the same state store</span>
+<span class="w">        </span><span class="c1">/// Users only need to implement this function but should NEVER need to call this api explicitly</span>
+<span class="w">        </span><span class="c1">/// as it will be called by the library automatically when necessary</span>
+<span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Close</span><span class="p">()</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
+<span class="w">        </span><span class="c1">/// Get the value corresponding to this key.</span>
+<span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name=&quot;key&quot;&gt;the key to fetch&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;returns&gt;The value or null if no value is found.&lt;/returns&gt;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="w"> </span><span class="nf">Get</span><span class="p">(</span><span class="n">Bytes</span><span class="w"> </span><span class="n">key</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
+<span class="w">        </span><span class="c1">/// Get an enumerator over a given range of keys. This enumerator must be closed after use.</span>
+<span class="w">        </span><span class="c1">/// Order is not guaranteed as bytes lexicographical ordering might not represent key order.</span>
+<span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name=&quot;from&quot;&gt;The first key that could be in the range, where iteration starts from.&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name=&quot;to&quot;&gt;The last key that could be in the range, where iteration ends.&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;returns&gt;The enumerator for this range, from smallest to largest bytes.&lt;/returns&gt;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="n">IKeyValueEnumerator</span><span class="o">&lt;</span><span class="n">Bytes</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Range</span><span class="p">(</span><span class="n">Bytes</span><span class="w"> </span><span class="k">from</span><span class="p">,</span><span class="w"> </span><span class="n">Bytes</span><span class="w"> </span><span class="n">to</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
+<span class="w">        </span><span class="c1">/// Get a reverser enumerator over a given range of keys. This enumerator must be closed after use.</span>
+<span class="w">        </span><span class="c1">/// Order is not guaranteed as bytes lexicographical ordering might not represent key order.</span>
+<span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name=&quot;from&quot;&gt;The first key that could be in the range, where iteration starts from.&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name=&quot;to&quot;&gt;The last key that could be in the range, where iteration ends.&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;returns&gt;The reverse enumerator for this range, from smallest to largest bytes.&lt;/returns&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;exception cref=&quot;InvalidStateStoreException&quot;&gt;if the store is not initialized&lt;/exception&gt;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="n">IKeyValueEnumerator</span><span class="o">&lt;</span><span class="n">Bytes</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ReverseRange</span><span class="p">(</span><span class="n">Bytes</span><span class="w"> </span><span class="k">from</span><span class="p">,</span><span class="w"> </span><span class="n">Bytes</span><span class="w"> </span><span class="n">to</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
+<span class="w">        </span><span class="c1">/// Return an enumerator over all keys in this store. No ordering guarantees are provided.</span>
+<span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;returns&gt;An enumerator of all key/value pairs in the store.&lt;/returns&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;exception cref=&quot;InvalidStateStoreException&quot;&gt;if the store is not initialized&lt;/exception&gt;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="n">IEnumerable</span><span class="o">&lt;</span><span class="n">KeyValuePair</span><span class="o">&lt;</span><span class="n">Bytes</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">All</span><span class="p">()</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
+<span class="w">        </span><span class="c1">/// Return a reverse enumerator over all keys in this store. No ordering guarantees are provided.</span>
+<span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;returns&gt;A reverse enumerator of all key/value pairs in the store.&lt;/returns&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;exception cref=&quot;InvalidStateStoreException&quot;&gt;if the store is not initialized&lt;/exception&gt;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="n">IEnumerable</span><span class="o">&lt;</span><span class="n">KeyValuePair</span><span class="o">&lt;</span><span class="n">Bytes</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">ReverseAll</span><span class="p">()</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
+<span class="w">        </span><span class="c1">/// Return an approximate count of key-value mappings in this store.</span>
+<span class="w">        </span><span class="c1">/// The count is not guaranteed to be exact in order to accommodate stores</span>
+<span class="w">        </span><span class="c1">/// where an exact count is expensive to calculate.</span>
+<span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;returns&gt;an approximate count of key-value mappings in the store.&lt;/returns&gt;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">ApproximateNumEntries</span><span class="p">()</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
+<span class="w">        </span><span class="c1">/// Update the value associated with this key.</span>
+<span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name=&quot;key&quot;&gt;The key to associate the value to&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name=&quot;value&quot;&gt;The value to update, it can be null if the serialized bytes are also null it is interpreted as deletes&lt;/param&gt;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Put</span><span class="p">(</span><span class="n">Bytes</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="w"> </span><span class="k">value</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
+<span class="w">        </span><span class="c1">/// Update the value associated with this key, unless a value is already associated with the key.</span>
+<span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name=&quot;key&quot;&gt;The key to associate the value to&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name=&quot;value&quot;&gt;The value to update, it can be null; if the serialized bytes are also null it is interpreted as deletes&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;returns&gt;The old value or null if there is no such key.&lt;/returns&gt;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="w"> </span><span class="nf">PutIfAbsent</span><span class="p">(</span><span class="n">Bytes</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="w"> </span><span class="k">value</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
+<span class="w">        </span><span class="c1">/// Update all the given key/value pairs.</span>
+<span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name=&quot;entries&quot;&gt;A list of entries to put into the store. if the serialized bytes are also null it is interpreted as deletes&lt;/param&gt;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">PutAll</span><span class="p">(</span><span class="n">IEnumerable</span><span class="o">&lt;</span><span class="n">KeyValuePair</span><span class="o">&lt;</span><span class="n">Bytes</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">entries</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
+<span class="w">        </span><span class="c1">/// Delete the value from the store (if there is one).</span>
+<span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name=&quot;key&quot;&gt;the key&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;returns&gt;The old value or null if there is no such key&lt;/returns&gt;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="w"> </span><span class="nf">Delete</span><span class="p">(</span><span class="n">Bytes</span><span class="w"> </span><span class="n">key</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>2 - Integrate with Streamiz Application</p>
+<p>For using the custom state store within your Streamiz application, you need to write a custom <code class="docutils literal notranslate"><span class="pre">IKeyValueBytesStoreSupplier</span></code>. This supplier will be used to create one or multiple instances of your custom store. Of course, you can add some parameters like URI, API Key/Secret, etc ..</p>
+<p>For instance :</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">CustomStorageSupplier</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">IKeyValueBytesStoreSupplier</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">Uri</span><span class="w"> </span><span class="p">{</span><span class="k">get</span><span class="p">;</span><span class="k">set</span><span class="p">;}</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">Token</span><span class="w"> </span><span class="p">{</span><span class="k">get</span><span class="p">;</span><span class="k">set</span><span class="p">;}</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">Name</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="k">set</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="nf">AzureRemoteStorageSupplier</span><span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="n">uri</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">token</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">name</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">Uri</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">uri</span><span class="p">;</span>
+<span class="w">            </span><span class="n">Token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">token</span><span class="p">;</span>
+<span class="w">            </span><span class="n">Name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">name</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="n">IKeyValueStore</span><span class="o">&lt;</span><span class="n">Bytes</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Get</span><span class="p">()</span>
+<span class="w">            </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CustomKeyValueStore</span><span class="p">(</span><span class="n">Uri</span><span class="p">,</span><span class="w"> </span><span class="n">Token</span><span class="p">,</span><span class="w"> </span><span class="n">Name</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">MetricsScope</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s">&quot;custom-remote-storage&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+</pre></div>
+</div>
+<p>3 - Use the supplier</p>
+<p>Let’s suppose, you would like to materialize a KTable with your custom state store.</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">&quot;table-input&quot;</span><span class="p">,</span><span class="w"> </span>
+<span class="w">                        </span><span class="n">Materialized</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="n">IKeyValueStore</span><span class="o">&lt;</span><span class="n">Bytes</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="o">&gt;&gt;</span>
+<span class="w">                                </span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">CustomStorageSupplier</span><span class="p">(</span><span class="s">&quot;uri://&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;APIZ?ZLAKZ&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;custom-store&quot;</span><span class="p">)));</span>
+</pre></div>
+</div>
+</section>
+<section id="azure-table-key-value-store">
+<h3>Azure Table Key/Value store<a class="headerlink" href="#azure-table-key-value-store" title="Permalink to this heading"></a></h3>
+<p><strong>This feature is available in <code class="docutils literal notranslate"><span class="pre">EARLY</span> <span class="pre">ACCESS</span></code> only.</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">1.7.0</span></code> introduce a new remote storage. The <code class="docutils literal notranslate"><span class="pre">Azure</span> <span class="pre">Table</span> <span class="pre">Store</span></code> use under the hood, the Azure Table Client which can be used with a <a class="reference external" href="https://learn.microsoft.com/en-us/azure/storage/tables/table-storage-overview">Table Blob Storage</a> or a <a class="reference external" href="https://learn.microsoft.com/en-us/azure/cosmos-db/table/tutorial-query">CosmosDb endpoint</a></p>
+<section id="how-to">
+<h4>How to ?<a class="headerlink" href="#how-to" title="Permalink to this heading"></a></h4>
+<p>1- Install this nuget package</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">dotnet</span><span class="w"> </span><span class="k">add</span><span class="w"> </span><span class="n">package</span><span class="w"> </span><span class="n">Streamiz</span><span class="p">.</span><span class="n">Kafka</span><span class="p">.</span><span class="n">Net</span><span class="p">.</span><span class="n">Azure</span><span class="p">.</span><span class="n">RemoteStorage</span>
+</pre></div>
+</div>
+<p>2- Use the helper class to materialize the <code class="docutils literal notranslate"><span class="pre">Azure</span> <span class="pre">Remote</span> <span class="pre">Store</span></code></p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">&quot;table-input&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">AzureRemoteStorage</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">());</span>
+</pre></div>
+</div>
+<p>3- Configure it</p>
+<p>You can configure the azure endpoint and credentials via two way.</p>
+<p>1- Programmaticaly</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span>
+<span class="w">                </span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">&quot;table-input&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">AzureRemoteStorage</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="w"> </span>
+<span class="w">                            </span><span class="k">new</span><span class="w"> </span><span class="n">AzureRemoteStorageOptions</span>
+<span class="w">                                </span><span class="p">{</span>
+<span class="w">                                    </span><span class="n">AccountName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span>
+<span class="w">                                    </span><span class="n">StorageUri</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span>
+<span class="w">                                    </span><span class="n">StorageAccountKey</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+<span class="w">                                </span><span class="p">}));</span>
+</pre></div>
+</div>
+<p>2- Via Configuration</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="o">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">StringSerDes</span><span class="o">&gt;</span><span class="p">{</span>
+<span class="w">                </span><span class="n">ApplicationId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">$&quot;test-app&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="n">BootstrapServers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;localhost:9092&quot;</span>
+<span class="w">        </span><span class="p">};</span>
+<span class="w">           </span>
+<span class="n">config</span><span class="p">[</span><span class="s">&quot;azure.remote.storage.uri&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;URI&quot;</span><span class="p">;</span>
+<span class="n">config</span><span class="p">[</span><span class="s">&quot;azure.remote.storage.account.name&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;ACCOUNT_NAME&quot;</span><span class="p">;</span>
+<span class="n">config</span><span class="p">[</span><span class="s">&quot;azure.remote.storage.account.key&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;MASTER_KEY&quot;</span><span class="p">;</span>
+
+<span class="c1">/// ....</span>
+<span class="kt">var</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">&quot;table-input&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">AzureRemoteStorage</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
 </section>
 </section>
 </section>

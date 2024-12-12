@@ -80,6 +80,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#outer-join">Outer Join</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#drop-duplicates">Drop Duplicates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#suppress">Suppress</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="stores.html">State stores</a></li>
@@ -564,6 +566,82 @@ For each input record on the left side that does not have any match on the right
 <li><p>For each input record on one side that does not have any match on the other side, the ValueJoiner will be called with (leftRecord.value, null) or (null, rightRecord.value), respectively; this explains the rows with timestamp=3 and timestamp=7 in the table below, which list [A, null] and [null, b], respectively, in the OUTER JOIN column.</p></li>
 </ul>
 </section>
+</section>
+<section id="drop-duplicates">
+<h2>Drop Duplicates<a class="headerlink" href="#drop-duplicates" title="Permalink to this heading"></a></h2>
+<p>This function removes duplicate records from the same key based on the time interval mentioned. Duplicate records are detected based on the kafka key plus the lambda returns; In this simplified example, the record value is the event ID.  The internal processor remembers the old event IDs in an associated window state store, which automatically purges/expires event IDs from the store after a certain amount of time has passed to prevent the store from growing indefinitely.</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;input&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">DropDuplicate</span><span class="p">((</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">value1</span><span class="p">,</span><span class="w"> </span><span class="n">value2</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">value1</span><span class="p">.</span><span class="n">Equals</span><span class="p">(</span><span class="n">value2</span><span class="p">),</span><span class="w"> </span><span class="n">TimeSpan</span><span class="p">.</span><span class="n">FromMinutes</span><span class="p">(</span><span class="m">1</span><span class="p">))</span>
+<span class="w">        </span><span class="p">.</span><span class="n">To</span><span class="p">(</span><span class="s">&quot;output&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Timestamp</th>
+<th>Input Topic</th>
+<th>Window Store</th>
+<th>Output Topic</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>t0</td>
+<td>key: key1 ; value : eventID1</td>
+<td>key: key1 ; value : eventID1 ; t0</td>
+<td>key: key1 ; value : eventID1</td>
+</tr>
+<tr>
+<td>t0+10s</td>
+<td>key: key1 ; value : eventID1</td>
+<td>key: key1 ; value : eventID1 ; t0</td>
+<td>X</td>
+</tr>
+<tr>
+<td>t0+30s</td>
+<td>key: key1 ; value : eventID2</td>
+<td>key: key1 ; value : eventID2 ; t0+30s</td>
+<td>key: key1 ; value : eventID2</td>
+</tr>
+<tr>
+<td>t0+95s</td>
+<td>key: key1 ; value : eventID2</td>
+<td>key: key1 ; value : eventID2 ; t0+95s</td>
+<td>key: key1 ; value : eventID2</td>
+</tr>
+</tbody>
+</table></section>
+<section id="suppress">
+<h2>Suppress<a class="headerlink" href="#suppress" title="Permalink to this heading"></a></h2>
+<p>In Streamiz, windowed computations update their results continuously. As new data arrives for a window, freshly computed results are emitted downstream. For many applications, this is ideal, since fresh results are always available. and Streamiz is designed to make programming continuous computations seamless. However, some applications need to take action only on the final result of a windowed computation. Common examples of this are sending alerts or delivering results to a system that doesn’t support updates.</p>
+<p>Suppose that you have an hourly windowed count of events per user. If you want to send an alert when a user has less than three events in an hour, you have a real challenge. All users would match this condition at first, until they accrue enough events, so you cannot simply send an alert when someone matches the condition; you have to wait until you know you won’t see any more events for a particular window and then send the alert.</p>
+<p>Streamiz offers a clean way to define this logic: after defining your windowed computation, you can suppress the intermediate results, emitting the final count for each user when the window is closed.</p>
+<p>Example :</p>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamBuilder</span><span class="p">();</span>
+<span class="w">        </span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="p">(</span><span class="s">&quot;input&quot;</span><span class="p">,</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">(),</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">())</span>
+<span class="w">    </span><span class="p">.</span><span class="n">GroupByKey</span><span class="p">()</span>
+<span class="w">    </span><span class="p">.</span><span class="n">WindowedBy</span><span class="p">(</span><span class="n">TumblingWindowOptions</span><span class="p">.</span><span class="n">Of</span><span class="p">(</span><span class="n">TimeSpan</span><span class="p">.</span><span class="n">FromMinutes</span><span class="p">(</span><span class="m">1</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">.</span><span class="n">Count</span><span class="p">(</span>
+<span class="w">        </span><span class="n">InMemoryWindows</span>
+<span class="w">            </span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;count-store&quot;</span><span class="p">)</span>
+<span class="w">            </span><span class="p">.</span><span class="n">WithKeySerdes</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">())</span>
+<span class="w">            </span><span class="p">.</span><span class="n">WithValueSerdes</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">Int64SerDes</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">.</span><span class="n">Suppress</span><span class="p">(</span><span class="n">SuppressedBuilder</span><span class="p">.</span><span class="n">UntilWindowClose</span><span class="o">&lt;</span><span class="n">Windowed</span><span class="o">&lt;</span><span class="kt">string</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="n">TimeSpan</span><span class="p">.</span><span class="n">FromMinutes</span><span class="p">(</span><span class="m">1</span><span class="p">),</span>
+<span class="w">                </span><span class="n">StrictBufferConfig</span><span class="p">.</span><span class="n">Unbounded</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">.</span><span class="n">ToStream</span><span class="p">()</span>
+<span class="w">    </span><span class="p">.</span><span class="n">To</span><span class="p">(</span><span class="s">&quot;output&quot;</span><span class="p">,</span><span class="w"> </span>
+<span class="w">        </span><span class="k">new</span><span class="w"> </span><span class="n">TimeWindowedSerDes</span><span class="o">&lt;</span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">(),</span><span class="w"> </span><span class="p">(</span><span class="kt">long</span><span class="p">)</span><span class="n">TimeSpan</span><span class="p">.</span><span class="n">FromMinutes</span><span class="p">(</span><span class="m">1</span><span class="p">).</span><span class="n">TotalMilliseconds</span><span class="p">),</span><span class="w"> </span>
+<span class="w">        </span><span class="k">new</span><span class="w"> </span><span class="nf">Int64SerDes</span><span class="p">());</span>
+</pre></div>
+</div>
+<p>The key parts of this program are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TumblingWindowOptions.Of(TimeSpan.FromMinutes(1))</span></code> Define a tumbling window of 1 minute</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.Suppress(SuppressedBuilder.UntilWindowClose&lt;Windowed&lt;string&gt;,</span> <span class="pre">long&gt;(TimeSpan.Zero,</span></code> This configures the suppression operator to emit nothing for a window until it closes, and then emit the final result without a grace period.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">StrictBufferConfig.Unbounded()))</span></code> This configures the buffer used for storing events until their windows close.</p></li>
+</ul>
+<p>More details on the <code class="docutils literal notranslate"><span class="pre">Suppressed</span></code> class in the documentation.</p>
 </section>
 </section>
 

@@ -310,7 +310,7 @@ otherwise the default value is <code class="docutils literal notranslate"><span 
 </section>
 <section id="bufferedrecordsperpartition">
 <h3>BufferedRecordsPerPartition<a class="headerlink" href="#bufferedrecordsperpartition" title="Permalink to this heading"></a></h3>
-<p>Maximum number of records to buffer per partition. (Default: 1000)
+<p>[Deprecated] Maximum number of records to buffer per partition. (Default: Int32.MaxValue)
 If this number is exceeded, the consumer pauses for this partition until stream instance process messages.</p>
 </section>
 <section id="innerexceptionhandler">
@@ -402,7 +402,7 @@ Default is 1 day.</p>
 </section>
 <section id="starttaskdelayms">
 <h3>StartTaskDelayMs<a class="headerlink" href="#starttaskdelayms" title="Permalink to this heading"></a></h3>
-<p>Time wait before completing the start task of <code class="docutils literal notranslate"><span class="pre">KafkaStream</span></code> (default: 5000).</p>
+<p>[Obsolete] Time wait before completing the start task of <code class="docutils literal notranslate"><span class="pre">KafkaStream</span></code> (default: 5000).</p>
 </section>
 <section id="basicauthuserinfo">
 <h3>BasicAuthUserInfo<a class="headerlink" href="#basicauthuserinfo" title="Permalink to this heading"></a></h3>
