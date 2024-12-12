@@ -25,11 +25,11 @@ jobs:
     - name: Setup .NET 7.0
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 7.0.20
+        dotnet-version: 7.0.410
     - name: Setup .NET 8.0
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 8.0.10
+        dotnet-version: 8.0.404
     - name: Install dependencies
       run: dotnet restore
     - name: Build
