@@ -22,13 +22,13 @@ namespace Streamiz.Kafka.Net.Processors
 
         bool InitializeStateStores();
 
-        void Commit();
+        IEnumerable<TopicPartitionOffset> PrepareCommit();
 
-        void Resume();
-
+        void PostCommit(bool enforceCheckpoint);
+        
         void Suspend();
 
-        void Close();
+        void Close(bool dirty);
 
         IStateStore GetStore(String name);
 

@@ -48,13 +48,13 @@ namespace Streamiz.Kafka.Net.Tests.Stores
 
             kafkaSupplier = new SyncKafkaSupplier();
 
-            var producerConfig = new ProducerConfig();
-            producerConfig.ClientId = "producer-1";
-            var producerClient = kafkaSupplier.GetProducer(producerConfig);
-
-            recordCollector = new RecordCollector("p-1", config, id, new NoRunnableSensor("s", "s", MetricsRecordingLevel.DEBUG));
-            recordCollector.Init(ref producerClient);
-
+            var streamsProducer = new StreamsProducer(config,
+                "thread",
+                Guid.NewGuid(),
+                kafkaSupplier, "log");
+            
+            recordCollector = new RecordCollector("p-1", config, id, streamsProducer, new NoRunnableSensor("s", "s", MetricsRecordingLevel.DEBUG));
+            
             var changelogsTopics = new Dictionary<string, string>{
                 { "test-store", "test-store-changelog"}
             };
@@ -97,7 +97,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             {
                 store.Flush();
                 stateManager.Close();
-                recordCollector?.Close();
+                recordCollector?.Close(false);
             }
         }
 

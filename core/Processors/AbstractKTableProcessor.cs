@@ -36,8 +36,7 @@ namespace Streamiz.Kafka.Net.Processors
                             new Change<VS>(sendOldValues ? kv.Value.OldValue.Value : default, kv.Value.NewValue.Value),
                             kv.Value.NewValue.Timestamp);
                     },
-                    sendOldValues, 
-                    context.ConfigEnableCache);
+                    sendOldValues);
             }
 
             if (throwException && (queryableStoreName == null || store == null || tupleForwarder == null))

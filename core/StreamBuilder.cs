@@ -738,7 +738,7 @@ namespace Streamiz.Kafka.Net
         #endregion
 
         #region State Store
-
+        
         /// <summary>
         /// Adds a state store to the underlying <see cref="Topology"/>. 
         /// It is required to connect state stores to <see cref="Streamiz.Kafka.Net.Processors.Public.IProcessor{K, V}"/> 
@@ -746,9 +746,10 @@ namespace Streamiz.Kafka.Net
         /// before they can be used.
         /// </summary>
         /// <param name="storeBuilder">The builder used to obtain the <see cref="IStateStore"/> instance.</param>
-        public void AddStateStore(IStoreBuilder storeBuilder)
+        /// <param name="processorNames">The names of the processors that should be able to access the provided store</param>
+        public void AddStateStore(IStoreBuilder storeBuilder, params string[] processorNames)
         {
-            internalStreamBuilder.AddStateStore(storeBuilder);
+            internalStreamBuilder.AddStateStore(storeBuilder, processorNames);
         }
 
         #endregion

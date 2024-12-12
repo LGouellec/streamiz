@@ -42,7 +42,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 .To("test-output");
 
             builder.Stream<string, string>("test-output")
-                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => _return.Add(KeyValuePair.Create(k, v)));
 
             var t = builder.Build();
             var stream = new KafkaStream(t, config, supplier);
@@ -112,11 +112,11 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 .To("test-output");
 
             builder.Stream<string, string>("test-output")
-                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => _return.Add(KeyValuePair.Create(k, v)));
 
             var t = builder.Build();
 
-            using (var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
                 inputtopic.PipeInput("coucou");

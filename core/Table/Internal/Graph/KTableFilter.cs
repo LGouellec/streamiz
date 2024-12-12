@@ -10,9 +10,10 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
         {
             private readonly IKTableValueGetter<K, V> ktablegetter;
             private readonly bool filterNot;
-            private readonly Func<K, V, bool> predicate;
+            private readonly Func<K, V, IRecordContext, bool> predicate;
+            private ProcessorContext _context;
 
-            public KTableFilterValueGetter(bool filterNot, Func<K, V, bool> predicate, IKTableValueGetter<K, V> getter)
+            public KTableFilterValueGetter(bool filterNot, Func<K, V, IRecordContext, bool> predicate, IKTableValueGetter<K, V> getter)
             {
                 this.ktablegetter = getter;
                 this.filterNot = filterNot;
@@ -23,7 +24,11 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
 
             public ValueAndTimestamp<V> Get(K key) => ComputeValue(key, ktablegetter.Get(key));
 
-            public void Init(ProcessorContext context) => ktablegetter.Init(context);
+            public void Init(ProcessorContext context)
+            {
+                ktablegetter.Init(context);
+                _context = context;
+            }
 
             private ValueAndTimestamp<V> ComputeValue(K key, ValueAndTimestamp<V> valueAndTimestamp)
             {
@@ -32,7 +37,7 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
                 if (valueAndTimestamp != null)
                 {
                     V value = valueAndTimestamp.Value;
-                    if (filterNot ^ predicate.Invoke(key, value))
+                    if (filterNot ^ predicate.Invoke(key, value, _context.RecordContext))
                     {
                         newValueAndTimestamp = valueAndTimestamp;
                     }
@@ -43,12 +48,12 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
         }
 
         private readonly IKTableGetter<K, V> parent;
-        private readonly Func<K, V, bool> predicate;
+        private readonly Func<K, V, IRecordContext, bool> predicate;
         private readonly bool filterNot;
         private readonly string queryableStoreName;
         private bool sendOldValues = false;
 
-        public KTableFilter(IKTableGetter<K, V> parent, Func<K, V, bool> predicate, bool filterNot, string queryableStoreName)
+        public KTableFilter(IKTableGetter<K, V> parent, Func<K, V, IRecordContext, bool> predicate, bool filterNot, string queryableStoreName)
         {
             this.parent = parent;
             this.predicate = predicate;

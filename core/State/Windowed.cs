@@ -12,7 +12,23 @@ namespace Streamiz.Kafka.Net.State
     /// Thus, a windowed <see cref="IKTable{K, V}"/> has type <code><see cref="Windowed{K}"/>, V</code>.
     /// </summary>
     /// <typeparam name="K">type of key</typeparam>
-    public class Windowed<K>
+    public abstract class Windowed
+    {
+        /// <summary>
+        /// Return the window containing the values associated with this key.
+        /// </summary>
+        public abstract Window Window { get; }
+    }
+    
+    /// <summary>
+    /// The result key type of a windowed stream aggregation.
+    /// If a <see cref="IKStream{K, V}"/> gets grouped and aggregated using a window-aggregation the resulting <see cref="IKTable{K, V}"/>is a
+    /// so-called "windowed <see cref="IKTable{K, V}"/>" with a combined key type that encodes the corresponding aggregation window and
+    /// the original record key.
+    /// Thus, a windowed <see cref="IKTable{K, V}"/> has type <code><see cref="Windowed{K}"/>, V</code>.
+    /// </summary>
+    /// <typeparam name="K">type of key</typeparam>
+    public class Windowed<K> : Windowed
     {
         /// <summary>
         /// Constructor with Key and Window data
@@ -33,7 +49,7 @@ namespace Streamiz.Kafka.Net.State
         /// <summary>
         /// Return the window containing the values associated with this key.
         /// </summary>
-        public Window Window { get; }
+        public override Window Window { get; }
 
         /// <summary>
         /// 

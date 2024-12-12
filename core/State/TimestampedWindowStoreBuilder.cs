@@ -57,7 +57,7 @@ namespace Streamiz.Kafka.Net.State
 
         private IWindowStore<Bytes, byte[]> WrapLogging(IWindowStore<Bytes, byte[]> inner)
         {
-            if (!LoggingEnabled)
+            if (!LoggingEnabled || !inner.IsLocally)
                 return inner;
 
             return new ChangeLoggingTimestampedWindowBytesStore(inner, supplier.RetainDuplicates);
@@ -71,7 +71,8 @@ namespace Streamiz.Kafka.Net.State
                     inner,
                     supplier.WindowSize.Value,
                     supplier.SegmentInterval,
-                    new WindowKeySchema());
+                    new WindowKeySchema(),
+                    CacheSize);
         }
     }
 }

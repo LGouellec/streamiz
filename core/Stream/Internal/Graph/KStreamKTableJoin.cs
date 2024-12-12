@@ -7,7 +7,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph
     {
         public class KeyValueMapper : IKeyValueMapper<K, V1, K>
         {
-            public K Apply(K key, V1 value) => key;
+            public K Apply(K key, V1 value, IRecordContext context) => key;
         }
 
         private readonly IKTableValueGetterSupplier<K, V2> valueGetter;

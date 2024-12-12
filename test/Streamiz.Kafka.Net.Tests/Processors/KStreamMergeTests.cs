@@ -28,7 +28,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var stream1 = builder.Stream<string, int>("topic1"); 
             var stream2 = builder.Stream<string, int>("topic2");
             var merged = stream1.Merge(stream2);
-            merged.Peek((k, v) => observed.Add(KeyValuePair.Create(k, v)));
+            merged.Peek((k, v, _) => observed.Add(KeyValuePair.Create(k, v)));
 
             var config = new StreamConfig<StringSerDes, Int32SerDes>
             {
@@ -68,7 +68,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var stream1 = builder.Stream<string, int>("topic1");
             var stream2 = builder.Stream<string, int>("topic2");
             var merged = stream1.Merge(stream2);
-            merged.Peek((k, v) => observed.Add(KeyValuePair.Create(k, v)));
+            merged.Peek((k, v, _) => observed.Add(KeyValuePair.Create(k, v)));
 
             var config = new StreamConfig<StringSerDes, Int32SerDes>
             {
@@ -107,7 +107,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var stream1 = builder.Stream<string, int>("topic1");
             var stream2 = builder.Stream<string, int>("topic2");
             var merged = stream1.Merge(stream2);
-            merged.Peek((k, v) => observed.Add(KeyValuePair.Create(k, v)));
+            merged.Peek((k, v, _) => observed.Add(KeyValuePair.Create(k, v)));
 
             var config = new StreamConfig<StringSerDes, Int32SerDes>
             {

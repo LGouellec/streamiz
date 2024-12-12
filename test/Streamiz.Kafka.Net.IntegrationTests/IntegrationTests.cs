@@ -31,6 +31,7 @@ namespace Streamiz.Kafka.Net.IntegrationTests
         }
 
         [Test]
+        [NonParallelizable]
         public async Task TestSimpleTopology()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
@@ -64,6 +65,7 @@ namespace Streamiz.Kafka.Net.IntegrationTests
         }
         
         [Test]
+        [NonParallelizable]
         public async Task TestFilteredTopology()
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
@@ -78,7 +80,7 @@ namespace Streamiz.Kafka.Net.IntegrationTests
 
             var builder = new StreamBuilder();
             builder.Stream<string, string>("filtered-topic")
-                .Filter((key, value) => value.StartsWith("a"))
+                .Filter((key, value, _) => value.StartsWith("a"))
                 .To("filtered-topic2");
 
             var t = builder.Build();

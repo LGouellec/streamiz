@@ -32,7 +32,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             var branchs = builder.Stream<string, string>("topic")
-                .Branch((k, b) => true);
+                .Branch((k, b, _) => true);
 
             branchs[0].To("topic-branch0");
 
@@ -66,7 +66,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
 
             var branchs = builder.Stream<string, int>("topic")
-                .Branch((k, v) => v % 2 == 0, (k, v) => v % 2 > 0);
+                .Branch((k, v, _) => v % 2 == 0, (k, v, _) => v % 2 > 0);
 
             branchs[0].To("topic-pair");
             branchs[1].To("topic-impair");

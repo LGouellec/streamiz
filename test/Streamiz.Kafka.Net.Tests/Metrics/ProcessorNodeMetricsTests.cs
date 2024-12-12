@@ -51,7 +51,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
                 new StringSerDes(),
                 new StringSerDes(),
                 new FailOnInvalidTimestamp());
-            sourceProcessor.AddNextProcessor(new KStreamPeekProcessor<string, string>((k, v) => { }, false));
+            sourceProcessor.AddNextProcessor(new KStreamPeekProcessor<string, string>((k, v, _) => { }, false));
 
             context = new ProcessorContext(
                 UnassignedStreamTask.Create(id),

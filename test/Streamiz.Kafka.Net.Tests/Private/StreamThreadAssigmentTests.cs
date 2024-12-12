@@ -1,11 +1,9 @@
-using Confluent.Kafka;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Metrics;
@@ -24,6 +22,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             public string Name { get; set; }
             public bool Persistent { get; }
+            public bool IsLocally => true;
             public bool IsOpen { get; }
             public void Init(ProcessorContext context, IStateStore root)
             {
@@ -136,7 +135,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             
 
             thread1 = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", Guid.NewGuid(), "c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 mockKafkaSupplier, mockKafkaSupplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;

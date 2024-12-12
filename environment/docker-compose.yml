@@ -2,7 +2,7 @@
 version: '2'
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.6.1
+    image: confluentinc/cp-zookeeper:7.8.0
     hostname: zookeeper
     container_name: zookeeper
     ports:
@@ -13,7 +13,7 @@ services:
       KAFKA_OPTS: "-Dzookeeper.4lw.commands.whitelist=*"
 
   broker-1:
-    image: confluentinc/cp-server:7.6.1
+    image: confluentinc/cp-server:7.8.0
     hostname: broker-1
     container_name: broker-1
     depends_on:
@@ -28,6 +28,8 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker-1:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_LOG4J_LOGGERS: "kafka=INFO,kafka.network.RequestChannel$=WARN,kafka.producer.async.DefaultEventHandler=DEBUG,kafka.request.logger=DEBUG,kafka.controller=TRACE,log4j.logger.kafka.log.LogCleaner=INFO,log4j.logger.state.change.logger=TRACE,log4j.logger.kafka.authorizer.logger=WARN"
+      KAFKA_ALLOW_AUTO_CREATE_TOPICS: false
       KAFKA_DEFAULT_REPLICATION_FACTOR: 2
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 2
@@ -43,7 +45,7 @@ services:
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
 
   broker-2:
-    image: confluentinc/cp-server:7.6.1
+    image: confluentinc/cp-server:7.8.0
     hostname: broker-2
     container_name: broker-2
     depends_on:
@@ -59,11 +61,13 @@ services:
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+      KAFKA_ALLOW_AUTO_CREATE_TOPICS: false
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_LOG4J_LOGGERS: "kafka=INFO,kafka.network.RequestChannel$=WARN,kafka.producer.async.DefaultEventHandler=DEBUG,kafka.request.logger=DEBUG,kafka.controller=TRACE,log4j.logger.kafka.log.LogCleaner=INFO,log4j.logger.state.change.logger=TRACE,log4j.logger.kafka.authorizer.logger=WARN"
       KAFKA_JMX_PORT: 9102
       KAFKA_JMX_HOSTNAME: localhost
       KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry:8081
@@ -106,3 +110,53 @@ services:
     links:
       - broker-1
       - broker-2
+  
+  connect:
+    image: cnfldemos/kafka-connect-datagen:0.6.4-7.6.0
+    container_name: connect
+    depends_on:
+      - broker-1
+      - broker-2
+      - schema-registry
+    ports:
+      - 8083:8083
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: "broker-1:29092,broker-2:29093"
+      CONNECT_REST_ADVERTISED_HOST_NAME: "connect"
+      CONNECT_GROUP_ID: kafka-connect
+      CONNECT_CONFIG_STORAGE_TOPIC: _kafka-connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: _kafka-connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: _kafka-connect-status
+      CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
+      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
+      CONNECT_LOG4J_ROOT_LOGLEVEL: "INFO"
+      CONNECT_LOG4J_LOGGERS: "org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR"
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
+    volumes: 
+      - ./confs/order.avsc:/home/appuser/order.avsc
+
+  otel-collector:
+    image: otel/opentelemetry-collector:0.112.0
+    restart: always
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./confs/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "1888:1888"   # pprof extension
+      - "8888:8888"   # Prometheus metrics exposed by the collector
+      - "8889:8889"   # Prometheus exporter metrics
+      - "13133:13133" # health_check extension
+      - "4317:4317"   # OTLP gRPC receiver
+      - "55679:55679" # zpages extension
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: always
+    volumes:
+      - ./confs/prometheus.yaml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"

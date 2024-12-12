@@ -148,6 +148,13 @@ namespace Streamiz.Kafka.Net
         /// <returns>Return the config value of the key, null otherwise</returns>
         dynamic Get(string key);
 
+        /// <summary>
+        /// Get the list of key/value where each key start with the prefixKey.
+        /// </summary>
+        /// <param name="prefixKey">Prefix key searched</param>
+        /// <returns>Return the list of key/value where each key start with the prefixKey.</returns>
+        IEnumerable<KeyValuePair<string, string>> GetPrefixScan(string prefixKey);
+
         #endregion
 
         #region Stream Config Property
@@ -270,6 +277,7 @@ namespace Streamiz.Kafka.Net
         /// Authorize your streams application to follow metadata (timestamp, topic, partition, offset and headers) during processing record.
         /// You can use <see cref="StreamizMetadata"/> to get these metadatas. (Default : false)
         /// </summary>
+        [Obsolete("Plan to remove in 1.8.0")]
         bool FollowMetadata { get; set; }
 
         /// <summary>
@@ -343,9 +351,9 @@ namespace Streamiz.Kafka.Net
         TimeSpan LogProcessingSummary { get; set; }
         
         /// <summary>
-        /// Maximum number of memory bytes to be used for state stores cache for a single store. (default: 5Mb)
+        /// Define the default maximum number of memory bytes to be used for state stores cache for a single store. (default: 5Mb)
         /// </summary>
-        long StateStoreCacheMaxBytes { get; set; }
+        long DefaultStateStoreCacheMaxBytes { get; set; }
         
         #endregion
         
@@ -398,6 +406,23 @@ namespace Streamiz.Kafka.Net
     /// </summary>
     public class StreamConfig : IStreamConfig, ISchemaRegistryConfig
     {
+        private class TupleEqualityComparer : IEqualityComparer<KeyValuePair<string, string>>
+        {
+            public bool Equals(KeyValuePair<string, string> x, KeyValuePair<string, string> y)
+                => x.Key.Equals(y.Key);
+
+            public int GetHashCode(KeyValuePair<string, string> obj)
+                => obj.Key.GetHashCode();
+        }
+        
+        private static string VersionString => Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
+        private static List<KeyValuePair<string, string>> NameAndVersionConfig => new()
+            {
+                new( "client.software.name", "streamiz-dotnet"),
+                new( "client.software.version", VersionString )
+            };
+
         private class KeyValueComparer : IEqualityComparer<KeyValuePair<string, string>>
         {
             public bool Equals(KeyValuePair<string, string> x, KeyValuePair<string, string> y)
@@ -553,11 +578,21 @@ namespace Streamiz.Kafka.Net
         private readonly IDictionary<string, PropertyInfo> cacheProperties 
             = new Dictionary<string, PropertyInfo>();
 
-        private readonly Dictionary<string, dynamic> configProperties 
-            = new Dictionary<string, dynamic>();
+        private readonly Dictionary<string, dynamic> configProperties = new();
 
         internal long MetricsMinIntervalMs { get; set; } = 30000;
-
+        
+        /// <summary>
+        /// Get the config value of the key. Null if any key found OR
+        /// Add a new key/value configuration.
+        /// </summary>
+        /// <param name="key">key to get or add</param>
+        public dynamic this[string key]
+        {
+            get => Get(key);
+            set => AddConfig(key, value);
+        }
+        
         #region Middlewares
 
         /// <summary>
@@ -2003,7 +2038,16 @@ namespace Streamiz.Kafka.Net
         /// low
         /// </summary>
         [StreamConfigProperty("allow.auto.create.topics")]
-        public bool? AllowAutoCreateTopics { get { return _consumerConfig.AllowAutoCreateTopics; } set { _consumerConfig.AllowAutoCreateTopics = value; } }
+        public bool? AllowAutoCreateTopics
+        {
+            get { return _consumerConfig.AllowAutoCreateTopics; }
+            set
+            {
+                _consumerConfig.AllowAutoCreateTopics = value;
+                _adminClientConfig.AllowAutoCreateTopics = value;
+                _producerConfig.AllowAutoCreateTopics = value;
+            }
+        }
 
         #endregion
 
@@ -2282,12 +2326,12 @@ namespace Streamiz.Kafka.Net
             MetricsIntervalMs = (long)TimeSpan.FromSeconds(30).TotalMilliseconds;
             MetricsRecording = MetricsRecordingLevel.INFO;
             LogProcessingSummary = TimeSpan.FromMinutes(1);
-            MetricsReporter = (_) => { }; // nothing by default, maybe another behavior in future
+            MetricsReporter = _ => { }; // nothing by default, maybe another behavior in future
             ExposeLibrdKafkaStats = false;
             StartTaskDelayMs = 5000;
             ParallelProcessing = false;
             MaxDegreeOfParallelism = 8;
-            StateStoreCacheMaxBytes = 5 * 1024 * 1024;
+            DefaultStateStoreCacheMaxBytes = 5 * 1024 * 1024;
 
             _consumerConfig = new ConsumerConfig();
             _producerConfig = new ProducerConfig();
@@ -2297,7 +2341,8 @@ namespace Streamiz.Kafka.Net
             MaxPollIntervalMs = 300000;
             EnableAutoCommit = false;
             EnableAutoOffsetStore = false;
-            PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.CooperativeSticky;
+            AllowAutoCreateTopics = false;
+            PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.Range;
             Partitioner = Confluent.Kafka.Partitioner.Murmur2Random;
 
             Logger = LoggerFactory.Create(builder =>
@@ -2389,6 +2434,46 @@ namespace Streamiz.Kafka.Net
                 else
                     configProperties.AddOrUpdate(key, (object)value);
             }
+        }
+
+        /// <summary>
+        /// Get the list of key/value where each key start with the prefixKey.
+        /// </summary>
+        /// <param name="prefixKey">Prefix key searched</param>
+        /// <returns>Return the list of key/value where each key start with the prefixKey.</returns>
+        public IEnumerable<KeyValuePair<string, string>> GetPrefixScan(string prefixKey)
+        {
+            List<(string, dynamic)> results = new List<(string, dynamic)>();
+            results.AddRange(
+                cacheProperties.Where(kv => kv.Key.StartsWith(prefixKey))
+                    .Select(kv => (kv.Key, kv.Value.GetValue(this))));
+
+            if (prefixKey.StartsWith(mainConsumerPrefix))
+                results.AddRange(_overrideMainConsumerConfig.Select(kv => ($"{prefixKey}{kv.Key}", (dynamic)kv.Value)));
+            else if (prefixKey.StartsWith(globalConsumerPrefix))
+                results.AddRange(
+                    _overrideGlobalConsumerConfig.Select(kv => ($"{prefixKey}{kv.Key}", (dynamic)kv.Value)));
+            else if (prefixKey.StartsWith(restoreConsumerPrefix))
+                results.AddRange(
+                    _overrideRestoreConsumerConfig.Select(kv => ($"{prefixKey}{kv.Key}", (dynamic)kv.Value)));
+            else if (prefixKey.StartsWith(producerPrefix))
+                results.AddRange(
+                    _overrideProducerConfig.Select(kv => ($"{prefixKey}{kv.Key}", (dynamic)kv.Value)));
+            else if(prefixKey.StartsWith(externalConsumerPrefix))
+                results.AddRange(
+                    _overrideExternalConsumerConfig.Select(kv => ($"{prefixKey}{kv.Key}", (dynamic)kv.Value)));
+            else if(prefixKey.StartsWith(externalProducerPrefix))
+                results.AddRange(
+                    _overrideExternalProducerConfig.Select(kv => ($"{prefixKey}{kv.Key}", (dynamic)kv.Value)));
+            
+            results.AddRange(
+                configProperties.Where(kv => kv.Key.StartsWith(prefixKey))
+                    .Select(kv => (kv.Key, kv.Value)));
+
+            return results
+                .Where(kv => kv.Item2 != null)
+                .Select(kv => new KeyValuePair<string, string>(kv.Item1, kv.Item2.ToString()))
+                .Distinct(new TupleEqualityComparer());
         }
         
         /// <summary>
@@ -2578,7 +2663,7 @@ namespace Streamiz.Kafka.Net
         /// Maximum number of records to buffer per partition. (Default: 1000)
         /// </summary>
         [StreamConfigProperty("" + bufferedRecordsPerPartitionCst)]
-        [Obsolete("Librdkafka clients manage internally a backpressure. So this configuration will be remove in the next release.")]
+        [Obsolete("Librdkafka clients manage internally a backpressure. So this configuration will be remove in 1.8.0")]
         public long BufferedRecordsPerPartition
         {
             get => configProperties[bufferedRecordsPerPartitionCst];
@@ -2716,9 +2801,12 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
-        /// Time wait before completing the start task of <see cref="KafkaStream"/>. (default: 5000)
+        /// Time wait before completing the start task of <see cref="KafkaStream"/>.
+        /// Should be removed in the next release.
+        /// (default: 5000)
         /// </summary>
         [StreamConfigProperty("" + startTaskDelayMsCst)]
+        [Obsolete("Remove in 1.8.0")]
         public long StartTaskDelayMs
         {
             get => configProperties[startTaskDelayMsCst];
@@ -2761,7 +2849,7 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         [StreamConfigProperty("" + stateStoreCacheMaxBytesCst)]
 
-        public long StateStoreCacheMaxBytes        
+        public long DefaultStateStoreCacheMaxBytes        
         {
             get => configProperties[stateStoreCacheMaxBytesCst];
             set => configProperties.AddOrUpdate(stateStoreCacheMaxBytesCst, value);
@@ -2780,7 +2868,12 @@ namespace Streamiz.Kafka.Net
         /// <returns>Return <see cref="ProducerConfig"/> for building <see cref="IProducer{TKey, TValue}"/> instance.</returns>
         public ProducerConfig ToProducerConfig(string clientId)
         {
-            ProducerConfig config = new ProducerConfig(_producerConfig.Union(_config).Distinct(new KeyValueComparer()).ToDictionary());
+            ProducerConfig config = new ProducerConfig(
+                _producerConfig
+                    .Union(_config)
+                    .Distinct(new KeyValueComparer())
+                    .Concat(NameAndVersionConfig)
+                    .ToDictionary());
             foreach(var kv in _overrideProducerConfig)
                 config.Set(kv.Key, kv.Value);
             config.ClientId = clientId;
@@ -2794,7 +2887,12 @@ namespace Streamiz.Kafka.Net
         /// <returns>Return <see cref="ProducerConfig"/> for building <see cref="IProducer{TKey, TValue}"/> instance.</returns>
         public ProducerConfig ToExternalProducerConfig(string clientId)
         {
-            ProducerConfig config = new ProducerConfig(_producerConfig.Union(_config).Distinct(new KeyValueComparer()).ToDictionary());
+            ProducerConfig config = new ProducerConfig(
+                _producerConfig
+                    .Union(_config)
+                    .Distinct(new KeyValueComparer())
+                    .Concat(NameAndVersionConfig)
+                    .ToDictionary());
             foreach(var kv in _overrideExternalProducerConfig)
                 config.Set(kv.Key, kv.Value);
             config.ClientId = clientId;
@@ -2818,7 +2916,11 @@ namespace Streamiz.Kafka.Net
             if (!configProperties.ContainsKey(applicatonIdCst))
                 throw new StreamConfigException($"Key {applicatonIdCst} was not found. She is mandatory for getting consumer config");
 
-            var config = new ConsumerConfig(_consumerConfig.Union(_config).Distinct(new KeyValueComparer()).ToDictionary());
+            var config = new ConsumerConfig(
+                _consumerConfig.Union(_config)
+                    .Distinct(new KeyValueComparer())
+                    .Concat(NameAndVersionConfig)
+                    .ToDictionary());
             if(@override)
             {
                 _overrideMainConsumerConfig.EnableAutoCommit = false;
@@ -2841,7 +2943,12 @@ namespace Streamiz.Kafka.Net
             if (!configProperties.ContainsKey(applicatonIdCst))
                 throw new StreamConfigException($"Key {applicatonIdCst} was not found. She is mandatory for getting consumer config");
 
-            var config = new ConsumerConfig(_consumerConfig.Union(_config).Distinct(new KeyValueComparer()).ToDictionary());
+            var config = new ConsumerConfig(
+                _consumerConfig
+                    .Union(_config)
+                    .Distinct(new KeyValueComparer())
+                    .Concat(NameAndVersionConfig)
+                    .ToDictionary());
             foreach (var kv in _overrideExternalConsumerConfig)
                 config.Set(kv.Key, kv.Value);
             
@@ -2894,7 +3001,12 @@ namespace Streamiz.Kafka.Net
         /// <returns>Return <see cref="AdminClientConfig"/> for building <see cref="IAdminClient"/> instance.</returns>
         public AdminClientConfig ToAdminConfig(string clientId)
         {
-            var config = new AdminClientConfig(_adminClientConfig.Union(_config).Distinct(new KeyValueComparer()).ToDictionary());
+            var config = new AdminClientConfig(
+                _adminClientConfig
+                    .Union(_config)
+                    .Distinct(new KeyValueComparer())
+                    .Concat(NameAndVersionConfig)
+                    .ToDictionary());
             config.ClientId = clientId;
             return config;
         }
@@ -2995,13 +3107,17 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
-        ///    BasicAuthCredentialsSource
+        /// BasicAuthCredentialsSource "USER_INFO" or "SASL_INHERIT".
         /// </summary>
         [StreamConfigProperty("" + schemaRegistryBasicAuthCredentialSourceCst)]
-        public int? BasicAuthCredentialsSource
+        public string BasicAuthCredentialsSource
         {
             get => configProperties.ContainsKey(schemaRegistryBasicAuthCredentialSourceCst) ? configProperties[schemaRegistryBasicAuthCredentialSourceCst] : null;
-            set => configProperties.AddOrUpdate(schemaRegistryBasicAuthCredentialSourceCst, value);
+            set
+            {
+                if(value.Equals("USER_INFO") || value.Equals("SASL_INHERIT"))
+                    configProperties.AddOrUpdate(schemaRegistryBasicAuthCredentialSourceCst, value);
+            }
         }
 
         /// <summary>
@@ -3352,6 +3468,29 @@ namespace Streamiz.Kafka.Net
         {
             DefaultKeySerDes = new KS();
             DefaultValueSerDes = new VS();
+        }
+    }
+
+
+    public static class StreamConfigExtensions
+    {
+        public static T Read<T>(this IStreamConfig config)
+            where T : class
+        {
+            T t = Activator.CreateInstance<T>();
+            
+            foreach (var p in typeof(T).GetProperties())
+            {
+                var streamConfigAttr = p.GetCustomAttribute<StreamConfigPropertyAttribute>();
+                if (streamConfigAttr != null && !streamConfigAttr.ReadOnly)
+                {
+                    var r = config.Get(streamConfigAttr.KeyName);
+                    if (r != null)
+                        p.SetValue(t, r);
+                }
+            }
+
+            return t;
         }
     }
 }

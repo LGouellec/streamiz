@@ -77,7 +77,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         private void BuildTopology(StreamBuilder builder)
         {
             builder.Stream<string, ObjectA, StringSerDes, JsonSerDes<ObjectA>>("source")
-                .Map((key, value) => new KeyValuePair<string, ObjectA>(value.Symbol, value))
+                .Map((key, value, _) => new KeyValuePair<string, ObjectA>(value.Symbol, value))
                 .GroupByKey<StringSerDes, JsonSerDes<ObjectA>>()
                 .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(5)))
                 .Aggregate(
@@ -87,7 +87,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                         .WithKeySerdes(new StringSerDes())
                         .WithValueSerdes(new JsonSerDes<ObjectB>()))
                 .ToStream()
-                .Map((key, ObjectB) => new KeyValuePair<string, ObjectB>(key.Key, ObjectB))
+                .Map((key, ObjectB, _) => new KeyValuePair<string, ObjectB>(key.Key, ObjectB))
                 .To<StringSerDes, JsonSerDes<ObjectB>>("sink");
         }
 

@@ -10,6 +10,7 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
         {
             private readonly IKTableValueGetter<K, V> ktablegetter;
             private readonly IValueMapperWithKey<K, V, VR> mapper;
+            private ProcessorContext _context;
 
             public KTableMapValuesValueGetter(IValueMapperWithKey<K, V, VR> mapper, IKTableValueGetter<K, V> getter)
             {
@@ -21,7 +22,11 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
 
             public ValueAndTimestamp<VR> Get(K key) => ComputeValue(key, ktablegetter.Get(key));
 
-            public void Init(ProcessorContext context) => ktablegetter.Init(context);
+            public void Init(ProcessorContext context)
+            {
+                ktablegetter.Init(context);
+                _context = context;
+            }
 
             private ValueAndTimestamp<VR> ComputeValue(K key, ValueAndTimestamp<V> valueAndTimestamp)
             {
@@ -30,7 +35,7 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
 
                 if (valueAndTimestamp != null)
                 {
-                    newValue = mapper.Apply(key, valueAndTimestamp.Value);
+                    newValue = mapper.Apply(key, valueAndTimestamp.Value, _context.RecordContext);
                     timestamp = valueAndTimestamp.Timestamp;
                 }
 

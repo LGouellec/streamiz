@@ -1,14 +1,11 @@
-﻿using Confluent.Kafka;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Streamiz.Kafka.Net.Mock;
-using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Mock.Sync;
 using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.Private
@@ -43,12 +40,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 .To("test-output");
 
             builder.Stream<string, string>("test-output")
-                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => _return.Add(KeyValuePair.Create(k, v)));
 
             var t = builder.Build();
 
-            using (var driver = new TopologyTestDriver(t.Builder, config,
-                TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
                 inputtopic.PipeInput("coucou");
@@ -69,6 +65,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.AreEqual(new List<KeyValuePair<string, string>>(), _return);
         }
 
+        [NonParallelizable]
         [Test]
         public void ProductionExceptionRecoverableHandlerFailTestWithParallel()
         {
@@ -86,7 +83,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var _return = new List<KeyValuePair<string, string>>();
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             var dt = DateTime.Now;
-            var timeout = TimeSpan.FromSeconds(10);
+            var timeout = TimeSpan.FromSeconds(1);
             
         
             config.ApplicationId = "test";
@@ -94,7 +91,12 @@ namespace Streamiz.Kafka.Net.Tests.Private
             config.PollMs = 10;
             config.ProductionExceptionHandler += (r) => ProductionExceptionHandlerResponse.FAIL;
             config.ParallelProcessing = parallelProcessing;
-        
+            config.Logger = LoggerFactory.Create((b) =>
+            {
+                b.SetMinimumLevel(LogLevel.Debug);
+                b.AddConsole();
+            });
+                
             var options = new ProducerSyncExceptionOptions()
             {
                 IsRecoverable = true,
@@ -102,26 +104,32 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 WhiteTopics = new List<string> {"test"}
             };
             var supplier = new ProducerSyncExceptionSupplier(options);
-        
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("test")
                 .To("test-output");
         
             builder.Stream<string, string>("test-output")
-                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => _return.Add(KeyValuePair.Create(k, v)));
         
             var t = builder.Build();
         
-            using (var driver = new TopologyTestDriver(t.Builder, config,
-                TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
-                var outputTopic = driver.CreateOuputTopic<string, string>("test-output");
+                //var outputTopic = driver.CreateOuputTopic<string, string>("test-output");
                 inputtopic.PipeInput("coucou");
                 inputtopic.PipeInput("coucou");
-                while (_return.Count == 0) ;
+                while (_return.Count == 0)
+                {
+                    Thread.Sleep(100);
+                    if (DateTime.Now > dt + timeout)
+                    {
+                        break;
+                    }
+                }
                 var expected = new List<KeyValuePair<string, string>>();
+                expected.Add(KeyValuePair.Create<string, string>(null, "coucou"));
                 expected.Add(KeyValuePair.Create<string, string>(null, "coucou"));
                 Assert.AreEqual(expected, _return);
             }
@@ -133,7 +141,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
             ProduceExceptionRecoverableHandlerFailTest(false);
         }
         
-        [Test] public void ProduceExceptionRecoverableHandlerFailTestWithParallel()
+        [NonParallelizable]
+        [Test] 
+        public void ProduceExceptionRecoverableHandlerFailTestWithParallel()
         {
             ProduceExceptionRecoverableHandlerFailTest(true);
         }
@@ -168,12 +178,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 .To("test-output");
         
             builder.Stream<string, string>("test-output")
-                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => _return.Add(KeyValuePair.Create(k, v)));
         
             var t = builder.Build();
         
-            using (var driver = new TopologyTestDriver(t.Builder, config,
-                       TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
                 var outputTopic = driver.CreateOuputTopic<string, string>("test-output");
@@ -223,12 +232,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 .To("test-output");
 
             builder.Stream<string, string>("test-output")
-                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => _return.Add(KeyValuePair.Create(k, v)));
 
             var t = builder.Build();
 
-            using (var driver = new TopologyTestDriver(t.Builder, config,
-                TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
                 inputtopic.PipeInput("coucou");
@@ -276,12 +284,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 .To("test-output");
 
             builder.Stream<string, string>("test-output")
-                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => _return.Add(KeyValuePair.Create(k, v)));
 
             var t = builder.Build();
 
-            using var driver = new TopologyTestDriver(t.Builder, config,
-                TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier);
+            using var driver = new TopologyTestDriver(t, config, supplier);
             var inputtopic = driver.CreateInputTopic<string, string>("test");
             inputtopic.PipeInput("coucou1");
             inputtopic.PipeInput("coucou2");
@@ -331,12 +338,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 .To("test-output");
 
             builder.Stream<string, string>("test-output")
-                .Peek((k, v) => _return.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => _return.Add(KeyValuePair.Create(k, v)));
 
             var t = builder.Build();
 
-            using var driver = new TopologyTestDriver(t.Builder, config,
-                TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier);
+            using var driver = new TopologyTestDriver(t, config, supplier);
             var inputtopic = driver.CreateInputTopic<string, string>("test");
             inputtopic.PipeInput("coucou1");
             inputtopic.PipeInput("coucou2");

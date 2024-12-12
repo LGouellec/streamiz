@@ -5,6 +5,7 @@ using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Table;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
@@ -16,7 +17,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var builder = new StreamBuilder();
             IKStream<string, string> stream = builder.Stream<string, string>("topic");
-            Func<string, string, string> selector1 = null;
+            Func<string, string, IRecordContext, string> selector1 = null;
             IKeyValueMapper<string, string, string> selector2 = null;
 
             Assert.Throws<ArgumentNullException>(() => stream.GroupBy(selector1));
@@ -45,7 +46,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key3", "paper"));
 
             var stream = builder.Stream<string, string>("topic");
-            stream.GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()));
+            stream.GroupBy((k, v, _) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()));
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-group";
 

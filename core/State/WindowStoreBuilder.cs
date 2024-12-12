@@ -72,7 +72,8 @@ namespace Streamiz.Kafka.Net.State
                     inner,
                     supplier.WindowSize.Value,
                     supplier.SegmentInterval,
-                    new WindowKeySchema());
+                    new WindowKeySchema(),
+                    CacheSize);
         }
     }
 }

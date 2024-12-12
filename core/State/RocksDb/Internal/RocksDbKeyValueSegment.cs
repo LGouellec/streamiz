@@ -1,5 +1,6 @@
 ﻿using Streamiz.Kafka.Net.State.Internal;
 using System;
+using Streamiz.Kafka.Net.Metrics.Internal;
 
 namespace Streamiz.Kafka.Net.State.Internal
 {
@@ -8,8 +9,8 @@ namespace Streamiz.Kafka.Net.State.Internal
     {
         private readonly long id;
 
-        public RocksDbKeyValueSegment(string segmentName, string windowName, long id)
-            : base(segmentName, windowName)
+        public RocksDbKeyValueSegment(string segmentName, string windowName, long id, RocksDbMetricsRecorder recorder)
+            : base(segmentName, windowName, recorder)
         {
             this.id = id;
             KeyComparator = CompareSegmentedKey;

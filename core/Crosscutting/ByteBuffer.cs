@@ -88,6 +88,31 @@ namespace Streamiz.Kafka.Net.Crosscutting
 
         #region ReadOperation
 
+        public long GetLong()
+        {
+            var bytes = reader.ReadBytes(sizeof(long));
+            
+            if (BitConverter.IsLittleEndian && bigEndian)
+                bytes = bytes.Reverse().ToArray();
+
+            return BitConverter.ToInt64(bytes, 0);
+        }
+
+        public int GetInt()
+        {
+            var bytes = reader.ReadBytes(sizeof(int));
+            
+            if (BitConverter.IsLittleEndian && bigEndian)
+                bytes = bytes.Reverse().ToArray();
+            
+            return BitConverter.ToInt32(bytes, 0);
+        }
+
+        public byte[] GetBytes(int size)
+        {
+            return reader.ReadBytes(size);
+        }
+        
         public long GetLong(int offset)
         {
             reader.BaseStream.Seek(offset, SeekOrigin.Begin);
@@ -116,6 +141,13 @@ namespace Streamiz.Kafka.Net.Crosscutting
             return reader.ReadBytes(size);
         }
 
+        public byte[] GetNullableSizePrefixedArray()
+        {
+            var size = GetInt();
+            if (size == -1)
+                return null;
+            return GetBytes(size);
+        }
         #endregion
 
         public byte[] ToArray()

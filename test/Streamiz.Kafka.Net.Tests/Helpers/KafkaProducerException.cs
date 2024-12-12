@@ -2,6 +2,7 @@
 using Streamiz.Kafka.Net.Mock.Sync;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,6 +10,7 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
 {
     internal class ProducerSyncExceptionOptions
     {
+        public IDictionary<string, Func<Exception>> ExceptionsToThrow;
         public bool IsFatal { get; set; } = false;
         public bool IsRecoverable { get; set; } = false;
         public bool IsProductionException { get; set; } = false;
@@ -50,6 +52,15 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
         {
             innerProducer = syncProducer;
         }
+        
+        private void CheckThrowException(string currentMethod)
+        {
+            if (options.ExceptionsToThrow != null &&
+                options.ExceptionsToThrow.ContainsKey(currentMethod))
+            {
+                throw options.ExceptionsToThrow[currentMethod].Invoke();
+            }
+        }
 
         public KafkaProducerException(SyncProducer syncProducer, ProducerSyncExceptionOptions options)
             : this(syncProducer)
@@ -63,50 +74,61 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
 
         public void AbortTransaction(TimeSpan timeout)
         {
+            CheckThrowException(MethodBase.GetCurrentMethod().Name);
         }
 
         public void SetSaslCredentials(string username, string password)
         {
+            CheckThrowException(MethodBase.GetCurrentMethod().Name);
         }
 
         public int AddBrokers(string brokers)
         {
+            CheckThrowException(MethodBase.GetCurrentMethod().Name);
             return 0;
         }
 
         public void BeginTransaction()
         {
+            CheckThrowException(MethodBase.GetCurrentMethod().Name);
         }
 
         public void CommitTransaction(TimeSpan timeout)
         {
+            CheckThrowException(MethodBase.GetCurrentMethod().Name);
         }
 
         public void Dispose()
         {
+            CheckThrowException(MethodBase.GetCurrentMethod().Name);
         }
 
         public int Flush(TimeSpan timeout)
         {
+            CheckThrowException(MethodBase.GetCurrentMethod().Name);
             return 0;
         }
 
         public void Flush(CancellationToken cancellationToken = default)
         {
+            CheckThrowException(MethodBase.GetCurrentMethod().Name);
         }
 
         public void InitTransactions(TimeSpan timeout)
         {
+            CheckThrowException(MethodBase.GetCurrentMethod().Name);
         }
 
         public int Poll(TimeSpan timeout)
         {
+            CheckThrowException(MethodBase.GetCurrentMethod().Name);
             return 0;
         }
 
         private void HandleError(DeliveryReport<byte[], byte[]> initReport,
             Action<DeliveryReport<byte[], byte[]>> deliveryHandler)
         {
+            CheckThrowException(MethodBase.GetCurrentMethod().Name);
             --options.NumberOfError;
             handleError = options.NumberOfError > 0;
             
@@ -121,7 +143,7 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
 
                 if (options.IsRecoverable)
                 {
-                    throw new ProduceException<byte[], byte[]>(new Error(ErrorCode.TransactionCoordinatorFenced,
+                    throw new ProduceException<byte[], byte[]>(new Error(ErrorCode.ProducerFenced,
                         "TransactionCoordinatorFenced", false), result);
                 }
                 else
@@ -141,7 +163,7 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
                 }
                 else if (options.IsRecoverable)
                 {
-                    initReport.Error = new Error(ErrorCode.TransactionCoordinatorFenced,
+                    initReport.Error = new Error(ErrorCode.ProducerFenced,
                         "TransactionCoordinatorFenced",
                         false);
                     deliveryHandler(initReport);
@@ -157,6 +179,7 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
         public void Produce(string topic, Message<byte[], byte[]> message,
             Action<DeliveryReport<byte[], byte[]>> deliveryHandler = null)
         {
+            CheckThrowException(MethodBase.GetCurrentMethod().Name);
             if (options.WhiteTopics.Contains(topic) || !handleError)
                 innerProducer.Produce(topic, message, deliveryHandler);
             else
@@ -173,6 +196,7 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
         public void Produce(TopicPartition topicPartition, Message<byte[], byte[]> message,
             Action<DeliveryReport<byte[], byte[]>> deliveryHandler = null)
         {
+            CheckThrowException(MethodBase.GetCurrentMethod().Name);
             if (options.WhiteTopics.Contains(topicPartition.Topic) || !handleError)
                 innerProducer.Produce(topicPartition, message, deliveryHandler);
             else
@@ -190,6 +214,7 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
         public async Task<DeliveryResult<byte[], byte[]>> ProduceAsync(string topic,
             Message<byte[], byte[]> message, CancellationToken cancellationToken = default)
         {
+            CheckThrowException(MethodBase.GetCurrentMethod().Name);
             if (options.WhiteTopics.Contains(topic) || !handleError)
                 return await innerProducer.ProduceAsync(topic, message, cancellationToken);
             else
@@ -199,6 +224,7 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
         public async Task<DeliveryResult<byte[], byte[]>> ProduceAsync(TopicPartition topicPartition,
             Message<byte[], byte[]> message, CancellationToken cancellationToken = default)
         {
+            CheckThrowException(MethodBase.GetCurrentMethod().Name);
             if (options.WhiteTopics.Contains(topicPartition.Topic) || !handleError)
                 return await innerProducer.ProduceAsync(topicPartition, message, cancellationToken);
             else
@@ -208,17 +234,17 @@ namespace Streamiz.Kafka.Net.Tests.Helpers
         public void SendOffsetsToTransaction(IEnumerable<TopicPartitionOffset> offsets,
             IConsumerGroupMetadata groupMetadata, TimeSpan timeout)
         {
-            throw new NotImplementedException();
+            CheckThrowException(MethodBase.GetCurrentMethod().Name);
         }
 
         public void CommitTransaction()
         {
-            throw new NotImplementedException();
+            CheckThrowException(MethodBase.GetCurrentMethod().Name);
         }
 
         public void AbortTransaction()
         {
-            throw new NotImplementedException();
+            CheckThrowException(MethodBase.GetCurrentMethod().Name);
         }
     }
 }

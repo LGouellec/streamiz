@@ -4,6 +4,7 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
+using Streamiz.Kafka.Net.Processors;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -14,7 +15,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var builder = new StreamBuilder();
             var stream = builder.Stream<string, string>("topic");
-            Func<string, string, KeyValuePair<string, string>> mapper1 = null;
+            Func<string, string, IRecordContext,  KeyValuePair<string, string>> mapper1 = null;
             IKeyValueMapper<string, string, KeyValuePair<string, string>> mapper2 = null;
 
             Assert.Throws<ArgumentNullException>(() => stream.Map(mapper1));
@@ -29,7 +30,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key1", "123456"));
 
             builder.Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(k, v.Length))
+                .Map((k, v, _) => KeyValuePair.Create(k, v.Length))
                 .To<StringSerDes, Int32SerDes>("topic-map");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -59,7 +60,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key1", "123456"));
 
             builder.Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(v.Length, k))
+                .Map((k, v, _) => KeyValuePair.Create(v.Length, k))
                 .To<Int32SerDes, StringSerDes>("topic-map");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -89,7 +90,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key1", "abc"));
 
             builder.Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(k, v.ToUpper()))
+                .Map((k, v, _) => KeyValuePair.Create(k, v.ToUpper()))
                 .To<StringSerDes, StringSerDes>("topic-map");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();

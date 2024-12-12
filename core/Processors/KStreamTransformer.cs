@@ -28,10 +28,10 @@ namespace Streamiz.Kafka.Net.Processors
         public override void Process(Record<K, V> record)
         {
             var newRecord = transformer.Process(record);
-            
-            
             if (newRecord != null)
             {
+                Context.SetHeaders(newRecord.Headers);
+                
                 if (changeKey)
                     Forward(newRecord.Key, newRecord.Value);
                 else

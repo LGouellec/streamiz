@@ -21,8 +21,8 @@ do
     fi
 done
 
-docker-compose -f environment/docker-compose.yml up -d broker
-kafkaContainerId=`docker ps -f name=broker | tail -n 1 | awk '{print $1}'`
+docker-compose -f environment/docker-compose.yml up -d broker-1 broker-2
+kafkaContainerId=`docker ps -f name=broker-1 | tail -n 1 | awk '{print $1}'`
 
 # Wait broker is UP
 test=true
@@ -39,12 +39,12 @@ do
 done
 
 docker-compose -f environment/docker-compose.yml up -d schema-registry akhq
-docker exec -i ${kafkaContainerId} kafka-topics --bootstrap-server broker:29092 --topic input --create --partitions 4 --replication-factor 1 > /dev/null 2>&1
-docker exec -i ${kafkaContainerId} kafka-topics --bootstrap-server broker:29092 --topic output --create --partitions 4 --replication-factor 1 > /dev/null 2>&1
+docker exec -i ${kafkaContainerId} kafka-topics --bootstrap-server broker-1:29092 --topic input --create --partitions 4 --replication-factor 1 > /dev/null 2>&1
+docker exec -i ${kafkaContainerId} kafka-topics --bootstrap-server broker-1:29092 --topic output --create --partitions 4 --replication-factor 1 > /dev/null 2>&1
 echo "Topics created"
 
 echo "List all topics ..."
-docker exec -i ${kafkaContainerId} kafka-topics --bootstrap-server broker:29092 --list
+docker exec -i ${kafkaContainerId} kafka-topics --bootstrap-server broker-1:29092 --list
 
 echo "Restore, build and run demo sample"
 dotnet dev-certs https
@@ -53,5 +53,5 @@ dotnet build -f net6.0 --no-restore
 
 if [ $# -gt 0 ]
   then
-     dotnet run -f net6.0 --project samples/sample-stream-demo/sample-stream-demo.csproj --no-build --no-restore
+     dotnet run -f net6.0 --project launcher/sample-stream-demo/sample-stream-demo.csproj --no-build --no-restore
 fi

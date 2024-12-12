@@ -5,6 +5,7 @@ using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Table;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
@@ -16,7 +17,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
         {
             var builder = new StreamBuilder();
             var table = builder.Table<string, string>("topic", InMemory.As<string, string>("store"));
-            Func<string, string, KeyValuePair<string,string>> selector1 = null;
+            Func<string, string, IRecordContext, KeyValuePair<string,string>> selector1 = null;
             IKeyValueMapper<string, string, KeyValuePair<string, string>> selector2 = null;
 
             Assert.Throws<ArgumentNullException>(() => table.GroupBy(selector1));
@@ -33,7 +34,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key3", "paper"));
 
             var table = builder.Table<string, string>("topic", InMemory.As<string, string>("store"));
-            table.GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()));
+            table.GroupBy((k, v, _) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()));
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "table-test-group";
 
@@ -70,7 +71,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                         .As<string, string>("table-store"));
             
             table
-                .GroupBy((k, v) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()))
+                .GroupBy((k, v, _) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()))
                 .Count(InMemory
                     .As<string, long>("store-count")
                     .WithKeySerdes(new StringSerDes())

@@ -1,4 +1,5 @@
 ﻿using System;
+using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -15,9 +16,15 @@ namespace Streamiz.Kafka.Net.Processors
     {
         private ITopicNameExtractor<K, V> topicNameExtractor;
         private readonly IRecordTimestampExtractor<K, V> timestampExtractor;
-        private readonly Func<string, K, V, int> partitioner; 
+        private readonly IStreamPartitioner<K, V> partitioner; 
 
-        internal SinkProcessor(string name, ITopicNameExtractor<K, V> topicNameExtractor, IRecordTimestampExtractor<K, V> timestampExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Func<string, K, V, int> partitioner = null)
+        internal SinkProcessor(
+            string name,
+            ITopicNameExtractor<K, V> topicNameExtractor,
+            IRecordTimestampExtractor<K, V> timestampExtractor,
+            ISerDes<K> keySerdes,
+            ISerDes<V> valueSerdes,
+            IStreamPartitioner<K, V> partitioner = null)
             : base(name, keySerdes, valueSerdes)
         {
             this.topicNameExtractor = topicNameExtractor;
@@ -62,11 +69,21 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 throw new StreamsException($"Invalid (negative) timestamp of {timestamp} for output record <{key}:{value}>.");
             }
-
+            
             if (partitioner != null)
             {
-                int partition = partitioner.Invoke(topicName, key, value);
-                Context.RecordCollector.Send(topicName, key, value, Context.RecordContext.Headers, partition, timestamp, KeySerDes,
+                Partition partition = partitioner.Partition(
+                    topicName,
+                    key, value,
+                    Context.Partition,
+                    Context.RecordCollector.PartitionsFor(topicName));
+                
+                Context.RecordCollector.Send(
+                    topicName, 
+                    key, value, 
+                    Context.RecordContext.Headers,
+                    partition,
+                    timestamp, KeySerDes,
                     ValueSerDes);
             }
             else

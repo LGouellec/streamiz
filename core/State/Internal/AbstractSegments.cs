@@ -56,6 +56,7 @@ namespace Streamiz.Kafka.Net.State.Internal
                 s.Flush();
             }
         }
+        
         public S GetOrCreateSegmentIfLive(long segmentId, ProcessorContext context, long streamTime)
         {
             long minLiveTimestamp = streamTime - retentionPeriod;
@@ -82,7 +83,7 @@ namespace Streamiz.Kafka.Net.State.Internal
             return segments.ContainsKey(key) ? segments[key] : default(S);
         }
 
-        public void OpenExisting(ProcessorContext context, long streamTime)
+        public virtual void OpenExisting(ProcessorContext context, long streamTime)
         {
             try
             {

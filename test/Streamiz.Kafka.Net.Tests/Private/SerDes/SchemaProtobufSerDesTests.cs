@@ -170,7 +170,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var builder = new StreamBuilder();
             builder
                 .Stream<string, Helpers.Proto.Person>("person")
-                .Filter((k, v) => v.Age >= 18)
+                .Filter((k, v, _) => v.Age >= 18)
                 .To("person-major");
 
             var topo = builder.Build();
@@ -200,7 +200,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var builder = new StreamBuilder();
             builder
                 .Stream<string, Helpers.Proto.Person>("person")
-                .Filter((k, v) => v.Age >= 18)
+                .Filter((k, v, _) => v.Age >= 18)
                 .To("person-major");
 
             var topo = builder.Build();
@@ -229,8 +229,8 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var builder = new StreamBuilder();
             builder
                 .Stream<string, Helpers.Proto.Person>("person")
-                .Filter((k, v) => v.Age >= 18)
-                .MapValues((v) => v.Age)
+                .Filter((k, v, _) => v.Age >= 18)
+                .MapValues((v, _) => v.Age)
                 .To<StringSerDes, Int32SerDes>("person-major");
 
             var topo = builder.Build();
@@ -262,7 +262,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             StreamBuilder builder = new StreamBuilder();
 
             var ss = builder.Stream<string, Order, StringSerDes, SchemaProtobufSerDes<Order>>("test-topic")
-                .Peek((k, v) => { Console.WriteLine($"Order #  {v.OrderId}"); });
+                .Peek((k, v, _) => { Console.WriteLine($"Order #  {v.OrderId}"); });
 
             Topology t = builder.Build();
 
@@ -279,7 +279,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
                     });
             }
 
-            var client = MockSchemaRegistry.GetClientForScope("test");
+            var client = MockSchemaRegistry.GetClientForScope("test", null);
             Assert.IsAssignableFrom<MockSchemaRegistryClient>(client);
             Assert.NotNull(client.GetSchemaAsync(1).GetAwaiter().GetResult());
 
@@ -296,7 +296,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             StreamBuilder builder = new StreamBuilder();
 
             builder.Stream<string, Order>("test")
-                .Filter((k, v) => k.Contains("test"))
+                .Filter((k, v, _) => k.Contains("test"))
                 .To("test-output");
 
             Topology t = builder.Build();
@@ -331,7 +331,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             StreamBuilder builder = new StreamBuilder();
 
             var ss = builder.Stream<string, Order, StringSerDes, SchemaProtobufSerDes<Order>>("test-topic")
-                .Peek((k, v) => { Console.WriteLine($"Order #  {v.OrderId}"); });
+                .Peek((k, v, _) => { Console.WriteLine($"Order #  {v.OrderId}"); });
 
             Topology t = builder.Build();
 
@@ -362,7 +362,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             StreamBuilder builder = new StreamBuilder();
 
             var ss = builder.Stream<string, Order, StringSerDes, SchemaProtobufSerDes<Order>>("test-topic")
-                .Peek((k, v) => { Console.WriteLine($"Order #  {v.OrderId}"); });
+                .Peek((k, v, _) => { Console.WriteLine($"Order #  {v.OrderId}"); });
 
             Topology t = builder.Build();
 
@@ -416,12 +416,12 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var config = new StreamConfig();
             config.SchemaRegistryUrl = "mock://test";
             config.BasicAuthUserInfo = "user:password";
-            config.BasicAuthCredentialsSource = (int) AuthCredentialsSource.UserInfo;
+            config.BasicAuthCredentialsSource = "USER_INFO";
             config.SchemaRegistryMaxCachedSchemas = 1;
             config.SchemaRegistryRequestTimeoutMs = 30;
 
             var serdes = new SchemaProtobufSerDes<Order>();
-            var schemaConfig = serdes.ToConfig(config);
+            var schemaConfig = serdes.ToConfig(config, config);
 
             Assert.AreEqual(1, schemaConfig.MaxCachedSchemas);
             Assert.AreEqual(30, schemaConfig.RequestTimeoutMs);
@@ -438,7 +438,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             config.AutoRegisterSchemas = true;
 
             var serdes = new SchemaProtobufSerDes<Order>();
-            var schemaConfig = serdes.ToSerializerConfig(config);
+            var schemaConfig = serdes.ToSerializerConfig(config, config);
 
             Assert.AreEqual(Confluent.SchemaRegistry.SubjectNameStrategy.TopicRecord, schemaConfig.SubjectNameStrategy);
             Assert.AreEqual(true, schemaConfig.AutoRegisterSchemas);

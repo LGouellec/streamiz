@@ -21,7 +21,8 @@ namespace Streamiz.Kafka.Net.Stream
 
         internal string Name { get; private set; }
         internal string Label { get; private set; }
-        internal IKeyValueMapper<K, V, string> Mapper { get; private set; } = new WrappedKeyValueMapper<K, V, string>((k, v) => $"{k} {v}");
+        internal IKeyValueMapper<K, V, string> Mapper { get; private set; } 
+            = new WrappedKeyValueMapper<K, V, string>((k, v, c) => $"{k} {v}");
 
         internal IProcessorSupplier<K, V> Build(string processorName) => 
             new KStreamPrint<K, V>(
@@ -60,7 +61,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// </summary>
         /// <param name="mapper">Mapper to use</param>
         /// <returns>Itself</returns>
-        public Printed<K, V> WithKeyValueMapper(Func<K, V, string> mapper)
+        public Printed<K, V> WithKeyValueMapper(Func<K, V, IRecordContext, string> mapper)
         {
             this.Mapper = new WrappedKeyValueMapper<K, V, string>(mapper);
             return this;

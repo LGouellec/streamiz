@@ -4,6 +4,7 @@ using Streamiz.Kafka.Net.Mock.Sync;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Streamiz.Kafka.Net.Kafka.Internal;
 
 namespace Streamiz.Kafka.Net.Mock.Pipes
 {

@@ -3,7 +3,6 @@ using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock.Pipes;
 using Streamiz.Kafka.Net.SerDes;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;

@@ -24,7 +24,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .Map((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                 .GroupByKey()
                 .Count(InMemory.As<string, long>())
                 .ToStream()
@@ -58,7 +58,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .Map((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                 .GroupByKey()
                 .Count(InMemory.As<string, long>())
                 .ToStream()
@@ -96,7 +96,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             IKStream<string, string> stream1 = builder
                 .Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v));
+                .Map((k, v, _) => KeyValuePair.Create(k.ToUpper(), v));
             
             IKStream<string, string> stream2 = builder.Stream<string, string>("topic2");
 
@@ -115,7 +115,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 
             Topology t = builder.Build();
 
-            using (var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
                 var inputTopic2 = driver.CreateInputTopic<string, string>("topic2");
@@ -148,7 +148,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .Map((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                 .GroupByKey()
                 .Count(InMemory.As<string, long>())
                 .ToStream()
@@ -156,7 +156,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             Topology t = builder.Build();
 
-            using (var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
                 var outputTopic = driver.CreateOuputTopic<string, long, StringSerDes, Int64SerDes>("output");
@@ -189,7 +189,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             
             builder
                 .Stream<string, string>("topic")
-                .SelectKey((k, v) => v.ToUpper())
+                .SelectKey((k, v, _) => v.ToUpper())
                 .Join(table, (v,t) => $"{v}:{t}")
                 .To("output");
 
@@ -197,7 +197,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             MockKafkaSupplier supplier = new MockKafkaSupplier(4);
             
-            using (var driver = new TopologyTestDriver(t.Builder, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, supplier))
+            using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
                 var inputTableTopic = driver.CreateInputTopic<string, string>("input-table");

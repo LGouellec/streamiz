@@ -160,7 +160,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     .Transformer<TestHeadersTransformer>()
                     .Build()
                 )
-                .MapValues(value => value.ToUpper())
+                .MapValues((value, _) => value.ToUpper())
                 .To("test-output");
 
             Topology t = builder.Build();

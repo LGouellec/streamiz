@@ -11,7 +11,8 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json
     /// </summary>
     /// <typeparam name="T">type of json bean
     /// </typeparam>
-    public class SchemaJsonSerDes<T> : SchemaSerDes<T, JsonSerializerConfig>
+    public class SchemaJsonSerDes<T> 
+        : SchemaSerDes<T, JsonSerializerConfig, JsonDeserializerConfig>
         where T : class
     {
         /// <summary>
@@ -33,9 +34,9 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json
             {
                 if (context.Config is ISchemaRegistryConfig schemaConfig)
                 {
-                    registryClient = GetSchemaRegistryClient(GetConfig(schemaConfig));
-                    deserializer = new JsonDeserializer<T>();
-                    serializer = new JsonSerializer<T>(registryClient, GetSerializerConfig(schemaConfig));
+                    registryClient = GetSchemaRegistryClient(GetConfig(schemaConfig, context.Config));
+                    deserializer = new JsonDeserializer<T>(registryClient, GetDeserializerConfig(schemaConfig, context.Config));
+                    serializer = new JsonSerializer<T>(registryClient, GetSerializerConfig(schemaConfig, context.Config));
                     isInitialized = true;
                 }
                 else

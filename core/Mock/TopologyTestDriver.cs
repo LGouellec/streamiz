@@ -98,13 +98,18 @@ namespace Streamiz.Kafka.Net.Mock
         public TopologyTestDriver(Topology topology, IStreamConfig config, Mode mode = Mode.SYNC_TASK)
             : this(topology.Builder, config, mode)
         { }
+        
+        /// <summary>
+        /// Create a new test diver instance.
+        /// </summary>
+        /// <param name="topology">Topology to be tested</param>
+        /// <param name="config">Configuration for topology. One property will be modified : <see cref="IStreamConfig.NumStreamThreads"/> will set to 1</param>
+        /// <param name="kafkaSupplier">Kafka supplier to be used</param>
+        public TopologyTestDriver(Topology topology, IStreamConfig config, IKafkaSupplier kafkaSupplier)
+            : this(topology.Builder, config, Mode.ASYNC_CLUSTER_IN_MEMORY, kafkaSupplier)
+        { }
 
-        private TopologyTestDriver(InternalTopologyBuilder builder, IStreamConfig config, Mode mode)
-            : this(builder, config, mode, null)
-        {
-        }
-
-        internal TopologyTestDriver(InternalTopologyBuilder builder, IStreamConfig config, Mode mode, IKafkaSupplier supplier)
+        internal TopologyTestDriver(InternalTopologyBuilder builder, IStreamConfig config, Mode mode, IKafkaSupplier supplier = null)
         {
             Logger.LoggerFactory = config.Logger;
             topologyBuilder = builder;
@@ -144,6 +149,8 @@ namespace Streamiz.Kafka.Net.Mock
                         supplier,
                         tokenSource.Token);
                     break;
+                default:
+                    throw new NotSupportedException();
             }
 
             behavior.StartDriver();
@@ -373,10 +380,9 @@ namespace Streamiz.Kafka.Net.Mock
             var store = behavior.GetStateStore<K, V>(name);
             if (store is ITimestampedWindowStore<K, V>)
                 return new ReadOnlyWindowStoreFacade<K, V>(store as ITimestampedWindowStore<K, V>);
-            else if (store is IReadOnlyWindowStore<K, V>)
+            if (store is IReadOnlyWindowStore<K, V>)
                 return (IReadOnlyWindowStore<K, V>)store;
-            else
-                return null;
+            return null;
         }
 
         #endregion

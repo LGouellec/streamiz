@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Security.Cryptography;
 
 namespace Streamiz.Kafka.Net
@@ -21,6 +22,14 @@ namespace Streamiz.Kafka.Net
             // Use this when possible as it is more memory efficient
             return RandomNumberGenerator.GetInt32(0, partitionCount);
 #endif
+        }
+
+        public static string GetRandomString(int maxLength = 100)
+        {
+            var rdLength = GetInt32(maxLength);
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            return new string(Enumerable.Repeat(chars, rdLength)
+                .Select(s => s[GetInt32(s.Length)]).ToArray());
         }
     }
 }

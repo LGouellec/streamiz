@@ -18,7 +18,7 @@ namespace Streamiz.Kafka.Net.Processors
             LogProcessingKeyValue(key, value);
             var originalHeader = Context.RecordContext.Headers.Clone();
 
-            foreach (var newPair in mapper.Apply(key, value))
+            foreach (var newPair in mapper.Apply(key, value, Context.RecordContext))
             {
                 Forward(newPair.Key, newPair.Value);
                 Context.SetHeaders(originalHeader);
