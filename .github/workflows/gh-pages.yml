@@ -24,7 +24,7 @@ jobs:
         run: |
           pip3 install setuptools
           pip3 install recommonmark
-          pip3 install sphinx sphinx-rtd-theme
+          pip3 install sphinx sphinx-rtd-theme==2.0.0
           pip3 install sphinx_markdown_tables
 
       - name: "Build Sphinx Doc"
