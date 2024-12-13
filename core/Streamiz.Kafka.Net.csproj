@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net5.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>net5.0;net6.0;netstandard2.0;net7.0;net8.0</TargetFrameworks>
     <RootNamespace>Streamiz.Kafka.Net</RootNamespace>
     <AssemblyName>Streamiz.Kafka.Net</AssemblyName>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -12,17 +12,17 @@
     <Description>.NET Stream Processing Library for Apache Kafka</Description>
     <Copyright>Copyright 2020</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/LGouellec/kafka-streams-dotnet</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/LGouellec/kafka-streams-dotnet</RepositoryUrl>
-    <PackageTags>kafka kafka-streams kafka-streams-dotnet event-streaming</PackageTags>
-    <PackageReleaseNotes>https://github.com/LGouellec/kafka-streams-dotnet/releases</PackageReleaseNotes>
-    <PackageIconUrl>https://raw.githubusercontent.com/LGouellec/kafka-streams-dotnet/master/resources/logo-kafka-stream-net.png</PackageIconUrl>
+    <PackageProjectUrl>https://github.com/LGouellec/streamiz</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/LGouellec/streamiz</RepositoryUrl>
+    <PackageTags>kafka kafka-streams streamiz event-streaming</PackageTags>
+    <PackageReleaseNotes>https://github.com/LGouellec/streamiz/releases</PackageReleaseNotes>
+    <PackageIconUrl>https://raw.githubusercontent.com/LGouellec/streamiz/master/resources/logo-kafka-stream-net.png</PackageIconUrl>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\key.snk</AssemblyOriginatorKeyFile>
-    <Version>1.6.0-RC1</Version>
-    <PackageVersion>1.6.0-RC1</PackageVersion>
-    <AssemblyVersion>1.6.0</AssemblyVersion>
-    <FileVersion>1.6.0</FileVersion>
+    <Version>1.7.0-RC1</Version>
+    <PackageVersion>1.7.0-RC1</PackageVersion>
+    <AssemblyVersion>1.7.0</AssemblyVersion>
+    <FileVersion>1.7.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -42,8 +42,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="RocksDB" Version="7.7.3.33461" />
-    <PackageReference Include="Confluent.Kafka" Version="2.4.0" />
+    <PackageReference Include="RocksDB" Version="9.4.0.50294" />
+    <PackageReference Include="Confluent.Kafka" Version="2.6.1" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
   </ItemGroup>

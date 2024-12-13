@@ -2,6 +2,7 @@
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Kafka.Internal;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -14,12 +15,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             log = Logger.GetLogger(GetType());
         }
 
-        public ICollection<T> CreateTasks(IConsumer<byte[], byte[]> consumer, IDictionary<TaskId, IList<TopicPartition>> tasksToBeCreated)
+        public ICollection<T> CreateTasks(IConsumer<byte[], byte[]> consumer, StreamsProducer producer, IDictionary<TaskId, IList<TopicPartition>> tasksToBeCreated)
         {
             List<T> createdTasks = new List<T>();
             foreach (var newTaskAndPartitions in tasksToBeCreated)
             {
-                T task = CreateTask(consumer, newTaskAndPartitions.Key, newTaskAndPartitions.Value);
+                T task = CreateTask(consumer, producer, newTaskAndPartitions.Key, newTaskAndPartitions.Value);
                 if (task != null)
                 {
                     log.LogDebug("Created task {NewTaskAndPartitionsKey} with assigned partition {PartitionValues}", newTaskAndPartitions.Key,
@@ -31,6 +32,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             return createdTasks;
         }
 
-        public abstract T CreateTask(IConsumer<byte[], byte[]> consumer, TaskId id, IEnumerable<TopicPartition> partition);
+        public abstract T CreateTask(IConsumer<byte[], byte[]> consumer, StreamsProducer producer, TaskId id, IEnumerable<TopicPartition> partition);
     }
 }

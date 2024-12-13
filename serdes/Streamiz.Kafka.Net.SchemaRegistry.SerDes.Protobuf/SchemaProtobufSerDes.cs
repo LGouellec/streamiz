@@ -13,7 +13,8 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf
     /// SerDes for Protobuf
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class SchemaProtobufSerDes<T> : SchemaSerDes<T, ProtobufSerializerConfig> 
+    public class SchemaProtobufSerDes<T> 
+        : SchemaSerDes<T, ProtobufSerializerConfig, ProtobufDeserializerConfig> 
         where T : class, IMessage<T>, new()
     {
         /// <summary>
@@ -23,18 +24,27 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf
             : base("protobuf")
         { }
 
-        protected override ProtobufSerializerConfig GetSerializerConfig(ISchemaRegistryConfig config)
+        protected override ProtobufSerializerConfig GetSerializerConfig(ISchemaRegistryConfig config, IStreamConfig streamConfig)
         {
-            ProtobufSerializerConfig protobufConfig = base.GetSerializerConfig(config);
-            if (config.UseDeprecatedFormat.HasValue)
+            ProtobufSerializerConfig protobufConfig = base.GetSerializerConfig(config, streamConfig);
+            if (config.UseDeprecatedFormat.HasValue && !protobufConfig.UseDeprecatedFormat.HasValue)
                 protobufConfig.UseDeprecatedFormat = config.UseDeprecatedFormat.Value;
-            if (config.SkipKnownTypes.HasValue)
+            if (config.SkipKnownTypes.HasValue && !protobufConfig.SkipKnownTypes.HasValue)
                 protobufConfig.SkipKnownTypes = config.SkipKnownTypes.Value;
-            if (config.ReferenceSubjectNameStrategy.HasValue)
+            if (config.ReferenceSubjectNameStrategy.HasValue && !protobufConfig.ReferenceSubjectNameStrategy.HasValue)
                 protobufConfig.ReferenceSubjectNameStrategy = (Confluent.SchemaRegistry.ReferenceSubjectNameStrategy)config.ReferenceSubjectNameStrategy.Value;
             return protobufConfig;
         }
-        
+
+        protected override ProtobufDeserializerConfig GetDeserializerConfig(ISchemaRegistryConfig config, IStreamConfig streamConfig)
+        {
+            ProtobufDeserializerConfig protobufDeserializerConfig = base.GetDeserializerConfig(config, streamConfig);
+            if (config.UseDeprecatedFormat.HasValue && !protobufDeserializerConfig.UseDeprecatedFormat.HasValue)
+                protobufDeserializerConfig.UseDeprecatedFormat = config.UseDeprecatedFormat.Value;
+            
+            return protobufDeserializerConfig;
+        }
+
         /// <summary>
         /// Initialize method with a current context which contains <see cref="IStreamConfig"/>.
         /// Can be used to initialize the serdes according to some parameters present in the configuration such as the schema.registry.url
@@ -46,9 +56,10 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Protobuf
             {
                 if (context.Config is ISchemaRegistryConfig schemaConfig)
                 {
-                    registryClient = GetSchemaRegistryClient(GetConfig(schemaConfig));
-                    deserializer = new ProtobufDeserializer<T>(schemaConfig as Config);
-                    serializer = new ProtobufSerializer<T>(registryClient, GetSerializerConfig(schemaConfig));
+                    registryClient = GetSchemaRegistryClient(GetConfig(schemaConfig, context.Config));
+                    deserializer = new ProtobufDeserializer<T>(registryClient,
+                        GetDeserializerConfig(schemaConfig, context.Config));
+                    serializer = new ProtobufSerializer<T>(registryClient, GetSerializerConfig(schemaConfig, context.Config));
 
                     isInitialized = true;
                 }

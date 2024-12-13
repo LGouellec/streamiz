@@ -17,8 +17,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var streamObserved = new List<KeyValuePair<string, string>>();
 
             builder.Stream<string, string>("topic")
-                .Peek((k, v) => peekObserved.Add(KeyValuePair.Create(k, v)))
-                .Foreach((k, v) => streamObserved.Add(KeyValuePair.Create(k, v)));
+                .Peek((k, v, _) => peekObserved.Add(KeyValuePair.Create(k, v)))
+                .Foreach((k, v, _) => streamObserved.Add(KeyValuePair.Create(k, v)));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-peek";

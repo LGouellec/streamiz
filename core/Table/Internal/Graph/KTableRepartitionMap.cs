@@ -25,7 +25,7 @@ namespace Streamiz.Kafka.Net.Table.Internal.Graph
             public ValueAndTimestamp<KeyValuePair<K1, V1>> Get(K key)
             {
                 ValueAndTimestamp<V> valueAndTimestamp = parentTableGetter.Get(key);
-                var v = mapper.Apply(key, valueAndTimestamp != null ? valueAndTimestamp.Value : default);
+                var v = mapper.Apply(key, valueAndTimestamp != null ? valueAndTimestamp.Value : default, context.RecordContext);
                 return ValueAndTimestamp<KeyValuePair<K1, V1>>.Make(v, valueAndTimestamp == null ? context.Timestamp : valueAndTimestamp.Timestamp);
             }
 

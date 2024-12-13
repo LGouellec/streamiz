@@ -14,6 +14,6 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph
 
         public IProcessor<K, V> Get() => new KStreamMapProcessor<K, V, K, V1>(
             new WrappedKeyValueMapper<K, V, KeyValuePair<K, V1>>(
-                (key, value) => new KeyValuePair<K, V1>(key, this.mapper.Apply(key, value))));
+                (key, value, c) => new KeyValuePair<K, V1>(key, mapper.Apply(key, value, c))));
     }
 }

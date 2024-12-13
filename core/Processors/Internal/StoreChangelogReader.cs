@@ -88,20 +88,23 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             if (storeMetadata == null)
                 throw new StreamsException($"Cannot find the corresponding state store metadata for changelog {topicPartition}");
 
-            var changelogMetadata = new ChangelogMetadata
+            if (storeMetadata.Store.IsLocally)
             {
-                StoreMetadata = storeMetadata,
-                StateManager = processorStateManager,
-                ChangelogState = ChangelogState.REGISTERED,
-                RestoreEndOffset = null,
-                BeginOffset = null,
-                CurrentOffset = null,
-                TotalRestored = 0,
-                BufferedLimit = 0,
-                BufferedRecords = new List<ConsumeResult<byte[], byte[]>>()
-            };
+                var changelogMetadata = new ChangelogMetadata
+                {
+                    StoreMetadata = storeMetadata,
+                    StateManager = processorStateManager,
+                    ChangelogState = ChangelogState.REGISTERED,
+                    RestoreEndOffset = null,
+                    BeginOffset = null,
+                    CurrentOffset = null,
+                    TotalRestored = 0,
+                    BufferedLimit = 0,
+                    BufferedRecords = new List<ConsumeResult<byte[], byte[]>>()
+                };
 
-            changelogs.Add(topicPartition, changelogMetadata);
+                changelogs.Add(topicPartition, changelogMetadata);
+            }
         }
 
         // Workflow :
@@ -314,7 +317,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 c => new TopicPartitionOffset(
                     c.StoreMetadata.ChangelogTopicPartition, 
                     c.StoreMetadata.Offset.HasValue
-                        ? new Offset(c.StoreMetadata.Offset.Value + 1) : Offset.Beginning)).ToList();
+                        ? new Offset(c.StoreMetadata.Offset.Value) : Offset.Beginning)).ToList();
             
             restoreConsumer.IncrementalAssign(newPartitionsOffsets);
             restoreConsumer.Resume(newPartitionsOffsets.Select(t => t.TopicPartition));
@@ -333,7 +336,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     return new
                     {
                         TopicPartition = _changelog.StoreMetadata.ChangelogTopicPartition,
-                        EndOffset = offsets.High > 0 ? new Offset(offsets.High - 1) : 0,
+                        //EndOffset = offsets.High > 0 ? new Offset(offsets.High - 1) : 0,
+                        EndOffset = offsets.High,
                         BeginOffset = offsets.Low
 
                     };

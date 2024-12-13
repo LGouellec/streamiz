@@ -14,7 +14,7 @@ namespace Streamiz.Kafka.Net.Processors
         public override void Process(K key, V value)
         {
             LogProcessingKeyValue(key, value);
-            actionPrint.Apply(key, value);
+            actionPrint.Apply(key, value, Context.RecordContext);
         }
 
         public override void Close()

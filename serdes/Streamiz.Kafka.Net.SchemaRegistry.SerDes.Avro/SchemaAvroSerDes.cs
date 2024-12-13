@@ -11,7 +11,8 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
     /// </summary>
     /// <typeparam name="T">type of avro bean
     /// </typeparam>
-    public class SchemaAvroSerDes<T> : SchemaSerDes<T, AvroSerializerConfig>
+    public class SchemaAvroSerDes<T> 
+        : SchemaSerDes<T, AvroSerializerConfig, AvroDeserializerConfig>
     {
         /// <summary>
         /// Empty constructor
@@ -32,9 +33,9 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro
             {
                 if (context.Config is ISchemaRegistryConfig schemaConfig)
                 {
-                    registryClient = GetSchemaRegistryClient(GetConfig(schemaConfig));
-                    deserializer = new AvroDeserializer<T>(registryClient);
-                    serializer = new AvroSerializer<T>(registryClient, GetSerializerConfig(schemaConfig));
+                    registryClient = GetSchemaRegistryClient(GetConfig(schemaConfig, context.Config));
+                    deserializer = new AvroDeserializer<T>(registryClient, GetDeserializerConfig(schemaConfig, context.Config));
+                    serializer = new AvroSerializer<T>(registryClient, GetSerializerConfig(schemaConfig, context.Config));
 
                     isInitialized = true;
                 }

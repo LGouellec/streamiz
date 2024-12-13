@@ -126,7 +126,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 builder
                     .Stream<string, string>("topic")
-                    .MapValues((v) => v.Length)
+                    .MapValues((v, _) => v.Length)
                     .GroupByKey()
                     .Aggregate((Initializer<int>)null, (Aggregator<string, int, int>)null, m);
             });
@@ -142,7 +142,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var stream = builder
                .Stream<string, string>("topic")
-               .GroupBy((k, v) => k.ToUpper());
+               .GroupBy((k, v, _) => k.ToUpper());
 
             stream.Count(InMemory.As<string, long>("count-store"));
             stream.Aggregate(
@@ -204,7 +204,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                .Stream<string, string>("topic")
-               .GroupBy((k, v) => k.ToUpper())
+               .GroupBy((k, v, _) => k.ToUpper())
                .Aggregate<Dictionary<char, int>, DictionarySerDes>(
                     () => new Dictionary<char, int>(),
                     (k, v, old) =>
@@ -254,7 +254,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                .Stream<string, string>("topic")
-               .GroupBy((k, v) => k.ToUpper())
+               .GroupBy((k, v, _) => k.ToUpper())
                .Aggregate<Dictionary<char, int>, DictionarySerDes>(
                     new MyInitializer(),
                     new MyAggregator()
@@ -293,7 +293,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                .Stream<string, string>("topic")
-               .GroupBy((k, v) => k.ToUpper())
+               .GroupBy((k, v, _) => k.ToUpper())
                .Aggregate(
                     () => 0L,
                     (k, v, agg) => agg + 1,
@@ -341,7 +341,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic")
-                .GroupBy((k, v) => k.ToCharArray()[0])
+                .GroupBy((k, v, _) => k.ToCharArray()[0])
                 .Aggregate(
                     () => 0L,
                     (k, v, agg) => agg + 1,

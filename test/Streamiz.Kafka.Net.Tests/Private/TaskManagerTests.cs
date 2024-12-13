@@ -10,8 +10,8 @@ using System.Linq;
 using Streamiz.Kafka.Net.Table;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.State;
-using Streamiz.Kafka.Net.State.Internal;
 using System.IO;
+using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics;
 
 namespace Streamiz.Kafka.Net.Tests.Private
@@ -30,16 +30,22 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var topology = builder.Build();
 
             var supplier = new SyncKafkaSupplier();
-            var producer = supplier.GetProducer(config.ToProducerConfig());
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
             var storeChangelogReader =
                 new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
-            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer,
+            var streamsProducer = new StreamsProducer(
+                config,
+                "thread-0",
+                Guid.NewGuid(),
+                supplier,
+                "");
+            
+            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier,
                 storeChangelogReader, new StreamMetricsRegistry());
             var taskManager = new TaskManager(topology.Builder, taskCreator,
-                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader);
+                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader, streamsProducer);
 
             taskManager.CreateTasks(
                 new List<TopicPartition>
@@ -98,17 +104,23 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var topology = builder.Build();
 
             var supplier = new SyncKafkaSupplier();
-            var producer = supplier.GetProducer(config.ToProducerConfig());
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
 
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
             var storeChangelogReader =
                 new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
-            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer,
+            var streamsProducer = new StreamsProducer(
+                config,
+                "thread-0",
+                Guid.NewGuid(),
+                supplier,
+                "");
+            
+            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier,
                 storeChangelogReader, new StreamMetricsRegistry());
             var taskManager = new TaskManager(topology.Builder, taskCreator,
-                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader);
+                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader, streamsProducer);
 
             taskManager.CreateTasks(
                 new List<TopicPartition>
@@ -134,23 +146,29 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var builder = new StreamBuilder();
 
             builder.Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()))
+                .Map((k, v, _) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()))
                 .To("topic2");
 
             var topology = builder.Build();
 
             var supplier = new SyncKafkaSupplier();
-            var producer = supplier.GetProducer(config.ToProducerConfig());
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
 
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
             var storeChangelogReader =
                 new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
-            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer,
+            var streamsProducer = new StreamsProducer(
+                config,
+                "thread-0",
+                Guid.NewGuid(),
+                supplier,
+                "");
+            
+            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier,
                 storeChangelogReader, new StreamMetricsRegistry());
             var taskManager = new TaskManager(topology.Builder, taskCreator,
-                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader);
+                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader, streamsProducer);
 
             taskManager.CreateTasks(
                 new List<TopicPartition>
@@ -231,23 +249,29 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var builder = new StreamBuilder();
 
             builder.Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()))
+                .Map((k, v, _) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()))
                 .To("topic2");
 
             var topology = builder.Build();
 
             var supplier = new SyncKafkaSupplier();
-            var producer = supplier.GetProducer(config.ToProducerConfig());
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
 
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
             var storeChangelogReader =
                 new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
-            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer,
+            var streamsProducer = new StreamsProducer(
+                config,
+                "thread-0",
+                Guid.NewGuid(),
+                supplier,
+                "");
+            
+            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier,
                 storeChangelogReader, new StreamMetricsRegistry());
             var taskManager = new TaskManager(topology.Builder, taskCreator,
-                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader);
+                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader, streamsProducer);
 
             taskManager.CreateTasks(
                 new List<TopicPartition>
@@ -283,23 +307,29 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var builder = new StreamBuilder();
 
             builder.Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()))
+                .Map((k, v, _) => KeyValuePair.Create(k.ToUpper(), v.ToUpper()))
                 .To("topic2");
 
             var topology = builder.Build();
 
             var supplier = new SyncKafkaSupplier();
-            var producer = supplier.GetProducer(config.ToProducerConfig());
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
 
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
             var storeChangelogReader =
                 new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
-            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer,
+            var streamsProducer = new StreamsProducer(
+                config,
+                "thread-0",
+                Guid.NewGuid(),
+                supplier,
+                "");
+            
+            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier,
                 storeChangelogReader, new StreamMetricsRegistry());
             var taskManager = new TaskManager(topology.Builder, taskCreator,
-                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader);
+                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader, streamsProducer);
 
             taskManager.CreateTasks(
                 new List<TopicPartition>
@@ -360,16 +390,22 @@ namespace Streamiz.Kafka.Net.Tests.Private
             topology.Builder.RewriteTopology(config);
 
             var supplier = new SyncKafkaSupplier();
-            var producer = supplier.GetProducer(config.ToProducerConfig());
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
             var storeChangelogReader =
                 new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
-            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier, producer,
+            var streamsProducer = new StreamsProducer(
+                config,
+                "thread-0",
+                Guid.NewGuid(),
+                supplier,
+                "");
+            
+            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier,
                 storeChangelogReader, new StreamMetricsRegistry());
             var taskManager = new TaskManager(topology.Builder, taskCreator,
-                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader);
+                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader, streamsProducer);
 
             var part = new TopicPartition("topic", 0);
 

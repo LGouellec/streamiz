@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
 
         private int id = 0;
         private readonly List<string> subjects = new List<string>();
-        private readonly Dictionary<string, List<RegisterSchema>> schemas = new Dictionary<string, List<RegisterSchema>>();
+        private readonly Dictionary<string, List<RegisterSchema>> schemas = new();
 
         #region ISchemaRegistryClient Impl
 
@@ -67,6 +67,11 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
             id = 0;
         }
 
+        public Task<RegisteredSchema> GetLatestWithMetadataAsync(string subject, IDictionary<string, string> metadata, bool ignoreDeletedSchemas)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Gets a list of all subjects with registered schemas.
         /// </summary>
@@ -82,6 +87,7 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
         {
             MaxCachedSchemas = config.MaxCachedSchemas.HasValue ? config.MaxCachedSchemas.Value : 100;
             RequestTimeoutMs = config.RequestTimeoutMs.HasValue ? config.RequestTimeoutMs.Value : 30000;
+            Config = config;
         }
 
         /// <summary>
@@ -194,6 +200,32 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
             return schema != null ?
                 Task.FromResult(new Schema(schema.Schema, SchemaType.Avro)) :
                 Task.FromResult((Schema)null);
+        }
+
+        public Task<Schema> GetSchemaBySubjectAndIdAsync(string subject, int id, string format = null)
+        {
+            if (schemas.ContainsKey(subject))
+            {
+                var schema = schemas[subject].FirstOrDefault(s => s.Id.Equals(id));
+                return schema != null ?
+                    Task.FromResult(new Schema(schema.Schema, SchemaType.Avro)) :
+                    Task.FromResult((Schema)null);
+            }
+
+            return Task.FromResult((Schema)null);
+        }
+
+        public Task<RegisteredSchema> GetRegisteredSchemaAsync(string subject, int version, bool ignoreDeletedSchemas = true)
+        {
+            if (schemas.ContainsKey(subject))
+            {
+                var schema = schemas[subject].FirstOrDefault(s => s.Version.Equals(version));
+                return schema != null ?
+                    Task.FromResult(new RegisteredSchema(subject, version, schema.Id, schema.Schema, SchemaType.Avro, new List<SchemaReference>())) :
+                    Task.FromResult((RegisteredSchema)null);
+            }
+
+            return Task.FromResult((RegisteredSchema)null);
         }
 
         /// <summary>
@@ -316,13 +348,16 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
         [Obsolete("Superseded by RegisterSchemaAsync(string, Schema)")]
         public Task<int> RegisterSchemaAsync(string subject, string avroSchema)
         {
-            ++id;
+            var registerSchema = schemas
+                .SelectMany(s => s.Value)
+                .FirstOrDefault(s => s.Schema.Equals(avroSchema));
+            
             if (schemas.ContainsKey(subject))
             {
                 var maxVersion = schemas[subject].Max(s => s.Version) + 1;
                 schemas[subject].Add(new RegisterSchema
                 {
-                    Id = id,
+                    Id = registerSchema?.Id ?? ++id,
                     Schema = avroSchema,
                     Version = maxVersion
                 });
@@ -331,14 +366,14 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
             {
                 schemas.Add(subject, new List<RegisterSchema> {
                     new RegisterSchema {
-                    Id = id,
+                    Id = registerSchema?.Id ?? ++id,
                     Schema = avroSchema,
                     Version = 1
                     }
                 });
                 subjects.Add(subject);
             }
-            return Task.FromResult(id);
+            return Task.FromResult(registerSchema?.Id ?? id);
         }
 
         /// <summary>
@@ -376,6 +411,18 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
         {
             return Task.FromResult(compatibility);
         }
+
+        public void ClearLatestCaches()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ClearCaches()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<KeyValuePair<string, string>> Config { get; private set; }
 
         #endregion ISchemaRegistryClient Impl
     }

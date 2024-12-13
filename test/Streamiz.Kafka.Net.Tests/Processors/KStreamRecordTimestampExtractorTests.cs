@@ -94,7 +94,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var data = new List<KeyValuePair<string, string>>() { KeyValuePair.Create("key1", "123456") };
 
             builder.Stream<string, string>("topic")
-                .WithRecordTimestamp((k, v) => customTimestamp + 3600)
+                .WithRecordTimestamp((k, v, _) => customTimestamp + 3600)
                 .To((k, v, ctx) => "output-topic", (k, v, ctx) => customTimestamp);
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();

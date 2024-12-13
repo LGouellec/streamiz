@@ -13,7 +13,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
     /// When Disposed, is committed to the cache.
     /// </summary>
     internal interface ICacheEntry<K, V> : IDisposable
-        where K : class
+        where K : class, IComparable<K>
         where V : class
     {
         /// <summary>

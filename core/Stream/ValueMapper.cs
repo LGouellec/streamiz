@@ -1,4 +1,5 @@
 ﻿using System;
+using Streamiz.Kafka.Net.Processors;
 
 namespace Streamiz.Kafka.Net.Stream
 {
@@ -18,19 +19,20 @@ namespace Streamiz.Kafka.Net.Stream
         /// Map the given value to a new value.
         /// </summary>
         /// <param name="value">Value to be mapped</param>
+        /// <param name="context">current context</param>
         /// <returns>New value</returns>
-        VR Apply(V value);
+        VR Apply(V value, IRecordContext context);
     }
 
     internal class WrappedValueMapper<V, VR> : IValueMapper<V, VR>
     {
-        private readonly Func<V, VR> wrappedFunction;
+        private readonly Func<V, IRecordContext, VR> wrappedFunction;
 
-        public WrappedValueMapper(Func<V, VR> function)
+        public WrappedValueMapper(Func<V, IRecordContext, VR> function)
         {
             this.wrappedFunction = function ?? throw new ArgumentNullException($"Mapper function can't be null");
         }
 
-        public VR Apply(V value) => wrappedFunction.Invoke(value);
+        public VR Apply(V value, IRecordContext context) => wrappedFunction.Invoke(value, context);
     }
 }

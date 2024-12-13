@@ -28,8 +28,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key3", "test"));
 
             builder.Stream<string, string>("topic")
-                .Filter((k, v) => v.Contains("test", StringComparison.InvariantCultureIgnoreCase))
-                .Peek((k, v) => filterObserved.Add(KeyValuePair.Create(k, v)));
+                .Filter((k, v, _) => v.Contains("test", StringComparison.InvariantCultureIgnoreCase))
+                .Peek((k, v, _) => filterObserved.Add(KeyValuePair.Create(k, v)));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-filter";
@@ -59,8 +59,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key3", "paper"));
 
             builder.Stream<string, string>("topic")
-                .Filter((k, v) => v.Contains("test", StringComparison.InvariantCultureIgnoreCase))
-                .Peek((k, v) => filterObserved.Add(KeyValuePair.Create(k, v)));
+                .Filter((k, v, _) => v.Contains("test", StringComparison.InvariantCultureIgnoreCase))
+                .Peek((k, v, _) => filterObserved.Add(KeyValuePair.Create(k, v)));
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
             config.ApplicationId = "test-filter";
@@ -86,7 +86,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key3", "paper"));
 
             builder.Stream<string, string>("topic")
-                .Filter((k, v) => v.Contains("test", StringComparison.InvariantCultureIgnoreCase))
+                .Filter((k, v, _) => v.Contains("test", StringComparison.InvariantCultureIgnoreCase))
                 .To("topic-filter");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();

@@ -133,14 +133,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
         }
 
         [Test]
-        public void GetTaskProducerClientIdTest()
-        {
-            var taskId = new TaskId {Id = 0, Partition = 0};
-            var result = StreamThread.GetTaskProducerClientId("thread-client", taskId);
-            Assert.AreEqual($"thread-client-0-0-streamiz-producer", result);
-        }
-
-        [Test]
         public void GetThreadProducerClientIdTest()
         {
             var result = StreamThread.GetThreadProducerClientId("thread-client");
@@ -164,7 +156,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var supplier = new SyncKafkaSupplier();
             var thread = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", Guid.NewGuid(), "c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
@@ -208,7 +200,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var consumer = supplier.GetConsumer(config.ToConsumerConfig("test-consum"), null);
             consumer.Subscribe("topic2");
             var thread = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", Guid.NewGuid(), "c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
@@ -259,7 +251,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var consumer = supplier.GetConsumer(config.ToConsumerConfig("test-consum"), null);
             consumer.Subscribe("topic2");
             var thread = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", Guid.NewGuid(), "c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
@@ -305,7 +297,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var supplier = new SyncKafkaSupplier();
             var thread = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", Guid.NewGuid(), "c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
@@ -328,7 +320,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var supplier = new SyncKafkaSupplier();
             var thread = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;
@@ -353,7 +345,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var supplier = new SyncKafkaSupplier();
             var thread = StreamThread.Create(
-                "thread-0", "c0",
+                "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
                 0) as StreamThread;

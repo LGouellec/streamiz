@@ -38,7 +38,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("topic", new StringSerDes(), new StringSerDes(), "source")
-                .Filter((k, v) => v.Contains("test"), "filter")
+                .Filter((k, v, _) => v.Contains("test"), "filter")
                 .To("topic-dest", "to");
 
             var topology = builder.Build();
@@ -81,7 +81,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var builder = new StreamBuilder();
             builder
                 .Stream<string, string>("topic", new StringSerDes(), new StringSerDes(), "source", new MyTimestampExtractor())
-                .Filter((k, v) => v.Contains("test"), "filter")
+                .Filter((k, v, _) => v.Contains("test"), "filter")
                 .To(new MytopicExtractor(), "to");
 
             var topology = builder.Build();
@@ -236,7 +236,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
         {
             var builder = new StreamBuilder();
             builder.Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .Map((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                 .ToTable()
                 .ToStream()
                 .To("return");
@@ -269,7 +269,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var streamJoin = builder.Stream<String, String>("topic-to-join");
             
             builder.Stream<string, string>("topic")
-                .Map((k, v) => KeyValuePair.Create(k.ToUpper(), v))
+                .Map((k, v, _) => KeyValuePair.Create(k.ToUpper(), v))
                 .Join(streamJoin,
                     (s, s1) => $"{s}-{s1}",
                     JoinWindowOptions.Of(TimeSpan.FromSeconds(1)))
@@ -308,7 +308,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
         {
             var builder = new StreamBuilder();
             builder.Stream<string, string>("topic")
-                .GroupBy((k,v)=> KeyValuePair.Create(k.ToUpper(),v))
+                .GroupBy((k,v, _)=> KeyValuePair.Create(k.ToUpper(),v))
                 .Count()
                 .ToStream()
                 .To("return");
@@ -340,7 +340,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var builder = new StreamBuilder();
             builder
                 .Table<string, string>("topic")
-                .GroupBy((k,v)=> KeyValuePair.Create(k.ToUpper(),v))
+                .GroupBy((k,v, _)=> KeyValuePair.Create(k.ToUpper(),v))
                 .Count()
                 .ToStream()
                 .To("return");

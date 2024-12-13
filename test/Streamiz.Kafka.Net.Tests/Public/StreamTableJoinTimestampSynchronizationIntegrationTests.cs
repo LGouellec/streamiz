@@ -79,7 +79,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var userClicksStream = builder.Stream<string, string>(userClicksTopic, stringSerdes, stringSerdes, timestampExtractor);
 
             userClicksStream
-                    .SelectKey((k, v) => k)
+                    .SelectKey((k, v, _) => k)
                     .Join(userRegionsTable, Join)
                     .To(outputTopic);
 
@@ -97,7 +97,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             // TODO : update when through processor is DONE
             userClicksStream
-                    .SelectKey((k, v) => k)
+                    .SelectKey((k, v, _) => k)
                     .Join(userRegionsTable, Join)
                     .To(outputTopic);
 
@@ -114,7 +114,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var userClicksStream = builder.Stream<string, string>(userClicksTopic, stringSerdes, stringSerdes, timestampExtractor);
 
             userClicksStream
-                .SelectKey((k, v) => k)
+                .SelectKey((k, v, _) => k)
                 .To(intermediateTopic);
 
             builder

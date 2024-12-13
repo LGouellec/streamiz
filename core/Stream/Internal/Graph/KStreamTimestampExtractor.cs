@@ -5,9 +5,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph
 {
     internal class KStreamTimestampExtractor<K,V> : IProcessorSupplier<K, V>
     {
-        private readonly Func<K, V, long> timestampExtractor;
+        private readonly Func<K, V, IRecordContext, long> timestampExtractor;
 
-        public KStreamTimestampExtractor(Func<K, V, long> timestampExtractor)
+        public KStreamTimestampExtractor(Func<K, V, IRecordContext, long> timestampExtractor)
         {
             this.timestampExtractor = timestampExtractor;
         }

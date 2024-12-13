@@ -14,20 +14,20 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var branches = builder.Stream<string, string>("topic")
                 .Branch(
-                    (k, v) => v.Length % 2 == 0,
-                    (k, v) => v.Length % 2 > 0);
+                    (k, v, _) => v.Length % 2 == 0,
+                    (k, v, _) => v.Length % 2 > 0);
             
             branches[0].To("topic-B");
             branches[1].To("topic-C");
             
             builder
                 .Stream<string, string>("topic-B")
-                .MapValues((k,v) => v.ToUpper())
+                .MapValues((k,v, _) => v.ToUpper())
                 .To("topic-D");
 
             builder
                 .Stream<string, string>("topic-C")
-                .MapValues((k,v) => v.ToLower())
+                .MapValues((k,v, _) => v.ToLower())
                 .To("topic-D");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();

@@ -76,7 +76,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var builder = new StreamBuilder();
             builder
                 .Stream<string, Order>("order")
-                .Filter((k, v) => v.OrderId >= 200)
+                .Filter((k, v, _) => v.OrderId >= 200)
                 .To("order-filtered");
 
             var topo = builder.Build();
@@ -111,7 +111,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var builder = new StreamBuilder();
             builder
                 .Stream<string, Order>("order")
-                .Filter((k, v) => v.OrderId >= 200)
+                .Filter((k, v, _) => v.OrderId >= 200)
                 .To("order-filtered");
 
             var topo = builder.Build();

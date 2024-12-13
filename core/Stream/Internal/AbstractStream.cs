@@ -3,6 +3,7 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
+using Streamiz.Kafka.Net.Processors;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
@@ -77,18 +78,18 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 throw new ArgumentNullException(paramName);
         }
 
-        protected static WrappedValueMapperWithKey<K, V, VR> WithKey<VR>(Func<V, VR> valueMapper)
+        protected static WrappedValueMapperWithKey<K, V, VR> WithKey<VR>(Func<V, IRecordContext, VR> valueMapper)
         {
             valueMapper = valueMapper ?? throw new ArgumentNullException(nameof(valueMapper));
 
-            return new WrappedValueMapperWithKey<K, V, VR>((readOnlyKey, value) => valueMapper(value));
+            return new WrappedValueMapperWithKey<K, V, VR>((_, value, c) => valueMapper(value, c));
         }
 
         protected static WrappedValueMapperWithKey<K, V, VR> WithKey<VR>(IValueMapper<V, VR> valueMapper)
         {
             valueMapper = valueMapper ?? throw new ArgumentNullException(nameof(valueMapper));
 
-            return new WrappedValueMapperWithKey<K, V, VR>((readOnlyKey, value) => valueMapper.Apply(value));
+            return new WrappedValueMapperWithKey<K, V, VR>((_, value, c) => valueMapper.Apply(value, c));
         }
     }
 }

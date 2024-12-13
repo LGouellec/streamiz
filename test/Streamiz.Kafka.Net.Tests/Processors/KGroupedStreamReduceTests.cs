@@ -33,7 +33,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic")
-                .MapValues((v) => v.Length)
+                .MapValues((v, _) => v.Length)
                 .GroupByKey()
                 .Reduce((v1, v2) => Math.Max(v1, v2), m);
 
@@ -62,7 +62,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic")
-                .MapValues(v => v.Length)
+                .MapValues((v, _) => v.Length)
                 .GroupByKey()
                 .Reduce((v1, v2) => Math.Max(v1, v2), m)
                 .ToStream()
@@ -94,7 +94,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 builder
                     .Stream<string, string>("topic")
-                    .MapValues(v => v.Length)
+                    .MapValues((v, _) => v.Length)
                     .GroupByKey()
                     .Reduce((Reducer<int>)null, m);
             });
@@ -110,8 +110,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var stream = builder
                .Stream<string, string>("topic")
-               .MapValues(v => v.Length)
-               .GroupBy<string, StringSerDes, Int32SerDes>((k, v) => k.ToUpper());
+               .MapValues((v, _) => v.Length)
+               .GroupBy<string, StringSerDes, Int32SerDes>((k, v, _) => k.ToUpper());
 
             stream.Count(InMemory.As<string, long>("count-store"));
             stream.Reduce(
@@ -153,7 +153,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                .Stream<string, string>("topic")
-               .GroupBy((k, v) => k.ToUpper())
+               .GroupBy((k, v, _) => k.ToUpper())
                .Reduce(
                     (v1, v2) => v2.Length > v1.Length ? v2 : v1,
                     InMemory.As<string, string>("reduce-store"));
@@ -184,7 +184,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                .Stream<string, string>("topic")
-               .GroupBy((k, v) => k.ToUpper())
+               .GroupBy((k, v, _) => k.ToUpper())
                .Reduce(new MyReducer(), InMemory.As<string, string>("reduce-store"));
 
             var topology = builder.Build();
@@ -213,7 +213,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                .Stream<string, string>("topic")
-               .GroupBy((k, v) => k.ToUpper())
+               .GroupBy((k, v, _) => k.ToUpper())
                .Reduce(
                     new MyReducer(),
                     InMemory.As<string, string>("reduce-store"),
@@ -247,7 +247,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                .Stream<string, string>("topic")
-               .GroupBy((k, v) => k?.ToUpper())
+               .GroupBy((k, v, _) => k?.ToUpper())
                .Reduce(
                     new MyReducer(),
                     InMemory.As<string, string>("reduce-store"),
@@ -298,7 +298,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             builder
                 .Stream<string, string>("topic")
-                .GroupBy((k, v) => k.ToCharArray()[0])
+                .GroupBy((k, v, _) => k.ToCharArray()[0])
                 .Reduce(
                     (v1, v2) => v2,
                     InMemory.As<char, string>());

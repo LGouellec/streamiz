@@ -52,6 +52,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             store = new RocksDbWindowStore(
                 new RocksDbSegmentedBytesStore(
                     "test-w-store", 
+                    "rocksdb-w",
                     (long)defaultRetention.TotalMilliseconds,
                     7200000,
                     new WindowKeySchema()),

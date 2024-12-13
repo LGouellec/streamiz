@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Confluent.Kafka;
 using NUnit.Framework;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Processors.Public;
@@ -11,6 +14,30 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 {
     public class KStreamTransformerAPITests
     {
+        private class MyConnectStateStoreTransformer : ITransformer<string, string, string, string>
+        {
+            private IKeyValueStore<string, string> store1;
+            private IKeyValueStore<string, string> store2;
+
+            public void Init(ProcessorContext<string, string> context)
+            {
+                store1 = (IKeyValueStore<string, string>)context.GetStateStore("store1");
+                store2 = (IKeyValueStore<string, string>)context.GetStateStore("store2");
+            }
+
+            public Record<string, string> Process(Record<string, string> record)
+            {
+                Assert.IsNotNull(store1);
+                Assert.IsNotNull(store2);
+                return record;
+            }
+
+            public void Close()
+            {
+            
+            }
+        }
+        
         private class MyTransformer : ITransformer<string, string, string, string>
         {
             private ProcessorContext<string,string> context;
@@ -63,6 +90,45 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             public void Close()
             {
                 
+            }
+        }
+
+        [Test]
+        public void ConnectStateStoreManuallyTest()
+        {
+            var builder = new StreamBuilder();
+            
+            var storeBuilder1 = Streamiz.Kafka.Net.State.Stores.KeyValueStoreBuilder(Streamiz.Kafka.Net.State.Stores.InMemoryKeyValueStore("store1"), new StringSerDes(),
+                new StringSerDes());
+            var storeBuilder2 = Streamiz.Kafka.Net.State.Stores.KeyValueStoreBuilder(Streamiz.Kafka.Net.State.Stores.InMemoryKeyValueStore("store2"), new StringSerDes(),
+                new StringSerDes());
+            
+            builder.Stream<string, string>("input")
+                .TransformValues(
+                    TransformerBuilder.New<string, string, string, string>()
+                        .Transformer<MyConnectStateStoreTransformer>()
+                        .Build(), "my-transfomer")
+                .To("output");
+            
+            builder.AddStateStore(storeBuilder1, "my-transfomer");
+            builder.AddStateStore(storeBuilder2, "my-transfomer");
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-transformer-api";
+
+            Topology t = builder.Build();
+
+            using (var driver = new TopologyTestDriver(t, config))
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("input");
+                inputTopic.PipeInput("key1", "value1");
+                inputTopic.PipeInput("key2", "value2");
+
+                var outputTopic = driver.CreateOuputTopic<string, string>("output");
+                var mapRecords = outputTopic.ReadKeyValueList().ToList();
+                Assert.AreEqual(2, mapRecords.Count);
+                Assert.AreEqual("value1", mapRecords[0].Message.Value);
+                Assert.AreEqual("value2", mapRecords[1].Message.Value);
             }
         }
 
@@ -207,7 +273,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
             
             builder.Stream<string, string>("topic")
-                .SelectKey((k,v) => v)
+                .SelectKey((k,v, _) => v)
                 .GroupByKey()
                 .Count(InMemory.As<string, long>())
                 .ToStream()
@@ -249,7 +315,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 .GroupByKey()
                 .Count(InMemory.As<string, long>())
                 .ToStream()
-                .MapValues((v) => v.ToString())
+                .MapValues((v, _) => v.ToString())
                 .To("topic-output");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -270,5 +336,42 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 Assert.AreEqual("1", mapRecords["value2"]);
             } 
         }
+        
+        [Test]
+        public void TransformerValuesWithUpdateHeaders()
+        {
+            var builder = new StreamBuilder();
+            
+            builder.Stream<string, string>("topic")
+                .TransformValues(TransformerBuilder
+                    .New<string, string, string, string>()
+                    .Transformer((record) =>
+                    {
+                        var headers = new Headers();
+                        headers.Add("key1", Encoding.UTF8.GetBytes("value1"));
+                        return Record<string, string>.Create(record.Value.ToUpper(), headers);
+                    })
+                    .Build())
+                .To("topic-output");
+
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-transformer-api";
+
+            Topology t = builder.Build();
+
+            using var driver = new TopologyTestDriver(t, config);
+            {
+                var inputTopic = driver.CreateInputTopic<string, string>("topic");
+                inputTopic.PipeInput("key1", "value1");
+
+                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var record = outputTopic.ReadKeyValue();
+                Assert.AreEqual(1, record.Message.Headers.Count);
+                Assert.AreEqual(
+                    Encoding.UTF8.GetBytes("value1"),
+                    record.Message.Headers.GetLastBytes("key1"));
+            }
+        }
+
     }
 }

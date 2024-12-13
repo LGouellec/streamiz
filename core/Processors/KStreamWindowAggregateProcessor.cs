@@ -47,8 +47,7 @@ namespace Streamiz.Kafka.Net.Processors
                         new Change<Agg>(sendOldValues ? kv.Value.OldValue.Value : default, kv.Value.NewValue.Value),
                         kv.Value.NewValue.Timestamp);
                 },
-                sendOldValues,
-                context.ConfigEnableCache);
+                sendOldValues);
         }
 
         public override void Process(K key, V value)

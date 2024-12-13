@@ -37,7 +37,7 @@ namespace Streamiz.Kafka.Net.Processors
 
             if (value != null)
             {
-                newValue = mapper.Apply(key, value);
+                newValue = mapper.Apply(key, value, Context.RecordContext);
             }
 
             return newValue;

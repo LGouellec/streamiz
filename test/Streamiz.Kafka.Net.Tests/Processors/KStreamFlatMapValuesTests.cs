@@ -5,6 +5,7 @@ using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Streamiz.Kafka.Net.Processors;
 
 namespace Streamiz.Kafka.Net.Tests.Processors
 {
@@ -16,10 +17,10 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var builder = new StreamBuilder();
             var stream = builder.Stream<string, string>("topic");
 
-            Func<string, IEnumerable<string>> mapper1 = null;
+            Func<string, IRecordContext, IEnumerable<string>> mapper1 = null;
             IValueMapper<string, IEnumerable<string>> mapper2 = null;
             IValueMapperWithKey<string, string, IEnumerable<string>> mapper3 = null;
-            Func<string, string, IEnumerable<string>> mapper4 = null;
+            Func<string, string, IRecordContext, IEnumerable<string>> mapper4 = null;
 
             Assert.Throws<ArgumentNullException>(() => stream.FlatMapValues(mapper1));
             Assert.Throws<ArgumentNullException>(() => stream.FlatMapValues(mapper2));
@@ -35,7 +36,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key1", "123456"));
 
             builder.Stream<string, string>("topic")
-                .FlatMapValues((k, v) => v.ToCharArray().Select(c => c.ToString()))
+                .FlatMapValues((k, v, _) => v.ToCharArray().Select(c => c.ToString()))
                 .To("topic-flatmapvalues");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();
@@ -69,7 +70,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             data.Add(KeyValuePair.Create("key1", "123456"));
 
             builder.Stream<string, string>("topic")
-                .FlatMapValues((k, v) => v.ToCharArray())
+                .FlatMapValues((k, v, _) => v.ToCharArray())
                 .To<StringSerDes, CharSerDes>("topic-flatmap");
 
             var config = new StreamConfig<StringSerDes, StringSerDes>();

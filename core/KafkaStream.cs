@@ -9,6 +9,7 @@ using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -21,6 +22,7 @@ using ThreadState = Streamiz.Kafka.Net.Processors.ThreadState;
 [assembly: InternalsVisibleTo("Streamiz.Kafka.Net.Tests, PublicKey=00240000048000009400000006020000002400005253413100040000010001000d9d4a8e90a3b987f68f047ec499e5a3405b46fcad30f52abadefca93b5ebce094d05976950b38cc7f0855f600047db0a351ede5e0b24b9d5f1de6c59ab55dee145da5d13bb86f7521b918c35c71ca5642fc46ba9b04d4900725a2d4813639ff47898e1b762ba4ccd5838e2dd1e1664bd72bf677d872c87749948b1174bd91ad")]
 [assembly: InternalsVisibleTo("Streamiz.Kafka.Net.Metrics.Prometheus, PublicKey=00240000048000009400000006020000002400005253413100040000010001000d9d4a8e90a3b987f68f047ec499e5a3405b46fcad30f52abadefca93b5ebce094d05976950b38cc7f0855f600047db0a351ede5e0b24b9d5f1de6c59ab55dee145da5d13bb86f7521b918c35c71ca5642fc46ba9b04d4900725a2d4813639ff47898e1b762ba4ccd5838e2dd1e1664bd72bf677d872c87749948b1174bd91ad")]
 [assembly: InternalsVisibleTo("Streamiz.Kafka.Net.Metrics.OpenTelemetry, PublicKey=00240000048000009400000006020000002400005253413100040000010001000d9d4a8e90a3b987f68f047ec499e5a3405b46fcad30f52abadefca93b5ebce094d05976950b38cc7f0855f600047db0a351ede5e0b24b9d5f1de6c59ab55dee145da5d13bb86f7521b918c35c71ca5642fc46ba9b04d4900725a2d4813639ff47898e1b762ba4ccd5838e2dd1e1664bd72bf677d872c87749948b1174bd91ad")]
+[assembly: InternalsVisibleTo("Streamiz.Kafka.Net.Azure.RemoteStorage, PublicKey=00240000048000009400000006020000002400005253413100040000010001000d9d4a8e90a3b987f68f047ec499e5a3405b46fcad30f52abadefca93b5ebce094d05976950b38cc7f0855f600047db0a351ede5e0b24b9d5f1de6c59ab55dee145da5d13bb86f7521b918c35c71ca5642fc46ba9b04d4900725a2d4813639ff47898e1b762ba4ccd5838e2dd1e1664bd72bf677d872c87749948b1174bd91ad")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2, PublicKey=0024000004800000940000000602000000240000525341310004000001000100c547cac37abd99c8db225ef2f6c8a3602f3b3606cc9891605d02baa56104f4cfc0734aa39b93bf7852f7d9266654753cc297e7d2edfe0bac1cdcf9f717241550e0a7b191195b7667bb4f64bcb8e2121380fd1d9d46ad2d92d2d15605093924cceaf74c4861eff62abf69b9291ed0a340e113be11e6a7d3113e92484cf7045cc7")]
 
 namespace Streamiz.Kafka.Net
@@ -252,13 +254,15 @@ namespace Streamiz.Kafka.Net
         private readonly string clientId;
         private readonly ILogger logger;
         private readonly string logPrefix;
-        private readonly object stateLock = new object();
+        private readonly object stateLock = new();
         private readonly QueryableStoreProvider queryableStoreProvider;
         private readonly GlobalStreamThread globalStreamThread;
         private readonly StreamStateManager manager;
         private readonly StreamMetricsRegistry metricsRegistry;
 
         private readonly CancellationTokenSource _cancelSource = new();
+        private readonly SequentiallyGracefullyShutdownHook shutdownHook;
+        private readonly Guid processId;
 
         internal State StreamState { get; private set; }
 
@@ -299,8 +303,6 @@ namespace Streamiz.Kafka.Net
                 throw new StreamConfigException($"Stream configuration is not correct. Please set ApplicationId and BootstrapServers as minimal.");
             }
 
-            var processID = Guid.NewGuid();
-            clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{configuration.ApplicationId.ToLower()}-{processID}" : configuration.ClientId;
             logPrefix = $"stream-application[{configuration.ApplicationId}] ";
             metricsRegistry = new StreamMetricsRegistry(clientId, configuration.MetricsRecording);
             this.kafkaSupplier.MetricsRegistry = metricsRegistry;
@@ -312,6 +314,10 @@ namespace Streamiz.Kafka.Net
             
             // sanity check
             var processorTopology = topology.Builder.BuildTopology();
+            processId = StateDirectory
+                .GetInstance(this.configuration, topology.Builder.HasPersistentStores)
+                .InitializeProcessId();
+            clientId = string.IsNullOrEmpty(configuration.ClientId) ? $"{configuration.ApplicationId.ToLower()}-{processId}" : configuration.ClientId;
 
             int numStreamThreads = topology.Builder.HasNoNonGlobalTopology ? 0 : configuration.NumStreamThreads;
 
@@ -324,6 +330,37 @@ namespace Streamiz.Kafka.Net
                 () => StreamState != null && StreamState.IsRunning() ? 1 : 0,
                 () => threads.Count(t => t.State != ThreadState.DEAD && t.State != ThreadState.PENDING_SHUTDOWN),
                 metricsRegistry);
+            
+            #region Temporary
+
+            long GetMemoryUse()
+            {
+                using var process = Process.GetCurrentProcess();
+                #if NETSTANDARD2_0
+                    return process.PrivateMemorySize64;
+                #else
+                    return process.WorkingSet64 + process.PagedSystemMemorySize64 -
+                       (GC.GetGCMemoryInfo().TotalCommittedBytes - GC.GetTotalMemory(false));
+                #endif
+            }
+                
+            string TOTAL_MEMORY = "total-memory";
+            string TOTAL_MEMORY_DESCRIPTION = "The application information metrics";
+            var sensor = metricsRegistry.ClientLevelSensor(
+                TOTAL_MEMORY,
+                TOTAL_MEMORY_DESCRIPTION,
+                MetricsRecordingLevel.INFO);
+            var tags = metricsRegistry.ClientTags();
+            tags.Add(GeneralClientMetrics.APPLICATION_ID, configuration.ApplicationId);
+            
+            SensorHelper.AddMutableValueMetricToSensor(
+                sensor,
+                StreamMetricsRegistry.CLIENT_LEVEL_GROUP,
+                tags,
+                TOTAL_MEMORY,
+                TOTAL_MEMORY_DESCRIPTION,
+                GetMemoryUse);
+            #endregion
             
             threads = new IThread[numStreamThreads];
             var threadState = new Dictionary<long, Processors.ThreadState>();
@@ -374,6 +411,7 @@ namespace Streamiz.Kafka.Net
 
                 threads[i] = StreamThread.Create(
                     threadId,
+                    processId,
                     clientId,
                     this.topology.Builder,
                     metricsRegistry,
@@ -401,6 +439,13 @@ namespace Streamiz.Kafka.Net
             queryableStoreProvider = new QueryableStoreProvider(stateStoreProviders, globalStateStoreProvider);
 
             StreamState = State.CREATED;
+
+            shutdownHook = new SequentiallyGracefullyShutdownHook(
+                threads,
+                globalStreamThread,
+                externalStreamThread,
+                _cancelSource
+            );
         }
 
         /// <summary>
@@ -409,7 +454,7 @@ namespace Streamiz.Kafka.Net
         /// Because threads are started in the background, this method does not block.
         /// </summary>
         /// <param name="token">Token for propagates notification that the stream should be canceled.</param>
-        [Obsolete("This method is deprecated, please use StartAsync(...) instead. It will be removed in next release version.")]
+        [Obsolete("This method is deprecated, please use StartAsync(...) instead. It will be removed in 1.8.0.")]
         public void Start(CancellationToken? token = null)
         {
             StartAsync(token).ConfigureAwait(false).GetAwaiter().GetResult();
@@ -430,7 +475,8 @@ namespace Streamiz.Kafka.Net
                     Dispose();
                 });
             }
-            await Task.Factory.StartNew(async () =>
+            
+            await Task.Factory.StartNew(() =>
             {
                 if (SetState(State.REBALANCING))
                 {
@@ -448,12 +494,13 @@ namespace Streamiz.Kafka.Net
                             SetState(State.PENDING_SHUTDOWN);
                             SetState(State.ERROR);
                         }
-                        return;
+
+                        return Task.CompletedTask;
                     }
 
                     RunMiddleware(true, true);
                     
-                    globalStreamThread?.Start(_cancelSource.Token);
+                    globalStreamThread?.Start();
                     externalStreamThread?.Start(_cancelSource.Token);
                     
                     foreach (var t in threads)
@@ -463,14 +510,16 @@ namespace Streamiz.Kafka.Net
                     
                     RunMiddleware(false, true);
                 }
+
+                return Task.CompletedTask;
             }, token ?? _cancelSource.Token);
 
 
             try
             {
                 // Allow time for streams thread to run
-                await Task.Delay(TimeSpan.FromMilliseconds(configuration.StartTaskDelayMs),
-                    token ?? _cancelSource.Token);
+               // await Task.Delay(TimeSpan.FromMilliseconds(configuration.StartTaskDelayMs),
+               //     token ?? _cancelSource.Token);
             }
             catch
             {
@@ -484,16 +533,8 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         public void Dispose()
         {
-            Task.Factory.StartNew(() =>
-            {
-                if (!_cancelSource.IsCancellationRequested)
-                {
-                    _cancelSource.Cancel();
-                }
-
-                Close();
-                _cancelSource.Dispose();
-            }).Wait(TimeSpan.FromSeconds(30));
+            Close();
+            _cancelSource.Dispose();
         }
 
         /// <summary>
@@ -512,13 +553,7 @@ namespace Streamiz.Kafka.Net
             {
                 RunMiddleware(true, false);
                 
-                foreach (var t in threads)
-                {
-                    t.Dispose();
-                }
-
-                externalStreamThread?.Dispose();
-                globalStreamThread?.Dispose();
+                shutdownHook.Shutdown();
 
                 RunMiddleware(false, false);
                 metricsRegistry.RemoveClientSensors();
@@ -624,8 +659,8 @@ namespace Streamiz.Kafka.Net
         {
             // Create internal topics (changelogs & repartition) if need
             var adminClientInternalTopicManager = kafkaSupplier.GetAdmin(configuration.ToAdminConfig(StreamThread.GetSharedAdminClientId($"{configuration.ApplicationId.ToLower()}-admin-internal-topic-manager")));
-            using(var internalTopicManager = new DefaultTopicManager(configuration, adminClientInternalTopicManager))
-                await InternalTopicManagerUtils.New().CreateInternalTopicsAsync(internalTopicManager, topology.Builder);
+            using var internalTopicManager = new DefaultTopicManager(configuration, adminClientInternalTopicManager);
+            await InternalTopicManagerUtils.New().CreateInternalTopicsAsync(internalTopicManager, topology.Builder);
         }
 
         private void RunMiddleware(bool before, bool start)

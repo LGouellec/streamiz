@@ -24,7 +24,7 @@ namespace Streamiz.Kafka.Net
         internal virtual SerDesContext SerDesContext { get; }
         internal virtual IStreamConfig Configuration { get; }
         internal virtual IRecordContext RecordContext { get; private set; }
-        internal IRecordCollector RecordCollector { get; private set; }
+        internal virtual IRecordCollector RecordCollector { get; private set; }
         internal virtual IStateManager States { get; }
         internal virtual bool FollowMetadata { get; set; }
         
@@ -68,13 +68,11 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         public virtual string StateDir => $"{Path.Combine(Configuration.StateDir, Configuration.ApplicationId, Id.ToString())}";
 
-        internal bool ConfigEnableCache => Configuration.StateStoreCacheMaxBytes > 0;
-        
-        // FOR TESTING
         internal ProcessorContext()
         {
+            
         }
-
+        
         internal ProcessorContext(AbstractTask task, IStreamConfig configuration, IStateManager stateManager,
             StreamMetricsRegistry streamMetricsRegistry)
         { 

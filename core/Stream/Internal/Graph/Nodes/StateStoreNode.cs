@@ -6,15 +6,20 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
     internal class StateStoreNode : StreamGraphNode
     {
         private readonly IStoreBuilder storeBuilder;
+        private readonly string[] processorNodeNames;
 
-        public StateStoreNode(IStoreBuilder storeBuilder, string streamGraphNode) : base(streamGraphNode)
+        public StateStoreNode(IStoreBuilder storeBuilder,
+            string streamGraphNode,
+            params string[] processorNodeNames) 
+            : base(streamGraphNode)
         {
             this.storeBuilder = storeBuilder;
+            this.processorNodeNames = processorNodeNames;
         }
 
         public override void WriteToTopology(InternalTopologyBuilder builder)
         {
-            builder.AddStateStore(storeBuilder);
+            builder.AddStateStore(storeBuilder, false, processorNodeNames);
         }
     }
 }

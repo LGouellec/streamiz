@@ -75,6 +75,7 @@ namespace Streamiz.Kafka.Net.State
             return new RocksDbWindowStore(
                 new RocksDbSegmentedBytesStore(
                     Name,
+                    MetricsScope,
                     Retention,
                     SegmentInterval,
                     new WindowKeySchema()),

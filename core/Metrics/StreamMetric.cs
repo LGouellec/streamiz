@@ -15,7 +15,7 @@ namespace Streamiz.Kafka.Net.Metrics
         private readonly IMetricValueProvider metricValueProvider;
         private readonly MetricConfig config;
 
-        private object lastValue;
+        private object lastValue = -1L;
 
         internal StreamMetric(
             MetricName metricName,

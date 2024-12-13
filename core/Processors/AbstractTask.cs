@@ -86,13 +86,13 @@ namespace Streamiz.Kafka.Net.Processors
         public abstract IDictionary<TopicPartition, long> PurgeOffsets { get; }
         public abstract PartitionGrouper Grouper { get; }
         public abstract bool CanProcess(long now);
-        public abstract void Close();
-        public abstract void Commit();
+        public abstract void Close(bool dirty);
+        public abstract IEnumerable<TopicPartitionOffset> PrepareCommit();
+        public abstract void PostCommit(bool enforceCheckpoint);
         public abstract IStateStore GetStore(string name);
         public abstract void InitializeTopology();
         public abstract void RestorationIfNeeded();
         public abstract bool InitializeStateStores();
-        public abstract void Resume();
         public abstract void Suspend();
         public abstract void MayWriteCheckpoint(bool force = false);
         public abstract TaskScheduled RegisterScheduleTask(TimeSpan interval, PunctuationType punctuationType, Action<long> punctuator);

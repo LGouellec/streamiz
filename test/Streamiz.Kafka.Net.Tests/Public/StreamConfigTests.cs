@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
+using NUnit.Framework.Interfaces;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
@@ -13,6 +14,30 @@ namespace Streamiz.Kafka.Net.Tests.Public
 {
     public class StreamConfigTests
     {
+        public class StreamConfigInner
+        {
+            [StreamConfigProperty("inner.conf1")]
+            public String Conf1 { get; set; }
+            [StreamConfigProperty("inner.conf2")]
+            public String Conf2 { get; set; }
+            [StreamConfigProperty("inner.conf3")]
+            public String Conf3 { get; set; }
+        }
+        
+        [Test]
+        public void ReadStreamConfig()
+        {
+            var config = new StreamConfig();
+            config.AddConfig("inner.conf1", "123");
+            config.AddConfig("inner.conf2", "123");
+            config.AddConfig("inner.conf3", "123");
+
+            var innerConf = config.Read<StreamConfigInner>();
+            Assert.AreEqual("123", innerConf.Conf1);
+            Assert.AreEqual("123", innerConf.Conf2);
+            Assert.AreEqual("123", innerConf.Conf3);
+        }
+        
         [Test]
         public void CreateStreamConfigThroughOptionsPattern()
         {
@@ -271,6 +296,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             stream.InternalTerminationSignal = 1;
             stream.IsolationLevel = Confluent.Kafka.IsolationLevel.ReadCommitted;
             stream.LingerMs = 12;
+            stream.PartitionAssignmentStrategy = PartitionAssignmentStrategy.CooperativeSticky;
             stream.LogConnectionClose = false;
             stream.LogQueue = true;
             stream.LogThreadName = false;

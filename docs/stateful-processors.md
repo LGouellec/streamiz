@@ -459,3 +459,57 @@ Detailed behavior:
 - Input records with a null key are ignored and do not trigger the join.
 - Input records with a null value are interpreted as tombstones for the corresponding key, which indicate the deletion of the key from the table. Tombstones do not trigger the join. When an input tombstone is received, then an output tombstone is forwarded directly to the join result IKTable if required (i.e. only if the corresponding key actually exists already in the join result IKTable).
 - For each input record on one side that does not have any match on the other side, the ValueJoiner will be called with (leftRecord.value, null) or (null, rightRecord.value), respectively; this explains the rows with timestamp=3 and timestamp=7 in the table below, which list [A, null] and [null, b], respectively, in the OUTER JOIN column.
+
+
+## Drop Duplicates
+
+This function removes duplicate records from the same key based on the time interval mentioned. Duplicate records are detected based on the kafka key plus the lambda returns; In this simplified example, the record value is the event ID.  The internal processor remembers the old event IDs in an associated window state store, which automatically purges/expires event IDs from the store after a certain amount of time has passed to prevent the store from growing indefinitely.
+
+``` csharp
+builder.Stream<string, string>("input")
+        .DropDuplicate((key, value1, value2) => value1.Equals(value2), TimeSpan.FromMinutes(1))
+        .To("output");
+```
+
+| Timestamp  | Input Topic                   | Window Store                           | Output Topic                             |
+|------------|-------------------------------|----------------------------------------|------------------------------------------|
+|     t0     | key: key1 ; value : eventID1  |   key: key1 ; value : eventID1 ; t0    |   key: key1 ; value : eventID1           |
+|     t0+10s | key: key1 ; value : eventID1  |   key: key1 ; value : eventID1 ; t0    |   X                                      |
+|     t0+30s | key: key1 ; value : eventID2  |   key: key1 ; value : eventID2 ; t0+30s|   key: key1 ; value : eventID2           |
+|     t0+95s | key: key1 ; value : eventID2  |   key: key1 ; value : eventID2 ; t0+95s|   key: key1 ; value : eventID2           |
+
+## Suppress
+
+In Streamiz, windowed computations update their results continuously. As new data arrives for a window, freshly computed results are emitted downstream. For many applications, this is ideal, since fresh results are always available. and Streamiz is designed to make programming continuous computations seamless. However, some applications need to take action only on the final result of a windowed computation. Common examples of this are sending alerts or delivering results to a system that doesn't support updates.
+
+Suppose that you have an hourly windowed count of events per user. If you want to send an alert when a user has less than three events in an hour, you have a real challenge. All users would match this condition at first, until they accrue enough events, so you cannot simply send an alert when someone matches the condition; you have to wait until you know you won't see any more events for a particular window and then send the alert.
+
+Streamiz offers a clean way to define this logic: after defining your windowed computation, you can suppress the intermediate results, emitting the final count for each user when the window is closed.
+
+Example : 
+
+``` csharp
+var builder = new StreamBuilder();
+        
+builder.Stream("input", new StringSerDes(), new StringSerDes())
+    .GroupByKey()
+    .WindowedBy(TumblingWindowOptions.Of(TimeSpan.FromMinutes(1)))
+    .Count(
+        InMemoryWindows
+            .As<string, long>("count-store")
+            .WithKeySerdes(new StringSerDes())
+            .WithValueSerdes(new Int64SerDes()))
+    .Suppress(SuppressedBuilder.UntilWindowClose<Windowed<string>, long>(TimeSpan.FromMinutes(1),
+                StrictBufferConfig.Unbounded()))
+    .ToStream()
+    .To("output", 
+        new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds), 
+        new Int64SerDes());
+```
+
+The key parts of this program are:
+- `TumblingWindowOptions.Of(TimeSpan.FromMinutes(1))` Define a tumbling window of 1 minute
+- `.Suppress(SuppressedBuilder.UntilWindowClose<Windowed<string>, long>(TimeSpan.Zero,` This configures the suppression operator to emit nothing for a window until it closes, and then emit the final result without a grace period.
+- `StrictBufferConfig.Unbounded()))` This configures the buffer used for storing events until their windows close.
+
+More details on the `Suppressed` class in the documentation.

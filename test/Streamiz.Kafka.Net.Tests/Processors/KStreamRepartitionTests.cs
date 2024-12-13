@@ -30,7 +30,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 ? new MockKafkaSupplier(numberPartition)
                 : null;
 
-            using (var driver = new TopologyTestDriver(t.Builder, config, mode, supplier))
+            using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
                 var outputTopic = driver.CreateOuputTopic<string, string>("output");
@@ -89,7 +89,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 builder
                     .Stream<string, string>("topic")
-                    .Repartition(Repartitioned<string, string>.Empty().WithStreamPartitioner((t,k,v) => 0))
+                    .Repartition(Repartitioned<string, string>.Empty().WithStreamPartitioner((t,k,v,_, c) => 0))
                     .To("output");
             }, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, 10);
 

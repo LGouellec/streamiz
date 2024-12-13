@@ -13,7 +13,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Confluent.Kafka;
 using Streamiz.Kafka.Net.Processors.Public;
+using Streamiz.Kafka.Net.State.Supplier;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
@@ -54,6 +56,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         internal static readonly string FLATMAPVALUES_ASYNC_NAME = "KSTREAM-FLATMAPVALUES-ASYNC-";
         internal static readonly string FOREACH_ASYNC_NAME = "KSTREAM-FOREACH-ASYNC-";
         internal static readonly string RECORD_TIMESTAMP_NAME = "KSTREAM-RECORDTIMESTAMP-";
+        internal static readonly string DROP_DUPLICATES_NAME = "KSTREAM-DROPDUPLICATES-";
 
         internal static readonly string REQUEST_SINK_SUFFIX = "-request-sink";
         internal static readonly string RESPONSE_SINK_SUFFIX = "-response-sink";
@@ -77,9 +80,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Branch
 
-        public IKStream<K, V>[] Branch(params Func<K, V, bool>[] predicates) => DoBranch(string.Empty, predicates);
+        public IKStream<K, V>[] Branch(params Func<K, V, IRecordContext, bool>[] predicates) => DoBranch(string.Empty, predicates);
 
-        public IKStream<K, V>[] Branch(string named, params Func<K, V, bool>[] predicates) => DoBranch(named, predicates);
+        public IKStream<K, V>[] Branch(string named, params Func<K, V, IRecordContext, bool>[] predicates) => DoBranch(named, predicates);
 
         #endregion
 
@@ -94,10 +97,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Filter
 
-        public IKStream<K, V> Filter(Func<K, V, bool> predicate, string named = null)
+        public IKStream<K, V> Filter(Func<K, V,IRecordContext, bool> predicate, string named = null)
             => DoFilter(predicate, named, false);
 
-        public IKStream<K, V> FilterNot(Func<K, V, bool> predicate, string named = null)
+        public IKStream<K, V> FilterNot(Func<K, V,IRecordContext, bool> predicate, string named = null)
             => DoFilter(predicate, named, true);
 
         #endregion
@@ -178,55 +181,177 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public void To(string topicName, string named = null)
         {
-            if (topicName == null)
-            {
-                throw new ArgumentNullException(nameof(topicName));
-            }
-
             if (string.IsNullOrEmpty(topicName))
             {
-                throw new ArgumentException("topicName must be empty");
+                throw new ArgumentException("topicName must not be null or empty");
             }
 
-            To(new StaticTopicNameExtractor<K, V>(topicName), named);
+            To(new StaticTopicNameExtractor<K, V>(topicName), new DefaultStreamPartitioner<K, V>(), named);
         }
 
+        public void To(string topicName, Func<string, K, V, Partition, int, Partition> partitioner, string named = null)
+        {
+            if (string.IsNullOrEmpty(topicName))
+            {
+                throw new ArgumentException("topicName must not be null or empty");
+            }
+
+            To(
+                new StaticTopicNameExtractor<K, V>(topicName), 
+                new WrapperStreamPartitioner<K, V>(partitioner),
+                named);
+        }
+
+        public void To(string topicName, IStreamPartitioner<K, V> partitioner, string named = null)
+        {
+            if (string.IsNullOrEmpty(topicName))
+            {
+                throw new ArgumentException("topicName must not be null or empty");
+            }
+
+            To(
+                new StaticTopicNameExtractor<K, V>(topicName), 
+                partitioner,
+                named);
+        }
+        
         public void To(string topicName, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null)
         {
-            if (topicName == null)
-            {
-                throw new ArgumentNullException(nameof(topicName));
-            }
-
             if (string.IsNullOrEmpty(topicName))
-            {
-                throw new ArgumentException("topicName must be empty");
-            }
+                throw new ArgumentException("topicName must not be null or empty");
 
-            To(new StaticTopicNameExtractor<K, V>(topicName), keySerdes, valueSerdes, named);
+            To(new StaticTopicNameExtractor<K, V>(topicName), new DefaultStreamPartitioner<K, V>(), keySerdes, valueSerdes, named);
         }
 
-        public void To(ITopicNameExtractor<K, V> topicExtractor, string named = null) => DoTo(topicExtractor, new DefaultRecordTimestampExtractor<K, V>(), Produced<K, V>.Create(KeySerdes, ValueSerdes).WithName(named));
+        public void To(string topicName, Func<string, K, V, Partition, int, Partition> partitioner, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null)
+        {
+            if (string.IsNullOrEmpty(topicName))
+                throw new ArgumentException("topicName must be empty");
 
-        public void To(ITopicNameExtractor<K, V> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null)
-            => DoTo(topicExtractor, new DefaultRecordTimestampExtractor<K, V>(), Produced<K,V>.Create(keySerdes, valueSerdes).WithName(named));
+            To(new StaticTopicNameExtractor<K, V>(topicName),
+                new WrapperStreamPartitioner<K, V>(partitioner),
+                keySerdes, valueSerdes, named);
+        }
 
-        public void To(Func<K, V, IRecordContext, string> topicExtractor, string named = null) => To(new WrapperTopicNameExtractor<K, V>(topicExtractor), named);
+        public void To(Func<K, V, IRecordContext, string> topicExtractor,
+            Func<string, K, V, Partition, int, Partition> partitioner, ISerDes<K> keySerdes, ISerDes<V> valueSerdes,
+            string named = null)
+            => To(
+                new WrapperTopicNameExtractor<K, V>(topicExtractor),
+                KeySerdes, ValueSerdes,
+                new DefaultRecordTimestampExtractor<K, V>(),
+                new WrapperStreamPartitioner<K, V>(partitioner),
+                named);
+
+        public void To(ITopicNameExtractor<K, V> topicExtractor, string named = null)
+            => To(
+                topicExtractor,
+                KeySerdes, ValueSerdes,
+                new DefaultRecordTimestampExtractor<K, V>(),
+                new DefaultStreamPartitioner<K, V>(),
+                named);
+
+        public void To(ITopicNameExtractor<K, V> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes,
+            string named = null)
+            => To(topicExtractor,
+                keySerdes, valueSerdes,
+                new DefaultRecordTimestampExtractor<K, V>(),
+                new DefaultStreamPartitioner<K, V>(),
+                named);
+
+        public void To(ITopicNameExtractor<K, V> topicExtractor, IStreamPartitioner<K, V> partitioner,
+            ISerDes<K> keySerdes, ISerDes<V> valueSerdes,
+            string named = null)
+            => To(topicExtractor,
+                keySerdes, valueSerdes,
+                new DefaultRecordTimestampExtractor<K, V>(),
+                partitioner,
+                named);
+
+        public void To(Func<K, V, IRecordContext, string> topicExtractor, string named = null) 
+            => To(new WrapperTopicNameExtractor<K, V>(topicExtractor), named);
+
+        public void To(Func<K, V, IRecordContext, string> topicExtractor,
+            Func<string, K, V, Partition, int, Partition> partitioner, string named = null)
+            => To(new WrapperTopicNameExtractor<K, V>(topicExtractor), 
+                new WrapperStreamPartitioner<K, V>(partitioner),
+                named);
 
         public void To(Func<K, V, IRecordContext, string> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, string named = null)
             => To(new WrapperTopicNameExtractor<K, V>(topicExtractor), keySerdes, valueSerdes, named);
 
-        public void To(Func<K, V, IRecordContext, string> topicExtractor, Func<K, V, IRecordContext, long> recordTimestampExtractor, string named = null) =>
-            DoTo(new WrapperTopicNameExtractor<K, V>(topicExtractor), new WrapperRecordTimestampExtractor<K, V>(recordTimestampExtractor), Produced<K, V>.Create(KeySerdes, ValueSerdes).WithName(named));
+        public void To(Func<K, V, IRecordContext, string> topicExtractor,
+            Func<K, V, IRecordContext, long> recordTimestampExtractor, string named = null)
+            => To(
+                new WrapperTopicNameExtractor<K, V>(topicExtractor),
+                KeySerdes, ValueSerdes,
+                new WrapperRecordTimestampExtractor<K, V>(recordTimestampExtractor),
+                new DefaultStreamPartitioner<K, V>(),
+                named);
 
-        public void To(Func<K, V, IRecordContext, string> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, Func<K, V, IRecordContext, long> recordTimestampExtractor, string named = null) =>
-            DoTo(new WrapperTopicNameExtractor<K, V>(topicExtractor), new WrapperRecordTimestampExtractor<K, V>(recordTimestampExtractor), Produced<K, V>.Create(keySerdes, valueSerdes).WithName(named));
+        public void To(Func<K, V, IRecordContext, string> topicExtractor,
+            Func<K, V, IRecordContext, long> recordTimestampExtractor, Func<string, K, V, Partition, int, Partition> partitioner,
+            string named = null)
+            => To(
+                new WrapperTopicNameExtractor<K, V>(topicExtractor),
+                KeySerdes, ValueSerdes,
+                new WrapperRecordTimestampExtractor<K, V>(recordTimestampExtractor),
+                new WrapperStreamPartitioner<K, V>(partitioner),
+                named);
 
-        public void To(ITopicNameExtractor<K, V> topicExtractor, IRecordTimestampExtractor<K, V> recordTimestampExtractor, string named = null) =>
-            DoTo(topicExtractor, recordTimestampExtractor, Produced<K, V>.Create(KeySerdes, ValueSerdes).WithName(named));
+        public void To(Func<K, V, IRecordContext, string> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes,
+            Func<K, V, IRecordContext, long> recordTimestampExtractor, string named = null)
+            => To(new WrapperTopicNameExtractor<K, V>(topicExtractor),
+                keySerdes, valueSerdes,
+                new WrapperRecordTimestampExtractor<K, V>(recordTimestampExtractor),
+                new DefaultStreamPartitioner<K, V>(),
+                named);
 
-        public void To(ITopicNameExtractor<K, V> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, IRecordTimestampExtractor<K, V> recordTimestampExtractor, string named = null) =>
-            DoTo(topicExtractor, recordTimestampExtractor, Produced<K, V>.Create(keySerdes, valueSerdes).WithName(named));    
+        public void To(ITopicNameExtractor<K, V> topicExtractor,
+            IRecordTimestampExtractor<K, V> recordTimestampExtractor, string named = null)
+            => To(topicExtractor,
+                KeySerdes, ValueSerdes,
+                recordTimestampExtractor,
+                new DefaultStreamPartitioner<K, V>(),
+                named);
+
+        public void To(ITopicNameExtractor<K, V> topicExtractor, IStreamPartitioner<K, V> partitioner,
+            string named = null)
+            => To(topicExtractor,
+                KeySerdes, ValueSerdes,
+                new DefaultRecordTimestampExtractor<K, V>(),
+                partitioner,
+                named);
+
+        public void To(ITopicNameExtractor<K, V> topicExtractor, IRecordTimestampExtractor<K, V> recordTimestampExtractor,
+            IStreamPartitioner<K, V> partitioner, string named = null)
+            => To(topicExtractor,
+                KeySerdes, ValueSerdes,
+                recordTimestampExtractor,
+                partitioner,
+                named);
+
+        public void To(ITopicNameExtractor<K, V> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes, IRecordTimestampExtractor<K, V> recordTimestampExtractor, string named = null) 
+            => To(
+                topicExtractor, 
+                keySerdes, valueSerdes,
+                recordTimestampExtractor, 
+                new DefaultStreamPartitioner<K, V>(),
+                named);
+
+        public void To(ITopicNameExtractor<K, V> topicExtractor, ISerDes<K> keySerdes, ISerDes<V> valueSerdes,
+            IRecordTimestampExtractor<K, V> recordTimestampExtractor, IStreamPartitioner<K, V> partitioner, string named = null)
+            => DoTo(
+                topicExtractor, 
+                recordTimestampExtractor, 
+                partitioner,
+                Produced<K, V>.Create(keySerdes, valueSerdes).WithName(named));
+
+        public void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor, Func<string, K, V, Partition, int, Partition> partitioner, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new()
+            => To<KS, VS>(
+                new WrapperTopicNameExtractor<K, V>(topicExtractor),
+                new WrapperStreamPartitioner<K, V>(partitioner),
+                named);
 
         public void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor, string named = null)
             where KS : ISerDes<K>, new()
@@ -238,26 +363,50 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             where VS : ISerDes<V>, new()
             => To<KS, VS>(new StaticTopicNameExtractor<K, V>(topicName), named);
 
+        public void To<KS, VS>(string topicName, Func<string, K, V, Partition, int, Partition> partitioner, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new()
+            => To<KS, VS>(new StaticTopicNameExtractor<K, V>(topicName), 
+                new WrapperStreamPartitioner<K, V>(partitioner),
+                named);
+
         public void To<KS, VS>(ITopicNameExtractor<K, V> topicExtractor, string named = null)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
-            => DoTo(topicExtractor, new DefaultRecordTimestampExtractor<K, V>(), Produced<K, V>.Create<KS, VS>().WithName(named));
+            => To<KS, VS>(topicExtractor, new DefaultStreamPartitioner<K, V>(), named);
+
+        public void To<KS, VS>(ITopicNameExtractor<K, V> topicExtractor, IStreamPartitioner<K, V> partitioner, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new()
+            => To<KS, VS>(
+                topicExtractor, 
+                new DefaultRecordTimestampExtractor<K, V>(), 
+                partitioner,
+                named);
 
         public void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor, Func<K, V, IRecordContext, long> recordTimestampExtractor, string named = null)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
             => To<KS, VS>(new WrapperTopicNameExtractor<K, V>(topicExtractor), new WrapperRecordTimestampExtractor<K, V>(recordTimestampExtractor), named);
 
-        public void To<KS, VS>(ITopicNameExtractor<K, V> topicExtractor, IRecordTimestampExtractor<K, V> recordTimestampExtractor, string named = null)
+        public void To<KS, VS>(Func<K, V, IRecordContext, string> topicExtractor, Func<K, V, IRecordContext, long> recordTimestampExtractor, Func<string, K, V, Partition, int, Partition> partitioner, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new()
+            => To<KS, VS>(new WrapperTopicNameExtractor<K, V>(topicExtractor), new WrapperRecordTimestampExtractor<K, V>(recordTimestampExtractor), new WrapperStreamPartitioner<K, V>(partitioner), named);
+
+        public void To<KS, VS>(ITopicNameExtractor<K, V> topicExtractor,
+            IRecordTimestampExtractor<K, V> recordTimestampExtractor, string named = null)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
-        => DoTo(topicExtractor, recordTimestampExtractor, Produced<K, V>.Create<KS, VS>().WithName(named));
+            => To<KS, VS>(topicExtractor, recordTimestampExtractor, new DefaultStreamPartitioner<K, V>(), named);
+
+        public void To<KS, VS>(ITopicNameExtractor<K, V> topicExtractor, IRecordTimestampExtractor<K, V> recordTimestampExtractor,
+            IStreamPartitioner<K, V> partitioner, string named = null) where KS : ISerDes<K>, new() where VS : ISerDes<V>, new()
+            => DoTo(
+                topicExtractor,
+                recordTimestampExtractor, 
+                partitioner,
+                Produced<K, V>.Create<KS, VS>().WithName(named));
 
         #endregion
 
         #region FlatMap
 
-        public IKStream<KR, VR> FlatMap<KR, VR>(Func<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named = null)
+        public IKStream<KR, VR> FlatMap<KR, VR>(Func<K, V,IRecordContext, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named = null)
             => FlatMap(new WrappedKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>>(mapper), named);
 
         public IKStream<KR, VR> FlatMap<KR, VR>(IKeyValueMapper<K, V, IEnumerable<KeyValuePair<KR, VR>>> mapper, string named = null)
@@ -282,10 +431,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region FlatMapValues
 
-        public IKStream<K, VR> FlatMapValues<VR>(Func<V, IEnumerable<VR>> mapper, string named = null)
+        public IKStream<K, VR> FlatMapValues<VR>(Func<V,IRecordContext, IEnumerable<VR>> mapper, string named = null)
             => FlatMapValues(new WrappedValueMapper<V, IEnumerable<VR>>(mapper), named);
 
-        public IKStream<K, VR> FlatMapValues<VR>(Func<K, V, IEnumerable<VR>> mapper, string named = null)
+        public IKStream<K, VR> FlatMapValues<VR>(Func<K, V,IRecordContext, IEnumerable<VR>> mapper, string named = null)
             => FlatMapValues(new WrappedValueMapperWithKey<K, V, IEnumerable<VR>>(mapper), named);
 
         public IKStream<K, VR> FlatMapValues<VR>(IValueMapper<V, IEnumerable<VR>> mapper, string named = null)
@@ -321,7 +470,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Foreach
 
-        public void Foreach(Action<K, V> action, string named = null)
+        public void Foreach(Action<K, V, IRecordContext> action, string named = null)
         {
             if (action == null)
             {
@@ -339,7 +488,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Peek
 
-        public IKStream<K, V> Peek(Action<K, V> action, string named = null)
+        public IKStream<K, V> Peek(Action<K, V, IRecordContext> action, string named = null)
         {
             if (action == null)
             {
@@ -366,7 +515,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Map
 
-        public IKStream<KR, VR> Map<KR, VR>(Func<K, V, KeyValuePair<KR, VR>> mapper, string named = null)
+        public IKStream<KR, VR> Map<KR, VR>(Func<K, V, IRecordContext, KeyValuePair<KR, VR>> mapper, string named = null)
             => Map(new WrappedKeyValueMapper<K, V, KeyValuePair<KR, VR>>(mapper), named);
 
         public IKStream<KR, VR> Map<KR, VR>(IKeyValueMapper<K, V, KeyValuePair<KR, VR>> mapper, string named = null)
@@ -398,10 +547,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region MapValues
 
-        public IKStream<K, VR> MapValues<VR>(Func<V, VR> mapper, string named = null)
+        public IKStream<K, VR> MapValues<VR>(Func<V, IRecordContext, VR> mapper, string named = null)
             => MapValues(new WrappedValueMapper<V, VR>(mapper), named);
 
-        public IKStream<K, VR> MapValues<VR>(Func<K, V, VR> mapper, string named = null)
+        public IKStream<K, VR> MapValues<VR>(Func<K, V, IRecordContext, VR> mapper, string named = null)
             => MapValues(new WrappedValueMapperWithKey<K, V, VR>(mapper), named);
 
         public IKStream<K, VR> MapValues<VR>(IValueMapper<V, VR> mapper, string named = null)
@@ -455,7 +604,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region SelectKey
 
-        public IKStream<KR, V> SelectKey<KR>(Func<K, V, KR> mapper, string named = null)
+        public IKStream<KR, V> SelectKey<KR>(Func<K, V, IRecordContext, KR> mapper, string named = null)
             => SelectKey(new WrappedKeyValueMapper<K, V, KR>(mapper), named);
 
         public IKStream<KR, V> SelectKey<KR>(IKeyValueMapper<K, V, KR> mapper, string named = null)
@@ -488,7 +637,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         public IKGroupedStream<KR, V> GroupBy<KR>(IKeyValueMapper<K, V, KR> keySelector, string named = null)
             => DoGroup(keySelector, Grouped<KR, V>.Create(named, null, ValueSerdes));
 
-        public IKGroupedStream<KR, V> GroupBy<KR>(Func<K, V, KR> keySelector, string named = null)
+        public IKGroupedStream<KR, V> GroupBy<KR>(Func<K, V, IRecordContext, KR> keySelector, string named = null)
             => GroupBy(new WrappedKeyValueMapper<K, V, KR>(keySelector), named);
 
         public IKGroupedStream<KR, V> GroupBy<KR, KS>(IKeyValueMapper<K, V, KR> keySelector, string named = null)
@@ -500,11 +649,11 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             where VS : ISerDes<V>, new()
             => DoGroup(keySelector, Grouped<KR, V>.Create<KRS, VS>(named));
 
-        public IKGroupedStream<KR, V> GroupBy<KR, KS>(Func<K, V, KR> keySelector, string named = null)
+        public IKGroupedStream<KR, V> GroupBy<KR, KS>(Func<K, V, IRecordContext, KR> keySelector, string named = null)
              where KS : ISerDes<KR>, new()
             => GroupBy<KR, KS>(new WrappedKeyValueMapper<K, V, KR>(keySelector), named);
 
-        public IKGroupedStream<KR, V> GroupBy<KR, KRS, VS>(Func<K, V, KR> keySelector, string named = null)
+        public IKGroupedStream<KR, V> GroupBy<KR, KRS, VS>(Func<K, V, IRecordContext, KR> keySelector, string named = null)
             where KRS : ISerDes<KR>, new() 
             where VS : ISerDes<V>, new()
             => GroupBy<KR, KRS, VS>(new WrappedKeyValueMapper<K, V, KR>(keySelector), named);
@@ -1024,7 +1173,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region WithRecordTimestamp
 
-        public IKStream<K, V> WithRecordTimestamp(Func<K, V, long> timestampExtractor, string named = null)
+        public IKStream<K, V> WithRecordTimestamp(Func<K, V, IRecordContext, long> timestampExtractor, string named = null)
         {
             if (timestampExtractor == null)
             {
@@ -1042,10 +1191,83 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         }
 
         #endregion
+        
+        #region DropDuplicates
+
+        /// <summary>
+        ///  This function removes duplicate records from the same key based on the time interval mentioned. 
+        /// </summary>
+        /// <param name="valueComparer">Lambda function which determine if the old value and the new value for the same key is equal</param>
+        /// <param name="interval">Time elapsed between two records are considered duplicates</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>a <see cref="IKStream{K,V}"/> which rejects duplicates records</returns>
+        public IKStream<K, V> DropDuplicate(Func<K, V, V, bool> valueComparer, TimeSpan interval, string named = null)
+            => DropDuplicate(valueComparer, interval, null, named);
+
+        /// <summary>
+        ///  This function removes duplicate records from the same key based on the time interval mentioned. 
+        /// </summary>
+        /// <param name="valueComparer">Lambda function which determine if the old value and the new value for the same key is equal</param>
+        /// <param name="interval">Time elapsed between two records are considered duplicates</param>
+        /// <param name="materialized">an instance of <see cref="Materialized{K, V, S}"/> used to describe how the window state store should be materialized.</param>
+        /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
+        /// <returns>a <see cref="IKStream{K,V}"/> which rejects duplicates records</returns>
+        public IKStream<K, V> DropDuplicate(Func<K, V, V, bool> valueComparer, TimeSpan interval, Materialized<K, V, IWindowStore<Bytes, byte[]>> materialized, string named = null)
+        {
+            materialized ??= Materialized<K, V, IWindowStore<Bytes, byte[]>>.Create();
+
+            var name = new Named(named).OrElseGenerateWithPrefix(builder, KStream.DROP_DUPLICATES_NAME);
+            materialized.UseProvider(builder, KStream.DROP_DUPLICATES_NAME);
+            StreamGraphNode tableParentNode = null;
+            IEnumerable<string> subTopologySourceNodes = null;
+            
+            if (RepartitionRequired)
+            {
+                (string repartitionSourceName, RepartitionNode<K, V> node) = CreateRepartitionSource(
+                    name,
+                    KeySerdes,
+                    ValueSerdes, builder);
+                tableParentNode = node;
+                builder.AddGraphNode(Node, tableParentNode);
+                subTopologySourceNodes = repartitionSourceName.ToSingle();
+            }
+            else{
+                tableParentNode = Node;
+                subTopologySourceNodes = SetSourceNodes;
+            }
+            
+            var options = TumblingWindowOptions.Of((long)interval.TotalMilliseconds);
+            var storeBuilder = new WindowStoreMaterializer<K, V, TimeWindow, IWindowStore<K, V>>(options, materialized).Materialize(); 
+            
+            var processorSupplier = new KStreamDropDuplicate<K, V>(
+                name,
+                storeBuilder.Name,
+                valueComparer,
+                interval);
+            var processorParameters = new ProcessorParameters<K, V>(processorSupplier, name);
+            
+            StatefulProcessorNode<K, V> dropDuplicateProcessorNode =
+                new StatefulProcessorNode<K, V>(
+                    name,
+                    processorParameters,
+                    storeBuilder);
+            
+            builder.AddGraphNode(tableParentNode, dropDuplicateProcessorNode);
+            
+            return new KStream<K, V>(
+                name,
+                KeySerdes,
+                ValueSerdes,
+                subTopologySourceNodes.ToList(),
+                dropDuplicateProcessorNode,
+                builder);
+        }
+        
+        #endregion
 
         #region Private
 
-        private IKStream<K, V> DoFilter(Func<K, V, bool> predicate, string named, bool not)
+        private IKStream<K, V> DoFilter(Func<K, V,IRecordContext, bool> predicate, string named, bool not)
         {
             if (predicate == null)
             {
@@ -1060,15 +1282,19 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             return new KStream<K, V>(name, KeySerdes, ValueSerdes, SetSourceNodes, RepartitionRequired, filterProcessorNode, builder);
         }
 
-        private void DoTo(ITopicNameExtractor<K, V> topicExtractor, IRecordTimestampExtractor<K, V> timestampExtractor, Produced<K, V> produced)
+        private void DoTo(ITopicNameExtractor<K, V> topicExtractor, IRecordTimestampExtractor<K, V> timestampExtractor, IStreamPartitioner<K, V> partitioner, Produced<K, V> produced)
         {
             string name = new Named(produced.Named).OrElseGenerateWithPrefix(builder, KStream.SINK_NAME);
 
-            StreamSinkNode<K, V> sinkNode = new StreamSinkNode<K, V>(topicExtractor, timestampExtractor, name, produced);
+            StreamSinkNode<K, V> sinkNode = new StreamSinkNode<K, V>(
+                topicExtractor,
+                timestampExtractor,
+                name,
+                produced.WithPartitioner(partitioner));
             builder.AddGraphNode(Node, sinkNode);
         }
 
-        private IKStream<K, V>[] DoBranch(string named = null, params Func<K, V, bool>[] predicates)
+        private IKStream<K, V>[] DoBranch(string named = null, params Func<K, V,IRecordContext, bool>[] predicates)
         {
             var namedInternal = new Named(named);
             if (predicates != null && predicates.Length == 0)
@@ -1161,7 +1387,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
             WrappedKeyValueMapper<K, V, KeyValuePair<KR, V>> internalMapper =
                 new WrappedKeyValueMapper<K, V, KeyValuePair<KR, V>>(
-                (key, value) => new KeyValuePair<KR, V>(mapper.Apply(key, value), value));
+                (key, value, c) => new KeyValuePair<KR, V>(mapper.Apply(key, value, c), value));
 
             KStreamMap<K, V, KR, V> kStreamMap = new KStreamMap<K, V, KR, V>(internalMapper);
             ProcessorParameters<K, V> processorParameters = new ProcessorParameters<K, V>(kStreamMap, name);
@@ -1294,7 +1520,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             var sourceName = builder.NewProcessorName(KStream.SOURCE_NAME);
 
             var processorParameters = new ProcessorParameters<K, V>(
-                new KStreamFilter<K, V>((k, v) => k != null), nullKeyFilterName);
+                new KStreamFilter<K, V>((k, v, _) => k != null), nullKeyFilterName);
 
             var repartitionNode = new RepartitionNode<K, V>(
                 sourceName,

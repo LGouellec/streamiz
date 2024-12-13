@@ -32,7 +32,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Enumerator
         }
             
         private bool IsDeletedCacheEntry(KeyValuePair<Bytes, CacheEntryValue>? nextFromCache) 
-            => nextFromCache?.Value.Value == null;
+            => nextFromCache?.Value?.Value == null;
 
         public K PeekNextKey() => Current.Value.Key;
 
@@ -45,7 +45,9 @@ namespace Streamiz.Kafka.Net.State.Cache.Enumerator
             if (_lastChoice is LastChoice.NONE or LastChoice.CACHE or LastChoice.BOTH)
             {
                 // skip over items deleted from cache, and corresponding store items if they have the same key
-                while (cacheEnumerator.MoveNext() && IsDeletedCacheEntry(cacheEnumerator.Current))
+                while (cacheEnumerator.MoveNext() 
+                       && cacheEnumerator.Current != null
+                       && IsDeletedCacheEntry(cacheEnumerator.Current))
                 {
                     var currentKeyStore = storeEnumerator.Current;
                     // advance the store enumerator if the key is the same as the deleted cache key

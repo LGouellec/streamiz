@@ -5,10 +5,10 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph
 {
     internal class KStreamBranch<K, V> : IProcessorSupplier<K, V>
     {
-        public Func<K, V, bool>[] Predicates { get; }
+        public Func<K, V,IRecordContext, bool>[] Predicates { get; }
         public String[] ChildNodes { get; }
 
-        public KStreamBranch(Func<K, V, bool>[] predicates,
+        public KStreamBranch(Func<K, V,IRecordContext, bool>[] predicates,
                       String[] childNodes)
         {
             this.Predicates = predicates;

@@ -43,7 +43,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         {
             config = new StreamConfig();
             config.ApplicationId = "unit-test-rocksdb-w";
-            config.StateStoreCacheMaxBytes = MAX_CACHE_SIZE_BYTES;
+            config.DefaultStateStoreCacheMaxBytes = MAX_CACHE_SIZE_BYTES;
 
             id = new TaskId { Id = 0, Partition = 0 };
             partition = new TopicPartition("source", 0);
@@ -62,7 +62,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             keySchema = new WindowKeySchema();
             store = GetBackWindowStore();
             cachingStore = new CachingWindowStore(store,
-                WINDOW_SIZE, SEGMENT_INTERVAL, keySchema);
+                WINDOW_SIZE, SEGMENT_INTERVAL, keySchema, null);
 
             if (store.Persistent)
                 config.UseRandomRocksDbConfigForTest();

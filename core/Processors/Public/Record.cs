@@ -36,23 +36,31 @@ namespace Streamiz.Kafka.Net.Processors.Public
         public V Value { get; }
 
         internal Record(TopicPartitionOffset topicPartitionOffset, Headers headers, Timestamp timestamp, K key, V value)
+            : this(key, value, headers)
         {
             TopicPartitionOffset = topicPartitionOffset;
-            Headers = headers;
             Timestamp = timestamp;
-            Key = key;
-            Value = value;
         }
 
         private Record(K key, V value)
+            : this(value)
         {
             Key = key;
-            Value = value;
+        }
+        
+        private Record(K key, V value, Headers headers)
+            : this(key, value)
+        {
+            Headers = headers;
         }
 
-        private Record(V value)
+        private Record(V value) : this(value, new Headers())
+        { }
+        
+        private Record(V value, Headers headers)
         {
             Value = value;
+            Headers = headers;
         }
 
         /// <summary>
@@ -71,6 +79,24 @@ namespace Streamiz.Kafka.Net.Processors.Public
         /// <returns>return a new value record</returns>
         public static Record<K, V> Create(V value)
             => new(value);
+        
+        /// <summary>
+        /// Use this helper method for returning a new record (value) and headers with <see cref="IKStream{K,V}.TransformValues{V1}"/>
+        /// </summary>
+        /// <param name="value">Value of the record</param>
+        /// <param name="headers">Headers of the record</param>
+        /// <returns>return a new value record</returns>
+        public static Record<K, V> Create(V value, Headers headers)
+            => new(value, headers);
 
+        /// <summary>
+        /// Use this helper method for returning a new record (key/value) and headers with <see cref="IKStream{K,V}.Transform{K1,V1}"/>
+        /// </summary>
+        /// <param name="key">Key of the record</param>
+        /// <param name="value">Value of the record</param>
+        /// <param name="headers">Headers of the record</param>
+        /// <returns>return a new key/value record</returns>
+        public static Record<K, V> Create(K key, V value, Headers headers)
+            => new(key, value, headers);
     }
 }

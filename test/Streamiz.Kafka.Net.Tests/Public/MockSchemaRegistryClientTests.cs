@@ -70,7 +70,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             int result = await client.RegisterSchemaAsync("order", schema);
             Assert.AreEqual(1, result);
             result = await client.RegisterSchemaAsync("order", schema);
-            Assert.AreEqual(2, result);
+            Assert.AreEqual(1, result);
         }
 
         [Test]
@@ -108,7 +108,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var items = await client.GetSubjectVersionsAsync("order");
             Assert.AreEqual(2, items.Count);
             Assert.AreEqual(1, items[0]);
-            Assert.AreEqual(2, items[1]);
+            Assert.AreEqual(1, items[1]);
         }
 
         [Test]

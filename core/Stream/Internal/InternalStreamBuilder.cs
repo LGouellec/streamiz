@@ -143,12 +143,13 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         #endregion
 
         #region Build Store
-        public void AddStateStore(IStoreBuilder storeBuilder)
+        
+        public void AddStateStore(IStoreBuilder storeBuilder, params string[] processorNames)
         {
-            var name = NewStoreName(string.Empty);
+           var name = NewStoreName(string.Empty);
 
-            var node = new StateStoreNode(storeBuilder, name);
-            this.AddGraphNode(root, node);
+            var node = new StateStoreNode(storeBuilder, name, processorNames);
+            AddGraphNode(root, node);
         }
         #endregion
     }

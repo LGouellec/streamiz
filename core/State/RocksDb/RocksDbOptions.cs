@@ -95,17 +95,6 @@ namespace Streamiz.Kafka.Net.State
         }
         
         /// <summary>
-        /// Specify the file access pattern once a compaction is started. It will be applied to all input files of a compaction. Default: 1
-        /// </summary>
-        /// <param name="value">The access hint integer</param>
-        /// <returns>the instance of the current object</returns>
-        public RocksDbOptions SetAccessHintOnCompactionStart(int value)
-        {
-            dbOptions.SetAccessHintOnCompactionStart(value);
-            return this;
-        }
-        
-        /// <summary>
         /// If set true, will hint the underlying file system that the file access pattern is random, when a sst file is opened.
         /// Default: true
         /// </summary>
@@ -1191,9 +1180,9 @@ namespace Streamiz.Kafka.Net.State
         /// <param name="p3"></param>
         /// <param name="p4"></param>
         /// <returns>the instance of the current object</returns>
-        public RocksDbOptions SetPlainTableFactory(uint p1, int p2, double p3, ulong p4)
+        public RocksDbOptions SetPlainTableFactory(uint user_key_len, int bloom_bits_per_key, double hash_table_ratio, int index_sparseness, int huge_page_tlb_size, char encoding_type, bool full_scan_mode, bool store_index_in_file)
         {
-            columnFamilyOptions.SetPlainTableFactory(p1, p2, p3, p4);
+            columnFamilyOptions.SetPlainTableFactory(user_key_len, bloom_bits_per_key, hash_table_ratio, index_sparseness, huge_page_tlb_size, encoding_type, full_scan_mode, store_index_in_file);
             return this;
         }
         
@@ -1300,6 +1289,19 @@ namespace Streamiz.Kafka.Net.State
         {
             columnFamilyOptions.SetWriteBufferSize(value);
             return this;
+        }
+        
+        #endregion
+        
+        #region Custom
+        
+        /// <summary>
+        /// Set the write buffer manager
+        /// </summary>
+        /// <param name="wbm">Pointer to the writer buffer manager</param>
+        public void SetWriteBufferManager(IntPtr wbm)
+        {
+            Native.Instance.rocksdb_options_set_write_buffer_manager(dbOptions.Handle, wbm);
         }
         
         #endregion

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Metrics.Stats;
@@ -159,6 +160,24 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             );
         }
         
+        internal static void AddAvgAndSumMetricsToSensor(Sensor sensor,
+            string group,
+            IDictionary<string, string> tags,
+            string operation,
+            string descriptionOfAvg,
+            string descriptionOfTotal) 
+        {
+            sensor.AddStatMetric(
+                new MetricName(
+                    operation + StreamMetricsRegistry.AVG_SUFFIX,
+                    group,
+                    descriptionOfAvg,
+                    tags),
+                new Avg()
+            );
+            AddSumMetricToSensor(sensor, group, tags, operation, descriptionOfTotal);
+        }
+        
         internal static void AddRateOfSumAndSumMetricsToSensor(Sensor sensor,
             string group,
             IDictionary<string, string> tags,
@@ -213,6 +232,21 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
              string description) 
         {
             sensor.AddStatMetric(new MetricName(name, group, description, tags), new Value());
+        }
+        
+        internal static void AddMutableValueMetricToSensor<T>(Sensor sensor,
+            string group,
+            IDictionary<string, string> tags,
+            string name,
+            string description,
+            Func<T> valueProvider)
+        {
+            sensor.AddProviderMetric(
+                new MetricName(
+                    name,
+                    group,
+                    description,
+                    tags), valueProvider);
         }
     }
 }

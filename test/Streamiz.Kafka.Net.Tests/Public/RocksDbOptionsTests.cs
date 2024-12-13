@@ -57,7 +57,6 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     .OptimizeLevelStyleCompaction(memTableMemoryBudget)
                     .OptimizeUniversalStyleCompaction(memtableMemoryBudget2)
                     .PrepareForBulkLoad()
-                    .SetAccessHintOnCompactionStart(accessHintOnCompactionStart)
                     .SetAdviseRandomOnOpen(adviseRandomOnOpen)
                     .SetAllowConcurrentMemtableWrite(allowConcurrentMemtableWrite)
                     .SetAllowMmapReads(false)
@@ -65,11 +64,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     .SetArenaBlockSize(arenaBlockSize)
                     .SetBloomLocality(bloomLocality)
                     .SetBytesPerSync(bytesPerSync)
-                    // .SetCompactionFilter(IntPtr.Zero)
-                    // .SetCompactionFilterFactory(IntPtr.Zero)
                     .SetCompactionReadaheadSize(1200)
                     .SetCompactionStyle(RocksDbSharp.Compaction.Level)
-                    //.SetComparator(IntPtr.Zero)
                     .SetCompression(RocksDbSharp.Compression.Lz4)
                     .SetCompressionOptions(1, 2, 3, 4)
                     .SetCompressionPerLevel(new[] { RocksDbSharp.Compression.Lz4 }, 1)
@@ -80,9 +76,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     .SetDeleteObsoleteFilesPeriodMicros(50)
                     .SetDisableAutoCompactions(1)
                     .SetEnableWriteThreadAdaptiveYield(true)
-                    //.SetEnv(IntPtr.Zero)
-                    .SetErrorIfExists()
-                    //.SetFifoCompactionOptions(IntPtr.Zero)
+                    .SetErrorIfExists(false)
                     .SetHardPendingCompactionBytesLimit(1)
                     .SetHashLinkListRep(12)
                     .SetHashSkipListRep(56, 4, 2)
@@ -140,7 +134,6 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     .SetPrefixExtractor(SliceTransform.CreateNoOp())
                     .SetRecycleLogFileNum(1)
                     .SetReportBgIoStats(true)
-                    .SetPlainTableFactory(1, 23, 4, 2)
                     .SetMaxBackgroundCompactions(1);
             };
 
@@ -158,7 +151,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             context = new ProcessorContext(task.Object, config, stateManager, new StreamMetricsRegistry());
 
-            store = new RocksDbKeyValueStore("test-store");
+            store = new RocksDbKeyValueStore("test-store", "rocksdb");
             store.Init(context, store);
         }
 

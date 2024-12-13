@@ -129,6 +129,16 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             globalStateUpdateTask.FlushState();
 
+            stateManagerMock.Verify(x => x.Flush(), Times.Never);
+        }
+        
+        [Test]
+        public void ShouldForceFlushState()
+        {
+            globalStateUpdateTask.Initialize();
+
+            globalStateUpdateTask.FlushState(true);
+
             stateManagerMock.Verify(x => x.Flush(), Times.Once);
         }
     }
