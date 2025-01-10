@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Asynchronous processing &mdash; Streamiz.Kafka.Net  documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
   
@@ -16,9 +16,9 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -87,7 +87,7 @@
            <div itemprop="articleBody">
              
   <section id="asynchronous-processing">
-<h1>Asynchronous processing<a class="headerlink" href="#asynchronous-processing" title="Permalink to this heading"></a></h1>
+<h1>Asynchronous processing<a class="headerlink" href="#asynchronous-processing" title="Link to this heading"></a></h1>
 <p>Often, you want to create a stream processing application, process data from Kafka topic to another Kafka topic, but in the middle of your topology, you need to get data from another tier system (oracle db, mongo db, http rest api or whatever).</p>
 <p>Since <code class="docutils literal notranslate"><span class="pre">1.4.0</span></code> release, Streamiz release multiple asynchronous processors :</p>
 <ul class="simple">
@@ -99,7 +99,7 @@
 </ul>
 <p>These processors use the pattern request/reponse to satisfy the asynchronous request with some retry policy options.</p>
 <section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Permalink to this heading"></a></h2>
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading"></a></h2>
 <p><strong>Use case: Enrich data from a mongodb instance</strong></p>
 <ul class="simple">
 <li><p>Create a directory which names : <code class="docutils literal notranslate"><span class="pre">mongo-init</span></code> and a file <code class="docutils literal notranslate"><span class="pre">init.js</span></code> inside</p></li>
@@ -242,10 +242,10 @@
 
 <span class="w">            </span><span class="n">builder</span>
 <span class="w">                </span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;input&quot;</span><span class="p">)</span>
-<span class="w">                </span><span class="p">.</span><span class="n">MapValuesAsync</span><span class="p">(</span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="n">record</span><span class="p">,</span><span class="w"> </span><span class="n">_</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="p">.</span><span class="n">MapValuesAsync</span><span class="p">(</span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="k">record</span><span class="p">,</span><span class="w"> </span><span class="n">_</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">{</span>
 <span class="w">                    </span><span class="kt">var</span><span class="w"> </span><span class="n">persons</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="n">database</span>
 <span class="w">                        </span><span class="p">.</span><span class="n">GetCollection</span><span class="o">&lt;</span><span class="n">Person</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;adress&quot;</span><span class="p">)</span>
-<span class="w">                        </span><span class="p">.</span><span class="n">FindAsync</span><span class="p">((</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">name</span><span class="p">.</span><span class="n">Equals</span><span class="p">(</span><span class="n">record</span><span class="p">.</span><span class="n">Key</span><span class="p">))</span>
+<span class="w">                        </span><span class="p">.</span><span class="n">FindAsync</span><span class="p">((</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">name</span><span class="p">.</span><span class="n">Equals</span><span class="p">(</span><span class="k">record</span><span class="p">.</span><span class="n">Key</span><span class="p">))</span>
 <span class="w">                        </span><span class="p">.</span><span class="n">Result</span><span class="p">.</span><span class="n">ToListAsync</span><span class="p">();</span>
 <span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="n">persons</span><span class="p">.</span><span class="n">FirstOrDefault</span><span class="p">()</span><span class="o">?.</span><span class="n">address</span><span class="p">.</span><span class="n">city</span><span class="p">;</span>
 <span class="w">                </span><span class="p">})</span>

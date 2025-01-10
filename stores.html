@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>State stores &mdash; Streamiz.Kafka.Net  documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
   
@@ -16,9 +16,9 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -103,7 +103,7 @@
            <div itemprop="articleBody">
              
   <section id="state-stores">
-<h1>State stores<a class="headerlink" href="#state-stores" title="Permalink to this heading"></a></h1>
+<h1>State stores<a class="headerlink" href="#state-stores" title="Link to this heading"></a></h1>
 <p>⚠️ <span style="color:red"><strong>Some things you need to know</strong></span> ⚠️</p>
 <ul class="simple">
 <li><p>From 1.4.0 release, the default state store is a RocksDb state store. (Before 1.4.0, the default state store was a in memory state store.)</p></li>
@@ -111,7 +111,7 @@
 <li><p>By default, a state store is tracked by a changelog topic from 1.2.0 release. (If you don’t need, you have to make it explicit).</p></li>
 </ul>
 <section id="basics">
-<h2>Basics<a class="headerlink" href="#basics" title="Permalink to this heading"></a></h2>
+<h2>Basics<a class="headerlink" href="#basics" title="Link to this heading"></a></h2>
 <p>A stateful processor may use one or more state stores. Each task that contains a stateful processor has exclusive access to the state stores in the processor. That means a topology with two state stores and five input partitions will lead to five tasks, and each task will own two state stores resulting in 10 state stores in total for your Kafka Streams application.</p>
 <p>State stores in Streamiz are layered in four ways :</p>
 <ul class="simple">
@@ -123,7 +123,7 @@
 <p><img alt="state-store" src="_images/state-store.png" /></p>
 </section>
 <section id="in-memory-key-value-store">
-<h2>In Memory key/value store<a class="headerlink" href="#in-memory-key-value-store" title="Permalink to this heading"></a></h2>
+<h2>In Memory key/value store<a class="headerlink" href="#in-memory-key-value-store" title="Link to this heading"></a></h2>
 <p>As his name, this is an inmemory key value state store which is supplied by InMemoryKeyValueBytesStoreSupplier.
 You have an child materialized class to help you to use it.</p>
 <p>Usefull with statefull operation like Count, Aggregate, Reduce but also to materialized IKTable&lt;K, V&gt; or IGlobalKTable&lt;K, V&gt;</p>
@@ -134,8 +134,8 @@ You have an child materialized class to help you to use it.</p>
 <span class="w">        </span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
 <span class="w">        </span><span class="p">.</span><span class="n">GroupBy</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">())</span>
 <span class="w">        </span><span class="p">.</span><span class="n">Aggregate</span><span class="p">(</span>
-<span class="w">            </span><span class="p">()</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="m">0L</span><span class="p">,</span>
-<span class="w">            </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">agg</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">1</span><span class="p">,</span>
+<span class="w">            </span><span class="p">()</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="mi">0L</span><span class="p">,</span>
+<span class="w">            </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">agg</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
 <span class="w">            </span><span class="n">InMemory</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;agg-store&quot;</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="o">&lt;</span><span class="n">Int64SerDes</span><span class="o">&gt;</span><span class="p">()</span>
 <span class="w">        </span><span class="p">);</span>
 </pre></div>
@@ -143,7 +143,7 @@ You have an child materialized class to help you to use it.</p>
 <p><strong>Be carefull, this state store is not persistent ! So after each application restart, you loose the state of your state store.</strong></p>
 </section>
 <section id="in-memory-window-store">
-<h2>In Memory window store<a class="headerlink" href="#in-memory-window-store" title="Permalink to this heading"></a></h2>
+<h2>In Memory window store<a class="headerlink" href="#in-memory-window-store" title="Link to this heading"></a></h2>
 <p>As his name, this is an inmemory windows state store which is supplied by InMemoryWindowStoreSupplier.
 You have an child materialized class to help you to use it.</p>
 <p>Usefull with windowing statefull operation like Count, Aggregate, Reduce in ITimeWindowedKStream&lt;K, V&gt;</p>
@@ -151,9 +151,9 @@ You have an child materialized class to help you to use it.</p>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">builder</span>
 <span class="w">        </span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
 <span class="w">        </span><span class="p">.</span><span class="n">GroupByKey</span><span class="p">()</span>
-<span class="w">        </span><span class="p">.</span><span class="n">WindowedBy</span><span class="p">(</span><span class="n">TumblingWindowOptions</span><span class="p">.</span><span class="n">Of</span><span class="p">(</span><span class="m">2000</span><span class="p">))</span>
+<span class="w">        </span><span class="p">.</span><span class="n">WindowedBy</span><span class="p">(</span><span class="n">TumblingWindowOptions</span><span class="p">.</span><span class="n">Of</span><span class="p">(</span><span class="mi">2000</span><span class="p">))</span>
 <span class="w">        </span><span class="p">.</span><span class="n">Aggregate</span><span class="p">(</span>
-<span class="w">            </span><span class="p">()</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="m">0</span><span class="p">,</span>
+<span class="w">            </span><span class="p">()</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
 <span class="w">            </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">Math</span><span class="p">.</span><span class="n">Max</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">),</span>
 <span class="w">            </span><span class="n">InMemoryWindows</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;store&quot;</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="o">&lt;</span><span class="n">Int32SerDes</span><span class="o">&gt;</span><span class="p">()</span>
 <span class="w">        </span><span class="p">)</span>
@@ -164,7 +164,7 @@ You have an child materialized class to help you to use it.</p>
 <p><strong>Be carefull, this state store is not persistent ! So after each application restart, you loose the state of your state store.</strong></p>
 </section>
 <section id="rocksdb-key-value-store">
-<h2>RocksDb key/value store<a class="headerlink" href="#rocksdb-key-value-store" title="Permalink to this heading"></a></h2>
+<h2>RocksDb key/value store<a class="headerlink" href="#rocksdb-key-value-store" title="Link to this heading"></a></h2>
 <p>As his name, this is a rocksdb key value state store which is supplied by RocksDbKeyValueBytesStoreSupplier.</p>
 <p>The state store is persisted on disk at <code class="docutils literal notranslate"><span class="pre">{config.StateDir}/{config.ApplicationId}/{taskId}/rocksdb/{store.Name}</span></code>.</p>
 <p>You have an child materialized class to help you to use it.</p>
@@ -176,15 +176,15 @@ You have an child materialized class to help you to use it.</p>
 <span class="w">    </span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
 <span class="w">    </span><span class="p">.</span><span class="n">GroupBy</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">())</span>
 <span class="w">    </span><span class="p">.</span><span class="n">Aggregate</span><span class="p">(</span>
-<span class="w">        </span><span class="p">()</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="m">0L</span><span class="p">,</span>
-<span class="w">        </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">agg</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">1</span><span class="p">,</span>
+<span class="w">        </span><span class="p">()</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="mi">0L</span><span class="p">,</span>
+<span class="w">        </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">agg</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
 <span class="w">        </span><span class="n">RocksDb</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;agg-store&quot;</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="o">&lt;</span><span class="n">Int64SerDes</span><span class="o">&gt;</span><span class="p">()</span>
 <span class="w">    </span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="rocksdb-window-store">
-<h2>RocksDb window store<a class="headerlink" href="#rocksdb-window-store" title="Permalink to this heading"></a></h2>
+<h2>RocksDb window store<a class="headerlink" href="#rocksdb-window-store" title="Link to this heading"></a></h2>
 <p>As his name, this is a rocksdb windows state store which is supplied by RocksDbWindowBytesStoreSupplier.</p>
 <p>This state store save data in 3 segments, each segment is a rocksdb properly and contains certain time range. This for optimization purposes and for retention periods (window size + grace + window-additional-retention).</p>
 <p>You have an child materialized class to help you to use it.</p>
@@ -193,9 +193,9 @@ You have an child materialized class to help you to use it.</p>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">builder</span>
 <span class="w">        </span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
 <span class="w">        </span><span class="p">.</span><span class="n">GroupByKey</span><span class="p">()</span>
-<span class="w">        </span><span class="p">.</span><span class="n">WindowedBy</span><span class="p">(</span><span class="n">TumblingWindowOptions</span><span class="p">.</span><span class="n">Of</span><span class="p">(</span><span class="m">2000</span><span class="p">))</span>
+<span class="w">        </span><span class="p">.</span><span class="n">WindowedBy</span><span class="p">(</span><span class="n">TumblingWindowOptions</span><span class="p">.</span><span class="n">Of</span><span class="p">(</span><span class="mi">2000</span><span class="p">))</span>
 <span class="w">        </span><span class="p">.</span><span class="n">Aggregate</span><span class="p">(</span>
-<span class="w">            </span><span class="p">()</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="m">0</span><span class="p">,</span>
+<span class="w">            </span><span class="p">()</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
 <span class="w">            </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">Math</span><span class="p">.</span><span class="n">Max</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">),</span>
 <span class="w">            </span><span class="n">RocksDbWindows</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;store&quot;</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="o">&lt;</span><span class="n">Int32SerDes</span><span class="o">&gt;</span><span class="p">()</span>
 <span class="w">        </span><span class="p">)</span>
@@ -205,7 +205,7 @@ You have an child materialized class to help you to use it.</p>
 </div>
 </section>
 <section id="caching">
-<h2>Caching<a class="headerlink" href="#caching" title="Permalink to this heading"></a></h2>
+<h2>Caching<a class="headerlink" href="#caching" title="Link to this heading"></a></h2>
 <p><strong>This feature is available in <code class="docutils literal notranslate"><span class="pre">EARLY</span> <span class="pre">ACCESS</span></code> only.</strong></p>
 <p>Streamiz offers robust capabilities for stream processing applications, including efficient data caching mechanisms. Caching optimizes performance by minimizing redundant computations, reducing latency, and enhancing overall throughput within stream processing pipelines.</p>
 <p><strong>Purpose of Caching</strong></p>
@@ -221,7 +221,7 @@ You have an child materialized class to help you to use it.</p>
 <li><p><strong>State Store Cache</strong>: Enhances processing efficiency by caching state store entries, reducing the overhead of state fetches and updates.</p></li>
 </ol>
 <section id="configuring-caching">
-<h3>Configuring Caching<a class="headerlink" href="#configuring-caching" title="Permalink to this heading"></a></h3>
+<h3>Configuring Caching<a class="headerlink" href="#configuring-caching" title="Link to this heading"></a></h3>
 <p>To optimize caching behavior, Streamiz offers configurable parameters:</p>
 <ul class="simple">
 <li><p><strong>Cache Size</strong>: Defines the maximum size of the cache to balance performance and memory usage. To be fair, this cache size is the maximum cache size per state store.</p></li>
@@ -255,11 +255,11 @@ You have an child materialized class to help you to use it.</p>
 </section>
 </section>
 <section id="remote-storage">
-<h2>Remote storage<a class="headerlink" href="#remote-storage" title="Permalink to this heading"></a></h2>
+<h2>Remote storage<a class="headerlink" href="#remote-storage" title="Link to this heading"></a></h2>
 <p>Steamiz provides powerful capabilities for real-time stream processing applications, leveraging Kafka as a robust event streaming platform. One of its key features is the ability to manage and store stateful data, crucial for maintaining application state across stream processing operations. While Steamiz offers built-in state stores like RocksDB, In memory store, developers may sometimes need to create custom state stores tailored to specific use cases or integration requirements.</p>
 <p>Custom state stores can be beneficial for scenarios such as integrating with existing systems, enhancing performance for specific data access patterns, or ensuring compatibility with proprietary data formats.</p>
 <section id="custom-state-store">
-<h3>Custom state store<a class="headerlink" href="#custom-state-store" title="Permalink to this heading"></a></h3>
+<h3>Custom state store<a class="headerlink" href="#custom-state-store" title="Link to this heading"></a></h3>
 <p><strong>Steps to Create Custom State Stores</strong></p>
 <p>1- Implement the State Store</p>
 <p>Create a class that extends <code class="docutils literal notranslate"><span class="pre">IKeyValueStore&lt;Bytes,</span> <span class="pre">byte[]&gt;</span></code> depending on the nature of your state. This involves defining how the state is stored and accessed. Consider using technologies like in-memory data structures or external databases depending on your use case.</p>
@@ -471,11 +471,11 @@ You have an child materialized class to help you to use it.</p>
 </div>
 </section>
 <section id="azure-table-key-value-store">
-<h3>Azure Table Key/Value store<a class="headerlink" href="#azure-table-key-value-store" title="Permalink to this heading"></a></h3>
+<h3>Azure Table Key/Value store<a class="headerlink" href="#azure-table-key-value-store" title="Link to this heading"></a></h3>
 <p><strong>This feature is available in <code class="docutils literal notranslate"><span class="pre">EARLY</span> <span class="pre">ACCESS</span></code> only.</strong></p>
 <p><code class="docutils literal notranslate"><span class="pre">1.7.0</span></code> introduce a new remote storage. The <code class="docutils literal notranslate"><span class="pre">Azure</span> <span class="pre">Table</span> <span class="pre">Store</span></code> use under the hood, the Azure Table Client which can be used with a <a class="reference external" href="https://learn.microsoft.com/en-us/azure/storage/tables/table-storage-overview">Table Blob Storage</a> or a <a class="reference external" href="https://learn.microsoft.com/en-us/azure/cosmos-db/table/tutorial-query">CosmosDb endpoint</a></p>
 <section id="how-to">
-<h4>How to ?<a class="headerlink" href="#how-to" title="Permalink to this heading"></a></h4>
+<h4>How to ?<a class="headerlink" href="#how-to" title="Link to this heading"></a></h4>
 <p>1- Install this nuget package</p>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">dotnet</span><span class="w"> </span><span class="k">add</span><span class="w"> </span><span class="n">package</span><span class="w"> </span><span class="n">Streamiz</span><span class="p">.</span><span class="n">Kafka</span><span class="p">.</span><span class="n">Net</span><span class="p">.</span><span class="n">Azure</span><span class="p">.</span><span class="n">RemoteStorage</span>
 </pre></div>
