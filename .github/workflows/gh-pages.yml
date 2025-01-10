@@ -18,7 +18,7 @@ jobs:
       - name: "Set up Python"
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.12
 
       - name: "Install Python dependencies"
         run: |
@@ -32,7 +32,7 @@ jobs:
           make html
 
       - name: "Deploy Github Pages"
-        uses: JamesIves/github-pages-deploy-action@3.7.1
+        uses: JamesIves/github-pages-deploy-action@4.7.2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
