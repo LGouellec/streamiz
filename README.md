@@ -1,7 +1,3 @@
-> [!IMPORTANT]
-We’re excited to hear from you and would love to get your feedback on the product. Your insights are invaluable and will help us shape the future of our product to better meet your needs. The [survey](https://docs.google.com/forms/d/1OVISLOQY0FLcvh9KhSEPZ5K2Lgqzl7NkciCyd6w9_kU/) will only take a few minutes, and your responses will be completely confidential.
-
-
 # .NET Stream Processing Library for Apache Kafka <sup>TM</sup> &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/LGouellec/streamiz/blob/master/LICENSE) &middot; [![Join the chat at https://discord.gg/J7Jtxum](https://img.shields.io/discord/704268523169382421.svg?logoColor=white)](https://discord.gg/J7Jtxum) ![build](https://github.com/LGouellec/streamiz/workflows/build/badge.svg?branch=master)
 
 | Package  | Nuget version  | Downloads |
@@ -13,6 +9,7 @@ We’re excited to hear from you and would love to get your feedback on the prod
 | Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json   | ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json) | ![Nuget](https://img.shields.io/nuget/dt/Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json) |
 | Streamiz.Kafka.Net.Metrics.Prometheus   | ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Streamiz.Kafka.Net.Metrics.Prometheus)  | ![Nuget](https://img.shields.io/nuget/dt/Streamiz.Kafka.Net.Metrics.Prometheus) |
 | Streamiz.Kafka.Net.Metrics.OpenTelemetry   | ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Streamiz.Kafka.Net.Metrics.OpenTelemetry)  | ![Nuget](https://img.shields.io/nuget/dt/Streamiz.Kafka.Net.Metrics.OpenTelemetry) |
+| Streamiz.Kafka.Net.Azure.RemoteStorage   | ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Streamiz.Kafka.Net.Azure.RemoteStorage)  | ![Nuget](https://img.shields.io/nuget/dt/Streamiz.Kafka.Net.Azure.RemoteStorage) |
 
 ## Quality Statistics
 
@@ -97,7 +94,7 @@ static async System.Threading.Tasks.Task Main(string[] args)
 
 # Compare Kafka Streams vs Streamiz
 
-|                        **_Features_**                        | **Kafka Streams (JAVA) supported** | **Streamiz supported** |                 **Comment**                |
+|                        **_Features_**                        | **Kafka Streams supported**        | **Streamiz supported** |                 **Comment**                |
 |:------------------------------------------------------------:|:----------------------------------:|:----------------------:|:------------------------------------------:|
 | Stateless processors                                         |              X                     |         X              |                                            |
 | RocksDb store                                                |              X                     |         X              |                                            |
@@ -107,19 +104,20 @@ static async System.Threading.Tasks.Task Main(string[] args)
 | Punctuate                                                    |              X                     |         X              |                                            |
 | KStream-KStream Join                                         |              X                     |         X              |                                            |
 | KTable-KTable Join                                           |              X                     |         X              |                                            |
-| KTable-KTable FK Join                                        |              X                     |                        | Plan for future                            |
+| KTable-KTable FK Join                                        |              X                     |                        | Plan for 1.8.0                             |
 | KStream-KTable Join                                          |              X                     |         X              |                                            |
 | KStream-GlobalKTable Join                                    |              X                     |         X              |                                            |
-| KStream Async Processing (external call inside the topology) |                                    |         X              |  Not supported in Kafka Streams JAVA       |
+| External Async Processing                                    |                                    |         X              | V2 in coming                               |
 | Hopping window                                               |              X                     |         X              |                                            |
 | Tumbling window                                              |              X                     |         X              |                                            |
 | Sliding window                                               |              X                     |                        | No plan for now                            |
 | Session window                                               |              X                     |                        | No plan for now                            |
-| Cache                                                        |              X                     |         X              | EA 1.6.0                                   |
-| Suppress(..)                                                 |              X                     |           X             | Plan for 1.7.0                           |
+| Cache                                                        |              X                     |         X              |                                            |
+| Suppress(..)                                                 |              X                     |         X              |                                            |
 | Interactive Queries                                          |              X                     |                        | No plan for now                            |
-| State store batch restoring                                  |              X                     |                        | No plan for now                            |
-| Exactly Once v2                                     |              X                     |         X              |  |
+| State store batch restoring                                  |              X                     |                        | Plan for 1.8.0                             |
+| Exactly Once                                                 |              X                     |         X              |                                            |
+| Remote storage (Azure, GCP, Aws)                             |                                    |         X              | Azure Preview, GCP and AWS coming          |
 
 # Community Support
 
