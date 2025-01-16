@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
@@ -23,6 +24,8 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
         private readonly Dictionary<string, List<RegisterSchema>> schemas = new();
 
         #region ISchemaRegistryClient Impl
+
+        public IWebProxy Proxy { get; }
 
         /// <summary>
         /// The maximum capacity of the local schema cache.
@@ -423,6 +426,7 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
         }
 
         public IEnumerable<KeyValuePair<string, string>> Config { get; private set; }
+        public IAuthenticationHeaderValueProvider AuthHeaderProvider { get; }
 
         #endregion ISchemaRegistryClient Impl
     }
