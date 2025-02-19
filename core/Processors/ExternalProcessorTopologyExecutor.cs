@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
@@ -165,6 +167,30 @@ namespace Streamiz.Kafka.Net.Processors
             
             if(0.8 * config.MaxPollIntervalMs <= RetryPolicy.TimeoutMs)
                 log.LogWarning("Be carefully about your retry policy => retry.timeout.ms is near or greater than consumer configuration MaxPollIntervalMs. It's can be risky and you can process multiple times the same message");
+            
+            // create queues and task
+            for (int i = 0; i < asyncProcessor.MaxParallelProcessing; ++i)
+            {
+                ConcurrentQueue<ConsumeResult<byte[], byte[]>> queue =
+                    new ConcurrentQueue<ConsumeResult<byte[], byte[]>>();
+
+                var task = Task.Factory.StartNew(async () =>
+                {
+                    while (true)
+                    {
+                        queue.TryDequeue(out ConsumeResult<byte[], byte[]> record);
+                        await asyncProcessor.ProcessAsync(record.Message.Key, record.Message.Value, record.Message.Headers, record.Message.Timestamp.UnixTimestampMs, )
+                        ActionHelper.MeasureLatency(() => Processor.Process(recordToProcess));
+
+                    }
+                });
+            }
+        }
+
+        public void EnqueueBatch(IEnumerable<ConsumeResult<byte[], byte[]>> records)
+        {
+            // ConcurrentQueue
+            // Create multiple Qeueue per
         }
 
         public void Process(ConsumeResult<byte[], byte[]> record)

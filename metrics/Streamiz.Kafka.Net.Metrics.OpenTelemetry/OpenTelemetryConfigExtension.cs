@@ -3,6 +3,7 @@ using OpenTelemetry;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Streamiz.Kafka.Net.Metrics.OpenTelemetry.Internal;
 
 namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry
@@ -35,12 +36,13 @@ namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry
                 .SetResourceBuilder(
                     ResourceBuilder.CreateDefault()
                         .AddService(serviceName: "Streamiz"));
-
+            
             meterProviderBuilder.AddOtlpExporter(options => {
                 options.Protocol = OtlpExportProtocol.Grpc;
                 options.ExportProcessorType = ExportProcessorType.Batch;
             });
             meterProviderBuilder.AddRuntimeInstrumentation();
+            //meterProviderBuilder.AddConsoleExporter();
             
             actionMeterProviderBuilder?.Invoke(meterProviderBuilder);
 

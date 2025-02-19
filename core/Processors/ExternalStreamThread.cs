@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,12 +42,13 @@ namespace Streamiz.Kafka.Net.Processors
         private DateTime lastCheckoutProcessing = DateTime.Now;
         private readonly TimeSpan intervalCheckoutProcessing = TimeSpan.FromMinutes(1); // hard code for now
         private int messageProcessed;
-        private Task<List<DeleteRecordsResult>> currentDeleteTask = null;
+        private Task<List<DeleteRecordsResult>> currentDeleteTask;
         
         private readonly Sensor commitSensor;
         private readonly Sensor pollSensor;
         private readonly Sensor processLatencySensor;
         private readonly Sensor processRateSensor;
+        
         private StreamsProducer producer;
 
         public ExternalStreamThread(
@@ -63,8 +66,7 @@ namespace Streamiz.Kafka.Net.Processors
             this.streamMetricsRegistry = streamMetricsRegistry;
             this.configuration = configuration;
             
-            thread = new Thread(Run)
-            {
+            thread = new Thread(Run) {
                 Name = threadId
             };
             Name = threadId;
@@ -109,16 +111,37 @@ namespace Streamiz.Kafka.Net.Processors
                     long now = DateTime.Now.GetMilliseconds();
                     
                     var consumer = GetConsumer();
-                    ConsumeResult<byte[], byte[]> result = null;
+                    IEnumerable<ConsumeResult<byte[], byte[]>> results = new List<ConsumeResult<byte[], byte[]>>();
                     long pollLatency = ActionHelper.MeasureLatency(() =>
-                        result = consumer.Consume(TimeSpan.FromMilliseconds(configuration.PollMs)));
+                        results = consumer.ConsumeRecords(
+                            TimeSpan.FromMilliseconds(configuration.PollMs), configuration.ExternalMaxPollRecords));
                     
                     pollSensor.Record(pollLatency, now);
-                    
+
+                    ConsumeResult<byte[], byte[]> result = null;
+                    ExternalProcessorTopologyExecutor processor = null;
                     try
                     {
-                        ExternalProcessorTopologyExecutor processor = null;
-
+                        Dictionary<string, List<ConsumeResult<byte[], byte[]>>> CreateBatchPerTopic(
+                            IEnumerable<ConsumeResult<byte[], byte[]>> records)
+                        {
+                            Dictionary<string, List<ConsumeResult<byte[], byte[]>>> batches =
+                                new Dictionary<string, List<ConsumeResult<byte[], byte[]>>>();
+                            
+                            foreach(var r in records)
+                                if (batches.ContainsKey(r.Topic))
+                                    batches[r.Topic].Add(r);
+                                else
+                                    batches.Add(r.Topic, new List<ConsumeResult<byte[], byte[]>>{r});
+                            return batches;
+                        }
+                        
+                        var batches = CreateBatchPerTopic(results);
+                        
+                        foreach (var batch in batches)
+                            GetExternalProcessorTopology(batch.Key)
+                                .EnqueueBatch(batch.Value);
+                        
                         if (result != null)
                             processor = GetExternalProcessorTopology(result.Topic);
                         else
@@ -356,14 +379,15 @@ namespace Streamiz.Kafka.Net.Processors
             return State;
         }
 
-        public IEnumerable<ITask> ActiveTasks => throw new NotSupportedException();
+        public IEnumerable<ITask> ActiveTasks 
+            => throw new NotSupportedException();
 
         public event ThreadStateListener StateChanged;
 
         private ExternalProcessorTopologyExecutor GetExternalProcessorTopology(string topic)
         {
-            if (externalProcessorTopologies.ContainsKey(topic))
-                return externalProcessorTopologies[topic];
+            if (externalProcessorTopologies.TryGetValue(topic, out var processorTopology))
+                return processorTopology;
             
             var taskId = internalTopologyBuilder.GetTaskIdFromPartition(new TopicPartition(topic, Partition.Any));
             var topology = internalTopologyBuilder.BuildTopology(taskId);

@@ -201,6 +201,11 @@ namespace Streamiz.Kafka.Net
         /// The maximum number of records returned in a polling restore phase. (Default: 1000)
         /// </summary>
         long MaxPollRestoringRecords { get; set; }
+        
+        /// <summary>
+        /// The maximum number of records returned in a polling phase for external calling. (Default: 200)
+        /// </summary>
+        long ExternalMaxPollRecords { get; set; }
 
         /// <summary>
         /// The amount of time in milliseconds to block waiting for input.
@@ -519,6 +524,7 @@ namespace Streamiz.Kafka.Net
         private const string pollMsCst = "poll.ms";
         private const string maxPollRecordsCst = "max.poll.records";
         private const string maxPollRestoringRecordsCst = "max.poll.restoring.records";
+        private const string externalMaxPollRecordsCst = "external.max.poll.records";
         private const string maxTaskIdleCst = "max.task.idle.ms";
         private const string bufferedRecordsPerPartitionCst = "buffered.records.per.partition";
         private const string followMetadataCst = "follow.metadata";
@@ -2652,6 +2658,16 @@ namespace Streamiz.Kafka.Net
         {
             get => configProperties[maxPollRestoringRecordsCst];
             set => configProperties.AddOrUpdate(maxPollRestoringRecordsCst, value);
+        }
+        
+        /// <summary>
+        /// The maximum number of records returned in a polling phase for external calling. (Default: 200)
+        /// </summary>
+        [StreamConfigProperty("" + externalMaxPollRecordsCst)]
+        public long ExternalMaxPollRecords
+        {
+            get => configProperties[externalMaxPollRecordsCst];
+            set => configProperties.AddOrUpdate(externalMaxPollRecordsCst, value);
         }
 
         /// <summary>

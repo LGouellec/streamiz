@@ -18,12 +18,19 @@ namespace Streamiz.Kafka.Net.Processors
     {
         private Sensor retrySensor;
 
-        protected AbstractAsyncProcessor(RetryPolicy policy)
+        protected AbstractAsyncProcessor(
+            RetryPolicy policy, 
+            int maxParallelProcessing,
+            ParallelOrdering parallelOrdering)
         {
             Policy = policy;
+            MaxParallelProcessing = maxParallelProcessing;
+            ParallelOrdering = parallelOrdering;
         }
         
         public RetryPolicy Policy { get; }
+        public int MaxParallelProcessing { get; }
+        public ParallelOrdering ParallelOrdering { get; }
 
         public override void Process(K key, V value)
         {
