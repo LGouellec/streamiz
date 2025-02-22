@@ -51,7 +51,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             else
             {
                 var processor = SourceOperators.FirstOrDefault(kp =>
-                    kp.Value is ISourceProcessor && (kp.Value as ISourceProcessor).TopicName.Equals(topicName));
+                    kp.Value is ISourceProcessor sourceProcessor && sourceProcessor.TopicName.Equals(topicName));
                 return processor.Value as ISourceProcessor;
             }
         }

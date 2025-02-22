@@ -31,9 +31,9 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
             public override bool Equals(object obj)
             {
-                return obj is MockTopicPartitionOffset &&
-                       ((MockTopicPartitionOffset) obj).Topic.Equals(Topic) &&
-                       ((MockTopicPartitionOffset) obj).Partition.Equals(Partition);
+                return obj is MockTopicPartitionOffset offset &&
+                       offset.Topic.Equals(Topic) &&
+                       offset.Partition.Equals(Partition);
             }
 
             public override int GetHashCode()
@@ -64,7 +64,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public override bool Equals(object obj)
         {
-            return obj is MockConsumerInformation && ((MockConsumerInformation) obj).Name.Equals(Name);
+            return obj is MockConsumerInformation information && information.Name.Equals(Name);
         }
     }
 

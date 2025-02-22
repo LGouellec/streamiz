@@ -95,9 +95,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 stateFactory.users.Add(processorName);
                 var nodeFactory = nodeFactories[processorName];
 
-                if (nodeFactory is IProcessorNodeFactory)
+                if (nodeFactory is IProcessorNodeFactory factory)
                 {
-                    ((IProcessorNodeFactory)nodeFactory).AddStateStore(stateStoreName);
+                    factory.AddStateStore(stateStoreName);
                 }
                 else
                 {
@@ -366,17 +366,17 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     var processor = nodeFactory.Build();
                     processors.Add(nodeFactory.Name, processor);
 
-                    if (nodeFactory is IProcessorNodeFactory)
+                    if (nodeFactory is IProcessorNodeFactory factory)
                     {
-                        BuildProcessorNode(processors, stateStores, nodeFactory as IProcessorNodeFactory, processor, taskId);
+                        BuildProcessorNode(processors, stateStores, factory, processor, taskId);
                     }
-                    else if (nodeFactory is ISourceNodeFactory)
+                    else if (nodeFactory is ISourceNodeFactory sourceNodeFactory)
                     {
-                        BuildSourceNode(sources, repartitionTopics, nodeFactory as ISourceNodeFactory, processor);
+                        BuildSourceNode(sources, repartitionTopics, sourceNodeFactory, processor);
                     }
-                    else if (nodeFactory is ISinkNodeFactory)
+                    else if (nodeFactory is ISinkNodeFactory sinkNodeFactory)
                     {
-                        BuildSinkNode(processors, repartitionTopics, sinks, nodeFactory as ISinkNodeFactory, processor);
+                        BuildSinkNode(processors, repartitionTopics, sinks, sinkNodeFactory, processor);
                     }
                     else
                     {
@@ -522,9 +522,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private bool IsGlobalSource(string node)
         {
             var factory = nodeFactories[node];
-            if (factory is ISourceNodeFactory)
+            if (factory is ISourceNodeFactory nodeFactory)
             {
-                return globalTopics.Contains(((ISourceNodeFactory)factory).Topic);
+                return globalTopics.Contains(nodeFactory.Topic);
             }
             return false;
         }

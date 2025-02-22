@@ -215,7 +215,7 @@ namespace Streamiz.Kafka.Net
             /// <returns></returns>
             public override bool Equals(object obj)
             {
-                return obj is State && Equals((State)obj);
+                return obj is State stateObj && Equals(stateObj);
             }
 
             /// <summary>

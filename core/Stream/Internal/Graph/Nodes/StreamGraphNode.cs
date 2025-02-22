@@ -65,7 +65,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
 
         public override bool Equals(object obj)
         {
-            return obj is StreamGraphNode && (obj as StreamGraphNode).guid.Equals(this.guid);
+            return obj is StreamGraphNode node && node.guid.Equals(this.guid);
         }
 
         public override int GetHashCode()

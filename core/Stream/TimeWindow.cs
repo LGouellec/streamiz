@@ -26,6 +26,6 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="other">another window</param>
         /// <returns>true if other overlaps with this window, false otherwise</returns>
         public override bool Overlap(Window other)
-            => other is TimeWindow && StartMs < ((TimeWindow)other).EndMs && ((TimeWindow)other).StartMs < EndMs;
+            => other is TimeWindow window && StartMs < window.EndMs && window.StartMs < EndMs;
     }
 }

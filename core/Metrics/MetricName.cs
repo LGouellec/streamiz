@@ -61,8 +61,8 @@ namespace Streamiz.Kafka.Net.Metrics
         /// <param name="obj"></param>
         /// <returns></returns>
         public override bool Equals(object obj)
-            => obj is MetricName && ((MetricName) obj).Name.Equals(Name) &&
-               ((MetricName) obj).Group.Equals(Group);
+            => obj is MetricName name && name.Name.Equals(Name) &&
+               name.Group.Equals(Group);
 
         /// <summary>
         /// 

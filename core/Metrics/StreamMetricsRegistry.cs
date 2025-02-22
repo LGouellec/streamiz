@@ -551,7 +551,7 @@ namespace Streamiz.Kafka.Net.Metrics
             params Sensor[] parents)
             where T : Sensor
         {
-            if (sensors.ContainsKey(name) && sensors[name] is T)
+            if(sensors.TryGetValue(name, out var sensorObj) && sensorObj is T)
                 return (T)sensors[name];
             else
             {
@@ -599,9 +599,9 @@ namespace Streamiz.Kafka.Net.Metrics
                     sensors.Add(sensor);
             }
 
-            if (threadScopeSensors.ContainsKey(threadId))
+            if (threadScopeSensors.TryGetValue(threadId, out var list))
             {
-                foreach (var s in threadScopeSensors[threadId])
+                foreach (var s in list)
                 {
                     var sensor = this.sensors[s];
                     if(TestMetricsRecordingLevel(sensor.MetricsRecording)) 

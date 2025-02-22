@@ -56,20 +56,19 @@ namespace Streamiz.Kafka.Net.Table.Internal
         {
             get
             {
-                if (processorSupplier != null && processorSupplier is KTableSource<K, V>)
+                if (processorSupplier != null && processorSupplier is KTableSource<K, V> source)
                 {
-                    var source = (KTableSource<K, V>)processorSupplier;
                     // whenever a source ktable is required for getter, it should be materialized
                     source.Materialize();
                     return new KTableSourceValueGetterSupplier<K, V>(source.QueryableName);
                 }
-                else if (processorSupplier is IKStreamAggProcessorSupplier<K, V>)
+                else if (processorSupplier is IKStreamAggProcessorSupplier<K, V> supplier)
                 {
-                    return ((IKStreamAggProcessorSupplier<K, V>)processorSupplier).View();
+                    return supplier.View();
                 }
-                else if (tableProcessorSupplier != null && tableProcessorSupplier is IKTableProcessorSupplier<K, S, V>)
+                else if (tableProcessorSupplier != null && tableProcessorSupplier is IKTableProcessorSupplier<K, S, V> kTableProcessorSupplier)
                 {
-                    return ((IKTableProcessorSupplier<K, S, V>)tableProcessorSupplier).View;
+                    return kTableProcessorSupplier.View;
                 }
                 else
                 {
@@ -469,18 +468,17 @@ namespace Streamiz.Kafka.Net.Table.Internal
         {
             if (!SendOldValues)
             {
-                if (processorSupplier != null && processorSupplier is KTableSource<K, V>)
+                if (processorSupplier != null && processorSupplier is KTableSource<K, V> source)
                 {
-                    KTableSource<K, V> source = (KTableSource<K, V>)processorSupplier;
                     source.EnableSendingOldValues();
                 }
-                else if (processorSupplier is IKStreamAggProcessorSupplier<K, V>)
+                else if (processorSupplier is IKStreamAggProcessorSupplier<K, V> supplier)
                 {
-                    ((IKStreamAggProcessorSupplier<K, V>)processorSupplier).EnableSendingOldValues();
+                    supplier.EnableSendingOldValues();
                 }
-                else if (tableProcessorSupplier != null && tableProcessorSupplier is IKTableProcessorSupplier)
+                else if (tableProcessorSupplier != null && tableProcessorSupplier is IKTableProcessorSupplier kTableProcessorSupplier)
                 {
-                    (tableProcessorSupplier as IKTableProcessorSupplier).EnableSendingOldValues();
+                    kTableProcessorSupplier.EnableSendingOldValues();
                 }
                 SendOldValues = true;
             }

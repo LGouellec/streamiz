@@ -22,8 +22,8 @@ namespace Streamiz.Kafka.Net.Table.Internal
             {
                 if (processorSupplier == null)
                     return base.ValueGetterSupplier;
-                else if (processorSupplier is IKStreamAggProcessorSupplier<K, KR, V, VR>)
-                    return ((IKStreamAggProcessorSupplier<K, KR, V, VR>)processorSupplier).View();
+                else if (processorSupplier is IKStreamAggProcessorSupplier<K, KR, V, VR> supplier)
+                    return supplier.View();
                 else
                     return null;
             }
@@ -37,9 +37,9 @@ namespace Streamiz.Kafka.Net.Table.Internal
                     base.EnableSendingOldValues();
                 else
                 {
-                    if (processorSupplier is IKStreamAggProcessorSupplier<KR, VR>)
+                    if (processorSupplier is IKStreamAggProcessorSupplier<KR, VR> supplier)
                     {
-                        ((IKStreamAggProcessorSupplier<KR, VR>)processorSupplier).EnableSendingOldValues();
+                        supplier.EnableSendingOldValues();
                     }
                     SendOldValues = true;
                 }

@@ -28,7 +28,7 @@
         /// <returns></returns>
         public override bool Equals(object obj)
         {
-            return obj is TaskId && (obj as TaskId).Id.Equals(Id) && (obj as TaskId).Partition.Equals(Partition);
+            return obj is TaskId id && id.Id.Equals(Id) && id.Partition.Equals(Partition);
         }
 
         /// <summary>

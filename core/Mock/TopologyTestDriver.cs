@@ -355,10 +355,10 @@ namespace Streamiz.Kafka.Net.Mock
         public IReadOnlyKeyValueStore<K, V> GetKeyValueStore<K, V>(string name)
         {
             var store = behavior.GetStateStore<K, V>(name);
-            if (store is ITimestampedKeyValueStore<K, V>)
-                return new ReadOnlyKeyValueStoreFacade<K, V>(store as ITimestampedKeyValueStore<K, V>);
-            else if (store is IReadOnlyKeyValueStore<K, V>)
-                return (IReadOnlyKeyValueStore<K, V>)store;
+            if (store is ITimestampedKeyValueStore<K, V> valueStore)
+                return new ReadOnlyKeyValueStoreFacade<K, V>(valueStore);
+            else if (store is IReadOnlyKeyValueStore<K, V> keyValueStore)
+                return keyValueStore;
             else
                 return null;
         }
@@ -378,10 +378,10 @@ namespace Streamiz.Kafka.Net.Mock
         public IReadOnlyWindowStore<K, V> GetWindowStore<K, V>(string name)
         {
             var store = behavior.GetStateStore<K, V>(name);
-            if (store is ITimestampedWindowStore<K, V>)
-                return new ReadOnlyWindowStoreFacade<K, V>(store as ITimestampedWindowStore<K, V>);
-            if (store is IReadOnlyWindowStore<K, V>)
-                return (IReadOnlyWindowStore<K, V>)store;
+            if (store is ITimestampedWindowStore<K, V> windowStore)
+                return new ReadOnlyWindowStoreFacade<K, V>(windowStore);
+            if (store is IReadOnlyWindowStore<K, V> onlyWindowStore)
+                return onlyWindowStore;
             return null;
         }
 

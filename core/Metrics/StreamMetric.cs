@@ -61,10 +61,10 @@ namespace Streamiz.Kafka.Net.Metrics
 
         private void Measure(long now)
         {
-            if (metricValueProvider is IMeasurable)
-                lastValue = ((IMeasurable) metricValueProvider).Measure(config, now);
-            else if (metricValueProvider is IGauge)
-                lastValue = ((IGauge) metricValueProvider).Value(config, now);
+            if (metricValueProvider is IMeasurable measurable)
+                lastValue = measurable.Measure(config, now);
+            else if (metricValueProvider is IGauge gauge)
+                lastValue = gauge.Value(config, now);
         }
 
         internal void ChangeTagValue(string tag, string newValue)
