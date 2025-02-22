@@ -17,8 +17,8 @@ namespace Streamiz.Kafka.Net.State.Internal
         {
             if (stateStore is ITimestampedStore)
                 return true;
-            else if (stateStore is IWrappedStateStore)
-                return IsTimestamped(((IWrappedStateStore)stateStore).Wrapped);
+            else if (stateStore is IWrappedStateStore wrappedStateStore)
+                return IsTimestamped(wrappedStateStore.Wrapped);
             else
                 return false;
         }
