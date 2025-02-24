@@ -219,10 +219,9 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             var adminConfig = _configuration.ToAdminConfig("");
             var refreshInterval = adminConfig.TopicMetadataRefreshIntervalMs ?? 5 * 60 * 1000;
 
-            if (_cachePartitionsForTopics.ContainsKey(topic) &&
-                _cachePartitionsForTopics[topic].Item2 + TimeSpan.FromMilliseconds(refreshInterval) > DateTime.Now)
-                return _cachePartitionsForTopics[topic].Item1;
-            
+            if (_cachePartitionsForTopics.TryGetValue(topic, out var tuple) && tuple.Item2 + TimeSpan.FromMilliseconds(refreshInterval) > DateTime.Now)
+                return tuple.Item1;
+
             var metadata = _adminClient.GetMetadata(topic, TimeSpan.FromSeconds(5));
             var partitionCount = metadata.Topics.FirstOrDefault(t => t.Topic.Equals(topic))!.Partitions.Count;
             _cachePartitionsForTopics.AddOrUpdate(topic, (partitionCount, DateTime.Now));

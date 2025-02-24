@@ -292,10 +292,9 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                     "{LogPrefix}Record persisted: (timestamp {Timestamp}) topic=[{Topic}] partition=[{Partition}] offset=[{Offset}]",
                     _logPrefix, report.Message.Timestamp.UnixTimestampMs, report.Topic, report.Partition,
                     report.Offset);
-                if (_collectorsOffsets.ContainsKey(report.TopicPartition) &&
-                    _collectorsOffsets[report.TopicPartition] < report.Offset.Value)
-                    _collectorsOffsets.TryUpdate(report.TopicPartition, report.Offset.Value,
-                        _collectorsOffsets[report.TopicPartition]);
+
+                if(_collectorsOffsets.TryGetValue(report.TopicPartition, out var offset) && offset < report.Offset.Value)
+                    _collectorsOffsets.TryUpdate(report.TopicPartition, report.Offset.Value, offset);
                 else
                     _collectorsOffsets.TryAdd(report.TopicPartition, report.Offset);
                 _retryRecordContext.AckRecord(report);

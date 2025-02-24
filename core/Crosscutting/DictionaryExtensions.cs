@@ -87,10 +87,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
             foreach (var element in source)
             {
                 var key = keySelector(element);
-                if (dictonary.ContainsKey(key))
-                    dictonary[key] = elementSelector(element);
-                else
-                    dictonary.Add(key, elementSelector(element));
+                dictonary[key] = elementSelector(element);
             }
 
             return dictonary;
@@ -146,10 +143,14 @@ namespace Streamiz.Kafka.Net.Crosscutting
         /// <typeparam name="V">Value type</typeparam>
         public static void CreateListOrAdd<K, V>(this IDictionary<K, List<V>> source, K key, V value)
         {
-            if(source.ContainsKey(key))
-                source[key].Add(value);
+            if (source.TryGetValue(key, out var list))
+            {
+                list.Add(value);
+            }
             else
-                source.Add(key, new List<V>{value});
+            {
+                source.Add(key, new List<V> { value });
+            }
         }
         
        #if NETSTANDARD2_0

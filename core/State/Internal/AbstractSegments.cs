@@ -80,7 +80,7 @@ namespace Streamiz.Kafka.Net.State.Internal
         public S GetSegmentForTimestamp(long timestamp)
         {
             long key = SegmentId(timestamp);
-            return segments.ContainsKey(key) ? segments[key] : default(S);
+            return segments.TryGetValue(key, out var segment) ? segment : default(S);
         }
 
         public virtual void OpenExisting(ProcessorContext context, long streamTime)

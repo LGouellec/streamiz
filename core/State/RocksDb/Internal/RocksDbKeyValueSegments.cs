@@ -14,8 +14,8 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public override RocksDbKeyValueSegment GetOrCreateSegment(long segmentId, ProcessorContext context)
         {
-            if (segments.ContainsKey(segmentId))
-                return segments[segmentId];
+            if (segments.TryGetValue(segmentId, out var createSegment))
+                return createSegment;
             else
             {
                 var segment = new RocksDbKeyValueSegment(

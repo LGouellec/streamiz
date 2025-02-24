@@ -110,8 +110,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public IStateStore GetStore(string name)
         {
-            return globalStores.ContainsKey(name)
-                ? globalStores[name]
+            return globalStores.TryGetValue(name, out var store)
+                ? store
                 : null;
         }
 
@@ -227,9 +227,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 long offset, checkpoint, highWM, checkpointSeek;
 
-                if (ChangelogOffsets.ContainsKey(topicPartition))
+                if (ChangelogOffsets.TryGetValue(topicPartition, out var changelogOffset))
                 {
-                    checkpoint = ChangelogOffsets[topicPartition];
+                    checkpoint = changelogOffset;
                     checkpointSeek = checkpoint + 1;
                 }
                 else

@@ -148,11 +148,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public IStateStore GetStore(string name)
         {
-            if (registeredStores.ContainsKey(name))
-                return registeredStores[name].Store;
+            if (registeredStores.TryGetValue(name, out var registeredStore))
+                return registeredStore.Store;
 
-            if (globalStateStores.ContainsKey(name))
-                return globalStateStores[name];
+            if (globalStateStores.TryGetValue(name, out var store))
+                return store;
 
             return null;
         }
@@ -164,9 +164,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public TopicPartition GetRegisteredChangelogPartitionFor(string storeName)
         {
-            if (registeredStores.ContainsKey(storeName))
+            if (registeredStores.TryGetValue(storeName, out var metadata))
             {
-                var metadata = registeredStores[storeName];
                 if (metadata.ChangelogTopicPartition != null)
                     return metadata.ChangelogTopicPartition;
                 throw new IllegalStateException(
@@ -237,9 +236,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 }
                 else if(kvStore.Value.Offset == null)
                 {
-                    if (loadedCheckpoints.ContainsKey(kvStore.Value.ChangelogTopicPartition))
+                    if (loadedCheckpoints.TryGetValue(kvStore.Value.ChangelogTopicPartition, out var offset))
                     {
-                        long offset = loadedCheckpoints[kvStore.Value.ChangelogTopicPartition];
                         kvStore.Value.Offset = offset != OffsetCheckpointFile.OFFSET_UNKNOWN ? offset : null;
                         log.LogDebug($"State store {kvStore.Value.Store.Name} initialized from checkpoint with offset {offset} at changelog {kvStore.Value.ChangelogTopicPartition}");
                         loadedCheckpoints.Remove(kvStore.Value.ChangelogTopicPartition);

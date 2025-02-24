@@ -74,10 +74,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 var taskId = builder.GetTaskIdFromPartition(partition);
                 if (!activeTasks.ContainsKey(taskId))
                 {
-                    if (tasksToBeCreated.ContainsKey(taskId))
-                        tasksToBeCreated[taskId].Add(partition);
+                    if (tasksToBeCreated.TryGetValue(taskId, out var list))
+                        list.Add(partition);
                     else
                         tasksToBeCreated.Add(taskId, new List<TopicPartition> { partition });
+
                     partitionsToTaskId.TryAdd(partition, taskId);
                 }
             }

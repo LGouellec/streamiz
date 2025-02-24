@@ -46,8 +46,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         internal ISourceProcessor GetSourceProcessor(string topicName)
         {
-            if (SourceOperators.ContainsKey(topicName))
-                return SourceOperators[topicName] as ISourceProcessor;
+            if (SourceOperators.TryGetValue(topicName, out var @operator))
+                return @operator as ISourceProcessor;
             else
             {
                 var processor = SourceOperators.FirstOrDefault(kp =>
