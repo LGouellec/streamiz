@@ -246,6 +246,7 @@ namespace Streamiz.Kafka.Net
 
         #endregion
 
+        private bool _disposed = false;
         private readonly Topology topology;
         private readonly IKafkaSupplier kafkaSupplier;
         private readonly IThread[] threads;
@@ -468,11 +469,19 @@ namespace Streamiz.Kafka.Net
         /// <param name="token">Token for propagates notification that the stream should be canceled.</param>
         public async Task StartAsync(CancellationToken? token = null)
         {
+            if(_disposed)
+            {
+                throw new ObjectDisposedException(nameof(KafkaStream));
+            }
+
             if (token.HasValue)
             {
                 token.Value.Register(() => {
-                    _cancelSource.Cancel();
-                    Dispose();
+                    if (!_disposed)
+                    {
+                        _cancelSource.Cancel();
+                        Dispose();
+                    }
                 });
             }
             
@@ -535,6 +544,7 @@ namespace Streamiz.Kafka.Net
         {
             Close();
             _cancelSource.Dispose();
+            _disposed = true;
         }
 
         /// <summary>
