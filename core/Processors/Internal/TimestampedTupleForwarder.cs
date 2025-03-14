@@ -21,8 +21,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             this.processor = processor;
             this.sendOldValues = sendOldValues;
-            cachingEnabled = ((IWrappedStateStore)store).IsCachedStore &&
-                             ((ICachedStateStore<K, ValueAndTimestamp<V>>)store).SetFlushListener(listener, sendOldValues);
+            cachingEnabled = store is IWrappedStateStore { IsCachedStore: true }
+                                 and ICachedStateStore<K, ValueAndTimestamp<V>> cachedStore &&
+                             cachedStore.SetFlushListener(listener, sendOldValues);
         }
 
         public void MaybeForward(K key, V newValue, V oldValue)

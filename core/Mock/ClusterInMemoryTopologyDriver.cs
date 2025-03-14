@@ -177,7 +177,7 @@ namespace Streamiz.Kafka.Net.Mock
                 var store = task.GetStore(name);
                 if (store != null)
                 {
-                    if (store is IReadOnlyWindowStore<K, V> || store is ITimestampedWindowStore<K, V>)
+                    if (store is IReadOnlyWindowStore<K, V> or ITimestampedWindowStore<K, V>)
                         windowStore = true;
                     stores.Add(store);
                 }
@@ -196,20 +196,23 @@ namespace Streamiz.Kafka.Net.Mock
             void stateChangedHandeler(IThread thread, ThreadStateTransitionValidator old,
                 ThreadStateTransitionValidator @new)
             {
-                if (@new is Processors.ThreadState && ((Processors.ThreadState)@new) == Processors.ThreadState.RUNNING)
+                if (@new is Processors.ThreadState threadState)
                 {
-                    isRunningState = true;
-                    IsRunning = true;
-                }
-                else if (@new is Processors.ThreadState && ((Processors.ThreadState)@new) == Processors.ThreadState.DEAD)
-                {
-                    IsRunning = false;
-                    IsError = true;
-                }
-                else if (@new is Processors.ThreadState && ((Processors.ThreadState)@new) == Processors.ThreadState.PENDING_SHUTDOWN)
-                {
-                    IsRunning = false;
-                    IsError = false;
+                    if (threadState == Processors.ThreadState.RUNNING)
+                    {
+                        isRunningState = true;
+                        IsRunning = true;
+                    }
+                    else if (threadState == Processors.ThreadState.DEAD)
+                    {
+                        IsRunning = false;
+                        IsError = true;
+                    }
+                    else if (threadState == Processors.ThreadState.PENDING_SHUTDOWN)
+                    {
+                        IsRunning = false;
+                        IsError = false;
+                    }
                 }
             }
 
@@ -228,7 +231,7 @@ namespace Streamiz.Kafka.Net.Mock
                 Thread.Sleep(250);
                 if (DateTime.Now > dt + startTimeout)
                 {
-                    throw new StreamsException($"Test topology driver can't initiliaze state after {startTimeout.TotalSeconds} seconds !");
+                    throw new StreamsException($"Test topology driver can't initialize state after {startTimeout.TotalSeconds} seconds !");
                 }
             }
         }

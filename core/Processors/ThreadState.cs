@@ -116,7 +116,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public override bool Equals(object obj)
         {
-            return obj is ThreadState && ((ThreadState)obj).Ordinal.Equals(Ordinal);
+            return obj is ThreadState state && state.Ordinal.Equals(Ordinal);
         }
 
         public override int GetHashCode()

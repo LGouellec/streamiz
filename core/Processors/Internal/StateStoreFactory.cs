@@ -25,9 +25,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             if (taskId != null)
             {
-                if (stores.ContainsKey((Name, taskId.Partition)))
+                if (stores.TryGetValue((Name, taskId.Partition), out var storeInstance))
                 {
-                    return stores[(Name, taskId.Partition)];
+                    return storeInstance;
                 }
 
                 var store = storeBuilder.Build();

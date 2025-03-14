@@ -722,8 +722,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public IKStream<K, VR> Join<V0, VR>(IKTable<K, V0> table, IValueJoiner<V, V0, VR> valueJoiner, string named = null)
         {
-            return table is AbstractStream<K, V0> ?
-                Join(table, valueJoiner, ((AbstractStream<K, V0>)table).ValueSerdes, null, named) :
+            return table is AbstractStream<K, V0> stream ?
+                Join(table, valueJoiner, stream.ValueSerdes, null, named) :
                 Join(table, valueJoiner, null, null, named);
         }
 
@@ -790,8 +790,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public IKStream<K, VR> LeftJoin<VT, VR>(IKTable<K, VT> table, IValueJoiner<V, VT, VR> valueJoiner, string named = null)
         {
-            return table is AbstractStream<K, VT> ?
-                LeftJoin(table, valueJoiner, ((AbstractStream<K, VT>)table).ValueSerdes, null, named) :
+            return table is AbstractStream<K, VT> stream ?
+                LeftJoin(table, valueJoiner, stream.ValueSerdes, null, named) :
                 LeftJoin(table, valueJoiner, null, null, named);
         }
 
@@ -847,8 +847,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public IKStream<K, VR> Join<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null)
         {
-            return stream is AbstractStream<K, V0> ?
-                Join(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), ((AbstractStream<K, V0>)stream).ValueSerdes, null) :
+            return stream is AbstractStream<K, V0> abstractStream ?
+                Join(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), abstractStream.ValueSerdes, null) :
                 Join(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), null, null);
         }
 
@@ -887,8 +887,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public IKStream<K, VR> LeftJoin<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null)
         {
-            return stream is AbstractStream<K, V0> ?
-                LeftJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), ((AbstractStream<K, V0>)stream).ValueSerdes, null) :
+            return stream is AbstractStream<K, V0> abstractStream ?
+                LeftJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), abstractStream.ValueSerdes, null) :
                 LeftJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), null, null);
         }
 
@@ -931,8 +931,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public IKStream<K, VR> OuterJoin<V0, VR>(IKStream<K, V0> stream, IValueJoiner<V, V0, VR> valueJoiner, JoinWindowOptions windows, StreamJoinProps<K, V, V0> props = null)
         {
-            return stream is AbstractStream<K, V0> ?
-                OuterJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), ((AbstractStream<K, V0>)stream).ValueSerdes, null) :
+            return stream is AbstractStream<K, V0> abstractStream ?
+                OuterJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), abstractStream.ValueSerdes, null) :
                 OuterJoin(stream, valueJoiner, windows, StreamJoinProps.From<K, V, V0>(props), null, null);
         }
 

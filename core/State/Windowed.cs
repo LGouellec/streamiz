@@ -57,9 +57,8 @@ namespace Streamiz.Kafka.Net.State
         /// <param name="obj"></param>
         /// <returns></returns>
         public override bool Equals(object obj)
-            => obj is Windowed<K>
-                && Key.Equals(((Windowed<K>)obj).Key)
-                && Window.Equals(((Windowed<K>)obj).Window);
+            => obj is Windowed<K> windowed && Key.Equals(windowed.Key)
+                                           && Window.Equals(windowed.Window);
 
         /// <summary>
         /// 

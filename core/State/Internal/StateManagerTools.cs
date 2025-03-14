@@ -27,7 +27,7 @@ namespace Streamiz.Kafka.Net.State.Internal
 
             long totalOffsetDelta = 0L;
             foreach(var kv in newOffsetSnapshot)
-                totalOffsetDelta += kv.Value - (oldOffsetSnapshot.ContainsKey(kv.Key) ? oldOffsetSnapshot[kv.Key] : 0L);
+                totalOffsetDelta += kv.Value - (oldOffsetSnapshot.TryGetValue(kv.Key, out var value) ? value : 0L);
 
             return totalOffsetDelta > OFFSET_DELTA_THRESHOLD_FOR_CHECKPOINT;
         }

@@ -104,7 +104,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
         /// <returns></returns>
         public override bool Equals(object obj)
         {
-            return obj is Bytes && Equals((Bytes)obj);
+            return obj is Bytes bytesObj && Equals(bytesObj);
         }
 
         /// <summary>

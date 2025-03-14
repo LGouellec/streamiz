@@ -17,8 +17,8 @@ namespace Streamiz.Kafka.Net.Processors
         {
             internal get
             {
-                if (Configs != null && Configs.ContainsKey(InternalTopicConfigCst.RETENTION_MS_CONFIG))
-                    return long.Parse(Configs[InternalTopicConfigCst.RETENTION_MS_CONFIG]);
+                if (Configs != null && Configs.TryGetValue(InternalTopicConfigCst.RETENTION_MS_CONFIG, out var config))
+                    return long.Parse(config);
                 else
                     return retentionsMs;
             }

@@ -43,8 +43,8 @@ namespace Streamiz.Kafka.Net.State.Internal
 
         public override void Init(ProcessorContext context, IStateStore root)
         {
-            base.Init(context, root);
             InitStoreSerDes(context);
+            base.Init(context, root);
         }
     }
 }

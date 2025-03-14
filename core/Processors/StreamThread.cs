@@ -539,7 +539,10 @@ namespace Streamiz.Kafka.Net.Processors
         {
             try
             {
-                thread.Join();
+                if (thread.ThreadState != System.Threading.ThreadState.Unstarted)
+                {
+                    thread.Join();
+                }
             }
             catch (Exception e)
             {

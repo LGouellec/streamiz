@@ -119,9 +119,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                         {
                             int? numPartitionCandidate = null;
 
-                            if (repartitionTopics.ContainsKey(upstreamSourceTopic))
+                            if (repartitionTopics.TryGetValue(upstreamSourceTopic, out var topic))
                             {
-                                numPartitionCandidate = repartitionTopics[upstreamSourceTopic].NumberPartitions;
+                                numPartitionCandidate = topic.NumberPartitions;
                             }
                             else
                             {
@@ -167,8 +167,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         internal static int DefaultPartitionNumber(List<DescribeConfigsResult> configsResults)
         {
             string numPartitionsCst = "num.partitions";
-            if (configsResults.First().Entries.ContainsKey(numPartitionsCst))
-                return int.Parse(configsResults.First().Entries[numPartitionsCst].Value);
+            if (configsResults.First().Entries.TryGetValue(numPartitionsCst, out var entry))
+                return int.Parse(entry.Value);
             throw new StreamsException("Default number partitions unavailable !");
         }
 

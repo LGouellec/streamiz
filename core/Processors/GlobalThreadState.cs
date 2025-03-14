@@ -90,7 +90,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public override bool Equals(object obj)
         {
-            return obj is GlobalThreadState && ((GlobalThreadState)obj).Ordinal.Equals(Ordinal);
+            return obj is GlobalThreadState state && state.Ordinal.Equals(Ordinal);
         }
 
         public override int GetHashCode()

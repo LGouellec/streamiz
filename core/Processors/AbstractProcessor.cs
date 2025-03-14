@@ -28,9 +28,9 @@ namespace Streamiz.Kafka.Net.Processors
         public string Name { get; set; }
         public IList<string> StateStores { get; protected set; }
 
-        public ISerDes<K> KeySerDes => Key is ISerDes<K> ? (ISerDes<K>)Key : null;
+        public ISerDes<K> KeySerDes => Key as ISerDes<K>;
 
-        public ISerDes<V> ValueSerDes => Value is ISerDes<V> ? (ISerDes<V>)Value : null;
+        public ISerDes<V> ValueSerDes => Value as ISerDes<V>;
 
         public ISerDes Key { get; internal set; } = null;
 
@@ -280,7 +280,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public override bool Equals(object obj)
         {
-            return obj is AbstractProcessor<K, V> && ((AbstractProcessor<K, V>)obj).Name.Equals(Name);
+            return obj is AbstractProcessor<K, V> processor && processor.Name.Equals(Name);
         }
 
         public override int GetHashCode()

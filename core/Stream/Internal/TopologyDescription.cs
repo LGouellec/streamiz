@@ -129,9 +129,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         public override bool Equals(object obj)
         {
-            return obj is GlobalStoreDescription &&
-                ((GlobalStoreDescription)obj).Source.Equals(Source) &&
-                ((GlobalStoreDescription)obj).Processor.Equals(Processor);
+            return obj is GlobalStoreDescription description &&
+                description.Source.Equals(Source) &&
+                description.Processor.Equals(Processor);
         }
         public override int GetHashCode()
         {
@@ -183,7 +183,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         }
 
         public override bool Equals(object obj)
-            => obj is INodeDescription && ((INodeDescription)obj).Equals(this.Name);
+            => obj is INodeDescription description && description.Equals(this.Name);
 
         public override int GetHashCode()
             => Name.GetHashCode();

@@ -22,9 +22,9 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
 
             public override bool Equals(object other)
             {
-                if (other == null || !(other is ScopedLibrdKafka))
+                if (other == null || !(other is ScopedLibrdKafka scoped))
                     return false;
-                return ((ScopedLibrdKafka)other).Name.Equals(Name) && ((ScopedLibrdKafka)other).Scope.Equals(Scope);
+                return scoped.Name.Equals(Name) && scoped.Scope.Equals(Scope);
             }
 
             public override int GetHashCode()
@@ -120,8 +120,8 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
                     scopedTags.Select(i => $"{i.Item1}{ScopedLibrdKafka.internalSeparator}{i.Item2}"))
             };
             
-            if (scopedLibrdKafkaSensors.ContainsKey(scoped))
-                return scopedLibrdKafkaSensors[scoped];
+            if (scopedLibrdKafkaSensors.TryGetValue(scoped, out var sensor))
+                return sensor;
             else
             {
                 var scopedSensor = new ScopedLibrdKafkaSensor(this, scoped);

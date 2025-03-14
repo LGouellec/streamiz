@@ -27,8 +27,8 @@ namespace Streamiz.Kafka.Net.Crosscutting
 
         internal static V Get<K,V>(this IDictionary<K,V> map, K key)
         {
-            if (map.ContainsKey(key))
-                return map[key];
+            if (map.TryGetValue(key, out var value))
+                return value;
             else
                 return default(V);
         }

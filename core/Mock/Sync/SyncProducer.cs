@@ -26,8 +26,8 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
             public void Commit()
             {
-                if (metadata is SyncConsumer)
-                    (metadata as SyncConsumer).Commit(offsets);
+                if (metadata is SyncConsumer consumer)
+                    consumer.Commit(offsets);
             }
         }
         private static readonly object _lock = new();

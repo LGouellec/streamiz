@@ -44,7 +44,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         public override bool Equals(object obj)
         {
-            return obj is TaskState && ((TaskState)obj).Ordinal.Equals(Ordinal);
+            return obj is TaskState state && state.Ordinal.Equals(Ordinal);
         }
 
         public override int GetHashCode()

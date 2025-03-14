@@ -103,8 +103,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             => new SinkProcessor<K, V>(Name, TopicExtractor, TimestampExtractor, KeySerdes, ValueSerdes, ProducedPartitioner);
 
         public override NodeDescription Describe()
-            => TopicExtractor is StaticTopicNameExtractor<K, V> ?
-            new SinkNodeDescription(Name, ((StaticTopicNameExtractor<K, V>)TopicExtractor).TopicName) :
+            => TopicExtractor is StaticTopicNameExtractor<K, V> extractor ?
+            new SinkNodeDescription(Name, extractor.TopicName) :
             new SinkNodeDescription(Name, TopicExtractor?.GetType());
     }
 

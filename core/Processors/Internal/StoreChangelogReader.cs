@@ -139,16 +139,15 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public void Unregister(IEnumerable<TopicPartition> topicPartitions)
         {
             var revokedPartitions = new List<TopicPartition>();
-            var assigmentPartitions = new List<TopicPartition>();
 
             foreach(var part in topicPartitions)
             {
-                if (changelogs.ContainsKey(part))
+                if (changelogs.TryGetValue(part, out var metadata))
                 {
-                    if (!(changelogs[part].ChangelogState == ChangelogState.REGISTERED))
+                    if (metadata.ChangelogState != ChangelogState.REGISTERED)
                         revokedPartitions.Add(part);
 
-                    changelogs[part].BufferedRecords.Clear();
+                    metadata.BufferedRecords.Clear();
                     changelogs.Remove(part);
                 }
                 else
@@ -176,14 +175,14 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         private ChangelogMetadata GetRestoringMetadata(TopicPartition topicPartition)
         {
-            if (changelogs.ContainsKey(topicPartition))
+            if (changelogs.TryGetValue(topicPartition, out var metadata))
             {
-                if (changelogs[topicPartition].ChangelogState != ChangelogState.RESTORING)
+                if (metadata.ChangelogState != ChangelogState.RESTORING)
                 {
                     throw new IllegalStateException($"The corresponding changelog restorer for {topicPartition} has already transited to completed state, this should not happen.");
                 }
 
-                return changelogs[topicPartition];
+                return metadata;
             }
 
             throw new IllegalStateException($"The corresponding changelog restorer for {topicPartition} does not exist, this should not happen.");
@@ -348,6 +347,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         #endregion
 
         internal ChangelogMetadata GetMetadata(TopicPartition topicPartition)
-            => changelogs.ContainsKey(topicPartition) ? changelogs[topicPartition] : null;
+            => changelogs.TryGetValue(topicPartition, out var metadata) ? metadata : null;
     }
 }

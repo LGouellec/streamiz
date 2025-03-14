@@ -52,8 +52,8 @@ namespace Streamiz.Kafka.Net.SerDes.Internal
 
         public override void Initialize(SerDesContext context)
         {
-            if (innerSerdes == null && context.Config.DefaultValueSerDes is ISerDes<V>)
-                innerSerdes = (ISerDes<V>) context.Config.DefaultValueSerDes;
+            if (innerSerdes == null && context.Config.DefaultValueSerDes is ISerDes<V> des)
+                innerSerdes = des;
             
             if(innerSerdes == null)
                 throw new StreamsException($"ChangeSerdes<{typeof(V)}> is not correctly configured. Please set explicitly serdes in previous operation.");

@@ -352,12 +352,11 @@ namespace Streamiz.Kafka.Net.State.InMemory
                 if (time <= observedStreamTime - retention.TotalMilliseconds)
                     return null;
 
-                if (map.ContainsKey(time))
+                if (map.TryGetValue(time, out var value))
                 {
                     var keyFrom = retainDuplicates ? WrapWithSeq(key, 0) : key;
                     var keyTo = retainDuplicates ? WrapWithSeq(key, Int32.MaxValue) : key;
-                    return map[time]
-                        .FirstOrDefault(kv => kv.Key.CompareTo(keyFrom) >= 0 && kv.Key.CompareTo(keyTo) <= 0).Value;
+                    return value.FirstOrDefault(kv => kv.Key.CompareTo(keyFrom) >= 0 && kv.Key.CompareTo(keyTo) <= 0).Value;
                 }
                 else
                     return null;
@@ -478,11 +477,9 @@ namespace Streamiz.Kafka.Net.State.InMemory
                     // Skip if value is null and duplicates are allowed since this delete is a no-op
                     if (map.ContainsKey(windowStartTimestamp))
                     {
-                        ConcurrentDictionary<Bytes, byte[]> tmp = null;
-                        byte[] d = null;
-                        map[windowStartTimestamp].TryRemove(key, out d);
+                        map[windowStartTimestamp].TryRemove(key, out _);
                         if (map[windowStartTimestamp].Count == 0)
-                            map.TryRemove(windowStartTimestamp, out tmp);
+                            map.TryRemove(windowStartTimestamp, out _);
                     }
                 }
             }

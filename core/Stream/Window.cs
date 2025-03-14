@@ -69,10 +69,10 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="obj"></param>
         /// <returns></returns>
         public override bool Equals(object obj)
-            => obj is Window &&
-                obj.GetType().Equals(GetType()) &&
-                (obj as Window).StartMs.Equals(StartMs) &&
-                (obj as Window).EndMs.Equals(EndMs);
+            => obj is Window window &&
+                window.GetType().Equals(GetType()) &&
+                window.StartMs.Equals(StartMs) &&
+                window.EndMs.Equals(EndMs);
 
         /// <summary>
         /// 

@@ -72,9 +72,9 @@ namespace Streamiz.Kafka.Net.Table.Internal
             var joinLeftProcessorParameters = new TableProcessorParameters<K, V>(joinLeft, joinLeftName);
             var joinRightProcessorParameters = new TableProcessorParameters<K, V0>(joinRight, joinRigthName);
 
-            if (materializedInternal.KeySerdes == null && tableLeft is AbstractStream<K, V>)
+            if (materializedInternal.KeySerdes == null && tableLeft is AbstractStream<K, V> stream)
             {
-                materializedInternal.WithKeySerdes((tableLeft as AbstractStream<K, V>).KeySerdes);
+                materializedInternal.WithKeySerdes(stream.KeySerdes);
             }
 
             ISerDes<K> keySerdes = materializedInternal.KeySerdes;

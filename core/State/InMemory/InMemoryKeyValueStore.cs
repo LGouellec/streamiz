@@ -80,8 +80,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// <returns>Return old value or null if key not found</returns>
         public virtual byte[] Delete(Bytes key)
         {
-            byte[] v = map.ContainsKey(key) ? map[key] : null;
-            size -= map.TryRemove(key, out _) ? 1 : 0;
+            size -= map.TryRemove(key, out var v) ? 1 : 0;
             return v;
         }
 
@@ -95,8 +94,7 @@ namespace Streamiz.Kafka.Net.State.InMemory
         /// </summary>
         /// <param name="key">The key to fetch</param>
         /// <returns>The value or null if no value is found</returns>
-        public virtual byte[] Get(Bytes key) => map.ContainsKey(key) ? map[key] : null;
-
+        public virtual byte[] Get(Bytes key) => map.TryGetValue(key, out var value) ? value : null;
         /// <summary>
         /// Return an iterator over all keys in this store. No ordering guarantees are provided.
         /// </summary>

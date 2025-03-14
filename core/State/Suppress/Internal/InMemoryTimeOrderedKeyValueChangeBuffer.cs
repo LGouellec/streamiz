@@ -252,9 +252,8 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
         {
             if (value == null)
             {
-                if (index.ContainsKey(key))
+                if (index.TryGetValue(key, out var bufferedKey))
                 {
-                    var bufferedKey = index[key];
                     index.Remove(key);
 
                     var bufferValue = sortedValues.Get(bufferedKey);
