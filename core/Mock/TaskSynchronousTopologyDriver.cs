@@ -37,6 +37,7 @@ namespace Streamiz.Kafka.Net.Mock
         private readonly StreamsProducer producer = null;
         private readonly bool hasGlobalTopology = false;
         private ITopicManager internalTopicManager;
+        private readonly IConsumer<byte[],byte[]> repartitionConsumerForwarder;
 
         public bool IsRunning { get; private set; }
 
@@ -109,6 +110,9 @@ namespace Streamiz.Kafka.Net.Mock
                         metricsRegistry,
                         adminClient));
             }
+            
+            repartitionConsumerForwarder = this.supplier.GetConsumer(topicConfiguration.ToConsumerConfig("consumer-repartition-forwarder"),
+                null);
         }
 
         internal StreamTask GetTask(string topicName)
@@ -158,14 +162,14 @@ namespace Streamiz.Kafka.Net.Mock
                 .GetResult();
         }
 
-        private void ForwardRepartitionTopic(IConsumer<byte[], byte[]> consumer, string topic)
+        private void ForwardRepartitionTopic(string topic)
         {
             var records = new List<ConsumeResult<byte[], byte[]>>();
-            consumer.Subscribe(topic);
+            repartitionConsumerForwarder.Subscribe(topic);
             ConsumeResult<byte[], byte[]> record = null;
             do
             {
-                record = consumer.Consume();
+                record = repartitionConsumerForwarder.Consume();
                 if (record != null)
                     records.Add(record);
             } while (record != null);
@@ -179,10 +183,10 @@ namespace Streamiz.Kafka.Net.Mock
                 pipe.Flush();
                 pipe.Dispose();
 
-                consumer.Commit(records.Last());
+                repartitionConsumerForwarder.Commit(records.Last());
             }
 
-            consumer.Unsubscribe();
+            repartitionConsumerForwarder.Unsubscribe();
         }
 
         private SyncPipeBuilder CreateBuilder(string topicName)
@@ -219,7 +223,7 @@ namespace Streamiz.Kafka.Net.Mock
                         null);
 
                 foreach (var topicLink in topicsLink)
-                    pipeInput.Flushed += () => ForwardRepartitionTopic(consumer, topicLink);
+                    pipeInput.Flushed += () => ForwardRepartitionTopic(topicLink);
 
                 pipes.Add(topic, pipeInput);
             }
@@ -235,13 +239,11 @@ namespace Streamiz.Kafka.Net.Mock
 
             var topicsLink = new List<string>();
             builder.GetLinkTopics(topicName, topicsLink);
-            var consumer = supplier.GetConsumer(topicConfiguration.ToConsumerConfig("consumer-repartition-forwarder"),
-                null);
-
+            
             foreach (var topic in topicsLink)
             {
                 GetTask(topic);
-                pipeInput.Flushed += () => ForwardRepartitionTopic(consumer, topic);
+                pipeInput.Flushed += () => ForwardRepartitionTopic(topic);
             }
 
             return new TestInputTopic<K, V>(pipeInput, configuration, keySerdes, valueSerdes);
