@@ -79,7 +79,7 @@ namespace sample_stream
 
         public static async Task Main(string[] args)
         {
-            /*AwsKmsDriver.Register();
+            AwsKmsDriver.Register();
             FieldEncryptionExecutor.Register();
 
             var config = new StreamConfig<StringSerDes, StringSerDes>
@@ -101,10 +101,7 @@ namespace sample_stream
 
             Console.CancelKeyPress += (_, _) => { stream.Dispose(); };
 
-            await stream.StartAsync();*/
-
-            var reproducerProtobuf = new ReproducerProtobuf();
-            await reproducerProtobuf.Test();
+            await stream.StartAsync();
         }
 
         private static Topology BuildTopology()
