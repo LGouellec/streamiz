@@ -28,6 +28,70 @@ namespace Streamiz.Kafka.Net.Tests.Private
         {
             // nothing
         }
+
+        [Test]
+        public void TestWithNoHeader()
+        {
+            var options = new ProducerSyncExceptionOptions
+            {
+                NumberOfError = 2,
+            };
+            var supplier = new ProducerSyncExceptionSupplier(options);
+            
+            var producer = new StreamsProducer(
+                config,
+                "thread",
+                Guid.NewGuid(),
+                supplier,
+                "");
+            
+            var collector = new RecordCollector(
+                "test-collector",
+                config,
+                new TaskId {Id = 0, Partition = 0},
+                producer,
+                NoRunnableSensor.Empty);
+            
+            // first send => retry queue
+            try
+            {
+                collector.Send(
+                    "input-topic",
+                    "key1",
+                    "value1",
+                    null,
+                    DateTime.Now.GetMilliseconds(),
+                    new StringSerDes(),
+                    new StringSerDes());
+            }
+            catch { }
+
+            try
+            {
+                collector.Send(
+                    "input-topic",
+                    "key1",
+                    "value2",
+                   null,
+                    DateTime.Now.GetMilliseconds(),
+                    new StringSerDes(),
+                    new StringSerDes());
+            }
+            catch { }
+
+            var consumer = supplier.GetConsumer(config.ToConsumerConfig("consumer"), null);
+            consumer.Subscribe("input-topic");
+            int count = 0;
+            ConsumeResult<byte[], byte[]> r = null;
+            
+            while((r = consumer.Consume(100)) != null)
+                ++count;
+            
+            Assert.AreEqual(2, count);
+
+            consumer.Close();
+            consumer.Dispose();
+        }
         
         [Test]
         public void MultipleRetry()
