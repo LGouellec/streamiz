@@ -2,8 +2,6 @@
 using Moq;
 using NUnit.Framework;
 using RocksDbSharp;
-using Streamiz.Kafka.Net.Crosscutting;
-using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
@@ -51,6 +49,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             config.RocksDbConfigHandler = (name, options) =>
             {
                 options
+                    .SetPeriodicCompactionSeconds(100)
                     .EnableStatistics()
                     .IncreaseParallelism(parallelism)
                     .OptimizeForPointLookup(blockCacheSizeMb)
