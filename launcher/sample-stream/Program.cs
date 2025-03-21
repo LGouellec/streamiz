@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.InteropServices.JavaScript;
+using System.Text;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Confluent.SchemaRegistry.Encryption;
@@ -77,8 +79,19 @@ namespace sample_stream
             }
         }
 
-        public static async Task Main(string[] args)
+        private static String GetProprerty<T>()
         {
+            StringBuilder sb = new StringBuilder();
+            
+            foreach (var property in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public))
+            {
+                sb.AppendLine($"{property.PropertyType.ToString()} {property.Name}");
+            }
+
+            return sb.ToString();
+        }
+        public static async Task Main(string[] args)
+        { 
             /*AwsKmsDriver.Register();
             FieldEncryptionExecutor.Register();
 
@@ -103,8 +116,8 @@ namespace sample_stream
 
             await stream.StartAsync();*/
 
-            var reproducerProtobuf = new ReproducerProtobuf();
-            await reproducerProtobuf.Test();
+            //var reproducerProtobuf = new ReproducerProtobuf();
+            //await reproducerProtobuf.Test();
         }
 
         private static Topology BuildTopology()
