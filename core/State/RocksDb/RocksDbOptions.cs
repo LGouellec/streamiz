@@ -55,6 +55,18 @@ namespace Streamiz.Kafka.Net.State
         }
 
         #region DbOptions
+
+        /// <summary>
+        /// Makes sure a file goes through compaction filter every once a while, so that compaction filter can remove data accordingly.
+        /// </summary>
+        /// <param name="periodicCompactionSeconds">Periodic parameters in seconds</param>
+        /// <returns>the instance of the current object</returns>
+        public RocksDbOptions SetPeriodicCompactionSeconds(ulong periodicCompactionSeconds)
+        {
+            Native.Instance.rocksdb_options_set_periodic_compaction_seconds(
+                dbOptions.Handle, periodicCompactionSeconds);
+            return this;
+        }
         
         /// <summary>
         /// Enable rocksdb statistics
