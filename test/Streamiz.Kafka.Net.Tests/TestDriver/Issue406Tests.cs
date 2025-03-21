@@ -8,14 +8,14 @@ using Streamiz.Kafka.Net.Mock;
 
 namespace Streamiz.Kafka.Net.Tests.TestDriver;
 
-public class UnitTest1
+public class Issue406Tests
 {
     static readonly String SUM_OF_ODD_NUMBERS_TOPIC = "sum-of-odd-numbers-topic";
     static readonly String NUMBERS_TOPIC = "numbers-topic";
     static readonly String BACK_UP_NUMBERS_TOPIC = "backup-numbers-topic";
 
     [Test]
-    public void Test1()
+    public void Reproducer()
     {
         var topology = GetTopology();
 

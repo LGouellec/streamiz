@@ -79,20 +79,9 @@ namespace sample_stream
             }
         }
 
-        private static String GetProprerty<T>()
-        {
-            StringBuilder sb = new StringBuilder();
-            
-            foreach (var property in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public))
-            {
-                sb.AppendLine($"{property.PropertyType.ToString()} {property.Name}");
-            }
-
-            return sb.ToString();
-        }
         public static async Task Main(string[] args)
         { 
-            /*AwsKmsDriver.Register();
+            AwsKmsDriver.Register();
             FieldEncryptionExecutor.Register();
 
             var config = new StreamConfig<StringSerDes, StringSerDes>
@@ -114,10 +103,9 @@ namespace sample_stream
 
             Console.CancelKeyPress += (_, _) => { stream.Dispose(); };
 
-            await stream.StartAsync();*/
+            await stream.StartAsync();
 
-            //var reproducerProtobuf = new ReproducerProtobuf();
-            //await reproducerProtobuf.Test();
+            await stream.StartAsync();
         }
 
         private static Topology BuildTopology()

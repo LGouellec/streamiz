@@ -28,18 +28,14 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
         private sealed class RetryRecordContext
         {
-            private readonly Dictionary<string, RetryRecord> records;
-            private readonly Queue<RetryRecord> queueRecords;
+            private readonly Dictionary<string, RetryRecord> records = new();
+            private readonly Queue<RetryRecord> queueRecords = new();
             private const string RETRY_HEADER_KEY = "streamiz-retry-guid";
-
-            public RetryRecordContext()
-            {
-                records = new Dictionary<string, RetryRecord>();
-                queueRecords = new Queue<RetryRecord>();
-            }
 
             public void AddRecord(RetryRecord record)
             {
+                record.Headers ??= new Headers();
+                
                 if (record.Headers.TryGetLastBytes(RETRY_HEADER_KEY, out byte[] previousGuid))
                 {
                     string oldGuidKey = Encoding.UTF8.GetString(previousGuid);
