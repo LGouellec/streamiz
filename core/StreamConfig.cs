@@ -436,14 +436,7 @@ namespace Streamiz.Kafka.Net
 
         /// private string applicationServerCst = "application.server";
         /// private string topologyOptimizationCst = "topology.optimization";
-        /// private string cacheMaxBytesBufferingCst = "cache.max.bytes.buffering";
-        /// private string rocksdbConfigSetterCst = "rocksdb.config.setter";
         /// private string stateCleanupDelayMsCst = "state.cleanup.delay.ms";
-        /// private string pollMsCst = "poll.ms";
-        /// private string processingGuaranteeCst = "processing.guarantee";
-
-        /// public static readonly string AT_LEAST_ONCE = "at_least_once";
-        /// public static readonly string EXACTLY_ONCE = "exactly_once";
 
         /// private string Optimize
         /// {
@@ -468,24 +461,14 @@ namespace Streamiz.Kafka.Net
         ///             throw new InvalidOperationException($"ProcessingGuaranteeConfig value must equal to {AT_LEAST_ONCE} or {EXACTLY_ONCE}");
         ///     }
         /// }
-
-        /// private long PollMsConfig
-        /// {
-        ///     get => Convert.ToInt64(configProperties[pollMsCst]);
-        ///     set => configProperties.AddOrUpdate(pollMsCst, value.ToString());
-        /// }
+        
 
         /// private long StateCleanupDelayMs
         /// {
         ///     get => Convert.ToInt64(configProperties[stateCleanupDelayMsCst]);
         ///     set => configProperties.AddOrUpdate(stateCleanupDelayMsCst, value.ToString());
         /// }
-
-        /// private long CacheMaxBytesBuffering
-        /// {
-        ///     get => Convert.ToInt64(configProperties[cacheMaxBytesBufferingCst]);
-        ///     set => configProperties.AddOrUpdate(cacheMaxBytesBufferingCst, value.ToString());
-        /// }
+        
 
         #endregion
 
@@ -622,6 +605,142 @@ namespace Streamiz.Kafka.Net
 
         #region ClientConfig
 
+        /// <summary>
+        /// Maximum time allowed for broker connection setup (TCP connection setup as well SSL and SASL handshake). If the connection to the broker is not fully functional after this the connection will be closed and retried.
+        /// default: 30000 (importance: medium)
+        /// </summary>
+        [StreamConfigProperty("socket.connection.setup.timeout.ms")]
+        public int? SocketConnectionSetupTimeoutMs
+        {
+            get => _config.SocketConnectionSetupTimeoutMs;
+            set
+            {
+                _config.SocketConnectionSetupTimeoutMs = value;
+                _consumerConfig.SocketConnectionSetupTimeoutMs = value;
+                _producerConfig.SocketConnectionSetupTimeoutMs = value;
+                _adminClientConfig.SocketConnectionSetupTimeoutMs = value;
+            }
+        }
+        
+        /// <summary>
+        /// Whether to enable pushing of client metrics to the cluster, if the cluster has a client metrics subscription which matches this client
+        /// default: true (importance: low)
+        /// </summary>
+        [StreamConfigProperty("enable.metrics.push")]
+        public bool? EnableMetricsPush
+        {
+            get => _config.EnableMetricsPush;
+            set
+            {
+                _config.EnableMetricsPush = value;
+                _consumerConfig.EnableMetricsPush = value;
+                _producerConfig.EnableMetricsPush = value;
+                _adminClientConfig.EnableMetricsPush = value;
+            }
+        }
+        
+        /// <summary>
+        ///  Controls how the client uses DNS lookups. By default, when the lookup returns multiple IP addresses for a hostname, they will all be attempted for connection before the connection is considered failed. This applies to both bootstrap and advertised servers. If the value is set to `resolve_canonical_bootstrap_servers_only`, each entry will be resolved and expanded into a list of canonical names. **WARNING**: `resolve_canonical_bootstrap_servers_only` must only be used with `GSSAPI` (Kerberos) as `sasl.mechanism`, as it's the only purpose of this configuration value. **NOTE**: Default here is different from the Java client's default behavior, which connects only to the first IP address returned for a hostname.
+        /// default: use_all_dns_ips (importance: low)
+        /// </summary>
+        [StreamConfigProperty("client.dns.lookup")]
+        public Confluent.Kafka.ClientDnsLookup? ClientDnsLookup
+        {
+            get => _config.ClientDnsLookup;
+            set
+            {
+                _config.ClientDnsLookup = value;
+                _consumerConfig.ClientDnsLookup = value;
+                _producerConfig.ClientDnsLookup = value;
+                _adminClientConfig.ClientDnsLookup = value;
+            }
+        }
+        
+        /// <summary>
+        /// The max backoff time in milliseconds before retrying a protocol request, this is the atmost backoff allowed for exponentially backed off requests.
+        /// default: 1000 (importance: medium)
+        /// </summary>
+        [StreamConfigProperty("retry.backoff.max.ms")]
+        public int? RetryBackoffMaxMs
+        {
+            get => _config.RetryBackoffMaxMs;
+            set
+            {
+                _config.RetryBackoffMaxMs = value;
+                _consumerConfig.RetryBackoffMaxMs = value;
+                _producerConfig.RetryBackoffMaxMs = value;
+                _adminClientConfig.RetryBackoffMaxMs = value;
+            }
+        }
+        
+        /// <summary>
+        /// OpenSSL engine id is the name used for loading engine.
+        /// default: dynamic (importance: low)
+        /// </summary>
+        [StreamConfigProperty("ssl.engine.id")]
+        public string SslEngineId
+        {
+            get => _config.SslEngineId;
+            set
+            {
+                _config.SslEngineId = value;
+                _consumerConfig.SslEngineId = value;
+                _producerConfig.SslEngineId = value;
+                _adminClientConfig.SslEngineId = value;
+            }
+        }
+        
+        /// <summary>
+        /// Comma-separated list of OpenSSL 3.0.x implementation providers. E.g., "default,legacy".
+        /// default: '' (importance: low)
+        /// </summary>
+        [StreamConfigProperty("ssl.providers")]
+        public string SslProviders
+        {
+            get => _config.SslProviders;
+            set
+            {
+                _config.SslProviders = value;
+                _consumerConfig.SslProviders = value;
+                _producerConfig.SslProviders = value;
+                _adminClientConfig.SslProviders = value;
+            }
+        }
+
+        /// <summary>
+        /// CA certificate string (PEM format) for verifying the broker's key.
+        /// default: '' (importance: low)
+        /// </summary>
+        [StreamConfigProperty("ssl.ca.pem")]
+        public string SslCaPem
+        {
+            get => _config.SslCaPem;
+            set
+            {
+                _config.SslCaPem = value;
+                _consumerConfig.SslCaPem = value;
+                _producerConfig.SslCaPem = value;
+                _adminClientConfig.SslCaPem = value;
+            }
+        }
+        
+        /// <summary>
+        ///  Close broker connections after the specified time of inactivity. Disable with 0. If this property is left at its default value some heuristics are performed to determine a suitable default value, this is currently limited to identifying brokers on Azure (see librdkafka issue #3109 for more info).
+        ///  default: 0 (importance: medium)
+        /// </summary>
+        [StreamConfigProperty("connections.max.idle.ms")]
+        public int? ConnectionsMaxIdleMs
+        {
+            get => _config.ConnectionsMaxIdleMs;
+            set
+            {
+                _config.ConnectionsMaxIdleMs = value;
+                _consumerConfig.ConnectionsMaxIdleMs = value;
+                _producerConfig.ConnectionsMaxIdleMs = value;
+                _adminClientConfig.ConnectionsMaxIdleMs = value;
+            }
+        }
+        
         /// <summary>
         /// Timeout for broker API version requests. default: 10000 importance: low
         /// </summary>
@@ -1846,6 +1965,39 @@ namespace Streamiz.Kafka.Net
         #region ConsumerConfig
         
         /// <summary>
+        ///  How long to postpone the next fetch request for a topic+partition in case the current fetch queue thresholds (queued.min.messages or queued.max.messages.kbytes) have been exceded. This property may need to be decreased if the queue thresholds are set low and the application is experiencing long (~1s) delays between messages. Low values may increase CPU utilization.
+        ///  default: 1000 (importance: medium)
+        /// </summary>
+        [StreamConfigProperty("fetch.queue.backoff.ms")]
+        public int? FetchQueueBackoffMs
+        {
+            get => _consumerConfig.FetchQueueBackoffMs;
+            set => _consumerConfig.FetchQueueBackoffMs = value;
+        }
+        
+        /// <summary>
+        /// Group protocol to use. Use `classic` for the original protocol and `consumer` for the new protocol introduced in KIP-848. Available protocols: classic or consumer. Default is `classic`, but will change to `consumer` in next releases.
+        /// default: classic (importance: high)
+        /// </summary>
+        [StreamConfigProperty("group.protocol")]
+        public GroupProtocol? GroupProtocol
+        {
+            get => _consumerConfig.GroupProtocol;
+            set => _consumerConfig.GroupProtocol = value;
+        }
+
+        /// <summary>
+        /// Server side assignor to use. Keep it null to make server select a suitable assignor for the group. Available assignors: uniform or range. Default is null
+        /// default: '' (importance: medium)
+        /// </summary>
+        [StreamConfigProperty("group.remote.assignor")]
+        public String GroupRemoteAssignor
+        {
+            get => _consumerConfig.GroupRemoteAssignor;
+            set => _consumerConfig.GroupRemoteAssignor = value;
+        }
+        
+        /// <summary>
         /// Controls how to read messages written transactionally: `read_committed` - only
         /// return transactional messages which have been committed. `read_uncommitted` -
         /// return all messages, even transactional messages which have been aborted. default:
@@ -1869,7 +2021,10 @@ namespace Streamiz.Kafka.Net
         /// a fetch error. default: 500 importance: medium
         /// </summary>
         [StreamConfigProperty("fetch.error.backoff.ms")]
-        public int? FetchErrorBackoffMs { get { return _consumerConfig.FetchErrorBackoffMs; } set { _consumerConfig.FetchErrorBackoffMs = value; } }
+        public int? FetchErrorBackoffMs { 
+            get => _consumerConfig.FetchErrorBackoffMs;
+            set => _consumerConfig.FetchErrorBackoffMs = value;
+        }
 
         /// <summary>
         /// Minimum number of bytes the broker responds with. If fetch.wait.max.ms expires

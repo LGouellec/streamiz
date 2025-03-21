@@ -5,7 +5,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
-using NUnit.Framework.Interfaces;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
@@ -372,6 +371,18 @@ namespace Streamiz.Kafka.Net.Tests.Public
             stream.StickyPartitioningLingerMs = 5;
             stream.ParallelProcessing = true;
             stream.MaxDegreeOfParallelism = 10;
+            
+            stream.GroupProtocol = GroupProtocol.Consumer;
+            stream.GroupRemoteAssignor = "range";
+            stream.FetchQueueBackoffMs = 3000;
+            stream.ConnectionsMaxIdleMs = 100;
+            stream.SslCaPem = "SSLCAPEM";
+            stream.SslProviders = "opensslv3";
+            stream.SslEngineId = "engine"; 
+            stream.RetryBackoffMaxMs = 600;
+            stream.ClientDnsLookup = ClientDnsLookup.ResolveCanonicalBootstrapServersOnly;
+            stream.EnableMetricsPush = false;
+            stream.SocketConnectionSetupTimeoutMs = 300;
 
             var producerConfig = stream.ToProducerConfig();
             var consumerConfig = stream.ToConsumerConfig();
@@ -379,6 +390,16 @@ namespace Streamiz.Kafka.Net.Tests.Public
             var adminConfig = stream.ToAdminConfig("admin");
 
             #region ProducerConfig
+            
+            Assert.AreEqual(producerConfig.ConnectionsMaxIdleMs, 100);
+            Assert.AreEqual(producerConfig.SslCaPem, "SSLCAPEM");
+            Assert.AreEqual(producerConfig.SslProviders, "opensslv3");
+            Assert.AreEqual(producerConfig.SslEngineId, "engine");
+            Assert.AreEqual(producerConfig.RetryBackoffMaxMs, 600);
+            Assert.AreEqual(producerConfig.ClientDnsLookup, ClientDnsLookup.ResolveCanonicalBootstrapServersOnly);
+            Assert.AreEqual(producerConfig.EnableMetricsPush, false);
+            Assert.AreEqual(producerConfig.SocketConnectionSetupTimeoutMs, 300);
+            
             Assert.AreEqual(Confluent.Kafka.Acks.All, producerConfig.Acks);
             Assert.AreEqual(1, producerConfig.ApiVersionFallbackMs);
             Assert.AreEqual(false, producerConfig.ApiVersionRequest);
@@ -469,6 +490,20 @@ namespace Streamiz.Kafka.Net.Tests.Public
              #endregion
 
             #region ConsumerConfig
+
+            Assert.AreEqual(consumerConfig.GroupProtocol, GroupProtocol.Consumer);
+            Assert.AreEqual(consumerConfig.GroupRemoteAssignor, "range");
+            Assert.AreEqual(consumerConfig.FetchQueueBackoffMs, 3000);
+
+            Assert.AreEqual(consumerConfig.ConnectionsMaxIdleMs, 100);
+            Assert.AreEqual(consumerConfig.SslCaPem, "SSLCAPEM");
+            Assert.AreEqual(consumerConfig.SslProviders, "opensslv3");
+            Assert.AreEqual(consumerConfig.SslEngineId, "engine");
+            Assert.AreEqual(consumerConfig.RetryBackoffMaxMs, 600);
+            Assert.AreEqual(consumerConfig.ClientDnsLookup, ClientDnsLookup.ResolveCanonicalBootstrapServersOnly);
+            Assert.AreEqual(consumerConfig.EnableMetricsPush, false);
+            Assert.AreEqual(consumerConfig.SocketConnectionSetupTimeoutMs, 300);
+            
             Assert.AreEqual(Confluent.Kafka.Acks.All, consumerConfig.Acks);
             Assert.AreEqual(1, consumerConfig.ApiVersionFallbackMs);
             Assert.AreEqual(false, consumerConfig.ApiVersionRequest);
@@ -550,6 +585,15 @@ namespace Streamiz.Kafka.Net.Tests.Public
             #endregion
 
             #region GlobalConfig
+            Assert.AreEqual(globalConfig.ConnectionsMaxIdleMs, 100);
+            Assert.AreEqual(globalConfig.SslCaPem, "SSLCAPEM");
+            Assert.AreEqual(globalConfig.SslProviders, "opensslv3");
+            Assert.AreEqual(globalConfig.SslEngineId, "engine");
+            Assert.AreEqual(globalConfig.RetryBackoffMaxMs, 600);
+            Assert.AreEqual(globalConfig.ClientDnsLookup, ClientDnsLookup.ResolveCanonicalBootstrapServersOnly);
+            Assert.AreEqual(globalConfig.EnableMetricsPush, false);
+            Assert.AreEqual(globalConfig.SocketConnectionSetupTimeoutMs, 300);
+            
             Assert.AreEqual(Confluent.Kafka.Acks.All, globalConfig.Acks);
             Assert.AreEqual(1, globalConfig.ApiVersionFallbackMs);
             Assert.AreEqual(false, globalConfig.ApiVersionRequest);
@@ -633,6 +677,15 @@ namespace Streamiz.Kafka.Net.Tests.Public
             #endregion
 
             #region AdminConfig
+            Assert.AreEqual(adminConfig.ConnectionsMaxIdleMs, 100);
+            Assert.AreEqual(adminConfig.SslCaPem, "SSLCAPEM");
+            Assert.AreEqual(adminConfig.SslProviders, "opensslv3");
+            Assert.AreEqual(adminConfig.SslEngineId, "engine");
+            Assert.AreEqual(adminConfig.RetryBackoffMaxMs, 600);
+            Assert.AreEqual(adminConfig.ClientDnsLookup, ClientDnsLookup.ResolveCanonicalBootstrapServersOnly);
+            Assert.AreEqual(adminConfig.EnableMetricsPush, false);
+            Assert.AreEqual(adminConfig.SocketConnectionSetupTimeoutMs, 300);
+            
             Assert.AreEqual(Confluent.Kafka.Acks.All, adminConfig.Acks);
             Assert.AreEqual(1, adminConfig.ApiVersionFallbackMs);
             Assert.AreEqual(false, adminConfig.ApiVersionRequest);
@@ -698,6 +751,15 @@ namespace Streamiz.Kafka.Net.Tests.Public
             #endregion
 
             #region StreamConfig
+            Assert.AreEqual(stream.ConnectionsMaxIdleMs, 100);
+            Assert.AreEqual(stream.SslCaPem, "SSLCAPEM");
+            Assert.AreEqual(stream.SslProviders, "opensslv3");
+            Assert.AreEqual(stream.SslEngineId, "engine");
+            Assert.AreEqual(stream.RetryBackoffMaxMs, 600);
+            Assert.AreEqual(stream.ClientDnsLookup, ClientDnsLookup.ResolveCanonicalBootstrapServersOnly);
+            Assert.AreEqual(stream.EnableMetricsPush, false);
+            Assert.AreEqual(stream.SocketConnectionSetupTimeoutMs, 300);
+            
             Assert.AreEqual("test", stream.ApplicationId);
             Assert.AreEqual(Confluent.Kafka.Acks.All, stream.Acks);
             Assert.AreEqual(1, stream.ApiVersionFallbackMs);

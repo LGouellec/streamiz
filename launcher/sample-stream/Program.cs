@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.InteropServices.JavaScript;
+using System.Text;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Confluent.SchemaRegistry.Encryption;
@@ -78,7 +80,7 @@ namespace sample_stream
         }
 
         public static async Task Main(string[] args)
-        {
+        { 
             AwsKmsDriver.Register();
             FieldEncryptionExecutor.Register();
 
@@ -100,6 +102,8 @@ namespace sample_stream
             var stream = new KafkaStream(t, config);
 
             Console.CancelKeyPress += (_, _) => { stream.Dispose(); };
+
+            await stream.StartAsync();
 
             await stream.StartAsync();
         }
