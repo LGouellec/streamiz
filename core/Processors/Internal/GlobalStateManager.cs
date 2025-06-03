@@ -250,13 +250,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     
                     if (lowWM == highWM) // if low offset == high offset
                         break;
-
-                    if (globalConsumer.Position(topicPartition) == highWM) // consumer is still EOF to the partition
-                    {
-                        offset = highWM;
-                        break;
-                    }
-
+                    
                     var convertedRecords = globalConsumer
                         .ConsumeRecords(TimeSpan.FromMilliseconds(config.PollMs), config.MaxPollRestoringRecords)
                         .Select(r => recordConverter(r)).ToList();
@@ -266,6 +260,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
                     if (convertedRecords.Any())
                         offset = convertedRecords.Last().Offset;
+                    else
+                    {
+                        if (globalConsumer.Position(topicPartition) == highWM) // consumer is still EOF to the partition
+                            break;
+                    }
                 }
 
                 ChangelogOffsets.AddOrUpdate(topicPartition, offset);
