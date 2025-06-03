@@ -168,7 +168,6 @@ public class GlobalRestoreStateTests
         _builder = new();
         _globalBuilder = new();
         
-        
         var config = new StreamConfig<StringSerDes, StringSerDes>()
         {
             ApplicationId = APPLICATION_ID,
