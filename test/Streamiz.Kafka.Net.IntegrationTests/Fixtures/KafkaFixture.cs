@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Confluent.Kafka;
 using Confluent.Kafka.Admin;
 using Testcontainers.Kafka;
+using AdminClientBuilder = Confluent.Kafka.AdminClientBuilder;
 
 namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
 {
@@ -23,6 +24,11 @@ namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
                 .WithName("kafka-streamiz-integration-tests")
                 .Build();
         }
+        
+        public KafkaFixture(KafkaContainer container)
+        {
+            this.container = container;
+        }
 
         public string BootstrapServers => container.GetBootstrapAddress();
 
@@ -36,6 +42,11 @@ namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
         );
 
         private ProducerConfig ProducerProperties => new()
+        {
+            BootstrapServers = BootstrapServers
+        };
+        
+        private AdminClientConfig AdminProperties => new()
         {
             BootstrapServers = BootstrapServers
         };
@@ -168,5 +179,10 @@ namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
         public Task DisposeAsync() => container.DisposeAsync().AsTask();
 
         public Task InitializeAsync() => container.StartAsync();
+
+        public IAdminClient AdminClient()
+        {
+            return (new AdminClientBuilder(AdminProperties)).Build();
+        }
     }
 }

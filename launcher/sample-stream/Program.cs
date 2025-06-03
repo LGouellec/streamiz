@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices.JavaScript;
 using System.Threading.Tasks;
+using Amazon.Runtime.Internal.Auth;
 using Confluent.Kafka;
 using Confluent.SchemaRegistry.Encryption;
 using Confluent.SchemaRegistry.Encryption.Aws;
@@ -108,8 +109,11 @@ namespace sample_stream
         {
             var builder = new StreamBuilder();
 
-            //builder.Stream<string, PersonalData, StringSerDes, SchemaJsonSerDes<PersonalData>>("personalData")
-            //    .Print(Printed<string, PersonalData>.ToOut());
+            var globalTable = builder.GlobalTable(
+                "global-topic",
+                new StringSerDes(),
+                new StringSerDes(),
+                InMemory.As<String, String>());
 
             return builder.Build();
         }

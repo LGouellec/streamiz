@@ -66,7 +66,7 @@ namespace Streamiz.Kafka.Net.Processors
                     }
                     else
                     {
-                        if (numberPartitions == t.Value.NumberPartitions)
+                        if (t.Value.NumberPartitions == 0 || numberPartitions == t.Value.NumberPartitions)
                         {
                             continue;
                         }
