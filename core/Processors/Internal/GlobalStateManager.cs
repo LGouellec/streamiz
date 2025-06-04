@@ -251,16 +251,20 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     if (lowWM == highWM) // if low offset == high offset
                         break;
                     
-                    var records = globalConsumer.ConsumeRecords(TimeSpan.FromMilliseconds(config.PollMs),
-                        config.MaxPollRestoringRecords).ToList();
-
-                    var convertedRecords = records.Select(r => recordConverter(r)).ToList();
+                    var convertedRecords = globalConsumer
+                        .ConsumeRecords(TimeSpan.FromMilliseconds(config.PollMs), config.MaxPollRestoringRecords)
+                        .Select(r => recordConverter(r)).ToList();
 
                     foreach (var record in convertedRecords)
                         restoreCallback?.Invoke(record);
 
                     if (convertedRecords.Any())
-                        offset = records.Last().Offset;
+                        offset = convertedRecords.Last().Offset;
+                    else
+                    {
+                        if (globalConsumer.Position(topicPartition) == highWM) // consumer is still EOF to the partition
+                            break;
+                    }
                 }
 
                 ChangelogOffsets.AddOrUpdate(topicPartition, offset);
