@@ -774,6 +774,14 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                             .Nodes
                             .OfType<ISourceNodeDescription>()
                             .FirstOrDefault(predicate) != null);
+            
+            if (subTopo == null)
+            {
+                // Check if one global store is used as a ref
+                var globalStoreDescription = description.GlobalStores.FirstOrDefault(g => g.Source.Topics.Contains(topic));
+                return globalStoreDescription;
+            }
+
             return subTopo;
         }
         
@@ -812,9 +820,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         // FOR TESTING
         internal void GetLinkTopics(string topic, IList<string> linkTopics)
         {
+            List<string> changelogsTopics = new List<string>();
+            
             var subTopo = GetSubTopologyDescription(topic);
             if (subTopo != null)
             {
+                // If the sink topic is used as a source topic in another part of the topology
                 var sinkNodes = subTopo
                     .Nodes
                     .OfType<ISinkNodeDescription>();
@@ -828,10 +839,35 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                             : sinkNode.Topic;
                         
                         if (linkTopics.Contains(sinkTopic))
-                            return;
+                            break;
                         
                         linkTopics.Add(sinkTopic);
                         GetLinkTopics(sinkTopic, linkTopics);
+                    }
+                }
+                
+                // If some changelog topics is used as a source processor (GlobalStore for instance)
+                var processorNodes = subTopo
+                    .Nodes
+                    .OfType<ProcessorNodeDescription>();
+
+                foreach (var processorNode in processorNodes)
+                {
+                    foreach (var store in processorNode.Stores)
+                    {
+                        if (storesToTopics.ContainsKey(store))
+                        {
+                            var changelogTopic = storesToTopics[store];
+                            var subTopology = GetSubTopologyDescription(changelogTopic);
+                            if (subTopology != null)
+                            {
+                                if (linkTopics.Contains(changelogTopic))
+                                    break;
+
+                                linkTopics.Add(changelogTopic);
+                                GetLinkTopics(changelogTopic, linkTopics);
+                            }
+                        }
                     }
                 }
             }

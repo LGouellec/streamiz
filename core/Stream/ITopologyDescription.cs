@@ -51,7 +51,7 @@ namespace Streamiz.Kafka.Net.Stream
     /// Furthermore, global stores are available to all processors without connecting them explicitly, and thus global
     /// stores will never be part of any subtopology.
     /// </summary>
-    public interface IGlobalStoreDescription
+    public interface IGlobalStoreDescription : ISubTopologyDescription
     {
         /// <summary>
         /// The source node reading from a "global" topic.
