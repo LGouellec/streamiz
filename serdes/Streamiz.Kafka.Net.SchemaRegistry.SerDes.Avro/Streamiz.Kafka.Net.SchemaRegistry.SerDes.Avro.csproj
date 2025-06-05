@@ -19,8 +19,8 @@
     <PackageIconUrl>https://raw.githubusercontent.com/LGouellec/streamiz/master/resources/logo-kafka-stream-net.png</PackageIconUrl>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\key.snk</AssemblyOriginatorKeyFile>
-    <Version>1.7.1-RC1</Version>
-    <PackageVersion>1.7.1-RC1</PackageVersion>
+    <Version>1.7.1-RC2</Version>
+    <PackageVersion>1.7.1-RC2</PackageVersion>
     <AssemblyVersion>1.7.1</AssemblyVersion>
     <FileVersion>1.7.1</FileVersion>
   </PropertyGroup>

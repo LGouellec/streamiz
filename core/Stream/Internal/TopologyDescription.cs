@@ -109,6 +109,12 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
     internal class GlobalStoreDescription : IGlobalStoreDescription
     {
+        public IEnumerable<INodeDescription> Nodes => new List<INodeDescription>
+        {
+            Source,
+            Processor
+        };
+        
         public ISourceNodeDescription Source { get; }
 
         public IProcessorNodeDescription Processor { get; }

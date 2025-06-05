@@ -264,8 +264,10 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
                     (k,v) => k,
                     (v1, v2) => $"{v1}-{v2}")
                 .To("sink");
-            
-            var driver = new ClusterInMemoryTopologyDriver("client", builder.Build().Builder, config, topicConfiguration, TimeSpan.FromSeconds(1), source.Token);
+
+            var internalDriver = builder.Build().Builder;
+            internalDriver.RewriteTopology(config);
+            var driver = new ClusterInMemoryTopologyDriver("client", internalDriver, config, topicConfiguration, TimeSpan.FromSeconds(1), source.Token);
             driver.StartDriver();
             
             var inputTest = driver.CreateInputTopic("test", new StringSerDes(), new StringSerDes());
