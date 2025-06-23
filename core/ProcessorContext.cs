@@ -54,6 +54,11 @@ namespace Streamiz.Kafka.Net
         public long Offset => RecordContext.Offset;
 
         /// <summary>
+        /// Current message headers of record processing
+        /// </summary>
+        public Headers Headers => RecordContext.Headers;
+
+        /// <summary>
         /// Current partition of record processing
         /// </summary>
         public Partition Partition => RecordContext.Partition;
