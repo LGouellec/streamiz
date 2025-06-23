@@ -113,13 +113,18 @@ namespace Streamiz.Kafka.Net.Processors
                 where policyException.IsInstanceOfType(innerException) 
                 select innerException).Any();
 
-        private void LogProcessingKeyValueWithRetryNumber(K key, V value, int retryNumber, bool result) => log.LogDebug(
-            $"{logPrefix}Process<{typeof(K).Name},{typeof(V).Name}> message with key {key} and {value}" +
-            $" with record metadata [topic:{Context.RecordContext.Topic}|" +
-            $"partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}] [retry.number={retryNumber}, result={(result ? "Success" : "Failure")}]");
-        
+        private void LogProcessingKeyValueWithRetryNumber(K key, V value, int retryNumber, bool result)
+        {
+            if (log.IsEnabled(LogLevel.Debug))
+            {
+                log.LogDebug(
+                    $"{logPrefix}Process<{typeof(K).Name},{typeof(V).Name}> message with key {key} and {value}" +
+                    $" with record metadata [topic:{Context.RecordContext.Topic}|" +
+                    $"partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}] [retry.number={retryNumber}, result={(result ? "Success" : "Failure")}]");
+            }
+        }
+
         public abstract Task<IEnumerable<KeyValuePair<K1, V1>>> ProcessAsync(K key, V value, Headers headers, long timestamp,
             ExternalContext context);
-        
     }
 }
