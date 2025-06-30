@@ -17,6 +17,7 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
             public string Schema { get; set; }
             public int Version { get; set; }
             public int Id { get; set; }
+            public string Guid { get; set; }
         }
 
         private int id = 0;
@@ -173,6 +174,25 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
         /// 
         /// </summary>
         /// <param name="subject"></param>
+        /// <param name="schema"></param>
+        /// <param name="normalize"></param>
+        /// <returns></returns>
+        public Task<RegisteredSchema> RegisterSchemaWithResponseAsync(string subject, Schema schema, bool normalize = false)
+        {
+            var registerSchema = RegisterSchemaInternal(subject, schema.SchemaString);
+            return Task.FromResult(new RegisteredSchema(
+                subject,
+                registerSchema.Version,
+                registerSchema.Id,
+                registerSchema.Schema,
+                SchemaType.Avro,
+                new List<SchemaReference>()));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="subject"></param>
         /// <param name="avroSchema"></param>
         /// <param name="normalize"></param>
         /// <returns></returns>
@@ -216,6 +236,22 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
             }
 
             return Task.FromResult((Schema)null);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="guid"></param>
+        /// <param name="format"></param>
+        /// <returns></returns>
+        public Task<Schema> GetSchemaByGuidAsync(string guid, string format = null)
+        {
+            var schema = schemas
+                .SelectMany(s => s.Value)
+                .FirstOrDefault(s => s.Guid.Equals(guid));
+            return schema != null ?
+                Task.FromResult(new Schema(schema.Schema, SchemaType.Avro)) :
+                Task.FromResult((Schema)null);
         }
 
         public Task<RegisteredSchema> GetRegisteredSchemaAsync(string subject, int version, bool ignoreDeletedSchemas = true)
@@ -351,32 +387,8 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
         [Obsolete("Superseded by RegisterSchemaAsync(string, Schema)")]
         public Task<int> RegisterSchemaAsync(string subject, string avroSchema)
         {
-            var registerSchema = schemas
-                .SelectMany(s => s.Value)
-                .FirstOrDefault(s => s.Schema.Equals(avroSchema));
-            
-            if (schemas.ContainsKey(subject))
-            {
-                var maxVersion = schemas[subject].Max(s => s.Version) + 1;
-                schemas[subject].Add(new RegisterSchema
-                {
-                    Id = registerSchema?.Id ?? ++id,
-                    Schema = avroSchema,
-                    Version = maxVersion
-                });
-            }
-            else
-            {
-                schemas.Add(subject, new List<RegisterSchema> {
-                    new RegisterSchema {
-                    Id = registerSchema?.Id ?? ++id,
-                    Schema = avroSchema,
-                    Version = 1
-                    }
-                });
-                subjects.Add(subject);
-            }
-            return Task.FromResult(registerSchema?.Id ?? id);
+            var registerSchema = RegisterSchemaInternal(subject, avroSchema);
+            return Task.FromResult(registerSchema.Id);
         }
 
         /// <summary>
@@ -429,5 +441,42 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
         public IAuthenticationHeaderValueProvider AuthHeaderProvider { get; }
 
         #endregion ISchemaRegistryClient Impl
+
+        private RegisterSchema RegisterSchemaInternal(string subject, string schemaString)
+        {
+            RegisterSchema schema;
+            var registerSchema = schemas
+                .SelectMany(s => s.Value)
+                .FirstOrDefault(s => s.Schema.Equals(schemaString));
+
+            if (schemas.ContainsKey(subject))
+            {
+                var maxVersion = schemas[subject].Max(s => s.Version) + 1;
+                schema = new RegisterSchema
+                {
+                    Id = registerSchema?.Id ?? ++id,
+                    Guid = registerSchema?.Guid ?? Guid.NewGuid().ToString(),
+                    Schema = schemaString,
+                    Version = maxVersion
+                };
+
+                schemas[subject].Add(schema);
+            }
+            else
+            {
+                schema = new RegisterSchema
+                {
+                    Id = registerSchema?.Id ?? ++id,
+                    Guid = registerSchema?.Guid ?? Guid.NewGuid().ToString(),
+                    Schema = schemaString,
+                    Version = 1
+                };
+
+                schemas.Add(subject, new List<RegisterSchema> { schema });
+                subjects.Add(subject);
+            }
+
+            return schema;
+        }
     }
 }
