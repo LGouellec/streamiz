@@ -30,8 +30,11 @@ namespace Streamiz.Kafka.Net.Kafka
 
         internal void LogConsume(IConsumer<byte[], byte[]> consumer, LogMessage message)
         {
-            string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
-            log.LogDebug("{LogPrefix}Log consumer {ConsumerName} - {Message}", logPrefix, GetName(consumer), message.Message);
+            if (log.IsEnabled(LogLevel.Debug))
+            {
+                string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
+                log.LogDebug("{LogPrefix}Log consumer {ConsumerName} - {Message}", logPrefix, GetName(consumer), message.Message);
+            }
         }
 
         internal void ErrorConsume(IConsumer<byte[], byte[]> consumer, Error error)
@@ -46,13 +49,16 @@ namespace Streamiz.Kafka.Net.Kafka
 
         internal void LogProduce(IProducer<byte[], byte[]> producer, LogMessage message)
         {
-            string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
-            log.LogDebug("{LogPrefix}Log producer {ProducerName} - {Message}", logPrefix, GetName(producer), message.Message);
+            if (log.IsEnabled(LogLevel.Debug))
+            { 
+                string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : ""; 
+                log.LogDebug("{LogPrefix}Log producer {ProducerName} - {Message}", logPrefix, GetName(producer), message.Message);
+            }
         }
 
         internal void ErrorProduce(IProducer<byte[], byte[]> producer, Error error)
         {
-            string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
+            string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : ""; 
             log.LogError("{LogPrefix}Error producer {ProducerName} - {ErrorReason}", logPrefix, GetName(producer), error.Reason);
         }
 
@@ -68,8 +74,11 @@ namespace Streamiz.Kafka.Net.Kafka
 
         internal void LogAdmin(IAdminClient admin, LogMessage message)
         {
-            string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
-            log.LogDebug("{LogPrefix}Log admin {ClientName} - {Message}", logPrefix, GetName(admin), message.Message);
+            if (log.IsEnabled(LogLevel.Debug))
+            {
+                string logPrefix = Thread.CurrentThread.Name != null ? $"stream-thread[{Thread.CurrentThread.Name}] " : "";
+               log.LogDebug("{LogPrefix}Log admin {ClientName} - {Message}", logPrefix, GetName(admin), message.Message);
+            }
         }
 
         #endregion

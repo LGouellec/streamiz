@@ -49,12 +49,14 @@ namespace Streamiz.Kafka.Net.Tests.Public
             result.Partition = 0;
             result.Offset = 100;
             result.Message.Timestamp = new Timestamp(dt);
+            result.Message.Headers = new Headers();
             context.SetRecordMetaData(result);
 
             Assert.AreEqual("topic", context.Topic);
             Assert.AreEqual(0, context.Partition.Value);
             Assert.AreEqual(100, context.Offset);
             Assert.AreEqual(dt.GetMilliseconds(), context.Timestamp);
+            Assert.AreEqual(result.Message.Headers, context.Headers);
         }
 
         [Test]
