@@ -320,6 +320,12 @@ Default: true
 The subject name strategy to use for schema registration / lookup. 
 Possible values: ``` Topic, Record, TopicRecord ```
 
+### AllowAutoCreateTopic
+
+Allow automatic topic creation on the broker when subscribing to or assigning non-existent topics. The broker must also be configured with `auto.create.topics.enable=true` for this configuration to take effect.
+
+Note that enabling this setting in the StreamConfig can cause unexpected behavior when creating internal topics via this library: Kafka will auto-create the topics, with the default amount of partitions. This happens before the Streaming library can create the topics, causing an exception, and also leading to the internal topics not having the expected amount of partitions.
+
 ## Kafka consumers and producer configuration parameters
 
 You can specify parameters for the Kafka consumers, producers, and admin client that are used internally. The consumer, producer and admin client settings are defined by wrapper properties on ConsumerConfig, ProducerConfig and AdminConfig.
@@ -332,7 +338,7 @@ In this example, the Kafka consumer session timeout is configured to be 60000 mi
     config.SessionTimeoutMs = 60000;
 ```
 
-In case of the configuration is not wrapped in StreamConfig yet or because you want to override differnetly the configuration of the main consumer and the configuration of the restore consumer , you can directly add your configuration via the following methods.
+In case of the configuration is not wrapped in StreamConfig yet or because you want to override differently the configuration of the main consumer and the configuration of the restore consumer , you can directly add your configuration via the following methods.
 ``` csharp
     var config = new StreamConfig();
     // add key/value for the main consumer (prefix : "main.consumer."), similar to config.Add("main.consumer.fetch.min.bytes", 1000);
