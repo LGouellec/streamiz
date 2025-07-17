@@ -69,7 +69,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             InternalTopicManagerUtils
                 .New()
-                .CreateInternalTopicsAsync(internalTopicManager, topo.Builder).GetAwaiter();
+                .CreateInternalTopicsAsync(internalTopicManager, topo.Builder, false).GetAwaiter();
         }
 
         [TearDown]

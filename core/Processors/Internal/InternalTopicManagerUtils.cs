@@ -29,9 +29,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         internal async Task CreateInternalTopicsAsync(
             ITopicManager topicManager,
-            InternalTopologyBuilder builder)
+            InternalTopologyBuilder builder,
+            bool automaticTopicCreationAllowed)
         {
             //var clusterMetadata = topicManager.AdminClient.GetMetadata(timeout);
+
             var internalTopicsGroups = builder.MakeInternalTopicGroups();
             
             foreach (var entry in internalTopicsGroups)
@@ -41,7 +43,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
                 var internalTopics = entry.Value.ChangelogTopics.Union(entry.Value.RepartitionTopics).ToDictionary();
 
-                await topicManager.ApplyAsync(entry.Key, internalTopics);
+                await topicManager.ApplyAsync(entry.Key, internalTopics, automaticTopicCreationAllowed);
             }
         }
 

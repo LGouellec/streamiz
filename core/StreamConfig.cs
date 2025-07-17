@@ -354,7 +354,9 @@ namespace Streamiz.Kafka.Net
         /// Define the default maximum number of memory bytes to be used for state stores cache for a single store. (default: 5Mb)
         /// </summary>
         long DefaultStateStoreCacheMaxBytes { get; set; }
-        
+
+        bool? AllowAutoCreateTopics { get; set; }
+
         #endregion
         
         #region Middlewares
@@ -522,6 +524,7 @@ namespace Streamiz.Kafka.Net
         private const string productionExceptionHandlerCst = "production.exception.handler";
         private const string logProcessingSummaryCst = "log.processing.summary";
         private const string stateStoreCacheMaxBytesCst = "statestore.cache.max.bytes";
+        private const string allowAutoCreateTopic = "statestore.cache.max.bytes";
         
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -2187,7 +2190,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Allow automatic topic creation on the broker when subscribing to or assigning
         /// non-existent topics. The broker must also be configured with `auto.create.topics.enable=true`
-        /// for this configuraiton to take effect. Note: The default value (false) is different
+        /// for this configuration to take effect. Note: The default value (false) is different
         /// from the Java consumer (true). Requires broker version >= 0.11.0.0, for older
         /// broker versions only the broker configuration applies. default: false importance:
         /// low
@@ -3013,6 +3016,15 @@ namespace Streamiz.Kafka.Net
         {
             get => configProperties[stateStoreCacheMaxBytesCst];
             set => configProperties.AddOrUpdate(stateStoreCacheMaxBytesCst, value);
+        }
+        
+        /// <summary>
+        /// Allow automatic topic creation on the broker when subscribing, producing, or requesting metadata
+        /// </summary>
+        public bool? AllowAllowAutoCreateTopics        
+        {
+            get => configProperties[allowAutoCreateTopic];
+            set => configProperties.AddOrUpdate(allowAutoCreateTopic, value);
         }
 
         /// <summary>

@@ -119,7 +119,7 @@ namespace Streamiz.Kafka.Net.Mock
             InternalTopicManagerUtils
                 .New()
                 .CreateSourceTopics(internalTopologyBuilder, kafkaSupplier)
-                .CreateInternalTopicsAsync(internalTopicManager, internalTopologyBuilder)
+                .CreateInternalTopicsAsync(internalTopicManager, internalTopologyBuilder, configuration.AllowAutoCreateTopics ?? false)
                 .GetAwaiter()
                 .GetResult();
         }

@@ -9,6 +9,6 @@ namespace Streamiz.Kafka.Net.Processors
     {
         IAdminClient AdminClient { get; }
 
-        Task<IEnumerable<string>> ApplyAsync(int topologyId, IDictionary<string, InternalTopicConfig> topics);
+        Task<IEnumerable<string>> ApplyAsync(int topologyId, IDictionary<string, InternalTopicConfig> topics, bool allowAutoCreateTopicsIsEnabled);
     }
 }
