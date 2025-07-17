@@ -54,6 +54,14 @@ namespace Streamiz.Kafka.Net.Mock.Sync
                 }
             }
         }
+        
+        internal void DeleteTopic(string topicName)
+        {
+            lock (_lock)
+            {
+                topics.Remove(topicName);
+            }
+        }
 
         internal IEnumerable<string> GetAllTopics()
             => topics.Keys;

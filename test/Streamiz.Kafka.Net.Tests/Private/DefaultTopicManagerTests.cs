@@ -100,18 +100,23 @@ namespace Streamiz.Kafka.Net.Tests.Private
             topics.Add("topic", new UnwindowedChangelogTopicConfig
             {
                 Name = "topic",
-                NumberPartitions = 1
+                NumberPartitions = 6
             });
             topics.Add("topic1", new UnwindowedChangelogTopicConfig
             {
                 Name = "topic1",
-                NumberPartitions = 1
+                NumberPartitions = 6
             });
+            
+            Assert.Throws<StreamsException>(() => manager.ApplyAsync(0, topics, true).GetAwaiter().GetResult());
+            Assert.Throws<StreamsException>(() => manager.ApplyAsync(0, topics, false).GetAwaiter().GetResult());
+            
+            ((SyncProducer) kafkaSupplier.GetProducer(new ProducerConfig())).DeleteTopic("topic");
 
             var r = manager.ApplyAsync(0, topics, false).GetAwaiter().GetResult().ToList();
 
-            Assert.AreEqual(1, r.Count);
-            Assert.AreEqual("topic1", r[0]);
+            Assert.AreEqual(2, r.Count);
+            Assert.AreEqual("topic", r[0]);
         }
 
         [Test]
@@ -157,29 +162,6 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.Throws<StreamsException>(() => manager.ApplyAsync(0, topics, true).GetAwaiter().GetResult());
         }
         
-        [Test]
-        public void TryCreateInternalTopicsWhenAllowCreateTopicsIsEnabled()
-        {
-            AdminClientConfig config = new AdminClientConfig();
-            config.BootstrapServers = "localhost:9092";
-
-            StreamConfig config2 = new StreamConfig();
-
-            DefaultTopicManager manager = new DefaultTopicManager(config2, kafkaSupplier.GetAdmin(config));
-            ((SyncProducer) kafkaSupplier.GetProducer(new ProducerConfig())).CreateTopic("topic");
-
-            IDictionary<string, InternalTopicConfig> topics = new Dictionary<string, InternalTopicConfig>();
-            
-            // We try to create an internal topic. This topic has already been created but with a different amount of partitions.
-            topics.Add("topic", new UnwindowedChangelogTopicConfig
-            {
-                Name = "topic",
-                NumberPartitions = 6
-            });
-
-            Assert.Throws<StreamsException>(() => manager.ApplyAsync(0, topics, true).GetAwaiter().GetResult());
-        }
-
         // WAIT dotnet testcontainers
 
         //[Test]
