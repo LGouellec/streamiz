@@ -154,13 +154,11 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 NumberPartitions = 1
             });
 
-            var r = Parallel.ForEach(new List<int> {1, 2, 3, 4},
-                (i) => manager.ApplyAsync(0, topics, false).GetAwaiter().GetResult());
-            Assert.IsTrue(r.IsCompleted);
+            Assert.Throws<StreamsException>(() => manager.ApplyAsync(0, topics, true).GetAwaiter().GetResult());
         }
         
         [Test]
-        public void TryCreateInternalTopics()
+        public void TryCreateInternalTopicsWhenAllowCreateTopicsIsEnabled()
         {
             AdminClientConfig config = new AdminClientConfig();
             config.BootstrapServers = "localhost:9092";
@@ -168,17 +166,18 @@ namespace Streamiz.Kafka.Net.Tests.Private
             StreamConfig config2 = new StreamConfig();
 
             DefaultTopicManager manager = new DefaultTopicManager(config2, kafkaSupplier.GetAdmin(config));
+            ((SyncProducer) kafkaSupplier.GetProducer(new ProducerConfig())).CreateTopic("topic");
 
             IDictionary<string, InternalTopicConfig> topics = new Dictionary<string, InternalTopicConfig>();
+            
+            // We try to create an internal topic. This topic has already been created but with a different amount of partitions.
             topics.Add("topic", new UnwindowedChangelogTopicConfig
             {
                 Name = "topic",
-                NumberPartitions = 1
+                NumberPartitions = 6
             });
 
-            var r = Parallel.ForEach(new List<int> {1, 2, 3, 4},
-                (i) => manager.ApplyAsync(0, topics, true).GetAwaiter().GetResult());
-            Assert.IsTrue(r.IsCompleted);
+            Assert.Throws<StreamsException>(() => manager.ApplyAsync(0, topics, true).GetAwaiter().GetResult());
         }
 
         // WAIT dotnet testcontainers
