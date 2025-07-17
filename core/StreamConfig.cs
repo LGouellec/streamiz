@@ -524,7 +524,6 @@ namespace Streamiz.Kafka.Net
         private const string productionExceptionHandlerCst = "production.exception.handler";
         private const string logProcessingSummaryCst = "log.processing.summary";
         private const string stateStoreCacheMaxBytesCst = "statestore.cache.max.bytes";
-        private const string allowAutoCreateTopic = "statestore.cache.max.bytes";
         
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -3016,15 +3015,6 @@ namespace Streamiz.Kafka.Net
         {
             get => configProperties[stateStoreCacheMaxBytesCst];
             set => configProperties.AddOrUpdate(stateStoreCacheMaxBytesCst, value);
-        }
-        
-        /// <summary>
-        /// Allow automatic topic creation on the broker when subscribing, producing, or requesting metadata
-        /// </summary>
-        public bool? AllowAllowAutoCreateTopics        
-        {
-            get => configProperties[allowAutoCreateTopic];
-            set => configProperties.AddOrUpdate(allowAutoCreateTopic, value);
         }
 
         /// <summary>

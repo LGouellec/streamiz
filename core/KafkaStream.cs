@@ -279,10 +279,8 @@ namespace Streamiz.Kafka.Net
         /// <param name="topology">the topology specifying the computational logic</param>
         /// <param name="configuration">configuration about this stream</param>
         public KafkaStream(Topology topology, IStreamConfig configuration)
-            : this(topology, configuration,
-                new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(configuration), configuration))
-        {
-        }
+            : this(topology, configuration, new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(configuration), configuration))
+        { }
 
         /// <summary>
         /// Create a <see cref="KafkaStream"/> instance with your own <see cref="IKafkaSupplier" />

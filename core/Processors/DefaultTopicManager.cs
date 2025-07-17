@@ -71,22 +71,13 @@ namespace Streamiz.Kafka.Net.Processors
                         {
                             continue;
                         }
-                        else
-                        {
-                            string msg =
-                                $"Existing internal topic {t.Key} with invalid partitions: expected {t.Value.NumberPartitions}, actual: {numberPartitions}.";
-                            if (allowAutoCreateTopicsIsEnabled)
-                            {
-                                msg = $"{msg} Disable AllowAutoCreateTopics in the StreamConfig, delete the auto created partitions in Kafka, and restart the Streaming service.";
-                            }
-                            else
-                            {
-                               msg = $"{msg} Please clean up invalid topics before processing.";
-                            }
 
-                            log.LogError(msg);
-                            throw new StreamsException(msg);
-                        }
+                        var msg =
+                            $"Existing internal topic {t.Key} with invalid partitions: expected {t.Value.NumberPartitions}, actual: {numberPartitions}.";
+                        msg = allowAutoCreateTopicsIsEnabled ? $"{msg} Disable AllowAutoCreateTopics in the StreamConfig, delete the auto created partitions in Kafka, and restart the Streaming service." : $"{msg} Please clean up invalid topics before processing.";
+
+                        log.LogError(msg);
+                        throw new StreamsException(msg);
                     }
                 }
 

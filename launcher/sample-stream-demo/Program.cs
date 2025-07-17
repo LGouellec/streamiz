@@ -28,7 +28,7 @@ namespace sample_stream_demo
             config.ApplicationId = "sample-streamiz-demo";
             config.BootstrapServers = "localhost:9092";
             config.AutoOffsetReset = AutoOffsetReset.Earliest;
-            config.AllowAutoCreateTopics = true;
+            config.AllowAutoCreateTopics = false;
             config.StateDir = Path.Combine(".");
             config.CommitIntervalMs = 5000;
             config.Guarantee = ProcessingGuarantee.AT_LEAST_ONCE;
