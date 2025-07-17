@@ -324,7 +324,7 @@ Possible values: ``` Topic, Record, TopicRecord ```
 
 Allow automatic topic creation on the broker when subscribing to or assigning non-existent topics. The broker must also be configured with `auto.create.topics.enable=true` for this configuration to take effect.
 
-Note that enabling this setting in the StreamConfig can cause unexpected behavior when creating internal topics via this library: Kafka will auto-create the topics, with the default amount of partitions. This happens before the Streaming library can create the topics, causing an exception, and also leading to the internal topics not having the expected amount of partitions.
+Note that enabling this setting in the StreamConfig can cause unexpected behavior when creating internal topics via Streaming abstractions. Kafka will auto-create the topics, with the default amount of partitions. This happens before the Streaming library can create the internal topics, causing an exception. This can lead to internal topics not having the expected amount of partitions.
 
 ## Kafka consumers and producer configuration parameters
 
