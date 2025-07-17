@@ -159,7 +159,9 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 NumberPartitions = 1
             });
 
-            Assert.Throws<StreamsException>(() => manager.ApplyAsync(0, topics, true).GetAwaiter().GetResult());
+            var r = Parallel.ForEach(new List<int> {1, 2, 3, 4},
+                (i) => manager.ApplyAsync(0, topics, false).GetAwaiter().GetResult());
+            Assert.IsTrue(r.IsCompleted);
         }
         
         // WAIT dotnet testcontainers
