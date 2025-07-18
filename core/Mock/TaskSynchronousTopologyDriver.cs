@@ -157,7 +157,7 @@ namespace Streamiz.Kafka.Net.Mock
             InternalTopicManagerUtils
                 .New()
                 .CreateSourceTopics(builder, supplier)
-                .CreateInternalTopicsAsync(internalTopicManager, builder)
+                .CreateInternalTopicsAsync(internalTopicManager, builder, configuration.AllowAutoCreateTopics ?? false)
                 .GetAwaiter()
                 .GetResult();
         }

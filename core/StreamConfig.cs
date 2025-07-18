@@ -354,7 +354,9 @@ namespace Streamiz.Kafka.Net
         /// Define the default maximum number of memory bytes to be used for state stores cache for a single store. (default: 5Mb)
         /// </summary>
         long DefaultStateStoreCacheMaxBytes { get; set; }
-        
+
+        bool? AllowAutoCreateTopics { get; set; }
+
         #endregion
         
         #region Middlewares
@@ -2187,7 +2189,7 @@ namespace Streamiz.Kafka.Net
         /// <summary>
         /// Allow automatic topic creation on the broker when subscribing to or assigning
         /// non-existent topics. The broker must also be configured with `auto.create.topics.enable=true`
-        /// for this configuraiton to take effect. Note: The default value (false) is different
+        /// for this configuration to take effect. Note: The default value (false) is different
         /// from the Java consumer (true). Requires broker version >= 0.11.0.0, for older
         /// broker versions only the broker configuration applies. default: false importance:
         /// low

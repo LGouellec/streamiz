@@ -68,7 +68,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 new DefaultTopicManager(config, mockKafkaSupplier.GetAdmin(config.ToAdminConfig("admin")));
             InternalTopicManagerUtils
                 .New()
-                .CreateInternalTopicsAsync(internalTopicManager, topo.Builder).GetAwaiter();
+                .CreateInternalTopicsAsync(internalTopicManager, topo.Builder, false).GetAwaiter();
         }
 
         [TearDown]
