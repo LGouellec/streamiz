@@ -46,6 +46,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private static readonly long DEFAULT_OFFSET_UPDATE_MS = (long)TimeSpan.FromMinutes(5L).TotalMilliseconds;
         private readonly long pollTimeMs;
         private readonly long maxPollRestoringRecords;
+        private readonly IStreamConfig config;
         
         public StoreChangelogReader(
             IStreamConfig config,
@@ -53,6 +54,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             string threadId,
             StreamMetricsRegistry metricsRegistry)
         {
+            this.config = config;
             this.restoreConsumer = restoreConsumer;
             this.threadId = threadId;
             this.metricsRegistry = metricsRegistry;
@@ -331,7 +333,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             return registeredChangelogs
                 .Select(_changelog => {
-                    var offsets = restoreConsumer.QueryWatermarkOffsets(_changelog.StoreMetadata.ChangelogTopicPartition, TimeSpan.FromSeconds(5));
+                    var offsets = restoreConsumer.QueryWatermarkOffsets(_changelog.StoreMetadata.ChangelogTopicPartition, config.QueryWatermarkOffsetsTimeout);
                     return new
                     {
                         TopicPartition = _changelog.StoreMetadata.ChangelogTopicPartition,

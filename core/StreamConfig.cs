@@ -357,6 +357,11 @@ namespace Streamiz.Kafka.Net
 
         bool? AllowAutoCreateTopics { get; set; }
 
+        /// <summary>
+        /// Timeout for QueryWatermarkOffsets operations when restoring state stores. (Default: 5 seconds)
+        /// </summary>
+        TimeSpan QueryWatermarkOffsetsTimeout { get; set; }
+
         #endregion
         
         #region Middlewares
@@ -524,6 +529,7 @@ namespace Streamiz.Kafka.Net
         private const string productionExceptionHandlerCst = "production.exception.handler";
         private const string logProcessingSummaryCst = "log.processing.summary";
         private const string stateStoreCacheMaxBytesCst = "statestore.cache.max.bytes";
+        private const string queryWatermarkOffsetsTimeoutMsCst = "query.watermark.offsets.timeout.ms";
         
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -2489,6 +2495,7 @@ namespace Streamiz.Kafka.Net
             ParallelProcessing = false;
             MaxDegreeOfParallelism = 8;
             DefaultStateStoreCacheMaxBytes = 5 * 1024 * 1024;
+            QueryWatermarkOffsetsTimeout = TimeSpan.FromSeconds(5);
 
             _consumerConfig = new ConsumerConfig();
             _producerConfig = new ProducerConfig();
@@ -3015,6 +3022,16 @@ namespace Streamiz.Kafka.Net
         {
             get => configProperties[stateStoreCacheMaxBytesCst];
             set => configProperties.AddOrUpdate(stateStoreCacheMaxBytesCst, value);
+        }
+
+        /// <summary>
+        /// Timeout for QueryWatermarkOffsets operations when restoring state stores. (Default: 5 seconds)
+        /// </summary>
+        [StreamConfigProperty("" + queryWatermarkOffsetsTimeoutMsCst)]
+        public TimeSpan QueryWatermarkOffsetsTimeout
+        {
+            get => configProperties[queryWatermarkOffsetsTimeoutMsCst];
+            set => configProperties.AddOrUpdate(queryWatermarkOffsetsTimeoutMsCst, value);
         }
 
         /// <summary>
