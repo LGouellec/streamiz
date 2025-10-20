@@ -100,7 +100,7 @@ namespace Streamiz.Kafka.Net.Tests.Reproducer
             {
                 var inputTopic = driver.CreateInputTopic<string, string, StringSerDes, StringSerDes>("Input");
                 var outputTopic =
-                    driver.CreateOuputTopic<string, CloudEvent, StringSerDes, CloudEventSerDes2>("Output",
+                    driver.CreateOutputTopic<string, CloudEvent, StringSerDes, CloudEventSerDes2>("Output",
                         TimeSpan.FromSeconds(5));
 
                 IList<CloudEvent> result;
@@ -127,7 +127,7 @@ namespace Streamiz.Kafka.Net.Tests.Reproducer
             {
                 var inputTopic = driver.CreateInputTopic<string, string, StringSerDes, StringSerDes>("Input");
                 var outputTopic =
-                    driver.CreateOuputTopic<string, CloudEvent, StringSerDes, CloudEventSerDes2>("Output",
+                    driver.CreateOutputTopic<string, CloudEvent, StringSerDes, CloudEventSerDes2>("Output",
                         TimeSpan.FromSeconds(5));
 
                 IList<CloudEvent> result;

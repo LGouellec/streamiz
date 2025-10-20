@@ -40,7 +40,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 var inputTopic2 = driver.CreateInputTopic<string, string>("regions");
                 var inputTopic3 = driver.CreateInputTopic<string, string>("orders");
                 var inputTopic4 = driver.CreateInputTopic<string, string>("country");
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic-output");
 
                 inputTopic1.PipeInput("sylvain", "sylvain");
                 inputTopic2.PipeInput("sylvain", "Europe");
@@ -87,7 +87,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 var inputTopic2 = driver.CreateInputTopic<string, string>("regions");
                 var inputTopic3 = driver.CreateInputTopic<string, string>("orders");
                 var inputTopic4 = driver.CreateInputTopic<string, string>("country");
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic-output");
 
                 inputTopic1.PipeInput("sylvain", "sylvain");
                 inputTopic2.PipeInput("sylvain", "Europe");

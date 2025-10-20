@@ -229,7 +229,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     {'2', 1 }
                 };
                 var input = driver.CreateInputTopic<string, string>("topic");
-                var output = driver.CreateOuputTopic<Dictionary<char, int>, DictionarySerDes>("output");
+                var output = driver.CreateOutputTopic<Dictionary<char, int>, DictionarySerDes>("output");
                 input.PipeInput("test", "1");
                 input.PipeInput("test", "12");
 
@@ -269,7 +269,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     {'2', 1 }
                 };
                 var input = driver.CreateInputTopic<string, string>("topic");
-                var output = driver.CreateOuputTopic<Dictionary<char, int>, DictionarySerDes>("output");
+                var output = driver.CreateOutputTopic<Dictionary<char, int>, DictionarySerDes>("output");
                 input.PipeInput("test", "1");
                 input.PipeInput("test", "12");
 

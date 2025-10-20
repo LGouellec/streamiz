@@ -185,7 +185,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             using (var driver = new TopologyTestDriver(t, config, supplier))
             {
                 var inputtopic = driver.CreateInputTopic<string, string>("test");
-                var outputTopic = driver.CreateOuputTopic<string, string>("test-output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("test-output");
                 inputtopic.PipeInput("coucou");
                 while (_return.Count == 0)
                 {

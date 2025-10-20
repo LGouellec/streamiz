@@ -119,7 +119,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
-                var outputTopic = driver.CreateOuputTopic<string, long, StringSerDes, Int64SerDes>("output");
+                var outputTopic = driver.CreateOutputTopic<string, long, StringSerDes, Int64SerDes>("output");
                 
                 inputTopic.PipeInputs(data);
                 driver.Commit();

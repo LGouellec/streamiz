@@ -114,8 +114,8 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             using (var driver = new TopologyTestDriver(topology, config))
             {
                 var input = driver.CreateInputTopic<string, string>("topic");
-                var tempTopic = driver.CreateOuputTopic<string, string>("tempTopic");
-                var finalTopic = driver.CreateOuputTopic<string, string>("finalTopic");
+                var tempTopic = driver.CreateOutputTopic<string, string>("tempTopic");
+                var finalTopic = driver.CreateOutputTopic<string, string>("finalTopic");
 
                 input.PipeInput("1", "Once");
                 input.PipeInput("2", "Once");
@@ -152,7 +152,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             var topology = builder.Build();
             using var driver = new TopologyTestDriver(topology, config);
             var input = driver.CreateInputTopic<string, string>("topic");
-            var outputTopic = driver.CreateOuputTopic<string, string>("output");
+            var outputTopic = driver.CreateOutputTopic<string, string>("output");
 
             var headers = new Headers
             {
@@ -187,8 +187,8 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             var topology = builder.Build();
             using var driver = new TopologyTestDriver(topology, config);
             var input = driver.CreateMultiInputTopic<string, string>("topic", "topic1");
-            var outputTopic = driver.CreateOuputTopic<string, string>("output");
-            var outputTopic1 = driver.CreateOuputTopic<string, string>("output1");
+            var outputTopic = driver.CreateOutputTopic<string, string>("output");
+            var outputTopic1 = driver.CreateOutputTopic<string, string>("output1");
 
             var inputHeaders = new Headers
             {
@@ -235,7 +235,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             var topology = builder.Build();
             using var driver = new TopologyTestDriver(topology, config);
             var input = driver.CreateInputTopic<string, string>("topic");
-            var outputTopic = driver.CreateOuputTopic<string, string>("output");
+            var outputTopic = driver.CreateOutputTopic<string, string>("output");
 
             var inputHeaders = new Headers
             {
@@ -276,8 +276,8 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             var topology = builder.Build();
             using var driver = new TopologyTestDriver(topology, config);
             var input = driver.CreateMultiInputTopic<string, string>("topic", "topic1");
-            var outputTopic = driver.CreateOuputTopic<string, string>("output");
-            var outputTopic1 = driver.CreateOuputTopic<string, string>("output1");
+            var outputTopic = driver.CreateOutputTopic<string, string>("output");
+            var outputTopic1 = driver.CreateOutputTopic<string, string>("output1");
 
             var inputHeaders = new Headers
             {

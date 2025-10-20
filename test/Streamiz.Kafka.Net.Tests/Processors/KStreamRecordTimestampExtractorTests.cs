@@ -39,7 +39,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
-                var outputTopic = driver.CreateOuputTopic<string, string, StringSerDes, StringSerDes>("output-topic");
+                var outputTopic = driver.CreateOutputTopic<string, string, StringSerDes, StringSerDes>("output-topic");
 
                 inputTopic.PipeInputs(data);
                 var result = outputTopic.ReadKeyValueList().ToList();
@@ -73,7 +73,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
-                var outputTopic = driver.CreateOuputTopic<string, string, StringSerDes, StringSerDes>("output-topic");
+                var outputTopic = driver.CreateOutputTopic<string, string, StringSerDes, StringSerDes>("output-topic");
 
                 inputTopic.PipeInputs(data);
                 var result = outputTopic.ReadKeyValueList().ToList();
@@ -105,7 +105,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
-                var outputTopic = driver.CreateOuputTopic<string, string, StringSerDes, StringSerDes>("output-topic");
+                var outputTopic = driver.CreateOutputTopic<string, string, StringSerDes, StringSerDes>("output-topic");
 
                 inputTopic.PipeInputs(data);
                 var result = outputTopic.ReadKeyValueList().ToList();

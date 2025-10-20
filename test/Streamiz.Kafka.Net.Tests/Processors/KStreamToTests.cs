@@ -73,7 +73,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
@@ -123,7 +123,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
@@ -171,7 +171,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
@@ -221,7 +221,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
@@ -268,7 +268,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
@@ -314,7 +314,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
@@ -362,7 +362,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
@@ -405,7 +405,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
@@ -448,7 +448,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output", TimeSpan.FromSeconds(2));
+        var outputTopic = driver.CreateOutputTopic<string, string>("output", TimeSpan.FromSeconds(2));
         inputTopic.PipeInput("order", "order1");
         inputTopic.PipeInput("order", "order2");
         inputTopic.PipeInput("sale", "sale1");
@@ -507,7 +507,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
@@ -558,7 +558,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
@@ -606,7 +606,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
@@ -654,7 +654,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
@@ -701,7 +701,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
@@ -749,7 +749,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
@@ -800,7 +800,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
@@ -847,7 +847,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
@@ -894,7 +894,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
@@ -937,7 +937,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");
@@ -983,7 +983,7 @@ public class KStreamToTests
         
         using var driver = new TopologyTestDriver(t, config, mockSupplier);
         var inputTopic = driver.CreateInputTopic<string, string>("stream");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         inputTopic.PipeInput("test1", "test1");
         inputTopic.PipeInput("test2", "test2");
         inputTopic.PipeInput("test3", "test3");

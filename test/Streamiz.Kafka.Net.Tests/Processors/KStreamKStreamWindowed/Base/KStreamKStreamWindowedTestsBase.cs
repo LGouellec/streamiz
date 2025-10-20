@@ -41,7 +41,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             inputTopic1 = driver.CreateInputTopic<string, string>("topic1");
             inputTopic2 = driver.CreateInputTopic<string, string>("topic2");
-            outputTopic = driver.CreateOuputTopic<string, string>("output-join");
+            outputTopic = driver.CreateOutputTopic<string, string>("output-join");
         }
 
         [TearDown]

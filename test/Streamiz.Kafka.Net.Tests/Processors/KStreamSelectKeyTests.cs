@@ -49,7 +49,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
-                var outputTopic = driver.CreateOuputTopic<int, string, Int32SerDes, StringSerDes>("topic-select-key");
+                var outputTopic = driver.CreateOutputTopic<int, string, Int32SerDes, StringSerDes>("topic-select-key");
 
                 inputTopic.PipeInputs(data);
                 var result = outputTopic.ReadKeyValueList().Select(r => KeyValuePair.Create(r.Message.Key, r.Message.Value)).ToList();
@@ -85,7 +85,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic-select-key");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic-select-key");
 
                 inputTopic.PipeInputs(data);
                 var result = outputTopic.ReadKeyValueList().Select(r => KeyValuePair.Create(r.Message.Key, r.Message.Value)).ToList();

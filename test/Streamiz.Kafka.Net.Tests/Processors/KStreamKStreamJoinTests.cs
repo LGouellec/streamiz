@@ -49,7 +49,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic1");
                 var inputTopic2 = driver.CreateInputTopic<string, string>("topic2");
-                var outputTopic = driver.CreateOuputTopic<string, string>("output-join");
+                var outputTopic = driver.CreateOutputTopic<string, string>("output-join");
                 inputTopic.PipeInput("test", "test");
                 inputTopic2.PipeInput("test", "coucou");
                 var record = outputTopic.ReadKeyValue();
@@ -92,7 +92,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic1");
                 var inputTopic2 = driver.CreateInputTopic<string, string>("topic2");
-                var outputTopic = driver.CreateOuputTopic<string, string>("output-join");
+                var outputTopic = driver.CreateOutputTopic<string, string>("output-join");
                 inputTopic.PipeInput("test", "test");
                 inputTopic2.PipeInput("test", "coucou");
                 var record = outputTopic.ReadKeyValue();
@@ -135,7 +135,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic1");
                 var inputTopic2 = driver.CreateInputTopic<string, string>("topic2");
-                var outputTopic = driver.CreateOuputTopic<string, string>("output-join");
+                var outputTopic = driver.CreateOutputTopic<string, string>("output-join");
                 inputTopic.PipeInput("test", "test");
                 inputTopic2.PipeInput("test", "coucou");
                 var record = outputTopic.ReadKeyValue();
@@ -178,7 +178,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic1");
                 var inputTopic2 = driver.CreateInputTopic<string, string>("topic2");
-                var outputTopic = driver.CreateOuputTopic<string, string>("output-join");
+                var outputTopic = driver.CreateOutputTopic<string, string>("output-join");
                 inputTopic.PipeInput("test", "test");
                 inputTopic2.PipeInput("test", "coucou");
                 var record = outputTopic.ReadKeyValue();
@@ -313,7 +313,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic2 = driver.CreateInputTopic<string, string>("topic2");
-                var outputTopic = driver.CreateOuputTopic<string, string>("output-join");
+                var outputTopic = driver.CreateOutputTopic<string, string>("output-join");
                 inputTopic2.PipeInput("test", "coucou");
                 var record = outputTopic.ReadKeyValue();
                 Assert.IsNull(record);
@@ -351,7 +351,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic1");
-                var outputTopic = driver.CreateOuputTopic<string, string>("output-join");
+                var outputTopic = driver.CreateOutputTopic<string, string>("output-join");
                 inputTopic.PipeInput("test", "test");
                 var record = outputTopic.ReadKeyValue();
                 Assert.IsNull(record);
@@ -389,7 +389,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string, StringSerDes, StringSerDes>("topic1");
-                var outputTopic = driver.CreateOuputTopic<string, string, StringSerDes, StringSerDes>("output-join");
+                var outputTopic = driver.CreateOutputTopic<string, string, StringSerDes, StringSerDes>("output-join");
                 inputTopic.PipeInput("test", "test");
                 var record = outputTopic.ReadKeyValue();
                 Assert.IsNull(record);

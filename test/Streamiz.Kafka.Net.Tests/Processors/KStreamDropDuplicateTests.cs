@@ -30,7 +30,7 @@ public class KStreamDropDuplicateTests
 
         using var driver = new TopologyTestDriver(builder.Build(), config);
         var input = driver.CreateInputTopic<string, string>("input");
-        var output = driver.CreateOuputTopic<string, string>("output");
+        var output = driver.CreateOutputTopic<string, string>("output");
         input.PipeInput("key1", "test1");
         input.PipeInput("key2", "test2");
         var records = output.ReadKeyValueList().ToList();
@@ -64,7 +64,7 @@ public class KStreamDropDuplicateTests
 
         using var driver = new TopologyTestDriver(builder.Build(), config);
         var input = driver.CreateInputTopic<string, string>("input");
-        var output = driver.CreateOuputTopic<string, string>("output");
+        var output = driver.CreateOutputTopic<string, string>("output");
         input.PipeInput("key1", "test1");
         input.PipeInput("key1", "test1");
         var records = output.ReadKeyValueList().ToList();
@@ -94,7 +94,7 @@ public class KStreamDropDuplicateTests
 
         using var driver = new TopologyTestDriver(builder.Build(), config);
         var input = driver.CreateInputTopic<string, string>("input");
-        var output = driver.CreateOuputTopic<string, string>("output");
+        var output = driver.CreateOutputTopic<string, string>("output");
         input.PipeInput("key1", "test1");
         input.PipeInput("key1", "test2");
         var records = output.ReadKeyValueList().ToList();

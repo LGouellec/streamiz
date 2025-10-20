@@ -64,7 +64,7 @@ public class FIxIssue319Tests
                 "self", new JsonSerDes<SelfId>(), new JsonSerDes<SelfRelation>());
 
         var outputTopic =
-            driver.CreateOuputTopic<SelfId, Container, JsonSerDes<SelfId>, JsonSerDes<Container>>(
+            driver.CreateOutputTopic<SelfId, Container, JsonSerDes<SelfId>, JsonSerDes<Container>>(
                 "output");
         
         inputTopic.PipeInput(new SelfId { Id = 1 }, new SelfRelation { Id = 1, Name = "self", Relation = 2 });

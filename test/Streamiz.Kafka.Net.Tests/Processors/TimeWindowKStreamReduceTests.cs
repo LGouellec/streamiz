@@ -109,7 +109,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 using var driver = new TopologyTestDriver(topology, config);
                 var input = driver.CreateInputTopic<string, string>("topic");
-                var output = driver.CreateOuputTopic("output-topic", TimeSpan.FromSeconds(1), new StringTimeWindowedSerDes(), new Int64SerDes());
+                var output = driver.CreateOutputTopic("output-topic", TimeSpan.FromSeconds(1), new StringTimeWindowedSerDes(), new Int64SerDes());
                 input.PipeInput("test", "1");
             });
         }
@@ -133,7 +133,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(topology, config))
             {
                 var input = driver.CreateInputTopic<string, string>("topic");
-                var output = driver.CreateOuputTopic("output", TimeSpan.FromSeconds(1), new StringTimeWindowedSerDes(), new StringSerDes());
+                var output = driver.CreateOutputTopic("output", TimeSpan.FromSeconds(1), new StringTimeWindowedSerDes(), new StringSerDes());
                 input.PipeInput("test", "1");
                 input.PipeInput("test", "230");
                 input.PipeInput("test", "32");
@@ -172,7 +172,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(topology, config))
             {
                 var input = driver.CreateInputTopic<string, string>("topic");
-                var output = driver.CreateOuputTopic("output", TimeSpan.FromSeconds(1), new StringTimeWindowedSerDes(), new StringSerDes());
+                var output = driver.CreateOutputTopic("output", TimeSpan.FromSeconds(1), new StringTimeWindowedSerDes(), new StringSerDes());
                 input.PipeInput("test", "1");
                 input.PipeInput("test", "230");
                 input.PipeInput("test", "32");
@@ -249,7 +249,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(topology, config))
             {
                 var input = driver.CreateInputTopic<string, string>("topic");
-                var output = driver.CreateOuputTopic("output", TimeSpan.FromSeconds(1), new StringTimeWindowedSerDes(), new Int64SerDes());
+                var output = driver.CreateOutputTopic("output", TimeSpan.FromSeconds(1), new StringTimeWindowedSerDes(), new Int64SerDes());
                 var elements = output.ReadKeyValueList().ToList();
                 Assert.AreEqual(0, elements.Count);
             }
