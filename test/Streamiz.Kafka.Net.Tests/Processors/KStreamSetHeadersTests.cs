@@ -28,9 +28,14 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 Headers headers = record.Headers ?? new Headers();
                 headers.Add("headers-test", Encoding.UTF8.GetBytes("headers-1234"));
-                this._context.SetHeaders(headers);
-
-                return record;
+                
+                var newRecord = Record<string, string>.Create(
+                    record.Key,
+                    record.Value,
+                    headers
+                );
+                
+                return newRecord;
             }
         }
 
