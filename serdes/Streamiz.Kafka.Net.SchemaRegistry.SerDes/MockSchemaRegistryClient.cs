@@ -202,25 +202,6 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
         /// 
         /// </summary>
         /// <param name="subject"></param>
-        /// <param name="schema"></param>
-        /// <param name="normalize"></param>
-        /// <returns></returns>
-        public Task<RegisteredSchema> RegisterSchemaWithResponseAsync(string subject, Schema schema, bool normalize = false)
-        {
-            var registerSchema = RegisterSchemaInternal(subject, schema.SchemaString);
-            return Task.FromResult(new RegisteredSchema(
-                subject,
-                registerSchema.Version,
-                registerSchema.Id,
-                registerSchema.Schema,
-                SchemaType.Avro,
-                new List<SchemaReference>()));
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="subject"></param>
         /// <param name="avroSchema"></param>
         /// <param name="normalize"></param>
         /// <returns></returns>
@@ -490,41 +471,5 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
 
         #endregion ISchemaRegistryClient Impl
 
-        private RegisterSchema RegisterSchemaInternal(string subject, string schemaString)
-        {
-            RegisterSchema schema;
-            var registerSchema = schemas
-                .SelectMany(s => s.Value)
-                .FirstOrDefault(s => s.Schema.Equals(schemaString));
-
-            if (schemas.ContainsKey(subject))
-            {
-                var maxVersion = schemas[subject].Max(s => s.Version) + 1;
-                schema = new RegisterSchema
-                {
-                    Id = registerSchema?.Id ?? ++id,
-                    Guid = registerSchema?.Guid ?? Guid.NewGuid().ToString(),
-                    Schema = schemaString,
-                    Version = maxVersion
-                };
-
-                schemas[subject].Add(schema);
-            }
-            else
-            {
-                schema = new RegisterSchema
-                {
-                    Id = registerSchema?.Id ?? ++id,
-                    Guid = registerSchema?.Guid ?? Guid.NewGuid().ToString(),
-                    Schema = schemaString,
-                    Version = 1
-                };
-
-                schemas.Add(subject, new List<RegisterSchema> { schema });
-                subjects.Add(subject);
-            }
-
-            return schema;
-        }
     }
 }
