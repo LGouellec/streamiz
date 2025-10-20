@@ -117,7 +117,12 @@ namespace Streamiz.Kafka.Net.Crosscutting
             return Get.SequenceEqual(other.Get);
         }
 
-        internal static Bytes Wrap(byte[] bytes)
+        /// <summary>
+        /// Wrap a new instance of <see cref="Bytes"/>
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static Bytes Wrap(byte[] bytes)
         {
             if (bytes == null)
                 return null;

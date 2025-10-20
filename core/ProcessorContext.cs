@@ -134,7 +134,7 @@ namespace Streamiz.Kafka.Net
         /// <returns>The state store instance</returns>
         public virtual IStateStore GetStateStore(string storeName) => States.GetStore(storeName);
 
-        internal void Register(IStateStore store, StateRestoreCallback callback)
+        public void Register(IStateStore store, StateRestoreCallback callback)
         {
             Action<ConsumeResult<byte[], byte[]>> restoreCallBack = (result) =>
             {
