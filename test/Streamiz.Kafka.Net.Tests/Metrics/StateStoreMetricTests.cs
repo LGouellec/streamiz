@@ -8,6 +8,7 @@ using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Mock;
+using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
@@ -191,7 +192,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
                     id,
                     new List<TopicPartition> {topicPartition},
                     null,
-                    new StoreChangelogReader(config, null, threadId, streamMetricsRegistry),
+                    new StoreChangelogReader(config, null, threadId, new StatestoreRestoreManager(null), streamMetricsRegistry),
                     new MockOffsetCheckpointManager()
                 ), streamMetricsRegistry);
         }

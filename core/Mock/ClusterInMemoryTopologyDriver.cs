@@ -72,6 +72,7 @@ namespace Streamiz.Kafka.Net.Mock
                 this.configuration,
                 kafkaSupplier,
                 kafkaSupplier.GetAdmin(configuration.ToAdminConfig($"{clientId}-admin")),
+                new StatestoreRestoreManager(null),
                 0);
             
             ProcessorTopology globalTaskTopology = topologyBuilder.BuildGlobalStateTopology();

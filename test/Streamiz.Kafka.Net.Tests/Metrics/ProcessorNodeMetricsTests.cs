@@ -60,7 +60,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
                     id,
                     new List<TopicPartition> {topicPartition},
                     null,
-                    new StoreChangelogReader(config, null, threadId, streamMetricsRegistry),
+                    new StoreChangelogReader(config, null, threadId, new StatestoreRestoreManager(null), streamMetricsRegistry),
                     new MockOffsetCheckpointManager()
                 ), streamMetricsRegistry);
             

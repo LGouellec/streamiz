@@ -47,7 +47,9 @@ namespace Streamiz.Kafka.Net.Processors
             Guid processId,
             string clientId, InternalTopologyBuilder builder,
             StreamMetricsRegistry streamMetricsRegistry, IStreamConfig configuration, IKafkaSupplier kafkaSupplier,
-            IAdminClient adminClient, int threadInd)
+            IAdminClient adminClient,
+            StatestoreRestoreManager statestoreRestoreManager,
+            int threadInd)
         {
             string logPrefix = $"stream-thread[{threadId}] ";
             var log = Logger.GetLogger(typeof(StreamThread));
@@ -60,6 +62,7 @@ namespace Streamiz.Kafka.Net.Processors
                 configuration,
                 restoreConsumer,
                 threadId,
+                statestoreRestoreManager,
                 streamMetricsRegistry);
 
             var taskCreator = new TaskCreator(builder, configuration, threadId, kafkaSupplier,

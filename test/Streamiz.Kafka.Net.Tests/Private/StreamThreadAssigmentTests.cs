@@ -138,6 +138,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 "thread-0", Guid.NewGuid(), "c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 mockKafkaSupplier, mockKafkaSupplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
         }
 

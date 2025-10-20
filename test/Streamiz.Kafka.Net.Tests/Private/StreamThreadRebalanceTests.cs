@@ -44,12 +44,14 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 "thread-0", processId, "c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 mockKafkaSupplier, mockKafkaSupplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
 
             thread2 = StreamThread.Create(
                 "thread-1", processId, "c1",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 mockKafkaSupplier, mockKafkaSupplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 1) as StreamThread;
         }
 

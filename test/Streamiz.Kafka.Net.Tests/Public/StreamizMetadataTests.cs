@@ -48,6 +48,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 "thread-0", Guid.NewGuid(), "c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
 
             thread.Start(source.Token);
@@ -113,6 +114,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
 
             thread.Start(source.Token);
@@ -175,6 +177,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
 
             thread.Start(source.Token);
@@ -235,6 +238,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
 
             thread.Start(source.Token);
@@ -292,6 +296,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
 
             thread.Start(source.Token);
@@ -351,6 +356,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
 
             thread.Start(source.Token);
@@ -408,6 +414,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
 
             thread.Start(source.Token);
@@ -467,6 +474,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
 
             thread.Start(source.Token);
@@ -524,6 +532,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
 
             thread.Start(source.Token);
@@ -584,6 +593,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
 
             thread.Start(source.Token);
@@ -643,6 +653,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
 
             thread.Start(source.Token);

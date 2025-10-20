@@ -34,7 +34,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
             var storeChangelogReader =
-                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StatestoreRestoreManager(null), new StreamMetricsRegistry());
             var streamsProducer = new StreamsProducer(
                 config,
                 "thread-0",
@@ -109,7 +109,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
             var storeChangelogReader =
-                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StatestoreRestoreManager(null),new StreamMetricsRegistry());
             var streamsProducer = new StreamsProducer(
                 config,
                 "thread-0",
@@ -157,7 +157,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
             var storeChangelogReader =
-                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StatestoreRestoreManager(null), new StreamMetricsRegistry());
             var streamsProducer = new StreamsProducer(
                 config,
                 "thread-0",
@@ -260,7 +260,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
             var storeChangelogReader =
-                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StatestoreRestoreManager(null),new StreamMetricsRegistry());
             var streamsProducer = new StreamsProducer(
                 config,
                 "thread-0",
@@ -318,7 +318,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
             var storeChangelogReader =
-                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StatestoreRestoreManager(null),new StreamMetricsRegistry());
             var streamsProducer = new StreamsProducer(
                 config,
                 "thread-0",
@@ -394,7 +394,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
             var storeChangelogReader =
-                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StatestoreRestoreManager(null),new StreamMetricsRegistry());
             var streamsProducer = new StreamsProducer(
                 config,
                 "thread-0",

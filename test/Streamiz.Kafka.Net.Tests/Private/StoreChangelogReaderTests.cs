@@ -65,7 +65,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             store = new RocksDbKeyValueStore("store", "rocksdb");
             storeChangelogReader =
-                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StatestoreRestoreManager(null), new StreamMetricsRegistry());
             stateMgr = new ProcessorStateManager(
                 id,
                 topicPart.ToSingle(),
