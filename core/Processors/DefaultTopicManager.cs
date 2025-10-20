@@ -36,8 +36,9 @@ namespace Streamiz.Kafka.Net.Processors
         /// </summary>
         /// <param name="topologyId">SubTopology Id</param>
         /// <param name="topics">internal topics of topology</param>
+        /// <param name="allowAutoCreateTopicsIsEnabled">Whether allowAutoCreateTopics setting is enabled in the streaming config</param>
         /// <returns>the list of topics which had to be newly created</returns>
-        public async Task<IEnumerable<string>> ApplyAsync(int topologyId, IDictionary<string, InternalTopicConfig> topics)
+        public async Task<IEnumerable<string>> ApplyAsync(int topologyId, IDictionary<string, InternalTopicConfig> topics, bool allowAutoCreateTopicsIsEnabled)
         {
             int maxRetry = 10, i = 0;
 
@@ -70,12 +71,13 @@ namespace Streamiz.Kafka.Net.Processors
                         {
                             continue;
                         }
-                        else
-                        {
-                            string msg = $"Existing internal topic {t.Key} with invalid partitions: expected {t.Value.NumberPartitions}, actual: {numberPartitions}. Please clean up invalid topics before processing.";
-                            log.LogError(msg);
-                            throw new StreamsException(msg);
-                        }
+
+                        var msg =
+                            $"Existing internal topic {t.Key} with invalid partitions: expected {t.Value.NumberPartitions}, actual: {numberPartitions}.";
+                        msg = allowAutoCreateTopicsIsEnabled ? $"{msg} Disable AllowAutoCreateTopics in the StreamConfig, delete the auto created partitions in Kafka, and restart the Streaming service." : $"{msg} Please clean up invalid topics before processing.";
+
+                        log.LogError(msg);
+                        throw new StreamsException(msg);
                     }
                 }
 

@@ -61,11 +61,20 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             context.SetRecordMetaData(record);
 
-            var recordInfo = $"Topic:{record.Topic}|Partition:{record.Partition.Value}|Offset:{record.Offset}|Timestamp:{record.Message.Timestamp.UnixTimestampMs}";
-            log.LogDebug("Start processing one record [{RecordInfo}]", recordInfo);
+            string recordInfo = null;
+            if (log.IsEnabled(LogLevel.Debug))
+            {
+                recordInfo = $"Topic:{record.Topic}|Partition:{record.Partition.Value}|Offset:{record.Offset}|Timestamp:{record.Message.Timestamp.UnixTimestampMs}";
+                log.LogDebug("Start processing one record [{RecordInfo}]", recordInfo);
+            }
+          
             processor.Process(record);
-            log.LogDebug("Completed processing one record [{RecordInfo}]", recordInfo);
-            
+
+            if (log.IsEnabled(LogLevel.Debug))
+            {
+                log.LogDebug("Completed processing one record [{RecordInfo}]", recordInfo);
+            }
+
             offsets.AddOrUpdate(record.TopicPartition, record.Offset);
         }
 

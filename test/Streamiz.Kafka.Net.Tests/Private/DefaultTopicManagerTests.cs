@@ -47,7 +47,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 NumberPartitions = 1
             });
 
-            var r = manager.ApplyAsync(0, topics)
+            var r = manager.ApplyAsync(0, topics, false)
                 .GetAwaiter().GetResult().ToList();
 
             Assert.AreEqual(2, r.Count);
@@ -77,7 +77,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 NumberPartitions = 1
             });
 
-            var r = manager.ApplyAsync(0, topics).GetAwaiter().GetResult().ToList();
+            var r = manager.ApplyAsync(0, topics, false).GetAwaiter().GetResult().ToList();
 
             Assert.AreEqual(2, r.Count);
             Assert.AreEqual("topic", r[0]);
@@ -100,18 +100,23 @@ namespace Streamiz.Kafka.Net.Tests.Private
             topics.Add("topic", new UnwindowedChangelogTopicConfig
             {
                 Name = "topic",
-                NumberPartitions = 1
+                NumberPartitions = 6
             });
             topics.Add("topic1", new UnwindowedChangelogTopicConfig
             {
                 Name = "topic1",
-                NumberPartitions = 1
+                NumberPartitions = 6
             });
+            
+            Assert.Throws<StreamsException>(() => manager.ApplyAsync(0, topics, true).GetAwaiter().GetResult());
+            Assert.Throws<StreamsException>(() => manager.ApplyAsync(0, topics, false).GetAwaiter().GetResult());
+            
+            ((SyncProducer) kafkaSupplier.GetProducer(new ProducerConfig())).DeleteTopic("topic");
 
-            var r = manager.ApplyAsync(0, topics).GetAwaiter().GetResult().ToList();
+            var r = manager.ApplyAsync(0, topics, false).GetAwaiter().GetResult().ToList();
 
-            Assert.AreEqual(1, r.Count);
-            Assert.AreEqual("topic1", r[0]);
+            Assert.AreEqual(2, r.Count);
+            Assert.AreEqual("topic", r[0]);
         }
 
         [Test]
@@ -134,7 +139,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 NumberPartitions = 4
             });
 
-            Assert.Throws<StreamsException>(() => manager.ApplyAsync(0, topics).GetAwaiter().GetResult());
+            Assert.Throws<StreamsException>(() => manager.ApplyAsync(0, topics, false).GetAwaiter().GetResult());
         }
 
         [Test]
@@ -155,10 +160,10 @@ namespace Streamiz.Kafka.Net.Tests.Private
             });
 
             var r = Parallel.ForEach(new List<int> {1, 2, 3, 4},
-                (i) => manager.ApplyAsync(0, topics).GetAwaiter().GetResult());
+                (i) => manager.ApplyAsync(0, topics, false).GetAwaiter().GetResult());
             Assert.IsTrue(r.IsCompleted);
         }
-
+        
         // WAIT dotnet testcontainers
 
         //[Test]

@@ -271,7 +271,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             return topicPartitions
                 .Select(tp => {
-                    var offsets = globalConsumer.QueryWatermarkOffsets(tp, TimeSpan.FromSeconds(5));
+                    var offsets = globalConsumer.QueryWatermarkOffsets(tp, config.QueryWatermarkOffsetsTimeout);
                     return new
                     {
                         TopicPartition = tp,

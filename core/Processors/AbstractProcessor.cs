@@ -87,9 +87,12 @@ namespace Streamiz.Kafka.Net.Processors
 
         public virtual void Forward<K1, V1>(K1 key, V1 value)
         {
-            log.LogDebug(
-                "{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to each next processor",
-                logPrefix, typeof(K1).Name, typeof(V1).Name, key, value);
+            if (log.IsEnabled(LogLevel.Debug))
+            {
+                log.LogDebug(
+                    "{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to each next processor",
+                    logPrefix, typeof(K1).Name, typeof(V1).Name, key, value);
+            }
 
             Forward(Next.OfType<IProcessor<K1, V1>>(), processor => processor.Process(key, value));
         }
@@ -99,20 +102,27 @@ namespace Streamiz.Kafka.Net.Processors
             var processors = Next.OfType<IProcessor<K1, V1>>().Where(processor => processor.Name.Equals(name));
             Forward(processors, processor =>
             {
-                log.LogDebug(
-                    "{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to processor {Processor}",
-                    logPrefix,
-                    typeof(K1).Name, typeof(V1).Name, key, value, name);
+                if (log.IsEnabled(LogLevel.Debug))
+                {
+                    log.LogDebug(
+                        "{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to processor {Processor}",
+                        logPrefix,
+                        typeof(K1).Name, typeof(V1).Name, key, value, name);
+                }
+
                 processor.Process(key, value);
             });
         }
 
         public virtual void Forward(K key, V value)
         {
-            log.LogDebug(
-                "{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to each next processor",
-                logPrefix, typeof(K).Name, typeof(V).Name, key, value);
-            
+            if (log.IsEnabled(LogLevel.Debug))
+            {
+                log.LogDebug(
+                    "{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to each next processor",
+                    logPrefix, typeof(K).Name, typeof(V).Name, key, value);
+            }
+
             Forward(Next, genericProcessor =>
             {
                 if (genericProcessor is IProcessor<K, V> processor)
@@ -126,10 +136,14 @@ namespace Streamiz.Kafka.Net.Processors
         {
             Forward(Next.Where(processor => processor.Name.Equals(name)), genericProcessor =>
             {
-                log.LogDebug(
-                    "{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to processor {Processor}",
-                    logPrefix,
-                    typeof(K).Name, typeof(V).Name, key, value, name);
+                if (log.IsEnabled(LogLevel.Debug))
+                {
+                    log.LogDebug(
+                        "{LogPrefix}Forward<{KeyType},{ValueType}> message with key {Key} and value {Value} to processor {Processor}",
+                        logPrefix,
+                        typeof(K).Name, typeof(V).Name, key, value, name);
+                }
+
                 if (genericProcessor is IProcessor<K, V> processor)
                     processor.Process(key, value);
                 else
@@ -186,10 +200,16 @@ namespace Streamiz.Kafka.Net.Processors
             log.LogDebug("{LogPrefix}Process context initialized", logPrefix);
         }
 
-        protected void LogProcessingKeyValue(K key, V value) => log.LogDebug(
-            $"{logPrefix}Process<{typeof(K).Name},{typeof(V).Name}> message with key {key} and {value}" +
-            $" with record metadata [topic:{Context.RecordContext.Topic}|" +
-            $"partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}]");
+        protected void LogProcessingKeyValue(K key, V value)
+        {
+            if (log.IsEnabled(LogLevel.Debug))
+            {
+                log.LogDebug(
+                    $"{logPrefix}Process<{typeof(K).Name},{typeof(V).Name}> message with key {key} and {value}" +
+                    $" with record metadata [topic:{Context.RecordContext.Topic}|" +
+                    $"partition:{Context.RecordContext.Partition}|offset:{Context.RecordContext.Offset}]");
+            }
+        }
 
         #region Setter
 
