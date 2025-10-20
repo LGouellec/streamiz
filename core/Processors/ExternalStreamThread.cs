@@ -38,7 +38,7 @@ namespace Streamiz.Kafka.Net.Processors
         private DateTime lastMetrics = DateTime.Now;
 
         private DateTime lastCheckoutProcessing = DateTime.Now;
-        private readonly TimeSpan intervalCheckoutProcessing = TimeSpan.FromMinutes(1); // hard code for now
+        private TimeSpan intervalCheckoutProcessing = TimeSpan.FromMinutes(1); // 1 minute per default
         private int messageProcessed;
         private Task<List<DeleteRecordsResult>> currentDeleteTask = null;
         
@@ -69,6 +69,7 @@ namespace Streamiz.Kafka.Net.Processors
             };
             Name = threadId;
             logPrefix = $"external-stream-thread[{threadId}] ";
+            intervalCheckoutProcessing = this.configuration.LogProcessingSummary;
             
             State = ThreadState.CREATED;
 
