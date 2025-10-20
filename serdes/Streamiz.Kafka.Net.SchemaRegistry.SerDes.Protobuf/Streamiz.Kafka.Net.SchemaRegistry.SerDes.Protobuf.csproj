@@ -31,8 +31,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Confluent.SchemaRegistry" Version="2.8.0" />
-    <PackageReference Include="Confluent.SchemaRegistry.Serdes.Protobuf" Version="2.8.0" />
+    <PackageReference Include="Confluent.SchemaRegistry" Version="2.12.0" />
+    <PackageReference Include="Confluent.SchemaRegistry.Serdes.Protobuf" Version="2.12.0" />
   </ItemGroup>
 
   <ItemGroup>
