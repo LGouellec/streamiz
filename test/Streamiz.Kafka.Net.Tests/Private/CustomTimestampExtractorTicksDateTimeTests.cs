@@ -94,7 +94,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         private void AssertUseCase(TopologyTestDriver driver)
         {
             var inputTopic = driver.CreateInputTopic<String, ObjectA, StringSerDes, JsonSerDes<ObjectA>>("source");
-            var outputTopic = driver.CreateOuputTopic<String, ObjectB, StringSerDes, JsonSerDes<ObjectB>>("sink");
+            var outputTopic = driver.CreateOutputTopic<String, ObjectB, StringSerDes, JsonSerDes<ObjectB>>("sink");
             var dt = DateTime.Parse("2021-04-17T09:21:00-0000");
             var dt2 = dt.AddMinutes(1);
             inputTopic.PipeInput("key1", new ObjectA {Date = dt, Symbol = "$"});

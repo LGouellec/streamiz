@@ -34,7 +34,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     .To<StringSerDes, CharSerDes>("output");
             });
             var input = driver.CreateInputTopic<string, string>("input");
-            var output = driver.CreateOuputTopic<string, char, StringSerDes, CharSerDes>("output");
+            var output = driver.CreateOutputTopic<string, char, StringSerDes, CharSerDes>("output");
             input.PipeInput("key1", "value1");
             var result = output.ReadKeyValueList().ToList();
             Assert.AreEqual(6, result.Count);
@@ -72,7 +72,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     .To<StringSerDes, CharSerDes>("output");
             });
             var input = driver.CreateInputTopic<string, string>("input");
-            var output = driver.CreateOuputTopic<string, char, StringSerDes, CharSerDes>("output");
+            var output = driver.CreateOutputTopic<string, char, StringSerDes, CharSerDes>("output");
             input.PipeInput("key1", "value1");
             var result = output.ReadKeyValueList().ToList();
             Assert.AreEqual(2, numberCall);
@@ -111,7 +111,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     .To<StringSerDes, CharSerDes>("output");
             });
             var input = driver.CreateInputTopic<string, string>("input");
-            var output = driver.CreateOuputTopic<string, char, StringSerDes, CharSerDes>("output");
+            var output = driver.CreateOutputTopic<string, char, StringSerDes, CharSerDes>("output");
             input.PipeInput("key1", "value1");
             var result = output.ReadKeyValueList().ToList();
             Assert.AreEqual(4, numberCall);
@@ -150,7 +150,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     .To<StringSerDes, CharSerDes>("output");
             });
             var input = driver.CreateInputTopic<string, string>("input");
-            var output = driver.CreateOuputTopic<string, char, StringSerDes, CharSerDes>("output");
+            var output = driver.CreateOutputTopic<string, char, StringSerDes, CharSerDes>("output");
             input.PipeInput("key1", "value1");
             var result = output.ReadKeyValue();
             // null because the default behavior for the retry policy is failed
@@ -247,7 +247,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY,
                 (conf) => conf.MaxPollIntervalMs = 100);
             var input = driver.CreateInputTopic<string, string>("input");
-            var output = driver.CreateOuputTopic<string, char, StringSerDes, CharSerDes>("output");
+            var output = driver.CreateOutputTopic<string, char, StringSerDes, CharSerDes>("output");
             input.PipeInput("key1", "value1");
             var results = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(output, 6);
             
@@ -290,7 +290,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY,
                 (conf) => conf.MaxPollIntervalMs = 100);
             var input = driver.CreateInputTopic<string, string>("input");
-            var output = driver.CreateOuputTopic<string, char, StringSerDes, CharSerDes>("output");
+            var output = driver.CreateOutputTopic<string, char, StringSerDes, CharSerDes>("output");
             input.PipeInput("key1", "value1");
             var results = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(output, 1, TimeSpan.FromSeconds(1));
             Assert.AreEqual(0, results.Count);
@@ -327,7 +327,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY,
                 (conf) => conf.MaxPollIntervalMs = 100);
             var input = driver.CreateInputTopic<string, string>("input");
-            var output = driver.CreateOuputTopic<string, char, StringSerDes, CharSerDes>("output");
+            var output = driver.CreateOutputTopic<string, char, StringSerDes, CharSerDes>("output");
             input.PipeInput("key1", "value1");
             Thread.Sleep(1000);
             Assert.IsTrue(driver.IsError);
@@ -363,7 +363,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             }, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY);
             
             var input = driver.CreateInputTopic<string, string>("input");
-            var output = driver.CreateOuputTopic<string, char, StringSerDes, CharSerDes>("output");
+            var output = driver.CreateOutputTopic<string, char, StringSerDes, CharSerDes>("output");
             
             for(int i = 0 ; i < 15 ; ++i)
                 input.PipeInput("key1", "value1");

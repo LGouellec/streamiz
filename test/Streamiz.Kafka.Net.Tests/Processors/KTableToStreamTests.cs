@@ -28,7 +28,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("table-topic");
-                var outputTopic = driver.CreateOuputTopic<string, string>("table-stream");
+                var outputTopic = driver.CreateOutputTopic<string, string>("table-stream");
                 var expected = new List<KeyValuePair<string, string>>();
                 expected.Add(KeyValuePair.Create("A", "a"));
                 expected.Add(KeyValuePair.Create("B", "b"));
@@ -65,7 +65,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("table-topic");
-                var outputTopic = driver.CreateOuputTopic<string, string>("table-stream");
+                var outputTopic = driver.CreateOutputTopic<string, string>("table-stream");
                 var expected = new List<KeyValuePair<string, string>>();
                 expected.Add(KeyValuePair.Create("key1", "a"));
                 expected.Add(KeyValuePair.Create("key2", "b"));
@@ -104,7 +104,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("table-topic");
-                var outputTopic = driver.CreateOuputTopic<string, string>("table-stream");
+                var outputTopic = driver.CreateOutputTopic<string, string>("table-stream");
                 var expected = new List<KeyValuePair<string, string>>();
                 expected.Add(KeyValuePair.Create("key1", "a"));
                 expected.Add(KeyValuePair.Create("key2", "b"));
@@ -143,7 +143,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("table-topic");
-                var outputTopic = driver.CreateOuputTopic<string, string>("table-stream");
+                var outputTopic = driver.CreateOutputTopic<string, string>("table-stream");
                 var expected = new List<KeyValuePair<string, string>>();
                 expected.Add(KeyValuePair.Create("key1", "c"));
 
@@ -178,7 +178,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             using var driver = new TopologyTestDriver(t, config);
             var inputTopic = driver.CreateInputTopic<string, string>("table-topic");
-            var outputTopic = driver.CreateOuputTopic<string, string>("table-stream");
+            var outputTopic = driver.CreateOutputTopic<string, string>("table-stream");
             var expected = new List<KeyValuePair<string, string>>();
             expected.Add(KeyValuePair.Create("D", "d"));
 

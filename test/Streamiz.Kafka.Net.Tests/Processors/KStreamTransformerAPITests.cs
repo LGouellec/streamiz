@@ -124,7 +124,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 inputTopic.PipeInput("key1", "value1");
                 inputTopic.PipeInput("key2", "value2");
 
-                var outputTopic = driver.CreateOuputTopic<string, string>("output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("output");
                 var mapRecords = outputTopic.ReadKeyValueList().ToList();
                 Assert.AreEqual(2, mapRecords.Count);
                 Assert.AreEqual("value1", mapRecords[0].Message.Value);
@@ -155,7 +155,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 inputTopic.PipeInput("key1", "value1");
                 inputTopic.PipeInput("key2", "value2");
 
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic-output");
                 var mapRecords = outputTopic.ReadKeyValuesToMap();
                 Assert.AreEqual(2, mapRecords.Count);
                 Assert.AreEqual("VALUE1", mapRecords["key1"]);
@@ -187,7 +187,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 inputTopic.PipeInput("key1", "value1");
                 inputTopic.PipeInput("key2", "value2");
 
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic-output");
                 var mapRecords = outputTopic.ReadKeyValuesToMap();
                 Assert.AreEqual(2, mapRecords.Count);
                 Assert.AreEqual("VALUE1", mapRecords["key1"]);
@@ -228,7 +228,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 Assert.AreEqual("value1", store.Get("key1"));
                 Assert.AreEqual("value2", store.Get("key2"));
                 
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic-output");
                 var mapRecords = outputTopic.ReadKeyValuesToMap();
                 Assert.AreEqual(2, mapRecords.Count);
                 Assert.AreEqual("VALUE1", mapRecords["key1"]);
@@ -259,7 +259,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 inputTopic.PipeInput("key1", "value1");
                 inputTopic.PipeInput("key2", "value2");
 
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic-output");
                 var mapRecords = outputTopic.ReadKeyValuesToMap();
                 Assert.AreEqual(2, mapRecords.Count);
                 Assert.AreEqual("VALUE1", mapRecords["key1"]);
@@ -294,7 +294,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 inputTopic.PipeInput("key1", "value1");
                 inputTopic.PipeInput("key2", "value2");
 
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic-output");
                 var mapRecords = outputTopic.ReadKeyValuesToMap();
                 Assert.AreEqual(2, mapRecords.Count);
                 Assert.AreEqual("1", mapRecords["value1"]);
@@ -329,7 +329,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 inputTopic.PipeInput("key1", "value1");
                 inputTopic.PipeInput("key2", "value2");
 
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic-output");
                 var mapRecords = outputTopic.ReadKeyValuesToMap();
                 Assert.AreEqual(2, mapRecords.Count);
                 Assert.AreEqual("1", mapRecords["value1"]);
@@ -364,7 +364,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
                 inputTopic.PipeInput("key1", "value1");
 
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic-output");
                 var record = outputTopic.ReadKeyValue();
                 Assert.AreEqual(1, record.Message.Headers.Count);
                 Assert.AreEqual(

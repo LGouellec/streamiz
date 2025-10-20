@@ -439,7 +439,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             
             using var driver = new TopologyTestDriver(topology, config);
             var input = driver.CreateInputTopic<string, string>("words");
-            var output = driver.CreateOuputTopic<string, string>("output");
+            var output = driver.CreateOutputTopic<string, string>("output");
             var dt = DateTime.Now;
             input.PipeInput("sylvain", "1", dt.AddMilliseconds(-500));
             input.PipeInput("sylvain", "1", dt.AddMilliseconds(500));

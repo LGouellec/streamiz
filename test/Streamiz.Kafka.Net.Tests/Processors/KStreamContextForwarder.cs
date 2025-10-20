@@ -69,8 +69,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 inputTopic.PipeInput("key", "value2");
                 inputTopic.PipeInput("key", "value2");
                 
-                var outputTopic1 = driver.CreateOuputTopic<string, string>("topic-output1");
-                var outputTopic2 = driver.CreateOuputTopic<string, string>("topic-output2");
+                var outputTopic1 = driver.CreateOutputTopic<string, string>("topic-output1");
+                var outputTopic2 = driver.CreateOutputTopic<string, string>("topic-output2");
                 
                 var mapRecords1 = outputTopic1.ReadKeyValueList();
                 var mapRecords2 = outputTopic2.ReadKeyValueList();

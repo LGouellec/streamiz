@@ -37,7 +37,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 var inputTopic1 = driver.CreateInputTopic<string, string>("table1");
                 var inputTopic2 = driver.CreateInputTopic<string, string>("table2");
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic-output");
                 inputTopic1.PipeInput("test", "test");
                 inputTopic2.PipeInput("test", "coucou");
                 inputTopic1.PipeInput("test2", "test2");
@@ -72,7 +72,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic1 = driver.CreateInputTopic<string, string>("table1");
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic-output");
                 inputTopic1.PipeInput("test", "test");
                 var record = outputTopic.ReadKeyValuesToMap();
                 Assert.IsNotNull(record);
@@ -103,7 +103,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic1 = driver.CreateInputTopic<string, string>("table1");
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic-output");
 
                 inputTopic1.PipeInput("test", "test");
 
@@ -144,7 +144,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 var inputTopic1 = driver.CreateInputTopic<string, string>("table1");
                 var inputTopic2 = driver.CreateInputTopic<string, string>("table2");
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic-output");
                 inputTopic1.PipeInput("test", "test");
                 inputTopic2.PipeInput("test", "coucou");
                 inputTopic1.PipeInput("test2", "test2");
@@ -179,7 +179,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             {
                 var inputTopic1 = driver.CreateInputTopic<string, string>("table1");
                 var inputTopic2 = driver.CreateInputTopic<string, string>("table2");
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic-output");
                 inputTopic1.PipeInput("test", "test");
                 inputTopic1.PipeInput(null, "test");
                 inputTopic2.PipeInput("test", "coucou");
@@ -218,7 +218,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 var inputTopic1 = driver.CreateInputTopic<string, string>("users");
                 var inputTopic2 = driver.CreateInputTopic<string, string>("regions");
                 var inputTopic3 = driver.CreateInputTopic<string, string>("orders");
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic-output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic-output");
 
                 inputTopic1.PipeInput("sylvain", "sylvain");
                 inputTopic1.PipeInput("lise", "lise");

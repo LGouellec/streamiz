@@ -83,7 +83,7 @@ namespace Streamiz.Kafka.Net.Tests.Reproducer
                 var inputTicket = driver.CreateInputTopic<string, Ticket, StringSerDes, JsonSerDes<Ticket>>("tickets");
                 var inputTicketDetails = driver.CreateInputTopic<string, TicketDetails, StringSerDes, JsonSerDes<TicketDetails>>("tickets-details");
                 
-                var outputTopic = driver.CreateOuputTopic<string, string>("output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("output");
                 
                 inputTicketDetails.PipeInput("ticket-2", new TicketDetails{id = "2", user = "User2"}, 1676642917004.FromMilliseconds());
                 inputTicketDetails.PipeInput("ticket-1", new TicketDetails{id = "1", user = "User1"}, 1676642916975.FromMilliseconds());

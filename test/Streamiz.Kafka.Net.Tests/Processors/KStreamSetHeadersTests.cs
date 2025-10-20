@@ -65,7 +65,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var inputTopic = driver.CreateInputTopic<string, string>("test");
             inputTopic.PipeInput("test-with-headers", "test-1234");
 
-            var outputTopic = driver.CreateOuputTopic<string, string>("test-output", TimeSpan.FromSeconds(10));
+            var outputTopic = driver.CreateOutputTopic<string, string>("test-output", TimeSpan.FromSeconds(10));
 
             ConsumeResult<string, string> r = outputTopic.ReadKeyValue();
             Assert.AreEqual("test-with-headers", r.Message.Key);
@@ -96,7 +96,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var inputTopic = driver.CreateInputTopic<string, string>("test");
             inputTopic.PipeInput("test-no-headers", "test-5678");
 
-            var outputTopic = driver.CreateOuputTopic<string, string>("test-output", TimeSpan.FromSeconds(10));
+            var outputTopic = driver.CreateOutputTopic<string, string>("test-output", TimeSpan.FromSeconds(10));
             ConsumeResult<string, string> r = outputTopic.ReadKeyValue();
 
             Assert.AreEqual("test-no-headers", r.Message.Key);
@@ -129,7 +129,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             };
             inputTopic.PipeInput("test-add-headers", "test-9012", headers);
 
-            var outputTopic = driver.CreateOuputTopic<string, string>("test-output", TimeSpan.FromSeconds(10));
+            var outputTopic = driver.CreateOutputTopic<string, string>("test-output", TimeSpan.FromSeconds(10));
             ConsumeResult<string, string> r = outputTopic.ReadKeyValue();
 
             Assert.AreEqual("test-add-headers", r.Message.Key);
@@ -174,7 +174,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var inputTopic = driver.CreateInputTopic<string, string>("test");
             inputTopic.PipeInput("test-with-headers", "test-1234");
 
-            var outputTopic = driver.CreateOuputTopic<string, string>("test-output", TimeSpan.FromSeconds(10));
+            var outputTopic = driver.CreateOutputTopic<string, string>("test-output", TimeSpan.FromSeconds(10));
 
             ConsumeResult<string, string> r = outputTopic.ReadKeyValue();
             Assert.AreEqual("test-with-headers", r.Message.Key);

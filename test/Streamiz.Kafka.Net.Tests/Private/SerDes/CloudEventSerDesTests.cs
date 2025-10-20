@@ -82,7 +82,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var topo = builder.Build();
             using var driver = new TopologyTestDriver(topo, config);
             var input = driver.CreateInputTopic<string, Order>("order");
-            var output = driver.CreateOuputTopic<string, Order>("order-filtered");
+            var output = driver.CreateOutputTopic<string, Order>("order-filtered");
             input.PipeInput("order1", new Order() {OrderId = 240, OrderTime = DateTime.Now, ProductId = "123"});
             input.PipeInput("order2", new Order() {OrderId = 40, OrderTime = DateTime.Now, ProductId = "456"});
 
@@ -117,7 +117,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             var topo = builder.Build();
             using var driver = new TopologyTestDriver(topo, config);
             var input = driver.CreateInputTopic<string, Order>("order");
-            var output = driver.CreateOuputTopic<string, Order>("order-filtered");
+            var output = driver.CreateOutputTopic<string, Order>("order-filtered");
             input.PipeInput("order1", new Order() {OrderId = 240, OrderTime = DateTime.Now, ProductId = "123"});
             input.PipeInput("order2", new Order() {OrderId = 40, OrderTime = DateTime.Now, ProductId = "456"});
 

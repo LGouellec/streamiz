@@ -121,7 +121,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             using (var driver = new TopologyTestDriver(topo, config))
             {
                 var input = driver.CreateInputTopic<string, PersonJson>("person");
-                var output = driver.CreateOuputTopic<string, PersonJson>("person-major");
+                var output = driver.CreateOutputTopic<string, PersonJson>("person-major");
                 input.PipeInput("test1", new PersonJson {Age = 23, FirstName = "f", LastName = "l"});
                 input.PipeInput("test2", new PersonJson {Age = 12, FirstName = "t", LastName = "i"});
                 var records = output.ReadKeyValueList().ToList();
@@ -181,7 +181,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             using (var driver = new TopologyTestDriver(topo, config))
             {
                 var input = driver.CreateInputTopic<string, PersonJson>("person");
-                var output = driver.CreateOuputTopic<string, int, StringSerDes, Int32SerDes>("person-major");
+                var output = driver.CreateOutputTopic<string, int, StringSerDes, Int32SerDes>("person-major");
                 input.PipeInput("test1", new PersonJson {Age = 23, FirstName = "f", LastName = "l"});
                 var record = output.ReadKeyValue();
                 Assert.IsNotNull(record);

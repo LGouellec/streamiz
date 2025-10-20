@@ -88,7 +88,7 @@ namespace Streamiz.Kafka.Net.Tests.Reproducer
                 var locationInput = driver.CreateInputTopic("locations", stringSerdes, locationSerdes);
                 var jobInput = driver.CreateInputTopic("jobs", stringSerdes, jobSerdes);
 
-                var output = driver.CreateOuputTopic("person-job-location",
+                var output = driver.CreateOutputTopic("person-job-location",
                     TimeSpan.FromSeconds(10),
                     stringSerdes,
                     new JsonSerDes<PersonJobLocation>());

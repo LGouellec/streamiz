@@ -154,7 +154,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             {
                 var clickTopic = driver.CreateInputTopic<string, string>(userClicksTopic);
                 var regionTopic = driver.CreateInputTopic<string, string>(userRegionsTopic);
-                var output = driver.CreateOuputTopic<string, string>(outputTopic);
+                var output = driver.CreateOutputTopic<string, string>(outputTopic);
 
                 // publish event in ktable
                 regionTopic.PipeInput("alice", "100|france");
@@ -179,7 +179,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             {
                 var clickTopic = driver.CreateInputTopic<string, string>(userClicksTopic);
                 var regionTopic = driver.CreateInputTopic<string, string>(userRegionsTopic);
-                var output = driver.CreateOuputTopic<string, string>(outputTopic);
+                var output = driver.CreateOutputTopic<string, string>(outputTopic);
 
                 //publish event in kstream
                 clickTopic.PipeInput("alice", "200|user 1 click");
@@ -199,7 +199,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             using (var driver = new TopologyTestDriver(topo, BuildStreamConfig()))
             {
                 var topic = driver.CreateMultiInputTopic<string, string>(userClicksTopic, userRegionsTopic);
-                var output = driver.CreateOuputTopic<string, string>(outputTopic);
+                var output = driver.CreateOutputTopic<string, string>(outputTopic);
 
                 //publish event in kstream
                 topic.PipeInput(userClicksTopic, "alice", "200|user 1 click");
@@ -220,7 +220,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             using (var driver = new TopologyTestDriver(topo, BuildStreamConfig()))
             {
                 var topic = driver.CreateMultiInputTopic<string, string>(userClicksTopic, userRegionsTopic);
-                var output = driver.CreateOuputTopic<string, string>(outputTopic);
+                var output = driver.CreateOutputTopic<string, string>(outputTopic);
 
                 //publish event in kstream
                 topic.PipeInputs(userClicksTopic,
@@ -250,7 +250,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             using (var driver = new TopologyTestDriver(topo, BuildStreamConfig()))
             {
                 var topic = driver.CreateMultiInputTopic<string, string>(userClicksTopic, userRegionsTopic);
-                var output = driver.CreateOuputTopic<string, string>(outputTopic);
+                var output = driver.CreateOutputTopic<string, string>(outputTopic);
 
                 // publish event in ktable
                 topic.PipeInputs(userRegionsTopic,
@@ -275,7 +275,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             using (var driver = new TopologyTestDriver(topo, BuildStreamConfig()))
             {
                 var topic = driver.CreateMultiInputTopic<string, string>(userClicksTopic, userRegionsTopic);
-                var output = driver.CreateOuputTopic<string, string>(outputTopic);
+                var output = driver.CreateOutputTopic<string, string>(outputTopic);
 
                 // publish event in ktable
                 topic.PipeInputs(userRegionsTopic,
@@ -299,7 +299,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             using (var driver = new TopologyTestDriver(topo, BuildStreamConfig()))
             {
                 var topic = driver.CreateMultiInputTopic<string, string>(userClicksTopic, userRegionsTopic);
-                var output = driver.CreateOuputTopic<string, string>(outputTopic);
+                var output = driver.CreateOutputTopic<string, string>(outputTopic);
 
                 // publish event in ktable
                 topic.PipeInputs(userRegionsTopic,
@@ -334,7 +334,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             using (var driver = new TopologyTestDriver(topo, BuildStreamConfig()))
             {
                 var topic = driver.CreateMultiInputTopic<string, string>(userClicksTopic, userRegionsTopic);
-                var output = driver.CreateOuputTopic<string, string>(outputTopic);
+                var output = driver.CreateOutputTopic<string, string>(outputTopic);
 
                 AliceChangesRegionsAfterClickingOnWebsite(topic);
 
@@ -351,7 +351,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             using (var driver = new TopologyTestDriver(topo, BuildStreamConfig()))
             {
                 var topic = driver.CreateMultiInputTopic<string, string>(userClicksTopic, userRegionsTopic);
-                var output = driver.CreateOuputTopic<string, string>(outputTopic);
+                var output = driver.CreateOutputTopic<string, string>(outputTopic);
 
                 AliceChangesRegionsAfterClickingOnWebsite(topic);
 
@@ -368,7 +368,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             using (var driver = new TopologyTestDriver(topo, BuildStreamConfig()))
             {
                 var topic = driver.CreateMultiInputTopic<string, string>(userClicksTopic, userRegionsTopic);
-                var output = driver.CreateOuputTopic<string, string>(outputTopic);
+                var output = driver.CreateOutputTopic<string, string>(outputTopic);
 
                 AliceChangesRegionsAfterClickingOnWebsite(topic);
 
@@ -385,7 +385,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             using (var driver = new TopologyTestDriver(topo, BuildStreamConfig()))
             {
                 var topic = driver.CreateMultiInputTopic<string, string>(userClicksTopic, userRegionsTopic);
-                var output = driver.CreateOuputTopic<string, string>(outputTopic);
+                var output = driver.CreateOutputTopic<string, string>(outputTopic);
 
                 AliceChangesRegionsAfterClickingOnWebsite(topic);
 
@@ -404,7 +404,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             using (var driver = new TopologyTestDriver(topo, config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY))
             {
                 var topic = driver.CreateMultiInputTopic<string, string>(userClicksTopic, userRegionsTopic);
-                var output = driver.CreateOuputTopic<string, string>(outputTopic);
+                var output = driver.CreateOutputTopic<string, string>(outputTopic);
                 AliceChangesRegionsAfterClickingOnWebsite(topic);
 
                 var items = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(output, 1);

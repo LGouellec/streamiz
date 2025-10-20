@@ -69,7 +69,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
             {
                 var globalTopic = driver.CreateInputTopic<string, string>("meta");
                 var inputTopic = driver.CreateInputTopic<string, Tag, StringSerDes, JsonSerDes<Tag>>("stream");
-                var result = driver.CreateOuputTopic<string, string>("target");
+                var result = driver.CreateOutputTopic<string, string>("target");
 
                 globalTopic.PipeInput("key1", "{\"Data\":{\"key1\":\"value1\",\"key2\":\"value2\"}}");
                 inputTopic.PipeInput("key1", new Tag() {Field1 = "tag1", Field2 = "tag2", Field3 = "tag3"});

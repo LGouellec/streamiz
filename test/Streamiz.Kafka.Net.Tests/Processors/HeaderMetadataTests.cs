@@ -34,7 +34,7 @@ public class HeaderMetadataTests
 
         using var driver = new TopologyTestDriver(builder.Build(), config, TopologyTestDriver.Mode.SYNC_TASK);
         var inputTopic = driver.CreateInputTopic<string, string>("topic");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         
         inputTopic.PipeInput("test-1", "order", Headers);
         
@@ -70,7 +70,7 @@ public class HeaderMetadataTests
 
         using var driver = new TopologyTestDriver(builder.Build(), config, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY);
         var inputTopic = driver.CreateInputTopic<string, string>("topic");
-        var outputTopic = driver.CreateOuputTopic<string, string>("output");
+        var outputTopic = driver.CreateOutputTopic<string, string>("output");
         
         inputTopic.PipeInput("test-1", "order", Headers);
         
