@@ -9,7 +9,7 @@
         - image: mcr.microsoft.com/dotnet/sdk:8.0
       steps:
         - checkout
-        - run: dotnet tool install --global dotnet-sonarscanner --version 9.0.0
+        - run: dotnet tool install --global dotnet-sonarscanner --version 11.0.0
         - run: echo 'export PATH="$PATH:/root/.dotnet/tools"' >> $BASH_ENV
         #- run: echo "deb http://ftp.us.debian.org/debian stretch main contrib non-free" >> /etc/apt/sources.list
         - run: echo "deb http://ftp.debian.org/debian stable main contrib non-free" >> /etc/apt/sources.list
