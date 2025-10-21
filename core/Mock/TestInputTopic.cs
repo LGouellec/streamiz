@@ -50,14 +50,14 @@ namespace Streamiz.Kafka.Net.Mock
 
         internal IPipeInput Pipe => pipe;
 
-        private (byte[], byte[]) GetBytes(K key, V value, Headers headers)
+        protected (byte[], byte[]) GetBytes(K key, V value, Headers headers)
         {
             byte[] k = GetKeyBytes(key);
             byte[] v = GetValueBytes(value, headers);
             return (k, v);
         }
 
-        private byte[] GetKeyBytes(K key)
+        protected byte[] GetKeyBytes(K key)
         {
             if (key != null)
             {
@@ -70,7 +70,7 @@ namespace Streamiz.Kafka.Net.Mock
                 return null;
         }
 
-        private byte[] GetValueBytes(V value, Headers headers)
+        protected byte[] GetValueBytes(V value, Headers headers)
         {
             if (value != null)
             {
@@ -85,7 +85,7 @@ namespace Streamiz.Kafka.Net.Mock
 
         #region Pipe One Input
 
-        private void PipeInput(TestRecord<K, V> record)
+        public virtual void PipeInput(TestRecord<K, V> record)
         {
             DateTime ts = record.Timestamp.HasValue ? record.Timestamp.Value : DateTime.Now;
             var tuple = GetBytes(record.Key, record.Value, record.Headers);
@@ -135,7 +135,7 @@ namespace Streamiz.Kafka.Net.Mock
         /// Send input records with the given record list on the topic, flush at the end.
         /// </summary>
         /// <param name="records">List of records (key, value and timestamp)</param>
-        public void PipeInputs(IEnumerable<TestRecord<K,V>> records)
+        public virtual void PipeInputs(IEnumerable<TestRecord<K,V>> records)
         {
             foreach (var record in records)
             {
@@ -183,7 +183,7 @@ namespace Streamiz.Kafka.Net.Mock
                 ts += advance;
             }
 
-            this.PipeInputs(records);
+            PipeInputs(records);
         }
 
         #endregion

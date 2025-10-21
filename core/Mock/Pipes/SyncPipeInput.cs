@@ -8,6 +8,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
     {
         private readonly ISyncPublisher publisher;
         private readonly string topic;
+        private static readonly object _lock = new();
 
         public SyncPipeInput(ISyncPublisher publisher, string topic)
         {
@@ -26,13 +27,19 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
 
         public void Flush()
         {
-            publisher.Flush();
-            Flushed?.Invoke();
+            lock (_lock)
+            {
+                publisher.Flush();
+                Flushed?.Invoke();
+            }
         }
 
-        public void Pipe(byte[] key, byte[] value, DateTime timestamp, Headers headers)
+        public virtual void Pipe(byte[] key, byte[] value, DateTime timestamp, Headers headers)
         {
-            publisher.PublishRecord(topic, key, value, timestamp, headers);
+            lock (_lock)
+            {
+                publisher.PublishRecord(topic, key, value, timestamp, headers);
+            }
         }
     }
 }

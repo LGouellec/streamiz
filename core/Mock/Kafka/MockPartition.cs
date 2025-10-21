@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using Confluent.Kafka;
 using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.State.Internal;
 
 namespace Streamiz.Kafka.Net.Mock.Kafka
 {
@@ -9,6 +11,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
     {
         private readonly List<(byte[], byte[], long, Headers)> log = new();
         private readonly Dictionary<long, long> mappingOffsets = new();
+        private readonly object _lockObject = new();
 
         public MockPartition(int indice)
         {
@@ -21,12 +24,17 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
         public long LowOffset { get; private set; } = Offset.Unset;
         public long HighOffset { get; private set; } = Offset.Unset;
 
-        internal void AddMessageInLog(byte[] key, byte[] value, long timestamp, Headers headers)
+        internal int AddMessageInLog(byte[] key, byte[] value, long timestamp, Headers headers)
         {
-            mappingOffsets.Add(Size, log.Count);
-            log.Add((key, value, timestamp, headers));
-            ++Size;
-            UpdateOffset();
+            lock (_lockObject)
+            {
+                int offset = Size;
+                mappingOffsets.Add(offset, log.Count);
+                log.Add((key, value, timestamp, headers));
+                ++Size;
+                UpdateOffset();
+                return offset;
+            }
         }
 
         private void UpdateOffset()
@@ -40,33 +48,38 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         internal TestRecord<byte[], byte[]> GetMessage(long offset)
         {
-            if (mappingOffsets.ContainsKey(offset))
+            lock (_lockObject)
             {
-                var record = log[(int) mappingOffsets[offset]];
-                return new TestRecord<byte[], byte[]>
+                if (mappingOffsets.ContainsKey(offset))
                 {
-                    Key = record.Item1,
-                    Value = record.Item2,
-                    Timestamp = record.Item3.FromMilliseconds(),
-                    Headers = record.Item4
-                };
+                    var record = log[(int)mappingOffsets[offset]];
+                    return new TestRecord<byte[], byte[]>
+                    {
+                        Key = record.Item1,
+                        Value = record.Item2,
+                        Timestamp = record.Item3.FromMilliseconds(),
+                        Headers = record.Item4
+                    };
+                }
             }
-
+            
             return null;
         }
 
         public void Remove(Offset tpoOffset)
         {
-            var offsetsToRemove = mappingOffsets.Keys.Where(k => k < tpoOffset).OrderBy(g => g).ToList();
-            foreach (var o in offsetsToRemove)
+            lock (_lockObject)
             {
-                log.RemoveAt(0);
-                mappingOffsets.Remove(o);
+                var offsetsToRemove = mappingOffsets.Keys.Where(k => k < tpoOffset).OrderBy(g => g).ToList();
+                foreach (var o in offsetsToRemove)
+                {
+                    log.RemoveAt(0);
+                    mappingOffsets.Remove(o);
+                }
+
+                foreach (var kv in mappingOffsets)
+                    mappingOffsets.AddOrUpdate(kv.Key, kv.Value - offsetsToRemove.Count);
             }
-
-            foreach (var kv in mappingOffsets)
-                mappingOffsets.AddOrUpdate(kv.Key, kv.Value - offsetsToRemove.Count);
-
         }
     }
 }

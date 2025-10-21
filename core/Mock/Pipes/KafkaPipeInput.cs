@@ -1,7 +1,7 @@
 ﻿using Confluent.Kafka;
 using Streamiz.Kafka.Net.Kafka;
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace Streamiz.Kafka.Net.Mock.Pipes
 {
@@ -10,7 +10,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         private readonly string topicName;
         private readonly IProducer<byte[], byte[]> producer;
         private const int size = 10;
-        private readonly Queue<(byte[], byte[], DateTime, Headers)> buffer = new Queue<(byte[], byte[], DateTime, Headers)>(size);
+        private readonly ConcurrentQueue<(byte[], byte[], DateTime, Headers)> buffer = new();
 
         public KafkaPipeInput(string topicName, IStreamConfig configuration, IKafkaSupplier kafkaSupplier)
         {
@@ -34,9 +34,15 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         {
             while (buffer.Count > 0)
             {
-                var record = buffer.Dequeue();
-                producer.Produce(topicName,
-                    new Message<byte[], byte[]> { Key = record.Item1, Value = record.Item2, Timestamp = new Timestamp(record.Item3), Headers = record.Item4 });
+                if (buffer.TryDequeue(out var record))
+                {
+                    producer.Produce(topicName,
+                        new Message<byte[], byte[]>
+                        {
+                            Key = record.Item1, Value = record.Item2, Timestamp = new Timestamp(record.Item3),
+                            Headers = record.Item4
+                        });
+                }
             }
             producer.Flush();
             Flushed?.Invoke();
