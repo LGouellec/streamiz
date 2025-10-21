@@ -41,6 +41,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly ILogger log = Logger.GetLogger(typeof(StoreChangelogReader));
         private readonly IConsumer<byte[], byte[]> restoreConsumer;
         private readonly string threadId;
+        private readonly StatestoreRestoreManager statestoreRestoreManager;
         private readonly StreamMetricsRegistry metricsRegistry;
         private readonly IDictionary<TopicPartition, ChangelogMetadata> changelogs;
         private static readonly long DEFAULT_OFFSET_UPDATE_MS = (long)TimeSpan.FromMinutes(5L).TotalMilliseconds;
@@ -52,11 +53,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             IStreamConfig config,
             IConsumer<byte[], byte[]> restoreConsumer,
             string threadId,
+            StatestoreRestoreManager statestoreRestoreManager,
             StreamMetricsRegistry metricsRegistry)
         {
             this.config = config;
             this.restoreConsumer = restoreConsumer;
             this.threadId = threadId;
+            this.statestoreRestoreManager = statestoreRestoreManager;
             this.metricsRegistry = metricsRegistry;
 
             pollTimeMs = config.PollMs;
@@ -213,7 +216,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 changelogMetadata.BufferedLimit = 0;
                 changelogMetadata.TotalRestored += numRecords;
 
-                // TODO : call trigger batchRestored
+                statestoreRestoreManager.StatestoreRestoreChange(new StatestoreRestoreManager.StatestoreRestoreBatchArgs(
+                    changelogMetadata.StoreMetadata.ChangelogTopicPartition,
+                    changelogMetadata.StoreMetadata.Store.Name,
+                    changelogMetadata.StoreMetadata.Offset.Value,
+                    numRecords));
 
                 var restorationRecordSensor = TaskMetrics.RestorationRecordsSensor(
                     threadId,
@@ -241,7 +248,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
                 log.LogDebug($"Paused partition {changelogMetadata.StoreMetadata.ChangelogTopicPartition} from the restore consumer");
 
-                // TODO : call trigger restoredEnd
+                statestoreRestoreManager.StatestoreRestoreChange(new StatestoreRestoreManager.StatestoreRestoreEndArgs(
+                    changelogMetadata.StoreMetadata.ChangelogTopicPartition,
+                    changelogMetadata.StoreMetadata.Store.Name,
+                    changelogMetadata.TotalRestored
+                    ));
             }
         }
 
@@ -326,7 +337,19 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             log.LogDebug($"Added partitions with offsets {string.Join(",", newPartitionsOffsets.Select(c => $"{c.Topic}-{c.Partition}#{c.Offset}"))} " +
                 $"to the restore consumer, current assignment is {string.Join(",", restoreConsumer.Assignment.Select(c => $"{c.Topic}-{c.Partition}"))}");
             
-            // TODO : call trigger onRestoreStart(...)
+            foreach (var tpo in newPartitionsOffsets)
+            {
+                var clm = registeredChangelogs.First(r =>
+                    r.StoreMetadata.ChangelogTopicPartition.Equals(tpo.TopicPartition));
+                
+                statestoreRestoreManager.StatestoreRestoreChange(
+                    new StatestoreRestoreManager.StatestoreRestoreStartArgs(
+                        tpo.TopicPartition,
+                        clm.StoreMetadata.Store.Name,
+                        tpo.Offset.Value,
+                        clm.RestoreEndOffset.Value
+                        ));
+            }
         }
 
         private IDictionary<TopicPartition, (Offset, Offset)> OffsetsChangelogs(IEnumerable<ChangelogMetadata> registeredChangelogs)
