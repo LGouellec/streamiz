@@ -12,7 +12,7 @@ public class ApacheKafkaBuilder
 {
     public const string DEFAULT_IMAGE_NAME = $"apache/kafka:{DOCKER_VERSION}";
     public const string APACHE_KAFKA_NATIVE_IMAGE_NAME = $"apache/kafka-native:{DOCKER_VERSION}";
-    public const string DOCKER_VERSION = "3.8.0";
+    public const string DOCKER_VERSION = "4.1.0";
     
     public const string KafkaImage = DEFAULT_IMAGE_NAME;
     public const ushort KafkaPort = 9092;

@@ -72,7 +72,14 @@ namespace Streamiz.Kafka.Net.IntegrationTests
             Directory.Delete(Path.Combine(config.StateDir, "performance-test-restore"), true);
             
             //restart for restoration
+            bool start = false, end = false, batch = false;
+            
             stream = new KafkaStream(t, config);
+            
+            stream.OnRestoreStartEvent += (partition, name, offset, endingOffset) => { start = true; }; 
+            stream.OnRestoreEndEvent += (partition, name, total) => { end = true; }; 
+            stream.OnRestoreBatchEvent += (partition, name, batchOffset, total) => { batch = true; };
+            
             await kafkaFixture.Produce(inputTopic, "new-zealand", Encoding.UTF8.GetBytes("coucou"));
             long startRestoration = DateTime.Now.GetMilliseconds();
             
@@ -85,6 +92,10 @@ namespace Streamiz.Kafka.Net.IntegrationTests
             stream.Dispose();
             
             Assert.IsTrue(resultNZ);
+            
+            Assert.IsTrue(start);
+            Assert.IsTrue(end);
+            Assert.IsTrue(batch);
             
             Directory.Delete(Path.Combine(config.StateDir, "performance-test-restore"), true);
             
