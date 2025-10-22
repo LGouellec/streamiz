@@ -37,7 +37,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             {
                 var inputTopic1 = driver.CreateInputTopic<string, string>("topic1");
                 var inputTopic2 = driver.CreateInputTopic<string, string>("topic2");
-                var outputTopic = driver.CreateOuputTopic<string, string>("output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("output");
                 inputTopic1.PipeInput("key", "i1");
                 inputTopic1.PipeInput("key", "i2");
                 inputTopic1.PipeInput("key", "i3");

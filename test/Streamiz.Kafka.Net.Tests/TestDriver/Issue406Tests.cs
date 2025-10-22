@@ -28,7 +28,7 @@ public class Issue406Tests
             var inputTopic = driver.CreateInputTopic<string, string>(BACK_UP_NUMBERS_TOPIC);
             var otherInputTopic = driver.CreateInputTopic<string, string>(NUMBERS_TOPIC);
             var outputTopic =
-                driver.CreateOuputTopic<string, string>(SUM_OF_ODD_NUMBERS_TOPIC, TimeSpan.FromSeconds(5));
+                driver.CreateOutputTopic<string, string>(SUM_OF_ODD_NUMBERS_TOPIC, TimeSpan.FromSeconds(5));
 
             for (var i = 0; i < 10; i++)
             {

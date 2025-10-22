@@ -87,6 +87,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
                 topo.Builder, streamMetricsRegistry, config,
                 mockKafkaSupplier,
                 mockKafkaSupplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 1) as StreamThread;
         }
         

@@ -353,7 +353,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                 config => config.InnerExceptionHandler = _ => ExceptionHandlerResponse.CONTINUE);
             
             var input = driver.CreateInputTopic<string, string>("input");
-            var output = driver.CreateOuputTopic<string, string>("output");
+            var output = driver.CreateOutputTopic<string, string>("output");
             
             for(int i = 0 ; i < 5 ; ++i)
                 input.PipeInput("key1", "value1");

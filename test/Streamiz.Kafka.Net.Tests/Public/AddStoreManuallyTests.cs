@@ -69,7 +69,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("input-topic");
-                var outputTopic = driver.CreateOuputTopic<string, string>("output-topic");
+                var outputTopic = driver.CreateOutputTopic<string, string>("output-topic");
 
                 inputTopic.PipeInput("key1", "value1");
                 inputTopic.PipeInput("key2", "value1");

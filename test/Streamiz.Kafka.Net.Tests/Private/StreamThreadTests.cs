@@ -159,6 +159,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 "thread-0", Guid.NewGuid(), "c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
 
             Assert.AreEqual("thread-0", thread.Name);
@@ -203,6 +204,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 "thread-0", Guid.NewGuid(), "c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
             allStates.Add(thread.State);
             thread.StateChanged += (t, o, n) =>
@@ -254,6 +256,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 "thread-0", Guid.NewGuid(), "c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
 
             thread.Start(source.Token);
@@ -300,6 +303,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 "thread-0", Guid.NewGuid(), "c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
 
             // MUST BE IN CREATED STATE
@@ -323,6 +327,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
 
             // MUST BE IN CREATED STATE
@@ -348,6 +353,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 "thread-0", Guid.NewGuid(),"c0",
                 topo.Builder, new StreamMetricsRegistry(), config,
                 supplier, supplier.GetAdmin(config.ToAdminConfig("admin")),
+                new StatestoreRestoreManager(null),
                 0) as StreamThread;
 
             // MUST BE IN CREATED STATE

@@ -14,6 +14,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
@@ -33,6 +34,34 @@ namespace Streamiz.Kafka.Net
     /// <param name="oldState">previous statenew</param>
     /// <param name="newState">new state</param>
     public delegate void StateListener(KafkaStream.State oldState, KafkaStream.State newState);
+    
+    /// <summary>
+    /// Listen when a store begin hist restoration
+    /// </summary>
+    /// <param name="topicPartition">the TopicPartition containing the values to restore</param>
+    /// <param name="storeName">the name of the store undergoing restoration</param>
+    /// <param name="startingOffset">the starting offset of the entire restoration process for this TopicPartition</param>
+    /// <param name="endingOffset">the exclusive ending offset of the entire restoration process for this TopicPartition</param>
+    public delegate void OnRestoreStartListener(TopicPartition topicPartition, String storeName, long startingOffset, long endingOffset);
+    
+    /// <summary>
+    /// Listen when a store restoration is complete
+    /// </summary>
+    /// <param name="topicPartition">the TopicPartition containing the values to restore</param>
+    /// <param name="storeName">the name of the store just restored</param>
+    /// <param name="totalRestored">the total number of records restored for this TopicPartition</param>
+    public delegate void OnRestoreEndListener(TopicPartition topicPartition, String storeName, long totalRestored);
+    
+    /// <summary>
+    /// Listen when a batch of records has been restored. In this case the maximum size of the batch is whatever
+    /// the value of the <see cref="IStreamConfig.MaxPollRestoringRecords"/> is set to.
+    /// </summary>
+    /// <param name="topicPartition">the TopicPartition containing the values to restore</param>
+    /// <param name="storeName">the name of the store undergoing restoration</param>
+    /// <param name="batchEndOffset">the inclusive ending offset for the current restored batch for this TopicPartition</param>
+    /// <param name="numRestored">the total number of records restored in this batch for this TopicPartition</param>
+    public delegate void OnRestoreBatchListener (TopicPartition topicPartition, String storeName, long batchEndOffset, long numRestored);
+    
 
     /// <summary>
     /// A Kafka client that allows for performing continuous computation on input coming from one or more input topics and
@@ -260,6 +289,7 @@ namespace Streamiz.Kafka.Net
         private readonly GlobalStreamThread globalStreamThread;
         private readonly StreamStateManager manager;
         private readonly StreamMetricsRegistry metricsRegistry;
+        private readonly StatestoreRestoreManager statestoreRestoreManager;
 
         private readonly CancellationTokenSource _cancelSource = new();
         private readonly SequentiallyGracefullyShutdownHook shutdownHook;
@@ -271,6 +301,10 @@ namespace Streamiz.Kafka.Net
         /// An app can subscribe to <see cref="StateListener"/> and he is notified when state changes.
         /// </summary>
         public event StateListener StateChanged;
+        
+        public event OnRestoreStartListener OnRestoreStartEvent;
+        public event OnRestoreEndListener OnRestoreEndEvent;
+        public event OnRestoreBatchListener OnRestoreBatchEvent;
 
         /// <summary>
         /// Create a <see cref="KafkaStream"/> instance.
@@ -279,7 +313,8 @@ namespace Streamiz.Kafka.Net
         /// <param name="topology">the topology specifying the computational logic</param>
         /// <param name="configuration">configuration about this stream</param>
         public KafkaStream(Topology topology, IStreamConfig configuration)
-            : this(topology, configuration, new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(configuration), configuration))
+            : this(topology, configuration,
+                new DefaultKafkaClientSupplier(new KafkaLoggerAdapter(configuration), configuration))
         { }
 
         /// <summary>
@@ -295,6 +330,7 @@ namespace Streamiz.Kafka.Net
             this.kafkaSupplier = kafkaSupplier;
             this.configuration = configuration;
             Logger.LoggerFactory = configuration.Logger;
+            statestoreRestoreManager = new StatestoreRestoreManager(this);
             
             logger = Logger.GetLogger(typeof(KafkaStream));
             
@@ -419,6 +455,7 @@ namespace Streamiz.Kafka.Net
                     configuration,
                     this.kafkaSupplier,
                     adminClient,
+                    statestoreRestoreManager,
                     i);
 
                 threadState.Add(threads[i].Id, threads[i].State);
@@ -684,6 +721,23 @@ namespace Streamiz.Kafka.Net
                     methods[index].Invoke(middleware, new object[] {configuration, _cancelSource.Token});
                 logger.LogInformation($"{logPrefix}Middleware {methods[index].Name.ToLowerInvariant()} done");
             }
+        }
+        
+        internal void TriggerOnRestoreStartEvent(TopicPartition topicPartition, String storeName, long startingOffset,
+            long endingOffset)
+        {
+            OnRestoreStartEvent?.Invoke(topicPartition, storeName, startingOffset, endingOffset);
+        }
+
+        internal void TriggerOnRestoreEndEvent(TopicPartition topicPartition, String storeName, long totalRestored)
+        {
+            OnRestoreEndEvent?.Invoke(topicPartition, storeName, totalRestored);
+        }
+
+        internal void TriggerOnRestoreBatchEvent(TopicPartition topicPartition, String storeName, long batchEndOffset,
+            long numRestored)
+        {
+            OnRestoreBatchEvent?.Invoke(topicPartition, storeName, batchEndOffset, numRestored);
         }
         
         #endregion

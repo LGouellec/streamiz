@@ -95,7 +95,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(topology, config))
             {
                 var input = driver.CreateInputTopic<string, string>("topic");
-                var output = driver.CreateOuputTopic<string, long, StringSerDes, Int64SerDes>("output-topic");
+                var output = driver.CreateOutputTopic<string, long, StringSerDes, Int64SerDes>("output-topic");
                 input.PipeInput("test", "1");
                 input.PipeInput("test", "30");
 
@@ -185,7 +185,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(topology, config))
             {
                 var input = driver.CreateInputTopic<string, string>("topic");
-                var output = driver.CreateOuputTopic<string, long, StringSerDes, Int64SerDes>("output");
+                var output = driver.CreateOutputTopic<string, long, StringSerDes, Int64SerDes>("output");
                 input.PipeInput("test", "1");
                 var r = output.ReadKeyValue();
                 Assert.AreEqual("test", r.Message.Key);
@@ -212,7 +212,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(topology, config))
             {
                 var input = driver.CreateInputTopic<string, string>("topic");
-                var output = driver.CreateOuputTopic<string, long, StringSerDes, Int64SerDes>("output");
+                var output = driver.CreateOutputTopic<string, long, StringSerDes, Int64SerDes>("output");
                 input.PipeInput("test", "1");
                 var r = output.ReadKeyValue();
                 Assert.AreEqual("test", r.Message.Key);

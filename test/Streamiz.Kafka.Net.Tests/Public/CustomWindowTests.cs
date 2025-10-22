@@ -168,7 +168,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             using (var driver = new TopologyTestDriver(topo, streamConfiguration))
             {
                 var input = driver.CreateInputTopic<string, int>(inputTopic);
-                var output = driver.CreateOuputTopic<Windowed<int>, int, MySerDes, Int32SerDes>(outputTopic);
+                var output = driver.CreateOutputTopic<Windowed<int>, int, MySerDes, Int32SerDes>(outputTopic);
                 input.PipeInputs(inputRecords);
                 var items = output.ReadKeyValueList().Select(c => (c.Message.Key, c.Message.Value)).ToList();
                 Assert.AreEqual(expectedValues, items);

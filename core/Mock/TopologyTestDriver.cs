@@ -26,7 +26,7 @@ namespace Streamiz.Kafka.Net.Mock
     /// Using the <see cref="TopologyTestDriver"/> in tests is easy: simply instantiate the driver and provide a <see cref="Topology"/>
     /// (cf. <see cref="StreamBuilder.Build()"/>) and <see cref="IStreamConfig"/>, <see cref="CreateInputTopic{K, V}(string, ISerDes{K}, ISerDes{V})"/>
     /// and use a <see cref="TestInputTopic{K, V}"/> to supply an input records to the topology,
-    /// and then <see cref="CreateOuputTopic{K, V}(string, TimeSpan, ISerDes{K}, ISerDes{V})"/> and use a <see cref="TestOutputTopic{K, V}"/> to read and
+    /// and then <see cref="CreateOutputTopic{K,V}(string,System.TimeSpan,Streamiz.Kafka.Net.SerDes.ISerDes{K},Streamiz.Kafka.Net.SerDes.ISerDes{V})"/> and use a <see cref="TestOutputTopic{K, V}"/> to read and
     /// verify any output records by the topology.
     /// </p>
     /// <p>
@@ -236,8 +236,8 @@ namespace Streamiz.Kafka.Net.Mock
         /// <typeparam name="V">Value type</typeparam>
         /// <param name="topicName">the name of the topic</param>
         /// <returns><see cref="TestOutputTopic{K, V}"/> instance</returns>
-        public TestOutputTopic<K, V> CreateOuputTopic<K, V>(string topicName)
-            => CreateOuputTopic<K, V>(topicName, TimeSpan.FromSeconds(1), null, null);
+        public TestOutputTopic<K, V> CreateOutputTopic<K, V>(string topicName)
+            => CreateOutputTopic<K, V>(topicName, TimeSpan.FromSeconds(1), null, null);
 
         /// <summary>
         /// Create <see cref="TestOutputTopic{K, V}"/> to be used for reading records from topic.
@@ -249,7 +249,7 @@ namespace Streamiz.Kafka.Net.Mock
         /// <param name="keySerdes">Key deserializer</param>
         /// <param name="valueSerdes">Value deserializer</param>
         /// <returns><see cref="TestOutputTopic{K, V}"/> instance</returns>
-        public TestOutputTopic<K, V> CreateOuputTopic<K, V>(string topicName, TimeSpan consumeTimeout, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
+        public TestOutputTopic<K, V> CreateOutputTopic<K, V>(string topicName, TimeSpan consumeTimeout, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null)
         {
             var output = behavior.CreateOutputTopic(topicName, consumeTimeout, keySerdes, valueSerdes);
             outputs.Add(topicName, output.Pipe);
@@ -266,10 +266,10 @@ namespace Streamiz.Kafka.Net.Mock
         /// <typeparam name="VS">Value serializer type</typeparam>
         /// <param name="topicName">the name of the topic</param>
         /// <returns><see cref="TestOutputTopic{K, V}"/> instance</returns>
-        public TestOutputTopic<K, V> CreateOuputTopic<K, V, KS, VS>(string topicName)
+        public TestOutputTopic<K, V> CreateOutputTopic<K, V, KS, VS>(string topicName)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
-            => CreateOuputTopic<K, V, KS, VS>(topicName, TimeSpan.FromSeconds(5));
+            => CreateOutputTopic<K, V, KS, VS>(topicName, TimeSpan.FromSeconds(5));
 
         /// <summary>
         /// Create <see cref="TestOutputTopic{K, V}"/> to be used for reading records from topic.
@@ -281,10 +281,10 @@ namespace Streamiz.Kafka.Net.Mock
         /// <param name="topicName">the name of the topic</param>
         /// <param name="consumeTimeout">Consumer timeout</param>
         /// <returns><see cref="TestOutputTopic{K, V}"/> instance</returns>
-        public TestOutputTopic<K, V> CreateOuputTopic<K, V, KS, VS>(string topicName, TimeSpan consumeTimeout)
+        public TestOutputTopic<K, V> CreateOutputTopic<K, V, KS, VS>(string topicName, TimeSpan consumeTimeout)
             where KS : ISerDes<K>, new()
             where VS : ISerDes<V>, new()
-            => CreateOuputTopic<K, V>(topicName, consumeTimeout, new KS(), new VS());
+            => CreateOutputTopic<K, V>(topicName, consumeTimeout, new KS(), new VS());
 
         #endregion
 

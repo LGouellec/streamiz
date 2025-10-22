@@ -100,7 +100,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic2");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic2");
                 var expected = new List<KeyValuePair<string, string>>();
                 for (int i = 0; i < 42; i++)
                 {
@@ -133,7 +133,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic2");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic2");
                 var expected = new List<KeyValuePair<string, string>>();
                 for (int i = 0; i < 42; i++)
                 {
@@ -166,7 +166,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic2");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic2");
                 var expected = new List<KeyValuePair<string, string>>();
                 for (int i = 0; i < 42; i++)
                 {
@@ -199,7 +199,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic2");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic2");
                 var expected = new List<KeyValuePair<string, string>>();
                 for (int i = 0; i < 42; i++)
                 {
@@ -232,7 +232,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic2");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic2");
                 var expected = new List<KeyValuePair<string, string>>();
                 for (int i = 0; i < 42; i++)
                 {
@@ -265,7 +265,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic2");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic2");
                 var expected = new List<KeyValuePair<string, string>>();
                 for (int i = 0; i < 42; i++)
                 {

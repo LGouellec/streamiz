@@ -39,7 +39,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("test");
-                var outputTopic = driver.CreateOuputTopic<string, string>("output");
+                var outputTopic = driver.CreateOutputTopic<string, string>("output");
                 inputTopic.PipeInput("test", "test");
                 inputTopic.PipeInput("test", "tes");
                 inputTopic.PipeInput("test", "1234");

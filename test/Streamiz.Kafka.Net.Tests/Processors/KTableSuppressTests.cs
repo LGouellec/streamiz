@@ -61,7 +61,7 @@ public class KTableSuppressTests
         
         using var driver = new TopologyTestDriver(builder.Build(), streamConfig);
         var inputTopic = driver.CreateInputTopic("input", new StringSerDes(), new StringSerDes());
-        var outputTopic = driver.CreateOuputTopic("output",
+        var outputTopic = driver.CreateOutputTopic("output",
             TimeSpan.FromSeconds(5),
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());
@@ -83,7 +83,7 @@ public class KTableSuppressTests
         
         using var driver = new TopologyTestDriver(builder.Build(), streamConfig);
         var inputTopic = driver.CreateInputTopic("input", new StringSerDes(), new StringSerDes());
-        var outputTopic = driver.CreateOuputTopic("output",
+        var outputTopic = driver.CreateOutputTopic("output",
             TimeSpan.FromSeconds(5),
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());
@@ -106,7 +106,7 @@ public class KTableSuppressTests
         
         using var driver = new TopologyTestDriver(builder.Build(), streamConfig);
         var inputTopic = driver.CreateInputTopic("input", new StringSerDes(), new StringSerDes());
-        var outputTopic = driver.CreateOuputTopic("output",
+        var outputTopic = driver.CreateOutputTopic("output",
             TimeSpan.FromSeconds(5),
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());
@@ -136,7 +136,7 @@ public class KTableSuppressTests
         
         using var driver = new TopologyTestDriver(builder.Build(), streamConfig);
         var inputTopic = driver.CreateInputTopic("input", new StringSerDes(), new StringSerDes());
-        var outputTopic = driver.CreateOuputTopic("output",
+        var outputTopic = driver.CreateOutputTopic("output",
             TimeSpan.FromSeconds(5),
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());
@@ -163,7 +163,7 @@ public class KTableSuppressTests
         
         using var driver = new TopologyTestDriver(builder.Build(), streamConfig);
         var inputTopic = driver.CreateInputTopic("input", new StringSerDes(), new StringSerDes());
-        var outputTopic = driver.CreateOuputTopic("output",
+        var outputTopic = driver.CreateOutputTopic("output",
             TimeSpan.FromSeconds(5),
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());
@@ -190,7 +190,7 @@ public class KTableSuppressTests
         
         using var driver = new TopologyTestDriver(builder.Build(), streamConfig);
         var inputTopic = driver.CreateInputTopic("input", new StringSerDes(), new StringSerDes());
-        var outputTopic = driver.CreateOuputTopic("output",
+        var outputTopic = driver.CreateOutputTopic("output",
             TimeSpan.FromSeconds(5),
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());
@@ -214,7 +214,7 @@ public class KTableSuppressTests
         
         using var driver = new TopologyTestDriver(builder.Build(), streamConfig);
         var inputTopic = driver.CreateInputTopic("input", new StringSerDes(), new StringSerDes());
-        var outputTopic = driver.CreateOuputTopic("output",
+        var outputTopic = driver.CreateOutputTopic("output",
             TimeSpan.FromSeconds(5),
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());
@@ -238,7 +238,7 @@ public class KTableSuppressTests
         
         using var driver = new TopologyTestDriver(builder.Build(), streamConfig);
         var inputTopic = driver.CreateInputTopic("input", new StringSerDes(), new StringSerDes());
-        var outputTopic = driver.CreateOuputTopic("output",
+        var outputTopic = driver.CreateOutputTopic("output",
             TimeSpan.FromSeconds(5),
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());
@@ -264,7 +264,7 @@ public class KTableSuppressTests
         
         using var driver = new TopologyTestDriver(builder.Build(), streamConfig);
         var inputTopic = driver.CreateInputTopic("input", new StringSerDes(), new StringSerDes());
-        var outputTopic = driver.CreateOuputTopic("output",
+        var outputTopic = driver.CreateOutputTopic("output",
             TimeSpan.FromSeconds(5),
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());
@@ -284,7 +284,7 @@ public class KTableSuppressTests
         
         using var driver = new TopologyTestDriver(builder.Build(), streamConfig);
         var inputTopic = driver.CreateInputTopic("input", new StringSerDes(), new StringSerDes());
-        var outputTopic = driver.CreateOuputTopic("output",
+        var outputTopic = driver.CreateOutputTopic("output",
             TimeSpan.FromSeconds(5),
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());
@@ -304,7 +304,7 @@ public class KTableSuppressTests
         
         using var driver = new TopologyTestDriver(builder.Build(), streamConfig);
         var inputTopic = driver.CreateInputTopic("input", new StringSerDes(), new StringSerDes());
-        var outputTopic = driver.CreateOuputTopic("output",
+        var outputTopic = driver.CreateOutputTopic("output",
             TimeSpan.FromSeconds(5),
             new TimeWindowedSerDes<string>(new StringSerDes(), (long)TimeSpan.FromMinutes(1).TotalMilliseconds),
             new Int64SerDes());

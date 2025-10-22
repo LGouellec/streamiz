@@ -180,7 +180,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             using (var driver = new TopologyTestDriver(topo, config))
             {
                 var input = driver.CreateInputTopic<string, Person>("person");
-                var output = driver.CreateOuputTopic<string, Person>("person-major");
+                var output = driver.CreateOutputTopic<string, Person>("person-major");
                 input.PipeInput("test1", new Person {age = 23, firstName = "f", lastName = "l"});
                 input.PipeInput("test2", new Person {age = 12, firstName = "f", lastName = "l"});
                 var records = output.ReadKeyValueList().ToList();
@@ -241,7 +241,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             using (var driver = new TopologyTestDriver(topo, config))
             {
                 var input = driver.CreateInputTopic<string, Person>("person");
-                var output = driver.CreateOuputTopic<string, int, StringSerDes, Int32SerDes>("person-major");
+                var output = driver.CreateOutputTopic<string, int, StringSerDes, Int32SerDes>("person-major");
                 input.PipeInput("test1", new Person {age = 23, firstName = "f", lastName = "l"});
                 var record = output.ReadKeyValue();
                 Assert.IsNotNull(record);
@@ -308,7 +308,7 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, Order>("test");
-                var outputTopic = driver.CreateOuputTopic<string, Order>("test-output", TimeSpan.FromSeconds(5));
+                var outputTopic = driver.CreateOutputTopic<string, Order>("test-output", TimeSpan.FromSeconds(5));
                 inputTopic.PipeInput("test",
                     new Order
                     {

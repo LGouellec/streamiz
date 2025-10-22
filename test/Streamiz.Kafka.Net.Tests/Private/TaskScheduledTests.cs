@@ -10,6 +10,7 @@ using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Mock.Sync;
+using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.Processors.Public;
 using Streamiz.Kafka.Net.SerDes;
@@ -20,7 +21,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 {
     public class TaskScheduledTests
     {
-        class MySystemProcessor : IProcessor<string, string>
+        class MySystemProcessor : Net.Processors.Public.IProcessor<string, string>
         {
             public long count { get; set; }
             
@@ -45,7 +46,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             }
         }
         
-        class MyEventProcessor : IProcessor<string, string>
+        class MyEventProcessor : Net.Processors.Public.IProcessor<string, string>
         {
             public long count { get; set; }
             
@@ -70,7 +71,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             }
         }
 
-        class MyCloseProcessor : IProcessor<string, string>
+        class MyCloseProcessor : Net.Processors.Public.IProcessor<string, string>
         {
             private TaskScheduled taskScheduled;
             public long count { get; set; }
@@ -97,7 +98,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             }
         }
 
-        class ProcessorThrowableException : IProcessor<string, string>
+        class ProcessorThrowableException : Net.Processors.Public.IProcessor<string, string>
         {
             private readonly bool throwTaskMigration;
             private readonly bool throwStreamsException;
@@ -208,7 +209,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
             var storeChangelogReader =
-                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StatestoreRestoreManager(null),new StreamMetricsRegistry());
             var streamsProducer = new StreamsProducer(
                 config,
                 "thread-0",
@@ -257,7 +258,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
             var storeChangelogReader =
-                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StatestoreRestoreManager(null),new StreamMetricsRegistry());
             var streamsProducer = new StreamsProducer(
                 config,
                 "thread-0",
@@ -310,7 +311,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
             var storeChangelogReader =
-                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StatestoreRestoreManager(null),new StreamMetricsRegistry());
             var streamsProducer = new StreamsProducer(
                 config,
                 "thread-0",
@@ -383,7 +384,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
 
             var storeChangelogReader =
-                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StreamMetricsRegistry());
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StatestoreRestoreManager(null),new StreamMetricsRegistry());
             var streamsProducer = new StreamsProducer(
                 config,
                 "thread-0",
@@ -439,7 +440,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             
             using var driver = new TopologyTestDriver(topology, config);
             var input = driver.CreateInputTopic<string, string>("words");
-            var output = driver.CreateOuputTopic<string, string>("output");
+            var output = driver.CreateOutputTopic<string, string>("output");
             var dt = DateTime.Now;
             input.PipeInput("sylvain", "1", dt.AddMilliseconds(-500));
             input.PipeInput("sylvain", "1", dt.AddMilliseconds(500));

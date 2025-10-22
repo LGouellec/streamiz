@@ -44,7 +44,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic-branch0");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic-branch0");
 
                 var expected = new List<KeyValuePair<string, string>>();
                 for (int i = 0; i < 10; i++)
@@ -79,8 +79,8 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, int>("topic");
-                var outputTopicPair = driver.CreateOuputTopic<string, int>("topic-pair");
-                var outputTopicImpair = driver.CreateOuputTopic<string, int>("topic-impair");
+                var outputTopicPair = driver.CreateOutputTopic<string, int>("topic-pair");
+                var outputTopicImpair = driver.CreateOutputTopic<string, int>("topic-impair");
 
                 var expectedPair = new List<KeyValuePair<string, int>>();
                 var expectedImpair = new List<KeyValuePair<string, int>>();

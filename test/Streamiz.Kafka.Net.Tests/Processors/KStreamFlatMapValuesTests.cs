@@ -47,7 +47,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
-                var outputTopic = driver.CreateOuputTopic<string, string>("topic-flatmapvalues");
+                var outputTopic = driver.CreateOutputTopic<string, string>("topic-flatmapvalues");
 
                 inputTopic.PipeInputs(data);
                 var result = outputTopic.ReadKeyValueList().ToList();
@@ -81,7 +81,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             using (var driver = new TopologyTestDriver(t, config))
             {
                 var inputTopic = driver.CreateInputTopic<string, string>("topic");
-                var outputTopic = driver.CreateOuputTopic<string, char, StringSerDes, CharSerDes>("topic-flatmap");
+                var outputTopic = driver.CreateOutputTopic<string, char, StringSerDes, CharSerDes>("topic-flatmap");
 
                 inputTopic.PipeInputs(data);
                 var result = outputTopic.ReadKeyValueList().ToList();
