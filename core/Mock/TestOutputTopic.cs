@@ -125,31 +125,43 @@ namespace Streamiz.Kafka.Net.Mock
             List<ConsumeResult<K, V>> records = new List<ConsumeResult<K, V>>();
             foreach(var record in pipe.ReadList())
             {
-                var key = record.Key != null ?
-                    (keySerdes != null ? 
-                        keySerdes.Deserialize(record.Key, new SerializationContext(MessageComponentType.Key, pipe.TopicName, record.Message.Headers)) :
-                        (K)configuration.DefaultKeySerDes.DeserializeObject(record.Key, new SerializationContext(MessageComponentType.Key, pipe.TopicName, record.Message.Headers))) 
-                    : default;
+                if (record != null)
+                {
+                    var key = record.Key != null
+                        ? (keySerdes != null
+                            ? keySerdes.Deserialize(record.Key,
+                                new SerializationContext(MessageComponentType.Key, pipe.TopicName,
+                                    record.Message.Headers))
+                            : (K)configuration.DefaultKeySerDes.DeserializeObject(record.Key,
+                                new SerializationContext(MessageComponentType.Key, pipe.TopicName,
+                                    record.Message.Headers)))
+                        : default;
 
-                var value = record.Value != null ?
-                    (valueSerdes != null ?
-                        valueSerdes.Deserialize(record.Value, new SerializationContext(MessageComponentType.Value, pipe.TopicName, record.Message.Headers)) :
-                        (V)configuration.DefaultValueSerDes.DeserializeObject(record.Value, new SerializationContext(MessageComponentType.Value, pipe.TopicName, record.Message.Headers))) 
-                    : default;
+                    var value = record.Value != null
+                        ? (valueSerdes != null
+                            ? valueSerdes.Deserialize(record.Value,
+                                new SerializationContext(MessageComponentType.Value, pipe.TopicName,
+                                    record.Message.Headers))
+                            : (V)configuration.DefaultValueSerDes.DeserializeObject(record.Value,
+                                new SerializationContext(MessageComponentType.Value, pipe.TopicName,
+                                    record.Message.Headers)))
+                        : default;
 
-                records.Add(new ConsumeResult<K, V>{
-                    Message = new Message<K, V>
+                    records.Add(new ConsumeResult<K, V>
                     {
-                        Key = key,
-                        Value = value,
-                        Timestamp = record.Message.Timestamp,
-                        Headers = record.Message.Headers
-                    },
-                    Offset = record.Offset,
-                    Partition = record.Partition,
-                    Topic = record.Topic,
-                    IsPartitionEOF = record.IsPartitionEOF
-                });
+                        Message = new Message<K, V>
+                        {
+                            Key = key,
+                            Value = value,
+                            Timestamp = record.Message.Timestamp,
+                            Headers = record.Message.Headers
+                        },
+                        Offset = record.Offset,
+                        Partition = record.Partition,
+                        Topic = record.Topic,
+                        IsPartitionEOF = record.IsPartitionEOF
+                    });
+                }
             }
             return records;
         }

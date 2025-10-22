@@ -32,8 +32,12 @@ public class ParallelTopologyDriverTests
             t.Join();
     }
     
+    [TestCase(TopologyTestDriver.Mode.SYNC_TASK)]
+    [TestCase(TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY)]
+    [TestCase(TopologyTestDriver.Mode.SYNC_TASK, 10, 6000)]
+    [TestCase(TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, 10, 6000)]
     [Test]
-    public void Test1()
+    public void ParallelDriverTinyMessages(TopologyTestDriver.Mode mode, int numberThreads = 5, int numRecordPerThread = 200)
     {
         var config = new StreamConfig<StringSerDes, StringSerDes>();
         config.ApplicationId = "test-multiple-thread-driver";
@@ -47,14 +51,15 @@ public class ParallelTopologyDriverTests
 
         var topology = builder.Build();
         
-        using var driver = new TopologyTestDriver(topology, config);
+        using var driver = new TopologyTestDriver(topology, config, mode);
         
-        DateTime dt = DateTime.Now;
         var input = driver.CreateInputTopic<string, string>("topic");
-        ProduceInputTopic(5, 10000, input);
+        ProduceInputTopic(numberThreads, numRecordPerThread, input);
         var output = driver.CreateOuputTopic<string, string>("output");
-        var records = output.ReadValueList();
+        var records = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(output, numberThreads * numRecordPerThread,
+            TimeSpan.FromSeconds(10));
         Assert.IsNotNull(records);
         Assert.IsTrue(records.Any());
+        Assert.AreEqual(numberThreads * numRecordPerThread, records.Count());
     }
 }
