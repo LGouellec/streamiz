@@ -114,11 +114,14 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         internal void CreateTopic(string topic, int partitions)
         {
-            if (!topics.Values.Any(t => t.Name.Equals(topic, StringComparison.InvariantCultureIgnoreCase)))
+            lock (Lock)
             {
-                var t = new MockTopic(topic, partitions);
-                topics.TryAddOrUpdate(topic, t);
-                log.LogDebug($"Created topic {topic} with {partitions} partitions");
+                if (!topics.Values.Any(t => t.Name.Equals(topic, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    var t = new MockTopic(topic, partitions);
+                    topics.TryAddOrUpdate(topic, t);
+                    log.LogDebug($"Created topic {topic} with {partitions} partitions");
+                }
             }
         }
 
@@ -801,12 +804,12 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             else
                 partition = Math.Abs(MurMurHash3.Hash(new MemoryStream(message.Key))) % topics[topic].PartitionNumber;
             
-            topics[topic].AddMessage(message.Key, message.Value, partition, message.Timestamp.UnixTimestampMs, message.Headers);
+            int offset = topics[topic].AddMessage(message.Key, message.Value, partition, message.Timestamp.UnixTimestampMs, message.Headers);
 
             r.Message = message;
             r.Partition = partition;
             r.Topic = topic;
-            r.Offset = topics[topic].GetPartition(partition).Size - 1;
+            r.Offset = offset;
             r.Timestamp = new Timestamp(DateTime.Now);
             r.Error = new Error(ErrorCode.NoError);
             r.Status = PersistenceStatus.Persisted;
@@ -821,15 +824,16 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             DeliveryReport<byte[], byte[]> r = new DeliveryReport<byte[], byte[]>();
             r.Status = PersistenceStatus.NotPersisted;
             CreateTopic(topicPartition.Topic);
+            int offset = -1;
             if (topics[topicPartition.Topic].PartitionNumber > topicPartition.Partition)
             {
-                topics[topicPartition.Topic].AddMessage(message.Key, message.Value, topicPartition.Partition, message.Timestamp.UnixTimestampMs, message.Headers);
+                offset = topics[topicPartition.Topic].AddMessage(message.Key, message.Value, topicPartition.Partition, message.Timestamp.UnixTimestampMs, message.Headers);
                 r.Status = PersistenceStatus.Persisted;
             }
             else
             {
                 topics[topicPartition.Topic].CreateNewPartitions(topicPartition.Partition);
-                topics[topicPartition.Topic].AddMessage(message.Key, message.Value, topicPartition.Partition, message.Timestamp.UnixTimestampMs, message.Headers);
+                offset = topics[topicPartition.Topic].AddMessage(message.Key, message.Value, topicPartition.Partition, message.Timestamp.UnixTimestampMs, message.Headers);
                 r.Status = PersistenceStatus.Persisted;
             }
 
@@ -839,7 +843,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             r.Timestamp = new Timestamp(DateTime.Now);
             r.Error = new Error(ErrorCode.NoError);
             r.Status = PersistenceStatus.Persisted;
-            r.Offset = topics[topicPartition.Topic].GetPartition(topicPartition.Partition).Size - 1;
+            r.Offset = offset;
             return r;
         }
 

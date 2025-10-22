@@ -3,6 +3,7 @@ using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -20,8 +21,11 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         private readonly CancellationToken token;
         private readonly Thread readThread;
         private readonly IConsumer<byte[], byte[]> consumer;
-        private readonly Queue<ConsumeResult<byte[], byte[]>> queue = new();
+        private readonly ConcurrentQueue<ConsumeResult<byte[], byte[]>> queue = new();
         private readonly object _lock = new object();
+
+        private const long maxMessageInQueue = 1000;
+        private const long percentagelimitMessageAllowedToResume = 50;
 
 
         public string TopicName => topicName;
@@ -62,15 +66,33 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         private void ReadThread()
         {
             consumer.Subscribe(topicName);
+            bool paused = false;
             while (!token.IsCancellationRequested)
             {
-                var record = consumer.Consume(timeout);
-                if (record != null)
+                if (queue.Count >= maxMessageInQueue)
                 {
-                    lock (_lock)
-                        queue.Enqueue(record);
-                    consumer.Commit(record);
+                    paused = true;
+                    consumer.Pause(consumer.Assignment);
                 }
+
+                if (paused && queue.Count <= maxMessageInQueue * (percentagelimitMessageAllowedToResume / 100))
+                {
+                    consumer.Resume(consumer.Assignment);
+                    paused = false;
+                }
+
+                if (!paused)
+                {
+                    var record = consumer.Consume(timeout);
+                    if (record != null)
+                    {
+                        lock (_lock)
+                            queue.Enqueue(record);
+                        consumer.Commit(record);
+                    }
+                }
+                else
+                    Thread.Sleep((int)timeout.TotalMilliseconds / 10);
             }
         }
 
@@ -96,7 +118,9 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
 
                 if (size > 0)
                 {
-                    return queue.Dequeue();
+                    if (queue.TryDequeue(out var record))
+                        return record;
+                    Thread.Sleep((int)timeout.TotalMilliseconds / 10);
                 }
                 else
                 {
@@ -142,8 +166,10 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
                 {
                     for (int i = 0; i < size; ++i)
                     {
-                        var r = queue.Dequeue();
-                        records.Add(r);
+                        if (queue.TryDequeue(out var record))
+                        {
+                            records.Add(record);
+                        }
                     }
                     return records;
                 }
