@@ -41,6 +41,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly IDictionary<string, string> storesToTopics = new Dictionary<string, string>();
         // map from changelog topic name to its corresponding state store.
         private readonly IDictionary<string, string> topicsToStores = new Dictionary<string, string>();
+        // map of store name to restore behavior
+        private readonly IDictionary<string, (NodeFactory, ISerDes, ISerDes)> storeNameToReprocessOnRestore =
+            new Dictionary<string, (NodeFactory, ISerDes, ISerDes)>();
 
         internal IEnumerable<string> GetSourceTopics()
         {
@@ -207,7 +210,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             IStoreBuilder<S> storeBuilder,
             string sourceName,
             ConsumedInternal<K, V> consumed,
-            ProcessorParameters<K, V> processorParameters) where S : IStateStore
+            ProcessorParameters<K, V> processorParameters,
+            bool reprocessOnRestore) where S : IStateStore
         {
             string processorName = processorParameters.ProcessorName;
 
@@ -221,6 +225,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             globalTopics.Add(topicName);
             nodeFactories.Add(sourceName, new SourceNodeFactory<K, V>(sourceName, topicName, consumed.TimestampExtractor, consumed.KeySerdes, consumed.ValueSerdes));
 
+            if(reprocessOnRestore)
+                storeNameToReprocessOnRestore.Add(storeBuilder.Name, (nodeFactory, consumed.KeySerdes, consumed.ValueSerdes));
+            
             // TODO: ?
             // nodeToSourceTopics.put(sourceName, Arrays.asList(topics));
             nodeGrouper.Add(sourceName);
@@ -228,6 +235,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             nodeFactories.Add(processorName, nodeFactory);
             nodeGrouper.Add(processorName);
             nodeGrouper.Unite(processorName, predecessors);
+            // connect the source topic as (read-only) changelog topic for fault-tolerance
+            storeBuilder.WithLoggingDisabled();
             globalStateBuilders.Add(storeBuilder.Name, storeBuilder);
             ConnectSourceStoreAndTopic(storeBuilder.Name, topicName);
             nodeGroups = null;
@@ -402,7 +411,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 stateStores,
                 GlobalStateStores,
                 storesToChangelog,
-                repartitionTopics.Distinct().ToList());
+                repartitionTopics.Distinct().ToList(),
+                storeNameToReprocessOnRestore);
         }
 
         private void BuildSinkNode(

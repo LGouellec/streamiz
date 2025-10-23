@@ -1,6 +1,8 @@
 ﻿using Streamiz.Kafka.Net.Processors;
 using System.Collections.Generic;
 using System.Linq;
+using Streamiz.Kafka.Net.Processors.Internal;
+using Streamiz.Kafka.Net.SerDes;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
@@ -14,7 +16,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             new Dictionary<string, IStateStore>(),
             new Dictionary<string, IStateStore>(),
             new Dictionary<string, string>(),
-            new List<string>());
+            new List<string>(),
+            new Dictionary<string, (NodeFactory, ISerDes, ISerDes)>());
 
         private IProcessor Root { get; }
         internal IDictionary<string, IProcessor> SourceOperators { get; }
@@ -24,6 +27,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         internal IDictionary<string, IStateStore> GlobalStateStores { get; }
         internal IDictionary<string, string> StoresToTopics { get; }
         internal IList<string> RepartitionTopics { get; }
+        internal IDictionary<string, (NodeFactory, ISerDes, ISerDes)> StoreNameToReprocessOnRestore { get; }
 
         internal ProcessorTopology(IProcessor rootProcessor,
             IDictionary<string, IProcessor> sources,
@@ -32,7 +36,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             IDictionary<string, IStateStore> stateStores,
             IDictionary<string, IStateStore> globalStateStores,
             IDictionary<string, string> storesToTopics,
-            IList<string> repartitionTopics)
+            IList<string> repartitionTopics,
+            IDictionary<string, (NodeFactory, ISerDes, ISerDes)> storeNameToReprocessOnRestore)
         {
             Root = rootProcessor;
             SourceOperators = sources;
@@ -42,6 +47,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             GlobalStateStores = globalStateStores;
             StoresToTopics = storesToTopics;
             RepartitionTopics = repartitionTopics;
+            StoreNameToReprocessOnRestore = storeNameToReprocessOnRestore;
         }
 
         internal ISourceProcessor GetSourceProcessor(string topicName)

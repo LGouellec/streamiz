@@ -7,6 +7,7 @@ using Streamiz.Kafka.Net.Stream.Internal;
 using System.Collections.Generic;
 using System.Text;
 using Streamiz.Kafka.Net.Metrics;
+using Streamiz.Kafka.Net.SerDes;
 
 namespace Streamiz.Kafka.Net.Tests.Private
 {
@@ -56,7 +57,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 null,
                 null,
                 storesToTopics,
-                null);
+                null, 
+                new Dictionary<string, (NodeFactory, ISerDes, ISerDes)>());
 
             globalStateUpdateTask = new GlobalStateUpdateTask(stateManagerMock.Object, topology, contextMock.Object);
         }

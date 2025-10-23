@@ -19,9 +19,17 @@ namespace Streamiz.Kafka.Net.Processors
 
         public IList<IProcessor> Next { get; } = new List<IProcessor>();
 
-        public ISerDes Key => null;
+        ISerDes IProcessor.Key
+        {
+            get => null;
+            set => throw new System.NotImplementedException();
+        }
 
-        public ISerDes Value => null;
+        ISerDes IProcessor.Value
+        {
+            get => null;
+            set => throw new System.NotImplementedException();
+        }
 
         public IList<string> StateStores => new List<string>();
 

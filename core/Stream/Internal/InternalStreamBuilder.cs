@@ -10,6 +10,7 @@ using Streamiz.Kafka.Net.Table.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Processors.Public;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
@@ -144,13 +145,39 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Build Store
         
-        public void AddStateStore(IStoreBuilder storeBuilder, params string[] processorNames)
+        internal void AddStateStore(IStoreBuilder storeBuilder, params string[] processorNames)
         {
            var name = NewStoreName(string.Empty);
 
             var node = new StateStoreNode(storeBuilder, name, processorNames);
             AddGraphNode(root, node);
         }
+
+        internal void AddGlobalStore<K, V>(
+            IStoreBuilder<ITimestampedKeyValueStore<K, V>> storeBuilder,
+            String topic,
+            ConsumedInternal<K, V> consumed,
+            ProcessorSupplier<K, V> stateUpdateSupplier,
+            bool reprocessOnRestore)
+        {
+            // explicitly disable logging for global stores
+            storeBuilder.WithLoggingDisabled();
+                
+            string sourceName = new Named(consumed.Named).SuffixWithOrElseGet(TABLE_SOURCE_SUFFIX, this, KStream.SOURCE_NAME);
+            string processorName = new Named(consumed.Named).OrElseGenerateWithPrefix(this, KTable.SOURCE_NAME);
+
+            var globalStoreNode = new GlobalStoreNode<K, V, ITimestampedKeyValueStore<K, V>>(
+                storeBuilder,
+                sourceName,
+                processorName,
+                topic,
+                consumed,
+                stateUpdateSupplier,
+                reprocessOnRestore);
+            
+            AddGraphNode(root, globalStoreNode);
+        }
+        
         #endregion
     }
 }

@@ -32,9 +32,21 @@ namespace Streamiz.Kafka.Net.Processors
 
         public ISerDes<V> ValueSerDes => Value as ISerDes<V>;
 
-        public ISerDes Key { get; internal set; } = null;
+        internal ISerDes Key { get; set; } = null;
 
-        public ISerDes Value { get; internal set; } = null;
+        ISerDes IProcessor.Key
+        {
+            get => Key;
+            set => Key = value;
+        }
+
+        internal ISerDes Value { get; set; } = null;
+
+        ISerDes IProcessor.Value
+        {
+            get => Value;
+            set => Value = value;
+        }
 
         public IList<IProcessor> Next { get; private set; } = new List<IProcessor>();
 

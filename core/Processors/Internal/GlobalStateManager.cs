@@ -172,11 +172,27 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             
             try
             {
-                RestoreState(
-                    callback,
-                    topicPartitions,
-                    highWatermarks,
-                    StateManagerTools.ConverterForStore(store));
+                if (topology.StoreNameToReprocessOnRestore.ContainsKey(store.Name)) // must reprocess messages
+                {
+                    var factoryParams = topology.StoreNameToReprocessOnRestore[store.Name];
+                    // Initialize processor + serdes
+                    var processor = factoryParams.Item1.Build();
+                    processor.Key = factoryParams.Item2;
+                    processor.Value = factoryParams.Item3;
+                    
+                    ReprocessState(
+                        topicPartitions,
+                        highWatermarks,
+                        processor);
+                }
+                else
+                {
+                    RestoreState(
+                        callback,
+                        topicPartitions,
+                        highWatermarks,
+                        StateManagerTools.ConverterForStore(store));
+                }
             }
             finally
             {
@@ -267,6 +283,72 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
         }
 
+        
+        private void ReprocessState(
+            List<TopicPartition> topicPartitions,
+            IDictionary<TopicPartition, (Offset, Offset)> offsetWatermarks,
+            IProcessor processor)
+        {
+            processor.Init(context);
+
+            foreach (var topicPartition in topicPartitions)
+            {
+                long offset, checkpoint, highWM, checkpointSeek;
+                
+                if (ChangelogOffsets.TryGetValue(topicPartition, out var changelogOffset))
+                {
+                    checkpoint = changelogOffset;
+                    checkpointSeek = checkpoint + 1;
+                }
+                else
+                {
+                    checkpoint = Offset.Beginning.Value;
+                    checkpointSeek = checkpoint;
+                }
+                
+                globalConsumer.Assign((new TopicPartitionOffset(topicPartition, new Offset(checkpointSeek))).ToSingle());
+                offset = checkpoint;
+                var lowWM = offsetWatermarks[topicPartition].Item1;
+                highWM = offsetWatermarks[topicPartition].Item2;
+                
+                // stateRestoreListener.onRestoreStart(topicPartition, storeName, offset, highWatermark);
+                long restoreCount = 0L;
+                
+                while (offset < highWM - 1)
+                {
+                    if (offset == Offset.Beginning && highWM == 0) // no message into local and topics;
+                        break;
+                    
+                    if (lowWM == highWM) // if low offset == high offset
+                        break;
+                    
+                    var records = globalConsumer.ConsumeRecords(TimeSpan.FromMilliseconds(config.PollMs),
+                        config.MaxPollRestoringRecords).ToList();
+                    long batchRestoreCount = 0;
+
+                    foreach (var record in records)
+                    {
+                        context.SetRecordMetaData(record);
+                        if (record.Message.Key != null)
+                        {
+                            processor.Process(record);   
+                            restoreCount++;
+                            batchRestoreCount++;
+                        }
+                    }
+
+                    if (records.Any())
+                        offset = records.Last().Offset;
+                    
+                    // stateRestoreListener.onBatchRestored(topicPartition, storeName, offset, batchRestoreCount);
+                }
+                
+                // stateRestoreListener.onRestoreEnd(topicPartition, storeName, restoreCount);
+                ChangelogOffsets.AddOrUpdate(topicPartition, offset);
+            }
+        }
+        
+        
         private IDictionary<TopicPartition, (Offset, Offset)> OffsetsChangelogs(IEnumerable<TopicPartition> topicPartitions)
         {
             return topicPartitions

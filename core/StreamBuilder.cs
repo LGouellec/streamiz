@@ -7,6 +7,8 @@ using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Stream.Internal;
 using Streamiz.Kafka.Net.Table;
 using System;
+using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.Processors.Public;
 
 namespace Streamiz.Kafka.Net
 {
@@ -752,6 +754,43 @@ namespace Streamiz.Kafka.Net
             internalStreamBuilder.AddStateStore(storeBuilder, processorNames);
         }
 
+        /// <summary>
+        /// Adds a global <see cref="IStateStore" /> to the topology.
+        /// The <see cref="IStateStore" /> sources its data from all partitions of the provided input topic.
+        /// There will be exactly one instance of this <see cref="IStateStore" /> per Kafka Streams instance.
+        /// The provided <see cref="ProcessorSupplier{K,V}" /> will be used to create an
+        /// <see cref="Processors.IProcessor{K,V}"/> that will receive all records forwarded from the topic.
+        /// </summary>
+        /// <param name="storeBuilder">store definition</param>
+        /// <param name="topic">the topic to source the data from</param>
+        /// <param name="stateUpdateSupplier">processor supplier</param>
+        /// <param name="keySerdes">key deserializer</param>
+        /// <param name="valueSerdes">value deserializer</param>
+        /// <param name="timestampExtractor">timestamp extractor</param>
+        /// <param name="named">optional name of your processor</param>
+        /// <typeparam name="K">Type of the key</typeparam>
+        /// <typeparam name="V">Type of the value</typeparam>
+        /// <exception cref="TopologyException">If the process supplier define another store builder.</exception>
+        public void AddGlobalStore<K, V>(
+            IStoreBuilder<ITimestampedKeyValueStore<K, V>> storeBuilder,
+            String topic,
+            ProcessorSupplier<K, V> stateUpdateSupplier,
+            ISerDes<K> keySerdes,
+            ISerDes<V> valueSerdes,
+            ITimestampExtractor timestampExtractor = null,
+            string named = null)
+        {
+            if (stateUpdateSupplier.StoreBuilder != null)
+                throw new TopologyException(
+                    "A store builder is already provisioned for this processor. Please remove the store builder too much");
+
+            internalStreamBuilder.AddGlobalStore(
+                storeBuilder,
+                topic,
+                new ConsumedInternal<K, V>(named, keySerdes, valueSerdes, timestampExtractor), stateUpdateSupplier,
+                true);
+        }
+        
         #endregion
 
         /// <summary>
