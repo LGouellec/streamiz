@@ -771,14 +771,15 @@ namespace Streamiz.Kafka.Net
         /// <typeparam name="K">Type of the key</typeparam>
         /// <typeparam name="V">Type of the value</typeparam>
         /// <exception cref="TopologyException">If the process supplier define another store builder.</exception>
-        public void AddGlobalStore<K, V>(
-            IStoreBuilder<ITimestampedKeyValueStore<K, V>> storeBuilder,
+        public void AddGlobalStore<K, V, S>(
+            IStoreBuilder<S> storeBuilder,
             String topic,
             ProcessorSupplier<K, V> stateUpdateSupplier,
             ISerDes<K> keySerdes,
             ISerDes<V> valueSerdes,
             ITimestampExtractor timestampExtractor = null,
-            string named = null)
+            string named = null) 
+            where S : IStateStore
         {
             if (stateUpdateSupplier.StoreBuilder != null)
                 throw new TopologyException(

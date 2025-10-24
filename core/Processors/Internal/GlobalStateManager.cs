@@ -132,8 +132,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 }
                 
                 changelogTopics.Add(sourceTopic);
-                store.Init(context, store);
                 globalStores[storeName] = store;
+                store.Init(context, store);
             }
             
             ChangelogOffsets.Keys.ForEach(tp =>

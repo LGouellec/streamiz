@@ -34,6 +34,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
         public override void WriteToTopology(InternalTopologyBuilder builder)
         {
             _storeBuilder.WithLoggingDisabled();
+            
             builder.AddGlobalStore(_topic,
                 _storeBuilder,
                 streamGraphNode,
