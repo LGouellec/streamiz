@@ -8,6 +8,7 @@ namespace Streamiz.Kafka.Net.Processors
     internal class GlobalStreamThreadFactory
     {
         private readonly IAdminClient adminClient;
+        private readonly StatestoreRestoreManager statestoreRestoreManager;
         private readonly StreamMetricsRegistry streamMetricsRegistry;
         private readonly ProcessorTopology topology;
         private readonly IStreamConfig configuration;
@@ -19,9 +20,11 @@ namespace Streamiz.Kafka.Net.Processors
             IConsumer<byte[], byte[]> globalConsumer,
             IStreamConfig configuration,
             IAdminClient adminClient,
+            StatestoreRestoreManager statestoreRestoreManager,
             StreamMetricsRegistry streamMetricsRegistry)
         {
             this.adminClient = adminClient;
+            this.statestoreRestoreManager = statestoreRestoreManager;
             this.streamMetricsRegistry = streamMetricsRegistry;
             this.topology = topology;
             this.threadClientId = threadClientId;
@@ -31,7 +34,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public GlobalStreamThread GetGlobalStreamThread()
         {
-            var stateManager = new GlobalStateManager(globalConsumer, topology, adminClient, configuration);
+            var stateManager = new GlobalStateManager(globalConsumer, topology, adminClient, statestoreRestoreManager, configuration);
             var context = new GlobalProcessorContext(configuration, stateManager, streamMetricsRegistry);
             stateManager.SetGlobalProcessorContext(context);
             var globalStateUpdateTask = new GlobalStateUpdateTask(stateManager, topology, context);

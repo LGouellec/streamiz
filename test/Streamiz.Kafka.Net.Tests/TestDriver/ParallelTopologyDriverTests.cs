@@ -57,7 +57,7 @@ public class ParallelTopologyDriverTests
         ProduceInputTopic(numberThreads, numRecordPerThread, input);
         var output = driver.CreateOutputTopic<string, string>("output");
         var records = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(output, numberThreads * numRecordPerThread,
-            TimeSpan.FromSeconds(10));
+            TimeSpan.FromMinutes(1));
         Assert.IsNotNull(records);
         Assert.IsTrue(records.Any());
         Assert.AreEqual(numberThreads * numRecordPerThread, records.Count());

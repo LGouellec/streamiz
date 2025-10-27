@@ -58,7 +58,7 @@ namespace Streamiz.Kafka.Net.Mock
             
             pipeBuilder = new KafkaPipeBuilder(kafkaSupplier);
 
-            topologyBuilder.RewriteTopology(configuration);
+            // topologyBuilder.RewriteTopology(configuration);
             
             // ONLY FOR CHECK IF TOPOLOGY IS CORRECT
             topologyBuilder.BuildTopology();
@@ -86,6 +86,7 @@ namespace Streamiz.Kafka.Net.Mock
                     kafkaSupplier.GetGlobalConsumer(configuration.ToGlobalConsumerConfig(globalThreadId)),
                     configuration,
                     kafkaSupplier.GetAdmin(configuration.ToAdminConfig(clientId)),
+                    new StatestoreRestoreManager(null),
                     metricsRegistry);
                 globalStreamThread = globalStreamThreadFactory.GetGlobalStreamThread();
             }

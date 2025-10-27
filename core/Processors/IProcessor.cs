@@ -9,8 +9,8 @@ namespace Streamiz.Kafka.Net.Processors
     {
         string Name { get; set; }
         IList<string> StateStores {get;}
-        ISerDes Key { get; }
-        ISerDes Value { get; }
+        ISerDes Key { get;  set; }
+        ISerDes Value { get;  set;}
         void Init(ProcessorContext context);
         void SetTaskId(TaskId id);
         IList<IProcessor> Next { get; }

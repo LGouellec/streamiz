@@ -420,6 +420,7 @@ namespace Streamiz.Kafka.Net
                     kafkaSupplier.GetGlobalConsumer(configuration.ToGlobalConsumerConfig(globalThreadId).Wrap(globalThreadId)),
                     configuration,
                     kafkaSupplier.GetAdmin(configuration.ToAdminConfig(clientId)),
+                    statestoreRestoreManager,
                     metricsRegistry);
                 globalStreamThread = globalStreamThreadFactory.GetGlobalStreamThread();
                 globalThreadState = globalStreamThread.State;

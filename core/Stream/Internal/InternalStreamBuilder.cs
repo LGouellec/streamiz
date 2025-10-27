@@ -10,6 +10,9 @@ using Streamiz.Kafka.Net.Table.Internal.Graph.Nodes;
 using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
+using Streamiz.Kafka.Net.Processors;
+using Streamiz.Kafka.Net.Processors.Public;
+using Streamiz.Kafka.Net.State.Internal;
 
 namespace Streamiz.Kafka.Net.Stream.Internal
 {
@@ -144,13 +147,44 @@ namespace Streamiz.Kafka.Net.Stream.Internal
 
         #region Build Store
         
-        public void AddStateStore(IStoreBuilder storeBuilder, params string[] processorNames)
+        internal void AddStateStore(IStoreBuilder storeBuilder, params string[] processorNames)
         {
            var name = NewStoreName(string.Empty);
 
             var node = new StateStoreNode(storeBuilder, name, processorNames);
             AddGraphNode(root, node);
         }
+
+        internal void AddGlobalStore<K, V, S>(
+            IStoreBuilder<S> storeBuilder,
+            String topic,
+            ConsumedInternal<K, V> consumed,
+            ProcessorSupplier<K, V> stateUpdateSupplier,
+            bool reprocessOnRestore) 
+            where S : IStateStore
+        {
+            if (storeBuilder is not KeyValueStoreBuilder<K, V> && storeBuilder is not IStoreBuilder<ITimestampedKeyValueStore<K, V>>)
+                throw new TopologyException($"Global Store builder must be a IKeyValueStoreBuilder<K, V> " +
+                                    $"or a ITimestampedKeyValueStore<K, V> and the actual store builder is {storeBuilder.GetType().FullName}");
+            
+            // explicitly disable logging for global stores
+            storeBuilder.WithLoggingDisabled();
+                
+            string sourceName = new Named(consumed.Named).SuffixWithOrElseGet(TABLE_SOURCE_SUFFIX, this, KStream.SOURCE_NAME);
+            string processorName = new Named(consumed.Named).OrElseGenerateWithPrefix(this, KTable.SOURCE_NAME);
+
+            var globalStoreNode = new GlobalStoreNode<K, V, S>(
+                storeBuilder,
+                sourceName,
+                processorName,
+                topic,
+                consumed,
+                stateUpdateSupplier,
+                reprocessOnRestore);
+            
+            AddGraphNode(root, globalStoreNode);
+        }
+        
         #endregion
     }
 }

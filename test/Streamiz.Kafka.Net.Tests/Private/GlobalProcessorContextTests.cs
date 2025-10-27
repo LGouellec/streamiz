@@ -18,7 +18,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             streamConfig.StateDir = Path.Combine(".", Guid.NewGuid().ToString());
 
             var context = new GlobalProcessorContext(streamConfig,
-                new GlobalStateManager(null, ProcessorTopology.EMPTY, null, null),
+                new GlobalStateManager(null, ProcessorTopology.EMPTY, null, null, null),
                 new StreamMetricsRegistry());
 
             Assert.AreEqual(Path.Combine(streamConfig.StateDir, streamConfig.ApplicationId, "global"),
@@ -33,7 +33,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             streamConfig.StateDir = Path.Combine(".", Guid.NewGuid().ToString());
 
             var context = new GlobalProcessorContext(streamConfig,
-                new GlobalStateManager(null, ProcessorTopology.EMPTY, null, null),
+                new GlobalStateManager(null, ProcessorTopology.EMPTY, null, null, null),
                 new StreamMetricsRegistry());
 
             Assert.AreEqual(new TaskId {Id = -1, Partition = -1}, context.Id);

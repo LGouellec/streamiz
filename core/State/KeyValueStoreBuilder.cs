@@ -18,6 +18,8 @@ namespace Streamiz.Kafka.Net.State
     {
         private readonly IKeyValueBytesStoreSupplier supplier;
 
+        internal IKeyValueBytesStoreSupplier Supplier => supplier;
+
         /// <summary>
         /// 
         /// </summary>

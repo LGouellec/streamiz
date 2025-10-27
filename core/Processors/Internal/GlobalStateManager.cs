@@ -6,10 +6,10 @@ using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
 using Streamiz.Kafka.Net.Errors;
+using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Stream.Internal;
-using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -20,6 +20,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly IConsumer<byte[], byte[]> globalConsumer;
         private readonly ProcessorTopology topology;
         private readonly IAdminClient adminClient;
+        private readonly StatestoreRestoreManager statestoreRestoreManager;
         private readonly IStreamConfig config;
         private IOffsetCheckpointManager offsetCheckpointManager;
         private readonly List<string> globalNonPersistentStateStores = new();
@@ -33,11 +34,13 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             IConsumer<byte[], byte[]> globalConsumer,
             ProcessorTopology topology,
             IAdminClient adminClient,
+            StatestoreRestoreManager statestoreRestoreManager,
             IStreamConfig config)
         {
             this.globalConsumer = globalConsumer;
             this.topology = topology;
             this.adminClient = adminClient;
+            this.statestoreRestoreManager = statestoreRestoreManager;
             this.config = config;
             storesToTopic = this.topology.StoresToTopics;
                             
@@ -132,8 +135,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 }
                 
                 changelogTopics.Add(sourceTopic);
-                store.Init(context, store);
                 globalStores[storeName] = store;
+                store.Init(context, store);
             }
             
             ChangelogOffsets.Keys.ForEach(tp =>
@@ -172,11 +175,35 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             
             try
             {
-                RestoreState(
-                    callback,
-                    topicPartitions,
-                    highWatermarks,
-                    StateManagerTools.ConverterForStore(store));
+                if (topology.StoreNameToReprocessOnRestore.TryGetValue(store.Name, out (NodeFactory, ISerDes, ISerDes) item )) // must reprocess messages
+                { 
+                    // Initialize processor + serdes
+                    var processor = item.Item1.Build();
+                    processor.Key = item.Item2;
+                    processor.Value = item.Item3;
+                    
+                    processor.Init(context);
+
+                    RestoreState((record) =>
+                        {
+                            context.SetRecordMetaData(record);
+                            if (record.Message.Key != null)
+                                processor.Process(record);
+                        },
+                        topicPartitions,
+                        highWatermarks,
+                        r => r,
+                        store.Name);
+                }
+                else
+                {
+                    RestoreState(
+                        callback,
+                        topicPartitions,
+                        highWatermarks,
+                        StateManagerTools.ConverterForStore(store),
+                        store.Name);
+                }
             }
             finally
             {
@@ -217,32 +244,55 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             return result;
         }
 
+        private (long, long, long) GetRestoreOffsets(
+            TopicPartition topicPartition,
+            IDictionary<TopicPartition, (Offset, Offset)> offsetWatermarks)
+        {
+            long offset, checkpoint, highWM, checkpointSeek;
+
+            if (ChangelogOffsets.TryGetValue(topicPartition, out var changelogOffset))
+            {
+                checkpoint = changelogOffset;
+                checkpointSeek = checkpoint + 1;
+            }
+            else
+            {
+                checkpoint = Offset.Beginning.Value;
+                checkpointSeek = checkpoint;
+            }
+
+            globalConsumer.Assign((new TopicPartitionOffset(topicPartition, new Offset(checkpointSeek)))
+                .ToSingle());
+            offset = checkpoint;
+            var lowWM = offsetWatermarks[topicPartition].Item1;
+            highWM = offsetWatermarks[topicPartition].Item2;
+
+            return (offset, highWM, lowWM);
+        }
+
         private void RestoreState(
             Action<ConsumeResult<byte[], byte[]>> restoreCallback,
             List<TopicPartition> topicPartitions,
             IDictionary<TopicPartition, (Offset, Offset)> offsetWatermarks,
-            Func<ConsumeResult<byte[], byte[]>, ConsumeResult<byte[], byte[]>> recordConverter)
+            Func<ConsumeResult<byte[], byte[]>, ConsumeResult<byte[], byte[]>> recordConverter,
+            string storeName)
         {
             foreach (var topicPartition in topicPartitions)
             {
-                long offset, checkpoint, highWM, checkpointSeek;
-
-                if (ChangelogOffsets.TryGetValue(topicPartition, out var changelogOffset))
-                {
-                    checkpoint = changelogOffset;
-                    checkpointSeek = checkpoint + 1;
-                }
-                else
-                {
-                    checkpoint = Offset.Beginning.Value;
-                    checkpointSeek = checkpoint;
-                }
-
-                globalConsumer.Assign((new TopicPartitionOffset(topicPartition, new Offset(checkpointSeek))).ToSingle());
-                offset = checkpoint;
-                var lowWM = offsetWatermarks[topicPartition].Item1;
-                highWM = offsetWatermarks[topicPartition].Item2;
-
+                var offsets = GetRestoreOffsets(topicPartition, offsetWatermarks);
+                long offset = offsets.Item1,
+                    highWM = offsets.Item2,
+                    lowWM = offsets.Item3;
+                
+                statestoreRestoreManager.StatestoreRestoreChange(new StatestoreRestoreManager.StatestoreRestoreStartArgs(
+                    topicPartition,
+                    storeName,
+                    offset,
+                    highWM
+                ));
+                
+                long restoreCount = 0L;
+                
                 while (offset < highWM - 1)
                 {
                     if (offset == Offset.Beginning && highWM == 0) // no message into local and topics;
@@ -253,20 +303,35 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     
                     var records = globalConsumer.ConsumeRecords(TimeSpan.FromMilliseconds(config.PollMs),
                         config.MaxPollRestoringRecords).ToList();
-
+                    long batchRestoreCount = 0;
                     var convertedRecords = records.Select(r => recordConverter(r)).ToList();
 
                     foreach (var record in convertedRecords)
+                    {
                         restoreCallback?.Invoke(record);
+                        restoreCount++;
+                        batchRestoreCount++;
+                    }
 
                     if (convertedRecords.Any())
                         offset = records.Last().Offset;
+                    
+                    statestoreRestoreManager.StatestoreRestoreChange(new StatestoreRestoreManager.StatestoreRestoreBatchArgs(
+                        topicPartition,
+                        storeName,
+                        offset,
+                        batchRestoreCount));
                 }
 
+                statestoreRestoreManager.StatestoreRestoreChange(new StatestoreRestoreManager.StatestoreRestoreEndArgs(
+                    topicPartition,
+                    storeName,
+                    restoreCount));
+                
                 ChangelogOffsets.AddOrUpdate(topicPartition, offset);
             }
         }
-
+        
         private IDictionary<TopicPartition, (Offset, Offset)> OffsetsChangelogs(IEnumerable<TopicPartition> topicPartitions)
         {
             return topicPartitions

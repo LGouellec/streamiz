@@ -265,6 +265,7 @@ namespace Streamiz.Kafka.Net.Tests.TestDriver
                     (v1, v2) => $"{v1}-{v2}")
                 .To("sink");
             
+            builder.Build().Builder.RewriteTopology(config);
             var driver = new ClusterInMemoryTopologyDriver("client", builder.Build().Builder, config, topicConfiguration, TimeSpan.FromSeconds(1), source.Token);
             driver.StartDriver();
             

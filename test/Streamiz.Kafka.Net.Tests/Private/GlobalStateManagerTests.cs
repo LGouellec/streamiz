@@ -68,7 +68,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 new Dictionary<string, IStateStore>(),
                 globalStateStores,
                 storesToTopics,
-                new List<string>());
+                new List<string>(), 
+                new Dictionary<string, (NodeFactory, ISerDes, ISerDes)>());
 
             adminClientMock = new Mock<IAdminClient>();
             RegisterPartitionInAdminClient(kvStoreTopic);
@@ -76,8 +77,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             stateManager = new GlobalStateManager(globalConsumer, topology,
                 adminClientMock.Object,
-                streamConfigMock.Object
-            );
+                new StatestoreRestoreManager(null),
+                streamConfigMock.Object);
 
             context = new GlobalProcessorContext(
                 streamConfigMock.Object,

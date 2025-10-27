@@ -5,8 +5,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
 {
     internal class StateStoreNode : StreamGraphNode
     {
-        private readonly IStoreBuilder storeBuilder;
-        private readonly string[] processorNodeNames;
+        protected readonly IStoreBuilder storeBuilder;
+        protected readonly string[] processorNodeNames;
 
         public StateStoreNode(IStoreBuilder storeBuilder,
             string streamGraphNode,

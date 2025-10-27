@@ -88,7 +88,7 @@ namespace Streamiz.Kafka.Net.Mock
                 var globalConsumer =
                     this.supplier.GetGlobalConsumer(configuration.ToGlobalConsumerConfig($"{clientId}-global-consumer"));
                 var stateManager =
-                    new GlobalStateManager(globalConsumer, globalTaskTopology, adminClient, configuration);
+                    new GlobalStateManager(globalConsumer, globalTaskTopology, adminClient, new StatestoreRestoreManager(null), configuration);
                 globalProcessorContext = new GlobalProcessorContext(configuration, stateManager, metricsRegistry);
                 stateManager.SetGlobalProcessorContext(globalProcessorContext);
                 globalTask = new GlobalStateUpdateTask(stateManager, globalTaskTopology, globalProcessorContext);

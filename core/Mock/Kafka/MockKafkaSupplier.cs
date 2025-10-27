@@ -12,10 +12,12 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
     /// </summary>
     internal class MockKafkaSupplier : IKafkaSupplier
     {
+        private readonly bool _isDestroyable;
         private readonly MockCluster cluster = null;
 
-        public MockKafkaSupplier(int defaultNumberPartitions = 1, long waitBeforeRebalanceMs = 0)
+        public MockKafkaSupplier(int defaultNumberPartitions = 1, long waitBeforeRebalanceMs = 0, bool isDestroyable = true)
         {
+            _isDestroyable = isDestroyable;
             cluster = new MockCluster(defaultNumberPartitions, waitBeforeRebalanceMs);
         }
 
@@ -46,7 +48,8 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
     
         public void Destroy()
         {
-            cluster.Destroy();
+            if(_isDestroyable)
+                cluster.Destroy();
         }
 
         public void CreateTopic(string topic)
