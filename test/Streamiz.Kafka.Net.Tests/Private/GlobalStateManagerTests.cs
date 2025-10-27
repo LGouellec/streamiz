@@ -77,8 +77,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             stateManager = new GlobalStateManager(globalConsumer, topology,
                 adminClientMock.Object,
-                streamConfigMock.Object
-            );
+                new StatestoreRestoreManager(null),
+                streamConfigMock.Object);
 
             context = new GlobalProcessorContext(
                 streamConfigMock.Object,

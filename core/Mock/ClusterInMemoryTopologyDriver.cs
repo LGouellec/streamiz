@@ -86,6 +86,7 @@ namespace Streamiz.Kafka.Net.Mock
                     kafkaSupplier.GetGlobalConsumer(configuration.ToGlobalConsumerConfig(globalThreadId)),
                     configuration,
                     kafkaSupplier.GetAdmin(configuration.ToAdminConfig(clientId)),
+                    new StatestoreRestoreManager(null),
                     metricsRegistry);
                 globalStreamThread = globalStreamThreadFactory.GetGlobalStreamThread();
             }
