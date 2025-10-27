@@ -10,7 +10,6 @@ using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Stream.Internal;
-using Streamiz.Kafka.Net.Table.Internal;
 
 namespace Streamiz.Kafka.Net.Processors.Internal
 {
@@ -183,10 +182,17 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     processor.Key = item.Item2;
                     processor.Value = item.Item3;
                     
-                    ReprocessState(
+                    processor.Init(context);
+
+                    RestoreState((record) =>
+                        {
+                            context.SetRecordMetaData(record);
+                            if (record.Message.Key != null)
+                                processor.Process(record);
+                        },
                         topicPartitions,
                         highWatermarks,
-                        processor,
+                        r => r,
                         store.Name);
                 }
                 else
@@ -325,74 +331,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 ChangelogOffsets.AddOrUpdate(topicPartition, offset);
             }
         }
-
-        
-        private void ReprocessState(
-            List<TopicPartition> topicPartitions,
-            IDictionary<TopicPartition, (Offset, Offset)> offsetWatermarks,
-            IProcessor processor,
-            string storeName)
-        {
-            processor.Init(context);
-
-            foreach (var topicPartition in topicPartitions)
-            {
-                var offsets = GetRestoreOffsets(topicPartition, offsetWatermarks);
-                long offset = offsets.Item1,
-                    highWM = offsets.Item2,
-                    lowWM = offsets.Item3;
-                
-                statestoreRestoreManager.StatestoreRestoreChange(new StatestoreRestoreManager.StatestoreRestoreStartArgs(
-                    topicPartition,
-                    storeName,
-                    offset,
-                    highWM
-                    ));
-                
-                long restoreCount = 0L;
-                
-                while (offset < highWM - 1)
-                {
-                    if (offset == Offset.Beginning && highWM == 0) // no message into local and topics;
-                        break;
-                    
-                    if (lowWM == highWM) // if low offset == high offset
-                        break;
-                    
-                    var records = globalConsumer.ConsumeRecords(TimeSpan.FromMilliseconds(config.PollMs),
-                        config.MaxPollRestoringRecords).ToList();
-                    long batchRestoreCount = 0;
-
-                    foreach (var record in records)
-                    {
-                        context.SetRecordMetaData(record);
-                        if (record.Message.Key != null)
-                        {
-                            processor.Process(record);   
-                            restoreCount++;
-                            batchRestoreCount++;
-                        }
-                    }
-
-                    if (records.Any())
-                        offset = records.Last().Offset;
-                    
-                    statestoreRestoreManager.StatestoreRestoreChange(new StatestoreRestoreManager.StatestoreRestoreBatchArgs(
-                        topicPartition,
-                        storeName,
-                        offset,
-                        batchRestoreCount));
-                }
-                
-                statestoreRestoreManager.StatestoreRestoreChange(new StatestoreRestoreManager.StatestoreRestoreEndArgs(
-                    topicPartition,
-                    storeName,
-                    restoreCount));
-                
-                ChangelogOffsets.AddOrUpdate(topicPartition, offset);
-            }
-        }
-        
         
         private IDictionary<TopicPartition, (Offset, Offset)> OffsetsChangelogs(IEnumerable<TopicPartition> topicPartitions)
         {
