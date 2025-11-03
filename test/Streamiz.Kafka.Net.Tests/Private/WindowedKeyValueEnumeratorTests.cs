@@ -19,10 +19,10 @@ namespace Streamiz.Kafka.Net.Tests.Private
         public void WindowedKeyValueEnumeratorWithSerdes()
         {
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("key"));
+            var key = Bytes.Wrap("key"u8.ToArray());
             var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(10),
                 (long) TimeSpan.FromSeconds(1).TotalMilliseconds, false);
-            store.Put(key, Encoding.UTF8.GetBytes("value"), date.GetMilliseconds());
+            store.Put(key, "value"u8.ToArray(), date.GetMilliseconds());
 
             var enumerator = new MeteredWindowedKeyValueEnumerator<string, string>(
                 store.All(),
@@ -40,10 +40,10 @@ namespace Streamiz.Kafka.Net.Tests.Private
         public void WindowedKeyValueEnumeratorTestNext()
         {
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("key"));
+            var key = Bytes.Wrap("key"u8.ToArray());
             var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(10),
                 (long) TimeSpan.FromSeconds(1).TotalMilliseconds, false);
-            store.Put(key, Encoding.UTF8.GetBytes("value"), date.GetMilliseconds());
+            store.Put(key, "value"u8.ToArray(), date.GetMilliseconds());
 
             var enumerator = new MeteredWindowedKeyValueEnumerator<string, string>(
                 store.All(),
@@ -65,10 +65,10 @@ namespace Streamiz.Kafka.Net.Tests.Private
         public void WindowedKeyValueEnumeratorTestReset()
         {
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("key"));
+            var key = Bytes.Wrap("key"u8.ToArray());
             var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(10),
                 (long) TimeSpan.FromSeconds(1).TotalMilliseconds, false);
-            store.Put(key, Encoding.UTF8.GetBytes("value"), date.GetMilliseconds());
+            store.Put(key, "value"u8.ToArray(), date.GetMilliseconds());
 
             var enumerator = new MeteredWindowedKeyValueEnumerator<string, string>(
                 store.All(),
@@ -94,10 +94,10 @@ namespace Streamiz.Kafka.Net.Tests.Private
         public void WindowedKeyValueEnumeratorTestDispose()
         {
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("key"));
+            var key = Bytes.Wrap("key"u8.ToArray());
             var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(10),
                 (long) TimeSpan.FromSeconds(1).TotalMilliseconds, false);
-            store.Put(key, Encoding.UTF8.GetBytes("value"), date.GetMilliseconds());
+            store.Put(key, "value"u8.ToArray(), date.GetMilliseconds());
 
             var enumerator = new MeteredWindowedKeyValueEnumerator<string, string>(
                 store.All(),

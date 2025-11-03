@@ -40,7 +40,7 @@ namespace Streamiz.Kafka.Net.State
 
             if (iterator.Valid())
             {
-                Current = new KeyValuePair<Bytes, byte[]>(new Bytes(iterator.Key()), iterator.Value());
+                Current = new KeyValuePair<Bytes, byte[]>(Bytes.Wrap(iterator.Key()), iterator.Value());
                 return true;
             }
             else

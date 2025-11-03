@@ -269,18 +269,6 @@ namespace Streamiz.Kafka.Net
         long MaxTaskIdleMs { get; set; }
 
         /// <summary>
-        /// Maximum number of records to buffer per partition. (Default: 1000)
-        /// </summary>
-        long BufferedRecordsPerPartition { get; set; }
-
-        /// <summary>
-        /// Authorize your streams application to follow metadata (timestamp, topic, partition, offset and headers) during processing record.
-        /// You can use <see cref="StreamizMetadata"/> to get these metadatas. (Default : false)
-        /// </summary>
-        [Obsolete("Plan to remove in 1.8.0")]
-        bool FollowMetadata { get; set; }
-
-        /// <summary>
         /// Directory location for state store. This path must be unique for each streams instance sharing the same underlying filesystem.
         /// </summary>
         string StateDir { get; set; }
@@ -330,11 +318,6 @@ namespace Streamiz.Kafka.Net
         MetricsRecordingLevel MetricsRecording { get; set; }
         
         /// <summary>
-        /// Time wait before completing the start task of <see cref="KafkaStream"/>. (default: 2000)
-        /// </summary>
-        long StartTaskDelayMs { get; set; }
-        
-        /// <summary>
         /// Enables parallel processing for messages (default: false)
         /// </summary>
         bool ParallelProcessing { get; set; }
@@ -355,6 +338,9 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         long DefaultStateStoreCacheMaxBytes { get; set; }
 
+        /// <summary>
+        /// Allow automatic topic creation on the broker when subscribing to or assigning non-existent topics. The broker must also be configured with `auto.create.topics.enable=true` for this configuration to take effect. Note: the default value (true) for the producer is different from the default value (false) for the consumer. Further, the consumer default value is different from the Java consumer (true), and this property is not supported by the Java producer. Requires broker version >= 0.11.0.0, for older broker versions only the broker configuration applies. default: false importance: low
+        /// </summary>
         bool? AllowAutoCreateTopics { get; set; }
 
         /// <summary>
@@ -456,20 +442,7 @@ namespace Streamiz.Kafka.Net
         ///     get => configProperties[applicationServerCst];
         ///     set => configProperties.AddOrUpdate(applicationServerCst, value);
         /// }
-
-        /// private string ProcessingGuaranteeConfig
-        /// {
-        ///     get => configProperties[processingGuaranteeCst];
-        ///     set
-        ///     {
-        ///         if (value.Equals(AT_LEAST_ONCE) || value.Equals(EXACTLY_ONCE))
-        ///             configProperties.AddOrUpdate(processingGuaranteeCst, value);
-        ///         else
-        ///             throw new InvalidOperationException($"ProcessingGuaranteeConfig value must equal to {AT_LEAST_ONCE} or {EXACTLY_ONCE}");
-        ///     }
-        /// }
         
-
         /// private long StateCleanupDelayMs
         /// {
         ///     get => Convert.ToInt64(configProperties[stateCleanupDelayMsCst]);
@@ -510,8 +483,6 @@ namespace Streamiz.Kafka.Net
         private const string maxPollRecordsCst = "max.poll.records";
         private const string maxPollRestoringRecordsCst = "max.poll.restoring.records";
         private const string maxTaskIdleCst = "max.task.idle.ms";
-        private const string bufferedRecordsPerPartitionCst = "buffered.records.per.partition";
-        private const string followMetadataCst = "follow.metadata";
         private const string stateDirCst = "state.dir";
         private const string replicationFactorCst = "replication.factor";
         private const string windowstoreChangelogAdditionalRetentionMsCst = "windowstore.changelog.additional.retention.ms";
@@ -520,7 +491,6 @@ namespace Streamiz.Kafka.Net
         private const string metricsIntervalMsCst = "metrics.interval.ms";
         private const string exposeLibrdKafkaCst = "expose.librdkafka.stats";
         private const string metricsRecordingLevelCst = "metrics.recording.level";
-        private const string startTaskDelayMsCst = "start.task.delay.ms";
         private const string parallelProcessingCst = "parallel.processing";
         private const string maxDegreeOfParallelismCst = "max.degree.of.parallelism";
         private const string rocksDbConfigSetterCst = "rocksdb.config.setter";
@@ -2476,12 +2446,10 @@ namespace Streamiz.Kafka.Net
             MaxPollRecords = 500;
             MaxPollRestoringRecords = 1000;
             MaxTaskIdleMs = 0;
-            BufferedRecordsPerPartition = Int32.MaxValue;
             InnerExceptionHandler = (_) => ExceptionHandlerResponse.FAIL;
             ProductionExceptionHandler = (_) => ProductionExceptionHandlerResponse.FAIL;
             DeserializationExceptionHandler = (_, _, _) => ExceptionHandlerResponse.FAIL;
             RocksDbConfigHandler = (_, _) => { };
-            FollowMetadata = false;
             StateDir = Path.Combine(Path.GetTempPath(), "streamiz-kafka-net");
             ReplicationFactor = -1;
             WindowStoreChangelogAdditionalRetentionMs = (long)TimeSpan.FromDays(1).TotalMilliseconds;
@@ -2491,7 +2459,6 @@ namespace Streamiz.Kafka.Net
             LogProcessingSummary = TimeSpan.FromMinutes(1);
             MetricsReporter = _ => { }; // nothing by default, maybe another behavior in future
             ExposeLibrdKafkaStats = false;
-            StartTaskDelayMs = 5000;
             ParallelProcessing = false;
             MaxDegreeOfParallelism = 8;
             DefaultStateStoreCacheMaxBytes = 5 * 1024 * 1024;
@@ -2643,17 +2610,6 @@ namespace Streamiz.Kafka.Net
                 .Where(kv => kv.Item2 != null)
                 .Select(kv => new KeyValuePair<string, string>(kv.Item1, kv.Item2.ToString()))
                 .Distinct(new TupleEqualityComparer());
-        }
-        
-        /// <summary>
-        /// Authorize your streams application to follow metadata (timestamp, topic, partition, offset and headers) during processing record.
-        /// You can use <see cref="StreamizMetadata"/> to get these metadatas. (Default : false)
-        /// </summary>
-        [StreamConfigProperty("" + followMetadataCst)]
-        public bool FollowMetadata
-        {
-            get => configProperties[followMetadataCst];
-            set => configProperties.AddOrUpdate(followMetadataCst, value);
         }
 
         /// <summary>
@@ -2829,17 +2785,6 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
-        /// Maximum number of records to buffer per partition. (Default: 1000)
-        /// </summary>
-        [StreamConfigProperty("" + bufferedRecordsPerPartitionCst)]
-        [Obsolete("Librdkafka clients manage internally a backpressure. So this configuration will be remove in 1.8.0")]
-        public long BufferedRecordsPerPartition
-        {
-            get => configProperties[bufferedRecordsPerPartitionCst];
-            set => configProperties.AddOrUpdate(bufferedRecordsPerPartitionCst, value);
-        }
-
-        /// <summary>
         /// Directory location for state store. This path must be unique for each streams instance sharing the same underlying filesystem.
         /// Default value : $TMP_DIR_ENVIRONMENT$/streamiz-kafka-net
         /// </summary>
@@ -2967,19 +2912,6 @@ namespace Streamiz.Kafka.Net
         {
             get => configProperties[metricsRecordingLevelCst];
             set => configProperties.AddOrUpdate(metricsRecordingLevelCst, value);
-        }
-
-        /// <summary>
-        /// Time wait before completing the start task of <see cref="KafkaStream"/>.
-        /// Should be removed in the next release.
-        /// (default: 5000)
-        /// </summary>
-        [StreamConfigProperty("" + startTaskDelayMsCst)]
-        [Obsolete("Remove in 1.8.0")]
-        public long StartTaskDelayMs
-        {
-            get => configProperties[startTaskDelayMsCst];
-            set => configProperties.AddOrUpdate(startTaskDelayMsCst, value);
         }
 
         /// <summary>

@@ -19,7 +19,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         public void WindowStoreEnumeratorWithSerdes()
         {
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("key"));
+            var key = Bytes.Wrap("key"u8.ToArray());
             var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(10),
                 (long) TimeSpan.FromSeconds(1).TotalMilliseconds, false);
             store.Put(key, Encoding.UTF8.GetBytes("value"), date.GetMilliseconds());
@@ -38,7 +38,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         public void WindowStoreEnumeratorTestNext()
         {
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("key"));
+            var key = Bytes.Wrap("key"u8.ToArray());
             var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(10),
                 (long) TimeSpan.FromSeconds(1).TotalMilliseconds, false);
             store.Put(key, Encoding.UTF8.GetBytes("value"), date.GetMilliseconds());
@@ -62,7 +62,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         public void WindowStoreEnumeratorTestReset()
         {
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("key"));
+            var key = Bytes.Wrap("key"u8.ToArray());
             var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(10),
                 (long) TimeSpan.FromSeconds(1).TotalMilliseconds, false);
             store.Put(key, Encoding.UTF8.GetBytes("value"), date.GetMilliseconds());
@@ -90,7 +90,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         public void WindowStoreEnumeratorTestDispose()
         {
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("key"));
+            var key = Bytes.Wrap("key"u8.ToArray());
             var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(10),
                 (long) TimeSpan.FromSeconds(1).TotalMilliseconds, false);
             store.Put(key, Encoding.UTF8.GetBytes("value"), date.GetMilliseconds());

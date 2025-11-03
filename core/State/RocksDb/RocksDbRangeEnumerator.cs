@@ -44,7 +44,7 @@ namespace Streamiz.Kafka.Net.State
                 {
                     if (keyComparator(iterator.Key(), rawLastKey) <= 0)
                     {
-                        Current = new KeyValuePair<Bytes, byte[]>(new Bytes(iterator.Key()), iterator.Value());
+                        Current = new KeyValuePair<Bytes, byte[]>(Bytes.Wrap(iterator.Key()), iterator.Value());
                     }
                     else
                     {
@@ -55,7 +55,7 @@ namespace Streamiz.Kafka.Net.State
                 {
                     if (keyComparator(iterator.Key(), rawLastKey) >= 0)
                     {
-                        Current = new KeyValuePair<Bytes, byte[]>(new Bytes(iterator.Key()), iterator.Value());
+                        Current = new KeyValuePair<Bytes, byte[]>(Bytes.Wrap(iterator.Key()), iterator.Value());
                     }
                     else
                     {

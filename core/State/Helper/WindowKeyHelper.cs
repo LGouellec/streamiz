@@ -59,7 +59,7 @@ namespace Streamiz.Kafka.Net.State.Helper
 
         public static Bytes ToStoreKeyBinary(Bytes key, long timestamp, int seqnum)
         {
-            byte[] serializedKey = key.Get;
+            byte[] serializedKey = key?.Get;
             return ToStoreKeyBinary(serializedKey, timestamp, seqnum);
         }
 

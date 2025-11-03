@@ -60,7 +60,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var context = new ProcessorContext(UnassignedStreamTask.Create(), config, stateManager,
                 new StreamMetricsRegistry());
             wrapped.Init(context, inmemorystore);
-            inmemorystore.Put(new Bytes(Encoding.UTF8.GetBytes("test")), BitConverter.GetBytes(100), 300);
+            inmemorystore.Put( Bytes.Wrap("test"u8.ToArray()), BitConverter.GetBytes(100), 300);
             Assert.Throws<StreamsException>(() => wrapped.Fetch("test", 300));
         }
 

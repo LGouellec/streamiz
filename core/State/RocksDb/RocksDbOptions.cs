@@ -330,7 +330,6 @@ namespace Streamiz.Kafka.Net.State
         /// </summary>
         /// <param name="value"></param>
         /// <returns>the instance of the current object</returns>
-        [Obsolete]
         public RocksDbOptions SetMaxBackgroundCompactions(int value)
         {
             dbOptions.SetMaxBackgroundCompactions(value);
@@ -338,11 +337,10 @@ namespace Streamiz.Kafka.Net.State
         }
         
         /// <summary>
-        /// NOT SUPPORTED ANYMORE. Will remove in future release.
+        /// 
         /// </summary>
         /// <param name="value"></param>
         /// <returns>the instance of the current object</returns>
-        [Obsolete]
         public RocksDbOptions SetMaxBackgroundFlushes(int value)
         {
             dbOptions.SetMaxBackgroundFlushes(value);
@@ -791,19 +789,6 @@ namespace Streamiz.Kafka.Net.State
         /// <param name="numLevels">size of list</param>
         /// <returns>the instance of the current object</returns>
         public RocksDbOptions SetCompressionPerLevel(Compression[] levelValues, ulong numLevels)
-        {
-            columnFamilyOptions.SetCompressionPerLevel(levelValues, numLevels);
-            return this;
-        }
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="levelValues"></param>
-        /// <param name="numLevels"></param>
-        /// <returns>the instance of the current object</returns>
-        [Obsolete]
-        public RocksDbOptions SetCompressionPerLevel(Compression[] levelValues, UIntPtr numLevels)
         {
             columnFamilyOptions.SetCompressionPerLevel(levelValues, numLevels);
             return this;
