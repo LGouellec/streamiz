@@ -26,8 +26,6 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly IList<IProcessor> processors = new List<IProcessor>();
         private readonly bool eosEnabled;
         private readonly long maxTaskIdleMs;
-        private readonly long maxBufferedSize = 100;
-        private readonly bool followMetadata;
         private readonly List<TaskScheduled> streamTimePunctuationQueue = new();
         private readonly List<TaskScheduled> systemTimePunctuationQueue = new();
 
@@ -56,8 +54,6 @@ namespace Streamiz.Kafka.Net.Processors
             this.streamMetricsRegistry = streamMetricsRegistry;
             consumedOffsets = new Dictionary<TopicPartition, long>();
             maxTaskIdleMs = configuration.MaxTaskIdleMs;
-            maxBufferedSize = configuration.BufferedRecordsPerPartition;
-            followMetadata = configuration.FollowMetadata;
             idleStartTime = -1;
 
             eosEnabled = configuration.Guarantee == ProcessingGuarantee.EXACTLY_ONCE;
@@ -66,7 +62,6 @@ namespace Streamiz.Kafka.Net.Processors
 
             Context = new ProcessorContext(this, configuration, stateMgr, streamMetricsRegistry)
                 .UseRecordCollector(collector);
-            Context.FollowMetadata = followMetadata;
 
             var partitionsQueue = new Dictionary<TopicPartition, RecordQueue>();
 
@@ -421,11 +416,6 @@ namespace Streamiz.Kafka.Net.Processors
 
             consumedOffsets.AddOrUpdate(record.Record.TopicPartition, record.Record.Offset);
             commitNeeded = true;
-
-            if (record.Queue.Size == maxBufferedSize)
-            {
-                consumer.Resume(record.Record.TopicPartition.ToSingle());
-            }
                 
             processSensor.Record();
             processLatencySensor.Record(latency);
@@ -436,12 +426,6 @@ namespace Streamiz.Kafka.Net.Processors
         public void AddRecord(ConsumeResult<byte[], byte[]> record)
         {
             int newQueueSize = partitionGrouper.AddRecord(record.TopicPartition, record);
-
-            if (newQueueSize > maxBufferedSize)
-            {
-                consumer.Pause(record.TopicPartition.ToSingle());
-            }
-
             log.LogDebug($"{logPrefix}Added record into the buffered queue of partition {record.TopicPartition}, new queue size is {newQueueSize}");
         }
 

@@ -18,7 +18,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
         private static string TABLE_SOURCE_SUFFIX = "-source";
 
         private int index = -1;
-        private static readonly object _locker = new object();
+        private static readonly object _locker = new();
         private readonly ILogger logger = Logger.GetLogger(typeof(InternalStreamBuilder));
 
         internal IList<StreamGraphNode> nodes = new List<StreamGraphNode>();

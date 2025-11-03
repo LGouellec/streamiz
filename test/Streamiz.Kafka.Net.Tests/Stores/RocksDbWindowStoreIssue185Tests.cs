@@ -71,7 +71,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
 
         private Bytes Key(string key)
         {
-            return new Bytes(Encoding.UTF8.GetBytes(key));
+            return Bytes.Wrap(Encoding.UTF8.GetBytes(key));
         }
 
         private byte[] Value(string value)

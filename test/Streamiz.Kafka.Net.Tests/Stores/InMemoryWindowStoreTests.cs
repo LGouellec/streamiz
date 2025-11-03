@@ -30,7 +30,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         public void PutOneElement()
         {
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("test-key"));
+            var key = Bytes.Wrap("test-key"u8.ToArray());
             var store = new InMemoryWindowStore("store", defaultRetention, (long)defaultSize.TotalMilliseconds, false);
             store.Put(key, BitConverter.GetBytes(100), date.GetMilliseconds());
             var r = store.Fetch(key, date.GetMilliseconds());
@@ -43,7 +43,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         {
             var date = DateTime.Now;
             var dt2 = date.AddSeconds(1);
-            var key = new Bytes(Encoding.UTF8.GetBytes("test-key"));
+            var key = Bytes.Wrap("test-key"u8.ToArray());
             var store = new InMemoryWindowStore("store", defaultRetention, (long)defaultSize.TotalMilliseconds, false);
             store.Put(key, BitConverter.GetBytes(100), date.GetMilliseconds());
             store.Put(key, BitConverter.GetBytes(150), dt2.GetMilliseconds());
@@ -60,7 +60,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         public void PutTwoElementSameKeySameTime()
         {
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("test-key"));
+            var key = Bytes.Wrap("test-key"u8.ToArray());
             var store = new InMemoryWindowStore("store", defaultRetention, (long)defaultSize.TotalMilliseconds, false);
             store.Put(key, BitConverter.GetBytes(100), date.GetMilliseconds());
             store.Put(key, BitConverter.GetBytes(300), date.GetMilliseconds());
@@ -74,8 +74,8 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         {
             var date = DateTime.Now;
             var dt2 = date.AddSeconds(1);
-            var key = new Bytes(Encoding.UTF8.GetBytes("test-key"));
-            var key2 = new Bytes(Encoding.UTF8.GetBytes("coucou-key"));
+            var key = Bytes.Wrap("test-key"u8.ToArray());
+            var key2 = Bytes.Wrap("coucou-key"u8.ToArray());
             var store = new InMemoryWindowStore("store", defaultRetention, (long)defaultSize.TotalMilliseconds, false);
             store.Put(key, BitConverter.GetBytes(100), date.GetMilliseconds());
             store.Put(key2, BitConverter.GetBytes(300), dt2.GetMilliseconds());
@@ -98,8 +98,8 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         public void PutTwoElementDifferentKeySameTime()
         {
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("test-key"));
-            var key2 = new Bytes(Encoding.UTF8.GetBytes("coucou-key"));
+            var key = Bytes.Wrap("test-key"u8.ToArray());
+            var key2 = Bytes.Wrap("coucou-key"u8.ToArray());
             var store = new InMemoryWindowStore("store", defaultRetention, (long)defaultSize.TotalMilliseconds, false);
             store.Put(key, BitConverter.GetBytes(100), date.GetMilliseconds());
             store.Put(key2, BitConverter.GetBytes(300), date.GetMilliseconds());
@@ -115,8 +115,8 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         public void PutElementsAndFetch()
         {
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("test-key"));
-            var key2 = new Bytes(Encoding.UTF8.GetBytes("coucou-key"));
+            var key = Bytes.Wrap("test-key"u8.ToArray());
+            var key2 = Bytes.Wrap("coucou-key"u8.ToArray());
             var store = new InMemoryWindowStore("store", defaultRetention, (long)defaultSize.TotalMilliseconds, false);
             store.Put(key, BitConverter.GetBytes(100), date.GetMilliseconds());
             store.Put(key2, BitConverter.GetBytes(300), date.AddSeconds(1).GetMilliseconds());
@@ -134,7 +134,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         public void PutElementsWithNullValue()
         {
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("test-key"));
+            var key = Bytes.Wrap("test-key"u8.ToArray());
             var store = new InMemoryWindowStore("store", defaultRetention, (long)defaultSize.TotalMilliseconds, false);
             store.Put(key, null, date.GetMilliseconds());
             var r = store.All().ToList();
@@ -145,8 +145,8 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         public void PutElementsAndUpdateNullValueSameWindow()
         {
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("test-key"));
-            var value = Encoding.UTF8.GetBytes("test");
+            var key = Bytes.Wrap("test-key"u8.ToArray());
+            var value = "test"u8.ToArray();
             var store = new InMemoryWindowStore("store", defaultRetention, (long)defaultSize.TotalMilliseconds, false);
             store.Put(key, value, date.GetMilliseconds());
             store.Put(key, null, date.GetMilliseconds());
@@ -158,8 +158,8 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         public void PutElementsAndUpdateNullValueDifferentWindow()
         {
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("test-key"));
-            var value = Encoding.UTF8.GetBytes("test");
+            var key = Bytes.Wrap("test-key"u8.ToArray());
+            var value = "test"u8.ToArray();
             var store = new InMemoryWindowStore("store", defaultRetention, (long)defaultSize.TotalMilliseconds, false);
             store.Put(key, value, date.GetMilliseconds());
             store.Put(key, null, date.AddSeconds(1).GetMilliseconds());
@@ -175,7 +175,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         {
             var date = DateTime.Now;
             var store = new InMemoryWindowStore("store", defaultRetention, (long)defaultSize.TotalMilliseconds, false);
-            Assert.IsNull(store.Fetch(new Bytes(new byte[0]), 100));
+            Assert.IsNull(store.Fetch(Bytes.Wrap(new byte[0]), 100));
         }
 
         [Test]
@@ -201,7 +201,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             var date = DateTime.Now.AddDays(-1);
             var store = new InMemoryWindowStore("store", TimeSpan.Zero, (long)defaultSize.TotalMilliseconds, false);
             store.Init(mockContext.Object, null);
-            store.Put(new Bytes(new byte[1] { 13}), new byte[0], date.GetMilliseconds());
+            store.Put(Bytes.Wrap(new byte[1] { 13}), new byte[0], date.GetMilliseconds());
             Assert.AreEqual(0, store.All().ToList().Count);
         }
 
@@ -209,8 +209,8 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         public void TestRetentionWithOpenIt()
         {
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("test-key"));
-            var value = Encoding.UTF8.GetBytes("test");
+            var key = Bytes.Wrap("test-key"u8.ToArray());
+            var value = "test"u8.ToArray();
             var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(1), (long)defaultSize.TotalMilliseconds, false);
             store.Put(key, value, date.GetMilliseconds());
             var it = store.All();
@@ -238,7 +238,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         {
             var dt = DateTime.Now;
             var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(1), (long)defaultSize.TotalMilliseconds, false);
-            var enumerator = store.Fetch(new Bytes(null), dt.AddDays(1), dt);
+            var enumerator = store.Fetch(Bytes.Wrap(null), dt.AddDays(1), dt);
             Assert.IsAssignableFrom<EmptyWindowStoreEnumerator<byte[]>>(enumerator);
             Assert.IsFalse(enumerator.MoveNext());
             enumerator.Reset();
@@ -249,7 +249,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         public void DuplicateEvents()
         {
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("test"));
+            var key = Bytes.Wrap("test"u8.ToArray());
             var store = new InMemoryWindowStore("store", defaultRetention, (long)defaultSize.TotalMilliseconds, true);
             store.Put(key, BitConverter.GetBytes(100), date.GetMilliseconds());
             store.Put(key, BitConverter.GetBytes(200), date.GetMilliseconds());
@@ -264,8 +264,8 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         {
             var store = new InMemoryWindowStore("store", TimeSpan.FromSeconds(1), (long)defaultSize.TotalMilliseconds, true);
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("test-key"));
-            var key2 = new Bytes(Encoding.UTF8.GetBytes("test-key2"));
+            var key = Bytes.Wrap("test-key"u8.ToArray());
+            var key2 = Bytes.Wrap("test-key2"u8.ToArray());
             store.Put(key, BitConverter.GetBytes(100), date.GetMilliseconds());
             store.Put(key, BitConverter.GetBytes(150), date.GetMilliseconds());
             store.Put(key2, BitConverter.GetBytes(300), date.GetMilliseconds());

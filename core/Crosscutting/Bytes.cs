@@ -76,17 +76,10 @@ namespace Streamiz.Kafka.Net.Crosscutting
         /// <summary>
         /// Create a Bytes using the byte array.
         /// </summary>
-        /// <param name="bytes">This array becomes the backing storage for the object.</param>
-        [Obsolete("Will be removed in 1.8.0")]
-        public Bytes(byte[] bytes)
+        protected Bytes(byte[] bytes)
         {
             Get = bytes;
         }
-        
-        /// <summary>
-        /// Create a Bytes using the byte array.
-        /// </summary>
-        public Bytes(){}
 
         /// <summary>
         /// 

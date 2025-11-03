@@ -22,7 +22,7 @@ public class BoundMemoryRocksDbConfigHandlerTests
         Bytes Key(string k)
         {
             StringSerDes s = new StringSerDes();
-            return new Bytes(s.Serialize(k, SerializationContext.Empty));
+            return Bytes.Wrap(s.Serialize(k, SerializationContext.Empty));
         }
 
         byte[] Value(Int32 number)

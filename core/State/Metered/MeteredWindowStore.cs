@@ -93,7 +93,7 @@ namespace Streamiz.Kafka.Net.State.Metered
         private Bytes GetKeyBytes(K key)
         {
             if (keySerdes != null)
-                return new Bytes(keySerdes.Serialize(key, GetSerializationContext(true)));
+                return Bytes.Wrap(keySerdes.Serialize(key, GetSerializationContext(true)));
             else
                 throw new StreamsException($"The serializer is not compatible to the actual key (Key type: {typeof(K).FullName}). Change the default Serdes in StreamConfig or provide correct Serdes via method parameters(using the DSL)");
         }

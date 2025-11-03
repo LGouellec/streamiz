@@ -60,7 +60,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             InMemoryWindowStore store2 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10, false);
             var dt = DateTime.Now.GetMilliseconds();
             var valueSerdes = new ValueAndTimestampSerDes<string>(new StringSerDes());
-            var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
+            var bytes = Bytes.Wrap("test"u8.ToArray());
             var provider =
                 new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1,
                     store2);
@@ -81,7 +81,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             InMemoryWindowStore store2 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10, false);
             var dt = DateTime.Now;
             var valueSerdes = new ValueAndTimestampSerDes<string>(new StringSerDes());
-            var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
+            var bytes = Bytes.Wrap("test"u8.ToArray());
             var provider =
                 new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1,
                     store2);
@@ -106,8 +106,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             InMemoryWindowStore store2 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10, false);
             var dt = DateTime.Now;
             var valueSerdes = new ValueAndTimestampSerDes<string>(new StringSerDes());
-            var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
-            var bytes2 = new Bytes(Encoding.UTF8.GetBytes("test2"));
+            var bytes = Bytes.Wrap("test"u8.ToArray());
+            var bytes2 = Bytes.Wrap("test2"u8.ToArray());
             var provider =
                 new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1,
                     store2);
@@ -139,8 +139,8 @@ namespace Streamiz.Kafka.Net.Tests.Private
             InMemoryWindowStore store2 = new InMemoryWindowStore("store", TimeSpan.FromDays(1), 1000 * 10, false);
             var dt = DateTime.Now;
             var valueSerdes = new ValueAndTimestampSerDes<string>(new StringSerDes());
-            var bytes = new Bytes(Encoding.UTF8.GetBytes("test"));
-            var bytes2 = new Bytes(Encoding.UTF8.GetBytes("test2"));
+            var bytes = Bytes.Wrap("test"u8.ToArray());
+            var bytes2 = Bytes.Wrap("test2"u8.ToArray());
             var provider =
                 new MockStateProvider<string, string>(1000 * 10, new StringSerDes(), new StringSerDes(), store1,
                     store2);

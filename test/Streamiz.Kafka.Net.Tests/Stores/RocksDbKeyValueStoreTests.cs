@@ -84,7 +84,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         {
             var serdes = new StringSerDes();
             byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
-            store.Put(new Bytes(key), value);
+            store.Put(Bytes.Wrap(key), value);
             Assert.AreEqual(1, store.ApproximateNumEntries());
         }
 
@@ -96,11 +96,11 @@ namespace Streamiz.Kafka.Net.Tests.Stores
                 value = serdes.Serialize("value", new SerializationContext()),
                 value2 = serdes.Serialize("value2", new SerializationContext());
 
-            store.Put(new Bytes(key), value);
-            store.Put(new Bytes(key), value2);
+            store.Put(Bytes.Wrap(key), value);
+            store.Put(Bytes.Wrap(key), value2);
             var e = store.All().ToList();
             Assert.AreEqual(1, e.Count);
-            var v = store.Get(new Bytes(key));
+            var v = store.Get(Bytes.Wrap(key));
             Assert.AreEqual("value2", serdes.Deserialize(v, new SerializationContext()));
         }
 
@@ -110,7 +110,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             var serdes = new StringSerDes();
             byte[] key = serdes.Serialize("key", new SerializationContext());
 
-            var r = store.Delete(new Bytes(key));
+            var r = store.Delete(Bytes.Wrap(key));
             Assert.IsNull(r);
             Assert.AreEqual(0, store.ApproximateNumEntries());
         }
@@ -122,9 +122,9 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             byte[] key = serdes.Serialize("key", new SerializationContext()),
                 value = serdes.Serialize("value", new SerializationContext());
 
-            store.Put(new Bytes(key), value);
+            store.Put(Bytes.Wrap(key), value);
             Assert.AreEqual(1, store.ApproximateNumEntries());
-            var v = store.Delete(new Bytes(key));
+            var v = store.Delete(Bytes.Wrap(key));
             Assert.AreEqual(0, store.ApproximateNumEntries());
             Assert.AreEqual("value", serdes.Deserialize(v, new SerializationContext()));
         }
@@ -139,10 +139,10 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             byte[] key3 = serdes.Serialize("key3", new SerializationContext()), value3 = serdes.Serialize("value3", new SerializationContext());
 
             var items = new List<KeyValuePair<Bytes, byte[]>>();
-            items.Add(KeyValuePair.Create(new Bytes(key), value));
-            items.Add(KeyValuePair.Create(new Bytes(key1), value1));
-            items.Add(KeyValuePair.Create(new Bytes(key2), value2));
-            items.Add(KeyValuePair.Create(new Bytes(key3), value3));
+            items.Add(KeyValuePair.Create(Bytes.Wrap(key), value));
+            items.Add(KeyValuePair.Create(Bytes.Wrap(key1), value1));
+            items.Add(KeyValuePair.Create(Bytes.Wrap(key2), value2));
+            items.Add(KeyValuePair.Create(Bytes.Wrap(key3), value3));
 
             store.PutAll(items);
 
@@ -156,8 +156,8 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
 
             var items = new List<KeyValuePair<Bytes, byte[]>>();
-            items.Add(KeyValuePair.Create(new Bytes(key), value));
-            items.Add(KeyValuePair.Create(new Bytes(key), (byte[])null));
+            items.Add(KeyValuePair.Create(Bytes.Wrap(key), value));
+            items.Add(KeyValuePair.Create(Bytes.Wrap(key), (byte[])null));
 
             store.PutAll(items);
 
@@ -170,8 +170,8 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             var serdes = new StringSerDes();
             byte[] key3 = serdes.Serialize("key3", new SerializationContext()), value3 = serdes.Serialize("value3", new SerializationContext());
 
-            store.PutIfAbsent(new Bytes(key3), value3);
-            store.PutIfAbsent(new Bytes(key3), value3);
+            store.PutIfAbsent(Bytes.Wrap(key3), value3);
+            store.PutIfAbsent(Bytes.Wrap(key3), value3);
 
             Assert.AreEqual(1, store.ApproximateNumEntries());
         }
@@ -193,7 +193,7 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             var serdes = new StringSerDes();
             byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
 
-            store.Put(new Bytes(key), value);
+            store.Put(Bytes.Wrap(key), value);
 
             var enumerator = store.All().GetEnumerator();
             Assert.IsTrue(enumerator.MoveNext());
@@ -216,8 +216,8 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
             byte[] key2 = serdes.Serialize("key2", new SerializationContext()), value2 = serdes.Serialize("value2", new SerializationContext());
 
-            store.Put(new Bytes(key), value);
-            store.Put(new Bytes(key2), value2);
+            store.Put(Bytes.Wrap(key), value);
+            store.Put(Bytes.Wrap(key2), value2);
 
             var enumerator = store.ReverseAll().GetEnumerator();
             Assert.IsTrue(enumerator.MoveNext());
@@ -244,11 +244,11 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             byte[] key2 = serdes.Serialize("key2", new SerializationContext()), value2 = serdes.Serialize("value2", new SerializationContext());
             byte[] key3 = serdes.Serialize("key3", new SerializationContext()), value3 = serdes.Serialize("value3", new SerializationContext());
 
-            store.Put(new Bytes(key), value);
-            store.Put(new Bytes(key2), value2);
-            store.Put(new Bytes(key3), value3);
+            store.Put(Bytes.Wrap(key), value);
+            store.Put(Bytes.Wrap(key2), value2);
+            store.Put(Bytes.Wrap(key3), value3);
 
-            var enumerator = store.Range(new Bytes(key), new Bytes(key2));
+            var enumerator = store.Range(Bytes.Wrap(key), Bytes.Wrap(key2));
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual("key", deserialize(enumerator.Current.Value.Key.Get));
             Assert.AreEqual("value", deserialize(enumerator.Current.Value.Value));
@@ -273,11 +273,11 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             byte[] key2 = serdes.Serialize("key2", new SerializationContext()), value2 = serdes.Serialize("value2", new SerializationContext());
             byte[] key3 = serdes.Serialize("key3", new SerializationContext()), value3 = serdes.Serialize("value3", new SerializationContext());
 
-            store.Put(new Bytes(key), value);
-            store.Put(new Bytes(key2), value2);
-            store.Put(new Bytes(key3), value3);
+            store.Put(Bytes.Wrap(key), value);
+            store.Put(Bytes.Wrap(key2), value2);
+            store.Put(Bytes.Wrap(key3), value3);
 
-            var enumerator = store.ReverseRange(new Bytes(key), new Bytes(key2));
+            var enumerator = store.ReverseRange(Bytes.Wrap(key), Bytes.Wrap(key2));
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual("key2", deserialize(enumerator.Current.Value.Key.Get));
             Assert.AreEqual("value2", deserialize(enumerator.Current.Value.Value));
@@ -302,11 +302,11 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             byte[] key2 = serdes.Serialize("key2", new SerializationContext()), value2 = serdes.Serialize("value2", new SerializationContext());
             byte[] key3 = serdes.Serialize("key3", new SerializationContext()), value3 = serdes.Serialize("value3", new SerializationContext());
 
-            store.Put(new Bytes(key), value);
-            store.Put(new Bytes(key2), value2);
-            store.Put(new Bytes(key3), value3);
+            store.Put(Bytes.Wrap(key), value);
+            store.Put(Bytes.Wrap(key2), value2);
+            store.Put(Bytes.Wrap(key3), value3);
 
-            var enumerator = store.Range(new Bytes(key2), new Bytes(key));
+            var enumerator = store.Range(Bytes.Wrap(key2), Bytes.Wrap(key));
             Assert.IsFalse(enumerator.MoveNext());
             enumerator.Dispose();
         }
@@ -318,9 +318,9 @@ namespace Streamiz.Kafka.Net.Tests.Stores
 
             byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
 
-            store.Put(new Bytes(key), value);
+            store.Put(Bytes.Wrap(key), value);
 
-            var enumerator = store.Range(new Bytes(key), new Bytes(key));
+            var enumerator = store.Range(Bytes.Wrap(key), Bytes.Wrap(key));
             Assert.IsTrue(enumerator.MoveNext());
             enumerator.Dispose();
             Assert.Throws<ObjectDisposedException>(() => enumerator.Dispose());
@@ -332,9 +332,9 @@ namespace Streamiz.Kafka.Net.Tests.Stores
             var serdes = new StringSerDes();
             byte[] key = serdes.Serialize("key", new SerializationContext()), value = serdes.Serialize("value", new SerializationContext());
 
-            store.Put(new Bytes(key), value);
+            store.Put(Bytes.Wrap(key), value);
 
-            var enumerator = store.Range(new Bytes(key), new Bytes(key));
+            var enumerator = store.Range(Bytes.Wrap(key), Bytes.Wrap(key));
             Assert.IsTrue(enumerator.MoveNext());
             store.Close();
             Assert.Throws<ObjectDisposedException>(() => enumerator.Dispose());

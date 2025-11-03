@@ -68,8 +68,8 @@ namespace Streamiz.Kafka.Net.Tests.Stores
         public void FetchDuplicateEvents()
         {
             var date = DateTime.Now;
-            var key = new Bytes(Encoding.UTF8.GetBytes("test-key"));
-            var key2 = new Bytes(Encoding.UTF8.GetBytes("test-key2"));
+            var key = Bytes.Wrap(Encoding.UTF8.GetBytes("test-key"));
+            var key2 = Bytes.Wrap(Encoding.UTF8.GetBytes("test-key2"));
             store.Put(key, BitConverter.GetBytes(100), date.GetMilliseconds());
             store.Put(key, BitConverter.GetBytes(150), date.GetMilliseconds());
             store.Put(key2, BitConverter.GetBytes(300), date.GetMilliseconds());

@@ -157,7 +157,6 @@ namespace Streamiz.Kafka.Net.Tests.Public
                 ["application.id"] = "test-app",
                 ["deserialization.exception.handler"] = f,
                 ["metrics.interval.ms"] = 100000,
-                ["follow.metadata"] = true,
                 ["bootstrap.servers"] = "localhost:9092"
             };
 
@@ -167,7 +166,6 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual("localhost:9092", consumerConfig.BootstrapServers);
             Assert.AreEqual("test-app", consumerConfig.GroupId);
             Assert.AreEqual(ExceptionHandlerResponse.CONTINUE, streamConfig.DeserializationExceptionHandler.Invoke(null, null, null));
-            Assert.IsTrue(streamConfig.FollowMetadata);
             Assert.AreEqual(100000, streamConfig.MetricsIntervalMs);
         }
 
@@ -182,7 +180,6 @@ namespace Streamiz.Kafka.Net.Tests.Public
             streamConfig.AddConfig("application.id", "test-app");
             streamConfig.AddConfig("deserialization.exception.handler", f);
             streamConfig.AddConfig("metrics.interval.ms", 100000);
-            streamConfig.AddConfig("follow.metadata", true);
             streamConfig.AddConfig("bootstrap.servers", "localhost:9092");
             streamConfig.AddConfig("auto.offset.reset", AutoOffsetReset.Latest);
             streamConfig.AddConfig("acks", Acks.Leader);
@@ -194,7 +191,6 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual("localhost:9092", consumerConfig.BootstrapServers);
             Assert.AreEqual("test-app", consumerConfig.GroupId);
             Assert.AreEqual(ExceptionHandlerResponse.CONTINUE, streamConfig.DeserializationExceptionHandler.Invoke(null, null, null));
-            Assert.IsTrue(streamConfig.FollowMetadata);
             Assert.AreEqual(100000, streamConfig.MetricsIntervalMs);
             Assert.AreEqual(Acks.Leader, producerConfig.Acks);
             Assert.AreEqual(AutoOffsetReset.Latest, consumerConfig.AutoOffsetReset);

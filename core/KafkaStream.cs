@@ -485,19 +485,7 @@ namespace Streamiz.Kafka.Net
                 _cancelSource
             );
         }
-
-        /// <summary>
-        /// Start the <see cref="KafkaStream"/> instance by starting all its threads.
-        /// This function is expected to be called only once during the life cycle of the client.
-        /// Because threads are started in the background, this method does not block.
-        /// </summary>
-        /// <param name="token">Token for propagates notification that the stream should be canceled.</param>
-        [Obsolete("This method is deprecated, please use StartAsync(...) instead. It will be removed in 1.8.0.")]
-        public void Start(CancellationToken? token = null)
-        {
-            StartAsync(token).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
-
+        
         /// <summary>
         /// Start asynchronously the <see cref="KafkaStream"/> instance by starting all its threads.
         /// This function is expected to be called only once during the life cycle of the client.
