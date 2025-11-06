@@ -9,6 +9,8 @@ using Confluent.SchemaRegistry.Encryption;
 using Confluent.SchemaRegistry.Encryption.Aws;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NJsonSchema.Generation;
+using NJsonSchema.NewtonsoftJson.Generation;
 using Streamiz.Kafka.Net;
 using Streamiz.Kafka.Net.Processors.Public;
 using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json;
@@ -80,7 +82,7 @@ namespace sample_stream
         }
 
         public static async Task Main(string[] args)
-        { 
+        {
             AwsKmsDriver.Register();
             FieldEncryptionExecutor.Register();
 

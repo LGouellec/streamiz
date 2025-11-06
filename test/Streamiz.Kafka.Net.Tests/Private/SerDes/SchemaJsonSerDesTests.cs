@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Confluent.SchemaRegistry;
 using NUnit.Framework;
@@ -6,8 +7,13 @@ using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock;
 using Streamiz.Kafka.Net.SerDes;
 using System.Linq;
+using System.Runtime.InteropServices.JavaScript;
 using Confluent.SchemaRegistry.Serdes;
+using Moq;
+using NJsonSchema.Generation;
+using NJsonSchema.NewtonsoftJson.Generation;
 using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json;
+using SchemaType = NJsonSchema.SchemaType;
 
 namespace Streamiz.Kafka.Net.Tests.Private.SerDes
 {
@@ -40,6 +46,12 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             internal JsonSerializer<Person> JsonSerializer => serializer as JsonSerializer<Person>;
 
             public MockJsonSerDes(MockSchemaRegistryClient mockClient)
+            {
+                this.mockClient = mockClient;
+            }
+            
+            public MockJsonSerDes(MockSchemaRegistryClient mockClient, NewtonsoftJsonSchemaGeneratorSettings jsonSchemaGeneratorSettings)
+                :base(jsonSchemaGeneratorSettings)
             {
                 this.mockClient = mockClient;
             }
@@ -254,6 +266,49 @@ namespace Streamiz.Kafka.Net.Tests.Private.SerDes
             Assert.AreEqual(true, schemaConfig.AutoRegisterSchemas);
             Assert.AreEqual(false, schemaConfig.UseLatestVersion);
             Assert.AreEqual(1024, schemaConfig.BufferBytes);
+        }
+        
+        
+        [Test]
+        public void SerializeOKWithJsonGeneratorSettings()
+        {
+            var moqSchemaProcessor = new Moq.Mock<ISchemaProcessor>();
+            
+            var mockSchemaClient = new MockSchemaRegistryClient();
+            var config = new StreamConfig();
+            
+            var jsonSettings = new NewtonsoftJsonSchemaGeneratorSettings()
+            {
+                SchemaType = SchemaType.JsonSchema
+            };
+            jsonSettings.SchemaProcessors.Add(moqSchemaProcessor.Object);
+            
+            var serdes = new MockJsonSerDes(mockSchemaClient, jsonSettings);
+            config.ApplicationId = "test-workflow-jsonserdes";
+            config.DefaultKeySerDes = new StringSerDes();
+            config.DefaultValueSerDes = serdes;
+            config.SchemaRegistryMaxCachedSchemas = null;
+            config.SchemaRegistryRequestTimeoutMs = null;
+
+            var builder = new StreamBuilder();
+            builder
+                .Stream<string, PersonJson>("person")
+                .Filter((k, v, _) => v.Age >= 18)
+                .MapValues((v, _) => v.Age)
+                .To<StringSerDes, Int32SerDes>("person-major");
+
+            var topo = builder.Build();
+            using (var driver = new TopologyTestDriver(topo, config))
+            {
+                var input = driver.CreateInputTopic<string, PersonJson>("person");
+                var output = driver.CreateOutputTopic<string, int, StringSerDes, Int32SerDes>("person-major");
+                input.PipeInput("test1", new PersonJson {Age = 23, FirstName = "f", LastName = "l"});
+                var record = output.ReadKeyValue();
+                Assert.IsNotNull(record);
+                Assert.AreEqual("test1", record.Message.Key);
+                Assert.AreEqual(23, record.Message.Value);
+            }
+            moqSchemaProcessor.Verify(s => s.Process(It.IsAny<SchemaProcessorContext>()), Times.AtLeastOnce);
         }
 
     }

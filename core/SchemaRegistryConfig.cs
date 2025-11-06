@@ -112,5 +112,6 @@
         ///    Reference subject name strategy. default: ReferenceSubjectNameStrategy.ReferenceName
         /// </summary>
         public ReferenceSubjectNameStrategy? ReferenceSubjectNameStrategy { get; set; }
+        
     }
 }

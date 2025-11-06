@@ -1,5 +1,9 @@
 using System.Runtime.CompilerServices;
 using Confluent.SchemaRegistry.Serdes;
+using NJsonSchema.Generation;
+#if NET8_0
+using NJsonSchema.NewtonsoftJson.Generation;
+#endif
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.SerDes;
 
@@ -15,13 +19,40 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json
         : SchemaSerDes<T, JsonSerializerConfig, JsonDeserializerConfig>
         where T : class
     {
+        #if NETSTANDARD2_0 || NET5_0 || NET6_0 || NET7_0
+        private JsonSchemaGeneratorSettings _jsonSchemaGeneratorSettings;
+        /// <summary>
+        /// Constructor with json schema generator settings
+        /// </summary>
+        public SchemaJsonSerDes(JsonSchemaGeneratorSettings jsonSchemaGeneratorSettings = null)
+            : base("json")
+        {
+            _jsonSchemaGeneratorSettings = jsonSchemaGeneratorSettings;
+        }
+        #endif
+        
+        #if NET8_0
+        private NewtonsoftJsonSchemaGeneratorSettings _jsonSchemaGeneratorSettings;
+
+        /// <summary>
+        /// Constructor with json schema generator settings
+        /// </summary>
+        public SchemaJsonSerDes(NewtonsoftJsonSchemaGeneratorSettings jsonSchemaGeneratorSettings = null)
+            : base("json")
+        {
+            _jsonSchemaGeneratorSettings = jsonSchemaGeneratorSettings;
+        }
+        #endif
+
         /// <summary>
         /// Empty constructor
         /// </summary>
         public SchemaJsonSerDes() 
-            : base("json")
+            : this(null)
         {
+            
         }
+        
         
         /// <summary>
         /// Initialize method with a current context which contains <see cref="IStreamConfig"/>.
@@ -35,8 +66,14 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json
                 if (context.Config is ISchemaRegistryConfig schemaConfig)
                 {
                     registryClient = GetSchemaRegistryClient(GetConfig(schemaConfig, context.Config));
-                    deserializer = new JsonDeserializer<T>(registryClient, GetDeserializerConfig(schemaConfig, context.Config));
-                    serializer = new JsonSerializer<T>(registryClient, GetSerializerConfig(schemaConfig, context.Config));
+                    deserializer = new JsonDeserializer<T>(
+                        registryClient,
+                        GetDeserializerConfig(schemaConfig, context.Config),
+                        _jsonSchemaGeneratorSettings);
+                    serializer = new JsonSerializer<T>(
+                        registryClient,
+                        GetSerializerConfig(schemaConfig, context.Config),
+                        _jsonSchemaGeneratorSettings);
                     isInitialized = true;
                 }
                 else
