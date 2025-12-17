@@ -12,6 +12,11 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             _partitioner = partitioner;
         }
 
+        public void Initialize(IStreamConfig config)
+        {
+            
+        }
+
         public Partition Partition(string topic, K key, V value, Partition sourcePartition, int numPartitions)
             => _partitioner(topic, key, value, sourcePartition, numPartitions);
     }

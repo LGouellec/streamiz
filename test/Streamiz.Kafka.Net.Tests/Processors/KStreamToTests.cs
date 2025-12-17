@@ -15,6 +15,11 @@ public class KStreamToTests
 {
     private class MyStreamPartitioner : IStreamPartitioner<string, string>
     {
+        public void Initialize(IStreamConfig config)
+        {
+            
+        }
+
         public Partition Partition(string topic, string key, string value, Partition sourcePartition, int numPartitions)
         {
             switch (key)
