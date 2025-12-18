@@ -104,7 +104,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
                     .SetMaxSuccessiveMerges(12)
                     .SetMaxTotalWalSize(12)
                     .SetMaxWriteBufferNumber(15543)
-                    .SetMaxWriteBufferNumberToMaintain(126)
+                    .SetMaxWriteBufferSizeToMaintain(3000)
                     .SetMemtableHugePageSize(64317)
                     .SetMemtableHugePageSize(64317)
                     .SetMemtablePrefixBloomSizeRatio(12)
