@@ -102,8 +102,12 @@ namespace Streamiz.Kafka.Net.Processors
 
         private IDictionary<TopicPartition, long> CheckpointableOffsets
             => collector.CollectorOffsets
-                        .Union(consumedOffsets.AsEnumerable())
-                        .ToDictionary();
+                .Union(consumedOffsets.AsEnumerable())
+                .ToUpdateDictionary(
+                    tp => tp.Key,
+                    tp => tp.Value,
+                    (previousOffset, currentOffset) 
+                        => currentOffset > previousOffset ? currentOffset : previousOffset);
 
         private IEnumerable<TopicPartitionOffset> GetPartitionsWithOffset()
         {
