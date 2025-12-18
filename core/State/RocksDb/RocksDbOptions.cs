@@ -1051,13 +1051,13 @@ namespace Streamiz.Kafka.Net.State
         }
         
         /// <summary>
-        /// The total maximum number of write buffers to maintain in memory including copies of buffers that have already been flushed.
+        /// Set the limit of the aggregate memory used by all write buffers, including those waiting to be flushed. 
         /// </summary>
-        /// <param name="value">The maximum number of write buffers to maintain</param>
+        /// <param name="value">The maximum memory size of write buffers to maintain</param>
         /// <returns>the instance of the current object</returns>
-        public RocksDbOptions SetMaxWriteBufferNumberToMaintain(int value)
+        public RocksDbOptions SetMaxWriteBufferSizeToMaintain(int value)
         {
-            columnFamilyOptions.SetMaxWriteBufferNumberToMaintain(value);
+            columnFamilyOptions.SetMaxWriteBufferSizeToMaintain(value);
             return this;
         }
         
