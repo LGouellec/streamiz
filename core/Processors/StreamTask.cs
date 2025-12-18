@@ -100,7 +100,8 @@ namespace Streamiz.Kafka.Net.Processors
             restorationRecordsSendsor = TaskMetrics.RestorationRecordsSensor(threadId, Id, streamMetricsRegistry);    
         }
 
-        private IDictionary<TopicPartition, long> CheckpointableOffsets
+        // for testing
+        internal IDictionary<TopicPartition, long> CheckpointableOffsets
             => collector.CollectorOffsets
                 .Union(consumedOffsets.AsEnumerable())
                 .ToUpdateDictionary(
