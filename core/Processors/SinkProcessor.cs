@@ -46,6 +46,7 @@ namespace Streamiz.Kafka.Net.Processors
 
             Key?.Initialize(context.SerDesContext);
             Value?.Initialize(context.SerDesContext);
+            partitioner?.Initialize(context.Configuration);
 
             base.Init(context);
         }

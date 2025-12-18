@@ -5,6 +5,12 @@ namespace Streamiz.Kafka.Net.Processors
     public interface IStreamPartitioner<K, V>
     {
         /// <summary>
+        /// Initialize the current partitioner
+        /// </summary>
+        /// <param name="config">Global stream configuration</param>
+        void Initialize(IStreamConfig config);
+        
+        /// <summary>
         /// Function used to determine how records are distributed among partitions of the topic
         /// </summary>
         /// <param name="topic">Sink topic name</param>
