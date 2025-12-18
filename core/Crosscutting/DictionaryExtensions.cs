@@ -98,6 +98,10 @@ namespace Streamiz.Kafka.Net.Crosscutting
                     {
                         dictonary[key] = mergeOperator(previousValue, elementSelector(element));
                     }
+                    else
+                    {
+                        dictonary[key] = elementSelector(element);
+                    }
                 }
             }
 
