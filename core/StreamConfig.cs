@@ -349,12 +349,12 @@ namespace Streamiz.Kafka.Net
         TimeSpan QueryWatermarkOffsetsTimeout { get; set; }
         
         /// <summary>
-        /// Enable the automatic resuffle with the default stream partitioner. (Default: true)
+        /// Enable the automatic reshuffle with the default stream partitioner. (Default: true)
         /// If the value is true, when sending to a topic, the partition is always recalculated based on the destination topic's partition count.
         /// If the value is false, the default partitioner check if the destination topic has the same or more partitions as the source, if yes the source partition is used, even if the key has changed otherwise the partition is recalculated.
         /// Check <see cref="DefaultStreamPartitioner{K,V}"/>
         /// </summary>
-        bool DefaultPartitionerResuffleEveryKey { get; set; }
+        bool DefaultPartitionerReshuffleEveryKey { get; set; }
 
         #endregion
         
@@ -508,7 +508,7 @@ namespace Streamiz.Kafka.Net
         private const string logProcessingSummaryCst = "log.processing.summary";
         private const string stateStoreCacheMaxBytesCst = "statestore.cache.max.bytes";
         private const string queryWatermarkOffsetsTimeoutMsCst = "query.watermark.offsets.timeout.ms";
-        private const string defaultPartitionerResuffleEveryKeyCst = "default.partitioner.resuffle.every.key";
+        private const string defaultPartitionerReshuffleEveryKeyCst = "default.partitioner.reshuffle.every.key";
         
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -2472,7 +2472,7 @@ namespace Streamiz.Kafka.Net
             MaxDegreeOfParallelism = 8;
             DefaultStateStoreCacheMaxBytes = 5 * 1024 * 1024;
             QueryWatermarkOffsetsTimeout = TimeSpan.FromSeconds(5);
-            DefaultPartitionerResuffleEveryKey = true;
+            DefaultPartitionerReshuffleEveryKey = true;
 
             _consumerConfig = new ConsumerConfig();
             _producerConfig = new ProducerConfig();
@@ -2978,16 +2978,16 @@ namespace Streamiz.Kafka.Net
         
         
         /// <summary>
-        /// Enable the automatic resuffle with the default stream partitioner. (Default: true)
+        /// Enable the automatic reshuffle with the default stream partitioner. (Default: true)
         /// If the value is true, when sending to a topic, the partition is always recalculated based on the destination topic's partition count.
         /// If the value is false, the default partitioner check if the destination topic has the same or more partitions as the source, if yes the source partition is used, even if the key has changed else partition is recalculated.
         /// Check <see cref="DefaultStreamPartitioner{K,V}"/>
         /// </summary>
-        [StreamConfigProperty("" + defaultPartitionerResuffleEveryKeyCst)]
-        public bool DefaultPartitionerResuffleEveryKey 
+        [StreamConfigProperty("" + defaultPartitionerReshuffleEveryKeyCst)]
+        public bool DefaultPartitionerReshuffleEveryKey 
         {
-            get => configProperties[defaultPartitionerResuffleEveryKeyCst];
-            set => configProperties.AddOrUpdate(defaultPartitionerResuffleEveryKeyCst, value);
+            get => configProperties[defaultPartitionerReshuffleEveryKeyCst];
+            set => configProperties.AddOrUpdate(defaultPartitionerReshuffleEveryKeyCst, value);
         }
 
         /// <summary>
