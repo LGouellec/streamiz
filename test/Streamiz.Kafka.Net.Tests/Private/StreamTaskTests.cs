@@ -455,5 +455,101 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             Directory.Delete(config.StateDir, true);
         }
+        
+        [Test]
+        public void StreamTaskCheckpointOffsetTest()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-app";
+            config.StateDir = Path.Combine(".", Guid.NewGuid().ToString());
+
+            var serdes = new StringSerDes();
+            var builder = new StreamBuilder();
+
+            builder
+                .Stream("topic", new StringSerDes(), new StringSerDes())
+                .To("topic", new StringSerDes(), new StringSerDes());
+
+            TaskId id = new TaskId {Id = 0, Partition = 0};
+            var topology = builder.Build();
+            topology.Builder.RewriteTopology(config);
+
+            var processorTopology = topology.Builder.BuildTopology(id);
+
+            var supplier = new SyncKafkaSupplier();
+            var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
+
+            var streamsProducer = new StreamsProducer(
+                config,
+                "thread-0",
+                Guid.NewGuid(),
+                supplier,
+                "log-prefix");
+
+            var tp = new TopicPartition("topic", 0);
+            StreamTask task = new StreamTask(
+                "thread-0",
+                id,
+                new List<TopicPartition>
+                {
+                  tp  ,
+                },
+                processorTopology,
+                consumer,
+                config,
+                supplier,
+                streamsProducer,
+                new MockChangelogRegister()
+                , new StreamMetricsRegistry());
+            
+            
+            void AddRecord(string key, string value, TopicPartition tp, long offset)
+            {
+                task.AddRecord( new ConsumeResult<byte[], byte[]> {
+                    Message = new Message<byte[], byte[]>
+                    {
+                        Key = serdes.Serialize(key, new SerializationContext()),
+                        Value = serdes.Serialize(value, new SerializationContext())
+                    },
+                    TopicPartitionOffset = new TopicPartitionOffset( tp, offset)
+                });
+            }
+            
+            task.InitializeStateStores();
+            task.InitializeTopology();
+            task.RestorationIfNeeded();
+            task.CompleteRestoration();
+
+            AddRecord("key1", "value1", tp, 0L);
+            AddRecord("key2", "value2", tp,3L);
+            AddRecord("key3", "value3", tp,4L);
+            AddRecord("key4", "value4", tp,1L);
+            
+            Assert.IsTrue(task.CanProcess(DateTime.Now.GetMilliseconds()));
+
+            while (task.CanProcess(DateTime.Now.GetMilliseconds()))
+                Assert.IsTrue(task.Process());
+
+            var checkpointOffsets = task.CheckpointableOffsets;
+            
+            Assert.AreEqual(3L, checkpointOffsets[tp]);
+            
+            AddRecord("key5", "value5", tp,5L);
+            
+            Assert.IsTrue(task.CanProcess(DateTime.Now.GetMilliseconds()));
+
+            while (task.CanProcess(DateTime.Now.GetMilliseconds()))
+                Assert.IsTrue(task.Process());
+            
+            var checkpointOffsets2 = task.CheckpointableOffsets;
+            
+            Assert.AreEqual(5L, checkpointOffsets2[tp]);
+            
+            task.Suspend();
+            task.Close(false);
+
+            if(Directory.Exists(config.StateDir))
+                Directory.Delete(config.StateDir, true);
+        }
     }
 }

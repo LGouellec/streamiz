@@ -81,13 +81,28 @@ namespace Streamiz.Kafka.Net.Crosscutting
         public static IDictionary<K, V> ToUpdateDictionary<T, K, V>(
             this IEnumerable<T> source,
             Func<T, K> keySelector,
-            Func<T, V> elementSelector)
+            Func<T, V> elementSelector,
+            Func<V, V, V> mergeOperator = null)
         {
             var dictonary = new Dictionary<K, V>();
             foreach (var element in source)
             {
                 var key = keySelector(element);
-                dictonary[key] = elementSelector(element);
+                if (mergeOperator == null)
+                {
+                    dictonary[key] = elementSelector(element);
+                }
+                else
+                {
+                    if (dictonary.TryGetValue(key, out V previousValue))
+                    {
+                        dictonary[key] = mergeOperator(previousValue, elementSelector(element));
+                    }
+                    else
+                    {
+                        dictonary[key] = elementSelector(element);
+                    }
+                }
             }
 
             return dictonary;
