@@ -16,6 +16,8 @@ namespace Streamiz.Kafka.Net.State
         where T : IStateStore
     {
         private IDictionary<string, string> logConfig = new Dictionary<string, string>();
+
+        private bool explicitlySetted = false;
         
         /// <summary>
         /// Name of the state store
@@ -63,7 +65,8 @@ namespace Streamiz.Kafka.Net.State
         /// <summary>
         /// Caching enabled or not
         /// </summary>
-        public bool CachingEnabled => enableCaching;
+        public bool CachingEnabled =>
+            enableCaching || (!explicitlySetted && Materialized.CacheStoreByDefault);
 
         /// <summary>
         /// Cache size of the storage
@@ -90,6 +93,7 @@ namespace Streamiz.Kafka.Net.State
         public IStoreBuilder<T> WithCachingEnabled(CacheSize cacheSize = null)
         {
             enableCaching = true;
+            explicitlySetted = true;
             CacheSize = cacheSize;
             return this;
         }
@@ -100,6 +104,7 @@ namespace Streamiz.Kafka.Net.State
         /// <returns></returns>
         public IStoreBuilder<T> WithCachingDisabled()
         {
+            explicitlySetted = true;
             enableCaching = false;
             return this;
         }

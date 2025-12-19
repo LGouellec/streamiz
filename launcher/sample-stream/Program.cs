@@ -1,21 +1,13 @@
 using System;
-using System.Diagnostics;
-using System.Reflection;
-using System.Runtime.InteropServices.JavaScript;
-using System.Text;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Confluent.SchemaRegistry.Encryption;
 using Confluent.SchemaRegistry.Encryption.Aws;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using NJsonSchema.Generation;
-using NJsonSchema.NewtonsoftJson.Generation;
 using Streamiz.Kafka.Net;
-using Streamiz.Kafka.Net.Processors.Public;
 using Streamiz.Kafka.Net.SchemaRegistry.SerDes.Json;
 using Streamiz.Kafka.Net.SerDes;
-using Streamiz.Kafka.Net.State;
 using Streamiz.Kafka.Net.Stream;
 using Streamiz.Kafka.Net.Table;
 
@@ -99,6 +91,7 @@ namespace sample_stream
                     b.SetMinimumLevel(LogLevel.Information);
                 }),
             };
+            config.EnableCacheStoreByDefault(CacheSize.OfKb(10));
             
             var t = BuildTopology();
             var stream = new KafkaStream(t, config);

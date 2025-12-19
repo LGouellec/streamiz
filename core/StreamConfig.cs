@@ -13,6 +13,7 @@ using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.Table;
 
 namespace Streamiz.Kafka.Net
 {
@@ -2470,7 +2471,7 @@ namespace Streamiz.Kafka.Net
             ExposeLibrdKafkaStats = false;
             ParallelProcessing = false;
             MaxDegreeOfParallelism = 8;
-            DefaultStateStoreCacheMaxBytes = 5 * 1024 * 1024;
+            DefaultStateStoreCacheMaxBytes = CacheSize.OfMb(5).CacheSizeBytes;
             QueryWatermarkOffsetsTimeout = TimeSpan.FromSeconds(5);
             DefaultPartitionerResuffleEveryKey = true;
 
@@ -3627,6 +3628,18 @@ namespace Streamiz.Kafka.Net
             }
 
             return t;
+        }
+        
+        /// <summary>
+        /// Enable caching for each state store that the topology will create.
+        /// Not that if the cache is explicitly disabled via <see cref="Materialized{K,V,S}.WithCachingDisabled"/>, the store won't use cache.
+        /// </summary>
+        /// <param name="config">Stream configuration</param>
+        /// <param name="defaultCacheSize">Default size of the cache store</param>
+        public static void EnableCacheStoreByDefault(this IStreamConfig config, CacheSize defaultCacheSize)
+        {
+            Materialized.EnableCacheStoreByDefault();
+            config.DefaultStateStoreCacheMaxBytes = defaultCacheSize.CacheSizeBytes;
         }
     }
 }
