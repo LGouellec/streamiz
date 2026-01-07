@@ -9,7 +9,7 @@ namespace Streamiz.Kafka.Net.Processors
     /// <typeparam name="V">Value record type</typeparam>
     public class DefaultStreamPartitioner<K, V> : IStreamPartitioner<K, V>
     {
-        private bool _resuffleKey;
+        private bool _reshuffleKey;
         
         /// <summary>
         /// Initialize the current partitioner.
@@ -17,7 +17,7 @@ namespace Streamiz.Kafka.Net.Processors
         /// <param name="config">Global stream configuration</param>
         public void Initialize(IStreamConfig config)
         {
-            _resuffleKey = config.DefaultPartitionerResuffleEveryKey;
+            _reshuffleKey = config.DefaultPartitionerReshuffleEveryKey;
         }
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace Streamiz.Kafka.Net.Processors
         /// <returns>Return the source partition as the sink partition of the record if there is enough sink partitions, Partition.Any otherwise</returns>
         public Partition Partition(string topic, K key, V value, Partition sourcePartition, int numPartitions)
         {
-            return !_resuffleKey 
+            return !_reshuffleKey 
                    && sourcePartition.Value <= numPartitions - 1 ? 
                 sourcePartition
                 : Confluent.Kafka.Partition.Any;
