@@ -2480,7 +2480,7 @@ namespace Streamiz.Kafka.Net
             MaxDegreeOfParallelism = 8;
             DefaultStateStoreCacheMaxBytes = CacheSize.OfMb(5).CacheSizeBytes;
             QueryWatermarkOffsetsTimeout = TimeSpan.FromSeconds(5);
-            DefaultPartitionerResuffleEveryKey = true;
+            DefaultPartitionerReshuffleEveryKey = true;
             DefaultCacheEnabled = false;
 
             _consumerConfig = new ConsumerConfig();
