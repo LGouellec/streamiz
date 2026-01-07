@@ -46,12 +46,12 @@ namespace Streamiz.Kafka.Net.State
         /// Build the state store
         /// </summary>
         /// <returns></returns>
-        public override ITimestampedKeyValueStore<K, V> Build()
+        public override ITimestampedKeyValueStore<K, V> Build(IStreamConfig config)
         {
             var store = storeSupplier.Get();
             
             return new MeteredTimestampedKeyValueStore<K, V>(
-                WrapCaching(WrapLogging(store)),
+                WrapCaching(WrapLogging(store), config),
                 keySerdes,
                 valueSerdes,
                 storeSupplier.MetricsScope);
@@ -62,9 +62,11 @@ namespace Streamiz.Kafka.Net.State
             return !LoggingEnabled ? inner : new ChangeLoggingTimestampedKeyValueBytesStore(inner);
         }
 
-        private IKeyValueStore<Bytes, byte[]> WrapCaching(IKeyValueStore<Bytes, byte[]> inner)
+        private IKeyValueStore<Bytes, byte[]> WrapCaching(IKeyValueStore<Bytes, byte[]> inner, IStreamConfig config)
         {
-            return !CachingEnabled ? inner : new CachingKeyValueStore(inner, CacheSize);
+            return MustWrapCache(config) 
+                ? new CachingKeyValueStore(inner, CacheSize) 
+                : inner;
         }
     }
 }

@@ -57,6 +57,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
         [Test]
         public void WriteTopologyTest()
         {
+            var config = new StreamConfig();
             var builder = new InternalTopologyBuilder();
             List<StreamGraphNode> nodes = new List<StreamGraphNode>();
 
@@ -94,7 +95,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             Assert.IsTrue(filter.AllParentsWrittenToTopology);
             Assert.IsTrue(to.AllParentsWrittenToTopology);
 
-            var topology = builder.BuildTopology();
+            var topology = builder.BuildTopology(config);
             Assert.IsTrue(topology.SourceOperators.ContainsKey("topic"));
             Assert.IsTrue(topology.ProcessorOperators.ContainsKey("filter-02"));
             Assert.IsTrue(topology.SinkOperators.ContainsKey("topic2"));

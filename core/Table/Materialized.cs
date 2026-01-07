@@ -12,9 +12,9 @@ namespace Streamiz.Kafka.Net.Table
 {
     internal class Materialized
     {
-        internal static bool CacheStoreByDefault { get; private set; }
+        internal bool CacheStoreByDefault { get; private set; }
 
-        internal static void EnableCacheStoreByDefault()
+        internal void EnableCacheStoreByDefault()
         {
             CacheStoreByDefault = true;
         }
@@ -219,6 +219,8 @@ namespace Streamiz.Kafka.Net.Table
 
         #region Property
 
+        internal bool ExplicitlySetted => explicitlySetted;
+
         /// <summary>
         /// Is state store is not materialized. Default : false, so it's materialized.
         /// </summary>
@@ -239,7 +241,7 @@ namespace Streamiz.Kafka.Net.Table
         /// </summary>
         public bool CachingEnabled
         {
-            get => enableCaching || (!explicitlySetted && Materialized.CacheStoreByDefault);
+            get => enableCaching;
             protected set => enableCaching = value;
         }
 
@@ -335,7 +337,7 @@ namespace Streamiz.Kafka.Net.Table
         /// <returns>Itself</returns>
         public Materialized<K, V, S> WithCachingDisabled()
         {
-            this.cacheSize = null;
+            cacheSize = null;
             explicitlySetted = true;
             CachingEnabled = false;
             return this;

@@ -298,9 +298,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         #region Build
 
-        public ProcessorTopology BuildTopology() => BuildTopology((int?)null);
+        public ProcessorTopology BuildTopology(IStreamConfig config) => BuildTopology((int?)null, config);
 
-        public ProcessorTopology BuildTopology(int? id)
+        public ProcessorTopology BuildTopology(int? id, IStreamConfig config)
         {
             ISet<string> nodeGroup = null;
             if (id.HasValue)
@@ -323,19 +323,19 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             ISet<string> globalNodeGroups = GlobalNodeGroups;
             nodeGroup = nodeGroup.Where(x => !globalNodeGroups.Contains(x)).ToHashSet();
 
-            return BuildTopology(nodeGroup, null);
+            return BuildTopology(nodeGroup, null, config);
         }
 
-        public ProcessorTopology BuildGlobalStateTopology()
+        public ProcessorTopology BuildGlobalStateTopology(IStreamConfig config)
         {
             if (!GlobalNodeGroups.Any())
             {
                 return null;
             }
-            return BuildTopology(GlobalNodeGroups, null);
+            return BuildTopology(GlobalNodeGroups, null, config);
         }
 
-        public ProcessorTopology BuildTopology(TaskId taskId)
+        public ProcessorTopology BuildTopology(TaskId taskId, IStreamConfig config)
         {
             ISet<string> nodeGroup = null;
             if (taskId != null)
@@ -355,10 +355,10 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 nodeGroup = NodeGroups().Values.SelectMany(i => i).ToHashSet();
             }
 
-            return BuildTopology(nodeGroup, taskId);
+            return BuildTopology(nodeGroup, taskId, config);
         }
 
-        private ProcessorTopology BuildTopology(ISet<string> nodeGroup, TaskId taskId)
+        private ProcessorTopology BuildTopology(ISet<string> nodeGroup, TaskId taskId, IStreamConfig config)
         {
             // need refactor a little for repartition topic/processor source & sink etc .. change topic name
             IProcessor rootProcessor = new RootProcessor();
@@ -377,7 +377,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
                     if (nodeFactory is IProcessorNodeFactory factory)
                     {
-                        BuildProcessorNode(processors, stateStores, factory, processor, taskId);
+                        BuildProcessorNode(processors, stateStores, factory, processor, taskId, config);
                     }
                     else if (nodeFactory is ISourceNodeFactory sourceNodeFactory)
                     {
@@ -460,7 +460,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 sources.Add(factory.Topic, processor);
         }
 
-        private void BuildProcessorNode(IDictionary<string, IProcessor> processors, IDictionary<string, IStateStore> stateStores, IProcessorNodeFactory factory, IProcessor processor, TaskId taskId)
+        private void BuildProcessorNode(IDictionary<string, IProcessor> processors, IDictionary<string, IStateStore> stateStores, IProcessorNodeFactory factory, IProcessor processor, TaskId taskId, IStreamConfig config)
         {
             foreach (string predecessor in factory.Previous)
             {
@@ -483,7 +483,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                             storesToTopics.Add(stateStoreName, changelogTopic);
                         }
 
-                        store = stateStoreFactory.Build(taskId);
+                        store = stateStoreFactory.Build(taskId, config);
                         stateStores.Add(stateStoreName, store);
                     }
                     else
@@ -502,7 +502,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             foreach (var storeBuilder in globalStateBuilders.Values)
             {
-                GlobalStateStores.Add(storeBuilder.Name, storeBuilder.Build());
+                GlobalStateStores.Add(storeBuilder.Name, storeBuilder.Build(config));
             }
             
             applicationId = config.ApplicationId;

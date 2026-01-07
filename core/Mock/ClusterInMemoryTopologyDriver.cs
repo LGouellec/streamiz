@@ -61,7 +61,7 @@ namespace Streamiz.Kafka.Net.Mock
             // topologyBuilder.RewriteTopology(configuration);
             
             // ONLY FOR CHECK IF TOPOLOGY IS CORRECT
-            topologyBuilder.BuildTopology();
+            topologyBuilder.BuildTopology(configuration);
 
             threadTopology = StreamThread.Create(
                 $"{this.configuration.ApplicationId.ToLower()}-stream-thread-0",
@@ -75,7 +75,7 @@ namespace Streamiz.Kafka.Net.Mock
                 new StatestoreRestoreManager(null),
                 0);
             
-            ProcessorTopology globalTaskTopology = topologyBuilder.BuildGlobalStateTopology();
+            ProcessorTopology globalTaskTopology = topologyBuilder.BuildGlobalStateTopology(configuration);
             hasGlobalTopology = globalTaskTopology != null;
             if (hasGlobalTopology)
             {
@@ -119,7 +119,7 @@ namespace Streamiz.Kafka.Net.Mock
             internalTopicManager = new DefaultTopicManager(configuration, adminClientInternalTopicManager);
 
             InternalTopicManagerUtils
-                .New()
+                .New(configuration)
                 .CreateSourceTopics(internalTopologyBuilder, kafkaSupplier)
                 .CreateInternalTopicsAsync(internalTopicManager, internalTopologyBuilder, configuration.AllowAutoCreateTopics ?? false)
                 .GetAwaiter()

@@ -159,6 +159,11 @@ namespace Streamiz.Kafka.Net
         #endregion
 
         #region Stream Config Property
+        
+        /// <summary>
+        /// Enable cache by default for each state store of your topology. Default: false
+        /// </summary>
+        bool DefaultCacheEnabled { get; set; }
 
         /// <summary>
         /// A Rocks DB config handler function
@@ -510,6 +515,7 @@ namespace Streamiz.Kafka.Net
         private const string stateStoreCacheMaxBytesCst = "statestore.cache.max.bytes";
         private const string queryWatermarkOffsetsTimeoutMsCst = "query.watermark.offsets.timeout.ms";
         private const string defaultPartitionerResuffleEveryKeyCst = "default.partitioner.resuffle.every.key";
+        private const string defaultCacheEnabled = "default.cache.enabled";
         
         /// <summary>
         /// Default commit interval in milliseconds when exactly once is not enabled
@@ -2474,6 +2480,7 @@ namespace Streamiz.Kafka.Net
             DefaultStateStoreCacheMaxBytes = CacheSize.OfMb(5).CacheSizeBytes;
             QueryWatermarkOffsetsTimeout = TimeSpan.FromSeconds(5);
             DefaultPartitionerResuffleEveryKey = true;
+            DefaultCacheEnabled = false;
 
             _consumerConfig = new ConsumerConfig();
             _producerConfig = new ProducerConfig();
@@ -2621,6 +2628,16 @@ namespace Streamiz.Kafka.Net
                 .Where(kv => kv.Item2 != null)
                 .Select(kv => new KeyValuePair<string, string>(kv.Item1, kv.Item2.ToString()))
                 .Distinct(new TupleEqualityComparer());
+        }
+
+        /// <summary>
+        /// Enable cache by default for each state store of your topology. Default: false
+        /// </summary>
+        [StreamConfigProperty("" + defaultCacheEnabled)]
+        public bool DefaultCacheEnabled
+        {
+            get => configProperties[defaultCacheEnabled];
+            set => configProperties.AddOrUpdate(defaultCacheEnabled, value);
         }
 
         /// <summary>
@@ -3638,8 +3655,8 @@ namespace Streamiz.Kafka.Net
         /// <param name="defaultCacheSize">Default size of the cache store</param>
         public static void EnableCacheStoreByDefault(this IStreamConfig config, CacheSize defaultCacheSize)
         {
-            Materialized.EnableCacheStoreByDefault();
             config.DefaultStateStoreCacheMaxBytes = defaultCacheSize.CacheSizeBytes;
+            config.DefaultCacheEnabled = true;
         }
     }
 }

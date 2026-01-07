@@ -49,7 +49,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var topo = builder.Build();
             topo.Builder.RewriteTopology(config);
-            topo.Builder.BuildTopology();
+            topo.Builder.BuildTopology(config);
 
             var processId = Guid.NewGuid();
             thread1 = StreamThread.Create(
@@ -70,7 +70,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 new DefaultTopicManager(config, mockKafkaSupplier.GetAdmin(config.ToAdminConfig("admin")));
 
             InternalTopicManagerUtils
-                .New()
+                .New(config)
                 .CreateInternalTopicsAsync(internalTopicManager, topo.Builder, false).GetAwaiter();
         }
 

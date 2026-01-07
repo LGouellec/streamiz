@@ -17,7 +17,8 @@ namespace Streamiz.Kafka.Net.State
     {
         private IDictionary<string, string> logConfig = new Dictionary<string, string>();
 
-        private bool explicitlySetted = false;
+        private bool defaultNotOverride;
+        private bool explicitlySetted;
         
         /// <summary>
         /// Name of the state store
@@ -66,7 +67,7 @@ namespace Streamiz.Kafka.Net.State
         /// Caching enabled or not
         /// </summary>
         public bool CachingEnabled =>
-            enableCaching || (!explicitlySetted && Materialized.CacheStoreByDefault);
+            enableCaching;
 
         /// <summary>
         /// Cache size of the storage
@@ -92,8 +93,8 @@ namespace Streamiz.Kafka.Net.State
         /// <returns></returns>
         public IStoreBuilder<T> WithCachingEnabled(CacheSize cacheSize = null)
         {
+            defaultNotOverride = false;
             enableCaching = true;
-            explicitlySetted = true;
             CacheSize = cacheSize;
             return this;
         }
@@ -104,7 +105,7 @@ namespace Streamiz.Kafka.Net.State
         /// <returns></returns>
         public IStoreBuilder<T> WithCachingDisabled()
         {
-            explicitlySetted = true;
+            defaultNotOverride = enableCaching;
             enableCaching = false;
             return this;
         }
@@ -132,12 +133,29 @@ namespace Streamiz.Kafka.Net.State
             return this;
         }
 
+        public void CacheExplicitlySet()
+        {
+            explicitlySetted = true;
+        }
+
         /// <summary>
         /// Build the state store
         /// </summary>
         /// <returns></returns>
-        public abstract T Build();
+        public abstract T Build(IStreamConfig config);
 
-        IStateStore IStoreBuilder.Build() => Build();
+        IStateStore IStoreBuilder.Build(IStreamConfig config) => Build(config);
+
+        protected bool MustWrapCache(IStreamConfig config)
+        {
+            if (!CachingEnabled)
+            {
+                if (!defaultNotOverride && config.DefaultCacheEnabled && !explicitlySetted)
+                    return true;
+                return false;
+            }
+
+            return true;
+        }
     }
 }

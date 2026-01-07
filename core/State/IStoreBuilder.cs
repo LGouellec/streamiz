@@ -38,7 +38,7 @@ namespace Streamiz.Kafka.Net.State
         /// Build the state store
         /// </summary>
         /// <returns></returns>
-        IStateStore Build();
+        IStateStore Build(IStreamConfig config);
     }
 
     /// <summary>
@@ -73,6 +73,11 @@ namespace Streamiz.Kafka.Net.State
         /// Build the state store
         /// </summary>
         /// <returns></returns>
-        new T Build();
+        new T Build(IStreamConfig config);
+
+        /// <summary>
+        /// Mention cache store is explicitly set. This method will be deprecated in 2.0.0 and remove in 2.1.0  
+        /// </summary>
+        void CacheExplicitlySet();
     }
 }

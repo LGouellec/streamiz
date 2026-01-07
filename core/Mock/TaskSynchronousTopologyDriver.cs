@@ -81,7 +81,7 @@ namespace Streamiz.Kafka.Net.Mock
             }
             
             var adminClient = this.supplier.GetAdmin(configuration.ToAdminConfig($"{clientId}-admin"));
-            ProcessorTopology globalTaskTopology = topologyBuilder.BuildGlobalStateTopology();
+            ProcessorTopology globalTaskTopology = topologyBuilder.BuildGlobalStateTopology(configuration);
             hasGlobalTopology = globalTaskTopology != null;
             if (hasGlobalTopology)
             {
@@ -104,7 +104,7 @@ namespace Streamiz.Kafka.Net.Mock
                     new ExternalProcessorTopologyExecutor(
                         "ext-thread-0",
                         taskId,
-                        topologyBuilder.BuildTopology(taskId).GetSourceProcessor(requestTopic),
+                        topologyBuilder.BuildTopology(taskId, configuration).GetSourceProcessor(requestTopic),
                         producer,
                         configuration,
                         metricsRegistry,
@@ -128,7 +128,7 @@ namespace Streamiz.Kafka.Net.Mock
                     task = new StreamTask("thread-0",
                         id,
                         partitionsByTaskId[id],
-                        builder.BuildTopology(id),
+                        builder.BuildTopology(id, configuration),
                         supplier.GetConsumer(configuration.ToConsumerConfig(), null),
                         configuration,
                         supplier,
@@ -155,7 +155,7 @@ namespace Streamiz.Kafka.Net.Mock
             internalTopicManager = new DefaultTopicManager(configuration, adminClientInternalTopicManager);
 
             InternalTopicManagerUtils
-                .New()
+                .New(configuration)
                 .CreateSourceTopics(builder, supplier)
                 .CreateInternalTopicsAsync(internalTopicManager, builder, configuration.AllowAutoCreateTopics ?? false)
                 .GetAwaiter()

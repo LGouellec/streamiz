@@ -44,11 +44,11 @@ namespace Streamiz.Kafka.Net.State
         /// Build the state store
         /// </summary>
         /// <returns></returns>
-        public override ITimestampedWindowStore<K, V> Build()
+        public override ITimestampedWindowStore<K, V> Build(IStreamConfig config)
         {
             var store = supplier.Get();
             return new MeteredTimestampedWindowStore<K, V>(
-                WrapCaching(WrapLogging(store)),
+                WrapCaching(WrapLogging(store), config),
                 supplier.WindowSize.Value,
                 keySerdes,
                 valueSerdes,
@@ -63,16 +63,16 @@ namespace Streamiz.Kafka.Net.State
             return new ChangeLoggingTimestampedWindowBytesStore(inner, supplier.RetainDuplicates);
         }
         
-        private IWindowStore<Bytes, byte[]> WrapCaching(IWindowStore<Bytes, byte[]> inner)
+        private IWindowStore<Bytes, byte[]> WrapCaching(IWindowStore<Bytes, byte[]> inner, IStreamConfig config)
         {
-            return !CachingEnabled ? 
-                inner :
-                new CachingWindowStore(
+            return MustWrapCache(config)
+                ? new CachingWindowStore(
                     inner,
                     supplier.WindowSize.Value,
                     supplier.SegmentInterval,
                     new WindowKeySchema(),
-                    CacheSize);
+                    CacheSize)
+                : inner;
         }
     }
 }

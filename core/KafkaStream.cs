@@ -350,7 +350,7 @@ namespace Streamiz.Kafka.Net
             topology.Builder.RewriteTopology(configuration);
             
             // sanity check
-            var processorTopology = topology.Builder.BuildTopology();
+            var processorTopology = topology.Builder.BuildTopology(configuration);
             processId = StateDirectory
                 .GetInstance(this.configuration, topology.Builder.HasPersistentStores)
                 .InitializeProcessId();
@@ -402,7 +402,7 @@ namespace Streamiz.Kafka.Net
             threads = new IThread[numStreamThreads];
             var threadState = new Dictionary<long, Processors.ThreadState>();
 
-            ProcessorTopology globalTaskTopology = topology.Builder.BuildGlobalStateTopology();
+            ProcessorTopology globalTaskTopology = topology.Builder.BuildGlobalStateTopology(configuration);
             bool hasGlobalTopology = globalTaskTopology != null;
             if (numStreamThreads == 0 && !hasGlobalTopology)
             {
@@ -696,7 +696,7 @@ namespace Streamiz.Kafka.Net
             // Create internal topics (changelogs & repartition) if need
             var adminClientInternalTopicManager = kafkaSupplier.GetAdmin(configuration.ToAdminConfig(StreamThread.GetSharedAdminClientId($"{configuration.ApplicationId.ToLower()}-admin-internal-topic-manager")));
             using var internalTopicManager = new DefaultTopicManager(configuration, adminClientInternalTopicManager);
-            await InternalTopicManagerUtils.New().CreateInternalTopicsAsync(internalTopicManager, topology.Builder, configuration.AllowAutoCreateTopics ?? false);
+            await InternalTopicManagerUtils.New(configuration).CreateInternalTopicsAsync(internalTopicManager, topology.Builder, configuration.AllowAutoCreateTopics ?? false);
         }
 
         private void RunMiddleware(bool before, bool start)

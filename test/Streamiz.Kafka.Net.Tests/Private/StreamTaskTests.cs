@@ -37,7 +37,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var topology = builder.Build();
             TaskId id = new TaskId {Id = 0, Partition = 0};
-            var processorTopology = topology.Builder.BuildTopology(id);
+            var processorTopology = topology.Builder.BuildTopology(id, config);
 
             var supplier = new SyncKafkaSupplier();
             var streamsProducer = new StreamsProducer(
@@ -85,7 +85,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var topology = builder.Build();
             TaskId id = new TaskId {Id = 0, Partition = 0};
-            var processorTopology = topology.Builder.BuildTopology(id);
+            var processorTopology = topology.Builder.BuildTopology(id, config);
 
             var supplier = new SyncKafkaSupplier();
             var streamsProducer = new StreamsProducer(
@@ -136,7 +136,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             var topology = builder.Build();
             TaskId id = new TaskId {Id = 0, Partition = 0};
-            var processorTopology = topology.Builder.BuildTopology(id);
+            var processorTopology = topology.Builder.BuildTopology(id, config);
 
             var supplier = new SyncKafkaSupplier();
             var streamsProducer = new StreamsProducer(
@@ -235,7 +235,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             TaskId id = new TaskId {Id = 0, Partition = 0};
             var topology = builder.Build();
-            var processorTopology = topology.Builder.BuildTopology(id);
+            var processorTopology = topology.Builder.BuildTopology(id, config);
 
             var supplier = new SyncKafkaSupplier();
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
@@ -364,7 +364,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var topology = builder.Build();
             topology.Builder.RewriteTopology(config);
 
-            var processorTopology = topology.Builder.BuildTopology(id);
+            var processorTopology = topology.Builder.BuildTopology(id, config);
 
             var supplier = new SyncKafkaSupplier();
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
@@ -474,7 +474,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var topology = builder.Build();
             topology.Builder.RewriteTopology(config);
 
-            var processorTopology = topology.Builder.BuildTopology(id);
+            var processorTopology = topology.Builder.BuildTopology(id, config);
 
             var supplier = new SyncKafkaSupplier();
             var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);

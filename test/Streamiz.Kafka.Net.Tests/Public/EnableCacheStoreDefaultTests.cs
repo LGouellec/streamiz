@@ -8,8 +8,11 @@ using Streamiz.Kafka.Net.Table;
 
 namespace Streamiz.Kafka.Net.Tests.Public;
 
+[NonParallelizable]
 public class EnableCacheStoreDefaultTests
 {
+    private readonly DateTime dt = DateTime.ParseExact("2020-01-01 01:00:00", "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+    
     [Test]
     public void EnableCacheStoreByDefaultTest()
     {
@@ -43,7 +46,7 @@ public class EnableCacheStoreDefaultTests
     }
     
     [Test]
-    public void ExplicitallyDisableCacheEvenIfCacheStoreByDefaultIsEnabledTest()
+    public void ExplicitlyDisableCacheEvenIfCacheStoreByDefaultIsEnabledTest()
     {
         var streamConfig = new StreamConfig<StringSerDes, StringSerDes>();
         streamConfig.ApplicationId = "test-cache-store-default";
@@ -99,7 +102,6 @@ public class EnableCacheStoreDefaultTests
             .To("output-count", new StringSerDes(), new Int64SerDes());
 
         var topology = builder.Build();
-        var dt = DateTime.Now;
         using var driver = new TopologyTestDriver(topology, streamConfig);
         var input = driver.CreateInputTopic<string, string>("topic");
         var output = driver.CreateOutputTopic<string, long, StringSerDes, Int64SerDes>("output-count");
@@ -118,3 +120,4 @@ public class EnableCacheStoreDefaultTests
         Assert.AreEqual(1L, records2[1].Message.Value);
     }
 }
+

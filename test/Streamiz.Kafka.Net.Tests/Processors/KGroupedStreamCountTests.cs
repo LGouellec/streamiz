@@ -39,7 +39,7 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 
             var topology = builder.Build();
             TaskId id = new TaskId { Id = 0, Partition = 0 };
-            var processorTopology = topology.Builder.BuildTopology(id);
+            var processorTopology = topology.Builder.BuildTopology(id, config);
 
             var supplier = new SyncKafkaSupplier();
             var streamsProducer = new StreamsProducer(

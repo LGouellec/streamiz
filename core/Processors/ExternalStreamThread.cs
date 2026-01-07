@@ -367,7 +367,7 @@ namespace Streamiz.Kafka.Net.Processors
                 return processorTopology;
             
             var taskId = internalTopologyBuilder.GetTaskIdFromPartition(new TopicPartition(topic, Partition.Any));
-            var topology = internalTopologyBuilder.BuildTopology(taskId);
+            var topology = internalTopologyBuilder.BuildTopology(taskId, configuration);
 
             ExternalProcessorTopologyExecutor externalProcessorTopologyExecutor = new ExternalProcessorTopologyExecutor(
                 Name,
