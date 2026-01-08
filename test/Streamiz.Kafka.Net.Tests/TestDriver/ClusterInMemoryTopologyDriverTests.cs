@@ -8,7 +8,6 @@ using Streamiz.Kafka.Net.Table;
 using System;
 using System.Linq;
 using System.Threading;
-using Streamiz.Kafka.Net.Tests.Helpers;
 
 namespace Streamiz.Kafka.Net.Tests.TestDriver
 {

@@ -6,9 +6,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
     internal class StateStoreFactory
     {
         private readonly IStoreBuilder storeBuilder;
-        private readonly Dictionary<(string, int), IStateStore> stores =
-            new Dictionary<(string, int), IStateStore>();
-        internal readonly List<string> users = new List<string>();
+        private readonly Dictionary<(string, int), IStateStore> stores = new();
+        internal readonly List<string> users = new();
 
         public StateStoreFactory(IStoreBuilder builder)
         {
@@ -21,7 +20,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         public bool IsWindowStore => storeBuilder.IsWindowStore;
         public long RetentionMs => storeBuilder.RetentionMs;
 
-        public IStateStore Build(TaskId taskId)
+        public IStateStore Build(TaskId taskId, IStreamConfig config)
         {
             if (taskId != null)
             {
@@ -30,12 +29,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     return storeInstance;
                 }
 
-                var store = storeBuilder.Build();
+                var store = storeBuilder.Build(config);
                 stores.Add((Name, taskId.Partition), store);
                 return store;
             }
 
-            return storeBuilder.Build();
+            return storeBuilder.Build(config);
         }
     }
 }

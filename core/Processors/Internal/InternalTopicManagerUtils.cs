@@ -17,6 +17,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private static readonly TimeSpan timeout = TimeSpan.FromSeconds(10);
         private static readonly ConfigResource brokerConfigResource;
 
+        private IStreamConfig Configuration { get; set; }
+        
+
         static InternalTopicManagerUtils()
         {
             brokerConfigResource = new ConfigResource
@@ -25,7 +28,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             };
         }
 
-        internal static InternalTopicManagerUtils New() => new();
+        internal static InternalTopicManagerUtils New(IStreamConfig config)
+        {
+            var utils = new InternalTopicManagerUtils();
+            utils.Configuration = config;
+            return utils;
+        }
 
         internal async Task CreateInternalTopicsAsync(
             ITopicManager topicManager,
@@ -180,8 +188,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             var adminConfig = new AdminClientConfig();
             adminConfig.ClientId = "internal-admin-create-soure-topic";
 
-            var sourceTopics = builder.BuildTopology().GetSourceTopics().ToList();
-            var globalTopo = builder.BuildGlobalStateTopology();
+            var sourceTopics = builder.BuildTopology(Configuration).GetSourceTopics().ToList();
+            var globalTopo = builder.BuildGlobalStateTopology(Configuration);
             if (globalTopo != null)
                 sourceTopics.AddRange(globalTopo.StoresToTopics.Values);
 

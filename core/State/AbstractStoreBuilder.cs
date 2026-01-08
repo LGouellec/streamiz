@@ -16,6 +16,9 @@ namespace Streamiz.Kafka.Net.State
         where T : IStateStore
     {
         private IDictionary<string, string> logConfig = new Dictionary<string, string>();
+
+        private bool defaultNotOverride;
+        private bool explicitlySetted;
         
         /// <summary>
         /// Name of the state store
@@ -63,7 +66,8 @@ namespace Streamiz.Kafka.Net.State
         /// <summary>
         /// Caching enabled or not
         /// </summary>
-        public bool CachingEnabled => enableCaching;
+        public bool CachingEnabled =>
+            enableCaching;
 
         /// <summary>
         /// Cache size of the storage
@@ -89,6 +93,7 @@ namespace Streamiz.Kafka.Net.State
         /// <returns></returns>
         public IStoreBuilder<T> WithCachingEnabled(CacheSize cacheSize = null)
         {
+            defaultNotOverride = false;
             enableCaching = true;
             CacheSize = cacheSize;
             return this;
@@ -100,6 +105,7 @@ namespace Streamiz.Kafka.Net.State
         /// <returns></returns>
         public IStoreBuilder<T> WithCachingDisabled()
         {
+            defaultNotOverride = enableCaching;
             enableCaching = false;
             return this;
         }
@@ -127,12 +133,29 @@ namespace Streamiz.Kafka.Net.State
             return this;
         }
 
+        public void CacheExplicitlySet()
+        {
+            explicitlySetted = true;
+        }
+
         /// <summary>
         /// Build the state store
         /// </summary>
         /// <returns></returns>
-        public abstract T Build();
+        public abstract T Build(IStreamConfig config);
 
-        IStateStore IStoreBuilder.Build() => Build();
+        IStateStore IStoreBuilder.Build(IStreamConfig config) => Build(config);
+
+        protected bool MustWrapCache(IStreamConfig config)
+        {
+            if (!CachingEnabled)
+            {
+                if (!defaultNotOverride && config.DefaultCacheEnabled && !explicitlySetted)
+                    return true;
+                return false;
+            }
+
+            return true;
+        }
     }
 }

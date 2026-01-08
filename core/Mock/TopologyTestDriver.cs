@@ -127,7 +127,7 @@ namespace Streamiz.Kafka.Net.Mock
             topologyBuilder.RewriteTopology(configuration);
             
             // sanity check
-            topologyBuilder.BuildTopology();
+            topologyBuilder.BuildTopology(configuration);
 
             switch (mode)
             {

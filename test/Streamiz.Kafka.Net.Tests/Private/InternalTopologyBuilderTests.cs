@@ -20,7 +20,7 @@ namespace Streamiz.Kafka.Net.Tests.Private
             var topology = builder.Build();
 
             topology.Builder.RewriteTopology(config);
-            topology.Builder.BuildTopology();
+            topology.Builder.BuildTopology(config);
 
             var topicsGroups = topology.Builder.MakeInternalTopicGroups();
         }

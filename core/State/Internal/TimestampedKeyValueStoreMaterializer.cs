@@ -36,13 +36,12 @@ namespace Streamiz.Kafka.Net.State.Internal
             }
 
             if (materialized.CachingEnabled)
-            {
                 builder.WithCachingEnabled(materialized.CacheSize);
-            }
             else
-            {
                 builder.WithCachingDisabled();
-            }
+            
+            if(materialized.ExplicitlySetted)
+                builder.CacheExplicitlySet();
 
             return builder;
         }

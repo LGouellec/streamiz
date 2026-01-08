@@ -13,6 +13,7 @@ using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 using Streamiz.Kafka.Net.State;
+using Streamiz.Kafka.Net.Table;
 
 namespace Streamiz.Kafka.Net
 {
@@ -158,6 +159,11 @@ namespace Streamiz.Kafka.Net
         #endregion
 
         #region Stream Config Property
+        
+        /// <summary>
+        /// Enable cache by default for each state store of your topology. Default: false
+        /// </summary>
+        bool DefaultCacheEnabled { get; set; }
 
         /// <summary>
         /// A Rocks DB config handler function
@@ -508,6 +514,8 @@ namespace Streamiz.Kafka.Net
         private const string logProcessingSummaryCst = "log.processing.summary";
         private const string stateStoreCacheMaxBytesCst = "statestore.cache.max.bytes";
         private const string queryWatermarkOffsetsTimeoutMsCst = "query.watermark.offsets.timeout.ms";
+        private const string defaultPartitionerResuffleEveryKeyCst = "default.partitioner.resuffle.every.key";
+        private const string defaultCacheEnabled = "default.cache.enabled";
         private const string defaultPartitionerReshuffleEveryKeyCst = "default.partitioner.reshuffle.every.key";
         
         /// <summary>
@@ -2470,9 +2478,10 @@ namespace Streamiz.Kafka.Net
             ExposeLibrdKafkaStats = false;
             ParallelProcessing = false;
             MaxDegreeOfParallelism = 8;
-            DefaultStateStoreCacheMaxBytes = 5 * 1024 * 1024;
+            DefaultStateStoreCacheMaxBytes = CacheSize.OfMb(5).CacheSizeBytes;
             QueryWatermarkOffsetsTimeout = TimeSpan.FromSeconds(5);
             DefaultPartitionerReshuffleEveryKey = true;
+            DefaultCacheEnabled = false;
 
             _consumerConfig = new ConsumerConfig();
             _producerConfig = new ProducerConfig();
@@ -2620,6 +2629,16 @@ namespace Streamiz.Kafka.Net
                 .Where(kv => kv.Item2 != null)
                 .Select(kv => new KeyValuePair<string, string>(kv.Item1, kv.Item2.ToString()))
                 .Distinct(new TupleEqualityComparer());
+        }
+
+        /// <summary>
+        /// Enable cache by default for each state store of your topology. Default: false
+        /// </summary>
+        [StreamConfigProperty("" + defaultCacheEnabled)]
+        public bool DefaultCacheEnabled
+        {
+            get => configProperties[defaultCacheEnabled];
+            set => configProperties.AddOrUpdate(defaultCacheEnabled, value);
         }
 
         /// <summary>
@@ -3627,6 +3646,18 @@ namespace Streamiz.Kafka.Net
             }
 
             return t;
+        }
+        
+        /// <summary>
+        /// Enable caching for each state store that the topology will create.
+        /// Not that if the cache is explicitly disabled via <see cref="Materialized{K,V,S}.WithCachingDisabled"/>, the store won't use cache.
+        /// </summary>
+        /// <param name="config">Stream configuration</param>
+        /// <param name="defaultCacheSize">Default size of the cache store</param>
+        public static void EnableCacheStoreByDefault(this IStreamConfig config, CacheSize defaultCacheSize)
+        {
+            config.DefaultStateStoreCacheMaxBytes = defaultCacheSize.CacheSizeBytes;
+            config.DefaultCacheEnabled = true;
         }
     }
 }

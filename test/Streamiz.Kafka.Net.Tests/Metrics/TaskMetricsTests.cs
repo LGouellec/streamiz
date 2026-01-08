@@ -50,7 +50,7 @@ namespace Streamiz.Kafka.Net.Tests.Metrics
             var topo = builder.Build();
 
             id = new TaskId {Id = 0, Partition = 0};
-            var processorTopology = builder.Build().Builder.BuildTopology(id);
+            var processorTopology = builder.Build().Builder.BuildTopology(id, config);
             
             syncKafkaSupplier = new SyncKafkaSupplier();
             var streamsProducer = new StreamsProducer(

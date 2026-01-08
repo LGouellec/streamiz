@@ -10,6 +10,16 @@ using System.Collections.Generic;
 
 namespace Streamiz.Kafka.Net.Table
 {
+    internal class Materialized
+    {
+        internal bool CacheStoreByDefault { get; private set; }
+
+        internal void EnableCacheStoreByDefault()
+        {
+            CacheStoreByDefault = true;
+        }
+    }
+    
     /// <summary>
     /// Used to describe how a <see cref="IStateStore"/> should be materialized.
     /// You can either provide a custom <see cref="IStateStore"/> backend through one of the provided methods accepting a supplier
@@ -29,7 +39,9 @@ namespace Streamiz.Kafka.Net.Table
     public class Materialized<K, V, S>
         where S : IStateStore
     {
+        private bool explicitlySetted = false;
         private bool queriable = false;
+        private bool enableCaching = false;
 
         /// <summary>
         /// Name of state store
@@ -207,6 +219,8 @@ namespace Streamiz.Kafka.Net.Table
 
         #region Property
 
+        internal bool ExplicitlySetted => explicitlySetted;
+
         /// <summary>
         /// Is state store is not materialized. Default : false, so it's materialized.
         /// </summary>
@@ -225,7 +239,11 @@ namespace Streamiz.Kafka.Net.Table
         /// <summary>
         /// Is caching enabled (default: false)
         /// </summary>
-        public bool CachingEnabled { get; protected set; }
+        public bool CachingEnabled
+        {
+            get => enableCaching;
+            protected set => enableCaching = value;
+        }
 
         /// <summary>
         /// Store supplier use to build the state store
@@ -308,6 +326,7 @@ namespace Streamiz.Kafka.Net.Table
         public Materialized<K, V, S> WithCachingEnabled(CacheSize cacheSize = null)
         {
             CachingEnabled = true;
+            explicitlySetted = true;
             this.cacheSize = cacheSize;
             return this;
         }
@@ -318,7 +337,8 @@ namespace Streamiz.Kafka.Net.Table
         /// <returns>Itself</returns>
         public Materialized<K, V, S> WithCachingDisabled()
         {
-            this.cacheSize = null;
+            cacheSize = null;
+            explicitlySetted = true;
             CachingEnabled = false;
             return this;
         }
