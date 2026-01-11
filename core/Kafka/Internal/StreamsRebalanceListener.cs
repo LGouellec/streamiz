@@ -34,7 +34,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                 {
                     if (Thread.IsRunning)
                     {
-                        log.LogInformation($"New partitions assign requested : {string.Join(",", partitions)}");
+                        log.LogInformation($"[{Thread.Name}] - New partitions assign requested : {string.Join(",", partitions)}");
 
                         DateTime start = DateTime.Now;
                         manager.RebalanceInProgress = true;
@@ -44,7 +44,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                         manager.RebalanceInProgress = false;
 
                         StringBuilder sb = new StringBuilder();
-                        sb.AppendLine($"Partition assignment took {DateTime.Now - start} ms.");
+                        sb.AppendLine($"[{Thread.Name}] - Partition assignment took {DateTime.Now - start} ms.");
                         sb.AppendLine(
                             $"\tCurrently assigned active tasks: {string.Join(",", this.manager.ActiveTaskIds)}");
                         log.LogInformation(sb.ToString());

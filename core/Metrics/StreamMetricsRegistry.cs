@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -15,15 +16,15 @@ namespace Streamiz.Kafka.Net.Metrics
     /// </summary>
     public class StreamMetricsRegistry
     {
-        private IDictionary<string, Sensor> sensors = new Dictionary<string, Sensor>();
+        private ConcurrentDictionary<string, Sensor> sensors = new();
         private IList<string> clientLevelSensors = new List<string>();
-        private IDictionary<string, IList<string>> threadLevelSensors = new Dictionary<string, IList<string>>();
-        private IDictionary<string, IList<string>> taskLevelSensors = new Dictionary<string, IList<string>>();
-        private IDictionary<string, IList<string>> nodeLevelSensors = new Dictionary<string, IList<string>>();
-        private IDictionary<string, IList<string>> storeLevelSensors = new Dictionary<string, IList<string>>();
-        private IDictionary<string, IList<string>> librdkafkaSensors = new Dictionary<string, IList<string>>();
+        private ConcurrentDictionary<string, IList<string>> threadLevelSensors = new();
+        private ConcurrentDictionary<string, IList<string>> taskLevelSensors = new();
+        private ConcurrentDictionary<string, IList<string>> nodeLevelSensors = new();
+        private ConcurrentDictionary<string, IList<string>> storeLevelSensors = new();
+        private ConcurrentDictionary<string, IList<string>> librdkafkaSensors = new();
 
-        private IDictionary<string, IList<string>> threadScopeSensors = new Dictionary<string, IList<string>>();
+        private ConcurrentDictionary<string, IList<string>> threadScopeSensors = new();
 
         private readonly string clientId;
         private readonly MetricsRecordingLevel recordingLevel;
@@ -274,7 +275,7 @@ namespace Streamiz.Kafka.Net.Metrics
                 {
                     sensors.RemoveAll(sensorKeys);
                     threadScopeSensors[threadId].RemoveAll(sensorKeys);
-                    threadLevelSensors.Remove(key);
+                    threadLevelSensors.TryRemove(key, out _);
                 }
             }
         }
@@ -324,7 +325,7 @@ namespace Streamiz.Kafka.Net.Metrics
                 {
                     sensors.RemoveAll(sensorKeys);
                     threadScopeSensors[threadId].RemoveAll(sensorKeys);
-                    taskLevelSensors.Remove(key);
+                    taskLevelSensors.TryRemove(key, out _);
                 }
             }
         }
@@ -376,7 +377,7 @@ namespace Streamiz.Kafka.Net.Metrics
                 {
                     sensors.RemoveAll(sensorKeys);
                     threadScopeSensors[threadId].RemoveAll(sensorKeys);
-                    nodeLevelSensors.Remove(key);
+                    nodeLevelSensors.TryRemove(key, out _);
                 }
             }
         }
@@ -428,7 +429,7 @@ namespace Streamiz.Kafka.Net.Metrics
                 {
                     sensors.RemoveAll(sensorKeys);
                     threadScopeSensors[threadId].RemoveAll(sensorKeys);
-                    storeLevelSensors.Remove(key);
+                    storeLevelSensors.TryRemove(key, out _);
                 }
             }
         }
@@ -475,7 +476,7 @@ namespace Streamiz.Kafka.Net.Metrics
                 {
                     sensors.RemoveAll(sensorKeys);
                     threadScopeSensors[threadId].RemoveAll(sensorKeys);
-                    librdkafkaSensors.Remove(key);
+                    librdkafkaSensors.TryRemove(key, out _);
                 }
             }
         }
@@ -568,7 +569,7 @@ namespace Streamiz.Kafka.Net.Metrics
                 if (!TestMetricsRecordingLevel(metricsRecordingLevel))
                     sensor.NoRunnable = true;
                 
-                sensors.Add(name, sensor);
+                sensors.TryAdd(name, sensor);
                 return sensor;   
                 
             }
@@ -579,7 +580,7 @@ namespace Streamiz.Kafka.Net.Metrics
             if (threadScopeSensors.TryGetValue(threadId, out var list))
                 list.Add(fullSensorName);
             else
-                threadScopeSensors.Add(threadId, new List<string> { fullSensorName });
+                threadScopeSensors.TryAdd(threadId, new List<string> { fullSensorName });
         }
         
         internal IEnumerable<Sensor> GetThreadScopeSensor(string threadId)
