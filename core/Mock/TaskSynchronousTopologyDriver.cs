@@ -27,10 +27,10 @@ namespace Streamiz.Kafka.Net.Mock
         private readonly IDictionary<TaskId, StreamTask> tasks = new Dictionary<TaskId, StreamTask>();
         private readonly GlobalStateUpdateTask globalTask;
         private readonly IDictionary<string, ExternalProcessorTopologyExecutor> externalProcessorTopologies =
-            new Dictionary<string, ExternalProcessorTopologyExecutor>();        
+            new Dictionary<string, ExternalProcessorTopologyExecutor>();
         private readonly GlobalProcessorContext globalProcessorContext;
         private readonly StreamMetricsRegistry metricsRegistry;
-        
+
         private readonly IDictionary<TaskId, IList<TopicPartition>> partitionsByTaskId =
             new Dictionary<TaskId, IList<TopicPartition>>();
 
@@ -38,6 +38,7 @@ namespace Streamiz.Kafka.Net.Mock
         private readonly bool hasGlobalTopology = false;
         private ITopicManager internalTopicManager;
         private readonly IConsumer<byte[],byte[]> repartitionConsumerForwarder;
+        private readonly MockWallClockTimeProvider wallClockTimeProvider;
 
         public bool IsRunning { get; private set; }
 
@@ -113,6 +114,9 @@ namespace Streamiz.Kafka.Net.Mock
             
             repartitionConsumerForwarder = this.supplier.GetConsumer(topicConfiguration.ToConsumerConfig("consumer-repartition-forwarder"),
                 null);
+
+            // Initialize mock wall clock time provider for controlling time in tests
+            wallClockTimeProvider = new MockWallClockTimeProvider();
         }
 
         internal StreamTask GetTask(string topicName)
@@ -134,7 +138,8 @@ namespace Streamiz.Kafka.Net.Mock
                         supplier,
                         producer,
                         new MockChangelogRegister(),
-                        metricsRegistry);
+                        metricsRegistry,
+                        wallClockTimeProvider);
                     task.InitializeStateStores();
                     task.InitializeTopology();
                     task.RestorationIfNeeded();
@@ -317,6 +322,18 @@ namespace Streamiz.Kafka.Net.Mock
             }
 
             globalTask?.FlushState();
+        }
+
+        public void AdvanceWallClockTime(TimeSpan advance)
+        {
+            // Advance the mock wall clock
+            wallClockTimeProvider.Advance(advance);
+
+            // Trigger PROCESSING_TIME punctuations for all tasks
+            foreach (var task in tasks.Values)
+            {
+                task.PunctuateSystemTime();
+            }
         }
 
         #endregion

@@ -15,5 +15,12 @@ namespace Streamiz.Kafka.Net.Mock
         TestMultiInputTopic<K, V> CreateMultiInputTopic<K, V>(string[] topics, ISerDes<K> keySerdes = null, ISerDes<V> valueSerdes = null);
         IStateStore GetStateStore<K, V>(string name);
         void TriggerCommit();
+
+        /// <summary>
+        /// Advance wall-clock time by the specified duration, triggering any PROCESSING_TIME punctuations
+        /// that are scheduled to fire during the advanced time period.
+        /// </summary>
+        /// <param name="advance">The amount of time to advance the wall clock</param>
+        void AdvanceWallClockTime(TimeSpan advance);
     }
 }
