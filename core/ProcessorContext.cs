@@ -73,6 +73,16 @@ namespace Streamiz.Kafka.Net
         /// </summary>
         public virtual string StateDir => $"{Path.Combine(Configuration.StateDir, Configuration.ApplicationId, Id.ToString())}";
 
+        /// <summary>
+        /// Gets the current wall clock time in milliseconds since epoch.
+        /// In production, this returns system time (DateTime.Now).
+        /// In tests using TopologyTestDriver, this returns the mock wall clock time
+        /// that can be controlled via AdvanceWallClockTime.
+        /// Use this instead of DateTimeOffset.UtcNow when you need time that works
+        /// correctly in both production and test environments.
+        /// </summary>
+        public virtual long WallClockTime => Task?.GetWallClockTime() ?? DateTime.Now.GetMilliseconds();
+
         internal ProcessorContext()
         {
             

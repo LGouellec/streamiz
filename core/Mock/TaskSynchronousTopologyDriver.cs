@@ -129,6 +129,13 @@ namespace Streamiz.Kafka.Net.Mock
             {
                 if (builder.GetSourceTopics().Contains(topicName))
                 {
+                    // Make sure partitionsByTaskId has this task's partitions
+                    if (!partitionsByTaskId.ContainsKey(id))
+                    {
+                        var part = new TopicPartition(topicName, 0);
+                        partitionsByTaskId.Add(id, new List<TopicPartition> {part});
+                    }
+
                     task = new StreamTask("thread-0",
                         id,
                         partitionsByTaskId[id],
@@ -169,19 +176,33 @@ namespace Streamiz.Kafka.Net.Mock
 
         private void ForwardRepartitionTopic(string topic)
         {
+            ForwardTopicRecordsIfAny(topic);
+        }
+
+        /// <summary>
+        /// Forwards any pending records from an internal topic to downstream tasks.
+        /// Returns true if any records were forwarded, false otherwise.
+        /// </summary>
+        private bool ForwardTopicRecordsIfAny(string topic)
+        {
             var records = new List<ConsumeResult<byte[], byte[]>>();
+
             repartitionConsumerForwarder.Subscribe(topic);
+
             ConsumeResult<byte[], byte[]> record = null;
             do
             {
                 record = repartitionConsumerForwarder.Consume();
                 if (record != null)
+                {
                     records.Add(record);
+                }
             } while (record != null);
-
 
             if (records.Any())
             {
+                var task = GetTask(topic);
+
                 var pipe = CreateBuilder(topic).Input(topic, configuration);
                 foreach(var r in records)
                     pipe.Pipe(r.Message.Key, r.Message.Value, r.Message.Timestamp.UnixTimestampMs.FromMilliseconds(), r.Message.Headers);
@@ -189,15 +210,33 @@ namespace Streamiz.Kafka.Net.Mock
                 pipe.Dispose();
 
                 repartitionConsumerForwarder.Commit(records.Last());
+                repartitionConsumerForwarder.Unsubscribe();
+                return true;
             }
 
             repartitionConsumerForwarder.Unsubscribe();
+            return false;
+        }
+
+        /// <summary>
+        /// Gets all topics that are used for internal communication within the topology.
+        /// These are topics that are both written to (sink) and read from (source) within the topology.
+        /// </summary>
+        private HashSet<string> GetAllInternalCommunicationTopics()
+        {
+            var topicGroups = builder.MakeInternalTopicGroups();
+            var allSinks = topicGroups.Values.SelectMany(t => t.SinkTopics).ToHashSet();
+            var allSources = topicGroups.Values.SelectMany(t => t.SourceTopics).ToHashSet();
+
+            // Internal topics are those that are both written and read within the topology
+            allSinks.IntersectWith(allSources);
+            return allSinks;
         }
 
         private SyncPipeBuilder CreateBuilder(string topicName)
         {
             var task = GetTask(topicName);
-            
+
             if (task == null)
             {
                 if(hasGlobalTopology && builder.GetGlobalTopics().Contains(topicName))
@@ -206,7 +245,7 @@ namespace Streamiz.Kafka.Net.Mock
                     return new SyncPipeBuilder(externalProcessorTopologies[topicName]);
             }
 
-            return new SyncPipeBuilder(task);
+            return new SyncPipeBuilder(task, wallClockTimeProvider);
         }
         
         #region IBehaviorTopologyTestDriver
@@ -326,14 +365,73 @@ namespace Streamiz.Kafka.Net.Mock
 
         public void AdvanceWallClockTime(TimeSpan advance)
         {
-            // Advance the mock wall clock
+            // Advance the mock wall clock once at the beginning
             wallClockTimeProvider.Advance(advance);
 
-            // Trigger PROCESSING_TIME punctuations for all tasks
-            foreach (var task in tasks.Values)
+            // Get all topics used for internal communication within the topology
+            var internalTopics = GetAllInternalCommunicationTopics();
+
+            // Process until no more progress (like Java's completeAllProcessableWork)
+            // We advance time incrementally inside the loop to allow downstream buffers to flush.
+            // This is needed because buffers schedule punctuations relative to current time,
+            // so buffers created during forwarding need additional time to flush.
+            bool madeProgress;
+            int iterations = 0;
+            const int maxIterations = 100; // Prevent infinite loops
+            do
             {
-                task.PunctuateSystemTime();
-            }
+                madeProgress = false;
+                iterations++;
+
+                // 1. FIRST forward records from all internal topics to ensure buffers have data
+                // Keep forwarding until no more records found in any topic
+                bool forwardedAny = false;
+                bool forwardedThisPass;
+                do
+                {
+                    forwardedThisPass = false;
+                    foreach (var topic in internalTopics)
+                    {
+                        if (ForwardTopicRecordsIfAny(topic))
+                        {
+                            madeProgress = true;
+                            forwardedThisPass = true;
+                            forwardedAny = true;
+                        }
+                    }
+                } while (forwardedThisPass);
+
+                // 2. THEN trigger PROCESSING_TIME punctuations for all tasks (including newly created ones)
+                bool punctuatedAny = false;
+                foreach (var task in tasks.Values)
+                {
+                    if (task.PunctuateSystemTime())
+                    {
+                        madeProgress = true;
+                        punctuatedAny = true;
+                    }
+                }
+
+                // 3. If we forwarded records but no punctuations fired, we need to advance
+                // time significantly so downstream buffers can flush. Use the full advance
+                // amount since buffer punctuations may be scheduled far apart.
+                // If punctuations fired or no records were forwarded, use a smaller increment.
+                if (madeProgress)
+                {
+                    if (forwardedAny && !punctuatedAny)
+                    {
+                        // Records went to downstream buffers but their punctuations didn't fire yet
+                        // Advance by full amount to ensure downstream punctuations can fire
+                        wallClockTimeProvider.Advance(advance);
+                    }
+                    else
+                    {
+                        // Normal progress - advance by small amount
+                        wallClockTimeProvider.Advance(TimeSpan.FromMilliseconds(advance.TotalMilliseconds / 10));
+                    }
+                }
+
+            } while (madeProgress && iterations < maxIterations);
         }
 
         #endregion

@@ -101,7 +101,12 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 throw new NotImplementedException();
             }
-            
+
+            public override long GetWallClockTime()
+            {
+                return DateTime.Now.GetMilliseconds();
+            }
+
             #endregion
         }
         

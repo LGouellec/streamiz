@@ -101,16 +101,18 @@ namespace Streamiz.Kafka.Net.Processors
             RegisterSensors();
         }
 
-        #region Private
-
         /// <summary>
         /// Gets the current wall clock time, using the injected time provider if available,
         /// otherwise falling back to DateTime.Now.
+        /// In tests using TopologyTestDriver, this returns the mock wall clock time
+        /// that can be controlled via AdvanceWallClockTime.
         /// </summary>
-        private long GetWallClockTime()
+        public override long GetWallClockTime()
         {
             return wallClockTimeProvider?.GetWallClockTime() ?? DateTime.Now.GetMilliseconds();
         }
+
+        #region Private
 
         private void RegisterSensors()
         {
@@ -147,7 +149,7 @@ namespace Streamiz.Kafka.Net.Processors
             var taskScheduled = new TaskScheduled(
                 startTime,
                 interval,
-                punctuator, 
+                punctuator,
                 Context.CurrentProcessor);
 
             switch (punctuationType)

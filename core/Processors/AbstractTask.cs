@@ -96,6 +96,13 @@ namespace Streamiz.Kafka.Net.Processors
         public abstract void Suspend();
         public abstract void MayWriteCheckpoint(bool force = false);
         public abstract TaskScheduled RegisterScheduleTask(TimeSpan interval, PunctuationType punctuationType, Action<long> punctuator);
+
+        /// <summary>
+        /// Gets the current wall clock time in milliseconds since epoch.
+        /// In production, this returns DateTime.Now. In tests using TopologyTestDriver,
+        /// this returns the mock wall clock time that can be controlled via AdvanceWallClockTime.
+        /// </summary>
+        public abstract long GetWallClockTime();
         #endregion
 
         protected void TransitTo(TaskState newState)

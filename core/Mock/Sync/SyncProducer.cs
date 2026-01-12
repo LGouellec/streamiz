@@ -163,6 +163,17 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             return topics[topicName].ToArray();
         }
 
+        public IDictionary<string, int> GetAllTopicCounts()
+        {
+            lock (_lock)
+            {
+                var result = new Dictionary<string, int>();
+                foreach (var kvp in topics)
+                    result[kvp.Key] = kvp.Value.Count;
+                return result;
+            }
+        }
+
         public void CommitTransaction()
         {
             throw new NotImplementedException();
