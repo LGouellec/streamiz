@@ -5,6 +5,7 @@ using Streamiz.Kafka.Net.Errors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -52,7 +53,7 @@ namespace Streamiz.Kafka.Net.Processors
                 var topicsToCreate = new List<string>();
 
                 var clusterMetadata = AdminClient.GetMetadata(timeout);
-                log.LogInformation($"Metadata cluster : {clusterMetadata}");
+                log.LogDebug($"Metadata cluster : {clusterMetadata}");
                 
                 // 1. get source topic partition
                 // 2. check if changelog exist, :
@@ -62,7 +63,7 @@ namespace Streamiz.Kafka.Net.Processors
                 foreach (var t in topics)
                 {
                     var metadata = AdminClient.GetMetadata(t.Key, timeout);
-                    log.LogInformation($"Metadata topic {t.Key} : {metadata}");
+                    log.LogDebug($"Metadata topic {t.Key} : {metadata}");
                     
                     var numberPartitions = GetNumberPartitionForTopic(metadata, t.Key);
                     if (numberPartitions == 0)
@@ -136,11 +137,17 @@ namespace Streamiz.Kafka.Net.Processors
                     log.LogInformation(
                         "Error when creating all internal topics: {Message}. Maybe an another instance of your application just created them. (try: {Try}, max retry : {MaxTry})",
                         e.Message, i + 1, maxRetry);
-                    // Pause Random number
+
+                    WaitRandomily((int)timeout.TotalSeconds);
                 }
             }
 
             throw new StreamsException(_e);
+        }
+        
+        private static void WaitRandomily(int maxSecondsWaited)
+        {
+            Thread.Sleep(RandomGenerator.GetInt32(maxSecondsWaited) * 1000);
         }
 
         public void Dispose()

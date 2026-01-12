@@ -162,18 +162,18 @@ public sealed class LargeConcurrencyTests
             (key, session) => session.SessionId = key,
             new StringSerDes(),
             new JsonSerDes<SessionState>(),
-            TimeSpan.FromMilliseconds(10),
+            TimeSpan.FromMilliseconds(1),
             stats,
             tokenSource.Token);
             
         await stream1.StartAsync();
-        Thread.Sleep(TimeSpan.FromSeconds(5));
+        Thread.Sleep(TimeSpan.FromSeconds(4));
         
         await stream2.StartAsync();
-        Thread.Sleep(TimeSpan.FromSeconds(10));
+        Thread.Sleep(TimeSpan.FromSeconds(4));
 
         stream2.Dispose();
-        Thread.Sleep(TimeSpan.FromSeconds(10));
+        Thread.Sleep(TimeSpan.FromSeconds(4));
 
         Assert.AreNotEqual(KafkaStream.State.ERROR ,stream1State);
         Assert.AreNotEqual(KafkaStream.State.ERROR ,stream2State);
