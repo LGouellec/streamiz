@@ -395,7 +395,7 @@ namespace Streamiz.Kafka.Net.Processors
                     return ScheduleTask(0L, interval, punctuationType, punctuator);
                 case PunctuationType.PROCESSING_TIME:
                     // align punctuation to now, punctuate after interval has elapsed
-                    return ScheduleTask(DateTime.Now.GetMilliseconds() + (long)interval.TotalMilliseconds, interval, punctuationType, punctuator);
+                    return ScheduleTask(DateTime.Now.GetMilliseconds(), interval, punctuationType, punctuator);
                 default:
                     return null;
             }
