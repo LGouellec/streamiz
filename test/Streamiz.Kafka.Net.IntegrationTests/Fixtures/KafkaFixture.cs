@@ -7,6 +7,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Confluent.Kafka.Admin;
+using Streamiz.Kafka.Net.IntegrationTests.Seed;
+using Streamiz.Kafka.Net.SerDes;
 using Testcontainers.Kafka;
 
 namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
@@ -18,7 +20,7 @@ namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
         public KafkaFixture()
         {
             container = new ApacheKafkaBuilder()
-                .WithImage(ApacheKafkaBuilder.APACHE_KAFKA_NATIVE_IMAGE_NAME)
+                //.WithImage(ApacheKafkaBuilder.APACHE_KAFKA_NATIVE_IMAGE_NAME)
                 .WithPortBinding(9092)
                 .WithName("kafka-streamiz-integration-tests")
                 .Build();
@@ -98,6 +100,44 @@ namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
             return sizeCompleted;
         }
 
+        internal Task ProduceContinuously<K, V>(
+            string topic,
+            ISeeder<K> keySeeder, ISeeder<V> valueSeeder,
+            Action<K, V> alterValueAfterGeneration,
+            ISerDes<K> keySerdes, ISerDes<V> valueSerdes,
+            TimeSpan pauseBetweenEachIteration,
+            KafkaStats stats,
+            CancellationToken token)
+        {
+            var task = Task.Factory.StartNew(async () =>
+            {
+                using var producer = new ProducerBuilder<byte[], byte[]>(ProducerProperties).Build();
+                while (!token.IsCancellationRequested)
+                {
+                    var key = keySeeder.SeedOnce();
+                    var value = valueSeeder.SeedOnce();
+                    alterValueAfterGeneration(key, value);
+                    
+                    var keyBytes = keySerdes.Serialize(key, new SerializationContext(MessageComponentType.Key, topic));
+                    var valueBytes = valueSerdes.Serialize(value, new SerializationContext(MessageComponentType.Value, topic));
+
+                    ++stats.SentMessages;
+                    var result = await producer.ProduceAsync(topic, new Message<byte[], byte[]>()
+                    {
+                        Key = keyBytes,
+                        Value = valueBytes
+                    });
+                    
+                    if (result.Status == PersistenceStatus.Persisted)
+                        ++stats.MessagesCorrectlyPersisted;
+                    
+                    Thread.Sleep(pauseBetweenEachIteration);
+                }
+            }, token);
+            
+            return task;
+        }
+
         internal async Task<DeliveryResult<string, byte[]>> Produce(string topic, string key, byte[] bytes)
         {
             using var producer = new ProducerBuilder<string, byte[]>(ProducerProperties).Build();
@@ -156,13 +196,28 @@ namespace Streamiz.Kafka.Net.IntegrationTests.Fixtures
             
             using IAdminClient client = builder.Build();
             var metadata = client.GetMetadata(name, TimeSpan.FromSeconds(10));
-            if(metadata.Topics.Any(t => t.Topic.Contains(name)))
+
+            var tpm = metadata.Topics
+                .FirstOrDefault(t => t.Topic.Contains(name) && !t.Error.IsBrokerError);
+                    
+            if(tpm != null)
                 await client.DeleteTopicsAsync(new List<string> { name });
-            await client.CreateTopicsAsync(new List<TopicSpecification>{new TopicSpecification
+            try
             {
-                Name = name,
-                NumPartitions = partitions
-            }});
+                await client.CreateTopicsAsync(new List<TopicSpecification>
+                {
+                    new()
+                    {
+                        Name = name,
+                        NumPartitions = partitions
+                    }
+                });
+            }
+            catch (CreateTopicsException e)
+            {
+                Console.WriteLine(e.Message);
+                 /* nothing */
+            }
         }
 
         public Task DisposeAsync() => container.DisposeAsync().AsTask();
