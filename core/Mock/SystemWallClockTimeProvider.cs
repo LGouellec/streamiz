@@ -19,9 +19,6 @@ namespace Streamiz.Kafka.Net.Mock
         /// <summary>
         /// No-op for system time provider. Time advances naturally.
         /// </summary>
-        public void Advance(TimeSpan advance)
-        {
-            // No-op: system time cannot be advanced
-        }
+        public void Advance(TimeSpan advance) { }
     }
 }
