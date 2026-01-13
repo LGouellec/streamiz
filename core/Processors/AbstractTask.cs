@@ -102,7 +102,7 @@ namespace Streamiz.Kafka.Net.Processors
         /// In production, this returns DateTime.Now. In tests using TopologyTestDriver,
         /// this returns the mock wall clock time that can be controlled via AdvanceWallClockTime.
         /// </summary>
-        public abstract long GetWallClockTime();
+        public abstract long WallClockTime { get; }
         #endregion
 
         protected void TransitTo(TaskState newState)

@@ -81,7 +81,7 @@ namespace Streamiz.Kafka.Net
         /// Use this instead of DateTimeOffset.UtcNow when you need time that works
         /// correctly in both production and test environments.
         /// </summary>
-        public virtual long WallClockTime => Task?.GetWallClockTime() ?? DateTime.Now.GetMilliseconds();
+        public virtual long WallClockTime => Task?.WallClockTime ?? DateTime.Now.GetMilliseconds();
 
         internal ProcessorContext()
         {

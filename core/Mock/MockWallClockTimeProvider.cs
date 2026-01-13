@@ -17,7 +17,7 @@ namespace Streamiz.Kafka.Net.Mock
             _currentTimeMs = DateTime.Now.GetMilliseconds();
         }
 
-        public long GetWallClockTime() => _currentTimeMs;
+        public long WallClockTime => _currentTimeMs;
 
         public void Advance(TimeSpan advance)
         {

@@ -16,12 +16,10 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         private class StreamTaskPublisher : ISyncPublisher
         {
             private readonly StreamTask task;
-            private readonly IWallClockTimeProvider wallClockTimeProvider;
 
-            public StreamTaskPublisher(StreamTask task, IWallClockTimeProvider wallClockTimeProvider = null)
+            public StreamTaskPublisher(StreamTask task)
             {
                 this.task = task;
-                this.wallClockTimeProvider = wallClockTimeProvider;
             }
 
             private int offset = 0;
@@ -36,8 +34,8 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
             public void Flush()
             {
-                // Use mock wall clock time if available, otherwise fall back to real time
-                long now = wallClockTimeProvider?.GetWallClockTime() ?? DateTime.Now.GetMilliseconds();
+                // Use the task's wall clock time which is mock-aware
+                long now = task.WallClockTime;
                 TaskManager.CurrentTask = task;
                 while (task.CanProcess(now))
                     task.Process();
@@ -118,9 +116,9 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         private readonly ISyncPublisher publisher;
         private readonly SyncProducer mockProducer;
 
-        public SyncPipeBuilder(StreamTask task, IWallClockTimeProvider wallClockTimeProvider = null)
+        public SyncPipeBuilder(StreamTask task)
         {
-            publisher = new StreamTaskPublisher(task, wallClockTimeProvider);
+            publisher = new StreamTaskPublisher(task);
         }
         
         public SyncPipeBuilder(GlobalStateUpdateTask globalTask)

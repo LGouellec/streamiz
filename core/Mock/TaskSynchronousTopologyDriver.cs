@@ -245,7 +245,7 @@ namespace Streamiz.Kafka.Net.Mock
                     return new SyncPipeBuilder(externalProcessorTopologies[topicName]);
             }
 
-            return new SyncPipeBuilder(task, wallClockTimeProvider);
+            return new SyncPipeBuilder(task);
         }
         
         #region IBehaviorTopologyTestDriver
