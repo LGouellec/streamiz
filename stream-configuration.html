@@ -95,6 +95,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#schemaregistryurl">SchemaRegistryUrl</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#autoregisterschemas">AutoRegisterSchemas</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#subjectnamestrategy">SubjectNameStrategy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#allowautocreatetopic">AllowAutoCreateTopic</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#kafka-consumers-and-producer-configuration-parameters">Kafka consumers and producer configuration parameters</a></li>
@@ -436,6 +437,11 @@ Default: true</p>
 <p>The subject name strategy to use for schema registration / lookup.
 Possible values: <code class="docutils literal notranslate"><span class="pre">Topic,</span> <span class="pre">Record,</span> <span class="pre">TopicRecord</span></code></p>
 </section>
+<section id="allowautocreatetopic">
+<h3>AllowAutoCreateTopic<a class="headerlink" href="#allowautocreatetopic" title="Link to this heading"></a></h3>
+<p>Allow automatic topic creation on the broker when subscribing to or assigning non-existent topics. The broker must also be configured with <code class="docutils literal notranslate"><span class="pre">auto.create.topics.enable=true</span></code> for this configuration to take effect.</p>
+<p>Note that enabling this setting in the StreamConfig can cause unexpected behavior when creating internal topics via Streaming abstractions. Kafka will auto-create the topics, with the default amount of partitions. This happens before the Streaming library can create the internal topics, causing an exception. This can lead to internal topics not having the expected amount of partitions.</p>
+</section>
 </section>
 <section id="kafka-consumers-and-producer-configuration-parameters">
 <h2>Kafka consumers and producer configuration parameters<a class="headerlink" href="#kafka-consumers-and-producer-configuration-parameters" title="Link to this heading"></a></h2>
@@ -446,7 +452,7 @@ Possible values: <code class="docutils literal notranslate"><span class="pre">To
 <span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">SessionTimeoutMs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">60000</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>In case of the configuration is not wrapped in StreamConfig yet or because you want to override differnetly the configuration of the main consumer and the configuration of the restore consumer , you can directly add your configuration via the following methods.</p>
+<p>In case of the configuration is not wrapped in StreamConfig yet or because you want to override differently the configuration of the main consumer and the configuration of the restore consumer , you can directly add your configuration via the following methods.</p>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="p">();</span>
 <span class="w">    </span><span class="c1">// add key/value for the main consumer (prefix : &quot;main.consumer.&quot;), similar to config.Add(&quot;main.consumer.fetch.min.bytes&quot;, 1000);</span>
 <span class="w">    </span><span class="n">config</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">StreamConfig</span><span class="p">.</span><span class="n">MainConsumerPrefix</span><span class="p">(</span><span class="s">&quot;fetch.min.bytes&quot;</span><span class="p">),</span><span class="w"> </span><span class="mi">1000</span><span class="p">);</span>
