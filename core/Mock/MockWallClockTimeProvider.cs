@@ -9,19 +9,16 @@ namespace Streamiz.Kafka.Net.Mock
     /// </summary>
     internal class MockWallClockTimeProvider : IWallClockTimeProvider
     {
-        private long _currentTimeMs;
-
         public MockWallClockTimeProvider()
         {
-            // Initialize to current time
-            _currentTimeMs = DateTime.Now.GetMilliseconds();
+            WallClockTime = DateTime.Now.GetMilliseconds();
         }
 
-        public long WallClockTime => _currentTimeMs;
+        public long WallClockTime { get; private set; }
 
         public void Advance(TimeSpan advance)
         {
-            _currentTimeMs += (long)advance.TotalMilliseconds;
+            WallClockTime += (long)advance.TotalMilliseconds;
         }
     }
 }
