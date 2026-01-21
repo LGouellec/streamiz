@@ -64,6 +64,7 @@ public class ApacheKafkaBuilder
             .WithEnvironment("KAFKA_PROCESS_ROLES", "broker,controller")
             .WithEnvironment("KAFKA_CONTROLLER_LISTENER_NAMES", "CONTROLLER")
             .WithEnvironment("KAFKA_NODE_ID", "1")
+            .WithEnvironment("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "false")
             .WithEnvironment("KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR", "1")
             .WithEnvironment("KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS", "1")
             .WithEnvironment("KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR", "1")

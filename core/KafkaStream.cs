@@ -526,7 +526,6 @@ namespace Streamiz.Kafka.Net
                         foreach (var innerE in e.InnerExceptions)
                         {
                             logger.Log(LogLevel.Error, innerE, $"{logPrefix}Error during initializing internal topics");
-                            SetState(State.PENDING_SHUTDOWN);
                             SetState(State.ERROR);
                         }
 

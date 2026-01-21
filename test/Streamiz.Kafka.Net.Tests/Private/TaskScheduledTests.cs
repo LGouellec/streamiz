@@ -23,12 +23,24 @@ namespace Streamiz.Kafka.Net.Tests.Private
     {
         class MySystemProcessor : Net.Processors.Public.IProcessor<string, string>
         {
+            private readonly long scheduledMs;
+            
+            public MySystemProcessor()
+                :this(10)
+            {
+            }
+
+            public MySystemProcessor(long scheduledMs)
+            {
+                this.scheduledMs = scheduledMs;
+            }
+            
             public long count { get; set; }
             
             public void Init(ProcessorContext<string, string> context)
             {
                 context.Schedule(
-                    TimeSpan.FromMilliseconds(10),
+                    TimeSpan.FromMilliseconds(scheduledMs),
                     PunctuationType.PROCESSING_TIME,
                     (now) => {
                         ++count;
@@ -187,6 +199,53 @@ namespace Streamiz.Kafka.Net.Tests.Private
                 Offset = offset
             };
         }
+        
+        [Test]
+        public void FixIssue457()
+        {
+            var config = new StreamConfig<StringSerDes, StringSerDes>();
+            config.ApplicationId = "test-punctuator";
+
+            var builder = new StreamBuilder();
+            builder
+                .Stream<string, string>("topic")
+                .Process(
+                    new ProcessorBuilder<string, string>()
+                        .Processor<MySystemProcessor>(100)
+                        .Build());
+
+            var topology = builder.Build();
+
+            var supplier = new SyncKafkaSupplier();
+            var consumer = supplier.GetConsumer(config.ToConsumerConfig(), null);
+            var restoreConsumer = supplier.GetRestoreConsumer(config.ToConsumerConfig());
+
+            var storeChangelogReader =
+                new StoreChangelogReader(config, restoreConsumer, "thread-0", new StatestoreRestoreManager(null),new StreamMetricsRegistry());
+            var streamsProducer = new StreamsProducer(
+                config,
+                "thread-0",
+                Guid.NewGuid(),
+                supplier,
+                "");
+            
+            var taskCreator = new TaskCreator(topology.Builder, config, "thread-0", supplier,
+                storeChangelogReader, new StreamMetricsRegistry());
+            var taskManager = new TaskManager(topology.Builder, taskCreator,
+                supplier.GetAdmin(config.ToAdminConfig("admin")), consumer, storeChangelogReader, streamsProducer);
+
+            taskManager.CreateTasks(
+                new List<TopicPartition> {
+                    new("topic", 0)
+                });
+            taskManager.TryToCompleteRestoration();
+            // See : https://github.com/LGouellec/streamiz/issues/457
+            Thread.Sleep(100);
+            Assert.AreEqual(1, taskManager.Punctuate());
+            
+            taskManager.Close();
+        }
+
 
         [Test]
         public void StandardSystemTimePunctuator()
