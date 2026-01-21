@@ -10,6 +10,7 @@ using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Kafka.Internal;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.Metrics.Internal;
+using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.Processors.Public;
 using Streamiz.Kafka.Net.Stream.Internal;
@@ -32,6 +33,7 @@ namespace Streamiz.Kafka.Net.Processors
         private long idleStartTime;
         private bool transactionInFlight;
         private readonly string threadId;
+        private readonly IWallClockTimeProvider wallClockTimeProvider;
         
         private Sensor closeTaskSensor;
         private Sensor activeBufferedRecordSensor;
@@ -47,11 +49,24 @@ namespace Streamiz.Kafka.Net.Processors
             ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration,
             IKafkaSupplier kafkaSupplier, StreamsProducer producer, IChangelogRegister changelogRegister,
             StreamMetricsRegistry streamMetricsRegistry)
+            : this(threadId, id, partitions, processorTopology, consumer, configuration, kafkaSupplier,
+                   producer, changelogRegister, streamMetricsRegistry, SystemWallClockTimeProvider.Instance)
+        {
+        }
+
+        /// <summary>
+        /// Constructor that accepts an optional wall clock time provider for testing PROCESSING_TIME punctuations.
+        /// </summary>
+        public StreamTask(string threadId, TaskId id, IEnumerable<TopicPartition> partitions,
+            ProcessorTopology processorTopology, IConsumer<byte[], byte[]> consumer, IStreamConfig configuration,
+            IKafkaSupplier kafkaSupplier, StreamsProducer producer, IChangelogRegister changelogRegister,
+            StreamMetricsRegistry streamMetricsRegistry, IWallClockTimeProvider wallClockTimeProvider)
             : base(id, partitions, processorTopology, consumer, configuration, changelogRegister)
         {
             this.threadId = threadId;
             this.kafkaSupplier = kafkaSupplier;
             this.streamMetricsRegistry = streamMetricsRegistry;
+            this.wallClockTimeProvider = wallClockTimeProvider ?? SystemWallClockTimeProvider.Instance;
             consumedOffsets = new Dictionary<TopicPartition, long>();
             maxTaskIdleMs = configuration.MaxTaskIdleMs;
             idleStartTime = -1;
@@ -82,9 +97,16 @@ namespace Streamiz.Kafka.Net.Processors
             }
 
             partitionGrouper = new PartitionGrouper(partitionsQueue);
-            
+
             RegisterSensors();
         }
+
+        /// <summary>
+        /// Gets the current wall clock time from the injected time provider.
+        /// In tests using TopologyTestDriver, this returns the mock wall clock time
+        /// that can be controlled via AdvanceWallClockTime.
+        /// </summary>
+        public override long WallClockTime => wallClockTimeProvider.WallClockTime;
 
         #region Private
 
@@ -123,7 +145,7 @@ namespace Streamiz.Kafka.Net.Processors
             var taskScheduled = new TaskScheduled(
                 startTime,
                 interval,
-                punctuator, 
+                punctuator,
                 Context.CurrentProcessor);
 
             switch (punctuationType)
@@ -394,8 +416,11 @@ namespace Streamiz.Kafka.Net.Processors
                     // align punctuation to 0L, punctuate as soon as we have data
                     return ScheduleTask(0L, interval, punctuationType, punctuator);
                 case PunctuationType.PROCESSING_TIME:
-                    // align punctuation to now, punctuate after interval has elapsed
-                    return ScheduleTask(DateTime.Now.GetMilliseconds(), interval, punctuationType, punctuator);
+                    // Set lastTime to (now - interval) so that the first punctuation fires after 'interval' has elapsed.
+                    // This is because CanExecute checks: now - lastTime >= interval
+                    // With lastTime = now - interval, the first check becomes: now - (now - interval) >= interval = interval >= interval = true
+                    // But we want it to fire AFTER interval, so we use now as the starting point
+                    return ScheduleTask(WallClockTime, interval, punctuationType, punctuator);
                 default:
                     return null;
             }
@@ -467,7 +492,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         public bool PunctuateSystemTime()
         {
-            long systemTime = DateTime.Now.GetMilliseconds();
+            long systemTime = WallClockTime;
 
             bool punctuated = false;
 

@@ -54,7 +54,6 @@ namespace Streamiz.Kafka.Net.Processors
         public override void Process(K key, V value)
         {
             LogProcessingKeyValue(key, value);
-
             if (KeySerDes == null || ValueSerDes == null)
             {
                 var s = KeySerDes == null ? "key" : "value";

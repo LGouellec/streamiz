@@ -244,6 +244,16 @@ namespace Streamiz.Kafka.Net.Mock
             //((StreamThread)threadTopology)?.Manager.CommitAll();
         }
 
+        public void AdvanceWallClockTime(TimeSpan advance)
+        {
+            // Wall-clock time advancement is not supported in the cluster in-memory driver
+            // because it uses real Kafka with threads that use actual system time.
+            // Use TaskSynchronousTopologyDriver instead for testing PROCESSING_TIME punctuations.
+            throw new NotSupportedException(
+                "AdvanceWallClockTime is not supported in ClusterInMemoryTopologyDriver. " +
+                "Use the synchronous topology driver (default mode) instead for testing PROCESSING_TIME punctuations.");
+        }
+
         #endregion
     }
 }
