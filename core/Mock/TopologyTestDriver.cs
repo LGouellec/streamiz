@@ -405,5 +405,44 @@ namespace Streamiz.Kafka.Net.Mock
         public bool IsError => behavior.IsError;
 
         #endregion
+
+        #region Time Advancement
+
+        /// <summary>
+        /// Advance wall-clock time by the specified duration, triggering any <see cref="Processors.Public.PunctuationType.PROCESSING_TIME"/>
+        /// punctuations that are scheduled to fire during the advanced time period.
+        /// <para>
+        /// This is analogous to <a href="https://kafka.apache.org/32/javadoc/org/apache/kafka/streams/TopologyTestDriver.html#advanceWallClockTime(java.time.Duration)">
+        /// Java Kafka Streams TopologyTestDriver.advanceWallClockTime</a>.
+        /// </para>
+        /// <para>
+        /// This method is only supported when using <see cref="Mode.SYNC_TASK"/> (the default mode).
+        /// Using this method with <see cref="Mode.ASYNC_CLUSTER_IN_MEMORY"/> will throw <see cref="NotSupportedException"/>.
+        /// </para>
+        /// </summary>
+        /// <param name="advance">The amount of time to advance the wall clock</param>
+        /// <exception cref="NotSupportedException">When used with <see cref="Mode.ASYNC_CLUSTER_IN_MEMORY"/></exception>
+        /// <example>
+        /// <code>
+        /// using (var driver = new TopologyTestDriver(topology, config))
+        /// {
+        ///     var inputTopic = driver.CreateInputTopic&lt;string, string&gt;("input");
+        ///     var outputTopic = driver.CreateOutputTopic&lt;string, string&gt;("output");
+        ///
+        ///     inputTopic.PipeInput("key", "value");
+        ///
+        ///     // Advance time to trigger PROCESSING_TIME punctuations
+        ///     driver.AdvanceWallClockTime(TimeSpan.FromMilliseconds(500));
+        ///
+        ///     var result = outputTopic.ReadKeyValue();
+        /// }
+        /// </code>
+        /// </example>
+        public void AdvanceWallClockTime(TimeSpan advance)
+        {
+            behavior.AdvanceWallClockTime(advance);
+        }
+
+        #endregion
     }
 }

@@ -34,11 +34,12 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
             public void Flush()
             {
-                long now = DateTime.Now.GetMilliseconds();
+                // Use the task's wall clock time which is mock-aware
+                long now = task.WallClockTime;
                 TaskManager.CurrentTask = task;
                 while (task.CanProcess(now))
                     task.Process();
-                
+
                 task.PunctuateStreamTime();
                 task.PunctuateSystemTime();
                 TaskManager.CurrentTask = null;

@@ -37,6 +37,14 @@ namespace Streamiz.Kafka.Net.Processors.Public
         internal override IProcessor CurrentProcessor => context.CurrentProcessor;
         internal override IRecordContext RecordContext => context.RecordContext;
 
+        /// <summary>
+        /// Gets the current wall clock time in milliseconds since epoch.
+        /// In production, this returns system time (DateTime.Now).
+        /// In tests using TopologyTestDriver, this returns the mock wall clock time
+        /// that can be controlled via AdvanceWallClockTime.
+        /// </summary>
+        public override long WallClockTime => context.WallClockTime;
+
         #endregion
 
         private void CheckConfiguration()
