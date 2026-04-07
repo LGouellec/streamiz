@@ -266,7 +266,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
            
             if(changelogMetadata.CurrentOffset >= endOffset 
                // changelog topic has a delete policy, begin offset > end offset because the topic is empty #195
-               || changelogMetadata.BeginOffset > changelogMetadata.RestoreEndOffset)
+               || changelogMetadata.BeginOffset >= changelogMetadata.RestoreEndOffset)
                 return true;
             
             if (!changelogMetadata.BufferedRecords.Any())
