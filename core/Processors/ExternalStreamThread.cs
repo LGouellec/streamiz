@@ -33,6 +33,7 @@ namespace Streamiz.Kafka.Net.Processors
         private IAdminClient adminClient;
         private readonly string logPrefix;
         private readonly Thread thread;
+        private IProcessingStrategy processingStrategy;
         
         private DateTime lastCommit = DateTime.Now;
         private DateTime lastMetrics = DateTime.Now;
@@ -46,6 +47,9 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly Sensor pollSensor;
         private readonly Sensor processLatencySensor;
         private readonly Sensor processRateSensor;
+        private readonly Sensor parallelInFlightRecordsSensor;
+        private readonly Sensor parallelQueueDepthSensor;
+        private readonly Sensor parallelWorkerCountSensor;
         private StreamsProducer producer;
 
         public ExternalStreamThread(
@@ -77,6 +81,9 @@ namespace Streamiz.Kafka.Net.Processors
             pollSensor = ThreadMetrics.PollSensor(threadId, streamMetricsRegistry);
             processLatencySensor = ThreadMetrics.ProcessLatencySensor(threadId, streamMetricsRegistry);
             processRateSensor = ThreadMetrics.ProcessRateSensor(threadId, streamMetricsRegistry);
+            parallelInFlightRecordsSensor = ThreadMetrics.ParallelInFlightRecordsSensor(threadId, streamMetricsRegistry);
+            parallelQueueDepthSensor = ThreadMetrics.ParallelQueueDepthSensor(threadId, streamMetricsRegistry);
+            parallelWorkerCountSensor = ThreadMetrics.ParallelWorkerCountSensor(threadId, streamMetricsRegistry);
         }
         
         public void Dispose() => CloseThread();
@@ -108,53 +115,63 @@ namespace Streamiz.Kafka.Net.Processors
                     }
                     
                     long now = DateTime.Now.GetMilliseconds();
-                    
+
                     var consumer = GetConsumer();
                     ConsumeResult<byte[], byte[]> result = null;
                     long pollLatency = ActionHelper.MeasureLatency(() =>
                         result = consumer.Consume(TimeSpan.FromMilliseconds(configuration.PollMs)));
-                    
+
                     pollSensor.Record(pollLatency, now);
-                    
+
                     try
                     {
-                        ExternalProcessorTopologyExecutor processor = null;
-
-                        if (result != null)
-                            processor = GetExternalProcessorTopology(result.Topic);
-                        else
-                            processor = externalProcessorTopologies
-                                .Values
-                                .Where(e => e.BufferSize > 0)
-                                .Random();
-
-                        if (processor != null)
+                        // Submit record to processing strategy
+                        if (result != null || processingStrategy.InFlightCount > 0)
                         {
                             now = DateTime.Now.GetMilliseconds();
-                            long processLatency = ActionHelper.MeasureLatency(() => processor.Process(result));
-                            log.LogDebug($"Process one record into {processLatency} ms");
-                            ++messageProcessed;
-                            
-                            processLatencySensor.Record(processLatency, now);
-                            processRateSensor.Record(1, now);
+                            long processLatency = ActionHelper.MeasureLatency(() =>
+                                processingStrategy.SubmitAsync(result).GetAwaiter().GetResult());
 
-                            if (processor.State == ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState
-                                .BUFFER_FULL)
+                            if (result != null)
                             {
-                                var assignmentTopic = consumer.Assignment.Where(a => a.Topic.Equals(result.Topic))
+                                log.LogDebug($"Submitted record to processing strategy in {processLatency} ms");
+                                ++messageProcessed;
+                                processLatencySensor.Record(processLatency, now);
+                                processRateSensor.Record(1, now);
+                            }
+
+                            // Backpressure: check if strategy is at capacity
+                            bool isAtCapacity = false;
+                            if (processingStrategy is PerPartitionProcessingStrategy perPartitionStrategy)
+                            {
+                                isAtCapacity = perPartitionStrategy.IsAtCapacity();
+                            }
+                            else if (processingStrategy is PerKeyProcessingStrategy perKeyStrategy)
+                            {
+                                isAtCapacity = perKeyStrategy.IsAtCapacity();
+                            }
+                            else if (processingStrategy is UnorderedProcessingStrategy unorderedStrategy)
+                            {
+                                isAtCapacity = unorderedStrategy.IsAtCapacity();
+                            }
+
+                            if (isAtCapacity && result != null)
+                            {
+                                var assignmentTopic = consumer.Assignment
+                                    .Where(a => a.Topic.Equals(result.Topic))
                                     .ToList();
                                 consumer.Pause(assignmentTopic);
-                                processor.State = ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState
-                                    .PAUSED;
-                                processor.PreviousAssignment = assignmentTopic;
+                                log.LogWarning($"{logPrefix}Strategy at capacity, paused topic {result.Topic}");
                             }
-                            else if (processor.State ==
-                                     ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState.RESUMED)
+                            else if (!isAtCapacity)
                             {
-                                consumer.Resume(processor.PreviousAssignment);
-                                processor.State = ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState
-                                    .RUNNING;
-                                processor.PreviousAssignment = null;
+                                // Resume all paused partitions if we're under capacity
+                                var pausedPartitions = consumer.Assignment.Except(consumer.Assignment).ToList();
+                                if (pausedPartitions.Any())
+                                {
+                                    consumer.Resume(pausedPartitions);
+                                    log.LogInformation($"{logPrefix}Resumed paused partitions");
+                                }
                             }
                         }
 
@@ -180,7 +197,7 @@ namespace Streamiz.Kafka.Net.Processors
                                              $" Your retry policy behavior is failed, so the external stream thread will be stopped");
                             break;
                         }
-                        
+
                         log.LogError(e, $"{logPrefix}Encountered the following unexpected Kafka exception during processing, this usually indicate Streams internal errors:");
                         exception = e;
                     }
@@ -188,6 +205,9 @@ namespace Streamiz.Kafka.Net.Processors
                     if (lastMetrics.Add(TimeSpan.FromMilliseconds(configuration.MetricsIntervalMs)) <
                         DateTime.Now)
                     {
+                        // Record parallel processing metrics
+                        RecordParallelProcessingMetrics();
+
                         MetricUtils.ExportMetrics(streamMetricsRegistry, configuration, Name);
                         lastMetrics = DateTime.Now;
                     }
@@ -206,18 +226,25 @@ namespace Streamiz.Kafka.Net.Processors
                 if (!IsDisposable)
                 {
                     IsRunning = false;
-                    
+
                     if (State != ThreadState.PENDING_SHUTDOWN)
                         SetState(ThreadState.PENDING_SHUTDOWN);
-                    
+
                     CommitOffsets(true);
 
                     var consumer = GetConsumer();
-                    var consumerName = consumer.Name; 
+                    var consumerName = consumer.Name;
                     consumer.Unsubscribe();
                     consumer.Close();
                     consumer.Dispose();
-                    
+
+                    // Close the processing strategy
+                    if (processingStrategy != null)
+                    {
+                        processingStrategy.Close();
+                        processingStrategy.Dispose();
+                    }
+
                     externalProcessorTopologies
                         .Values
                         .ForEach(e => e.Close());
@@ -225,7 +252,7 @@ namespace Streamiz.Kafka.Net.Processors
                     // if one delete request is in progress, we wait the result before closing the manager
                     if (currentDeleteTask is {IsCompleted: false})
                         currentDeleteTask.GetAwaiter().GetResult();
-                    
+
                     adminClient?.Dispose();
 
                     externalProcessorTopologies.Clear();
@@ -243,24 +270,22 @@ namespace Streamiz.Kafka.Net.Processors
             finally
             {
                 SetState(ThreadState.DEAD);
-            }        
+            }
         }
 
         private bool CommitOffsets(bool clearBuffer)
         {
-            externalProcessorTopologies
-                .Values
-                .ForEach(e =>
-                {
-                    e.Flush();
-                    if(clearBuffer)
-                        e.ClearBuffer();
-                });
+            // Flush the processing strategy
+            processingStrategy.Flush();
 
-            var offsets = externalProcessorTopologies
-                .Values
-                .SelectMany(e => e.GetCommitOffsets())
-                .ToList();
+            // For sequential strategy, also handle buffer clearing
+            if (clearBuffer && processingStrategy is SequentialProcessingStrategy sequentialStrategy)
+            {
+                sequentialStrategy.ClearBuffers();
+            }
+
+            // Get committable offsets from the strategy
+            var offsets = processingStrategy.GetCommittableOffsets().ToList();
 
             if (offsets.Any())
             {
@@ -273,14 +298,28 @@ namespace Streamiz.Kafka.Net.Processors
                     if (currentDeleteTask != null && currentDeleteTask.IsFaulted)
                         log.LogDebug(
                             $"{logPrefix}Previous delete-records request has failed. Try sending the new request now.");
-                    
+
                     currentDeleteTask = adminClient.DeleteRecordsAsync(offsets);
                     log.LogDebug($"Sent delete-records request: {string.Join(",", offsets)}");
                 }
 
-                externalProcessorTopologies
-                    .Values
-                    .ForEach(e => e.ClearOffsets());
+                // Clear committed offsets from strategy tracking
+                if (processingStrategy is SequentialProcessingStrategy seq)
+                {
+                    seq.ClearCommittedOffsets();
+                }
+                else if (processingStrategy is PerPartitionProcessingStrategy perPart)
+                {
+                    perPart.ClearCommittedOffsets();
+                }
+                else if (processingStrategy is PerKeyProcessingStrategy perKey)
+                {
+                    perKey.ClearCommittedOffsets();
+                }
+                else if (processingStrategy is UnorderedProcessingStrategy unordered)
+                {
+                    unordered.ClearCommittedOffsets();
+                }
 
                 return true;
             }
@@ -335,11 +374,30 @@ namespace Streamiz.Kafka.Net.Processors
             
             currentConsumer = GetConsumer();
             adminClient = kafkaSupplier.GetAdmin(configuration.ToAdminConfig(clientId));
-            
+
             producer = new StreamsProducer(configuration, Name, Guid.NewGuid(), kafkaSupplier, logPrefix);
-            
+
             //producer = kafkaSupplier.GetProducer(configuration.ToExternalProducerConfig($"{thread.Name}-producer").Wrap(Name, configuration));
-            
+
+            // Create the processing strategy based on configuration
+            processingStrategy = CreateProcessingStrategy();
+            if (processingStrategy is PerPartitionProcessingStrategy perPartitionStrategy)
+            {
+                perPartitionStrategy.Start();
+            }
+            else if (processingStrategy is PerKeyProcessingStrategy perKeyStrategy)
+            {
+                perKeyStrategy.Start();
+            }
+            else if (processingStrategy is UnorderedProcessingStrategy unorderedStrategy)
+            {
+                unorderedStrategy.Start();
+            }
+            else if (processingStrategy is SequentialProcessingStrategy sequentialStrategy)
+            {
+                sequentialStrategy.Start();
+            }
+
             SetState(ThreadState.PARTITIONS_ASSIGNED);
             thread.Start();     
         }
@@ -365,7 +423,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             if (externalProcessorTopologies.TryGetValue(topic, out var processorTopology))
                 return processorTopology;
-            
+
             var taskId = internalTopologyBuilder.GetTaskIdFromPartition(new TopicPartition(topic, Partition.Any));
             var topology = internalTopologyBuilder.BuildTopology(taskId, configuration);
 
@@ -378,8 +436,99 @@ namespace Streamiz.Kafka.Net.Processors
                 streamMetricsRegistry,
                 adminClient);
             externalProcessorTopologies.Add(topic, externalProcessorTopologyExecutor);
-                
+
             return externalProcessorTopologyExecutor;
+        }
+
+        private IProcessingStrategy CreateProcessingStrategy()
+        {
+            var config = configuration.ExternalProcessingConfig;
+
+            // Validate configuration
+            config?.Validate();
+
+            switch (config?.Mode ?? ParallelProcessingMode.SEQUENTIAL)
+            {
+                case ParallelProcessingMode.SEQUENTIAL:
+                    log.LogInformation($"{logPrefix}Using SEQUENTIAL processing strategy");
+                    return new SequentialProcessingStrategy(
+                        Name,
+                        internalTopologyBuilder,
+                        producer,
+                        configuration,
+                        streamMetricsRegistry,
+                        adminClient);
+
+                case ParallelProcessingMode.PER_PARTITION:
+                    log.LogInformation($"{logPrefix}Using PER_PARTITION processing strategy (max concurrency: {config.MaxConcurrency})");
+                    return new PerPartitionProcessingStrategy(
+                        Name,
+                        internalTopologyBuilder,
+                        producer,
+                        configuration,
+                        config,
+                        streamMetricsRegistry,
+                        adminClient);
+
+                case ParallelProcessingMode.PER_KEY:
+                    log.LogInformation($"{logPrefix}Using PER_KEY processing strategy (max concurrency: {config.MaxConcurrency})");
+                    return new PerKeyProcessingStrategy(
+                        Name,
+                        internalTopologyBuilder,
+                        producer,
+                        configuration,
+                        config,
+                        streamMetricsRegistry,
+                        adminClient);
+
+                case ParallelProcessingMode.UNORDERED:
+                    log.LogInformation($"{logPrefix}Using UNORDERED processing strategy (max concurrency: {config.MaxConcurrency})");
+                    return new UnorderedProcessingStrategy(
+                        Name,
+                        internalTopologyBuilder,
+                        producer,
+                        configuration,
+                        config,
+                        streamMetricsRegistry,
+                        adminClient);
+
+                default:
+                    throw new ArgumentException($"{logPrefix}Unknown processing mode: {config.Mode}");
+            }
+        }
+
+        private void RecordParallelProcessingMetrics()
+        {
+            if (processingStrategy == null)
+                return;
+
+            var now = DateTime.Now.GetMilliseconds();
+
+            // Record in-flight records
+            parallelInFlightRecordsSensor.Record(processingStrategy.InFlightCount, now);
+
+            // Record queue depth and worker count for parallel strategies
+            if (processingStrategy is PerPartitionProcessingStrategy perPartitionStrategy)
+            {
+                parallelQueueDepthSensor.Record(perPartitionStrategy.QueuedRecordsCount, now);
+                parallelWorkerCountSensor.Record(configuration.ExternalProcessingConfig.MaxConcurrency, now);
+            }
+            else if (processingStrategy is PerKeyProcessingStrategy perKeyStrategy)
+            {
+                parallelQueueDepthSensor.Record(perKeyStrategy.QueuedRecordsCount, now);
+                parallelWorkerCountSensor.Record(configuration.ExternalProcessingConfig.MaxConcurrency, now);
+            }
+            else if (processingStrategy is UnorderedProcessingStrategy unorderedStrategy)
+            {
+                parallelQueueDepthSensor.Record(unorderedStrategy.QueuedRecordsCount, now);
+                parallelWorkerCountSensor.Record(configuration.ExternalProcessingConfig.MaxConcurrency, now);
+            }
+            else
+            {
+                // For sequential strategy, queue depth and workers are always 0/1
+                parallelQueueDepthSensor.Record(0, now);
+                parallelWorkerCountSensor.Record(1, now);
+            }
         }
         
         private ExceptionHandlerResponse TreatException(Exception exception)
@@ -415,12 +564,36 @@ namespace Streamiz.Kafka.Net.Processors
 
             var consumer = GetConsumer();
             var librdkafkaClientId = consumer.Name;
-            
+
             consumer.Unsubscribe();
             consumer.Close();
             consumer.Dispose();
             currentConsumer = null;
-            
+
+            // Close and recreate the processing strategy
+            if (processingStrategy != null)
+            {
+                processingStrategy.Close();
+                processingStrategy.Dispose();
+                processingStrategy = CreateProcessingStrategy();
+                if (processingStrategy is PerPartitionProcessingStrategy perPartitionStrategy)
+                {
+                    perPartitionStrategy.Start();
+                }
+                else if (processingStrategy is PerKeyProcessingStrategy perKeyStrategy)
+                {
+                    perKeyStrategy.Start();
+                }
+                else if (processingStrategy is UnorderedProcessingStrategy unorderedStrategy)
+                {
+                    unorderedStrategy.Start();
+                }
+                else if (processingStrategy is SequentialProcessingStrategy sequentialStrategy)
+                {
+                    sequentialStrategy.Start();
+                }
+            }
+
             streamMetricsRegistry.RemoveLibrdKafkaSensors(Name, librdkafkaClientId);
         }
     }

@@ -2,14 +2,16 @@
 
 Often, you want to create a stream processing application, process data from Kafka topic to another Kafka topic, but in the middle of your topology, you need to get data from another tier system (oracle db, mongo db, http rest api or whatever). 
 
-Since `1.4.0` release, Streamiz release multiple asynchronous processors :
+Since `1.4.0` release, Streamiz released multiple asynchronous processors :
 - MapAsync(...)
 - MapValuesAsync(...)
 - FlatMapAsync(...)
 - FlatMapValuesAsync(...)
 - ForEachAsync(...)
 
-These processors use the pattern request/reponse to satisfy the asynchronous request with some retry policy options.
+These processors use the pattern request/response to satisfy the asynchronous request with some retry policy options.
+
+**Since version `1.8.0`**, these async processors also support **per-processor parallel processing** configuration, allowing you to control concurrency for each async operation independently. See the [Parallel Processing documentation](parallel-processing.md#per-processor-parallel-processing) for details.
 
 ## Example
 
@@ -200,3 +202,34 @@ docker-compose exec broker kafka-console-producer --bootstrap-server broker:2909
 - Here the schema of this topology
 
 ![async-topology](./assets/async-topology.png)
+
+## Parallel Processing (Since 1.8.0)
+
+You can now configure parallel processing for async operations to improve throughput for I/O-bound workloads:
+
+```csharp
+builder
+    .Stream<string, string>("input")
+    .MapValuesAsync(
+        async (record, _) => {
+            var persons = await database
+                .GetCollection<Person>("adress")
+                .FindAsync((p) => p.name.Equals(record.Key))
+                .Result.ToListAsync();
+            return persons.FirstOrDefault()?.address.city;
+        },
+        retryPolicy: RetryPolicy.NewBuilder()
+            .NumberOfRetry(3)
+            .RetriableException<MongoException>()
+            .Build(),
+        parallelProcessingConfig: ParallelProcessingConfig.Unordered(maxConcurrency: 10))
+    .To("person-city");
+```
+
+This allows up to 10 concurrent database calls, significantly improving throughput when the database can handle parallel requests.
+
+See the [Parallel Processing documentation](parallel-processing.md) for:
+- Detailed configuration options
+- Ordering guarantees
+- Performance tuning guidelines
+- Best practices

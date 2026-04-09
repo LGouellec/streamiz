@@ -9,15 +9,20 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph
     {
         private readonly Func<ExternalRecord<K, V>, ExternalContext, Task<IEnumerable<KeyValuePair<K1, V1>>>> asyncMapper;
         private readonly RetryPolicy retryPolicy;
+        private readonly ParallelProcessingConfig parallelProcessingConfig;
 
-        public KStreamFlatMapAsync(Func<ExternalRecord<K, V>, ExternalContext, Task<IEnumerable<KeyValuePair<K1, V1>>>> asyncMapper, RetryPolicy retryPolicy)
+        public KStreamFlatMapAsync(
+            Func<ExternalRecord<K, V>, ExternalContext, Task<IEnumerable<KeyValuePair<K1, V1>>>> asyncMapper,
+            RetryPolicy retryPolicy,
+            ParallelProcessingConfig parallelProcessingConfig = null)
         {
             this.asyncMapper = asyncMapper;
             this.retryPolicy = retryPolicy ?? RetryPolicy.NewBuilder().Build();
+            this.parallelProcessingConfig = parallelProcessingConfig;
         }
 
         public IProcessor<K, V> Get()
-            => new KStreamFlatMapAsyncProcessor<K, V, K1, V1>(asyncMapper, retryPolicy);
+            => new KStreamFlatMapAsyncProcessor<K, V, K1, V1>(asyncMapper, retryPolicy, parallelProcessingConfig);
     }
 
 

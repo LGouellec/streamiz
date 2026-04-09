@@ -189,6 +189,53 @@ Maximum amount of time a stream task will stay idle when not all of its partitio
 
 Maximum allowed time between calls to consume messages for high-level consumers. If this interval is exceeded the consumer is considered failed and the group will rebalance in order to reassign the partitions to another consumer group member.
 
+### ExternalProcessingConfig
+
+**Since version 1.8.0**
+
+Configures parallel processing for external streams. This property controls how records are processed when using external stream processing, offering different trade-offs between ordering guarantees and throughput.
+
+Available processing modes:
+- `SEQUENTIAL` (default): Process records one at a time in strict order. Provides full backward compatibility.
+- `PER_PARTITION`: Process different partitions in parallel while maintaining partition ordering. Good for multi-tenant or time-series data.
+- `PER_KEY`: Process different keys in parallel while maintaining per-key ordering. Ideal for user sessions or entity updates.
+- `UNORDERED`: Maximum parallelism with no ordering guarantees. Best for independent events where order doesn't matter.
+
+**Default:** `ParallelProcessingConfig.Sequential()` (1 worker, maintains backward compatibility)
+
+**Factory Methods:**
+
+``` csharp
+// Sequential (default) - 1 worker
+config.ExternalProcessingConfig = ParallelProcessingConfig.Sequential();
+
+// Per-Partition - CPU core count workers
+config.ExternalProcessingConfig = ParallelProcessingConfig.PerPartition();
+config.ExternalProcessingConfig = ParallelProcessingConfig.PerPartition(maxConcurrency: 8);
+
+// Per-Key - CPU cores × 2 workers
+config.ExternalProcessingConfig = ParallelProcessingConfig.PerKey();
+config.ExternalProcessingConfig = ParallelProcessingConfig.PerKey(maxConcurrency: 16);
+
+// Unordered - CPU cores × 4 workers (maximum throughput)
+config.ExternalProcessingConfig = ParallelProcessingConfig.Unordered();
+config.ExternalProcessingConfig = ParallelProcessingConfig.Unordered(maxConcurrency: 32);
+```
+
+**Advanced Configuration:**
+
+``` csharp
+config.ExternalProcessingConfig = new ParallelProcessingConfig
+{
+    Mode = ParallelProcessingMode.PER_KEY,
+    MaxConcurrency = 16,                    // Number of worker threads
+    MaxQueuedRecords = 10000,              // Queue capacity (triggers backpressure)
+    MaxWaitForCompletion = TimeSpan.FromSeconds(30)  // Graceful shutdown timeout
+};
+```
+
+For detailed information on choosing the right strategy, ordering guarantees, and performance characteristics, see the [Parallel Processing documentation](parallel-processing.md).
+
 ### BufferedRecordsPerPartition
 
 [Deprecated] Maximum number of records to buffer per partition. (Default: Int32.MaxValue)

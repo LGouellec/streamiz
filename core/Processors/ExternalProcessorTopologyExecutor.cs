@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
@@ -194,7 +195,7 @@ namespace Streamiz.Kafka.Net.Processors
                     log.LogDebug(
                         $"{logPrefix}Process record with this following metadata ({recordToProcess.TopicPartitionOffset}) in {latency} ms");
                     consumedOffsets.AddOrUpdate(recordToProcess.TopicPartition, recordToProcess.Offset.Value);
-                    
+
                     if (State == ExternalProcessorTopologyState.PAUSED && BufferSize <= RetryPolicy.MemoryBufferSize / 2)
                     {
                         State = ExternalProcessorTopologyState.RESUMED;
@@ -238,12 +239,25 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 if(readingBuffer && !doNotDequeue)
                     BufferedRecords.Dequeue();
-                
-                if(readingBuffer && record != null) 
+
+                if(readingBuffer && record != null)
                     BufferedRecords.Enqueue(record);
-                
+
                 activeBufferedRecordSensor.Record(BufferSize);
             }
+        }
+
+        /// <summary>
+        /// Async version of Process for use by parallel processing strategies.
+        /// Currently runs synchronously but returns a Task for async/await compatibility.
+        /// Will be made truly async in future iterations.
+        /// </summary>
+        public Task ProcessAsync(ConsumeResult<byte[], byte[]> record)
+        {
+            // Run synchronously for now (already on worker thread)
+            // TODO: Make the entire processing pipeline truly async
+            Process(record);
+            return Task.CompletedTask;
         }
 
         public void Flush()

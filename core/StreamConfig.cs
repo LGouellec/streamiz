@@ -327,12 +327,20 @@ namespace Streamiz.Kafka.Net
         /// Enables parallel processing for messages (default: false)
         /// </summary>
         bool ParallelProcessing { get; set; }
-        
+
         /// <summary>
         /// The max number of concurrent messages processing by thread. (default: 8)
         /// Only valid if ParallelProcessing is true
         /// </summary>
         int MaxDegreeOfParallelism { get; set; }
+
+        /// <summary>
+        /// Configuration for parallel processing in external stream processing.
+        /// Controls the parallelism strategy, concurrency level, and resource limits.
+        /// Default: Sequential mode (backward compatible with existing behavior).
+        /// Only valid for external stream processing (ExternalStreamThread).
+        /// </summary>
+        ParallelProcessingConfig ExternalProcessingConfig { get; set; }
         
         /// <summary>
         /// Aims to log (info level) processing summary records per thread every X minutes. (default: 1 minute)
@@ -507,6 +515,7 @@ namespace Streamiz.Kafka.Net
         private const string metricsRecordingLevelCst = "metrics.recording.level";
         private const string parallelProcessingCst = "parallel.processing";
         private const string maxDegreeOfParallelismCst = "max.degree.of.parallelism";
+        private const string externalProcessingConfigCst = "external.processing.config";
         private const string rocksDbConfigSetterCst = "rocksdb.config.setter";
         private const string innerExceptionHandlerCst = "inner.exception.handler";
         private const string deserializationExceptionHandlerCst = "deserialization.exception.handler";
@@ -2478,6 +2487,7 @@ namespace Streamiz.Kafka.Net
             ExposeLibrdKafkaStats = false;
             ParallelProcessing = false;
             MaxDegreeOfParallelism = 8;
+            ExternalProcessingConfig = ParallelProcessingConfig.Sequential();
             DefaultStateStoreCacheMaxBytes = CacheSize.OfMb(5).CacheSizeBytes;
             QueryWatermarkOffsetsTimeout = TimeSpan.FromSeconds(5);
             DefaultPartitionerReshuffleEveryKey = true;
@@ -2963,7 +2973,20 @@ namespace Streamiz.Kafka.Net
             get => configProperties[maxDegreeOfParallelismCst];
             set => configProperties.AddOrUpdate(maxDegreeOfParallelismCst, value);
         }
-        
+
+        /// <summary>
+        /// Configuration for parallel processing in external stream processing.
+        /// Controls the parallelism strategy, concurrency level, and resource limits.
+        /// Default: Sequential mode (backward compatible with existing behavior).
+        /// Only valid for external stream processing (ExternalStreamThread).
+        /// </summary>
+        [StreamConfigProperty("" + externalProcessingConfigCst)]
+        public ParallelProcessingConfig ExternalProcessingConfig
+        {
+            get => configProperties[externalProcessingConfigCst];
+            set => configProperties.AddOrUpdate(externalProcessingConfigCst, value);
+        }
+
         /// <summary>
         /// Aims to log (info level) processing summary records per thread every X minutes. (default: 1 minute)
         /// </summary>

@@ -2041,7 +2041,7 @@ namespace Streamiz.Kafka.Net.Stream
 
         /// <summary>
         /// Transform each record of the input stream into a new record in the output stream (both key and value type can be
-        /// altered arbitrarily) with an asynchronous function. 
+        /// altered arbitrarily) with an asynchronous function.
         /// The provided async mapper is applied to each input record and computes a new output record.
         /// Thus, an input record &lt;<typeparamref name="K"/>, <typeparamref name="V"/>&gt; can be transformed into an output record &lt;<typeparamref name="K1"/>, <typeparamref name="V1"/>&gt;.
         /// This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.
@@ -2055,6 +2055,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="retryPolicy">Retry policy behavior for this async processing</param>
         /// <param name="requestSerDes">Serdes used for serialized/deserialized key and value for the request topic</param>
         /// <param name="responseSerDes">Serdes used for serialized/deserialized new key and value for the response topic</param>
+        /// <param name="parallelProcessingConfig">Optional parallel processing configuration for this processor. If null, uses sequential processing. Since 1.8.0</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{K1, V1}"/> that contains records with new key and value (possibly both of different type)</returns>
         IKStream<K1, V1> MapAsync<K1, V1>(
@@ -2062,6 +2063,7 @@ namespace Streamiz.Kafka.Net.Stream
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
             ResponseSerDes<K1, V1> responseSerDes = null,
+            ParallelProcessingConfig parallelProcessingConfig = null,
             string named = null);
         
         /// <summary>
@@ -2080,6 +2082,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="retryPolicy">Retry policy behavior for this async processing</param>
         /// <param name="requestSerDes">Serdes used for serialized/deserialized key and value for the request topic</param>
         /// <param name="responseSerDes">Serdes used for serialized/deserialized new key and value for the response topic</param>
+        /// <param name="parallelProcessingConfig">Optional parallel processing configuration for this processor. If null, uses sequential processing. Since 1.8.0</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{K1, V1}"/> that contains records with new key and value (possibly both of different type)</returns>
         IKStream<K1, V1> FlatMapAsync<K1, V1>(
@@ -2087,11 +2090,12 @@ namespace Streamiz.Kafka.Net.Stream
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
             ResponseSerDes<K1, V1> responseSerDes = null,
+            ParallelProcessingConfig parallelProcessingConfig = null,
             string named = null);
         
         /// <summary>
         /// Transform each record of the input stream into a new record in the output stream (value type can be
-        /// altered arbitrarily) with an asynchronous function. 
+        /// altered arbitrarily) with an asynchronous function.
         /// The provided async mapper is applied to each input record and computes a new output record.
         /// Thus, an input record &lt;<typeparamref name="K"/>, <typeparamref name="V"/>&gt; can be transformed into an output record &lt;<typeparamref name="K"/>, <typeparamref name="V1"/>&gt;.
         /// This operation is asynchronous and will create a request/response pattern. This asynchronous processing will be release by a dedicated external thread and implement a retry behavior.
@@ -2104,6 +2108,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="retryPolicy">Retry policy behavior for this async processing</param>
         /// <param name="requestSerDes">Serdes used for serialized/deserialized key and value for the request topic</param>
         /// <param name="responseSerDes">Serdes used for serialized/deserialized new key and value for the response topic</param>
+        /// <param name="parallelProcessingConfig">Optional parallel processing configuration for this processor. If null, uses sequential processing. Since 1.8.0</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{K, V1}"/> that contains records with new key and value (possibly both of different type)</returns>
         IKStream<K, V1> MapValuesAsync<V1>(
@@ -2111,6 +2116,7 @@ namespace Streamiz.Kafka.Net.Stream
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
             ResponseSerDes<K, V1> responseSerDes = null,
+            ParallelProcessingConfig parallelProcessingConfig = null,
             string named = null);
         
         /// <summary>
@@ -2128,6 +2134,7 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="retryPolicy">Retry policy behavior for this async processing</param>
         /// <param name="requestSerDes">Serdes used for serialized/deserialized key and value for the request topic</param>
         /// <param name="responseSerDes">Serdes used for serialized/deserialized new key and value for the response topic</param>
+        /// <param name="parallelProcessingConfig">Optional parallel processing configuration for this processor. If null, uses sequential processing. Since 1.8.0</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         /// <returns>A <see cref="IKStream{K, V1}"/> that contains records with new key and value (possibly both of different type)</returns>
         IKStream<K, V1> FlatMapValuesAsync<V1>(
@@ -2135,6 +2142,7 @@ namespace Streamiz.Kafka.Net.Stream
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
             ResponseSerDes<K, V1> responseSerDes = null,
+            ParallelProcessingConfig parallelProcessingConfig = null,
             string named = null);
 
         /// <summary>
@@ -2147,11 +2155,13 @@ namespace Streamiz.Kafka.Net.Stream
         /// <param name="asyncAction">An asynchronous action to perform on each record</param>
         /// <param name="retryPolicy">Retry policy behavior for this async processing</param>
         /// <param name="requestSerDes">Serdes used for serialized/deserialized key and value for the request topic</param>
+        /// <param name="parallelProcessingConfig">Optional parallel processing configuration for this processor. If null, uses sequential processing. Since 1.8.0</param>
         /// <param name="named">A <see cref="string"/> config used to name the processor in the topology. Default : null</param>
         void ForeachAsync(
             Func<ExternalRecord<K, V>, ExternalContext, Task> asyncAction,
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
+            ParallelProcessingConfig parallelProcessingConfig = null,
             string named = null);
 
         #endregion

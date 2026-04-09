@@ -11,8 +11,11 @@ namespace Streamiz.Kafka.Net.Processors
     {
         private readonly Func<ExternalRecord<K, V>, ExternalContext, Task> asyncCall;
 
-        public KStreamForeachAsyncProcessor(Func<ExternalRecord<K, V>, ExternalContext, Task> asyncCall, RetryPolicy policy) 
-            : base(policy)
+        public KStreamForeachAsyncProcessor(
+            Func<ExternalRecord<K, V>, ExternalContext, Task> asyncCall,
+            RetryPolicy policy,
+            ParallelProcessingConfig parallelProcessingConfig = null)
+            : base(policy, parallelProcessingConfig)
         {
             this.asyncCall = asyncCall;
         }

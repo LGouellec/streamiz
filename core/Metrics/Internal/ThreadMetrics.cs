@@ -54,6 +54,17 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
             "The fraction of time the thread spent on punctuating active tasks";
         internal static readonly string THREAD_START_TIME_DESCRIPTION =
             "The time that the thread was started";
+
+        // Parallel processing metrics
+        internal static readonly string PARALLEL_IN_FLIGHT_RECORDS = "parallel-in-flight-records";
+        internal static readonly string PARALLEL_IN_FLIGHT_RECORDS_DESCRIPTION =
+            "The number of records currently being processed in parallel";
+        internal static readonly string PARALLEL_QUEUE_DEPTH = "parallel-queue-depth";
+        internal static readonly string PARALLEL_QUEUE_DEPTH_DESCRIPTION =
+            "The number of records queued for parallel processing";
+        internal static readonly string PARALLEL_WORKER_COUNT = "parallel-worker-count";
+        internal static readonly string PARALLEL_WORKER_COUNT_DESCRIPTION =
+            "The number of parallel workers configured";
         
         #region Thread Metrics
 
@@ -303,25 +314,86 @@ namespace Streamiz.Kafka.Net.Metrics.Internal
         }
         
         public static Sensor PunctuateRatioSensor(string threadId, StreamMetricsRegistry metricsRegistry) {
-            
+
             var sensor =
                 metricsRegistry.ThreadLevelSensor(
-                    threadId, 
+                    threadId,
                     PUNCTUATE + StreamMetricsRegistry.RATIO_SUFFIX,
                     PUNCTUATE_RATIO_DESCRIPTION,
                     MetricsRecordingLevel.INFO);
             var tags = metricsRegistry.ThreadLevelTags(threadId);
-            
+
             SensorHelper.AddValueMetricToSensor(
                 sensor,
                 StreamMetricsRegistry.THREAD_LEVEL_GROUP,
                 tags,
                 PUNCTUATE + StreamMetricsRegistry.RATIO_SUFFIX,
                 PUNCTUATE_RATIO_DESCRIPTION);
-            
+
             return sensor;
         }
-        
+
+        #endregion
+
+        #region Parallel Processing
+
+        public static Sensor ParallelInFlightRecordsSensor(string threadId, StreamMetricsRegistry metricsRegistry)
+        {
+            var sensor = metricsRegistry.ThreadLevelSensor(
+                threadId,
+                PARALLEL_IN_FLIGHT_RECORDS,
+                PARALLEL_IN_FLIGHT_RECORDS_DESCRIPTION,
+                MetricsRecordingLevel.INFO);
+            var tags = metricsRegistry.ThreadLevelTags(threadId);
+
+            SensorHelper.AddValueMetricToSensor(
+                sensor,
+                StreamMetricsRegistry.THREAD_LEVEL_GROUP,
+                tags,
+                PARALLEL_IN_FLIGHT_RECORDS,
+                PARALLEL_IN_FLIGHT_RECORDS_DESCRIPTION);
+
+            return sensor;
+        }
+
+        public static Sensor ParallelQueueDepthSensor(string threadId, StreamMetricsRegistry metricsRegistry)
+        {
+            var sensor = metricsRegistry.ThreadLevelSensor(
+                threadId,
+                PARALLEL_QUEUE_DEPTH,
+                PARALLEL_QUEUE_DEPTH_DESCRIPTION,
+                MetricsRecordingLevel.INFO);
+            var tags = metricsRegistry.ThreadLevelTags(threadId);
+
+            SensorHelper.AddValueMetricToSensor(
+                sensor,
+                StreamMetricsRegistry.THREAD_LEVEL_GROUP,
+                tags,
+                PARALLEL_QUEUE_DEPTH,
+                PARALLEL_QUEUE_DEPTH_DESCRIPTION);
+
+            return sensor;
+        }
+
+        public static Sensor ParallelWorkerCountSensor(string threadId, StreamMetricsRegistry metricsRegistry)
+        {
+            var sensor = metricsRegistry.ThreadLevelSensor(
+                threadId,
+                PARALLEL_WORKER_COUNT,
+                PARALLEL_WORKER_COUNT_DESCRIPTION,
+                MetricsRecordingLevel.INFO);
+            var tags = metricsRegistry.ThreadLevelTags(threadId);
+
+            SensorHelper.AddValueMetricToSensor(
+                sensor,
+                StreamMetricsRegistry.THREAD_LEVEL_GROUP,
+                tags,
+                PARALLEL_WORKER_COUNT,
+                PARALLEL_WORKER_COUNT_DESCRIPTION);
+
+            return sensor;
+        }
+
         #endregion
     }
 }

@@ -107,7 +107,7 @@ static async System.Threading.Tasks.Task Main(string[] args)
 | KTable-KTable FK Join                                        |              X                     |                        | Plan for 1.8.0                             |
 | KStream-KTable Join                                          |              X                     |         X              |                                            |
 | KStream-GlobalKTable Join                                    |              X                     |         X              |                                            |
-| External Async Processing                                    |                                    |         X              | V2 in coming                               |
+| External Async Processing                                    |                                    |         X              | V2 with parallel processing (1.8.0+)       |
 | Hopping window                                               |              X                     |         X              |                                            |
 | Tumbling window                                              |              X                     |         X              |                                            |
 | Sliding window                                               |              X                     |                        | No plan for now                            |

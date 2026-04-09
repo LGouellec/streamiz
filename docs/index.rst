@@ -76,4 +76,5 @@ Need help
    topology-test-driver
    monitoring
    async-processing
+   parallel-processing
    processor-api

@@ -995,16 +995,17 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
             ResponseSerDes<K1, V1> responseSerDes = null,
+            ParallelProcessingConfig parallelProcessingConfig = null,
             string named = null)
         {
             requestSerDes ??= RequestSerDes<K, V>.Empty;
             responseSerDes ??= ResponseSerDes<K1, V1>.Empty;
-            
+
             var processors = RequestResponseProcessor(new Named(named), KStream.MAP_ASYNC_NAME);
-            
+
             ProcessorParameters<K, V > processorParameters =
-                new ProcessorParameters<K, V>(new KStreamMapAsync<K, V, K1, V1>(asyncMapper, retryPolicy), processors.asyncProcessorName);
-            
+                new ProcessorParameters<K, V>(new KStreamMapAsync<K, V, K1, V1>(asyncMapper, retryPolicy, parallelProcessingConfig), processors.asyncProcessorName);
+
             return AsyncProcess(
                 processors.asyncProcessorName,
                 processors.requestSinkProcessorName,
@@ -1021,15 +1022,16 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
             ResponseSerDes<K, V1> responseSerDes = null,
+            ParallelProcessingConfig parallelProcessingConfig = null,
             string named = null)
         {
             requestSerDes ??= RequestSerDes<K, V>.Empty;
             responseSerDes ??= ResponseSerDes<K, V1>.Empty;
-            
+
             var processors = RequestResponseProcessor(new Named(named), KStream.MAPVALUES_ASYNC_NAME);
-            
+
             ProcessorParameters<K, V > processorParameters =
-                new ProcessorParameters<K, V>(new KStreamMapValuesAsync<K, V, V1>(asyncMapper, retryPolicy), processors.asyncProcessorName);
+                new ProcessorParameters<K, V>(new KStreamMapValuesAsync<K, V, V1>(asyncMapper, retryPolicy, parallelProcessingConfig), processors.asyncProcessorName);
 
             return AsyncProcess(
                 processors.asyncProcessorName,
@@ -1047,15 +1049,16 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
             ResponseSerDes<K1, V1> responseSerDes = null,
+            ParallelProcessingConfig parallelProcessingConfig = null,
             string named = null)
         {
             requestSerDes ??= RequestSerDes<K, V>.Empty;
             responseSerDes ??= ResponseSerDes<K1, V1>.Empty;
-            
+
             var processors = RequestResponseProcessor(new Named(named), KStream.FLATMAP_ASYNC_NAME);
 
             ProcessorParameters<K, V > processorParameters =
-                new ProcessorParameters<K, V>(new KStreamFlatMapAsync<K, V, K1, V1>(asyncMapper, retryPolicy), processors.asyncProcessorName);
+                new ProcessorParameters<K, V>(new KStreamFlatMapAsync<K, V, K1, V1>(asyncMapper, retryPolicy, parallelProcessingConfig), processors.asyncProcessorName);
 
             return AsyncProcess(
                 processors.asyncProcessorName,
@@ -1073,15 +1076,16 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
             ResponseSerDes<K, V1> responseSerDes = null,
+            ParallelProcessingConfig parallelProcessingConfig = null,
             string named = null)
         {
             requestSerDes ??= RequestSerDes<K, V>.Empty;
             responseSerDes ??= ResponseSerDes<K, V1>.Empty;
-            
+
             var processors = RequestResponseProcessor(new Named(named), KStream.FLATMAPVALUES_ASYNC_NAME);
 
             ProcessorParameters<K, V > processorParameters =
-                new ProcessorParameters<K, V>(new KStreamFlatMapValuesAsync<K, V, V1>(asyncMapper, retryPolicy), processors.asyncProcessorName);
+                new ProcessorParameters<K, V>(new KStreamFlatMapValuesAsync<K, V, V1>(asyncMapper, retryPolicy, parallelProcessingConfig), processors.asyncProcessorName);
 
             return AsyncProcess(
                 processors.asyncProcessorName,
@@ -1098,6 +1102,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             Func<ExternalRecord<K, V>, ExternalContext, Task> asyncExternalCall,
             RetryPolicy retryPolicy = null,
             RequestSerDes<K, V> requestSerDes = null,
+            ParallelProcessingConfig parallelProcessingConfig = null,
             string named = null)
         {
             requestSerDes ??= new RequestSerDes<K, V>(null, null);
@@ -1105,8 +1110,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal
             var processors = RequestResponseProcessor(new Named(named), KStream.FOREACH_ASYNC_NAME, true);
 
             ProcessorParameters<K, V > processorParameters =
-                new ProcessorParameters<K, V>(new KStreamForeachAsync<K, V>(asyncExternalCall, retryPolicy), processors.asyncProcessorName);
-            
+                new ProcessorParameters<K, V>(new KStreamForeachAsync<K, V>(asyncExternalCall, retryPolicy, parallelProcessingConfig), processors.asyncProcessorName);
+
             AsyncNode<K, V, K, V> asyncNode = new AsyncNode<K, V, K, V>(
                 processors.asyncProcessorName,
                 processors.requestSinkProcessorName,
@@ -1114,7 +1119,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal
                 RequestTopic(processors.asyncProcessorName),
                 requestSerDes,
                 processorParameters);
-            
+
             builder.AddGraphNode(Node, asyncNode.RequestNode);
         }
         

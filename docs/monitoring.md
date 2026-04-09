@@ -132,6 +132,81 @@ All the following metrics have a recording level of `INFO`.
 | :---             |    :----:   |          ---: |
 | <span style="color: #06389C; font-weight: bold;">commit-ratio</span>        | The fraction of time the thread spent on committing all tasks        | thread_id  |
 
+### Parallel Processing Metrics
+
+**Since version 1.8.0**
+
+The following metrics are available when using parallel processing for external streams (i.e., when `ExternalProcessingConfig` is configured with a mode other than `SEQUENTIAL`). These metrics help monitor the performance and health of parallel processing workers.
+
+All the following metrics have a recording level of `INFO`.
+
+**Sensor : internal.[THREAD_ID].sensor.parallel-in-flight-records, Type : stream-thread-metrics**
+
+| Metric name      | Description | Tags          |
+| :---             |    :----:   |          ---: |
+| <span style="color: #06389C; font-weight: bold;">parallel-in-flight-records</span>        | The number of records currently being processed by parallel workers        | thread_id  |
+
+**Sensor : internal.[THREAD_ID].sensor.parallel-queue-depth, Type : stream-thread-metrics**
+
+| Metric name      | Description | Tags          |
+| :---             |    :----:   |          ---: |
+| <span style="color: #06389C; font-weight: bold;">parallel-queue-depth</span>        | The number of records queued for parallel processing        | thread_id  |
+
+**Sensor : internal.[THREAD_ID].sensor.parallel-worker-count, Type : stream-thread-metrics**
+
+| Metric name      | Description | Tags          |
+| :---             |    :----:   |          ---: |
+| <span style="color: #06389C; font-weight: bold;">parallel-worker-count</span>        | The number of active parallel processing workers        | thread_id  |
+
+#### Using Parallel Processing Metrics
+
+These metrics are essential for tuning parallel processing performance:
+
+**In-Flight Records** (`parallel-in-flight-records`):
+- Shows how many records are actively being processed by workers
+- High values indicate workers are busy processing
+- Consistently at or near `MaxConcurrency` suggests workers are fully utilized
+- Low values might indicate:
+  - Not enough work (low throughput from Kafka)
+  - Processing is very fast (good performance)
+  - Possible bottleneck in the processing logic
+
+**Queue Depth** (`parallel-queue-depth`):
+- Shows how many records are waiting to be processed
+- Consistently high (near `MaxQueuedRecords`) indicates:
+  - Workers can't keep up with incoming records
+  - Consider increasing `MaxConcurrency`
+  - Or optimize processing logic
+- Consistently low or zero indicates:
+  - Workers are keeping up well
+  - Possible over-provisioning of workers
+- Triggers backpressure when reaching `MaxQueuedRecords`
+
+**Worker Count** (`parallel-worker-count`):
+- Shows the configured number of parallel workers
+- Should match `MaxConcurrency` configuration
+- Useful for validating configuration is applied correctly
+- Remains constant during runtime (set at startup)
+
+**Example Scenarios:**
+
+1. **Optimal Performance:**
+   - `parallel-queue-depth`: Low to moderate (10-30% of max)
+   - `parallel-in-flight-records`: High (80-100% of `MaxConcurrency`)
+   - Workers are busy, queue is not backing up
+
+2. **Overloaded System:**
+   - `parallel-queue-depth`: High (>80% of `MaxQueuedRecords`)
+   - `parallel-in-flight-records`: At `MaxConcurrency`
+   - Action: Increase `MaxConcurrency` or optimize processing
+
+3. **Under-Utilized Workers:**
+   - `parallel-queue-depth`: Consistently zero
+   - `parallel-in-flight-records`: Low (<50% of `MaxConcurrency`)
+   - Action: Consider reducing `MaxConcurrency` to free resources
+
+For more information on parallel processing configuration and tuning, see the [Parallel Processing documentation](parallel-processing.md).
+
 ### Task metrics
 
 All the following metrics have a recording level of `DEBUG`.

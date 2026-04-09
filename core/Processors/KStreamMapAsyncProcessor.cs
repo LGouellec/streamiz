@@ -14,8 +14,9 @@ namespace Streamiz.Kafka.Net.Processors
 
         public KStreamMapAsyncProcessor(
             Func<ExternalRecord<K, V>, ExternalContext, Task<KeyValuePair<K1, V1>>> asyncMapper,
-            RetryPolicy retryPolicy)
-            : base(retryPolicy)
+            RetryPolicy retryPolicy,
+            ParallelProcessingConfig parallelProcessingConfig = null)
+            : base(retryPolicy, parallelProcessingConfig)
         {
             this.asyncMapper = asyncMapper;
         }
