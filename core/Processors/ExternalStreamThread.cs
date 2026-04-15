@@ -33,8 +33,8 @@ namespace Streamiz.Kafka.Net.Processors
         private IAdminClient adminClient;
         private readonly string logPrefix;
         private readonly Thread thread;
-        private IProcessingStrategy processingStrategy;
-        
+        private IDictionary<string, IProcessingStrategy> strategiesByTopic;
+
         private DateTime lastCommit = DateTime.Now;
         private DateTime lastMetrics = DateTime.Now;
 
@@ -126,51 +126,75 @@ namespace Streamiz.Kafka.Net.Processors
                     try
                     {
                         // Submit record to processing strategy
-                        if (result != null || processingStrategy.InFlightCount > 0)
+                        bool hasInFlightRecords = strategiesByTopic.Values.Any(s => s.InFlightCount > 0);
+
+                        if (result != null || hasInFlightRecords)
                         {
                             now = DateTime.Now.GetMilliseconds();
-                            long processLatency = ActionHelper.MeasureLatency(() =>
-                                processingStrategy.SubmitAsync(result).GetAwaiter().GetResult());
 
                             if (result != null)
                             {
-                                log.LogDebug($"Submitted record to processing strategy in {processLatency} ms");
-                                ++messageProcessed;
-                                processLatencySensor.Record(processLatency, now);
-                                processRateSensor.Record(1, now);
-                            }
-
-                            // Backpressure: check if strategy is at capacity
-                            bool isAtCapacity = false;
-                            if (processingStrategy is PerPartitionProcessingStrategy perPartitionStrategy)
-                            {
-                                isAtCapacity = perPartitionStrategy.IsAtCapacity();
-                            }
-                            else if (processingStrategy is PerKeyProcessingStrategy perKeyStrategy)
-                            {
-                                isAtCapacity = perKeyStrategy.IsAtCapacity();
-                            }
-                            else if (processingStrategy is UnorderedProcessingStrategy unorderedStrategy)
-                            {
-                                isAtCapacity = unorderedStrategy.IsAtCapacity();
-                            }
-
-                            if (isAtCapacity && result != null)
-                            {
-                                var assignmentTopic = consumer.Assignment
-                                    .Where(a => a.Topic.Equals(result.Topic))
-                                    .ToList();
-                                consumer.Pause(assignmentTopic);
-                                log.LogWarning($"{logPrefix}Strategy at capacity, paused topic {result.Topic}");
-                            }
-                            else if (!isAtCapacity)
-                            {
-                                // Resume all paused partitions if we're under capacity
-                                var pausedPartitions = consumer.Assignment.Except(consumer.Assignment).ToList();
-                                if (pausedPartitions.Any())
+                                // Route to the correct strategy based on topic
+                                if (strategiesByTopic.TryGetValue(result.Topic, out var strategy))
                                 {
-                                    consumer.Resume(pausedPartitions);
-                                    log.LogInformation($"{logPrefix}Resumed paused partitions");
+                                    long processLatency = ActionHelper.MeasureLatency(() =>
+                                        strategy.SubmitAsync(result).GetAwaiter().GetResult());
+
+                                    log.LogDebug($"Submitted record from topic {result.Topic} to processing strategy in {processLatency} ms");
+                                    ++messageProcessed;
+                                    processLatencySensor.Record(processLatency, now);
+                                    processRateSensor.Record(1, now);
+
+                                    // Backpressure: check if this strategy is at capacity
+                                    bool isAtCapacity = false;
+                                    if (strategy is PerPartitionProcessingStrategy perPartitionStrategy)
+                                    {
+                                        isAtCapacity = perPartitionStrategy.IsAtCapacity();
+                                    }
+                                    else if (strategy is PerKeyProcessingStrategy perKeyStrategy)
+                                    {
+                                        isAtCapacity = perKeyStrategy.IsAtCapacity();
+                                    }
+                                    else if (strategy is UnorderedProcessingStrategy unorderedStrategy)
+                                    {
+                                        isAtCapacity = unorderedStrategy.IsAtCapacity();
+                                    }
+
+                                    if (isAtCapacity)
+                                    {
+                                        var assignmentTopic = consumer.Assignment
+                                            .Where(a => a.Topic.Equals(result.Topic))
+                                            .ToList();
+                                        consumer.Pause(assignmentTopic);
+                                        log.LogWarning($"{logPrefix}Strategy for topic {result.Topic} at capacity, paused topic");
+                                    }
+                                    else
+                                    {
+                                        // Resume this topic if it was paused
+                                        var pausedForTopic = consumer.Assignment
+                                            .Where(a => a.Topic.Equals(result.Topic))
+                                            .ToList();
+                                        if (pausedForTopic.Any())
+                                        {
+                                            consumer.Resume(pausedForTopic);
+                                            log.LogInformation($"{logPrefix}Resumed topic {result.Topic}");
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    log.LogWarning($"{logPrefix}No strategy found for topic {result.Topic}, skipping record");
+                                }
+                            }
+                            else
+                            {
+                                // Process in-flight records for all strategies
+                                foreach (var kvp in strategiesByTopic)
+                                {
+                                    if (kvp.Value.InFlightCount > 0)
+                                    {
+                                        kvp.Value.SubmitAsync(null).GetAwaiter().GetResult();
+                                    }
                                 }
                             }
                         }
@@ -238,11 +262,15 @@ namespace Streamiz.Kafka.Net.Processors
                     consumer.Close();
                     consumer.Dispose();
 
-                    // Close the processing strategy
-                    if (processingStrategy != null)
+                    // Close all processing strategies
+                    if (strategiesByTopic != null)
                     {
-                        processingStrategy.Close();
-                        processingStrategy.Dispose();
+                        foreach (var strategy in strategiesByTopic.Values)
+                        {
+                            strategy.Close();
+                            strategy.Dispose();
+                        }
+                        strategiesByTopic.Clear();
                     }
 
                     externalProcessorTopologies
@@ -275,17 +303,22 @@ namespace Streamiz.Kafka.Net.Processors
 
         private bool CommitOffsets(bool clearBuffer)
         {
-            // Flush the processing strategy
-            processingStrategy.Flush();
-
-            // For sequential strategy, also handle buffer clearing
-            if (clearBuffer && processingStrategy is SequentialProcessingStrategy sequentialStrategy)
+            // Flush all processing strategies
+            foreach (var strategy in strategiesByTopic.Values)
             {
-                sequentialStrategy.ClearBuffers();
+                strategy.Flush();
+
+                // For sequential strategy, also handle buffer clearing
+                if (clearBuffer && strategy is SequentialProcessingStrategy sequentialStrategy)
+                {
+                    sequentialStrategy.ClearBuffers();
+                }
             }
 
-            // Get committable offsets from the strategy
-            var offsets = processingStrategy.GetCommittableOffsets().ToList();
+            // Get committable offsets from all strategies
+            var offsets = strategiesByTopic.Values
+                .SelectMany(s => s.GetCommittableOffsets())
+                .ToList();
 
             if (offsets.Any())
             {
@@ -303,22 +336,25 @@ namespace Streamiz.Kafka.Net.Processors
                     log.LogDebug($"Sent delete-records request: {string.Join(",", offsets)}");
                 }
 
-                // Clear committed offsets from strategy tracking
-                if (processingStrategy is SequentialProcessingStrategy seq)
+                // Clear committed offsets from all strategy tracking
+                foreach (var strategy in strategiesByTopic.Values)
                 {
-                    seq.ClearCommittedOffsets();
-                }
-                else if (processingStrategy is PerPartitionProcessingStrategy perPart)
-                {
-                    perPart.ClearCommittedOffsets();
-                }
-                else if (processingStrategy is PerKeyProcessingStrategy perKey)
-                {
-                    perKey.ClearCommittedOffsets();
-                }
-                else if (processingStrategy is UnorderedProcessingStrategy unordered)
-                {
-                    unordered.ClearCommittedOffsets();
+                    if (strategy is SequentialProcessingStrategy seq)
+                    {
+                        seq.ClearCommittedOffsets();
+                    }
+                    else if (strategy is PerPartitionProcessingStrategy perPart)
+                    {
+                        perPart.ClearCommittedOffsets();
+                    }
+                    else if (strategy is PerKeyProcessingStrategy perKey)
+                    {
+                        perKey.ClearCommittedOffsets();
+                    }
+                    else if (strategy is UnorderedProcessingStrategy unordered)
+                    {
+                        unordered.ClearCommittedOffsets();
+                    }
                 }
 
                 return true;
@@ -379,23 +415,32 @@ namespace Streamiz.Kafka.Net.Processors
 
             //producer = kafkaSupplier.GetProducer(configuration.ToExternalProducerConfig($"{thread.Name}-producer").Wrap(Name, configuration));
 
-            // Create the processing strategy based on configuration
-            processingStrategy = CreateProcessingStrategy();
-            if (processingStrategy is PerPartitionProcessingStrategy perPartitionStrategy)
+            // Create processing strategies per topic
+            strategiesByTopic = new Dictionary<string, IProcessingStrategy>();
+            foreach (var requestTopic in externalSourceTopics)
             {
-                perPartitionStrategy.Start();
-            }
-            else if (processingStrategy is PerKeyProcessingStrategy perKeyStrategy)
-            {
-                perKeyStrategy.Start();
-            }
-            else if (processingStrategy is UnorderedProcessingStrategy unorderedStrategy)
-            {
-                unorderedStrategy.Start();
-            }
-            else if (processingStrategy is SequentialProcessingStrategy sequentialStrategy)
-            {
-                sequentialStrategy.Start();
+                var parallelConfig = internalTopologyBuilder.GetParallelConfigForRequestTopic(requestTopic);
+                var strategy = CreateProcessingStrategy(requestTopic, parallelConfig);
+
+                strategiesByTopic[requestTopic] = strategy;
+
+                // Start the strategy
+                if (strategy is PerPartitionProcessingStrategy perPartitionStrategy)
+                {
+                    perPartitionStrategy.Start();
+                }
+                else if (strategy is PerKeyProcessingStrategy perKeyStrategy)
+                {
+                    perKeyStrategy.Start();
+                }
+                else if (strategy is UnorderedProcessingStrategy unorderedStrategy)
+                {
+                    unorderedStrategy.Start();
+                }
+                else if (strategy is SequentialProcessingStrategy sequentialStrategy)
+                {
+                    sequentialStrategy.Start();
+                }
             }
 
             SetState(ThreadState.PARTITIONS_ASSIGNED);
@@ -440,17 +485,20 @@ namespace Streamiz.Kafka.Net.Processors
             return externalProcessorTopologyExecutor;
         }
 
-        private IProcessingStrategy CreateProcessingStrategy()
+        private IProcessingStrategy CreateProcessingStrategy(string topic, ParallelProcessingConfig perProcessorConfig)
         {
-            var config = configuration.ExternalProcessingConfig;
+            // Use per-processor config if provided, otherwise fall back to global config
+            var config = perProcessorConfig ?? configuration.ExternalProcessingConfig;
 
             // Validate configuration
             config?.Validate();
 
+            var configSource = perProcessorConfig != null ? "per-processor" : "global";
+
             switch (config?.Mode ?? ParallelProcessingMode.SEQUENTIAL)
             {
                 case ParallelProcessingMode.SEQUENTIAL:
-                    log.LogInformation($"{logPrefix}Using SEQUENTIAL processing strategy");
+                    log.LogInformation($"{logPrefix}Topic [{topic}]: Using SEQUENTIAL processing strategy ({configSource} config)");
                     return new SequentialProcessingStrategy(
                         Name,
                         internalTopologyBuilder,
@@ -460,7 +508,7 @@ namespace Streamiz.Kafka.Net.Processors
                         adminClient);
 
                 case ParallelProcessingMode.PER_PARTITION:
-                    log.LogInformation($"{logPrefix}Using PER_PARTITION processing strategy (max concurrency: {config.MaxConcurrency})");
+                    log.LogInformation($"{logPrefix}Topic [{topic}]: Using PER_PARTITION processing strategy (max concurrency: {config.MaxConcurrency}, {configSource} config)");
                     return new PerPartitionProcessingStrategy(
                         Name,
                         internalTopologyBuilder,
@@ -471,7 +519,7 @@ namespace Streamiz.Kafka.Net.Processors
                         adminClient);
 
                 case ParallelProcessingMode.PER_KEY:
-                    log.LogInformation($"{logPrefix}Using PER_KEY processing strategy (max concurrency: {config.MaxConcurrency})");
+                    log.LogInformation($"{logPrefix}Topic [{topic}]: Using PER_KEY processing strategy (max concurrency: {config.MaxConcurrency}, {configSource} config)");
                     return new PerKeyProcessingStrategy(
                         Name,
                         internalTopologyBuilder,
@@ -482,7 +530,7 @@ namespace Streamiz.Kafka.Net.Processors
                         adminClient);
 
                 case ParallelProcessingMode.UNORDERED:
-                    log.LogInformation($"{logPrefix}Using UNORDERED processing strategy (max concurrency: {config.MaxConcurrency})");
+                    log.LogInformation($"{logPrefix}Topic [{topic}]: Using UNORDERED processing strategy (max concurrency: {config.MaxConcurrency}, {configSource} config)");
                     return new UnorderedProcessingStrategy(
                         Name,
                         internalTopologyBuilder,
@@ -499,36 +547,52 @@ namespace Streamiz.Kafka.Net.Processors
 
         private void RecordParallelProcessingMetrics()
         {
-            if (processingStrategy == null)
+            if (strategiesByTopic == null || !strategiesByTopic.Any())
                 return;
 
             var now = DateTime.Now.GetMilliseconds();
 
-            // Record in-flight records
-            parallelInFlightRecordsSensor.Record(processingStrategy.InFlightCount, now);
+            // Aggregate metrics from all strategies
+            int totalInFlight = strategiesByTopic.Values.Sum(s => s.InFlightCount);
+            int totalQueueDepth = 0;
+            int totalWorkers = 0;
 
-            // Record queue depth and worker count for parallel strategies
-            if (processingStrategy is PerPartitionProcessingStrategy perPartitionStrategy)
+            foreach (var strategy in strategiesByTopic.Values)
             {
-                parallelQueueDepthSensor.Record(perPartitionStrategy.QueuedRecordsCount, now);
-                parallelWorkerCountSensor.Record(configuration.ExternalProcessingConfig.MaxConcurrency, now);
+                if (strategy is PerPartitionProcessingStrategy perPartitionStrategy)
+                {
+                    totalQueueDepth += perPartitionStrategy.QueuedRecordsCount;
+                    totalWorkers += perPartitionStrategy.QueuedRecordsCount > 0 ?
+                        (internalTopologyBuilder.GetParallelConfigForRequestTopic(
+                            strategiesByTopic.First(kvp => kvp.Value == strategy).Key)?.MaxConcurrency
+                         ?? configuration.ExternalProcessingConfig?.MaxConcurrency ?? 1) : 0;
+                }
+                else if (strategy is PerKeyProcessingStrategy perKeyStrategy)
+                {
+                    totalQueueDepth += perKeyStrategy.QueuedRecordsCount;
+                    totalWorkers += perKeyStrategy.QueuedRecordsCount > 0 ?
+                        (internalTopologyBuilder.GetParallelConfigForRequestTopic(
+                            strategiesByTopic.First(kvp => kvp.Value == strategy).Key)?.MaxConcurrency
+                         ?? configuration.ExternalProcessingConfig?.MaxConcurrency ?? 1) : 0;
+                }
+                else if (strategy is UnorderedProcessingStrategy unorderedStrategy)
+                {
+                    totalQueueDepth += unorderedStrategy.QueuedRecordsCount;
+                    totalWorkers += unorderedStrategy.QueuedRecordsCount > 0 ?
+                        (internalTopologyBuilder.GetParallelConfigForRequestTopic(
+                            strategiesByTopic.First(kvp => kvp.Value == strategy).Key)?.MaxConcurrency
+                         ?? configuration.ExternalProcessingConfig?.MaxConcurrency ?? 1) : 0;
+                }
+                else
+                {
+                    // Sequential strategy contributes 1 worker if it has work
+                    totalWorkers += strategy.InFlightCount > 0 ? 1 : 0;
+                }
             }
-            else if (processingStrategy is PerKeyProcessingStrategy perKeyStrategy)
-            {
-                parallelQueueDepthSensor.Record(perKeyStrategy.QueuedRecordsCount, now);
-                parallelWorkerCountSensor.Record(configuration.ExternalProcessingConfig.MaxConcurrency, now);
-            }
-            else if (processingStrategy is UnorderedProcessingStrategy unorderedStrategy)
-            {
-                parallelQueueDepthSensor.Record(unorderedStrategy.QueuedRecordsCount, now);
-                parallelWorkerCountSensor.Record(configuration.ExternalProcessingConfig.MaxConcurrency, now);
-            }
-            else
-            {
-                // For sequential strategy, queue depth and workers are always 0/1
-                parallelQueueDepthSensor.Record(0, now);
-                parallelWorkerCountSensor.Record(1, now);
-            }
+
+            parallelInFlightRecordsSensor.Record(totalInFlight, now);
+            parallelQueueDepthSensor.Record(totalQueueDepth, now);
+            parallelWorkerCountSensor.Record(totalWorkers, now);
         }
         
         private ExceptionHandlerResponse TreatException(Exception exception)
@@ -570,27 +634,40 @@ namespace Streamiz.Kafka.Net.Processors
             consumer.Dispose();
             currentConsumer = null;
 
-            // Close and recreate the processing strategy
-            if (processingStrategy != null)
+            // Close and recreate all processing strategies
+            if (strategiesByTopic != null)
             {
-                processingStrategy.Close();
-                processingStrategy.Dispose();
-                processingStrategy = CreateProcessingStrategy();
-                if (processingStrategy is PerPartitionProcessingStrategy perPartitionStrategy)
+                foreach (var strategy in strategiesByTopic.Values)
                 {
-                    perPartitionStrategy.Start();
+                    strategy.Close();
+                    strategy.Dispose();
                 }
-                else if (processingStrategy is PerKeyProcessingStrategy perKeyStrategy)
+                strategiesByTopic.Clear();
+
+                // Recreate strategies for all topics
+                foreach (var requestTopic in externalSourceTopics)
                 {
-                    perKeyStrategy.Start();
-                }
-                else if (processingStrategy is UnorderedProcessingStrategy unorderedStrategy)
-                {
-                    unorderedStrategy.Start();
-                }
-                else if (processingStrategy is SequentialProcessingStrategy sequentialStrategy)
-                {
-                    sequentialStrategy.Start();
+                    var parallelConfig = internalTopologyBuilder.GetParallelConfigForRequestTopic(requestTopic);
+                    var strategy = CreateProcessingStrategy(requestTopic, parallelConfig);
+
+                    strategiesByTopic[requestTopic] = strategy;
+
+                    if (strategy is PerPartitionProcessingStrategy perPartitionStrategy)
+                    {
+                        perPartitionStrategy.Start();
+                    }
+                    else if (strategy is PerKeyProcessingStrategy perKeyStrategy)
+                    {
+                        perKeyStrategy.Start();
+                    }
+                    else if (strategy is UnorderedProcessingStrategy unorderedStrategy)
+                    {
+                        unorderedStrategy.Start();
+                    }
+                    else if (strategy is SequentialProcessingStrategy sequentialStrategy)
+                    {
+                        sequentialStrategy.Start();
+                    }
                 }
             }
 

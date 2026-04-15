@@ -12,11 +12,15 @@
 
 ## Recent Major Work (2026-04-08 to 2026-04-10)
 
-### Parallel Processing Implementation (async-processing-v2 branch)
+### Parallel Processing Architecture Refactoring (async-processing-v2 branch)
 
-Implemented comprehensive parallel processing support for both external streams and async processors within topologies.
+**Latest**: Refactored per-processor parallel processing to use unified `ProcessingStrategy` architecture (2026-04-10).
 
-**Commit**: `419e40ac` - "Add parallel processing support for async processors and external streams"
+Previously implemented comprehensive parallel processing support for both external streams and async processors within topologies.
+
+**Commits**:
+- `419e40ac` - "Add parallel processing support for async processors and external streams" (initial)
+- Latest refactoring - Unified architecture using ProcessingStrategy for both global and per-processor configs
 
 **Key Components Added**:
 
@@ -36,7 +40,9 @@ Implemented comprehensive parallel processing support for both external streams 
    - `IProcessingStrategy` - Strategy pattern interface
    - `OffsetTracker` - Manages committable offsets for at-least-once semantics
    - `RecordWorkItem` - Encapsulates work items in processing queues
-   - Enhanced `AbstractAsyncProcessor` - Task-based parallelism with semaphores
+   - `AbstractAsyncProcessor` - Base class for async processors (simplified after refactoring)
+   - `InternalTopologyBuilder` - Maps request topics to ParallelProcessingConfig
+   - `ExternalStreamThread` - Routes records to appropriate ProcessingStrategy per topic
 
 4. **Tests**: 42 total (all passing)
    - `OffsetTrackerTests.cs` - Offset management
@@ -54,6 +60,40 @@ Implemented comprehensive parallel processing support for both external streams 
 **Performance**: 5-10x throughput improvement for I/O-bound workloads with appropriate concurrency settings.
 
 **Backward Compatibility**: ✅ All changes opt-in, defaults to sequential processing. Existing code works without modification.
+
+### Architecture Refactoring (2026-04-10)
+
+**Objective**: Eliminate duplication between global and per-processor parallel processing by using unified `ProcessingStrategy` architecture.
+
+**Before** (Initial Implementation):
+- Global: `ExternalStreamThread` uses `ProcessingStrategy` 
+- Per-processor: `AbstractAsyncProcessor` uses Task/SemaphoreSlim for parallelism
+- **Problem**: Two different implementations of the same concept
+
+**After** (Refactored):
+- Both global and per-processor use `ProcessingStrategy` in `ExternalStreamThread`
+- Each async processor with `ParallelProcessingConfig` creates a unique request topic
+- `ExternalStreamThread` maintains `Dictionary<string, IProcessingStrategy>` for all topics
+- Records routed to correct strategy based on topic
+- `AbstractAsyncProcessor` simplified (removed Task/SemaphoreSlim code)
+
+**Benefits**:
+1. Single source of truth for parallel processing logic
+2. Consistent behavior between global and per-processor
+3. Simpler code (~150 lines removed from `AbstractAsyncProcessor`)
+4. Better resource management (shared thread pool)
+5. Same offset tracking and at-least-once semantics for both
+
+**Files Modified** (14 files):
+- `InternalTopologyBuilder.cs` - Maps request topics to configs
+- `AsyncNode.cs` - Passes config to builder
+- `KStream.cs` - Passes config to AsyncNode
+- `ExternalStreamThread.cs` - Routes to strategies per topic
+- `AbstractAsyncProcessor.cs` - Simplified (removed parallel code)
+- All async processor classes and suppliers
+- `PerProcessorParallelTests.cs` - Adapted for new architecture
+
+**Testing Limitation**: `TopologyTestDriver` does not create `ExternalStreamThread`, so per-processor parallel tests only verify API correctness, not actual parallelism. Integration tests required for parallel behavior verification.
 
 ## Project Structure
 
@@ -90,11 +130,13 @@ streamiz/
 
 ### Core Processing
 
-- **`ExternalStreamThread.cs`** - External stream consumer thread with strategy support
-- **`IProcessingStrategy.cs`** - Strategy pattern for parallel processing
-- **`AbstractAsyncProcessor.cs`** - Base class for async processors with parallelism
-- **`OffsetTracker.cs`** - Tracks in-flight and committable offsets
-- **`ParallelProcessingConfig.cs`** - Configuration for parallel processing
+- **`ExternalStreamThread.cs`** - External stream consumer thread; routes records to ProcessingStrategy per topic
+- **`IProcessingStrategy.cs`** - Strategy pattern interface for parallel processing
+- **`*ProcessingStrategy.cs`** - Concrete strategy implementations (Sequential, PerPartition, PerKey, Unordered)
+- **`AbstractAsyncProcessor.cs`** - Base class for async processors (simplified, sequential processing)
+- **`OffsetTracker.cs`** - Tracks in-flight and committable offsets for at-least-once semantics
+- **`ParallelProcessingConfig.cs`** - Configuration for parallel processing (factory methods)
+- **`InternalTopologyBuilder.cs`** - Maps request topics to their ParallelProcessingConfig
 
 ### Async Processors
 
@@ -266,9 +308,11 @@ builder.Stream<K, V>("topic")
    - Only sequential offsets are committable (at-least-once semantics)
    - Strategy provides committable offsets via `GetCommittableOffsets()`
 
-3. **Concurrency Models**:
-   - **External Streams**: Dedicated consumer thread + worker pool
-   - **Per-Processor**: Task-based parallelism with semaphore (in-process)
+3. **Concurrency Models** (Unified Architecture):
+   - Both global and per-processor use `ProcessingStrategy` in `ExternalStreamThread`
+   - Single `ExternalStreamThread` routes records to strategies based on topic
+   - Each topic (external or internal request) has its own `ProcessingStrategy` instance
+   - Strategy manages worker pool based on mode and `MaxConcurrency`
 
 4. **Default Concurrency**:
    - SEQUENTIAL: 1
@@ -278,17 +322,25 @@ builder.Stream<K, V>("topic")
 
 ### Known Limitations
 
-1. **Per-Processor Parallelism**:
-   - No offset tracking (relies on Kafka consumer commits)
-   - Records may complete out of order
-   - Fire-and-forget model (failed records logged but not requeued)
+1. **Per-Processor Configuration**:
+   - Creates internal request/response topics for each async processor
+   - More async processors = more internal topics
+   - Ordering depends on strategy mode chosen
+   - Each request topic has its own `ProcessingStrategy` instance
 
-2. **External Streams**:
-   - Each external stream gets dedicated consumer thread
-   - Memory usage proportional to `MaxQueuedRecords`
-   - Backpressure pauses consumer when queue full
+2. **Testing with TopologyTestDriver**:
+   - `TopologyTestDriver` does NOT create `ExternalStreamThread`
+   - Per-processor parallel processing executes sequentially in unit tests
+   - Integration tests with real Kafka required to test actual parallelism
+   - Unit tests can only verify API correctness, not parallel behavior
 
-3. **Compatibility**:
+3. **Resource Usage**:
+   - Single `ExternalStreamThread` shared across all topics (external + request)
+   - Memory usage proportional to `MaxQueuedRecords` per strategy
+   - Multiple strategies compound memory usage
+   - Backpressure pauses consumer when strategy queue full
+
+4. **Compatibility**:
    - .NET Standard 2.0 minimum
    - Kafka 0.10+ required
    - librdkafka client dependency
@@ -360,8 +412,9 @@ dotnet test --filter "FullyQualifiedName=Streamiz.Kafka.Net.Tests.Private.Offset
 ### Common Errors
 
 1. **"AbstractAsyncProcessor does not contain a constructor..."**
-   - Ensure all async processors pass `ParallelProcessingConfig` to base constructor
-   - Check processor supplier classes pass config through
+   - After refactoring: `AbstractAsyncProcessor` takes only `RetryPolicy` parameter
+   - `ParallelProcessingConfig` is NOT passed to processor constructor
+   - Config is stored in `InternalTopologyBuilder` and used by `ExternalStreamThread`
 
 2. **"Cannot implicitly convert List<Exception> to ReadOnlyCollection<Exception>"**
    - Use: `new ReadOnlyCollection<Exception>(new List<Exception> { ex })`
@@ -369,6 +422,11 @@ dotnet test --filter "FullyQualifiedName=Streamiz.Kafka.Net.Tests.Private.Offset
 3. **Build warnings about .NET version support**
    - Expected for multi-targeting (net5.0, net6.0, net7.0, net8.0, netstandard2.0)
    - Can be ignored unless breaking
+
+4. **Per-processor tests failing with "Expected concurrent processing"**
+   - `TopologyTestDriver` does not create `ExternalStreamThread`
+   - Per-processor parallelism cannot be tested with `TopologyTestDriver`
+   - Use integration tests with real Kafka to verify parallel behavior
 
 ## Resources
 
@@ -391,9 +449,14 @@ dotnet test --filter "FullyQualifiedName=Streamiz.Kafka.Net.Tests.Private.Offset
 ### Memory/Context
 
 - **Current Branch**: `async-processing-v2` (parallel processing implementation)
-- **Last Major Commit**: `419e40ac` - Parallel processing support
-- **Test Status**: 42/42 passing for parallel processing
-- **Next Steps**: Potentially merge to `develop` or create PR
+- **Last Major Work**: 
+  - Initial: `419e40ac` - Parallel processing support
+  - Refactoring (2026-04-10): Unified ProcessingStrategy architecture
+- **Test Status**: 
+  - Strategy tests: 42/42 passing
+  - Per-processor API tests: 6/6 passing (adapted for new architecture)
+- **Architecture**: Unified ProcessingStrategy for both global and per-processor configs
+- **Next Steps**: Integration testing, potentially merge to `develop` or create PR
 
 ### Project-Specific Patterns
 
@@ -405,6 +468,9 @@ dotnet test --filter "FullyQualifiedName=Streamiz.Kafka.Net.Tests.Private.Offset
 
 ---
 
-Last Updated: 2026-04-10
+Last Updated: 2026-04-10 (Post-Refactoring)
 Branch: async-processing-v2
-Commit: 419e40ac
+Major Work:
+- Initial: 419e40ac - Parallel processing support
+- Refactoring: Unified ProcessingStrategy architecture (14 files modified)
+Status: Tests passing, documentation updated

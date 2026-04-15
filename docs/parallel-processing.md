@@ -271,28 +271,58 @@ await stream.StartAsync();
 
 ### How It Works
 
-Per-processor parallel processing uses bounded Task-based concurrency:
+Per-processor parallel processing uses the same **ProcessingStrategy** infrastructure as global external streams, but applies it per-processor:
 
-1. **Semaphore Control**: Uses `SemaphoreSlim` to limit concurrent operations to `MaxConcurrency`
-2. **Fire-and-Forget**: Each record spawns an async Task that processes independently  
-3. **Retry Logic**: Each Task has its own retry loop based on the `RetryPolicy`
-4. **Graceful Shutdown**: `Close()` waits for all active tasks to complete (with timeout)
+1. **Request Topic Creation**: Each async processor with `ParallelProcessingConfig` creates a unique internal request topic
+2. **ExternalStreamThread**: Consumes all request topics and routes records to the appropriate strategy
+3. **Processing Strategy**: Each request topic gets its own strategy instance (PerPartition, PerKey, Unordered, or Sequential)
+4. **Worker Pool**: The strategy manages worker threads based on `MaxConcurrency` configuration
+5. **Offset Management**: Strategy tracks offsets and provides committable offsets for at-least-once semantics
 
 **Architecture:**
 ```
-Record arrives → Wait for available slot → Spawn async Task → Process + Retry → Forward result
-                 (Semaphore blocks if at max concurrency)
+Input Record → Processor (sends to request topic) → ExternalStreamThread
+                                                         ↓
+                                          Route to ProcessingStrategy for topic
+                                                         ↓
+                                          Worker Pool (PerKey/Unordered/etc.)
+                                                         ↓
+                                          Async Operation + Retry → Response topic
 ```
+
+**Key Insight**: Per-processor `ParallelProcessingConfig` is **not** a separate implementation. It simply configures which `ProcessingStrategy` to use for that processor's request topic within the shared `ExternalStreamThread`.
 
 ### Differences from Global Configuration
 
 | Feature | Global (External Streams) | Per-Processor |
 |---------|--------------------------|---------------|
-| **Implementation** | Dedicated consumer thread + worker pool | Task-based parallelism |
-| **Offset Management** | Tracks offsets, commits sequentially | No offset tracking (fires and forgets) |
-| **Ordering** | Can maintain partition/key order based on mode | Records may complete out of order |
-| **Resource Model** | Separate thread per external stream | Shared thread pool |
-| **Best For** | External stream consumers | Inline async operations in topology |
+| **Implementation** | ProcessingStrategy (one per external stream topic) | ProcessingStrategy (one per async processor request topic) |
+| **Configuration Scope** | Applies to all external streams (unless overridden) | Configured per async processor individually |
+| **Topic Type** | User-defined external Kafka topics | Auto-generated internal request/response topics |
+| **Offset Management** | Tracks offsets, commits sequentially | Same: tracks offsets, commits sequentially |
+| **Ordering** | Depends on strategy mode (Sequential/PerPartition/PerKey/Unordered) | Same: depends on strategy mode |
+| **Resource Model** | Single ExternalStreamThread routes to multiple strategies | Same: shared ExternalStreamThread routes to all request topics |
+| **Best For** | Consuming external topics not in your topology | Async operations within your topology |
+
+**Note**: After refactoring (v1.8.0), both global and per-processor configurations use the same underlying `ProcessingStrategy` infrastructure. The only difference is the _scope_ of configuration and the _source_ of topics (external vs. internal).
+
+### Testing Considerations
+
+**Important**: `TopologyTestDriver` (used for unit testing) does **not** create `ExternalStreamThread`, so per-processor parallel processing will execute sequentially in tests. To test actual parallel behavior:
+
+- Use integration tests with a real Kafka cluster
+- Configure `ExternalProcessingConfig` and run `KafkaStream`
+- Monitor metrics to verify parallel execution
+
+Unit tests with `TopologyTestDriver` can still verify:
+- The API accepts `ParallelProcessingConfig` without errors
+- Retry policies work correctly
+- Business logic is correct
+
+But they **cannot** verify:
+- Actual concurrent execution
+- Max concurrency limits
+- Ordering behavior across parallel workers
 
 ### Best Practices
 
@@ -330,28 +360,34 @@ retryPolicy: RetryPolicy.NewBuilder()
 
 ### Limitations
 
-1. **No Ordering Guarantees**: Records may complete out of order
-   - Even records with the same key may be processed concurrently
-   - Results may be forwarded in different order than arrival
+1. **Ordering Depends on Strategy**: Ordering guarantees depend on which strategy you configure
+   - **Sequential**: Full ordering preserved
+   - **PerPartition**: Partition order preserved (per-partition request topic partitions)
+   - **PerKey**: Per-key order preserved (same key routes to same worker)
+   - **Unordered**: No ordering guarantees
 
-2. **No Offset Coordination**: Unlike external streams, per-processor parallelism doesn't track offsets
-   - At-least-once semantics relies on Kafka consumer commits
-   - Failed records are logged but not retried after stream restart
+2. **Internal Topic Overhead**: Each async processor creates request/response topics
+   - More async processors = more internal topics
+   - Consider topic cleanup policies for internal topics
+   - Monitor broker topic limits
 
-3. **Shared Resources**: All processors share the application's thread pool
-   - Very high concurrency across multiple processors may cause contention
-   - Monitor thread pool metrics
+3. **Shared ExternalStreamThread**: All request topics share the same `ExternalStreamThread`
+   - Very high concurrency across multiple processors shares resources
+   - Each request topic has its own strategy and worker pool
+   - Monitor overall thread count
 
-4. **Memory Overhead**: Each concurrent operation holds state in memory
-   - Consider `MaxQueuedRecords` equivalent is the number of concurrent tasks
-   - High concurrency = high memory usage
+4. **Memory Overhead**: Each strategy maintains queues based on `MaxQueuedRecords`
+   - Per-processor configs compound memory usage
+   - High concurrency across many processors = high memory usage
+   - Consider tuning `MaxQueuedRecords` per processor
 
 ### When NOT to Use
 
 Don't use per-processor parallelism if:
-- **Ordering is critical**: Use external streams with appropriate mode instead
-- **Large message volumes**: External streams with dedicated threads scale better
-- **Need offset management**: External streams provide proper offset tracking
+- **Ordering is critical AND you need Sequential mode**: Consider if global sequential is better
+- **Too many async processors**: Each creates internal topics - consider consolidating
+- **Very low latency required**: Internal request/response topics add minimal but non-zero overhead
+- **Topology is already complex**: Simpler to reason about global config for external streams
 
 ## Complete Example
 

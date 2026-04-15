@@ -44,6 +44,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         // map of store name to restore behavior
         private readonly IDictionary<string, (NodeFactory, ISerDes, ISerDes)> storeNameToReprocessOnRestore =
             new Dictionary<string, (NodeFactory, ISerDes, ISerDes)>();
+        // map from request topic to its parallel processing configuration
+        private readonly IDictionary<string, ParallelProcessingConfig> requestTopicParallelConfigs =
+            new Dictionary<string, ParallelProcessingConfig>();
 
         internal IEnumerable<string> GetSourceTopics()
         {
@@ -55,6 +58,19 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
         internal IEnumerable<string> GetRequestTopics()
             => new ReadOnlyCollection<string>(requestTopics.Select(DecorateTopic).ToList());
+
+        internal void SetParallelConfigForRequestTopic(string requestTopic, ParallelProcessingConfig config)
+        {
+            if (config != null)
+            {
+                requestTopicParallelConfigs[requestTopic] = config;
+            }
+        }
+
+        internal ParallelProcessingConfig GetParallelConfigForRequestTopic(string requestTopic)
+        {
+            return requestTopicParallelConfigs.TryGetValue(requestTopic, out var config) ? config : null;
+        }
 
         internal IEnumerable<string> GetGlobalTopics() => globalTopics;
         

@@ -1,3 +1,4 @@
+using Streamiz.Kafka.Net.Processors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
 
@@ -12,6 +13,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
             private ISerDes<TV> ValueSerdes { get; }
             private string SinkName { get; }
             private string RepartitionTopic { get; }
+            private ParallelProcessingConfig ParallelConfig { get; }
 
             public AsyncNodeRequest(
                 string streamGraphNode,
@@ -19,7 +21,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
                 ISerDes<TK> keySerdes,
                 ISerDes<TV> valueSerdes,
                 string sinkName,
-                string repartitionTopic)
+                string repartitionTopic,
+                ParallelProcessingConfig parallelConfig)
                 : base(streamGraphNode)
             {
                 SourceName = sourceName;
@@ -27,6 +30,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
                 ValueSerdes = valueSerdes;
                 SinkName = sinkName;
                 RepartitionTopic = repartitionTopic;
+                ParallelConfig = parallelConfig;
             }
 
             public override void WriteToTopology(InternalTopologyBuilder builder)
@@ -43,6 +47,9 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
                     SourceName,
                     new ConsumedInternal<TK, TV>(SourceName, KeySerdes, ValueSerdes, new FailOnInvalidTimestamp()),
                     true);
+
+                // Set parallel processing config for this request topic
+                builder.SetParallelConfigForRequestTopic(RepartitionTopic, ParallelConfig);
             }
         }
 
@@ -91,6 +98,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
             public ISerDes<TV> ValueSerdes { get; }
             public string RequestTopic { get; }
             public string SinkName { get; }
+            public ParallelProcessingConfig ParallelConfig { get; }
 
             public AsyncNodeRequestVoid(
                 string streamGraphNode,
@@ -99,7 +107,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
                 string sinkName,
                 ProcessorParameters<TK, TV> processorParameters,
                 ISerDes<TK> keySerdes,
-                ISerDes<TV> valueSerdes)
+                ISerDes<TV> valueSerdes,
+                ParallelProcessingConfig parallelConfig)
                 : base(streamGraphNode)
             {
                 SourceName = sourceName;
@@ -108,6 +117,7 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
                 ValueSerdes = valueSerdes;
                 RequestTopic = requestTopic;
                 SinkName = sinkName;
+                ParallelConfig = parallelConfig;
             }
             
             public override void WriteToTopology(InternalTopologyBuilder builder)
@@ -120,10 +130,13 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
                     ParentNodeNames());
                 builder.AddSourceOperator(
                     RequestTopic,
-                    SourceName, 
+                    SourceName,
                     new ConsumedInternal<TK, TV>(SourceName, KeySerdes, ValueSerdes, new FailOnInvalidTimestamp()),
                     true);
                 builder.AddProcessor(ProcessorParameters.ProcessorName, ProcessorParameters.Processor, SourceName);
+
+                // Set parallel processing config for this request topic
+                builder.SetParallelConfigForRequestTopic(RequestTopic, ParallelConfig);
             }
         }
         
@@ -137,7 +150,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
             string responseTopicName,
             RequestSerDes<K, V> requestSerDes,
             ResponseSerDes<K1, V1> responseSerDes,
-            ProcessorParameters<K, V> processorParameters) 
+            ProcessorParameters<K, V> processorParameters,
+            ParallelProcessingConfig parallelProcessingConfig = null)
             : base(asyncProcessorName)
         {
             RequestNode = new AsyncNodeRequest<K, V>(
@@ -146,7 +160,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
                 requestSerDes.RequestKeySerDes,
                 requestSerDes.RequestValueSerDes,
                 requestSinkProcessorName,
-                requestTopicName);
+                requestTopicName,
+                parallelProcessingConfig);
 
             ResponseNode = new AsyncNodeResponse<K,V,K1,V1>(
                 responseSourceProcessorName,
@@ -164,7 +179,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
             string requestSourceProcessorName,
             string requestTopicName,
             RequestSerDes<K, V> requestSerDes,
-            ProcessorParameters<K, V> processorParameters) 
+            ProcessorParameters<K, V> processorParameters,
+            ParallelProcessingConfig parallelProcessingConfig = null)
             : base(asyncProcessorName)
         {
             ResponseNode = null;
@@ -176,7 +192,8 @@ namespace Streamiz.Kafka.Net.Stream.Internal.Graph.Nodes
                 requestSinkProcessorName,
                 processorParameters,
                 requestSerDes.RequestKeySerDes,
-                requestSerDes.RequestValueSerDes);
+                requestSerDes.RequestValueSerDes,
+                parallelProcessingConfig);
         }
 
         public StreamGraphNode RequestNode { get; }

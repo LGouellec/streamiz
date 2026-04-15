@@ -11,17 +11,17 @@ namespace Streamiz.Kafka.Net.Processors
         /// <summary>
         /// Default maximum concurrency based on processor count.
         /// </summary>
-        public static readonly int DEFAULT_MAX_CONCURRENCY = Environment.ProcessorCount;
+        private static readonly int DefaultMaxConcurrency = Environment.ProcessorCount;
 
         /// <summary>
         /// Default maximum queued records.
         /// </summary>
-        public const int DEFAULT_MAX_QUEUED_RECORDS = 10000;
+        private const int DefaultMaxQueuedRecords = 10000;
 
         /// <summary>
         /// Default maximum wait time for in-flight records to complete during shutdown.
         /// </summary>
-        public static readonly TimeSpan DEFAULT_MAX_WAIT_FOR_COMPLETION = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan DefaultMaxWaitForCompletion = TimeSpan.FromSeconds(30);
 
         /// <summary>
         /// The parallelism strategy to use.
@@ -31,24 +31,27 @@ namespace Streamiz.Kafka.Net.Processors
 
         /// <summary>
         /// Maximum number of concurrent workers processing records.
-        /// Default: Number of processor cores.
-        /// Recommendation: 2-4x CPU cores for I/O-bound workloads.
+        /// Default depends on mode:
+        /// - SEQUENTIAL: 1
+        /// - PER_PARTITION: processor count
+        /// - PER_KEY: processor count × 2
+        /// - UNORDERED: processor count × 4
         /// </summary>
-        public int MaxConcurrency { get; set; } = DEFAULT_MAX_CONCURRENCY;
+        public int MaxConcurrency { get; set; } = DefaultMaxConcurrency;
 
         /// <summary>
         /// Maximum number of records that can be queued for processing.
         /// When this limit is reached, the consumer will pause consuming from Kafka.
         /// Default: 10,000
         /// </summary>
-        public int MaxQueuedRecords { get; set; } = DEFAULT_MAX_QUEUED_RECORDS;
+        public int MaxQueuedRecords { get; set; } = DefaultMaxQueuedRecords;
 
         /// <summary>
         /// Maximum time to wait for in-flight records to complete during shutdown.
         /// After this timeout, remaining in-flight records will be abandoned and may be reprocessed.
         /// Default: 30 seconds
         /// </summary>
-        public TimeSpan MaxWaitForCompletion { get; set; } = DEFAULT_MAX_WAIT_FOR_COMPLETION;
+        public TimeSpan MaxWaitForCompletion { get; set; } = DefaultMaxWaitForCompletion;
 
         /// <summary>
         /// Validates the configuration and throws if invalid.
@@ -91,33 +94,33 @@ namespace Streamiz.Kafka.Net.Processors
             return new ParallelProcessingConfig
             {
                 Mode = ParallelProcessingMode.PER_PARTITION,
-                MaxConcurrency = maxConcurrency ?? DEFAULT_MAX_CONCURRENCY
+                MaxConcurrency = maxConcurrency ?? DefaultMaxConcurrency
             };
         }
 
         /// <summary>
         /// Creates a configuration for per-key parallel processing.
         /// </summary>
-        /// <param name="maxConcurrency">Maximum concurrent workers. Default: processor count * 2</param>
+        /// <param name="maxConcurrency">Maximum concurrent workers. Default: processor count × 2</param>
         public static ParallelProcessingConfig PerKey(int? maxConcurrency = null)
         {
             return new ParallelProcessingConfig
             {
                 Mode = ParallelProcessingMode.PER_KEY,
-                MaxConcurrency = maxConcurrency ?? (DEFAULT_MAX_CONCURRENCY * 2)
+                MaxConcurrency = maxConcurrency ?? (DefaultMaxConcurrency * 2)
             };
         }
 
         /// <summary>
         /// Creates a configuration for unordered parallel processing (maximum throughput).
         /// </summary>
-        /// <param name="maxConcurrency">Maximum concurrent workers. Default: processor count * 4</param>
+        /// <param name="maxConcurrency">Maximum concurrent workers. Default: processor count × 4</param>
         public static ParallelProcessingConfig Unordered(int? maxConcurrency = null)
         {
             return new ParallelProcessingConfig
             {
                 Mode = ParallelProcessingMode.UNORDERED,
-                MaxConcurrency = maxConcurrency ?? (DEFAULT_MAX_CONCURRENCY * 4)
+                MaxConcurrency = maxConcurrency ?? (DefaultMaxConcurrency * 4)
             };
         }
     }

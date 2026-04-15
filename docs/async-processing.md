@@ -11,7 +11,20 @@ Since `1.4.0` release, Streamiz released multiple asynchronous processors :
 
 These processors use the pattern request/response to satisfy the asynchronous request with some retry policy options.
 
-**Since version `1.8.0`**, these async processors also support **per-processor parallel processing** configuration, allowing you to control concurrency for each async operation independently. See the [Parallel Processing documentation](parallel-processing.md#per-processor-parallel-processing) for details.
+**Since version `1.8.0`**, these async processors also support **per-processor parallel processing** configuration, allowing you to control concurrency for each async operation independently.
+
+### Internal Architecture
+
+Async processors work by creating internal request/response topics:
+1. The processor sends records to an internal **request topic**
+2. `ExternalStreamThread` consumes the request topic
+3. Records are processed using a **ProcessingStrategy** (configured via `ParallelProcessingConfig`)
+4. Results are sent back via an internal **response topic**
+5. The processor receives the response and forwards it downstream
+
+This architecture allows async operations to integrate seamlessly with Streamiz's parallel processing infrastructure while maintaining at-least-once semantics.
+
+See the [Parallel Processing documentation](parallel-processing.md#per-processor-parallel-processing) for details on configuration, ordering guarantees, and performance tuning.
 
 ## Example
 

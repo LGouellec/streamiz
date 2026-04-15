@@ -25,7 +25,19 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public Task<List<DeleteRecordsResult>> DeleteRecordsAsync(IEnumerable<TopicPartitionOffset> topicPartitionOffsets, DeleteRecordsOptions options = null)
         {
-            throw new NotImplementedException();
+            // Mock implementation for testing - return empty results
+            // In a real scenario, this would delete records up to the specified offsets
+            var results = new List<DeleteRecordsResult>();
+            foreach (var tpo in topicPartitionOffsets)
+            {
+                results.Add(new DeleteRecordsResult
+                {
+                    Topic = tpo.Topic,
+                    Partition = tpo.Partition,
+                    Offset = tpo.Offset
+                });
+            }
+            return Task.FromResult(results);
         }
 
         public Task CreateAclsAsync(IEnumerable<AclBinding> aclBindings, CreateAclsOptions options = null)
