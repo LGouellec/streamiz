@@ -259,5 +259,32 @@ namespace Streamiz.Kafka.Net.Tests.Private
             
           Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
         }
+
+        [Test]
+        public void HasRestoredToEnd_WhenBufferedPastEndOffset_ReturnsTrue()
+        {
+            // Records written after the end-offset snapshot must not block completion (#468).
+            var metadata = new ChangelogMetadata
+            {
+                RestoreEndOffset = 100,
+                CurrentOffset = 99,
+                BufferedRecords = new List<ConsumeResult<byte[], byte[]>>
+                {
+                    new ConsumeResult<byte[], byte[]>
+                    {
+                        Topic = changelogTopic,
+                        Partition = 0,
+                        Offset = 101,
+                        Message = new Message<byte[], byte[]> { Key = new byte[] { 1 }, Value = new byte[] { 2 } }
+                    }
+                },
+                StoreMetadata = new ProcessorStateManager.StateStoreMetadata
+                {
+                    ChangelogTopicPartition = new TopicPartition(changelogTopic, 0)
+                }
+            };
+
+            Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
+        }
     }
 }

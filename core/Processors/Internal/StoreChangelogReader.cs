@@ -199,11 +199,12 @@ namespace Streamiz.Kafka.Net.Processors.Internal
 
             if (numRecords > 0)
             {
-                var records = changelogMetadata.BufferedRecords.Take(numRecords);
+                // Match Apache Kafka Streams: restore a prefix, then remove it from the buffer.
+                // Take()+Clear-only-when-all previously left past-end records in the buffer and
+                // HasRestoredToEnd returned false forever (infinite RESTORING). See #468.
+                var records = changelogMetadata.BufferedRecords.GetRange(0, numRecords);
                 changelogMetadata.StateManager.Restore(changelogMetadata.StoreMetadata, records);
-                
-                if (numRecords >= changelogMetadata.BufferedRecords.Count)
-                    changelogMetadata.BufferedRecords.Clear();
+                changelogMetadata.BufferedRecords.RemoveRange(0, numRecords);
 
                 long currentOffset = changelogMetadata.StoreMetadata.Offset.Value;
                 changelogMetadata.CurrentOffset = currentOffset;
@@ -275,7 +276,9 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 return offset != Offset.Unset && offset >= endOffset;
             }
 
-            return false;
+            // Past-end records may remain buffered (written after the end-offset snapshot).
+            // Apache Streams: complete when the first remaining buffered offset is already at/past end.
+            return changelogMetadata.BufferedRecords[0].Offset >= endOffset;
         }
 
         private void BufferedRecords(IEnumerable<ConsumeResult<byte[], byte[]>> records)
@@ -290,7 +293,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 else
                 {
                     metadata.BufferedRecords.Add(record);
-                    if (metadata.RestoreEndOffset == null || record.Offset <= metadata.RestoreEndOffset.Value)
+                    // Exclusive end offset (High watermark), same as Apache Kafka Streams.
+                    if (metadata.RestoreEndOffset == null || record.Offset < metadata.RestoreEndOffset.Value)
                         metadata.BufferedLimit = metadata.BufferedRecords.Count;
                 }
             }
