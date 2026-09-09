@@ -23,6 +23,9 @@
         - run: apt install -y bzip2 lz4 librocksdb-dev 
         # END Dependencies for RocksDB
         - run: export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64/
+        - run: |
+            echo "export SONAR_TOKEN=\"$(printf '%s' "$SONAR_TOKEN" | tr -d '[:space:]')\"" >> $BASH_ENV
+            echo "SONAR_TOKEN length: ${#SONAR_TOKEN}"
         - run: dotnet sonarscanner begin /k:LGouellec_kafka-streams-dotnet /o:kafka-streams-dotnet /d:sonar.token=${SONAR_TOKEN} /d:sonar.host.url=https://sonarcloud.io /d:sonar.cs.opencover.reportsPaths="**\coverage*.opencover.xml" /d:sonar.coverage.exclusions="**sample*/*.cs,**test*/*.cs,**Tests*.cs,**Mock*.cs,**State/Cache/Internal/*.cs"
         - run: dotnet build
         - run: dotnet test --no-restore --no-build --verbosity normal -f net8.0 --collect:"XPlat Code Coverage" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover test/Streamiz.Kafka.Net.Tests/Streamiz.Kafka.Net.Tests.csproj
