@@ -27,7 +27,6 @@ namespace Streamiz.Kafka.Net.State
 
         public void Dispose()
         {
-            iterator.Detach();
             iterator.Dispose();
         }
 
