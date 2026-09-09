@@ -286,5 +286,119 @@ namespace Streamiz.Kafka.Net.Tests.Private
 
             Assert.IsTrue(storeChangelogReader.HasRestoredToEnd(metadata));
         }
+
+        [Test]
+        public void HasRestoredToEnd_WhenFirstBufferedRecordBeforeEndOffset_ReturnsFalse()
+        {
+            // First remaining buffered record hasn't reached the end offset yet, restoration must continue.
+            var metadata = new ChangelogMetadata
+            {
+                RestoreEndOffset = 100,
+                BeginOffset = 0,
+                CurrentOffset = 50,
+                BufferedRecords = new List<ConsumeResult<byte[], byte[]>>
+                {
+                    new ConsumeResult<byte[], byte[]>
+                    {
+                        Topic = changelogTopic,
+                        Partition = 0,
+                        Offset = 99,
+                        Message = new Message<byte[], byte[]> { Key = new byte[] { 1 }, Value = new byte[] { 2 } }
+                    }
+                },
+                StoreMetadata = new ProcessorStateManager.StateStoreMetadata
+                {
+                    ChangelogTopicPartition = new TopicPartition(changelogTopic, 0)
+                }
+            };
+
+            Assert.IsFalse(storeChangelogReader.HasRestoredToEnd(metadata));
+        }
+
+        [Test]
+        public void BufferedRecords_WhenRestoreEndOffsetIsNull_IncludesAllRecordsInBufferedLimit()
+        {
+            var topicPartition = new TopicPartition(changelogTopic, 0);
+            var metadata = storeChangelogReader.GetMetadata(topicPartition);
+            metadata.ChangelogState = ChangelogState.RESTORING;
+            metadata.RestoreEndOffset = null;
+
+            var records = new List<ConsumeResult<byte[], byte[]>>
+            {
+                new ConsumeResult<byte[], byte[]>
+                {
+                    Topic = changelogTopic, Partition = 0, Offset = 0,
+                    Message = new Message<byte[], byte[]> { Key = new byte[] { 1 }, Value = new byte[] { 1 } }
+                },
+                new ConsumeResult<byte[], byte[]>
+                {
+                    Topic = changelogTopic, Partition = 0, Offset = 1,
+                    Message = new Message<byte[], byte[]> { Key = new byte[] { 2 }, Value = new byte[] { 2 } }
+                }
+            };
+
+            storeChangelogReader.BufferedRecords(records);
+
+            Assert.AreEqual(2, metadata.BufferedRecords.Count);
+            Assert.AreEqual(2, metadata.BufferedLimit);
+        }
+
+        [Test]
+        public void BufferedRecords_WhenRecordOffsetEqualsEndOffset_IsBufferedButExcludedFromLimit()
+        {
+            // Exclusive end offset (#468 fix): a record landing exactly at the end offset (or past it)
+            // is kept in the buffer for the next restoration pass but must not extend BufferedLimit.
+            var topicPartition = new TopicPartition(changelogTopic, 0);
+            var metadata = storeChangelogReader.GetMetadata(topicPartition);
+            metadata.ChangelogState = ChangelogState.RESTORING;
+            metadata.RestoreEndOffset = 2;
+
+            var records = new List<ConsumeResult<byte[], byte[]>>
+            {
+                new ConsumeResult<byte[], byte[]>
+                {
+                    Topic = changelogTopic, Partition = 0, Offset = 0,
+                    Message = new Message<byte[], byte[]> { Key = new byte[] { 1 }, Value = new byte[] { 1 } }
+                },
+                new ConsumeResult<byte[], byte[]>
+                {
+                    Topic = changelogTopic, Partition = 0, Offset = 1,
+                    Message = new Message<byte[], byte[]> { Key = new byte[] { 2 }, Value = new byte[] { 2 } }
+                },
+                new ConsumeResult<byte[], byte[]>
+                {
+                    Topic = changelogTopic, Partition = 0, Offset = 2, // == RestoreEndOffset
+                    Message = new Message<byte[], byte[]> { Key = new byte[] { 3 }, Value = new byte[] { 3 } }
+                }
+            };
+
+            storeChangelogReader.BufferedRecords(records);
+
+            Assert.AreEqual(3, metadata.BufferedRecords.Count);
+            Assert.AreEqual(2, metadata.BufferedLimit);
+        }
+
+        [Test]
+        public void BufferedRecords_WhenKeyIsNull_RecordIsSkipped()
+        {
+            var topicPartition = new TopicPartition(changelogTopic, 0);
+            var metadata = storeChangelogReader.GetMetadata(topicPartition);
+            metadata.ChangelogState = ChangelogState.RESTORING;
+            metadata.RestoreEndOffset = null;
+
+            var records = new List<ConsumeResult<byte[], byte[]>>
+            {
+                new ConsumeResult<byte[], byte[]>
+                {
+                    Topic = changelogTopic, Partition = 0, Offset = 0,
+                    Message = new Message<byte[], byte[]> { Key = null, Value = new byte[] { 1 } }
+                }
+            };
+
+            storeChangelogReader.BufferedRecords(records);
+
+            Assert.AreEqual(0, metadata.BufferedRecords.Count);
+            Assert.AreEqual(0, metadata.BufferedLimit);
+        }
     }
 }

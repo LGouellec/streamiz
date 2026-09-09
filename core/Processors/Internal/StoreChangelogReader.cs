@@ -281,7 +281,8 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             return changelogMetadata.BufferedRecords[0].Offset >= endOffset;
         }
 
-        private void BufferedRecords(IEnumerable<ConsumeResult<byte[], byte[]>> records)
+        // internal for testing
+        internal void BufferedRecords(IEnumerable<ConsumeResult<byte[], byte[]>> records)
         {
             foreach (var record in records)
             {
