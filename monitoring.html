@@ -116,8 +116,8 @@
 <p>Each package provide an extension method to specify settings.</p>
 <p>Example with the <code class="docutils literal notranslate"><span class="pre">Prometheus</span></code> exporter :</p>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="o">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">StringSerDes</span><span class="o">&gt;</span><span class="p">();</span>
-<span class="n">config</span><span class="p">.</span><span class="n">ApplicationId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;test-app2&quot;</span><span class="p">;</span>
-<span class="n">config</span><span class="p">.</span><span class="n">BootstrapServers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;localhost:9092&quot;</span><span class="p">;</span>
+<span class="n">config</span><span class="p">.</span><span class="n">ApplicationId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"test-app2"</span><span class="p">;</span>
+<span class="n">config</span><span class="p">.</span><span class="n">BootstrapServers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"localhost:9092"</span><span class="p">;</span>
 <span class="n">config</span><span class="p">.</span><span class="n">MetricsRecording</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MetricsRecordingLevel</span><span class="p">.</span><span class="n">DEBUG</span><span class="p">;</span>
 <span class="c1">// Run a http endpoint to 9090 and expose metrics to prometheus format</span>
 <span class="c1">// Expose librdkafka metrics too !</span>

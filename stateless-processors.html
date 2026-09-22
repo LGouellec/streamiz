@@ -121,13 +121,13 @@
 </ul>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
 <span class="kt">var</span><span class="w"> </span><span class="n">branches</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">Branch</span><span class="p">(</span>
-<span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">),</span>
-<span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">),</span>
-<span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">),</span>
+<span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">"A"</span><span class="p">),</span>
+<span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">"B"</span><span class="p">),</span>
+<span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">"C"</span><span class="p">),</span>
 <span class="w">                </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">true</span><span class="p">);</span><span class="w"> </span><span class="c1">// DLQ pattern</span>
-<span class="c1">// branches[0] contains all records whose keys start with &quot;A&quot;</span>
-<span class="c1">// branches[1] contains all records whose keys start with &quot;B&quot;</span>
-<span class="c1">// branches[2] contains all records whose keys start with &quot;C&quot;</span>
+<span class="c1">// branches[0] contains all records whose keys start with "A"</span>
+<span class="c1">// branches[1] contains all records whose keys start with "B"</span>
+<span class="c1">// branches[2] contains all records whose keys start with "C"</span>
 <span class="c1">// branches[3] contains other records</span>
 </pre></div>
 </div>
@@ -142,9 +142,9 @@
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
 <span class="n">IKTable</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w">  </span><span class="p">...;</span>
 
-<span class="c1">// A filter that selects  only value which contains &#39;test&#39; string constant</span>
-<span class="n">stream</span><span class="p">.</span><span class="n">Filter</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span>
-<span class="n">table</span><span class="p">.</span><span class="n">Filter</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span>
+<span class="c1">// A filter that selects  only value which contains 'test' string constant</span>
+<span class="n">stream</span><span class="p">.</span><span class="n">Filter</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">"test"</span><span class="p">))</span>
+<span class="n">table</span><span class="p">.</span><span class="n">Filter</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">"test"</span><span class="p">))</span>
 </pre></div>
 </div>
 </section>
@@ -158,9 +158,9 @@
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
 <span class="n">IKTable</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w">  </span><span class="p">...;</span>
 
-<span class="c1">// A inverse filter that selects value which contains not &#39;test&#39; string constant</span>
-<span class="n">stream</span><span class="p">.</span><span class="n">FilterNot</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span>
-<span class="n">table</span><span class="p">.</span><span class="n">FilterNot</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span>
+<span class="c1">// A inverse filter that selects value which contains not 'test' string constant</span>
+<span class="n">stream</span><span class="p">.</span><span class="n">FilterNot</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">"test"</span><span class="p">))</span>
+<span class="n">table</span><span class="p">.</span><span class="n">FilterNot</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">"test"</span><span class="p">))</span>
 </pre></div>
 </div>
 </section>
@@ -174,7 +174,7 @@
 
 <span class="c1">// Here, we generate two output records for each input record.</span>
 <span class="c1">// We also change the key and value types.</span>
-<span class="c1">// Example: (&quot;KEY1&quot;, &quot;Hello&quot;) -&gt; (&quot;HELLO&quot;, 100), (&quot;HELLO&quot;, 900)</span>
+<span class="c1">// Example: ("KEY1", "Hello") -&gt; ("HELLO", 100), ("HELLO", 900)</span>
 <span class="n">stream</span>
 <span class="w">    </span><span class="p">.</span><span class="n">FlatMap</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span>
 <span class="w">    </span><span class="p">{</span>
@@ -211,7 +211,7 @@
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
 
 <span class="c1">// Print the contents of the IKStream to the local console</span>
-<span class="n">stream</span><span class="p">.</span><span class="n">Foreach</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;{k} {v}&quot;</span><span class="p">))</span>
+<span class="n">stream</span><span class="p">.</span><span class="n">Foreach</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$"{k} {v}"</span><span class="p">))</span>
 </pre></div>
 </div>
 </section>
@@ -275,7 +275,7 @@
 </ul>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
 
-<span class="n">stream</span><span class="p">.</span><span class="n">Peek</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;{k} {v}&quot;</span><span class="p">))</span>
+<span class="n">stream</span><span class="p">.</span><span class="n">Peek</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$"{k} {v}"</span><span class="p">))</span>
 </pre></div>
 </div>
 </section>
@@ -304,7 +304,7 @@
 </ul>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">IKStream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">....;</span>
 
-<span class="c1">// Derive a new record key from the record&#39;s value.</span>
+<span class="c1">// Derive a new record key from the record's value.</span>
 <span class="n">stream</span><span class="p">.</span><span class="n">SelectKey</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -378,7 +378,7 @@
 
 <span class="c1">// Here, we generate two output records for each input record.</span>
 <span class="c1">// We also change the key and value types.</span>
-<span class="c1">// Example: (&quot;KEY1&quot;, &quot;co&quot;) -&gt; (&quot;KEY1&quot;, c), (&quot;KEY1&quot;, o)</span>
+<span class="c1">// Example: ("KEY1", "co") -&gt; ("KEY1", c), ("KEY1", o)</span>
 <span class="n">stream</span>
 <span class="w">   </span><span class="p">.</span><span class="n">FlatMapAsync</span><span class="p">(</span>
 <span class="w">        </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="k">record</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span>
@@ -419,7 +419,7 @@
 <span class="w">                    </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="k">record</span><span class="p">,</span><span class="w"> </span><span class="n">_</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span>
 <span class="w">                    </span><span class="p">{</span>
 <span class="w">                        </span><span class="k">await</span><span class="w"> </span><span class="n">database</span>
-<span class="w">                            </span><span class="p">.</span><span class="n">GetCollection</span><span class="o">&lt;</span><span class="n">Person</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;adress&quot;</span><span class="p">)</span>
+<span class="w">                            </span><span class="p">.</span><span class="n">GetCollection</span><span class="o">&lt;</span><span class="n">Person</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"adress"</span><span class="p">)</span>
 <span class="w">                            </span><span class="p">.</span><span class="n">InsertOneAsync</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">Person</span><span class="p">()</span>
 <span class="w">                            </span><span class="p">{</span>
 <span class="w">                                </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">record</span><span class="p">.</span><span class="n">Key</span><span class="p">,</span>
@@ -448,7 +448,7 @@
 </ul>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamBuilder</span><span class="p">();</span>
 <span class="w">            </span>
-<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"topic"</span><span class="p">)</span>
 <span class="w">    </span><span class="p">.</span><span class="n">Process</span><span class="p">(</span><span class="n">ProcessorBuilder</span>
 <span class="w">        </span><span class="p">.</span><span class="n">New</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">()</span>
 <span class="w">        </span><span class="p">.</span><span class="n">Processor</span><span class="p">((</span><span class="k">record</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span>
@@ -470,13 +470,13 @@
 </ul>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamBuilder</span><span class="p">();</span>
 <span class="w">            </span>
-<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"topic"</span><span class="p">)</span>
 <span class="w">    </span><span class="p">.</span><span class="n">Transform</span><span class="p">(</span><span class="n">TransformerBuilder</span>
 <span class="w">        </span><span class="p">.</span><span class="n">New</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">()</span>
 <span class="w">        </span><span class="p">.</span><span class="n">Transformer</span><span class="p">((</span><span class="k">record</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span>
 <span class="w">                </span><span class="n">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="k">record</span><span class="p">.</span><span class="n">Key</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">(),</span><span class="w"> </span><span class="k">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">()))</span>
 <span class="w">        </span><span class="p">.</span><span class="n">Build</span><span class="p">())</span>
-<span class="w">    </span><span class="p">.</span><span class="n">To</span><span class="p">(</span><span class="s">&quot;topic-output&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">.</span><span class="n">To</span><span class="p">(</span><span class="s">"topic-output"</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -490,12 +490,12 @@
 </ul>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamBuilder</span><span class="p">();</span>
 <span class="w">            </span>
-<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"topic"</span><span class="p">)</span>
 <span class="w">                </span><span class="p">.</span><span class="n">TransformValues</span><span class="p">(</span><span class="n">TransformerBuilder</span>
 <span class="w">                    </span><span class="p">.</span><span class="n">New</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">()</span>
 <span class="w">                    </span><span class="p">.</span><span class="n">Transformer</span><span class="p">((</span><span class="k">record</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="k">record</span><span class="p">.</span><span class="n">Value</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">()))</span>
 <span class="w">                    </span><span class="p">.</span><span class="n">Build</span><span class="p">())</span>
-<span class="w">        </span><span class="p">.</span><span class="n">To</span><span class="p">(</span><span class="s">&quot;topic-output&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="p">.</span><span class="n">To</span><span class="p">(</span><span class="s">"topic-output"</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>

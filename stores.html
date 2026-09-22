@@ -128,15 +128,15 @@
 You have an child materialized class to help you to use it.</p>
 <p>Usefull with statefull operation like Count, Aggregate, Reduce but also to materialized IKTable&lt;K, V&gt; or IGlobalKTable&lt;K, V&gt;</p>
 <p>Example :</p>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">builder</span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">&quot;test-ktable&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">InMemory</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;test-store&quot;</span><span class="p">));</span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">builder</span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">"test-ktable"</span><span class="p">,</span><span class="w"> </span><span class="n">InMemory</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"test-store"</span><span class="p">));</span>
 
 <span class="n">builder</span>
-<span class="w">        </span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"topic"</span><span class="p">)</span>
 <span class="w">        </span><span class="p">.</span><span class="n">GroupBy</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">())</span>
 <span class="w">        </span><span class="p">.</span><span class="n">Aggregate</span><span class="p">(</span>
 <span class="w">            </span><span class="p">()</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="mi">0L</span><span class="p">,</span>
 <span class="w">            </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">agg</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">            </span><span class="n">InMemory</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;agg-store&quot;</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="o">&lt;</span><span class="n">Int64SerDes</span><span class="o">&gt;</span><span class="p">()</span>
+<span class="w">            </span><span class="n">InMemory</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"agg-store"</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="o">&lt;</span><span class="n">Int64SerDes</span><span class="o">&gt;</span><span class="p">()</span>
 <span class="w">        </span><span class="p">);</span>
 </pre></div>
 </div>
@@ -149,16 +149,16 @@ You have an child materialized class to help you to use it.</p>
 <p>Usefull with windowing statefull operation like Count, Aggregate, Reduce in ITimeWindowedKStream&lt;K, V&gt;</p>
 <p>Example :</p>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">builder</span>
-<span class="w">        </span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"topic"</span><span class="p">)</span>
 <span class="w">        </span><span class="p">.</span><span class="n">GroupByKey</span><span class="p">()</span>
 <span class="w">        </span><span class="p">.</span><span class="n">WindowedBy</span><span class="p">(</span><span class="n">TumblingWindowOptions</span><span class="p">.</span><span class="n">Of</span><span class="p">(</span><span class="mi">2000</span><span class="p">))</span>
 <span class="w">        </span><span class="p">.</span><span class="n">Aggregate</span><span class="p">(</span>
 <span class="w">            </span><span class="p">()</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
 <span class="w">            </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">Math</span><span class="p">.</span><span class="n">Max</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">),</span>
-<span class="w">            </span><span class="n">InMemoryWindows</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;store&quot;</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="o">&lt;</span><span class="n">Int32SerDes</span><span class="o">&gt;</span><span class="p">()</span>
+<span class="w">            </span><span class="n">InMemoryWindows</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"store"</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="o">&lt;</span><span class="n">Int32SerDes</span><span class="o">&gt;</span><span class="p">()</span>
 <span class="w">        </span><span class="p">)</span>
 <span class="w">        </span><span class="p">.</span><span class="n">ToStream</span><span class="p">()</span>
-<span class="w">        </span><span class="p">.</span><span class="n">To</span><span class="o">&lt;</span><span class="n">StringTimeWindowedSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">Int32SerDes</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;output&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="p">.</span><span class="n">To</span><span class="o">&lt;</span><span class="n">StringTimeWindowedSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">Int32SerDes</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"output"</span><span class="p">);</span>
 </pre></div>
 </div>
 <p><strong>Be carefull, this state store is not persistent ! So after each application restart, you loose the state of your state store.</strong></p>
@@ -170,15 +170,15 @@ You have an child materialized class to help you to use it.</p>
 <p>You have an child materialized class to help you to use it.</p>
 <p>Usefull with statefull operation like Count, Aggregate, Reduce but also to materialized IKTable&lt;K, V&gt; or IGlobalKTable&lt;K, V&gt;</p>
 <p>Example :</p>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">builder</span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">&quot;test-ktable&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">RocksDb</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;test-store&quot;</span><span class="p">));</span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">builder</span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">"test-ktable"</span><span class="p">,</span><span class="w"> </span><span class="n">RocksDb</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"test-store"</span><span class="p">));</span>
 
 <span class="w"> </span><span class="n">builder</span>
-<span class="w">    </span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"topic"</span><span class="p">)</span>
 <span class="w">    </span><span class="p">.</span><span class="n">GroupBy</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">())</span>
 <span class="w">    </span><span class="p">.</span><span class="n">Aggregate</span><span class="p">(</span>
 <span class="w">        </span><span class="p">()</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="mi">0L</span><span class="p">,</span>
 <span class="w">        </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">agg</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">        </span><span class="n">RocksDb</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;agg-store&quot;</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="o">&lt;</span><span class="n">Int64SerDes</span><span class="o">&gt;</span><span class="p">()</span>
+<span class="w">        </span><span class="n">RocksDb</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"agg-store"</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="o">&lt;</span><span class="n">Int64SerDes</span><span class="o">&gt;</span><span class="p">()</span>
 <span class="w">    </span><span class="p">);</span>
 </pre></div>
 </div>
@@ -191,16 +191,16 @@ You have an child materialized class to help you to use it.</p>
 <p>Usefull with windowing statefull operation like Count, Aggregate, Reduce in ITimeWindowedKStream&lt;K, V&gt;</p>
 <p>Example :</p>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="n">builder</span>
-<span class="w">        </span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;topic&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">Stream</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"topic"</span><span class="p">)</span>
 <span class="w">        </span><span class="p">.</span><span class="n">GroupByKey</span><span class="p">()</span>
 <span class="w">        </span><span class="p">.</span><span class="n">WindowedBy</span><span class="p">(</span><span class="n">TumblingWindowOptions</span><span class="p">.</span><span class="n">Of</span><span class="p">(</span><span class="mi">2000</span><span class="p">))</span>
 <span class="w">        </span><span class="p">.</span><span class="n">Aggregate</span><span class="p">(</span>
 <span class="w">            </span><span class="p">()</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
 <span class="w">            </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">Math</span><span class="p">.</span><span class="n">Max</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">Length</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">),</span>
-<span class="w">            </span><span class="n">RocksDbWindows</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;store&quot;</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="o">&lt;</span><span class="n">Int32SerDes</span><span class="o">&gt;</span><span class="p">()</span>
+<span class="w">            </span><span class="n">RocksDbWindows</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"store"</span><span class="p">).</span><span class="n">WithValueSerdes</span><span class="o">&lt;</span><span class="n">Int32SerDes</span><span class="o">&gt;</span><span class="p">()</span>
 <span class="w">        </span><span class="p">)</span>
 <span class="w">        </span><span class="p">.</span><span class="n">ToStream</span><span class="p">()</span>
-<span class="w">        </span><span class="p">.</span><span class="n">To</span><span class="o">&lt;</span><span class="n">StringTimeWindowedSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">Int32SerDes</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;output&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="p">.</span><span class="n">To</span><span class="o">&lt;</span><span class="n">StringTimeWindowedSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">Int32SerDes</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"output"</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -228,25 +228,25 @@ You have an child materialized class to help you to use it.</p>
 <li><p><strong>Enable caching</strong> : By default, caching is disabled for all stateful processors in Streamiz. <strong>This feature will be enabled by default soon.</strong> You can enable the caching feature with <code class="docutils literal notranslate"><span class="pre">InMemory.WithCachingEnabled()</span></code>, <code class="docutils literal notranslate"><span class="pre">InMemoryWindows.WithCachingEnabled()</span></code>, <code class="docutils literal notranslate"><span class="pre">RocksDb.WithCachingEnabled()</span></code> or <code class="docutils literal notranslate"><span class="pre">RocksDbWindows.WithCachingEnabled()</span></code></p></li>
 </ul>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="c1">// Enable caching for a rocksdb window store</span>
-<span class="n">RocksDbWindows</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;count-window-store&quot;</span><span class="p">)</span>
+<span class="n">RocksDbWindows</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"count-window-store"</span><span class="p">)</span>
 <span class="w">        </span><span class="p">.</span><span class="n">WithKeySerdes</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">())</span>
 <span class="w">        </span><span class="p">.</span><span class="n">WithValueSerdes</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">Int64SerDes</span><span class="p">())</span>
 <span class="w">        </span><span class="p">.</span><span class="n">WithCachingEnabled</span><span class="p">();</span>
 
 <span class="c1">// Enable caching for an in-memory window store</span>
-<span class="n">InMemoryWindows</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;count-window-store&quot;</span><span class="p">)</span>
+<span class="n">InMemoryWindows</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"count-window-store"</span><span class="p">)</span>
 <span class="w">        </span><span class="p">.</span><span class="n">WithKeySerdes</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">())</span>
 <span class="w">        </span><span class="p">.</span><span class="n">WithValueSerdes</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">Int64SerDes</span><span class="p">())</span>
 <span class="w">        </span><span class="p">.</span><span class="n">WithCachingEnabled</span><span class="p">();</span>
 
 <span class="c1">// Enable caching for an rocksdb key/value store</span>
-<span class="n">RocksDb</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;count-store&quot;</span><span class="p">)</span>
+<span class="n">RocksDb</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"count-store"</span><span class="p">)</span>
 <span class="w">        </span><span class="p">.</span><span class="n">WithKeySerdes</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">())</span>
 <span class="w">        </span><span class="p">.</span><span class="n">WithValueSerdes</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">Int64SerDes</span><span class="p">())</span>
 <span class="w">        </span><span class="p">.</span><span class="n">WithCachingEnabled</span><span class="p">();</span>
 
 <span class="c1">// Enable caching for an in-memory key/value store</span>
-<span class="n">InMemory</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;count-store&quot;</span><span class="p">)</span>
+<span class="n">InMemory</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"count-store"</span><span class="p">)</span>
 <span class="w">        </span><span class="p">.</span><span class="n">WithKeySerdes</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">StringSerDes</span><span class="p">())</span>
 <span class="w">        </span><span class="p">.</span><span class="n">WithValueSerdes</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">Int64SerDes</span><span class="p">())</span>
 <span class="w">        </span><span class="p">.</span><span class="n">WithCachingEnabled</span><span class="p">();</span>
@@ -299,13 +299,13 @@ You have an child materialized class to help you to use it.</p>
 <span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
 <span class="w">        </span><span class="c1">/// Initializes this state store.</span>
 <span class="w">        </span><span class="c1">/// The implementation of this function must register the root store in the context via the</span>
-<span class="w">        </span><span class="c1">/// &lt;see cref=&quot;ProcessorContext.Register(IStateStore, Internal.StateRestoreCallback)&quot;/&gt; function, where the</span>
-<span class="w">        </span><span class="c1">/// first &lt;see cref=&quot;IStateStore&quot;/&gt; parameter should always be the passed-in &lt;code&gt;root&lt;/code&gt; object, and</span>
-<span class="w">        </span><span class="c1">/// the second parameter should be an object of user&#39;s implementation</span>
-<span class="w">        </span><span class="c1">/// of the &lt;see cref=&quot;Internal.StateRestoreCallback&quot;/&gt; interface used for restoring the state store from the changelog.</span>
+<span class="w">        </span><span class="c1">/// &lt;see cref="ProcessorContext.Register(IStateStore, Internal.StateRestoreCallback)"/&gt; function, where the</span>
+<span class="w">        </span><span class="c1">/// first &lt;see cref="IStateStore"/&gt; parameter should always be the passed-in &lt;code&gt;root&lt;/code&gt; object, and</span>
+<span class="w">        </span><span class="c1">/// the second parameter should be an object of user's implementation</span>
+<span class="w">        </span><span class="c1">/// of the &lt;see cref="Internal.StateRestoreCallback"/&gt; interface used for restoring the state store from the changelog.</span>
 <span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
-<span class="w">        </span><span class="c1">/// &lt;param name=&quot;context&quot;&gt;Processor context&lt;/param&gt;</span>
-<span class="w">        </span><span class="c1">/// &lt;param name=&quot;root&quot;&gt;Root state (always itself)&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name="context"&gt;Processor context&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name="root"&gt;Root state (always itself)&lt;/param&gt;</span>
 <span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Init</span><span class="p">(</span><span class="n">ProcessorContext</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">IStateStore</span><span class="w"> </span><span class="n">root</span><span class="p">)</span>
 <span class="w">        </span><span class="p">{</span>
 <span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
@@ -334,7 +334,7 @@ You have an child materialized class to help you to use it.</p>
 <span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
 <span class="w">        </span><span class="c1">/// Get the value corresponding to this key.</span>
 <span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
-<span class="w">        </span><span class="c1">/// &lt;param name=&quot;key&quot;&gt;the key to fetch&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name="key"&gt;the key to fetch&lt;/param&gt;</span>
 <span class="w">        </span><span class="c1">/// &lt;returns&gt;The value or null if no value is found.&lt;/returns&gt;</span>
 <span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="w"> </span><span class="nf">Get</span><span class="p">(</span><span class="n">Bytes</span><span class="w"> </span><span class="n">key</span><span class="p">)</span>
 <span class="w">        </span><span class="p">{</span>
@@ -345,8 +345,8 @@ You have an child materialized class to help you to use it.</p>
 <span class="w">        </span><span class="c1">/// Get an enumerator over a given range of keys. This enumerator must be closed after use.</span>
 <span class="w">        </span><span class="c1">/// Order is not guaranteed as bytes lexicographical ordering might not represent key order.</span>
 <span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
-<span class="w">        </span><span class="c1">/// &lt;param name=&quot;from&quot;&gt;The first key that could be in the range, where iteration starts from.&lt;/param&gt;</span>
-<span class="w">        </span><span class="c1">/// &lt;param name=&quot;to&quot;&gt;The last key that could be in the range, where iteration ends.&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name="from"&gt;The first key that could be in the range, where iteration starts from.&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name="to"&gt;The last key that could be in the range, where iteration ends.&lt;/param&gt;</span>
 <span class="w">        </span><span class="c1">/// &lt;returns&gt;The enumerator for this range, from smallest to largest bytes.&lt;/returns&gt;</span>
 <span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="n">IKeyValueEnumerator</span><span class="o">&lt;</span><span class="n">Bytes</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Range</span><span class="p">(</span><span class="n">Bytes</span><span class="w"> </span><span class="k">from</span><span class="p">,</span><span class="w"> </span><span class="n">Bytes</span><span class="w"> </span><span class="n">to</span><span class="p">)</span>
 <span class="w">        </span><span class="p">{</span>
@@ -357,10 +357,10 @@ You have an child materialized class to help you to use it.</p>
 <span class="w">        </span><span class="c1">/// Get a reverser enumerator over a given range of keys. This enumerator must be closed after use.</span>
 <span class="w">        </span><span class="c1">/// Order is not guaranteed as bytes lexicographical ordering might not represent key order.</span>
 <span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
-<span class="w">        </span><span class="c1">/// &lt;param name=&quot;from&quot;&gt;The first key that could be in the range, where iteration starts from.&lt;/param&gt;</span>
-<span class="w">        </span><span class="c1">/// &lt;param name=&quot;to&quot;&gt;The last key that could be in the range, where iteration ends.&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name="from"&gt;The first key that could be in the range, where iteration starts from.&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name="to"&gt;The last key that could be in the range, where iteration ends.&lt;/param&gt;</span>
 <span class="w">        </span><span class="c1">/// &lt;returns&gt;The reverse enumerator for this range, from smallest to largest bytes.&lt;/returns&gt;</span>
-<span class="w">        </span><span class="c1">/// &lt;exception cref=&quot;InvalidStateStoreException&quot;&gt;if the store is not initialized&lt;/exception&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;exception cref="InvalidStateStoreException"&gt;if the store is not initialized&lt;/exception&gt;</span>
 <span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="n">IKeyValueEnumerator</span><span class="o">&lt;</span><span class="n">Bytes</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ReverseRange</span><span class="p">(</span><span class="n">Bytes</span><span class="w"> </span><span class="k">from</span><span class="p">,</span><span class="w"> </span><span class="n">Bytes</span><span class="w"> </span><span class="n">to</span><span class="p">)</span>
 <span class="w">        </span><span class="p">{</span>
 <span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
@@ -370,7 +370,7 @@ You have an child materialized class to help you to use it.</p>
 <span class="w">        </span><span class="c1">/// Return an enumerator over all keys in this store. No ordering guarantees are provided.</span>
 <span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
 <span class="w">        </span><span class="c1">/// &lt;returns&gt;An enumerator of all key/value pairs in the store.&lt;/returns&gt;</span>
-<span class="w">        </span><span class="c1">/// &lt;exception cref=&quot;InvalidStateStoreException&quot;&gt;if the store is not initialized&lt;/exception&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;exception cref="InvalidStateStoreException"&gt;if the store is not initialized&lt;/exception&gt;</span>
 <span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="n">IEnumerable</span><span class="o">&lt;</span><span class="n">KeyValuePair</span><span class="o">&lt;</span><span class="n">Bytes</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">All</span><span class="p">()</span>
 <span class="w">        </span><span class="p">{</span>
 <span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
@@ -380,7 +380,7 @@ You have an child materialized class to help you to use it.</p>
 <span class="w">        </span><span class="c1">/// Return a reverse enumerator over all keys in this store. No ordering guarantees are provided.</span>
 <span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
 <span class="w">        </span><span class="c1">/// &lt;returns&gt;A reverse enumerator of all key/value pairs in the store.&lt;/returns&gt;</span>
-<span class="w">        </span><span class="c1">/// &lt;exception cref=&quot;InvalidStateStoreException&quot;&gt;if the store is not initialized&lt;/exception&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;exception cref="InvalidStateStoreException"&gt;if the store is not initialized&lt;/exception&gt;</span>
 <span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="n">IEnumerable</span><span class="o">&lt;</span><span class="n">KeyValuePair</span><span class="o">&lt;</span><span class="n">Bytes</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">ReverseAll</span><span class="p">()</span>
 <span class="w">        </span><span class="p">{</span>
 <span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
@@ -400,8 +400,8 @@ You have an child materialized class to help you to use it.</p>
 <span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
 <span class="w">        </span><span class="c1">/// Update the value associated with this key.</span>
 <span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
-<span class="w">        </span><span class="c1">/// &lt;param name=&quot;key&quot;&gt;The key to associate the value to&lt;/param&gt;</span>
-<span class="w">        </span><span class="c1">/// &lt;param name=&quot;value&quot;&gt;The value to update, it can be null if the serialized bytes are also null it is interpreted as deletes&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name="key"&gt;The key to associate the value to&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name="value"&gt;The value to update, it can be null if the serialized bytes are also null it is interpreted as deletes&lt;/param&gt;</span>
 <span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Put</span><span class="p">(</span><span class="n">Bytes</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="w"> </span><span class="k">value</span><span class="p">)</span>
 <span class="w">        </span><span class="p">{</span>
 <span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
@@ -410,8 +410,8 @@ You have an child materialized class to help you to use it.</p>
 <span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
 <span class="w">        </span><span class="c1">/// Update the value associated with this key, unless a value is already associated with the key.</span>
 <span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
-<span class="w">        </span><span class="c1">/// &lt;param name=&quot;key&quot;&gt;The key to associate the value to&lt;/param&gt;</span>
-<span class="w">        </span><span class="c1">/// &lt;param name=&quot;value&quot;&gt;The value to update, it can be null; if the serialized bytes are also null it is interpreted as deletes&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name="key"&gt;The key to associate the value to&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name="value"&gt;The value to update, it can be null; if the serialized bytes are also null it is interpreted as deletes&lt;/param&gt;</span>
 <span class="w">        </span><span class="c1">/// &lt;returns&gt;The old value or null if there is no such key.&lt;/returns&gt;</span>
 <span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="w"> </span><span class="nf">PutIfAbsent</span><span class="p">(</span><span class="n">Bytes</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="w"> </span><span class="k">value</span><span class="p">)</span>
 <span class="w">        </span><span class="p">{</span>
@@ -421,7 +421,7 @@ You have an child materialized class to help you to use it.</p>
 <span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
 <span class="w">        </span><span class="c1">/// Update all the given key/value pairs.</span>
 <span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
-<span class="w">        </span><span class="c1">/// &lt;param name=&quot;entries&quot;&gt;A list of entries to put into the store. if the serialized bytes are also null it is interpreted as deletes&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name="entries"&gt;A list of entries to put into the store. if the serialized bytes are also null it is interpreted as deletes&lt;/param&gt;</span>
 <span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">PutAll</span><span class="p">(</span><span class="n">IEnumerable</span><span class="o">&lt;</span><span class="n">KeyValuePair</span><span class="o">&lt;</span><span class="n">Bytes</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">entries</span><span class="p">)</span>
 <span class="w">        </span><span class="p">{</span>
 <span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">NotImplementedException</span><span class="p">();</span>
@@ -430,7 +430,7 @@ You have an child materialized class to help you to use it.</p>
 <span class="w">        </span><span class="c1">/// &lt;summary&gt;</span>
 <span class="w">        </span><span class="c1">/// Delete the value from the store (if there is one).</span>
 <span class="w">        </span><span class="c1">/// &lt;/summary&gt;</span>
-<span class="w">        </span><span class="c1">/// &lt;param name=&quot;key&quot;&gt;the key&lt;/param&gt;</span>
+<span class="w">        </span><span class="c1">/// &lt;param name="key"&gt;the key&lt;/param&gt;</span>
 <span class="w">        </span><span class="c1">/// &lt;returns&gt;The old value or null if there is no such key&lt;/returns&gt;</span>
 <span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="w"> </span><span class="nf">Delete</span><span class="p">(</span><span class="n">Bytes</span><span class="w"> </span><span class="n">key</span><span class="p">)</span>
 <span class="w">        </span><span class="p">{</span>
@@ -458,15 +458,15 @@ You have an child materialized class to help you to use it.</p>
 <span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="n">IKeyValueStore</span><span class="o">&lt;</span><span class="n">Bytes</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Get</span><span class="p">()</span>
 <span class="w">            </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CustomKeyValueStore</span><span class="p">(</span><span class="n">Uri</span><span class="p">,</span><span class="w"> </span><span class="n">Token</span><span class="p">,</span><span class="w"> </span><span class="n">Name</span><span class="p">);</span>
 
-<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">MetricsScope</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s">&quot;custom-remote-storage&quot;</span><span class="p">;</span>
+<span class="w">        </span><span class="k">public</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">MetricsScope</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s">"custom-remote-storage"</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 </pre></div>
 </div>
 <p>3 - Use the supplier</p>
 <p>Let’s suppose, you would like to materialize a KTable with your custom state store.</p>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">&quot;table-input&quot;</span><span class="p">,</span><span class="w"> </span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">"table-input"</span><span class="p">,</span><span class="w"> </span>
 <span class="w">                        </span><span class="n">Materialized</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="n">IKeyValueStore</span><span class="o">&lt;</span><span class="n">Bytes</span><span class="p">,</span><span class="w"> </span><span class="kt">byte</span><span class="p">[]</span><span class="o">&gt;&gt;</span>
-<span class="w">                                </span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">CustomStorageSupplier</span><span class="p">(</span><span class="s">&quot;uri://&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;APIZ?ZLAKZ&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;custom-store&quot;</span><span class="p">)));</span>
+<span class="w">                                </span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">CustomStorageSupplier</span><span class="p">(</span><span class="s">"uri://"</span><span class="p">,</span><span class="w"> </span><span class="s">"APIZ?ZLAKZ"</span><span class="p">,</span><span class="w"> </span><span class="s">"custom-store"</span><span class="p">)));</span>
 </pre></div>
 </div>
 </section>
@@ -481,35 +481,35 @@ You have an child materialized class to help you to use it.</p>
 </pre></div>
 </div>
 <p>2- Use the helper class to materialize the <code class="docutils literal notranslate"><span class="pre">Azure</span> <span class="pre">Remote</span> <span class="pre">Store</span></code></p>
-<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">&quot;table-input&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">AzureRemoteStorage</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">());</span>
+<div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">"table-input"</span><span class="p">,</span><span class="w"> </span><span class="n">AzureRemoteStorage</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">());</span>
 </pre></div>
 </div>
 <p>3- Configure it</p>
 <p>You can configure the azure endpoint and credentials via two way.</p>
 <p>1- Programmaticaly</p>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span>
-<span class="w">                </span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">&quot;table-input&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">"table-input"</span><span class="p">,</span>
 <span class="w">                    </span><span class="n">AzureRemoteStorage</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">(</span><span class="w"> </span>
 <span class="w">                            </span><span class="k">new</span><span class="w"> </span><span class="n">AzureRemoteStorageOptions</span>
 <span class="w">                                </span><span class="p">{</span>
-<span class="w">                                    </span><span class="n">AccountName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span>
-<span class="w">                                    </span><span class="n">StorageUri</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span>
-<span class="w">                                    </span><span class="n">StorageAccountKey</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+<span class="w">                                    </span><span class="n">AccountName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">""</span><span class="p">,</span>
+<span class="w">                                    </span><span class="n">StorageUri</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">""</span><span class="p">,</span>
+<span class="w">                                    </span><span class="n">StorageAccountKey</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">""</span>
 <span class="w">                                </span><span class="p">}));</span>
 </pre></div>
 </div>
 <p>2- Via Configuration</p>
 <div class="highlight-csharp notranslate"><div class="highlight"><pre><span></span><span class="kt">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamConfig</span><span class="o">&lt;</span><span class="n">StringSerDes</span><span class="p">,</span><span class="w"> </span><span class="n">StringSerDes</span><span class="o">&gt;</span><span class="p">{</span>
-<span class="w">                </span><span class="n">ApplicationId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">$&quot;test-app&quot;</span><span class="p">,</span>
-<span class="w">                </span><span class="n">BootstrapServers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;localhost:9092&quot;</span>
+<span class="w">                </span><span class="n">ApplicationId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">$"test-app"</span><span class="p">,</span>
+<span class="w">                </span><span class="n">BootstrapServers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"localhost:9092"</span>
 <span class="w">        </span><span class="p">};</span>
 <span class="w">           </span>
-<span class="n">config</span><span class="p">[</span><span class="s">&quot;azure.remote.storage.uri&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;URI&quot;</span><span class="p">;</span>
-<span class="n">config</span><span class="p">[</span><span class="s">&quot;azure.remote.storage.account.name&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;ACCOUNT_NAME&quot;</span><span class="p">;</span>
-<span class="n">config</span><span class="p">[</span><span class="s">&quot;azure.remote.storage.account.key&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;MASTER_KEY&quot;</span><span class="p">;</span>
+<span class="n">config</span><span class="p">[</span><span class="s">"azure.remote.storage.uri"</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"URI"</span><span class="p">;</span>
+<span class="n">config</span><span class="p">[</span><span class="s">"azure.remote.storage.account.name"</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"ACCOUNT_NAME"</span><span class="p">;</span>
+<span class="n">config</span><span class="p">[</span><span class="s">"azure.remote.storage.account.key"</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"MASTER_KEY"</span><span class="p">;</span>
 
 <span class="c1">/// ....</span>
-<span class="kt">var</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">&quot;table-input&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">AzureRemoteStorage</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="kt">var</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">Table</span><span class="p">(</span><span class="s">"table-input"</span><span class="p">,</span><span class="w"> </span><span class="n">AzureRemoteStorage</span><span class="p">.</span><span class="n">As</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">());</span>
 </pre></div>
 </div>
 </section>
