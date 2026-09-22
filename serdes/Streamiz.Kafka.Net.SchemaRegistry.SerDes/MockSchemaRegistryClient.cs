@@ -466,6 +466,22 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
             throw new NotImplementedException();
         }
 
+        public Task<List<Association>> GetAssociationsByResourceNameAsync(string resourceName, string resourceNamespace, string resourceType,
+            List<string> associationTypes, string lifecycle, int offset, int limit)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<AssociationResponse> CreateAssociationAsync(AssociationCreateOrUpdateRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task DeleteAssociationsAsync(string resourceId, string resourceType, List<string> associationTypes, bool cascadeLifecycle)
+        {
+            throw new NotImplementedException();
+        }
+
         public IEnumerable<KeyValuePair<string, string>> Config { get; private set; }
         public IAuthenticationHeaderValueProvider AuthHeaderProvider { get; }
 
