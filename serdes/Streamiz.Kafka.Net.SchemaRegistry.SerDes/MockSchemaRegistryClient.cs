@@ -469,7 +469,20 @@ namespace Streamiz.Kafka.Net.SchemaRegistry.SerDes.Mock
         public Task<List<Association>> GetAssociationsByResourceNameAsync(string resourceName, string resourceNamespace, string resourceType,
             List<string> associationTypes, string lifecycle, int offset, int limit)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(new List<Association>
+            {
+                new()
+                {
+                    Subject = $"{resourceName}{resourceNamespace}{associationTypes.First()}",
+                    Guid = Guid.NewGuid().ToString(),
+                    AssociationType = associationTypes.First(),
+                    Lifecycle = lifecycle,
+                    ResourceName = resourceName,
+                    ResourceNamespace = resourceNamespace,
+                    Frozen = false,
+                    ResourceType = resourceType
+                }
+            });
         }
 
         public Task<AssociationResponse> CreateAssociationAsync(AssociationCreateOrUpdateRequest request)
