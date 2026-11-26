@@ -14,6 +14,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly ProcessorTopology topology;
         private readonly ILogger log = Logger.GetLogger(typeof(GlobalStateUpdateTask));
         private readonly ProcessorContext context;
+        private readonly IProcessingListener processingListener;
         private readonly Dictionary<TopicPartition, long> offsets = new ();
         private IDictionary<string, IProcessor> topicToProcessor = new Dictionary<string, IProcessor>();
 
@@ -22,6 +23,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             this.globalStateManager = globalStateManager;
             this.topology = topology;
             this.context = context;
+            processingListener = context.Configuration?.ProcessingListener;
         }
 
         public void Close()
@@ -68,7 +70,10 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                 log.LogDebug("Start processing one record [{RecordInfo}]", recordInfo);
             }
           
-            processor.Process(record);
+            if (processingListener == null)
+                processor.Process(record);
+            else
+                ProcessingListenerHelper.Process(processingListener, context, record, processor.Process, log, string.Empty);
 
             if (log.IsEnabled(LogLevel.Debug))
             {

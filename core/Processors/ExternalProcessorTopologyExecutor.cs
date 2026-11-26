@@ -117,6 +117,7 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly IRecordCollector recordCollector;
         private ProcessorContext context;
         private readonly string logPrefix;
+        private readonly IProcessingListener processingListener;
         private readonly Dictionary<TopicPartition, long> consumedOffsets = new();
         
         private readonly Sensor droppedRecordsSensor;
@@ -140,6 +141,7 @@ namespace Streamiz.Kafka.Net.Processors
             Processor = sourceProcessor;
 
             logPrefix = $"external-task[{taskId.Id}] ";
+            processingListener = config.ProcessingListener;
             
             droppedRecordsSensor = TaskMetrics.DroppedRecordsSensor(threadId, taskId, streamMetricsRegistry);
             activeBufferedRecordSensor = TaskMetrics.ActiveBufferedRecordsSensor(threadId, taskId, streamMetricsRegistry);
@@ -188,7 +190,10 @@ namespace Streamiz.Kafka.Net.Processors
                 if (recordToProcess != null)
                 {
                     context.SetRecordMetaData(recordToProcess);
-                    long latency = ActionHelper.MeasureLatency(() => Processor.Process(recordToProcess));
+                    long latency = processingListener == null
+                        ? ActionHelper.MeasureLatency(() => Processor.Process(recordToProcess))
+                        : ActionHelper.MeasureLatency(() => ProcessingListenerHelper.Process(
+                            processingListener, context, recordToProcess, Processor.Process, log, logPrefix));
                     processSensor.Record();
                     processLatencySensor.Record(latency);
                     log.LogDebug(

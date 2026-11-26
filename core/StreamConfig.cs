@@ -186,6 +186,13 @@ namespace Streamiz.Kafka.Net
         Func<DeliveryReport<byte[], byte[]>, ProductionExceptionHandlerResponse> ProductionExceptionHandler { get; set; }
 
         /// <summary>
+        /// Listener invoked by the stream thread around the processing of each consumed record and each punctuation.
+        /// Useful to start a tracing span or a logging scope without changing the topology. See <see cref="IProcessingListener"/>.
+        /// Default: null (no listener)
+        /// </summary>
+        IProcessingListener ProcessingListener { get; set; }
+
+        /// <summary>
         /// Maximum allowed time between calls to consume messages (e.g., rd_kafka_consumer_poll())
         /// for high-level consumers. If this interval is exceeded the consumer is considered
         /// failed and the group will rebalance in order to reassign the partitions to another
@@ -511,6 +518,7 @@ namespace Streamiz.Kafka.Net
         private const string innerExceptionHandlerCst = "inner.exception.handler";
         private const string deserializationExceptionHandlerCst = "deserialization.exception.handler";
         private const string productionExceptionHandlerCst = "production.exception.handler";
+        private const string processingListenerCst = "processing.listener";
         private const string logProcessingSummaryCst = "log.processing.summary";
         private const string stateStoreCacheMaxBytesCst = "statestore.cache.max.bytes";
         private const string queryWatermarkOffsetsTimeoutMsCst = "query.watermark.offsets.timeout.ms";
@@ -2466,6 +2474,7 @@ namespace Streamiz.Kafka.Net
             InnerExceptionHandler = (_) => ExceptionHandlerResponse.FAIL;
             ProductionExceptionHandler = (_) => ProductionExceptionHandlerResponse.FAIL;
             DeserializationExceptionHandler = (_, _, _) => ExceptionHandlerResponse.FAIL;
+            ProcessingListener = null;
             RocksDbConfigHandler = (_, _) => { };
             StateDir = Path.Combine(Path.GetTempPath(), "streamiz-kafka-net");
             ReplicationFactor = -1;
@@ -2892,6 +2901,18 @@ namespace Streamiz.Kafka.Net
         {
             get => configProperties[productionExceptionHandlerCst];
             set => configProperties.AddOrUpdate(productionExceptionHandlerCst, value);
+        }
+
+        /// <summary>
+        /// Listener invoked by the stream thread around the processing of each consumed record and each punctuation.
+        /// Useful to start a tracing span or a logging scope without changing the topology. See <see cref="IProcessingListener"/>.
+        /// Default: null (no listener)
+        /// </summary>
+        [StreamConfigProperty("" + processingListenerCst)]
+        public IProcessingListener ProcessingListener
+        {
+            get => configProperties.ContainsKey(processingListenerCst) ? configProperties[processingListenerCst] : null;
+            set => configProperties.AddOrUpdate(processingListenerCst, value);
         }
 
         /// <summary>

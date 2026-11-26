@@ -34,6 +34,7 @@ namespace Streamiz.Kafka.Net.Processors
         private bool transactionInFlight;
         private readonly string threadId;
         private readonly IWallClockTimeProvider wallClockTimeProvider;
+        private readonly IProcessingListener processingListener;
         
         private Sensor closeTaskSensor;
         private Sensor activeBufferedRecordSensor;
@@ -69,6 +70,7 @@ namespace Streamiz.Kafka.Net.Processors
             this.wallClockTimeProvider = wallClockTimeProvider ?? SystemWallClockTimeProvider.Instance;
             consumedOffsets = new Dictionary<TopicPartition, long>();
             maxTaskIdleMs = configuration.MaxTaskIdleMs;
+            processingListener = configuration.ProcessingListener;
             idleStartTime = -1;
 
             eosEnabled = configuration.Guarantee == ProcessingGuarantee.EXACTLY_ONCE;
@@ -441,7 +443,10 @@ namespace Streamiz.Kafka.Net.Processors
             var recordInfo = $"Topic:{record.Record.Topic}|Partition:{record.Record.Partition.Value}|Offset:{record.Record.Offset}|Timestamp:{record.Record.Message.Timestamp.UnixTimestampMs}";
 
             log.LogDebug($"{logPrefix}Start processing one record [{recordInfo}]");
-            long latency = ActionHelper.MeasureLatency(() => record.Processor.Process(record.Record));
+            long latency = processingListener == null
+                ? ActionHelper.MeasureLatency(() => record.Processor.Process(record.Record))
+                : ActionHelper.MeasureLatency(() => ProcessingListenerHelper.Process(
+                    processingListener, Context, record.Record, record.Processor.Process, log, logPrefix));
             log.LogDebug($"{logPrefix}Completed processing one record [{recordInfo}]");
 
             consumedOffsets.AddOrUpdate(record.Record.TopicPartition, record.Record.Offset);
@@ -501,7 +506,7 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 Context.CurrentProcessor = taskScheduled.Processor;
                 Context.SetUnknownRecordMetaData(systemTime);
-                taskScheduled.Execute(systemTime);
+                ExecutePunctuation(taskScheduled, PunctuationType.PROCESSING_TIME, systemTime);
                 punctuated = true;
             }
 
@@ -523,13 +528,29 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 Context.CurrentProcessor = taskScheduled.Processor;
                 Context.SetUnknownRecordMetaData(partitionGrouper.StreamTime);
-                taskScheduled.Execute(partitionGrouper.StreamTime);
+                ExecutePunctuation(taskScheduled, PunctuationType.STREAM_TIME, partitionGrouper.StreamTime);
                 punctuated = true;
             }
             Context.CurrentProcessor = null;
             
             streamTimePunctuationQueue.RemoveAll(t => t.IsCancelled || t.IsCompleted);
             return punctuated;
+        }
+
+        private void ExecutePunctuation(TaskScheduled taskScheduled, PunctuationType punctuationType, long timestamp)
+        {
+            if (processingListener == null || taskScheduled.IsCompleted)
+                taskScheduled.Execute(timestamp);
+            else
+                ProcessingListenerHelper.Punctuate(
+                    processingListener,
+                    Context,
+                    taskScheduled.Processor?.Name,
+                    punctuationType,
+                    timestamp,
+                    () => taskScheduled.Execute(timestamp),
+                    log,
+                    logPrefix);
         }
     }   
 }
