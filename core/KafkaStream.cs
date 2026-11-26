@@ -624,6 +624,17 @@ namespace Streamiz.Kafka.Net
         public IEnumerable<Sensor> Metrics()
             => metricsRegistry.GetSensors();
 
+        /// <summary>
+        /// Returns a machine-readable description of the topology run by this <see cref="KafkaStream"/> instance.
+        /// Compared to <see cref="Topology.Describe"/>, internal topics (repartition and changelog topics) are resolved
+        /// with the <see cref="IStreamConfig.ApplicationId"/>.
+        /// Use <see cref="TopologyModel.ToJson"/> to serialize it in JSON, or <see cref="TopologyModel.ToString"/>
+        /// to get the text representation.
+        /// </summary>
+        /// <returns>a serializable description of the topology</returns>
+        public TopologyModel DescribeTopology()
+            => topology.Builder.DescribeModel();
+
         #region Privates
 
         /// <summary>

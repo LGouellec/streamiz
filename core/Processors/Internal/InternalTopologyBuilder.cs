@@ -694,6 +694,24 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             return topologyDes;
         }
 
+        internal TopologyModel DescribeModel()
+        {
+            var model = Describe().ToModel();
+            var topicGroups = MakeInternalTopicGroups();
+
+            foreach (var sub in model.SubTopologies)
+            {
+                if (topicGroups.TryGetValue(sub.Id, out var topicsInfo))
+                {
+                    sub.RepartitionTopics = topicsInfo.RepartitionTopics.Keys.OrderBy(t => t).ToList();
+                    sub.ChangelogTopics = topicsInfo.ChangelogTopics.Keys.OrderBy(t => t).ToList();
+                }
+            }
+
+            model.ComputeAggregates();
+            return model;
+        }
+
         private void DescribeSubTopology(TopologyDescription description, int key, ISet<string> values)
         {
             IDictionary<string, NodeDescription> nodesByName = new Dictionary<string, NodeDescription>();

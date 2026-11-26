@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+        <RootNamespace>Streamiz.Kafka.Net.AspNetCore</RootNamespace>
+        <AssemblyName>Streamiz.Kafka.Net.AspNetCore</AssemblyName>
+        <PackageId>Streamiz.Kafka.Net.AspNetCore</PackageId>
+        <Description>ASP.NET Core extensions for Streamiz.Kafka.Net (topology endpoint)</Description>
+        <Version>1.8.2</Version>
+        <PackageVersion>1.8.2</PackageVersion>
+        <AssemblyVersion>1.8.2</AssemblyVersion>
+        <FileVersion>1.8.2</FileVersion>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>..\..\key.snk</AssemblyOriginatorKeyFile>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <Authors>@LGouellec</Authors>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/LGouellec/streamiz</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/LGouellec/streamiz</RepositoryUrl>
+        <PackageTags>kafka kafka-streams streamiz event-streaming aspnetcore</PackageTags>
+        <PackageReleaseNotes>https://github.com/LGouellec/streamiz/releases</PackageReleaseNotes>
+        <PackageIconUrl>https://raw.githubusercontent.com/LGouellec/streamiz/master/resources/logo-kafka-stream-net.png</PackageIconUrl>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <LangVersion>9.0</LangVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <LangVersion>9.0</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\core\Streamiz.Kafka.Net.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\key.snk">
+            <Link>key.snk</Link>
+        </None>
+    </ItemGroup>
+
+</Project>
