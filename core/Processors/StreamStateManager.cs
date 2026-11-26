@@ -9,6 +9,7 @@ namespace Streamiz.Kafka.Net.Processors
     {
         private readonly ILogger log = Logger.GetLogger(typeof(StreamStateManager));
         private readonly Dictionary<long, ThreadState> threadState;
+        private readonly HashSet<long> failedThreads = new HashSet<long>();
         private readonly KafkaStream stream;
         private GlobalThreadState globalThreadState;
         private static readonly object threadStatesLock = new object();
@@ -23,9 +24,12 @@ namespace Streamiz.Kafka.Net.Processors
         private void MaybeSetError()
         {
             // check if we have at least one thread running
-            foreach (var state in threadState.Values)
+            // a thread shutting down due to a failure is considered as dead : its shutdown can be long (or blocked),
+            // and it will never process records again.
+            foreach (var kv in threadState)
             {
-                if (state != ThreadState.DEAD)
+                if (kv.Value != ThreadState.DEAD &&
+                    !(kv.Value == ThreadState.PENDING_SHUTDOWN && failedThreads.Contains(kv.Key)))
                 {
                     return;
                 }
@@ -33,7 +37,7 @@ namespace Streamiz.Kafka.Net.Processors
 
             if (stream.SetState(KafkaStream.State.ERROR))
             {
-                log.LogError("All stream threads have died. The instance will be in error state and should be closed");
+                log.LogError("All stream threads have died or are shutting down due to a failure. The instance will be in error state and should be closed");
             }
         }
 
@@ -79,6 +83,15 @@ namespace Streamiz.Kafka.Net.Processors
                     {
                         MaybeSetRunning();
                     }
+                    else if (newState == ThreadState.PENDING_SHUTDOWN)
+                    {
+                        // propagate the failure to the client as soon as possible, before the (potentially blocking) close of the thread
+                        if (thread is StreamThread streamThread && streamThread.IsFailed)
+                        {
+                            failedThreads.Add(thread.Id);
+                            MaybeSetError();
+                        }
+                    }
                     else if (newState == ThreadState.DEAD)
                     {
                         MaybeSetError();
@@ -100,8 +113,10 @@ namespace Streamiz.Kafka.Net.Processors
                     {
                         MaybeSetRunning();
                     }
-                    else if (newState == GlobalThreadState.DEAD)
+                    else if (newState == GlobalThreadState.PENDING_SHUTDOWN || newState == GlobalThreadState.DEAD)
                     {
+                        // the global thread is only shut down by the client (state already PENDING_SHUTDOWN, so ERROR is refused)
+                        // or due to a failure. In the second case, propagate the error as soon as possible.
                         if (stream.SetState(KafkaStream.State.ERROR))
                         {
                             log.LogError("Global thread has died. The instance will be in error state and should be closed");

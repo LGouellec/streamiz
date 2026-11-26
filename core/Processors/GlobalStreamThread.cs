@@ -137,6 +137,7 @@ namespace Streamiz.Kafka.Net.Processors
         private void Run()
         {
             SetState(GlobalThreadState.RUNNING);
+            bool failed = false;
             try
             {
                 while (State.IsRunning())
@@ -150,6 +151,13 @@ namespace Streamiz.Kafka.Net.Processors
                         lastMetrics = DateTime.Now;
                     }
                 }
+            }
+            catch (Exception e)
+            {
+                failed = true;
+                log.LogError(e, "{LogPrefix}Encountered an unexpected error, the global stream thread will shut down:", logPrefix);
+                // propagate the failure to the client before closing the global consumer and the global state stores
+                SetState(GlobalThreadState.PENDING_SHUTDOWN);
             }
             finally
             {
@@ -167,6 +175,12 @@ namespace Streamiz.Kafka.Net.Processors
                 }
 
                 //Dispose(false);
+
+                if (failed)
+                {
+                    SetState(GlobalThreadState.DEAD);
+                    log.LogInformation("{LogPrefix}Shutdown complete", logPrefix);
+                }
             }
         }
 
