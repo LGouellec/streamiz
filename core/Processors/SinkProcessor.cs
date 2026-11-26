@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.SerDes;
+using Streamiz.Kafka.Net.Tracing;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -70,26 +71,51 @@ namespace Streamiz.Kafka.Net.Processors
                 throw new StreamsException($"Invalid (negative) timestamp of {timestamp} for output record <{key}:{value}>.");
             }
             
+            Partition? partition = null;
             if (partitioner != null)
             {
-                Partition partition = partitioner.Partition(
+                partition = partitioner.Partition(
                     topicName,
                     key, value,
                     Context.Partition,
                     Context.RecordCollector.PartitionsFor(topicName));
-                
-                Context.RecordCollector.Send(
-                    topicName, 
-                    key, value, 
-                    Context.RecordContext.Headers,
-                    partition,
-                    timestamp, KeySerDes,
-                    ValueSerDes);
             }
-            else
+
+            // No-op (null) when no listener is subscribed to the Streamiz activity source
+            var activity = StreamizActivitySource.StartSend(
+                topicName,
+                partition.HasValue && partition.Value != Partition.Any ? partition.Value.Value : null,
+                value == null,
+                Context);
+            
+            try
             {
-                Context.RecordCollector.Send(topicName, key, value, Context.RecordContext.Headers, timestamp, KeySerDes,
-                    ValueSerDes); 
+                var headers = StreamizActivitySource.InjectContext(activity, Context.RecordContext.Headers);
+                
+                if (partition.HasValue)
+                {
+                    Context.RecordCollector.Send(
+                        topicName,
+                        key, value,
+                        headers,
+                        partition.Value,
+                        timestamp, KeySerDes,
+                        ValueSerDes);
+                }
+                else
+                {
+                    Context.RecordCollector.Send(topicName, key, value, headers, timestamp, KeySerDes,
+                        ValueSerDes);
+                }
+            }
+            catch (Exception e)
+            {
+                StreamizActivitySource.SetException(activity, e);
+                throw;
+            }
+            finally
+            {
+                activity?.Dispose();
             }
         }
 

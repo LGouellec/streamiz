@@ -47,4 +47,9 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
   </ItemGroup>
+
+  <!-- ActivitySource / ActivityStatusCode (distributed tracing) : inbox since net6.0, already a transitive dependency of Microsoft.Extensions.Logging 6.0.0 for older targets -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' Or '$(TargetFramework)' == 'net5.0'">
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="6.0.0" />
+  </ItemGroup>
 </Project>
