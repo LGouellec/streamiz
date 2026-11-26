@@ -87,7 +87,7 @@ namespace Streamiz.Kafka.Net.Mock
 
         public virtual void PipeInput(TestRecord<K, V> record)
         {
-            DateTime ts = record.Timestamp.HasValue ? record.Timestamp.Value : DateTime.Now;
+            DateTime ts = record.Timestamp.HasValue ? record.Timestamp.Value : DateTime.UtcNow;
             var tuple = GetBytes(record.Key, record.Value, record.Headers);
             pipe.Pipe(tuple.Item1, tuple.Item2, ts, record.Headers);
             pipe.Flush();
@@ -139,7 +139,7 @@ namespace Streamiz.Kafka.Net.Mock
         {
             foreach (var record in records)
             {
-                DateTime ts = record.Timestamp.HasValue ? record.Timestamp.Value : DateTime.Now;
+                DateTime ts = record.Timestamp.HasValue ? record.Timestamp.Value : DateTime.UtcNow;
                 var tuple = GetBytes(record.Key, record.Value, record.Headers);
                 pipe.Pipe(tuple.Item1, tuple.Item2, ts, record.Headers);
             }

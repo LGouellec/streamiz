@@ -720,7 +720,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             foreach (var t in mockConsumer.Subscription.ToList())
                 CreateTopic(t);
 
-            DateTime dt = DateTime.Now;
+            long dt = MonotonicClock.CurrentMs;
             ConsumeResult<byte[], byte[]> result = null;
             if (consumers.ContainsKey(mockConsumer.Name))
             {
@@ -739,7 +739,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                 {
                     foreach (var p in c.Partitions.ToList())
                     {
-                        if (timeout != TimeSpan.Zero && (dt + timeout) < DateTime.Now)
+                        if (timeout != TimeSpan.Zero && MonotonicClock.ElapsedSince(dt) > timeout.TotalMilliseconds)
                         {
                             stop = true;
                             break;
@@ -763,7 +763,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
                                         Key = record.Key,
                                         Value = record.Value,
                                         Timestamp = new Timestamp(
-                                            record.Timestamp ?? DateTime.Now, TimestampType.NotAvailable),
+                                            record.Timestamp ?? DateTime.UtcNow, TimestampType.NotAvailable),
                                         Headers = record.Headers
                                     }
                                 };
@@ -810,7 +810,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             r.Partition = partition;
             r.Topic = topic;
             r.Offset = offset;
-            r.Timestamp = new Timestamp(DateTime.Now);
+            r.Timestamp = new Timestamp(DateTime.UtcNow);
             r.Error = new Error(ErrorCode.NoError);
             r.Status = PersistenceStatus.Persisted;
             return r;
@@ -840,7 +840,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             r.Message = message;
             r.Partition = topicPartition.Partition;
             r.Topic = topicPartition.Topic;
-            r.Timestamp = new Timestamp(DateTime.Now);
+            r.Timestamp = new Timestamp(DateTime.UtcNow);
             r.Error = new Error(ErrorCode.NoError);
             r.Status = PersistenceStatus.Persisted;
             r.Offset = offset;

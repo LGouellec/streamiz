@@ -11,7 +11,7 @@ namespace Streamiz.Kafka.Net.Mock
     {
         public MockWallClockTimeProvider()
         {
-            WallClockTime = DateTime.Now.GetMilliseconds();
+            WallClockTime = DateTime.UtcNow.GetMilliseconds();
         }
 
         public long WallClockTime { get; private set; }

@@ -26,7 +26,7 @@ namespace Streamiz.Kafka.Net.State.Metered
             this.sensor = sensor;
             this.funcSerdesKey = funcSerdesKey;
             this.funcSerdesValue = funcSerdesValue;
-            startMs = DateTime.Now.GetMilliseconds();
+            startMs = MonotonicClock.CurrentMs;
         }
         
         public K PeekNextKey()
@@ -55,7 +55,7 @@ namespace Streamiz.Kafka.Net.State.Metered
         public void Dispose()
         {
             innerEnumerator.Dispose();
-            sensor.Record(DateTime.Now.GetMilliseconds() - startMs);
+            sensor.Record(MonotonicClock.CurrentMs - startMs);
         }
     }
 }

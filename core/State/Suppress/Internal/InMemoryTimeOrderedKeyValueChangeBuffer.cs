@@ -279,7 +279,7 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
 
         private void UpdateBufferMetrics()
         {
-            var now = DateTime.Now.GetMilliseconds();
+            var now = DateTime.UtcNow.GetMilliseconds();
             bufferSizeSensor.Record(BufferSize, now);
             bufferCountSensor.Record(index.Count, now);
         }
@@ -294,7 +294,7 @@ namespace Streamiz.Kafka.Net.State.Suppress.Internal
         }
 
         private void LogTombstone(Bytes key)
-            => processorContext.Log(Name, key, null, DateTime.Now.GetMilliseconds());
+            => processorContext.Log(Name, key, null, DateTime.UtcNow.GetMilliseconds());
         
         private void CleanPut(long time, Bytes key, BufferValue bufferValue)
         {

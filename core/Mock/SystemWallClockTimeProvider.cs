@@ -14,7 +14,7 @@ namespace Streamiz.Kafka.Net.Mock
         /// </summary>
         public static readonly SystemWallClockTimeProvider Instance = new();
 
-        public long WallClockTime => DateTime.Now.GetMilliseconds();
+        public long WallClockTime => DateTime.UtcNow.GetMilliseconds();
 
         /// <summary>
         /// No-op for system time provider. Time advances naturally.

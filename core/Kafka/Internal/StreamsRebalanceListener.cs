@@ -36,15 +36,15 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                     {
                         log.LogInformation($"[{Thread.Name}] - New partitions assign requested : {string.Join(",", partitions)}");
 
-                        DateTime start = DateTime.Now;
+                        long start = MonotonicClock.CurrentMs;
                         manager.RebalanceInProgress = true;
                         manager.CreateTasks(partitions);
                         Thread.SetState(ThreadState.PARTITIONS_ASSIGNED);
-                        Thread.LastPartitionAssignedTime = start.GetMilliseconds();
+                        Thread.LastPartitionAssignedTime = DateTime.UtcNow.GetMilliseconds();
                         manager.RebalanceInProgress = false;
 
                         StringBuilder sb = new StringBuilder();
-                        sb.AppendLine($"[{Thread.Name}] - Partition assignment took {DateTime.Now - start} ms.");
+                        sb.AppendLine($"[{Thread.Name}] - Partition assignment took {MonotonicClock.ElapsedSince(start)} ms.");
                         sb.AppendLine(
                             $"\tCurrently assigned active tasks: {string.Join(",", this.manager.ActiveTaskIds)}");
                         log.LogInformation(sb.ToString());
@@ -59,7 +59,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
         public void PartitionsRevoked(IConsumer<byte[], byte[]> consumer, List<TopicPartitionOffset> partitions)
         {
-            DateTime start = DateTime.Now;
+            long start = MonotonicClock.CurrentMs;
             lock (manager._lock)
             {
                 if (Thread.IsRunning)
@@ -70,7 +70,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
                     manager.RebalanceInProgress = false;
 
                     StringBuilder sb = new StringBuilder();
-                    sb.AppendLine($"Partition revocation took {DateTime.Now - start} ms");
+                    sb.AppendLine($"Partition revocation took {MonotonicClock.ElapsedSince(start)} ms");
                     sb.AppendLine(
                         $"\tCurrent suspended active tasks: {string.Join(",", partitions.Select(p => $"{p.Topic}-{p.Partition}"))}");
                     log.LogInformation(sb.ToString());
@@ -80,7 +80,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
         public void PartitionsLost(IConsumer<byte[], byte[]> consumer, List<TopicPartitionOffset> partitions)
         {
-            DateTime start = DateTime.Now;
+            long start = MonotonicClock.CurrentMs;
             try
             {
                 manager.RebalanceInProgress = true;
@@ -89,7 +89,7 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             finally
             {
                 manager.RebalanceInProgress = false;
-                log.LogInformation($"Partitions lost took {DateTime.Now - start} ms");
+                log.LogInformation($"Partitions lost took {MonotonicClock.ElapsedSince(start)} ms");
             }
         }
     }

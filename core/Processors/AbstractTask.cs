@@ -99,7 +99,7 @@ namespace Streamiz.Kafka.Net.Processors
 
         /// <summary>
         /// Gets the current wall clock time in milliseconds since epoch.
-        /// In production, this returns DateTime.Now. In tests using TopologyTestDriver,
+        /// In production, this returns DateTime.UtcNow. In tests using TopologyTestDriver,
         /// this returns the mock wall clock time that can be controlled via AdvanceWallClockTime.
         /// </summary>
         public abstract long WallClockTime { get; }

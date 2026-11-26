@@ -586,7 +586,7 @@ namespace Streamiz.Kafka.Net.Metrics
         internal IEnumerable<Sensor> GetThreadScopeSensor(string threadId)
         {
             var sensors = new List<Sensor>();
-            RocksDbMetricsRecordingTrigger.Run(DateTime.Now.GetMilliseconds());
+            RocksDbMetricsRecordingTrigger.Run(DateTime.UtcNow.GetMilliseconds());
             
             foreach (var s in clientLevelSensors)
             {
@@ -620,7 +620,7 @@ namespace Streamiz.Kafka.Net.Metrics
         /// <returns>Return a <see cref="ReadOnlyCollection{T}"/> of sensors.</returns>
         public IEnumerable<Sensor> GetSensors()
         {
-            RocksDbMetricsRecordingTrigger.Run(DateTime.Now.GetMilliseconds());
+            RocksDbMetricsRecordingTrigger.Run(DateTime.UtcNow.GetMilliseconds());
             return new ReadOnlyCollection<Sensor>(sensors.Values.Where(s => TestMetricsRecordingLevel(s.MetricsRecording)).ToList());
         }
         

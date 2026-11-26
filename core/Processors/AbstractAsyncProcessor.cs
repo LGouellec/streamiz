@@ -30,18 +30,18 @@ namespace Streamiz.Kafka.Net.Processors
             var context = new ExternalContext() {
                 RetryNumber = 0
             };
-            DateTime startProcessing = DateTime.Now;
+            DateTime startProcessing = DateTime.UtcNow;
             bool result = false, retry = true;
             Task<IEnumerable<KeyValuePair<K1, V1>>> task = null;
             Exception noneRetriableException = null;
-            context.FirstCallEpoch = DateTime.Now.GetMilliseconds();
+            context.FirstCallEpoch = DateTime.UtcNow.GetMilliseconds();
             
             while (retry)
             {
                 if(context.RetryNumber > 0)
                     Thread.Sleep(TimeSpan.FromMilliseconds(Policy.RetryBackOffMs));
 
-                context.CurrentCallEpoch = DateTime.Now.GetMilliseconds();
+                context.CurrentCallEpoch = DateTime.UtcNow.GetMilliseconds();
                 
                 if (context.RetryNumber == Policy.NumberOfRetry)
                     throw new NoneRetryableException($"Number of retry exceeded", context.RetryNumber,  context.CurrentCallEpoch - startProcessing.GetMilliseconds(), null); 

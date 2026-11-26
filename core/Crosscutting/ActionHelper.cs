@@ -7,25 +7,25 @@ namespace Streamiz.Kafka.Net.Crosscutting
     {
         internal static long MeasureLatency(Action action)
         {
-            long before = DateTime.Now.GetMilliseconds();
+            long before = MonotonicClock.CurrentMs;
             action();
-            return DateTime.Now.GetMilliseconds() - before;
+            return MonotonicClock.CurrentMs - before;
         }
         
         internal static T MeasureLatency<T>(Func<T> actionToMeasure, Sensor sensor) 
         {
-            long before = DateTime.Now.GetMilliseconds();
+            long before = MonotonicClock.CurrentMs;
             T @return = actionToMeasure.Invoke();
-            long after = DateTime.Now.GetMilliseconds();
+            long after = MonotonicClock.CurrentMs;
             sensor.Record(after - before);
             return @return;
         }
         
         internal static void MeasureLatency(Action actionToMeasure, Sensor sensor) 
         {
-            long before = DateTime.Now.GetMilliseconds();
+            long before = MonotonicClock.CurrentMs;
             actionToMeasure.Invoke();
-            long after = DateTime.Now.GetMilliseconds();
+            long after = MonotonicClock.CurrentMs;
             sensor.Record(after - before);
         }
     }

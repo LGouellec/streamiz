@@ -32,7 +32,7 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
 
         protected void PublishTopicsStatistics(Dictionary<string, TopicStatistic> statisticsTopics)
         {
-            long now = DateTime.Now.GetMilliseconds();
+            long now = DateTime.UtcNow.GetMilliseconds();
             foreach (var topic in statisticsTopics)
             {
                 LibrdKafkaSensor.ScopedLibrdKafkaSensor.Record(BatchSizeAverageBytesSensor

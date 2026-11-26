@@ -34,8 +34,9 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
 
         public string Name => _producer.Name;
         
-        private IDictionary<string, (int, DateTime)> _cachePartitionsForTopics =
-            new Dictionary<string, (int, DateTime)>();
+        // value: (partition count, monotonic clock value of the last refresh, see MonotonicClock)
+        private IDictionary<string, (int, long)> _cachePartitionsForTopics =
+            new Dictionary<string, (int, long)>();
         
         public StreamsProducer(
             IStreamConfig config,
@@ -219,14 +220,14 @@ namespace Streamiz.Kafka.Net.Kafka.Internal
             var adminConfig = _configuration.ToAdminConfig("");
             var refreshInterval = adminConfig.TopicMetadataRefreshIntervalMs ?? 5 * 60 * 1000;
 
-            if (_cachePartitionsForTopics.TryGetValue(topic, out var tuple) && tuple.Item2 + TimeSpan.FromMilliseconds(refreshInterval) > DateTime.Now)
+            if (_cachePartitionsForTopics.TryGetValue(topic, out var tuple) && MonotonicClock.ElapsedSince(tuple.Item2) < refreshInterval)
                 return tuple.Item1;
 
             var metadata = _adminClient.GetMetadata(topic, TimeSpan.FromSeconds(5));
             var partitionCount = metadata.Topics.FirstOrDefault(t => t.Topic.Equals(topic));
             if (partitionCount != null)
             {
-                _cachePartitionsForTopics.AddOrUpdate(topic, (partitionCount.Partitions.Count, DateTime.Now));
+                _cachePartitionsForTopics.AddOrUpdate(topic, (partitionCount.Partitions.Count, MonotonicClock.CurrentMs));
                 return partitionCount.Partitions.Count;
             }
 

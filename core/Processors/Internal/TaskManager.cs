@@ -369,7 +369,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     task.RestorationIfNeeded();
                 }catch(Exception e)
                 {
-                    log.LogDebug($"Could not initialize task {task.Id} at {DateTime.Now.GetMilliseconds()}, will retry ({e.Message})");
+                    log.LogDebug($"Could not initialize task {task.Id} at {DateTime.UtcNow.GetMilliseconds()}, will retry ({e.Message})");
                     allRunning = false;
                 }
             }
