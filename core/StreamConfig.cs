@@ -186,6 +186,12 @@ namespace Streamiz.Kafka.Net
         Func<DeliveryReport<byte[], byte[]>, ProductionExceptionHandlerResponse> ProductionExceptionHandler { get; set; }
 
         /// <summary>
+        /// Listener invoked around the processing of each consumed record and each punctuation (default: null).
+        /// See <see cref="IProcessingListener"/>.
+        /// </summary>
+        IProcessingListener ProcessingListener { get; set; }
+
+        /// <summary>
         /// Maximum allowed time between calls to consume messages (e.g., rd_kafka_consumer_poll())
         /// for high-level consumers. If this interval is exceeded the consumer is considered
         /// failed and the group will rebalance in order to reassign the partitions to another
@@ -353,6 +359,13 @@ namespace Streamiz.Kafka.Net
         /// Timeout for QueryWatermarkOffsets operations when restoring state stores. (Default: 5 seconds)
         /// </summary>
         TimeSpan QueryWatermarkOffsetsTimeout { get; set; }
+
+        /// <summary>
+        /// Maximum time allowed for each blocking step (closing tasks, closing the consumer, ...) when a stream thread shuts down. (Default: 60 seconds)
+        /// If a step exceeds this timeout, it is abandoned and the thread still transitions to DEAD, so the client state is never stuck.
+        /// Use <see cref="System.Threading.Timeout.InfiniteTimeSpan"/> (or <see cref="TimeSpan.Zero"/>) to wait indefinitely.
+        /// </summary>
+        TimeSpan StreamThreadShutdownTimeout { get; set; }
         
         /// <summary>
         /// Enable the automatic reshuffle with the default stream partitioner. (Default: true)
@@ -511,9 +524,11 @@ namespace Streamiz.Kafka.Net
         private const string innerExceptionHandlerCst = "inner.exception.handler";
         private const string deserializationExceptionHandlerCst = "deserialization.exception.handler";
         private const string productionExceptionHandlerCst = "production.exception.handler";
+        private const string processingListenerCst = "processing.listener";
         private const string logProcessingSummaryCst = "log.processing.summary";
         private const string stateStoreCacheMaxBytesCst = "statestore.cache.max.bytes";
         private const string queryWatermarkOffsetsTimeoutMsCst = "query.watermark.offsets.timeout.ms";
+        private const string streamThreadShutdownTimeoutMsCst = "stream.thread.shutdown.timeout.ms";
         private const string defaultPartitionerResuffleEveryKeyCst = "default.partitioner.resuffle.every.key";
         private const string defaultCacheEnabled = "default.cache.enabled";
         private const string defaultPartitionerReshuffleEveryKeyCst = "default.partitioner.reshuffle.every.key";
@@ -2466,6 +2481,7 @@ namespace Streamiz.Kafka.Net
             InnerExceptionHandler = (_) => ExceptionHandlerResponse.FAIL;
             ProductionExceptionHandler = (_) => ProductionExceptionHandlerResponse.FAIL;
             DeserializationExceptionHandler = (_, _, _) => ExceptionHandlerResponse.FAIL;
+            ProcessingListener = null;
             RocksDbConfigHandler = (_, _) => { };
             StateDir = Path.Combine(Path.GetTempPath(), "streamiz-kafka-net");
             ReplicationFactor = -1;
@@ -2480,6 +2496,7 @@ namespace Streamiz.Kafka.Net
             MaxDegreeOfParallelism = 8;
             DefaultStateStoreCacheMaxBytes = CacheSize.OfMb(5).CacheSizeBytes;
             QueryWatermarkOffsetsTimeout = TimeSpan.FromSeconds(5);
+            StreamThreadShutdownTimeout = TimeSpan.FromSeconds(60);
             DefaultPartitionerReshuffleEveryKey = true;
             DefaultCacheEnabled = false;
 
@@ -2895,6 +2912,17 @@ namespace Streamiz.Kafka.Net
         }
 
         /// <summary>
+        /// Listener invoked around the processing of each consumed record and each punctuation (default: null).
+        /// See <see cref="IProcessingListener"/>.
+        /// </summary>
+        [StreamConfigProperty("" + processingListenerCst)]
+        public IProcessingListener ProcessingListener
+        {
+            get => configProperties[processingListenerCst];
+            set => configProperties.AddOrUpdate(processingListenerCst, value);
+        }
+
+        /// <summary>
         /// Delay between two invocations of MetricsReporter().
         /// Minimum and default value : 30 seconds
         /// </summary>
@@ -2993,6 +3021,18 @@ namespace Streamiz.Kafka.Net
         {
             get => configProperties[queryWatermarkOffsetsTimeoutMsCst];
             set => configProperties.AddOrUpdate(queryWatermarkOffsetsTimeoutMsCst, value);
+        }
+
+        /// <summary>
+        /// Maximum time allowed for each blocking step (closing tasks, closing the consumer, ...) when a stream thread shuts down. (Default: 60 seconds)
+        /// If a step exceeds this timeout, it is abandoned and the thread still transitions to DEAD, so the client state is never stuck.
+        /// Use <see cref="System.Threading.Timeout.InfiniteTimeSpan"/> (or <see cref="TimeSpan.Zero"/>) to wait indefinitely.
+        /// </summary>
+        [StreamConfigProperty("" + streamThreadShutdownTimeoutMsCst)]
+        public TimeSpan StreamThreadShutdownTimeout
+        {
+            get => configProperties[streamThreadShutdownTimeoutMsCst];
+            set => configProperties.AddOrUpdate(streamThreadShutdownTimeoutMsCst, value);
         }
         
         

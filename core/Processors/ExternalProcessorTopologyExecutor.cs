@@ -13,6 +13,7 @@ using Streamiz.Kafka.Net.Metrics.Internal;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.Processors.Public;
 using Streamiz.Kafka.Net.Stream;
+using Streamiz.Kafka.Net.Tracing;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -115,6 +116,9 @@ namespace Streamiz.Kafka.Net.Processors
         public int BufferSize => BufferedRecords.Count;
 
         private readonly IRecordCollector recordCollector;
+        private readonly TaskId taskId;
+        private readonly string applicationId;
+        private readonly IProcessingListener processingListener;
         private ProcessorContext context;
         private readonly string logPrefix;
         private readonly Dictionary<TopicPartition, long> consumedOffsets = new();
@@ -138,6 +142,9 @@ namespace Streamiz.Kafka.Net.Processors
             this.streamMetricsRegistry = streamMetricsRegistry;
             State = ExternalProcessorTopologyState.RUNNING;
             Processor = sourceProcessor;
+            this.taskId = taskId;
+            applicationId = config.ApplicationId;
+            processingListener = config.ProcessingListener;
 
             logPrefix = $"external-task[{taskId.Id}] ";
             
@@ -188,7 +195,22 @@ namespace Streamiz.Kafka.Net.Processors
                 if (recordToProcess != null)
                 {
                     context.SetRecordMetaData(recordToProcess);
-                    long latency = ActionHelper.MeasureLatency(() => Processor.Process(recordToProcess));
+                    long latency;
+                    var activity = StreamizActivitySource.StartProcess(recordToProcess, applicationId, taskId);
+                    try
+                    {
+                        latency = ActionHelper.MeasureLatency(() => ProcessingListenerHelper.Process(
+                            processingListener, context, Processor, recordToProcess));
+                    }
+                    catch (Exception e)
+                    {
+                        StreamizActivitySource.SetException(activity, e);
+                        throw;
+                    }
+                    finally
+                    {
+                        activity?.Dispose();
+                    }
                     processSensor.Record();
                     processLatencySensor.Record(latency);
                     log.LogDebug(
