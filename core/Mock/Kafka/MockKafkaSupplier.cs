@@ -21,6 +21,8 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             cluster = new MockCluster(defaultNumberPartitions, waitBeforeRebalanceMs);
         }
 
+        internal int DefaultNumberPartitions => cluster.DEFAULT_NUMBER_PARTITIONS;
+
         public IAdminClient GetAdmin(AdminClientConfig config)
         {
             return new MockAdminClient(cluster, config.ClientId);
@@ -40,7 +42,7 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public IProducer<byte[], byte[]> GetProducer(ProducerConfig config)
         {
-            return new MockProducer(cluster, config.ClientId);
+            return new MockProducer(cluster, config.ClientId, config.Partitioner);
         }
 
         public IConsumer<byte[], byte[]> GetRestoreConsumer(ConsumerConfig config)

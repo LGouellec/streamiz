@@ -1,3 +1,4 @@
+using Confluent.Kafka.Admin;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,12 +15,13 @@ namespace Streamiz.Kafka.Net.Tests.Processors
 {
     public class KStreamRepartitionTests
     {
-        private IEnumerable<ConsumeResult<string, string>> SetupTest(Action<StreamBuilder> builderFunction, TopologyTestDriver.Mode mode = TopologyTestDriver.Mode.SYNC_TASK, int numberPartition = 1)
+        private IEnumerable<ConsumeResult<string, string>> SetupTest(Action<StreamBuilder> builderFunction, TopologyTestDriver.Mode mode = TopologyTestDriver.Mode.SYNC_TASK, int numberPartition = 1, Action<StreamConfig> configure = null)
         {
             var config = new StreamConfig<StringSerDes, StringSerDes>
             {
                 ApplicationId = "test-repartition-processor"
             };
+            configure?.Invoke(config);
             
             StreamBuilder builder = new StreamBuilder();
             builderFunction(builder);
@@ -29,6 +31,12 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             IKafkaSupplier supplier = mode == TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY
                 ? new MockKafkaSupplier(numberPartition)
                 : null;
+
+            // create the output topic upfront: when its metadata is unknown, the default stream partitioner
+            // always lets the producer partitioner choose the partition (key hash)
+            supplier?.GetAdmin(new AdminClientConfig())
+                .CreateTopicsAsync(new[] { new TopicSpecification { Name = "output", NumPartitions = numberPartition } })
+                .GetAwaiter().GetResult();
 
             using (var driver = new TopologyTestDriver(t, config, supplier))
             {
@@ -91,7 +99,9 @@ namespace Streamiz.Kafka.Net.Tests.Processors
                     .Stream<string, string>("topic")
                     .Repartition(Repartitioned<string, string>.Empty().WithStreamPartitioner((t,k,v,_, c) => 0))
                     .To("output");
-            }, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, 10);
+            }, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY, 10,
+                // keep the partition chosen by the repartition partitioner when writing to the output topic
+                config => config.DefaultPartitionerReshuffleEveryKey = false);
 
             Assert.AreEqual(0, records.ToList()[0].Partition.Value);
             Assert.AreEqual(0, records.ToList()[1].Partition.Value);

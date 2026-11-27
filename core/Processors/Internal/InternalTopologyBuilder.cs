@@ -71,6 +71,18 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             copartitionSourceGroups.Add(allSourceNodes);
         }
 
+        /// <summary>
+        /// Groups of topics that must be co-partitioned (inputs of a join), with the real name of internal topics.
+        /// </summary>
+        internal IList<ISet<string>> GetCopartitionTopicGroups()
+            => copartitionSourceGroups
+                .Select(group => (ISet<string>)new HashSet<string>(group
+                    .Select(node => nodeFactories.TryGetValue(node, out var factory) ? factory as ISourceNodeFactory : null)
+                    .Where(factory => factory?.Topic != null)
+                    .Select(factory => internalTopics.ContainsKey(factory.Topic) ? DecorateTopic(factory.Topic) : factory.Topic)))
+                .Where(topics => topics.Count > 1)
+                .ToList();
+
         internal void ConnectProcessorAndStateStore(string processorName, params string[] stateStoreNames)
         {
             foreach (var stateStoreName in stateStoreNames)

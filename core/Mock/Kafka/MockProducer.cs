@@ -9,10 +9,12 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
     internal class MockProducer : IProducer<byte[], byte[]>
     {
         private readonly MockCluster cluster;
+        private readonly Partitioner? partitioner;
 
-        public MockProducer(MockCluster cluster, string name)
+        public MockProducer(MockCluster cluster, string name, Partitioner? partitioner = null)
         {
             this.cluster = cluster;
+            this.partitioner = partitioner;
             Name = name;
         }
 
@@ -75,25 +77,25 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         public void Produce(string topic, Message<byte[], byte[]> message, Action<DeliveryReport<byte[], byte[]>> deliveryHandler = null)
         {
-            var result = cluster.Produce(topic, message);
+            var result = cluster.Produce(topic, message, partitioner);
             deliveryHandler?.Invoke(result);
         }
 
         public void Produce(TopicPartition topicPartition, Message<byte[], byte[]> message, Action<DeliveryReport<byte[], byte[]>> deliveryHandler = null)
         {
-            var result = cluster.Produce(topicPartition, message);
+            var result = cluster.Produce(topicPartition, message, partitioner);
             deliveryHandler?.Invoke(result);
         }
 
         public Task<DeliveryResult<byte[], byte[]>> ProduceAsync(string topic, Message<byte[], byte[]> message, CancellationToken cancellationToken = default)
         {
-            var r = cluster.Produce(topic, message) as DeliveryResult<byte[], byte[]>;
+            var r = cluster.Produce(topic, message, partitioner) as DeliveryResult<byte[], byte[]>;
             return Task.FromResult(r);
         }
 
         public Task<DeliveryResult<byte[], byte[]>> ProduceAsync(TopicPartition topicPartition, Message<byte[], byte[]> message, CancellationToken cancellationToken = default)
         {
-            var r = cluster.Produce(topicPartition, message) as DeliveryResult<byte[], byte[]>;
+            var r = cluster.Produce(topicPartition, message, partitioner) as DeliveryResult<byte[], byte[]>;
             return Task.FromResult(r);
         }
 

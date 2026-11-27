@@ -89,7 +89,7 @@ namespace Streamiz.Kafka.Net.Mock
         {
             DateTime ts = record.Timestamp.HasValue ? record.Timestamp.Value : DateTime.UtcNow;
             var tuple = GetBytes(record.Key, record.Value, record.Headers);
-            pipe.Pipe(tuple.Item1, tuple.Item2, ts, record.Headers);
+            pipe.Pipe(tuple.Item1, tuple.Item2, ts, record.Headers, record.Partition ?? -1);
             pipe.Flush();
         }
 
@@ -141,7 +141,7 @@ namespace Streamiz.Kafka.Net.Mock
             {
                 DateTime ts = record.Timestamp.HasValue ? record.Timestamp.Value : DateTime.UtcNow;
                 var tuple = GetBytes(record.Key, record.Value, record.Headers);
-                pipe.Pipe(tuple.Item1, tuple.Item2, ts, record.Headers);
+                pipe.Pipe(tuple.Item1, tuple.Item2, ts, record.Headers, record.Partition ?? -1);
             }
 
             pipe.Flush();

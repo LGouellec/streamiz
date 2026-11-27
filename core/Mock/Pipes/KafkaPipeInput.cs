@@ -10,7 +10,7 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
         private readonly string topicName;
         private readonly IProducer<byte[], byte[]> producer;
         private const int size = 10;
-        private readonly ConcurrentQueue<(byte[], byte[], DateTime, Headers)> buffer = new();
+        private readonly ConcurrentQueue<(byte[], byte[], DateTime, Headers, int)> buffer = new();
 
         public KafkaPipeInput(string topicName, IStreamConfig configuration, IKafkaSupplier kafkaSupplier)
         {
@@ -36,7 +36,8 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
             {
                 if (buffer.TryDequeue(out var record))
                 {
-                    producer.Produce(topicName,
+                    // a negative partition lets the producer partitioner choose it
+                    producer.Produce(new TopicPartition(topicName, record.Item5 >= 0 ? record.Item5 : Partition.Any),
                         new Message<byte[], byte[]>
                         {
                             Key = record.Item1, Value = record.Item2, Timestamp = new Timestamp(record.Item3),
@@ -48,9 +49,9 @@ namespace Streamiz.Kafka.Net.Mock.Pipes
             Flushed?.Invoke();
         }
 
-        public void Pipe(byte[] key, byte[] value, DateTime timestamp, Headers headers)
+        public void Pipe(byte[] key, byte[] value, DateTime timestamp, Headers headers, int partition = -1)
         {
-            buffer.Enqueue((key, value, timestamp, headers));
+            buffer.Enqueue((key, value, timestamp, headers, partition));
             if (buffer.Count >= size)
                 Flush();
         }

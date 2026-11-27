@@ -119,7 +119,7 @@ namespace Streamiz.Kafka.Net.Mock
             {
                 DateTime ts = record.Timestamp.HasValue ? record.Timestamp.Value : LastDate;
                 var tuple = GetBytes(topic, record.Key, record.Value);
-                pipes[topic].Pipe(tuple.Item1, tuple.Item2, ts, record.Headers);
+                pipes[topic].Pipe(tuple.Item1, tuple.Item2, ts, record.Headers, record.Partition ?? -1);
             }
             else
             {

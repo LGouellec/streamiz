@@ -31,6 +31,12 @@ namespace Streamiz.Kafka.Net.Mock
         /// </summary>
         public Headers Headers { get; set; }
 
+        /// <summary>
+        /// Partition of the record. When piped in an input topic, null (default) lets the producer partitioner
+        /// choose the partition from the key, like a real producer.
+        /// </summary>
+        public int? Partition { get; set; }
+
 
         /// <summary>
         /// Empty constructor

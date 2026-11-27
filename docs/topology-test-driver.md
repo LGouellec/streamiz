@@ -129,3 +129,61 @@ using (var driver = new TopologyTestDriver(t, config))
 }
 MockSchemaRegistry.DropScope("test");
 ```
+## Testing partitioning
+
+Records with the same key must land on the same partition for `GroupByKey`, `Aggregate`, `Join` or `Repartition` to be correct, and the inputs of a join must be co-partitioned. By default, every topic of the test driver has a single partition. Pass a `TestTopicPartitions` to test with several partitions:
+
+``` csharp
+var partitions = new TestTopicPartitions(defaultPartitions: 4) // input and output topics
+    .WithPartitions("customers", 2);                          // per topic
+
+using var driver = new TopologyTestDriver(topology, config, partitions);
+```
+
+- Records piped in an input topic are routed to a partition like a real Confluent.Kafka producer does, with the producer partitioner of the configuration (`StreamConfig.Partitioner`, `murmur2_random` by default, compatible with the Java producer). Set `TestRecord.Partition` to pipe a record to a given partition.
+- Records read from an output topic expose their partition and their offset in that partition (`ConsumeResult.Partition`, `ConsumeResult.Offset`).
+- Internal topics are sized like in a real application: a repartition topic gets the number of partitions of the source topics of the sub-topology writing to it, or `Repartitioned.WithNumberOfPartitions`.
+- In `SYNC_TASK` mode, a single task per sub-topology processes all the partitions of its source topics, and `ProcessorContext.Partition` is the partition of the current record. In `ASYNC_CLUSTER_IN_MEMORY` mode, there is one task per partition.
+
+The driver gives the partitioning of the topology:
+
+| Method | Description |
+|---|---|
+| `GetPartitionCount(topic)` | Number of partitions of a topic (input, output or internal) |
+| `GetPartition(topic, key, keySerdes)` | Partition where a producer writes a key, `-1` when it picks a random partition (null key) |
+| `GetRepartitionTopics()` | Real names of the repartition topics |
+| `GetCoPartitionedTopicGroups()` | Input topics of each join, which must be co-partitioned |
+| `DescribeTopology()` | Machine-readable description of the topology, with internal topics resolved |
+
+`PartitioningAssert` checks the partitioning, whatever your test framework. Each assertion throws a `PartitioningAssertionException` when it fails:
+
+| Assertion | Checks |
+|---|---|
+| `KeysOnSinglePartition(records)` | All the records with the same key are on the same partition |
+| `PartitionedByKey(driver, records)` | Each record is on the partition a producer would choose for its key |
+| `CoPartitioned(driver)` | The input topics of each join have the same number of partitions (or the topics given) |
+| `RepartitionTopicCount(driver, expected)` | The number of repartition topics, e.g. one after a key-changing operation followed by an aggregation |
+
+``` csharp
+var builder = new StreamBuilder();
+builder.Stream<string, Order>("orders")
+    .SelectKey((_, order, _) => order.CustomerId)
+    .GroupByKey()
+    .Count()
+    .ToStream()
+    .To("orders-by-customer");
+
+var partitions = new TestTopicPartitions(4);
+using var driver = new TopologyTestDriver(builder.Build(), config, partitions);
+var input = driver.CreateInputTopic<string, Order>("orders");
+var output = driver.CreateOutputTopic<string, long, StringSerDes, Int64SerDes>("orders-by-customer");
+
+input.PipeInputs(orders);
+var records = output.ReadKeyValueList().ToList();
+
+PartitioningAssert.RepartitionTopicCount(driver, 1); // SelectKey + GroupByKey creates a repartition topic
+PartitioningAssert.KeysOnSinglePartition(records);    // each customer is counted on a single partition
+PartitioningAssert.PartitionedByKey(driver, records); // and written on the partition of its key
+```
+
+By default (`StreamConfig.DefaultPartitionerReshuffleEveryKey = true`), a sink computes the partition from the key of the record. When it is `false`, a sink keeps the partition of the input record: use `PartitionedByKey` to detect a key changed by `Map` or `SelectKey` without repartition.

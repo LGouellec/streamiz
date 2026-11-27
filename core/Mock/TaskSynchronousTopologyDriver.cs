@@ -31,8 +31,6 @@ namespace Streamiz.Kafka.Net.Mock
         private readonly GlobalProcessorContext globalProcessorContext;
         private readonly StreamMetricsRegistry metricsRegistry;
 
-        private readonly IDictionary<TaskId, IList<TopicPartition>> partitionsByTaskId =
-            new Dictionary<TaskId, IList<TopicPartition>>();
 
         private readonly StreamsProducer producer = null;
         private readonly bool hasGlobalTopology = false;
@@ -70,17 +68,9 @@ namespace Streamiz.Kafka.Net.Mock
                 configuration,
                 clientId, Guid.NewGuid(), this.supplier, string.Empty);
 
-            foreach (var sourceTopic in builder
-                .GetSourceTopics())
-            {
-                var part = new TopicPartition(sourceTopic, 0);
-                var taskId = builder.GetTaskIdFromPartition(part);
-                if (partitionsByTaskId.ContainsKey(taskId))
-                    partitionsByTaskId[taskId].Add(part);
-                else
-                    partitionsByTaskId.Add(taskId, new List<TopicPartition> {part});
-            }
-            
+            // initialize the node groups of the topology (needed to build the global topology)
+            builder.Describe();
+
             var adminClient = this.supplier.GetAdmin(configuration.ToAdminConfig($"{clientId}-admin"));
             ProcessorTopology globalTaskTopology = topologyBuilder.BuildGlobalStateTopology(configuration);
             hasGlobalTopology = globalTaskTopology != null;
@@ -129,16 +119,10 @@ namespace Streamiz.Kafka.Net.Mock
             {
                 if (builder.GetSourceTopics().Contains(topicName))
                 {
-                    // Make sure partitionsByTaskId has this task's partitions
-                    if (!partitionsByTaskId.ContainsKey(id))
-                    {
-                        var part = new TopicPartition(topicName, 0);
-                        partitionsByTaskId.Add(id, new List<TopicPartition> {part});
-                    }
-
+                    // A single task per sub-topology processes all the partitions of its source topics
                     task = new StreamTask("thread-0",
                         id,
-                        partitionsByTaskId[id],
+                        GetTaskPartitions(id),
                         builder.BuildTopology(id, configuration),
                         supplier.GetConsumer(configuration.ToConsumerConfig(), null),
                         configuration,
@@ -158,12 +142,44 @@ namespace Streamiz.Kafka.Net.Mock
             return task;
         }
 
+        private SyncProducer SyncProducer => producer.Producer as SyncProducer;
+
+        public int GetPartitionCount(string topic) => SyncProducer?.GetPartitionCount(topic) ?? 1;
+
+        public void UsePartitions(TestTopicPartitions partitions)
+        {
+            var syncProducer = SyncProducer;
+            if (syncProducer == null)
+                return;
+
+            syncProducer.DefaultPartitions = partitions.DefaultPartitions;
+            foreach (var topic in partitions.Topics)
+                syncProducer.SetPartitionCount(topic.Key, topic.Value);
+        }
+
+        private List<TopicPartition> GetTaskPartitions(TaskId id)
+            => builder.GetSourceTopics()
+                .Where(t => builder.GetTaskIdFromPartition(new TopicPartition(t, 0)).Equals(id))
+                .SelectMany(t => Enumerable.Range(0, GetPartitionCount(t)).Select(p => new TopicPartition(t, p)))
+                .ToList();
+
         private void InitializeInternalTopicManager()
         {
             // Create internal topics (changelogs & repartition) if need
-            var adminClientInternalTopicManager = supplier.GetAdmin(configuration.ToAdminConfig(
+            var adminConfig = configuration.ToAdminConfig(
                 StreamThread.GetSharedAdminClientId(
-                    $"{configuration.ApplicationId.ToLower()}-admin-internal-topic-manager")));
+                    $"{configuration.ApplicationId.ToLower()}-admin-internal-topic-manager"));
+            IAdminClient adminClientInternalTopicManager;
+            if (supplier is SyncKafkaSupplier && SyncProducer != null)
+            {
+                // like a real admin client, reading the metadata of a missing internal topic must not create it,
+                // otherwise it would be created with the default number of partitions instead of the expected one
+                var syncAdmin = new SyncAdminClient(SyncProducer, false);
+                syncAdmin.UseConfig(adminConfig);
+                adminClientInternalTopicManager = syncAdmin;
+            }
+            else
+                adminClientInternalTopicManager = supplier.GetAdmin(adminConfig);
             internalTopicManager = new DefaultTopicManager(configuration, adminClientInternalTopicManager);
 
             InternalTopicManagerUtils
@@ -204,8 +220,12 @@ namespace Streamiz.Kafka.Net.Mock
                 var task = GetTask(topic);
 
                 var pipe = CreateBuilder(topic).Input(topic, configuration);
-                foreach(var r in records)
-                    pipe.Pipe(r.Message.Key, r.Message.Value, r.Message.Timestamp.UnixTimestampMs.FromMilliseconds(), r.Message.Headers);
+                foreach (var r in records)
+                {
+                    // keep the partition chosen by the repartition sink
+                    var partition = SyncProducer?.GetRecordPosition(topic, r.Offset.Value).partition ?? 0;
+                    pipe.Pipe(r.Message.Key, r.Message.Value, r.Message.Timestamp.UnixTimestampMs.FromMilliseconds(), r.Message.Headers, partition);
+                }
                 pipe.Flush();
                 pipe.Dispose();
 
@@ -245,7 +265,7 @@ namespace Streamiz.Kafka.Net.Mock
                     return new SyncPipeBuilder(externalProcessorTopologies[topicName]);
             }
 
-            return new SyncPipeBuilder(task);
+            return new SyncPipeBuilder(task, SyncProducer);
         }
         
         #region IBehaviorTopologyTestDriver

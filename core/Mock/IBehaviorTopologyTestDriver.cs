@@ -22,5 +22,7 @@ namespace Streamiz.Kafka.Net.Mock
         /// </summary>
         /// <param name="advance">The amount of time to advance the wall clock</param>
         void AdvanceWallClockTime(TimeSpan advance);
+        void UsePartitions(TestTopicPartitions partitions);
+        int GetPartitionCount(string topic);
     }
 }
