@@ -40,7 +40,7 @@ namespace Streamiz.Kafka.Net.AspNetCore
             this IEndpointRouteBuilder endpoints,
             string pattern = DefaultTopologyPattern)
         {
-            if (endpoints == null) throw new ArgumentNullException(nameof(endpoints));
+            ArgumentNullException.ThrowIfNull(endpoints);
             return endpoints.MapGet(pattern, (RequestDelegate)(context =>
             {
                 var stream = context.RequestServices.GetService<KafkaStream>();
@@ -61,8 +61,8 @@ namespace Streamiz.Kafka.Net.AspNetCore
             KafkaStream stream,
             string pattern = DefaultTopologyPattern)
         {
-            if (endpoints == null) throw new ArgumentNullException(nameof(endpoints));
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            ArgumentNullException.ThrowIfNull(endpoints);
+            ArgumentNullException.ThrowIfNull(stream);
             return endpoints.MapGet(pattern,
                 (RequestDelegate)(context => TopologyEndpoint.HandleAsync(context, stream.DescribeTopology)));
         }
@@ -80,8 +80,8 @@ namespace Streamiz.Kafka.Net.AspNetCore
             Topology topology,
             string pattern = DefaultTopologyPattern)
         {
-            if (endpoints == null) throw new ArgumentNullException(nameof(endpoints));
-            if (topology == null) throw new ArgumentNullException(nameof(topology));
+            ArgumentNullException.ThrowIfNull(endpoints);
+            ArgumentNullException.ThrowIfNull(topology);
             return endpoints.MapGet(pattern,
                 (RequestDelegate)(context => TopologyEndpoint.HandleAsync(context, () => topology.Describe().ToModel())));
         }
@@ -98,7 +98,7 @@ namespace Streamiz.Kafka.Net.AspNetCore
             {
                 context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
                 context.Response.ContentType = TextContentType;
-                await context.Response.WriteAsync($"No {nameof(KafkaStream)} instance is registered.");
+                await context.Response.WriteAsync($"No {nameof(KafkaStream)} instance is registered.", context.RequestAborted);
                 return;
             }
 
@@ -107,7 +107,7 @@ namespace Streamiz.Kafka.Net.AspNetCore
             {
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 context.Response.ContentType = TextContentType;
-                await context.Response.WriteAsync("Unsupported format. Supported formats are 'json' and 'text'.");
+                await context.Response.WriteAsync("Unsupported format. Supported formats are 'json' and 'text'.", context.RequestAborted);
                 return;
             }
 
@@ -116,12 +116,12 @@ namespace Streamiz.Kafka.Net.AspNetCore
             if (text.Value)
             {
                 context.Response.ContentType = TextContentType;
-                await context.Response.WriteAsync(model.ToString());
+                await context.Response.WriteAsync(model.ToString(), context.RequestAborted);
             }
             else
             {
                 context.Response.ContentType = JsonContentType;
-                await context.Response.WriteAsync(model.ToJson());
+                await context.Response.WriteAsync(model.ToJson(), context.RequestAborted);
             }
         }
 
@@ -138,9 +138,9 @@ namespace Streamiz.Kafka.Net.AspNetCore
                 return null;
             }
 
-            var accept = request.Headers["Accept"].ToString();
-            return accept.IndexOf("text/plain", StringComparison.OrdinalIgnoreCase) >= 0 &&
-                   accept.IndexOf("application/json", StringComparison.OrdinalIgnoreCase) < 0;
+            var accept = request.Headers.Accept.ToString();
+            return accept.Contains("text/plain", StringComparison.OrdinalIgnoreCase) &&
+                   !accept.Contains("application/json", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

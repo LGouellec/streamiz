@@ -26,6 +26,42 @@ namespace Streamiz.Kafka.Net.Stream
     }
 
     /// <summary>
+    /// Topics and state stores used by a <see cref="TopologyModel"/> or a <see cref="SubTopologyModel"/>.
+    /// </summary>
+    public abstract class TopologyResourcesModel
+    {
+        /// <summary>
+        /// Topics read (for a topology, including the global stores' topics).
+        /// </summary>
+        [JsonProperty("sourceTopics", Order = 100)]
+        public List<string> SourceTopics { get; set; } = new();
+
+        /// <summary>
+        /// Topics statically written.
+        /// </summary>
+        [JsonProperty("sinkTopics", Order = 101)]
+        public List<string> SinkTopics { get; set; } = new();
+
+        /// <summary>
+        /// State stores used (for a topology, including the global stores).
+        /// </summary>
+        [JsonProperty("stateStores", Order = 102)]
+        public List<string> StateStores { get; set; } = new();
+
+        /// <summary>
+        /// Internal repartition topics (only resolved when described from a <see cref="KafkaStream"/>).
+        /// </summary>
+        [JsonProperty("repartitionTopics", Order = 103)]
+        public List<string> RepartitionTopics { get; set; } = new();
+
+        /// <summary>
+        /// Internal changelog topics (only resolved when described from a <see cref="KafkaStream"/>).
+        /// </summary>
+        [JsonProperty("changelogTopics", Order = 104)]
+        public List<string> ChangelogTopics { get; set; } = new();
+    }
+
+    /// <summary>
     /// Serializable, machine-readable representation of a <see cref="Topology"/>.
     /// Build it from an <see cref="ITopologyDescription"/> with <see cref="TopologyDescriptionExtensions.ToModel"/>
     /// or from a running application with <see cref="KafkaStream.DescribeTopology"/> (which also resolves internal topics
@@ -33,7 +69,7 @@ namespace Streamiz.Kafka.Net.Stream
     /// Use <see cref="ToJson"/> to get its JSON representation, and <see cref="ToString"/> to get the classic text
     /// representation (same output as <see cref="Topology.Describe"/>).
     /// </summary>
-    public sealed class TopologyModel
+    public sealed class TopologyModel : TopologyResourcesModel
     {
         [JsonIgnore]
         internal ITopologyDescription Description { get; set; }
@@ -49,36 +85,6 @@ namespace Streamiz.Kafka.Net.Stream
         /// </summary>
         [JsonProperty("globalStores")]
         public List<GlobalStoreModel> GlobalStores { get; set; } = new();
-
-        /// <summary>
-        /// All topics read by the topology (sub-topologies and global stores).
-        /// </summary>
-        [JsonProperty("sourceTopics")]
-        public List<string> SourceTopics { get; set; } = new();
-
-        /// <summary>
-        /// All topics statically written by the topology.
-        /// </summary>
-        [JsonProperty("sinkTopics")]
-        public List<string> SinkTopics { get; set; } = new();
-
-        /// <summary>
-        /// All state stores used by the topology (sub-topologies and global stores).
-        /// </summary>
-        [JsonProperty("stateStores")]
-        public List<string> StateStores { get; set; } = new();
-
-        /// <summary>
-        /// All internal repartition topics (only resolved when described from a <see cref="KafkaStream"/>).
-        /// </summary>
-        [JsonProperty("repartitionTopics")]
-        public List<string> RepartitionTopics { get; set; } = new();
-
-        /// <summary>
-        /// All internal changelog topics (only resolved when described from a <see cref="KafkaStream"/>).
-        /// </summary>
-        [JsonProperty("changelogTopics")]
-        public List<string> ChangelogTopics { get; set; } = new();
 
         /// <summary>
         /// Serialize this model in JSON.
@@ -121,7 +127,7 @@ namespace Streamiz.Kafka.Net.Stream
     /// <summary>
     /// Serializable representation of a sub-topology.
     /// </summary>
-    public sealed class SubTopologyModel
+    public sealed class SubTopologyModel : TopologyResourcesModel
     {
         /// <summary>
         /// Sub-topology id
@@ -134,36 +140,6 @@ namespace Streamiz.Kafka.Net.Stream
         /// </summary>
         [JsonProperty("nodes")]
         public List<TopologyNodeModel> Nodes { get; set; } = new();
-
-        /// <summary>
-        /// Topics read by this sub-topology
-        /// </summary>
-        [JsonProperty("sourceTopics")]
-        public List<string> SourceTopics { get; set; } = new();
-
-        /// <summary>
-        /// Topics statically written by this sub-topology
-        /// </summary>
-        [JsonProperty("sinkTopics")]
-        public List<string> SinkTopics { get; set; } = new();
-
-        /// <summary>
-        /// State stores used by this sub-topology
-        /// </summary>
-        [JsonProperty("stateStores")]
-        public List<string> StateStores { get; set; } = new();
-
-        /// <summary>
-        /// Internal repartition topics of this sub-topology (only resolved when described from a <see cref="KafkaStream"/>)
-        /// </summary>
-        [JsonProperty("repartitionTopics")]
-        public List<string> RepartitionTopics { get; set; } = new();
-
-        /// <summary>
-        /// Internal changelog topics of this sub-topology (only resolved when described from a <see cref="KafkaStream"/>)
-        /// </summary>
-        [JsonProperty("changelogTopics")]
-        public List<string> ChangelogTopics { get; set; } = new();
     }
 
     /// <summary>

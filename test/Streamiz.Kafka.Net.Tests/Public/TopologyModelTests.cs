@@ -85,7 +85,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             Assert.AreEqual(0, ((JArray)obj["globalStores"]).Count);
 
             var compact = builder.Build().Describe().ToJson(false);
-            Assert.IsFalse(compact.Contains("\n"));
+            Assert.IsFalse(compact.Contains('\n'));
         }
 
         [Test]
@@ -145,6 +145,46 @@ namespace Streamiz.Kafka.Net.Tests.Public
 
             var obj = JObject.Parse(model.ToJson());
             Assert.AreEqual("test-app-count-store-changelog", obj["changelogTopics"][0].Value<string>());
+        }
+
+        [Test]
+        public void ModelWithoutDescriptionToString()
+        {
+            var model = new TopologyModel();
+            Assert.AreEqual(typeof(TopologyModel).FullName, model.ToString());
+            Assert.IsEmpty(model.SourceTopics);
+        }
+
+        [Test]
+        public void SinkWithTopicNameExtractorToModel()
+        {
+            var builder = new StreamBuilder();
+            builder
+                .Stream<string, string>("topic", new StringSerDes(), new StringSerDes(), "source")
+                .To((k, v, ctx) => "dynamic-" + k, new StringSerDes(), new StringSerDes(), "to");
+
+            var model = builder.Build().Describe().ToModel();
+            var sink = model.SubTopologies.Single().Nodes.Single(n => n.Type == TopologyNodeType.Sink);
+
+            Assert.IsNull(sink.Topic);
+            Assert.IsNotNull(sink.TopicNameExtractor);
+            Assert.IsEmpty(model.SinkTopics);
+        }
+
+        [Test]
+        public void JsonKeysOrder()
+        {
+            var builder = new StreamBuilder();
+            builder.Stream<string, string>("topic").To("topic-dest");
+
+            var obj = JObject.Parse(builder.Build().Describe().ToJson());
+
+            CollectionAssert.AreEqual(
+                new[] { "subTopologies", "globalStores", "sourceTopics", "sinkTopics", "stateStores", "repartitionTopics", "changelogTopics" },
+                obj.Properties().Select(p => p.Name).ToList());
+            CollectionAssert.AreEqual(
+                new[] { "id", "nodes", "sourceTopics", "sinkTopics", "stateStores", "repartitionTopics", "changelogTopics" },
+                ((JObject)obj["subTopologies"][0]).Properties().Select(p => p.Name).ToList());
         }
     }
 }

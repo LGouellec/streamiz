@@ -31,7 +31,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
             if (queryString != null)
                 context.Request.QueryString = new QueryString(queryString);
             if (accept != null)
-                context.Request.Headers["Accept"] = accept;
+                context.Request.Headers.Accept = accept;
             context.Response.Body = new MemoryStream();
 
             await TopologyEndpoint.HandleAsync(context, withProvider ? BuildModel : null);

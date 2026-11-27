@@ -254,15 +254,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 throw new TopologyException("Topic " + topicName + " has already been registered by another source.");
             }
-
-            // TODO: ?
-            //for (Pattern pattern : nodeToSourcePatterns.values())
-            //{
-            //    if (pattern.matcher(topic).matches())
-            //    {
-            //        throw new TopologyException("Topic " + topic + " matches a Pattern already registered by another source.");
-            //    }
-            //}
         }
 
         private void ValidateGlobalStoreArguments<K, V>(string sourceName,

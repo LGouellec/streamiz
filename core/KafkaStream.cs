@@ -358,7 +358,7 @@ namespace Streamiz.Kafka.Net
 
             int numStreamThreads = topology.Builder.HasNoNonGlobalTopology ? 0 : configuration.NumStreamThreads;
 
-            string Protect(string str)
+            static string Protect(string str)
                 => str.Replace("\n", "\\n");
             
             GeneralClientMetrics.StreamsAppSensor(
@@ -370,7 +370,7 @@ namespace Streamiz.Kafka.Net
             
             #region Temporary
 
-            long GetMemoryUse()
+            static long GetMemoryUse()
             {
                 using var process = Process.GetCurrentProcess();
                 #if NETSTANDARD2_0
