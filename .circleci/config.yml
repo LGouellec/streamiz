@@ -2,6 +2,7 @@
 
   orbs:
     #sonarcloud-dotnet: ksmc/sonarcloud-dotnet@0.0.9
+    sonarcloud: sonarsource/sonarcloud@4.0.0
 
   jobs:
     build:
