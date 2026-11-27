@@ -35,7 +35,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             return Task.Run(() =>
             {
                 foreach (var t in topics)
-                    producer.CreateTopic(t.Name);
+                    producer.CreateTopic(t.Name, t.NumPartitions);
             });
         }
         
@@ -53,7 +53,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
                                 IsReadOnly = true,
                                 IsSensitive = false,
                                 Name = "num.partitions",
-                                Value = "1",
+                                Value = producer.DefaultPartitions.ToString(),
                                 Source = ConfigSource.DefaultConfig
                             }
                         }
@@ -77,12 +77,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             
             if (topics.Contains(topic))
             {
-                var partitionsMetadata = new List<PartitionMetadata>
-                {
-                    new(1, 1, new int[1] { 1 }, new int[1] { 1 }, error)
-                };
-
-                var topicMetadata = new TopicMetadata(topic, partitionsMetadata, error);
+                var topicMetadata = new TopicMetadata(topic, PartitionsMetadata(topic, error), error);
                 
                 return new Metadata(brokersMetadata,
                     new List<TopicMetadata>() { topicMetadata },
@@ -112,16 +107,15 @@ namespace Streamiz.Kafka.Net.Mock.Sync
             };
 
             foreach(var t in topics)
-            {
-                var partitionsMetadata = new List<PartitionMetadata> {
-                    new PartitionMetadata(0, 0, new int[1]{0}, new int[1]{0}, error)
-                };
-
-                topicsMetadata.Add(new TopicMetadata(t, partitionsMetadata, error));
-            }
+                topicsMetadata.Add(new TopicMetadata(t, PartitionsMetadata(t, error), error));
 
             return new Metadata(brokersMetadata, topicsMetadata, 1, "localhost");
         }
+
+        private List<PartitionMetadata> PartitionsMetadata(string topic, Error error)
+            => Enumerable.Range(0, producer.GetPartitionCount(topic))
+                .Select(p => new PartitionMetadata(p, 1, new[] { 1 }, new[] { 1 }, error))
+                .ToList();
         
     }
 }

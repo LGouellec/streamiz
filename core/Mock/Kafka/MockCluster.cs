@@ -792,17 +792,14 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
 
         #region Producer Gesture
 
-        internal DeliveryReport<byte[], byte[]> Produce(string topic, Message<byte[], byte[]> message)
+        internal DeliveryReport<byte[], byte[]> Produce(string topic, Message<byte[], byte[]> message, Confluent.Kafka.Partitioner? partitioner = null)
         {
             DeliveryReport<byte[], byte[]> r = new DeliveryReport<byte[], byte[]>();
 
             CreateTopic(topic);
 
-            int partition;
-            if (message.Key == null)
-                partition = RandomGenerator.GetInt32(topics[topic].PartitionNumber);
-            else
-                partition = Math.Abs(MurMurHash3.Hash(new MemoryStream(message.Key))) % topics[topic].PartitionNumber;
+            // same partition as the Confluent.Kafka producer
+            int partition = KafkaPartitioner.ChoosePartition(message.Key, topics[topic].PartitionNumber, partitioner);
             
             int offset = topics[topic].AddMessage(message.Key, message.Value, partition, message.Timestamp.UnixTimestampMs, message.Headers);
 
@@ -816,10 +813,10 @@ namespace Streamiz.Kafka.Net.Mock.Kafka
             return r;
         }
 
-        internal DeliveryReport<byte[], byte[]> Produce(TopicPartition topicPartition, Message<byte[], byte[]> message)
+        internal DeliveryReport<byte[], byte[]> Produce(TopicPartition topicPartition, Message<byte[], byte[]> message, Confluent.Kafka.Partitioner? partitioner = null)
         {
             if (topicPartition.Partition.Equals(Partition.Any))
-                return Produce(topicPartition.Topic, message);
+                return Produce(topicPartition.Topic, message, partitioner);
             
             DeliveryReport<byte[], byte[]> r = new DeliveryReport<byte[], byte[]>();
             r.Status = PersistenceStatus.NotPersisted;

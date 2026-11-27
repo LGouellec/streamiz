@@ -9,6 +9,9 @@ using Streamiz.Kafka.Net.SerDes;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using Confluent.Kafka;
+using Confluent.Kafka.Admin;
 using System.Threading;
 using Streamiz.Kafka.Net.Metrics;
 using Streamiz.Kafka.Net.State;
@@ -189,6 +192,33 @@ namespace Streamiz.Kafka.Net.Mock
             return stores.Count > 0 ? 
                 !windowStore ? new MockReadOnlyKeyValueStore<K, V>(stores) : new MockReadOnlyWindowStore<K, V>(stores) 
                 : null;
+        }
+
+        private IAdminClient PartitionsAdmin()
+            => kafkaSupplier.GetAdmin(configuration.ToAdminConfig($"{configuration.ApplicationId}-test-driver-partitions"));
+
+        public void UsePartitions(TestTopicPartitions partitions)
+        {
+            if (!partitions.Topics.Any())
+                return;
+
+            PartitionsAdmin()
+                .CreateTopicsAsync(partitions.Topics.Select(t => new TopicSpecification
+                {
+                    Name = t.Key,
+                    NumPartitions = t.Value
+                }))
+                .GetAwaiter()
+                .GetResult();
+        }
+
+        public int GetPartitionCount(string topic)
+        {
+            var metadata = PartitionsAdmin().GetMetadata(TimeSpan.FromSeconds(5));
+            var topicMetadata = metadata.Topics.FirstOrDefault(t => t.Topic.Equals(topic));
+            if (topicMetadata != null)
+                return topicMetadata.Partitions.Count;
+            return kafkaSupplier is MockKafkaSupplier mockSupplier ? mockSupplier.DefaultNumberPartitions : 1;
         }
 
         public void StartDriver()

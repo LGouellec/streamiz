@@ -8,6 +8,7 @@ using Streamiz.Kafka.Net.State.Internal;
 using Streamiz.Kafka.Net.Stream;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Streamiz.Kafka.Net.Crosscutting;
 
@@ -109,7 +110,29 @@ namespace Streamiz.Kafka.Net.Mock
             : this(topology.Builder, config, Mode.ASYNC_CLUSTER_IN_MEMORY, kafkaSupplier)
         { }
 
-        internal TopologyTestDriver(InternalTopologyBuilder builder, IStreamConfig config, Mode mode, IKafkaSupplier supplier = null)
+        /// <summary>
+        /// Create a new test diver instance with several partitions per topic.
+        /// Records are routed to a partition like a real Confluent.Kafka producer does (see <see cref="IStreamConfig"/>
+        /// <c>Partitioner</c>, <c>murmur2_random</c> by default), and records read from an output topic expose their partition
+        /// (<c>ConsumeResult.Partition</c>).
+        /// <para>
+        /// In <see cref="Mode.SYNC_TASK"/> mode, a single task per sub-topology processes all the partitions of its
+        /// source topics: the processing results are the same as with one task per partition when the topology is
+        /// correctly partitioned, and <c>ProcessorContext.Partition</c> is the partition of the current record.
+        /// In <see cref="Mode.ASYNC_CLUSTER_IN_MEMORY"/> mode, there is one task per partition, like in a real application.
+        /// </para>
+        /// </summary>
+        /// <param name="topology">Topology to be tested</param>
+        /// <param name="config">Configuration for topology. One property will be modified : <see cref="IStreamConfig.NumStreamThreads"/> will set to 1</param>
+        /// <param name="partitions">Number of partitions of the topics</param>
+        /// <param name="mode">Topology mode</param>
+        public TopologyTestDriver(Topology topology, IStreamConfig config, TestTopicPartitions partitions, Mode mode = Mode.SYNC_TASK)
+            : this(topology.Builder, config, mode,
+                mode == Mode.ASYNC_CLUSTER_IN_MEMORY && partitions != null ? new MockKafkaSupplier(partitions.DefaultPartitions) : null,
+                partitions)
+        { }
+
+        internal TopologyTestDriver(InternalTopologyBuilder builder, IStreamConfig config, Mode mode, IKafkaSupplier supplier = null, TestTopicPartitions partitions = null)
         {
             Logger.LoggerFactory = config.Logger;
             topologyBuilder = builder;
@@ -152,6 +175,9 @@ namespace Streamiz.Kafka.Net.Mock
                 default:
                     throw new NotSupportedException();
             }
+
+            if (partitions != null)
+                behavior.UsePartitions(partitions);
 
             behavior.StartDriver();
         }
@@ -403,6 +429,76 @@ namespace Streamiz.Kafka.Net.Mock
         /// Indicate if <see cref="TopologyTestDriver"/> is in error or not.
         /// </summary>
         public bool IsError => behavior.IsError;
+
+        #endregion
+
+        #region Partitioning
+
+        /// <summary>
+        /// Number of partitions of a topic (input, output or internal topic).
+        /// See <see cref="TestTopicPartitions"/> to configure them.
+        /// </summary>
+        /// <param name="topicName">topic name (real name for internal topics: <c>{application.id}-{name}-repartition</c>)</param>
+        /// <returns>the number of partitions</returns>
+        public int GetPartitionCount(string topicName)
+            => behavior.GetPartitionCount(topicName);
+
+        /// <summary>
+        /// Partition where a producer writes a record with this key in <paramref name="topicName"/>,
+        /// using the producer partitioner of the configuration (<c>murmur2_random</c> by default).
+        /// </summary>
+        /// <param name="topicName">topic name</param>
+        /// <param name="key">record key</param>
+        /// <param name="keySerdes">key serdes, the default key serdes of the configuration if null</param>
+        /// <typeparam name="K">key type</typeparam>
+        /// <returns>the partition, or -1 (<see cref="Confluent.Kafka.Partition.Any"/>) when the producer picks a random
+        /// partition (null key with a <c>*_random</c> partitioner, or the <c>random</c> partitioner)</returns>
+        public int GetPartition<K>(string topicName, K key, ISerDes<K> keySerdes = null)
+        {
+            byte[] keyBytes;
+            var context = new Confluent.Kafka.SerializationContext(Confluent.Kafka.MessageComponentType.Key, topicName);
+            if (keySerdes != null)
+            {
+                keySerdes.Initialize(new SerDesContext(configuration));
+                keyBytes = keySerdes.Serialize(key, context);
+            }
+            else
+            {
+                configuration.DefaultKeySerDes.Initialize(new SerDesContext(configuration));
+                keyBytes = configuration.DefaultKeySerDes.SerializeObject(key, context);
+            }
+
+            return KafkaPartitioner.PartitionFor(
+                keyBytes,
+                GetPartitionCount(topicName),
+                configuration.ToProducerConfig().Partitioner).Value;
+        }
+
+        /// <summary>
+        /// Machine-readable description of the tested topology, with internal topics (repartition and changelog topics)
+        /// resolved with the application id.
+        /// </summary>
+        /// <returns>the topology description</returns>
+        public TopologyModel DescribeTopology()
+            => topologyBuilder.DescribeModel();
+
+        /// <summary>
+        /// Real names of the repartition topics created by the topology (after a key-changing operation followed by a
+        /// stateful operation or a join, or an explicit <c>Repartition</c>).
+        /// </summary>
+        /// <returns>the repartition topics</returns>
+        public IReadOnlyList<string> GetRepartitionTopics()
+            => DescribeTopology().RepartitionTopics;
+
+        /// <summary>
+        /// Groups of topics that must be co-partitioned: the input topics of each join (internal topics with their real name).
+        /// See <see cref="PartitioningAssert.CoPartitioned(TopologyTestDriver, string[])"/>.
+        /// </summary>
+        /// <returns>the groups of co-partitioned topics</returns>
+        public IReadOnlyList<IReadOnlyCollection<string>> GetCoPartitionedTopicGroups()
+            => topologyBuilder.GetCopartitionTopicGroups()
+                .Select(g => (IReadOnlyCollection<string>)g.OrderBy(t => t).ToList())
+                .ToList();
 
         #endregion
 

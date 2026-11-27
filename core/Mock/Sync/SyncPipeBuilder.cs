@@ -1,6 +1,7 @@
 ﻿using Streamiz.Kafka.Net.Mock.Pipes;
 using Streamiz.Kafka.Net.Processors;
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,15 +23,22 @@ namespace Streamiz.Kafka.Net.Mock.Sync
                 this.task = task;
             }
 
-            private int offset = 0;
+            // next offset by partition
+            private readonly Dictionary<TopicPartition, long> offsets = new();
 
-            public void PublishRecord(string topic, byte[] key, byte[] value, DateTime timestamp, Headers headers)
-             => task.AddRecord(new ConsumeResult<byte[], byte[]>
-             {
-                 Topic = topic,
-                 TopicPartitionOffset = new TopicPartitionOffset(new TopicPartition(topic, task.Id.Partition), offset++),
-                 Message = new Message<byte[], byte[]> { Key = key, Value = value, Timestamp = new Timestamp(timestamp), Headers = headers }
-             });
+            public void PublishRecord(string topic, int partition, byte[] key, byte[] value, DateTime timestamp, Headers headers)
+            {
+                var topicPartition = new TopicPartition(topic, partition);
+                offsets.TryGetValue(topicPartition, out var offset);
+                offsets[topicPartition] = offset + 1;
+
+                task.AddRecord(new ConsumeResult<byte[], byte[]>
+                {
+                    Topic = topic,
+                    TopicPartitionOffset = new TopicPartitionOffset(topicPartition, offset),
+                    Message = new Message<byte[], byte[]> { Key = key, Value = value, Timestamp = new Timestamp(timestamp), Headers = headers }
+                });
+            }
 
             public void Flush()
             {
@@ -60,8 +68,9 @@ namespace Streamiz.Kafka.Net.Mock.Sync
                 this.globalTask = globalTask;
             }
 
-            public void PublishRecord(string topic, byte[] key, byte[] value, DateTime timestamp, Headers headers)
+            public void PublishRecord(string topic, int partition, byte[] key, byte[] value, DateTime timestamp, Headers headers)
             {
+                // a global task reads all partitions of its topic: records are kept on partition 0
                 globalTask.Update(new ConsumeResult<byte[], byte[]>
                 {
                     Topic = topic,
@@ -90,7 +99,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
                 this.externalProcessorTopologyExecutor = externalProcessorTopologyExecutor;
             }
             
-            public void PublishRecord(string topic, byte[] key, byte[] value, DateTime timestamp, Headers headers)
+            public void PublishRecord(string topic, int partition, byte[] key, byte[] value, DateTime timestamp, Headers headers)
             {
                 var result = new ConsumeResult<byte[], byte[]>
                 {
@@ -116,9 +125,13 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         private readonly ISyncPublisher publisher;
         private readonly SyncProducer mockProducer;
 
-        public SyncPipeBuilder(StreamTask task)
+        // used to route piped records to a partition, like the producer would do
+        private readonly SyncProducer partitionsSource;
+
+        public SyncPipeBuilder(StreamTask task, SyncProducer partitionsSource = null)
         {
             publisher = new StreamTaskPublisher(task);
+            this.partitionsSource = partitionsSource;
         }
         
         public SyncPipeBuilder(GlobalStateUpdateTask globalTask)
@@ -138,7 +151,7 @@ namespace Streamiz.Kafka.Net.Mock.Sync
 
         public IPipeInput Input(string topic, IStreamConfig configuration)
         {
-            return new SyncPipeInput(publisher, topic);
+            return new SyncPipeInput(publisher, topic, partitionsSource, configuration?.ToProducerConfig().Partitioner);
         }
 
         public IPipeOutput Output(string topic, TimeSpan consumeTimeout, IStreamConfig configuration, CancellationToken token = default)
