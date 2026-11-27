@@ -358,7 +358,7 @@ namespace Streamiz.Kafka.Net
 
             int numStreamThreads = topology.Builder.HasNoNonGlobalTopology ? 0 : configuration.NumStreamThreads;
 
-            string Protect(string str)
+            static string Protect(string str)
                 => str.Replace("\n", "\\n");
             
             GeneralClientMetrics.StreamsAppSensor(
@@ -370,7 +370,7 @@ namespace Streamiz.Kafka.Net
             
             #region Temporary
 
-            long GetMemoryUse()
+            static long GetMemoryUse()
             {
                 using var process = Process.GetCurrentProcess();
                 #if NETSTANDARD2_0
@@ -623,6 +623,17 @@ namespace Streamiz.Kafka.Net
         /// <returns><see cref="IReadOnlyCollection{T}"/> of all sensors</returns>
         public IEnumerable<Sensor> Metrics()
             => metricsRegistry.GetSensors();
+
+        /// <summary>
+        /// Returns a machine-readable description of the topology run by this <see cref="KafkaStream"/> instance.
+        /// Compared to <see cref="Topology.Describe"/>, internal topics (repartition and changelog topics) are resolved
+        /// with the <see cref="IStreamConfig.ApplicationId"/>.
+        /// Use <see cref="TopologyModel.ToJson"/> to serialize it in JSON, or <see cref="TopologyModel.ToString"/>
+        /// to get the text representation.
+        /// </summary>
+        /// <returns>a serializable description of the topology</returns>
+        public TopologyModel DescribeTopology()
+            => topology.Builder.DescribeModel();
 
         #region Privates
 

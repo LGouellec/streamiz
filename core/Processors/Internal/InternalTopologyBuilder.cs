@@ -254,15 +254,6 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             {
                 throw new TopologyException("Topic " + topicName + " has already been registered by another source.");
             }
-
-            // TODO: ?
-            //for (Pattern pattern : nodeToSourcePatterns.values())
-            //{
-            //    if (pattern.matcher(topic).matches())
-            //    {
-            //        throw new TopologyException("Topic " + topic + " matches a Pattern already registered by another source.");
-            //    }
-            //}
         }
 
         private void ValidateGlobalStoreArguments<K, V>(string sourceName,
@@ -692,6 +683,35 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             }
 
             return topologyDes;
+        }
+
+        internal TopologyModel DescribeModel()
+        {
+            var model = Describe().ToModel();
+            var topicGroups = MakeInternalTopicGroups();
+
+            string Resolve(string topic) => topic != null && internalTopics.ContainsKey(topic) ? DecorateTopic(topic) : topic;
+
+            foreach (var sub in model.SubTopologies)
+            {
+                // internal topics are described with their logical name, use the real topic name instead
+                foreach (var node in sub.Nodes)
+                {
+                    node.Topics = node.Topics?.Select(Resolve).ToList();
+                    node.Topic = Resolve(node.Topic);
+                }
+                sub.SourceTopics = sub.SourceTopics.Select(Resolve).ToList();
+                sub.SinkTopics = sub.SinkTopics.Select(Resolve).ToList();
+
+                if (topicGroups.TryGetValue(sub.Id, out var topicsInfo))
+                {
+                    sub.RepartitionTopics = topicsInfo.RepartitionTopics.Keys.OrderBy(t => t).ToList();
+                    sub.ChangelogTopics = topicsInfo.ChangelogTopics.Keys.OrderBy(t => t).ToList();
+                }
+            }
+
+            model.ComputeAggregates();
+            return model;
         }
 
         private void DescribeSubTopology(TopologyDescription description, int key, ISet<string> values)
