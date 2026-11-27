@@ -85,7 +85,7 @@ namespace Streamiz.Kafka.Net.Processors
             var activity = StreamizActivitySource.StartSend(
                 topicName,
                 partition.HasValue && partition.Value != Partition.Any ? partition.Value.Value : null,
-                value == null,
+                value is null,
                 Context);
             
             try

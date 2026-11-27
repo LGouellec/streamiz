@@ -26,8 +26,12 @@ namespace Streamiz.Kafka.Net.Metrics.OpenTelemetry
         /// <returns>The same builder, for chaining</returns>
         public static TracerProviderBuilder AddStreamizInstrumentation(this TracerProviderBuilder builder)
         {
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(builder);
+#else
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
+#endif
 
             return builder.AddSource(StreamizInstrumentation.ActivitySourceName);
         }

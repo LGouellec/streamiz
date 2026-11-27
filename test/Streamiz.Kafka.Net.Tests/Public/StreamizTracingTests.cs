@@ -64,7 +64,7 @@ namespace Streamiz.Kafka.Net.Tests.Public
         private static string HeaderValue(Headers headers, string key)
             => headers != null && headers.TryGetLastBytes(key, out var bytes) ? Encoding.UTF8.GetString(bytes) : null;
 
-        private TopologyTestDriver BuildDriver(Action<StreamBuilder> build, string applicationId = "test-tracing")
+        private static TopologyTestDriver BuildDriver(Action<StreamBuilder> build, string applicationId = "test-tracing")
         {
             var config = new StreamConfig<StringSerDes, StringSerDes> { ApplicationId = applicationId };
             var builder = new StreamBuilder();
@@ -268,8 +268,8 @@ namespace Streamiz.Kafka.Net.Tests.Public
             input.PipeInput("key", null);
             output.ReadKeyValue();
 
-            Assert.AreEqual(true, Captured(inputTopic).Single().GetTagItem("messaging.kafka.message.tombstone"));
-            Assert.AreEqual(true, Captured(outputTopic).Single().GetTagItem("messaging.kafka.message.tombstone"));
+            Assert.That(Captured(inputTopic).Single().GetTagItem("messaging.kafka.message.tombstone"), Is.True);
+            Assert.That(Captured(outputTopic).Single().GetTagItem("messaging.kafka.message.tombstone"), Is.True);
         }
 
         [Test]
