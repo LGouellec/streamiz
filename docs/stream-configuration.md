@@ -206,6 +206,44 @@ Deserialization exception handling function called when deserialization exceptio
 
 Production exception handling function called when kafka produce exception is raise.
 
+### ProcessingListener
+
+Listener invoked by the stream thread around the processing of each consumed record and each punctuation. (Default: null)
+
+It can be used to start a tracing span, push a logging scope or measure processing without changing the topology. The callbacks run synchronously on the processing thread, so an ``` Activity ``` started in ``` OnProcessStart ``` is ``` Activity.Current ``` for every processor of the sub-topology, including the sink nodes, until ``` OnProcessEnd ```.
+
+It is called for records of source topics, internal repartition topics, table and global table source topics and async processor request/response topics. It is not called while restoring state stores.
+
+The listener only observes the processing and must not modify the record or the context. An exception thrown during processing is passed to ``` OnProcessEnd ``` and then rethrown, so the exception handlers are applied as usual. An exception thrown by the listener itself is logged and ignored. One instance is shared by all stream threads, so implementations must be thread-safe.
+
+``` csharp
+public class TracingListener : IProcessingListener
+{
+    private static readonly ActivitySource Source = new("my-streams-app");
+
+    public object OnProcessStart(ProcessorContext context, ConsumeResult<byte[], byte[]> record)
+        => Source.StartActivity($"{context.Topic} process", ActivityKind.Consumer);
+
+    public void OnProcessEnd(object state, Exception exception)
+    {
+        if (state is Activity activity)
+        {
+            if (exception != null)
+                activity.SetStatus(ActivityStatusCode.Error, exception.Message);
+            activity.Dispose();
+        }
+    }
+
+    public object OnPunctuateStart(ProcessorContext context, string processorName, PunctuationType punctuationType, long timestamp)
+        => Source.StartActivity($"{processorName} punctuate");
+
+    public void OnPunctuateEnd(object state, Exception exception) => OnProcessEnd(state, exception);
+}
+
+var config = new StreamConfig();
+config.ProcessingListener = new TracingListener();
+```
+
 ### Logger
 
 This library uses Microsoft.Extensions.Logging.Abstractions for logging. To set logging for this library you need to set Logger property in your stream config instance.
