@@ -14,6 +14,7 @@ using Streamiz.Kafka.Net.Mock;
 using Streamiz.Kafka.Net.Processors.Internal;
 using Streamiz.Kafka.Net.Processors.Public;
 using Streamiz.Kafka.Net.Stream.Internal;
+using Streamiz.Kafka.Net.Tracing;
 
 namespace Streamiz.Kafka.Net.Processors
 {
@@ -443,8 +444,22 @@ namespace Streamiz.Kafka.Net.Processors
             var recordInfo = $"Topic:{record.Record.Topic}|Partition:{record.Record.Partition.Value}|Offset:{record.Record.Offset}|Timestamp:{record.Record.Message.Timestamp.UnixTimestampMs}";
 
             log.LogDebug($"{logPrefix}Start processing one record [{recordInfo}]");
-            long latency = ActionHelper.MeasureLatency(() => ProcessingListenerHelper.Process(
-                processingListener, Context, record.Processor, record.Record));
+            long latency;
+            var activity = StreamizActivitySource.StartProcess(record.Record, ApplicationId, Id);
+            try
+            {
+                latency = ActionHelper.MeasureLatency(() => ProcessingListenerHelper.Process(
+                    processingListener, Context, record.Processor, record.Record));
+            }
+            catch (Exception e)
+            {
+                StreamizActivitySource.SetException(activity, e);
+                throw;
+            }
+            finally
+            {
+                activity?.Dispose();
+            }
             log.LogDebug($"{logPrefix}Completed processing one record [{recordInfo}]");
 
             consumedOffsets.AddOrUpdate(record.Record.TopicPartition, record.Record.Offset);

@@ -669,3 +669,33 @@ All the following metrics have a recording level of `DEBUG`.
 | Metric name      | Description | Tags          |
 | :---             |    :----:   |          ---: |
 | <span style="color: #06389C; font-weight: bold;">active-buffer-count</span>        | The count of buffered records that are polled from consumer and not yet processed for this active task        | thread_id,task_id  |
+
+## Distributed tracing
+
+Streamiz emits [`System.Diagnostics.Activity`](https://learn.microsoft.com/dotnet/core/diagnostics/distributed-tracing) spans through an `ActivitySource` named `Streamiz.Kafka.Net` (`StreamizInstrumentation.ActivitySourceName`). Tracing is opt-in : as long as no listener is subscribed to this source, nothing is created and record headers are forwarded untouched.
+
+When a listener (OpenTelemetry, or any `ActivityListener`) is subscribed, Streamiz creates :
+
+| Span | Kind | Parent | Description |
+| :--- | :--: | :--- | :--- |
+| `process {topic}` | `Consumer` | W3C `traceparent` / `tracestate` headers of the consumed record (if any) | One span per consumed record (source and repartition topics, async processors request/response topics), covering the whole sub-topology from deserialization to the sinks. `Activity.Current` is available in every processor. |
+| `send {topic}` | `Producer` | The current `process` span | One span per record produced by a sink (`To(...)`, repartition topics). Its W3C context replaces the `traceparent` / `tracestate` headers of the produced record, so the next hop continues the trace. |
+
+Spans follow the OpenTelemetry messaging semantic conventions : `messaging.system` (`kafka`), `messaging.operation.name`, `messaging.operation.type`, `messaging.destination.name`, `messaging.destination.partition.id`, `messaging.kafka.offset`, `messaging.consumer.group.name` (application id), `messaging.kafka.message.tombstone`, plus `streamiz.task.id`. Processing exceptions set the span status to `Error` with an `exception` event.
+
+With OpenTelemetry, install the `Streamiz.Kafka.Net.Metrics.OpenTelemetry` package and register the instrumentation :
+
+```csharp
+using OpenTelemetry;
+using OpenTelemetry.Trace;
+using Streamiz.Kafka.Net.Metrics.OpenTelemetry;
+
+using var tracerProvider = Sdk.CreateTracerProviderBuilder()
+    .AddStreamizInstrumentation() // equivalent to .AddSource("Streamiz.Kafka.Net")
+    .AddOtlpExporter()
+    .Build();
+```
+
+or with the hosting extensions : `services.AddOpenTelemetry().WithTracing(t => t.AddStreamizInstrumentation().AddOtlpExporter());`.
+
+Without OpenTelemetry, any `ActivityListener` subscribed to `StreamizInstrumentation.ActivitySourceName` works as well.
