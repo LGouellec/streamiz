@@ -35,6 +35,7 @@ namespace Streamiz.Kafka.Net.Processors
         private bool transactionInFlight;
         private readonly string threadId;
         private readonly IWallClockTimeProvider wallClockTimeProvider;
+        private readonly IProcessingListener processingListener;
         
         private Sensor closeTaskSensor;
         private Sensor activeBufferedRecordSensor;
@@ -70,6 +71,7 @@ namespace Streamiz.Kafka.Net.Processors
             this.wallClockTimeProvider = wallClockTimeProvider ?? SystemWallClockTimeProvider.Instance;
             consumedOffsets = new Dictionary<TopicPartition, long>();
             maxTaskIdleMs = configuration.MaxTaskIdleMs;
+            processingListener = configuration.ProcessingListener;
             idleStartTime = -1;
 
             eosEnabled = configuration.Guarantee == ProcessingGuarantee.EXACTLY_ONCE;
@@ -446,7 +448,8 @@ namespace Streamiz.Kafka.Net.Processors
             var activity = StreamizActivitySource.StartProcess(record.Record, ApplicationId, Id);
             try
             {
-                latency = ActionHelper.MeasureLatency(() => record.Processor.Process(record.Record));
+                latency = ActionHelper.MeasureLatency(() => ProcessingListenerHelper.Process(
+                    processingListener, Context, record.Processor, record.Record));
             }
             catch (Exception e)
             {
@@ -516,7 +519,8 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 Context.CurrentProcessor = taskScheduled.Processor;
                 Context.SetUnknownRecordMetaData(systemTime);
-                taskScheduled.Execute(systemTime);
+                ProcessingListenerHelper.Punctuate(
+                    processingListener, Context, taskScheduled, PunctuationType.PROCESSING_TIME, systemTime);
                 punctuated = true;
             }
 
@@ -538,7 +542,8 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 Context.CurrentProcessor = taskScheduled.Processor;
                 Context.SetUnknownRecordMetaData(partitionGrouper.StreamTime);
-                taskScheduled.Execute(partitionGrouper.StreamTime);
+                ProcessingListenerHelper.Punctuate(
+                    processingListener, Context, taskScheduled, PunctuationType.STREAM_TIME, partitionGrouper.StreamTime);
                 punctuated = true;
             }
             Context.CurrentProcessor = null;

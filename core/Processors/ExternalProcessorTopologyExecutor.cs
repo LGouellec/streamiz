@@ -118,6 +118,7 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly IRecordCollector recordCollector;
         private readonly TaskId taskId;
         private readonly string applicationId;
+        private readonly IProcessingListener processingListener;
         private ProcessorContext context;
         private readonly string logPrefix;
         private readonly Dictionary<TopicPartition, long> consumedOffsets = new();
@@ -143,6 +144,7 @@ namespace Streamiz.Kafka.Net.Processors
             Processor = sourceProcessor;
             this.taskId = taskId;
             applicationId = config.ApplicationId;
+            processingListener = config.ProcessingListener;
 
             logPrefix = $"external-task[{taskId.Id}] ";
             
@@ -197,7 +199,8 @@ namespace Streamiz.Kafka.Net.Processors
                     var activity = StreamizActivitySource.StartProcess(recordToProcess, applicationId, taskId);
                     try
                     {
-                        latency = ActionHelper.MeasureLatency(() => Processor.Process(recordToProcess));
+                        latency = ActionHelper.MeasureLatency(() => ProcessingListenerHelper.Process(
+                            processingListener, context, Processor, recordToProcess));
                     }
                     catch (Exception e)
                     {

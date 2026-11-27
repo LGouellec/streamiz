@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Streamiz.Kafka.Net.Crosscutting;
@@ -48,6 +49,23 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         private readonly long pollTimeMs;
         private readonly long maxPollRestoringRecords;
         private readonly IStreamConfig config;
+
+        private static readonly ISet<ErrorCode> retriableQueryWatermarkErrors = new HashSet<ErrorCode>
+        {
+            ErrorCode.NotLeaderForPartition,
+            ErrorCode.LeaderNotAvailable,
+            ErrorCode.RequestTimedOut,
+            ErrorCode.NetworkException,
+            ErrorCode.Local_TimedOut,
+            ErrorCode.Local_Transport,
+            ErrorCode.Local_AllBrokersDown,
+            ErrorCode.Local_UnknownPartition
+        };
+
+        // bounded retry of retriable errors when querying watermark offsets during the restore phase (internal for testing)
+        internal int QueryWatermarkOffsetsMaxAttempts { get; set; } = 5;
+        internal TimeSpan QueryWatermarkOffsetsRetryBackoff { get; set; } = TimeSpan.FromMilliseconds(100);
+        private static readonly TimeSpan QueryWatermarkOffsetsMaxRetryBackoff = TimeSpan.FromSeconds(2);
         
         public StoreChangelogReader(
             IStreamConfig config,
@@ -361,7 +379,7 @@ namespace Streamiz.Kafka.Net.Processors.Internal
         {
             return registeredChangelogs
                 .Select(_changelog => {
-                    var offsets = restoreConsumer.QueryWatermarkOffsets(_changelog.StoreMetadata.ChangelogTopicPartition, config.QueryWatermarkOffsetsTimeout);
+                    var offsets = QueryWatermarkOffsetsWithRetry(_changelog.StoreMetadata.ChangelogTopicPartition);
                     return new
                     {
                         TopicPartition = _changelog.StoreMetadata.ChangelogTopicPartition,
@@ -372,6 +390,30 @@ namespace Streamiz.Kafka.Net.Processors.Internal
                     };
                 })
             .ToDictionary(i => i.TopicPartition, i => (i.BeginOffset, i.EndOffset));
+        }
+
+        internal WatermarkOffsets QueryWatermarkOffsetsWithRetry(TopicPartition topicPartition)
+        {
+            TimeSpan backoff = QueryWatermarkOffsetsRetryBackoff;
+            int attempt = 1;
+            while (true)
+            {
+                try
+                {
+                    return restoreConsumer.QueryWatermarkOffsets(topicPartition, config.QueryWatermarkOffsetsTimeout);
+                }
+                catch (KafkaException e) when (retriableQueryWatermarkErrors.Contains(e.Error.Code) &&
+                                               attempt < QueryWatermarkOffsetsMaxAttempts)
+                {
+                    log.LogWarning(
+                        "Retriable error {Error} while querying watermark offsets of {TopicPartition} (attempt {Attempt}/{MaxAttempts}), retrying in {Backoff}ms",
+                        e.Error.Reason, topicPartition, attempt, QueryWatermarkOffsetsMaxAttempts,
+                        backoff.TotalMilliseconds);
+                    Thread.Sleep(backoff);
+                    backoff = TimeSpan.FromTicks(Math.Min(backoff.Ticks * 2, QueryWatermarkOffsetsMaxRetryBackoff.Ticks));
+                    ++attempt;
+                }
+            }
         }
 
         #endregion
