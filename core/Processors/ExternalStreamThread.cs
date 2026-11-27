@@ -142,7 +142,8 @@ namespace Streamiz.Kafka.Net.Processors
                             if (processor.State == ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState
                                 .BUFFER_FULL)
                             {
-                                var assignmentTopic = consumer.Assignment.Where(a => a.Topic.Equals(result.Topic))
+                                // result is null when the buffer becomes full while reprocessing a buffered record (no record polled)
+                                var assignmentTopic = consumer.Assignment.Where(a => a.Topic.Equals(processor.SourceTopic))
                                     .ToList();
                                 consumer.Pause(assignmentTopic);
                                 processor.State = ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState

@@ -108,6 +108,7 @@ namespace Streamiz.Kafka.Net.Processors
         }
         
         private ISourceProcessor Processor { get; }
+        public string SourceTopic => Processor.TopicName;
         private Queue<ConsumeResult<byte[], byte[]>> BufferedRecords { get; } = new();
         private RetryPolicy RetryPolicy { get; }
         public ExternalProcessorTopologyState State { get; internal set; }

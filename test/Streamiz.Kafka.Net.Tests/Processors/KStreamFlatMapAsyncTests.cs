@@ -371,6 +371,51 @@ namespace Streamiz.Kafka.Net.Tests.Processors
             var results = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(output, 15);
             Assert.AreEqual(15 * 6, results.Count);
         }
-        
+
+        [Test]
+        public void KStreamFlatMapAsyncBufferFullWhileReprocessingBuffer()
+        {
+            // The buffer becomes full while a buffered record is reprocessed after a poll with no record.
+            // The external stream thread must pause the request topic without relying on the polled record.
+            int failing = 1;
+            using var driver = BuildTopology((builder) =>
+            {
+                var stream = builder.Stream<string, string>("input");
+                stream
+                    .FlatMapAsync(
+                        async (record, _) =>
+                        {
+                            if (Volatile.Read(ref failing) == 1)
+                                throw new StreamsException("Exception");
+                            return await Task.FromResult(record.Value.ToCharArray().Select(c => new KeyValuePair<string, char>(record.Key.ToUpper(), c)));
+                        },
+                        RetryPolicy
+                            .NewBuilder()
+                            .RetriableException<StreamsException>()
+                            .NumberOfRetry(1)
+                            .RetryBackOffMs(1)
+                            .MemoryBufferSize(5)
+                            .RetryBehavior(EndRetryBehavior.BUFFERED)
+                            .Build(),
+                        null,
+                        new ResponseSerDes<string, char>(new StringSerDes(), new CharSerDes()))
+                    .To<StringSerDes, CharSerDes>("output");
+            }, TopologyTestDriver.Mode.ASYNC_CLUSTER_IN_MEMORY);
+
+            var input = driver.CreateInputTopic<string, string>("input");
+            var output = driver.CreateOutputTopic<string, char, StringSerDes, CharSerDes>("output");
+
+            for (int i = 0; i < 5; ++i)
+            {
+                input.PipeInput("key1", "value1");
+                // let the external stream thread poll without any new record
+                Thread.Sleep(300);
+            }
+
+            Volatile.Write(ref failing, 0);
+
+            var results = IntegrationTestUtils.WaitUntilMinKeyValueRecordsReceived(output, 5 * 6);
+            Assert.AreEqual(5 * 6, results.Count);
+        }
     }
 }
