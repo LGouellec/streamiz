@@ -121,15 +121,19 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         {
             CreateTopic(topic);
             
+            long offset;
             lock (_lock)
+            {
                 topics[topic].Add(message);
+                offset = topics[topic].Count - 1;
+            }
 
             DeliveryReport<byte[], byte[]> r = new DeliveryReport<byte[], byte[]>();
 
             r.Message = message;
             r.Partition = 0;
             r.Topic = topic;
-            r.Offset = topics[topic].Count - 1;
+            r.Offset = offset;
             r.Error = new Error(ErrorCode.NoError);
             r.Status = PersistenceStatus.Persisted;
             deliveryHandler?.Invoke(r);
@@ -160,7 +164,8 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         public IEnumerable<Message<byte[], byte[]>> GetHistory(string topicName)
         {
             CreateTopic(topicName);
-            return topics[topicName].ToArray();
+            lock (_lock)
+                return topics[topicName].ToArray();
         }
 
         public IDictionary<string, int> GetAllTopicCounts()

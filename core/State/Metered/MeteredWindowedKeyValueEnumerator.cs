@@ -26,7 +26,7 @@ namespace Streamiz.Kafka.Net.State.Metered
             this.funcSerdesKey = funcSerdesKey;
             this.funcSerdesValue = funcSerdesValue;
             this.sensor = sensor;
-            startMs = DateTime.Now.GetMilliseconds();
+            startMs = MonotonicClock.CurrentMs;
         }
 
         public KeyValuePair<Windowed<K>, V>? Current
@@ -48,7 +48,7 @@ namespace Streamiz.Kafka.Net.State.Metered
         public void Dispose()
         {
             innerEnumerator.Dispose();
-            sensor.Record(DateTime.Now.GetMilliseconds() - startMs);
+            sensor.Record(MonotonicClock.CurrentMs - startMs);
         }
 
         public bool MoveNext() => innerEnumerator.MoveNext();

@@ -9,7 +9,7 @@ namespace Streamiz.Kafka.Net.State.Cache.Internal
 
     internal class ClockSystemTime : IClockTime
     {
-        public DateTime GetCurrentTime() => DateTime.Now;
+        public DateTime GetCurrentTime() => DateTime.UtcNow;
     }
 
 

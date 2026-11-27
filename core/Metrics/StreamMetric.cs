@@ -34,7 +34,7 @@ namespace Streamiz.Kafka.Net.Metrics
         {
             get
             {
-                Measure(DateTime.Now.GetMilliseconds());
+                Measure(DateTime.UtcNow.GetMilliseconds());
                 return lastValue;
             }
         }

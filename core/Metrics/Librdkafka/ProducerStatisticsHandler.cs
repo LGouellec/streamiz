@@ -213,7 +213,7 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
         
         private void PublishTopicsStats(Dictionary<string, TopicStatistic> statisticsTopics)
         {
-            long now = DateTime.Now.GetMilliseconds();
+            long now = DateTime.UtcNow.GetMilliseconds();
 
             PublishTopicsStatistics(statisticsTopics);
             
@@ -269,7 +269,7 @@ namespace Streamiz.Kafka.Net.Metrics.Librdkafka
 
         private void PublishBrokerStats(Dictionary<string, BrokerStatistic> statisticsBrokers)
         {
-            long now = DateTime.Now.GetMilliseconds();
+            long now = DateTime.UtcNow.GetMilliseconds();
 
             foreach (var broker in statisticsBrokers)
             {

@@ -1,4 +1,5 @@
-﻿using Streamiz.Kafka.Net.Errors;
+﻿using Streamiz.Kafka.Net.Crosscutting;
+using Streamiz.Kafka.Net.Errors;
 using Streamiz.Kafka.Net.Kafka;
 using Streamiz.Kafka.Net.Mock.Kafka;
 using Streamiz.Kafka.Net.Mock.Pipes;
@@ -193,7 +194,7 @@ namespace Streamiz.Kafka.Net.Mock
         public void StartDriver()
         {
             bool isRunningState = false;
-            DateTime dt = DateTime.Now;
+            long dt = MonotonicClock.CurrentMs;
 
             void stateChangedHandeler(IThread thread, ThreadStateTransitionValidator old,
                 ThreadStateTransitionValidator @new)
@@ -231,7 +232,7 @@ namespace Streamiz.Kafka.Net.Mock
             while (!isRunningState)
             {
                 Thread.Sleep(250);
-                if (DateTime.Now > dt + startTimeout)
+                if (MonotonicClock.ElapsedSince(dt) > startTimeout.TotalMilliseconds)
                 {
                     throw new StreamsException($"Test topology driver can't initialize state after {startTimeout.TotalSeconds} seconds !");
                 }

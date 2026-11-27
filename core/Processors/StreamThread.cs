@@ -106,9 +106,10 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly string logPrefix;
         private readonly long commitTimeMs = 0;
         private CancellationToken token;
-        private DateTime lastCommit = DateTime.Now;
-        private DateTime lastMetrics = DateTime.Now;
-        private DateTime lastSummaryMs;
+        // lastCommit, lastMetrics, lastSummaryMs and lastPollMs are monotonic clock values (see MonotonicClock), not epoch timestamps
+        private long lastCommit = MonotonicClock.CurrentMs;
+        private long lastMetrics = MonotonicClock.CurrentMs;
+        private long lastSummaryMs;
         private long summaryProcessed;
         private long summaryPunctuated;
         private long summaryComitted;
@@ -198,7 +199,7 @@ namespace Streamiz.Kafka.Net.Processors
         public void Run()
         {
             exception = null;
-            lastSummaryMs = DateTime.Now;
+            lastSummaryMs = MonotonicClock.CurrentMs;
             long totalProcessLatency = 0, totalCommitLatency = 0, totalPunctuateLatency = 0;
             bool failed = false;
 
@@ -240,8 +241,8 @@ namespace Streamiz.Kafka.Net.Processors
                             {
                                 RestorePhase();
 
-                                long now = DateTime.Now.GetMilliseconds();
-                                long startMs = now;
+                                long now = DateTime.UtcNow.GetMilliseconds();
+                                long startMs = MonotonicClock.CurrentMs;
                                 IEnumerable<ConsumeResult<byte[], byte[]>> records =
                                     new List<ConsumeResult<byte[], byte[]>>();
 
@@ -251,21 +252,21 @@ namespace Streamiz.Kafka.Net.Processors
                                 });
                                 pollSensor.Record(pollLatency, now);
 
-                                DateTime n = DateTime.Now;
+                                long n = MonotonicClock.CurrentMs;
                                 var count = AddToTasks(records);
                                 if (count > 0)
                                 {
-                                    log.LogDebug($"Add {count} records in tasks in {DateTime.Now - n}");
+                                    log.LogDebug($"Add {count} records in tasks in {MonotonicClock.ElapsedSince(n)}ms");
                                     pollRecordsSensor.Record(count, now);
                                 }
 
-                                n = DateTime.Now;
+                                n = MonotonicClock.CurrentMs;
                                 int processed = 0, totalProcessed = 0;
                                 long timeSinceLastPoll = 0;
                                 do
                                 {
                                     processed = 0;
-                                    now = DateTime.Now.GetMilliseconds();
+                                    now = DateTime.UtcNow.GetMilliseconds();
                                     for (int i = 0; i < numIterations; ++i)
                                     {
                                         long processLatency = 0;
@@ -309,7 +310,7 @@ namespace Streamiz.Kafka.Net.Processors
 
                                     log.LogDebug($"{punctuated} punctuators ran.");
 
-                                    timeSinceLastPoll = Math.Max(DateTime.Now.GetMilliseconds() - lastPollMs, 0);
+                                    timeSinceLastPoll = Math.Max(MonotonicClock.ElapsedSince(lastPollMs), 0);
 
                                     int commited = 0;
                                     long commitLatency = ActionHelper.MeasureLatency(() => commited = Commit());
@@ -337,11 +338,11 @@ namespace Streamiz.Kafka.Net.Processors
                                 if (State == ThreadState.PARTITIONS_ASSIGNED)
                                     SetState(ThreadState.RUNNING);
 
-                                now = DateTime.Now.GetMilliseconds();
-                                double runOnceLatency = (double) now - startMs;
+                                now = DateTime.UtcNow.GetMilliseconds();
+                                double runOnceLatency = MonotonicClock.ElapsedSince(startMs);
 
                                 if (totalProcessed > 0)
-                                    log.LogDebug($"Processing {totalProcessed} records in {DateTime.Now - n}");
+                                    log.LogDebug($"Processing {totalProcessed} records in {MonotonicClock.ElapsedSince(n)}ms");
 
                                 processRecordsSensor.Record(totalProcessed, now);
                                 processRatioSensor.Record(totalProcessLatency / runOnceLatency, now);
@@ -353,14 +354,14 @@ namespace Streamiz.Kafka.Net.Processors
                                 totalCommitLatency = 0;
                                 totalPunctuateLatency = 0;
 
-                                var dt = DateTime.Now;
-                                if (lastMetrics.Add(TimeSpan.FromMilliseconds(streamConfig.MetricsIntervalMs)) < dt)
+                                long dt = MonotonicClock.CurrentMs;
+                                if (dt - lastMetrics > streamConfig.MetricsIntervalMs)
                                 {
                                     MetricUtils.ExportMetrics(streamMetricsRegistry, streamConfig, Name);
                                     lastMetrics = dt;
                                 }
 
-                                if (lastSummaryMs.Add(streamConfig.LogProcessingSummary) < dt)
+                                if (dt - lastSummaryMs > streamConfig.LogProcessingSummary.TotalMilliseconds)
                                 {
                                     log.LogInformation(
                                         $"Processed {summaryProcessed} total records, ran {summaryPunctuated} punctuators and committed {summaryComitted} total tasks since the last update");
@@ -416,7 +417,7 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     restorationInProgress = false;
                     log.LogInformation(
-                        $"Restoration took {DateTime.Now.GetMilliseconds() - LastPartitionAssignedTime}ms for all tasks {string.Join(",", Manager.ActiveTaskIds)}");
+                        $"Restoration took {DateTime.UtcNow.GetMilliseconds() - LastPartitionAssignedTime}ms for all tasks {string.Join(",", Manager.ActiveTaskIds)}");
                     if (State == ThreadState.PARTITIONS_ASSIGNED)
                         SetState(ThreadState.RUNNING);
                 }
@@ -487,7 +488,7 @@ namespace Streamiz.Kafka.Net.Processors
             consumer.Subscribe(builder.GetSourceTopics());
             thread.Start();
 
-            ThreadMetrics.CreateStartThreadSensor(threadId, DateTime.Now.GetMilliseconds(), streamMetricsRegistry);
+            ThreadMetrics.CreateStartThreadSensor(threadId, DateTime.UtcNow.GetMilliseconds(), streamMetricsRegistry);
         }
 
         public IEnumerable<ITask> ActiveTasks => Manager.ActiveTasks;
@@ -528,17 +529,17 @@ namespace Streamiz.Kafka.Net.Processors
         internal int Commit() // for testing
         {
             int committed = 0;
-            if (DateTime.Now - lastCommit > TimeSpan.FromMilliseconds(commitTimeMs))
+            if (MonotonicClock.ElapsedSince(lastCommit) > commitTimeMs)
             {
-                DateTime beginCommit = DateTime.Now;
+                long beginCommit = MonotonicClock.CurrentMs;
                 log.LogDebug(
                     "Committing all active tasks {TaskIDs} since {DateTime}ms has elapsed (commit interval is {CommitTime}ms)",
-                    string.Join(",", Manager.ActiveTaskIds), (DateTime.Now - lastCommit).TotalMilliseconds,
+                    string.Join(",", Manager.ActiveTaskIds), MonotonicClock.ElapsedSince(lastCommit),
                     commitTimeMs);
                 committed = Manager.CommitAll();
                 if (committed > 0)
                     log.LogDebug("Committed all active tasks {TaskIDs} in {TimeElapsed}ms",
-                        string.Join(",", Manager.ActiveTaskIds), (DateTime.Now - beginCommit).TotalMilliseconds);
+                        string.Join(",", Manager.ActiveTaskIds), MonotonicClock.ElapsedSince(beginCommit));
 
                 if (committed == -1)
                 {
@@ -547,7 +548,7 @@ namespace Streamiz.Kafka.Net.Processors
                 }
                 else
                 {
-                    lastCommit = DateTime.Now;
+                    lastCommit = MonotonicClock.CurrentMs;
                 }
             }
 
@@ -660,7 +661,7 @@ namespace Streamiz.Kafka.Net.Processors
         {
             if (!restorationInProgress && !Manager.RebalanceInProgress)
             {
-                lastPollMs = DateTime.Now.GetMilliseconds();
+                lastPollMs = MonotonicClock.CurrentMs;
                 return consumer.ConsumeRecords(ts, streamConfig.MaxPollRecords);
             }
 

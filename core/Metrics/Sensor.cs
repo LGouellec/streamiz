@@ -152,10 +152,10 @@ namespace Streamiz.Kafka.Net.Metrics
             => Record(1);
         
         internal void Record(long value)
-            => Record(value, DateTime.Now.GetMilliseconds());
+            => Record(value, DateTime.UtcNow.GetMilliseconds());
         
         internal void Record(double value)
-            => Record(value, DateTime.Now.GetMilliseconds());
+            => Record(value, DateTime.UtcNow.GetMilliseconds());
         
         internal virtual void Record(double value, long timeMs)
             => RecordInternal(value, timeMs);

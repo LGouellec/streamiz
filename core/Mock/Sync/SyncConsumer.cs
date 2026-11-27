@@ -297,14 +297,14 @@ namespace Streamiz.Kafka.Net.Mock.Sync
         {
             lock (_lock)
             {
-                DateTime dt = DateTime.Now;
+                long dt = MonotonicClock.CurrentMs;
                 ConsumeResult<byte[], byte[]> result = null;
 
                 foreach (var kp in offsets)
                 {
                     if (Assignment.Any() && Assignment.Select(a => a.Topic).Contains(kp.Key))
                     {
-                        if (timeout != TimeSpan.Zero && (dt + timeout) < DateTime.Now)
+                        if (timeout != TimeSpan.Zero && MonotonicClock.ElapsedSince(dt) > timeout.TotalMilliseconds)
                             break;
 
                         var tp = new TopicPartition(kp.Key, 0);

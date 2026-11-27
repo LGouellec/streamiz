@@ -21,7 +21,7 @@ namespace Streamiz.Kafka.Net.Processors
             private readonly TimeSpan pollTime;
             private readonly TimeSpan flushInterval;
             private readonly long maxPollRecords;
-            private DateTime lastFlush;
+            private long lastFlush; // monotonic clock value (see MonotonicClock)
 
 
             public StateConsumer(
@@ -52,7 +52,7 @@ namespace Streamiz.Kafka.Net.Processors
                 foreach(var tpo in mappedPartitions)
                     globalConsumer.Seek(tpo);
 
-                lastFlush = DateTime.Now;
+                lastFlush = MonotonicClock.CurrentMs;
             }
 
             public void PollAndUpdate()
@@ -66,11 +66,10 @@ namespace Streamiz.Kafka.Net.Processors
                         globalConsumer.StoreOffset(record);
                     }
 
-                    DateTime dt = DateTime.Now;
-                    if (dt >= lastFlush.Add(flushInterval))
+                    if (MonotonicClock.ElapsedSince(lastFlush) >= flushInterval.TotalMilliseconds)
                     {
                         globalStateMaintainer.FlushState();
-                        lastFlush = DateTime.Now;
+                        lastFlush = MonotonicClock.CurrentMs;
                     }
                 }
                 catch (Exception e)
@@ -114,7 +113,7 @@ namespace Streamiz.Kafka.Net.Processors
         private StateConsumer stateConsumer;
         private readonly IGlobalStateMaintainer globalStateMaintainer;
         private readonly StreamMetricsRegistry metricsRegistry;
-        private DateTime lastMetrics = DateTime.Now;
+        private long lastMetrics = MonotonicClock.CurrentMs; // monotonic clock value (see MonotonicClock)
 
         public GlobalStreamThread(string threadClientId,
             IConsumer<byte[], byte[]> globalConsumer,
@@ -144,11 +143,10 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     stateConsumer.PollAndUpdate();
                     
-                    if (lastMetrics.Add(TimeSpan.FromMilliseconds(configuration.MetricsIntervalMs)) <
-                        DateTime.Now)
+                    if (MonotonicClock.ElapsedSince(lastMetrics) > configuration.MetricsIntervalMs)
                     {
                         MetricUtils.ExportMetrics(metricsRegistry, configuration, threadClientId);
-                        lastMetrics = DateTime.Now;
+                        lastMetrics = MonotonicClock.CurrentMs;
                     }
                 }
             }

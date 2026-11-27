@@ -34,10 +34,11 @@ namespace Streamiz.Kafka.Net.Processors
         private readonly string logPrefix;
         private readonly Thread thread;
         
-        private DateTime lastCommit = DateTime.Now;
-        private DateTime lastMetrics = DateTime.Now;
+        // monotonic clock values (see MonotonicClock), not epoch timestamps
+        private long lastCommit = MonotonicClock.CurrentMs;
+        private long lastMetrics = MonotonicClock.CurrentMs;
 
-        private DateTime lastCheckoutProcessing = DateTime.Now;
+        private long lastCheckoutProcessing = MonotonicClock.CurrentMs;
         private TimeSpan intervalCheckoutProcessing = TimeSpan.FromMinutes(1); // 1 minute per default
         private int messageProcessed;
         private Task<List<DeleteRecordsResult>> currentDeleteTask = null;
@@ -107,7 +108,7 @@ namespace Streamiz.Kafka.Net.Processors
                         }
                     }
                     
-                    long now = DateTime.Now.GetMilliseconds();
+                    long now = DateTime.UtcNow.GetMilliseconds();
                     
                     var consumer = GetConsumer();
                     ConsumeResult<byte[], byte[]> result = null;
@@ -130,7 +131,7 @@ namespace Streamiz.Kafka.Net.Processors
 
                         if (processor != null)
                         {
-                            now = DateTime.Now.GetMilliseconds();
+                            now = DateTime.UtcNow.GetMilliseconds();
                             long processLatency = ActionHelper.MeasureLatency(() => processor.Process(result));
                             log.LogDebug($"Process one record into {processLatency} ms");
                             ++messageProcessed;
@@ -141,7 +142,8 @@ namespace Streamiz.Kafka.Net.Processors
                             if (processor.State == ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState
                                 .BUFFER_FULL)
                             {
-                                var assignmentTopic = consumer.Assignment.Where(a => a.Topic.Equals(result.Topic))
+                                // result is null when the buffer becomes full while reprocessing a buffered record (no record polled)
+                                var assignmentTopic = consumer.Assignment.Where(a => a.Topic.Equals(processor.SourceTopic))
                                     .ToList();
                                 consumer.Pause(assignmentTopic);
                                 processor.State = ExternalProcessorTopologyExecutor.ExternalProcessorTopologyState
@@ -158,12 +160,12 @@ namespace Streamiz.Kafka.Net.Processors
                             }
                         }
 
-                        now = DateTime.Now.GetMilliseconds();
-                        if (now >= lastCheckoutProcessing.Add(intervalCheckoutProcessing).GetMilliseconds())
+                        now = DateTime.UtcNow.GetMilliseconds();
+                        if (MonotonicClock.ElapsedSince(lastCheckoutProcessing) >= intervalCheckoutProcessing.TotalMilliseconds)
                         {
                             log.LogInformation(
                                 $"{logPrefix}Processed {messageProcessed} total records in {intervalCheckoutProcessing.TotalMilliseconds}ms");
-                            lastCheckoutProcessing = DateTime.Now;
+                            lastCheckoutProcessing = MonotonicClock.CurrentMs;
                             messageProcessed = 0;
                         }
 
@@ -185,11 +187,10 @@ namespace Streamiz.Kafka.Net.Processors
                         exception = e;
                     }
                     
-                    if (lastMetrics.Add(TimeSpan.FromMilliseconds(configuration.MetricsIntervalMs)) <
-                        DateTime.Now)
+                    if (MonotonicClock.ElapsedSince(lastMetrics) > configuration.MetricsIntervalMs)
                     {
                         MetricUtils.ExportMetrics(streamMetricsRegistry, configuration, Name);
-                        lastMetrics = DateTime.Now;
+                        lastMetrics = MonotonicClock.CurrentMs;
                     }
                 }
             }
@@ -290,13 +291,13 @@ namespace Streamiz.Kafka.Net.Processors
 
         private bool Commit()
         {
-            if (DateTime.Now - lastCommit > TimeSpan.FromMilliseconds(configuration.CommitIntervalMs))
+            if (MonotonicClock.ElapsedSince(lastCommit) > configuration.CommitIntervalMs)
             {
-                DateTime beginCommit = DateTime.Now;
-                log.LogDebug($"Committing all topic/partitions since {(DateTime.Now - lastCommit).TotalMilliseconds}ms has elapsed (commit interval is {configuration.CommitIntervalMs}ms)");
+                long beginCommit = MonotonicClock.CurrentMs;
+                log.LogDebug($"Committing all topic/partitions since {MonotonicClock.ElapsedSince(lastCommit)}ms has elapsed (commit interval is {configuration.CommitIntervalMs}ms)");
                 bool committed = CommitOffsets(false);
-                log.LogDebug($"Committed all topic/partitions in {(DateTime.Now - beginCommit).TotalMilliseconds}ms");
-                lastCommit = DateTime.Now;
+                log.LogDebug($"Committed all topic/partitions in {MonotonicClock.ElapsedSince(beginCommit)}ms");
+                lastCommit = MonotonicClock.CurrentMs;
                 return committed;
             }
             return false;

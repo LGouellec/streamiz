@@ -100,7 +100,7 @@ namespace Streamiz.Kafka.Net.Mock
             {
                 if (lastDate == null)
                 {
-                    lastDate = DateTime.Now;
+                    lastDate = DateTime.UtcNow;
                 }
                 else
                 {

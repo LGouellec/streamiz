@@ -42,21 +42,26 @@ namespace Streamiz.Kafka.Net.Crosscutting
             => ConsumeRecords(consumer, timeout, 500);
 
         internal static IEnumerable<ConsumeResult<K, V>> ConsumeRecords<K, V>(this IConsumer<K, V> consumer, TimeSpan timeout, long maxRecords)
+            => ConsumeRecords(consumer, timeout, maxRecords, MonotonicClock.Instance);
+
+        // The deadline is computed with a monotonic clock (and not with the local wall-clock time) so that a system clock change
+        // (daylight saving time, NTP, manual adjustment) cannot extend the poll loop (see #481).
+        internal static IEnumerable<ConsumeResult<K, V>> ConsumeRecords<K, V>(this IConsumer<K, V> consumer, TimeSpan timeout, long maxRecords, IMonotonicClock clock)
         {
             List<ConsumeResult<K, V>> records = new List<ConsumeResult<K, V>>();
-            DateTime dt = DateTime.Now, now;
+            long deadlineMs = clock.NowMs + (long)timeout.TotalMilliseconds, now;
             TimeSpan ts = timeout;
             do
             {
                 var r = consumer.Consume(ts);
-                now = DateTime.Now;
+                now = clock.NowMs;
                 if (r != null)
                 {
                     records.Add(r);
                 }
                 else
                 {
-                    var diffTs = Math.Max((dt.Add(timeout) - now).TotalMilliseconds, 0);
+                    double diffTs = Math.Max(deadlineMs - now, 0);
                     ts = TimeSpan.FromMilliseconds(1 / (2 * Math.Log(diffTs) + 1) * 1000);
                     
                     if (consumer.Assignment  != null && !consumer.Assignment.Any()) // if consumer has no assignment, sleep Max (ts / 2, 100 ms)
@@ -69,7 +74,7 @@ namespace Streamiz.Kafka.Net.Crosscutting
                 if (records.Count >= maxRecords) // if the batch is full, break;
                     break;
                 
-            } while (dt.Add(timeout) > now);
+            } while (deadlineMs > now);
 
             return records;
         }

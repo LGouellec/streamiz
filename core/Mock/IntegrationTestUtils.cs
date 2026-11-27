@@ -1,4 +1,5 @@
-﻿using Confluent.Kafka;
+﻿using Streamiz.Kafka.Net.Crosscutting;
+using Confluent.Kafka;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,13 +34,13 @@ namespace Streamiz.Kafka.Net.Mock
         /// <returns>Return a list of records</returns>
         public static List<ConsumeResult<K, V>> WaitUntilMinKeyValueRecordsReceived<K, V>(TestOutputTopic<K, V> topic, int size, TimeSpan timeout)
         {
-            DateTime dt = DateTime.Now;
+            long dt = MonotonicClock.CurrentMs;
 
             List<ConsumeResult<K, V>> results = new List<ConsumeResult<K, V>>();
             do
             {
                 results.AddRange(topic.ReadKeyValueList().ToList());
-                if (dt + timeout < DateTime.Now)
+                if (MonotonicClock.ElapsedSince(dt) > timeout.TotalMilliseconds)
                     break;
             } while (results.Count < size);
 
