@@ -31,13 +31,15 @@ namespace Streamiz.Kafka.Net.Stream
     public abstract class TopologyResourcesModel
     {
         /// <summary>
-        /// Topics read (for a topology, including the global stores' topics).
+        /// Topics read (for a topology, including the global stores' topics, and excluding the repartition topics
+        /// listed in <see cref="RepartitionTopics"/>).
         /// </summary>
         [JsonProperty("sourceTopics", Order = 100)]
         public List<string> SourceTopics { get; set; } = new();
 
         /// <summary>
-        /// Topics statically written.
+        /// Topics statically written (for a topology, excluding the repartition topics listed in
+        /// <see cref="RepartitionTopics"/>).
         /// </summary>
         [JsonProperty("sinkTopics", Order = 101)]
         public List<string> SinkTopics { get; set; } = new();
@@ -109,11 +111,13 @@ namespace Streamiz.Kafka.Net.Stream
         internal void ComputeAggregates()
         {
             var nodes = SubTopologies.SelectMany(s => s.Nodes).ToList();
+            var repartitionTopics = new HashSet<string>(SubTopologies.SelectMany(s => s.RepartitionTopics));
+            // repartition topics are both read and written by the topology, they are listed in RepartitionTopics only
             SourceTopics = nodes.Where(n => n.Topics != null).SelectMany(n => n.Topics)
                 .Concat(GlobalStores.Select(g => g.Topic))
-                .Where(t => t != null).Distinct().OrderBy(t => t).ToList();
+                .Where(t => t != null && !repartitionTopics.Contains(t)).Distinct().OrderBy(t => t).ToList();
             SinkTopics = nodes.Where(n => n.Topic != null).Select(n => n.Topic)
-                .Distinct().OrderBy(t => t).ToList();
+                .Where(t => !repartitionTopics.Contains(t)).Distinct().OrderBy(t => t).ToList();
             StateStores = nodes.Where(n => n.Stores != null).SelectMany(n => n.Stores)
                 .Concat(GlobalStores.Select(g => g.Store))
                 .Where(t => t != null).Distinct().OrderBy(t => t).ToList();

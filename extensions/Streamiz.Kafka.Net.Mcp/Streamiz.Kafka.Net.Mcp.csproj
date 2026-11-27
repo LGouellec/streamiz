@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+        <RootNamespace>Streamiz.Kafka.Net.Mcp</RootNamespace>
+        <AssemblyName>Streamiz.Kafka.Net.Mcp</AssemblyName>
+        <PackageId>Streamiz.Kafka.Net.Mcp</PackageId>
+        <Description>Model Context Protocol (MCP) server tools for Streamiz.Kafka.Net (read-only topology introspection)</Description>
+        <Version>1.8.2</Version>
+        <PackageVersion>1.8.2</PackageVersion>
+        <AssemblyVersion>1.8.2</AssemblyVersion>
+        <FileVersion>1.8.2</FileVersion>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>..\..\key.snk</AssemblyOriginatorKeyFile>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <Authors>@LGouellec</Authors>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/LGouellec/streamiz</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/LGouellec/streamiz</RepositoryUrl>
+        <PackageTags>kafka kafka-streams streamiz event-streaming mcp model-context-protocol</PackageTags>
+        <PackageReleaseNotes>https://github.com/LGouellec/streamiz/releases</PackageReleaseNotes>
+        <PackageIconUrl>https://raw.githubusercontent.com/LGouellec/streamiz/master/resources/logo-kafka-stream-net.png</PackageIconUrl>
+        <LangVersion>9.0</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="ModelContextProtocol" Version="2.4.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\core\Streamiz.Kafka.Net.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\key.snk">
+            <Link>key.snk</Link>
+        </None>
+    </ItemGroup>
+
+</Project>

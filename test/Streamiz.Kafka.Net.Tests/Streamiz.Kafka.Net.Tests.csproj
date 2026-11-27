@@ -42,6 +42,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\core\Streamiz.Kafka.Net.csproj" />
     <ProjectReference Include="..\..\extensions\Streamiz.Kafka.Net.AspNetCore\Streamiz.Kafka.Net.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\extensions\Streamiz.Kafka.Net.Mcp\Streamiz.Kafka.Net.Mcp.csproj" />
     <ProjectReference Include="..\..\metrics\Streamiz.Kafka.Net.Metrics.OpenTelemetry\Streamiz.Kafka.Net.Metrics.OpenTelemetry.csproj" />
     <ProjectReference Include="..\..\remote\Streamiz.Kafka.Net.Azure.RemoteStorage\Streamiz.Kafka.Net.Azure.RemoteStorage.csproj" />
     <ProjectReference Include="..\..\serdes\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro\Streamiz.Kafka.Net.SchemaRegistry.SerDes.Avro.csproj" />

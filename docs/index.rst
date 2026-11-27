@@ -75,5 +75,6 @@ Need help
    stores
    topology-test-driver
    monitoring
+   topology-introspection
    async-processing
    processor-api

@@ -690,8 +690,19 @@ namespace Streamiz.Kafka.Net.Processors.Internal
             var model = Describe().ToModel();
             var topicGroups = MakeInternalTopicGroups();
 
+            string Resolve(string topic) => topic != null && internalTopics.ContainsKey(topic) ? DecorateTopic(topic) : topic;
+
             foreach (var sub in model.SubTopologies)
             {
+                // internal topics are described with their logical name, use the real topic name instead
+                foreach (var node in sub.Nodes)
+                {
+                    node.Topics = node.Topics?.Select(Resolve).ToList();
+                    node.Topic = Resolve(node.Topic);
+                }
+                sub.SourceTopics = sub.SourceTopics.Select(Resolve).ToList();
+                sub.SinkTopics = sub.SinkTopics.Select(Resolve).ToList();
+
                 if (topicGroups.TryGetValue(sub.Id, out var topicsInfo))
                 {
                     sub.RepartitionTopics = topicsInfo.RepartitionTopics.Keys.OrderBy(t => t).ToList();
