@@ -185,6 +185,12 @@ namespace Streamiz.Kafka.Net.Processors
 
         public bool IsDisposable { get; private set; } = false;
 
+        /// <summary>
+        /// True if the thread is shutting down (or is shut down) because of an unrecoverable failure,
+        /// false if it was requested to stop (client close or cancellation).
+        /// </summary>
+        public bool IsFailed { get; private set; } = false;
+
         public int Id => thread.ManagedThreadId;
 
         public void Dispose() => CloseThread();
@@ -194,6 +200,7 @@ namespace Streamiz.Kafka.Net.Processors
             exception = null;
             lastSummaryMs = DateTime.Now;
             long totalProcessLatency = 0, totalCommitLatency = 0, totalPunctuateLatency = 0;
+            bool failed = false;
 
             try
             {
@@ -214,7 +221,10 @@ namespace Streamiz.Kafka.Net.Processors
                         {
                             ExceptionHandlerResponse response = TreatException(exception);
                             if (response == ExceptionHandlerResponse.FAIL)
+                            {
+                                failed = true;
                                 break;
+                            }
                             if (response == ExceptionHandlerResponse.CONTINUE)
                             {
                                 exception = null;
@@ -383,9 +393,15 @@ namespace Streamiz.Kafka.Net.Processors
                     }
                 }
             }
+            catch (Exception e)
+            {
+                failed = true;
+                log.LogError(e, "{LogPrefix}Encountered an unexpected error, the stream thread will shut down:",
+                    logPrefix);
+            }
             finally
             {
-                CompleteShutdown();
+                CompleteShutdown(failed);
             }
         }
 
@@ -554,7 +570,7 @@ namespace Streamiz.Kafka.Net.Processors
             }
         }
 
-        private void CompleteShutdown()
+        private void CompleteShutdown(bool failed = false)
         {
             try
             {
@@ -562,15 +578,20 @@ namespace Streamiz.Kafka.Net.Processors
                 {
                     log.LogInformation("{LogPrefix}Shutting down", logPrefix);
 
+                    // Flag the failure before transitioning to PENDING_SHUTDOWN, so the failure is
+                    // propagated to the client before any potentially blocking close operation (see #480)
+                    IsFailed = failed;
                     SetState(ThreadState.PENDING_SHUTDOWN);
 
                     IsRunning = false;
 
-                    Manager.Close();
-
-                    consumer.Unsubscribe();
-                    consumer.Close();
-                    consumer.Dispose();
+                    RunShutdownStep("closing the task manager", () => Manager.Close());
+                    RunShutdownStep("closing the consumer", () =>
+                    {
+                        consumer.Unsubscribe();
+                        consumer.Close();
+                    });
+                    RunShutdownStep("disposing the consumer", () => consumer.Dispose());
 
                     streamMetricsRegistry.RemoveThreadSensors(threadId);
                     log.LogInformation($"{logPrefix}Shutdown complete");
@@ -586,6 +607,53 @@ namespace Streamiz.Kafka.Net.Processors
             {
                 SetState(ThreadState.DEAD);
             }
+        }
+
+        /// <summary>
+        /// Run a blocking shutdown step, bounded by <see cref="IStreamConfig.StreamThreadShutdownTimeout"/>.
+        /// If the step doesn't complete in time, it is abandoned (it keeps running in a background thread) and the shutdown goes on,
+        /// so the thread is guaranteed to reach the DEAD state.
+        /// Exceptions thrown by the step are rethrown.
+        /// </summary>
+        private void RunShutdownStep(string stepName, Action step)
+        {
+            TimeSpan timeout = streamConfig?.StreamThreadShutdownTimeout ?? Timeout.InfiniteTimeSpan;
+            if (timeout <= TimeSpan.Zero)
+            {
+                step();
+                return;
+            }
+
+            Exception stepException = null;
+            // the step runs in a dedicated thread named like the stream thread,
+            // because some components (metrics, ...) rely on the current thread name
+            var stepThread = new Thread(() =>
+            {
+                try
+                {
+                    step();
+                }
+                catch (Exception e)
+                {
+                    stepException = e;
+                }
+            })
+            {
+                Name = thread.Name,
+                IsBackground = true
+            };
+            stepThread.Start();
+
+            if (!stepThread.Join(timeout))
+            {
+                log.LogError(
+                    "{LogPrefix}Timeout ({Timeout}ms) expired while {ShutdownStep}, this step is abandoned and the shutdown continues",
+                    logPrefix, timeout.TotalMilliseconds, stepName);
+                return;
+            }
+
+            if (stepException != null)
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(stepException).Throw();
         }
 
         private IEnumerable<ConsumeResult<byte[], byte[]>> PollRequest(TimeSpan ts)
